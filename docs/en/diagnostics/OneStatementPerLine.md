@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Тексты модулей оформляются по принципу "один оператор в одной строке". Several statements are acceptable in case of same-type assignment operators. For example:
+Module texts are formatted according to the "one statement in one line" principle. Several statements are acceptable in case of same-type assignment operators. For example:
 
 `StartIndex = 0; Index = 0; Result = 0;`
 
