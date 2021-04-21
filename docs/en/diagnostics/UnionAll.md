@@ -12,7 +12,7 @@ Employ UNION only when removing duplicates from the result is required.
 
 ## Examples
 
-Incorrect:
+Wrong:
 ```bsl
 SELECT
 GoodsReceipt.Ref
@@ -27,7 +27,7 @@ FROM
 Document.GoodsSale AS GoodsSale
 ```
 
-Correct:
+Сorrect:
 
 ```bsl
 SELECT
