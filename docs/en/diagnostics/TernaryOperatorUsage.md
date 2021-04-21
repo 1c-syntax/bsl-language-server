@@ -34,14 +34,14 @@ EndIf;
 Bad:
 
 ```bsl
-If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
+If ?(P.Emp_emptype = Null, 0, P.Emp_emptype) = 0 Then
       Status = "Done";
 EndIf;
 ```
 Good:
 
 ```bsl
-If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
+If P.Emp_emptype = Null OR P.Emp_emptype = 0 Then
       Status = "Done";
 End If;
 ```
