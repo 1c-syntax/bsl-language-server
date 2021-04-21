@@ -23,10 +23,6 @@ plugins {
 repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
-    maven {
-      url = uri("http://cache")
-      isAllowInsecureProtocol = true
-    }
 }
 
 group = "com.github.1c-syntax"
