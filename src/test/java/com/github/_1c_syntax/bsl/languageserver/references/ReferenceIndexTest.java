@@ -77,6 +77,26 @@ class ReferenceIndexTest {
   }
 
   @Test
+  void getReferencesToLocalMethodFromFormModule() {
+    // given
+    var documentContext = serverContext.getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule).orElseThrow();
+    var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
+    var module = documentContext.getSymbolTree().getModule();
+
+    var uri = documentContext.getUri();
+    var location = new Location(uri.toString(), Ranges.create(4, 0, 18));
+
+    // when
+    var references = referenceIndex.getReferencesTo(method);
+
+    // then
+    assertThat(references)
+      .isNotEmpty()
+      .contains(Reference.of(module, method, location))
+    ;
+  }
+
+  @Test
   void getReferencesToCommonModuleMethod() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);

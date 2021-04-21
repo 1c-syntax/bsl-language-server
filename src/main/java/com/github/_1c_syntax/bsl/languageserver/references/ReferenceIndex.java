@@ -42,7 +42,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -193,7 +192,7 @@ public class ReferenceIndex {
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
     String mdoRef = multikey.getKey(0);
-    ModuleType moduleType = getModuleType(multikey.getKey(1));
+    ModuleType moduleType = ModuleType.valueOf(multikey.getKey(1));
     String symbolName = multikey.getKey(2);
 
     return serverContext.getDocument(mdoRef, moduleType)
@@ -218,18 +217,11 @@ public class ReferenceIndex {
   }
 
   private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName());
+    return new MultiKey<>(mdoRef, moduleType.toString());
   }
 
   private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String symbolName) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName(), symbolName);
-  }
-
-  private static ModuleType getModuleType(String filename) {
-    return Arrays.stream(ModuleType.values())
-      .filter(type -> type.getFileName().equals(filename))
-      .findFirst()
-      .orElseThrow();
+    return new MultiKey<>(mdoRef, moduleType.toString(), symbolName);
   }
 
   private static boolean isReferenceAccessible(Reference reference) {
