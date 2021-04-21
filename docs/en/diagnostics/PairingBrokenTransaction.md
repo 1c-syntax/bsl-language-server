@@ -14,16 +14,16 @@ Beginning of transaction and it's committing (rollback) have to be executed with
 *Correct*
 
 ```bsl
-Процедура ЗаписатьДанныеВИБ()
+Procedure WriteDataToIB()
 
-    НачатьТранзакцию();
+    StartTransaction();
 
-    Попытка
-        ... // чтение или запись данных
-        ДокументОбъект.Записать()
-        ЗафиксироватьТранзакцию();
-    Исключение
-        ОтменитьТранзакцию();
+    Try
+        ... // read or write data
+        DocumentObject.Write()
+        CommitTransaction();
+    Raise
+        RollbackTransaction();
         ... // additional steps to handle the exception
     EndTry;
 
@@ -48,15 +48,7 @@ Procedure WriteDocument()
         CommitTransaction();
     Raise
         RollbackTransaction();
-        ... // additional operations to process the exception
-    EndTry;
-
-EndProcedure // чтение или запись данных
-        ДокументОбъект.Записать()
-        ЗафиксироватьТранзакцию();
-    Исключение
-        ОтменитьТранзакцию();
-    ... // additional steps to handle the exception
+        ... // additional steps to handle the exception
     EndTry;
 
 EndProcedure
