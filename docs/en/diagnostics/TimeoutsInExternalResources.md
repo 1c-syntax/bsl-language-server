@@ -13,7 +13,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-When working with external resources using the WSDefinitions, WSProxy, HTTPConnection, FTPConnection there should be a time out - the time limit for the operation to be completed. Otherwise, as a result of endless waiting, the program will freeze or some of the functionality of the program will become unavailable. For the InternetMailProfile the platform sets the default timeout value to 30 seconds, but despite this, it is worth explicitly specifying the timeout value when using it.
+When working with external resources using the WSDefinitions, WSProxy, HTTPConnection, FTPConnection there should be a time out - the time limit for the operation to be completed. Otherwise, as a result of endless waiting, the program will freeze or some of the functionality of the program will become unavailable.  
+For the InternetMailProfile the platform sets the default timeout value to 30 seconds, but despite this, it is worth explicitly specifying the timeout value when using it.
 
 Setting a timeout protects against external factors:
 
