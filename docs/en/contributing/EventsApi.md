@@ -7,12 +7,12 @@
 Подсистема состоит из трех компонентов:
 
 * events;
-* публикация событий;
-* подпись на событие.
+* post events;
+* event subscription.
 
 Ключевым отличием от обычной работы со Spring Events является вынос публикации события из прикладного кода в изолированный слой с применением аспектно-ориентированного программирования.
 
-> Краткую информацию о Spring Events можно почерпнуть в статье https://www.baeldung.com/spring-events.
+> A summary of Spring Events in the article https://www.baeldung.com/spring-events.
 
 ## Events
 
