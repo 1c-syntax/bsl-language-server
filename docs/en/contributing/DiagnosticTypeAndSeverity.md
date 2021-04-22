@@ -1,62 +1,62 @@
-# Типы и важность диагностик
+# Diagnostics types and severity
 
-Каждая диагностика относится к определенному типу и имеет определенную важность.  
-Для того, чтобы выбрать тип и важность для создаваемой диагностики, ниже приведено их подробное описание.
+Each diagnostic is of a specific type and has a specific importance.   
+In order to select the type and importance for the generated diagnostics, a detailed semantic description is given below.
 
 ## Severity
 
-Важность диагностики указывается в аннотации `@DiagnosticMetadata` параметром `severity` и принимает значения типа `DiagnosticSeverity`.
+The severity of diagnostics is set in the annotation `@DiagnosticMetadata` by the `severity` parameter and takes values ​​of the `DiagnosticSeverity` type.
 
-Возможные варианты (общие случаи, если не сказано иного):
+Possible use cases (basic cases, unless otherwise stated):
 
-### BLOCKER
+### Blocker (BLOCKER)
 
-Ошибки, приводящие приложение в нерабочее состояние. Используется только для `Ошибок` и `Уязвимостей`.
+Errors that render the application inoperable. Used only for `Errors` and `Vulnerabilities`.
 
-### CRITICAL
+### Critical (CRITICAL)
 
-Неправильно работающая ключевая бизнес-логика, дыры в системе безопасности, проблемы, приводящие к временной неработоспособности приложения или его компонент. Используется только для `Ошибок` и `Уязвимостей`.
+Incorrectly working key business logic, errors in the security system, problems leading to the temporary inoperability of the application or its components. Used only for `Errors` and `Vulnerabilities`.
 
-### MAJOR
+### Important (MAJOR)
 
-Часть основной бизнес-логики работает некорректно, но есть обходные пути либо низкокачественный код, приводящий к проблемам производительности, эффективности, плавающим ошибкам. Используется только для `Ошибок` и `Дефектов кода`.
+Some of the core business logic doesn't work correctly, but there are workarounds; poor quality code that leads to poor performance, efficiency, floating bugs. Used only for `Errors` and `Code Defects`.
 
-### MINOR
+### Minor (MINOR)
 
-Не нарушается бизнес-логика приложения, плавающая ошибка, низкокачественный, слабоподдерживаемый код, ошибки в редкоиспольземой функциональности. Используется только для `Ошибок` и `Дефектов кода`.
+The business logic of the application is not violated, a floating error, low-quality, poorly supported code, bugs in rarely used functionality. Used only for `Errors` and `Code Defects`.
 
 ### Information (INFO)
 
-Тривиальная ошибка, не касающаяся бизнес-логики приложения, плохо воспроизводимая проблема, малозаметная, не оказывающая никакого влияния на общее качество продукта. Используется только для `Дефектов кода`.
+A trivial error not related to the business logic of the application; poorly reproducible problem; unobtrusive, having no effect on the overall quality of the product. Используется только для `Дефектов кода`.
 
-## Тип диагностики
+## Diagnostics type
 
-Тип диагностики указывается в аннотации `@DiagnosticMetadata` параметром `type` и принимает значения типа `DiagnosticType`.
+The severity of diagnostics is set in the annotation `@DiagnosticMetadata` by the `type` parameter and takes values ​​of the `DiagnosticType` type.
 
-### VULNERABILITY
+### Vulnerability (VULNERABILITY)
 
-К этому типу диагностик относятся ошибки безопасности. Они всегда должны иметь важность `Блокирующий` в случае наличия известного способа компрометации, или `Критичный` если его нет либо ценность утечки не высока.  
-Примеры
+This type of diagnostics includes security errors. They should always be of severity `Blocker` if there is a known compromise, or `Critical` if there is none or the value of the leak is not high.   
+Examples
 
-- компрометация персональных данных является блокирующей уязвимостью, т.к. кроме нарушения законодальства, полученная информация может быть использована в различных противоправных действиях.
-- компрометация настроек отчетов пользователя относится к критичной уязвимости, т.к. может подсказать злоумышленнику как собрать важный отчет, но не дает доступа для выполнения запроса.
+- the compromise of personal data is a blocking vulnerability, since in addition to violation of the law, the information obtained can be used in various illegal actions.
+- compromise of user reporting settings is a critical vulnerability, since can tell an attacker how to collect an important report, but does not give access to fulfill the request.
 
-### Потенциальная уязвимость (SECURITY_HOTSPOT)
+### Potential vulnerability (SECURITY_HOTSPOT)
 
-В отличие от уязвимостей, диагностики с данным типом выделяют фрагменты кода, чуствительные к безопасности, требующие дополнительного ручного анализа. После анализа либо будет обнаружена проблема, которую необходимо исправить, либо проблемы нет и стоит отметить замечание как неактуальное. Диагностики с данным типом всегда должны иметь важность `Критичный`.
+Diagnostics of this type highlight security-sensitive code fragments that require additional manual analysis. After the analysis, either the problem that needs to be corrected will be confirmed, or a decision is made that there is no problem. Diagnostics with this type should always have severity `Critical`.
 
 Examples
 
-- обращение к параметрам операционной системы, комьютера пользователя не всегда является уязвимостью, так например версия архитектуры ОС может быть использована для загрузки нужной версии библиотки, входящей в состав приложения.
-- повышение привилегий пользователя может происходить запланировано, на время выполнения операции в соответствии с бизнес-процессом, что не явлется уязвимостью, в отличие от ситуации отключения контроля прав доступа пользователя полностью.
+- Accessing the parameters of the user's computer operating system is not always a vulnerability. For example, the version of the OS architecture can be used to load the correct version of the library included with the application.
+- User privilege escalation can occur in a planned manner while the operation is being performed in accordance with the business process, which is not a vulnerability. In other situations, disabling user access control is completely a vulnerability.
 
-### CODE SMELL
+### Code defect (CODE_SMELL)
 
-`Дефект кода` не приводит к ошибкам в программе, но усложняет дальнейшую разработку, возможность адаптировать и расширять функционал. Может иметь любую важность, кроме `Блокирующий` и `Критичный`. Требует исправления по мере важности в процессе рефакторинга.
+`Code defect` does not lead to errors in the program, but complicates further development, the ability to adapt and extend functionality. Can be of any importance except `Blocker` and `Critical`. Needs fixing as important in the refactoring process.
 
-### ERROR
+### Error (ERROR)
 
-К данной категории относятся реальные ошибки при работе пользователя. Они могут быть любой важности, кроме `Информационный`, при этом:
+This category includes real errors during the user's work. They can be of any importance, except `Informational`, while:
 
-- `Blocker` means there is no workaround, urgently needs to be fixed. Примером такой ошибки является некомпилиремый код или обращение к несуществующему методу.
-- `Критичный` означает наличие известного способа обхода (например отключения функциональности с ошибкой), но требующий максимально оперативного исправления.
+- `Blocker` means there is no workaround, urgently needs to be fixed. An example is uncompiled code or calling a method that does not exist.
+- `Critical` means there is a known workaround (for example, disabling functionality with an error), but requiring the fastest possible fix.
