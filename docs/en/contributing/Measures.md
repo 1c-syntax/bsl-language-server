@@ -12,7 +12,7 @@ The output of the performance measurement occurs after the `analyze` command fin
 
 ## Implementation
 
-Основная логика замеров реализована в аспекте `com.github._1c_syntax.bsl.languageserver.aop.MeasuresAspect` и пакете `com.github._1c_syntax.bsl.languageserver.aop.measures`.
+Measurement logic implemented in aspect `com.github._1c_syntax.bsl.languageserver.aop.MeasuresAspect` and package `com.github._1c_syntax.bsl.languageserver.aop.measures`.
 
 Aspect `MeasuresAspect` intercepts and measures calls to `ServerContext`, various computers, and calls to calculate diagnostics.
 
@@ -20,7 +20,7 @@ Aspect `MeasuresAspect` intercepts and measures calls to `ServerContext`, variou
 
 ## Example
 
-Фрагмент результатов замера:
+Fragment of measurement results:
 
 ```log
 c.g._.b.l.aop.measures.MeasureCollector  : diagnostic: NestedStatements - 4139
