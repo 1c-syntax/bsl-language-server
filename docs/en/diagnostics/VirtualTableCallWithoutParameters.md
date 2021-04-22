@@ -7,15 +7,15 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-При использовании виртуальных таблиц в запросах, следует передавать в параметры таблиц все условия, относящиеся к данной виртуальной таблице.
+When using virtual tables in queries, you should specify all conditions related to it in the table parameters.
 
-Не рекомендуется обращаться к виртуальным таблицам при помощи условий в секции ГДЕ и т.п.
+It is not recommended to refer to virtual tables using conditions in the WHERE section, etc.
 
-Такой запрос будет возвращать правильный (с точки зрения функциональности) результат, но СУБД будет намного сложнее выбрать оптимальный план для его выполнения. В некоторых случаях это может привести к ошибкам оптимизатора СУБД и значительному замедлению работы запроса.
+Such a query will return the correct (in terms of functionality) result, but it will be much more difficult for the DBMS to choose the optimal plan for its execution. In some cases, this can lead to errors in the DBMS optimizer and a significant slowdown in query performance.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-Например, следующий запрос использует секцию `ГДЕ` запроса для выборки из виртуальной таблицы:
+For example, a query uses the `WHERE` section to filter virtual table data:
 ```bsl
 Query.Text = "SELECT
 | Good
@@ -24,9 +24,9 @@ Query.Text = "SELECT
 |WHERE
 | Warehouse = &Warehouse";
 ```
-Возможно, что в результате выполнения этого запроса сначала будут выбраны все записи виртуальной таблицы, а затем из них будет отобрана часть, соответствующая заданному условию.
+When executing this query, first all records of the virtual table will be selected, then the part corresponding to the specified condition will be selected from them.
 
-Рекомендуется ограничивать количество выбираемых записей на самом раннем этапе обработки запроса. Для этого следует передать условия в параметры виртуальной таблицы.
+It is recommended that you limit the number of selected records as early as possible. To do this, pass conditions to the parameters of the virtual table.
 
 ```bsl
 Query.Text = "SELECT
@@ -42,9 +42,9 @@ Query.Text = "SELECT
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* Source: [Standard: Using virtual tables (RU)](https://its.1c.ru/db/v8std#content:657:hdoc)
-* Source: [Standard: Effective use of the virtual table «Turnovers» (RU)](https://its.1c.ru/db/v8std#content:733:hdoc)
-* Источник: [Рекомендация 1С: Использование параметра Условие при обращении к виртуальной таблице](https://its.1c.ru/db/metod8dev/content/5457/hdoc)
+* Standard: [Using virtual tables (RU)](https://its.1c.ru/db/v8std#content:657:hdoc)
+* Standard: [Effective use of the virtual table «Turnovers» (RU)](https://its.1c.ru/db/v8std#content:733:hdoc)
+* 1C Recommendation: [Using the Condition parameter when accessing a virtual table](https://its.1c.ru/db/metod8dev/content/5457/hdoc) (RU)
 
 ## Snippets
 
