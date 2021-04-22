@@ -8,23 +8,23 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-В текстах запросов очень редко используют многострочные литералы, в основном это результаты ошибки из-за некорректного числа двойных кавычек.
+Multi-line literals are rarely used in query texts, mostly these are error results due to an incorrect number of double quotes.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-В приведенном ниже примере в выборке будет присутствовать два поля вместо трех.
+In the example below, the selection will have two fields instead of three.
 
 ```bsl
-Запрос = Новый Запрос;
-Запрос.Текст = "ВЫБРАТЬ
-|   ПриходныйОрдерНоменклатура.Номенклатура КАК Номенклатура,
-|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Код, "") КАК НоменклатураКод,
-|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Наименование, "") КАК НоменклатураНаименование
-|ИЗ
-|   Документ.ПриходныйОрдер.Номенклатура КАК ПриходныйОрдерНоменклатура
-|ГДЕ
-|   ПриходныйОрдерНоменклатура.Ссылка = &Ссылка";
+Query = New Query;
+Query.Text = "SELECT
+|   OrderGoods.Cargo AS Cargo,
+|   ISNULL(OrderGoods.Cargo.Code, "") AS CargoCode,
+|   ISNULL(OrderGoods.Cargo.Name, "") AS CargoName
+|FROM
+|   Document.Order.Goods AS OrderGoods
+|WHERE
+|   OrderGoods.Ref = &Ref";
 ```
 
 ## Sources
