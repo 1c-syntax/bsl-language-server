@@ -19,30 +19,49 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.documentlink;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.documentlink.DocumentLinkSupplier;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLink;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Класс-провайдер для формирования списка ссылок на внешние источники информации.
+ * Сапплаер для формирования ссылки на страницу с информацией по диагностике.
  */
 @Component
 @RequiredArgsConstructor
-public class DocumentLinkProvider {
-  private final Collection<DocumentLinkSupplier> suppliers;
+public class DiagnosticDescriptionDocumentLinkSupplier implements DocumentLinkSupplier {
 
+  private final LanguageServerConfiguration configuration;
+
+  @Override
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
-    return suppliers.stream()
-      .map(supplier -> supplier.getDocumentLinks(documentContext))
-      .flatMap(Collection::stream)
+    if (!configuration.getDocumentLinkOptions().isShowDiagnosticDescription()) {
+      return Collections.emptyList();
+    }
+
+    var language = configuration.getLanguage();
+
+    return documentContext.getComputedDiagnostics().stream()
+      .map((Diagnostic diagnostic) -> {
+        var diagnosticCode = DiagnosticCode.getStringValue(diagnostic.getCode());
+
+        return new DocumentLink(
+          diagnostic.getRange(),
+          diagnostic.getCodeDescription().getHref(),
+          null,
+          Resources.getResourceString(language, this.getClass(), "tooltip", diagnosticCode)
+        );
+      })
       .collect(Collectors.toList());
   }
 }

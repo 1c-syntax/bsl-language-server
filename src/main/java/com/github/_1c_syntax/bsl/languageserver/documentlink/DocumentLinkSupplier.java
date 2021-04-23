@@ -19,30 +19,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.documentlink;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.documentlink.DocumentLinkSupplier;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentLink;
-import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Класс-провайдер для формирования списка ссылок на внешние источники информации.
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * данными о ссылках на внешние источники информации.
  */
-@Component
-@RequiredArgsConstructor
-public class DocumentLinkProvider {
-  private final Collection<DocumentLinkSupplier> suppliers;
-
-  public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
-    return suppliers.stream()
-      .map(supplier -> supplier.getDocumentLinks(documentContext))
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
+public interface DocumentLinkSupplier {
+  /**
+   * Получить список ссылок на внешние источники информации в документе.
+   *
+   * @param documentContext Документ, для которого необходимо получить список ссылок на внешние источники информации.
+   * @return Список ссылок на внешние источники информации.
+   */
+  List<DocumentLink> getDocumentLinks(DocumentContext documentContext);
 }
