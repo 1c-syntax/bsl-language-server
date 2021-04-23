@@ -26,7 +26,7 @@ The following items are deprecated and their use is not recommended since platfo
    * ОтображатьПодписиШкалыСерии. Для доступа рекомендуется использовать ШкалаСерий.ПоложениеПодписейШкалы;
    * ОтображатьПодписиШкалыТочек. Для доступа рекомендуется использовать ШкалаТочек.ПоложениеПодписейШкалы;
    * ОтображатьПодписиШкалыЗначений. Для доступа рекомендуется использовать ШкалаЗначений.ПоложениеПодписейШкалы;
-   * ОтображатьЛинииЗначенийШкалы. ShowPointsScaleLabels- recommended to use the PointsScale.ScaleLabelLocation
+   * ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;
    * ФорматШкалыЗначений. Для доступа рекомендуется использовать ШкалаЗначений.ФорматПодписей;
    * ОриентацияМеток. Для доступа рекомендуется использовать ШкалаТочек.ОриентацияПодписей.
 * Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
