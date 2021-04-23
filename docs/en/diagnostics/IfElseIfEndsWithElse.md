@@ -1,4 +1,4 @@
-# Использование синтаксической конструкции Если...Тогда...ИначеЕсли... (IfElseIfEndsWithElse)
+# Else...The...ElseIf... statement should end with Else branch (IfElseIfEndsWithElse)
 
  |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
  |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
