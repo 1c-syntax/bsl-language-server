@@ -87,6 +87,9 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
+  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+  private boolean useDevSite;
+
   @Nullable
   private File traceLog;
 
