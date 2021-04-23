@@ -467,7 +467,6 @@
             "$id": "#/properties/codeLens",
             "type": "object",
             "title": "Code Lens configuration.",
-            "default": null,
             "properties": {
                 "showCognitiveComplexity": {
                     "$id": "#/properties/showCognitiveComplexity",
@@ -487,19 +486,12 @@
             "$id": "#/properties/documentLink",
             "type": "object",
             "title": "Document link configuration.",
-            "default": null,
             "properties": {
-                "useDevSite": {
-                    "$id": "#/properties/useDevSite",
+                "showDiagnosticDescription": {
+                    "$id": "#/properties/showDiagnosticDescription",
                     "type": "boolean",
-                    "title": "Use develop version of site for documentation links.",
+                    "title": "Show additional links to diagnostics documentation.",
                     "default": false
-                },
-                "siteRoot": {
-                    "$id": "#/properties/siteRoot",
-                    "type": "string",
-                    "title": "Root URL for documentation links.",
-                    "default": "https://1c-syntax.github.io/bsl-language-server"
                 }
             }
         },
@@ -507,7 +499,6 @@
             "$id": "#/properties/diagnostics",
             "type": "object",
             "title": "Diagnostics configuration.",
-            "default": null,
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/parameters"
@@ -597,6 +588,18 @@
                     ]
                 }
             }
+        },
+        "useDevSite": {
+            "$id": "#/properties/useDevSite",
+            "type": "boolean",
+            "title": "Use develop version of site for documentation links.",
+            "default": false
+        },
+        "siteRoot": {
+            "$id": "#/properties/siteRoot",
+            "type": "string",
+            "title": "Root URL for documentation links.",
+            "default": "https://1c-syntax.github.io/bsl-language-server"
         },
         "traceLog": {
             "$id": "#/properties/traceLog",
