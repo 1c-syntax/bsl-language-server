@@ -105,7 +105,7 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotNull();
 
-    assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
+    assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
   }

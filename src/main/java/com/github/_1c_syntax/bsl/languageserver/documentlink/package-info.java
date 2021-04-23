@@ -19,21 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Пакет предназначен для реализации различных ссылок на внешние источники информации ("documentLink"),
+ * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}.
  */
-@Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DocumentLinkOptions {
-  private boolean showDiagnosticDescription;
-}
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.documentlink;
+
+import javax.annotation.ParametersAreNonnullByDefault;
