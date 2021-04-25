@@ -88,16 +88,19 @@ class ReferenceIndexTest {
     var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
     var module = documentContext.getSymbolTree().getModule();
 
-    var uri = documentContext.getUri();
-    var location = new Location(uri.toString(), Ranges.create(4, 0, 18));
-
     // when
     var references = referenceIndex.getReferencesTo(method);
+    var reference= Reference.builder()
+      .from(module)
+      .symbol(method)
+      .uri(documentContext.getUri())
+      .selectionRange(Ranges.create(4, 0, 18))
+      .build();
 
     // then
     assertThat(references)
       .isNotEmpty()
-      .contains(Reference.of(module, method, location))
+      .contains(reference)
     ;
   }
 
