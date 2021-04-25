@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -64,7 +63,7 @@ public class ReferenceIndex {
    * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind)
    * были вызваны из списка Location (URI + Range).
    */
-  private final ConcurrentMap<ReferenceDTO, List <Location>> referencesTo = new ConcurrentHashMap<>();
+  private final Map<ReferenceDTO, List <Location>> referencesTo = new ConcurrentHashMap<>();
 
   /**
    * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind) в каких URI были
@@ -92,13 +91,10 @@ public class ReferenceIndex {
       .orElse("");
 
     List<ReferenceDTO> keys = new ArrayList<>();
-    keys.add(ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), false));
-
-    return keys.stream()
-      .map(key -> referencesTo.getOrDefault(key, Collections.emptyList()))
-      .flatMap(locations -> locations.stream()
-        .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
-      )
+    var findKey = ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), false);
+    return referencesTo.getOrDefault(findKey, Collections.emptyList())
+      .stream()
+      .map(location -> getReference(URI.create(location.getUri()), location.getRange()))
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -111,10 +107,22 @@ public class ReferenceIndex {
    * @return данные ссылки.
    */
   public Optional<Reference> getReference(URI uri, Position position) {
-    return referencesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
+    return referencesRanges.getOrDefault(uri, Collections.emptyMap())
+      .entrySet()
+      .stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
+  }
+
+  public Optional<Reference> getReference(URI uri, Range range) {
+    var t = referencesRanges.getOrDefault(uri, Collections.emptyMap()).get(range);
+
+    if (t == null) {
+      return Optional.empty();
+    }
+
+    return buildReference(uri, range.getStart(), t, range);
   }
 
   /**
