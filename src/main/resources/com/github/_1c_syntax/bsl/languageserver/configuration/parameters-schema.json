@@ -682,6 +682,16 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectLineBreak": {
+            "description": "Incorrect expression line break",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect expression line break",
+            "$id": "#/definitions/IncorrectLineBreak"
+        },
         "IncorrectUseLikeInQuery": {
             "description": "Incorrect use of 'LIKE'",
             "default": true,
