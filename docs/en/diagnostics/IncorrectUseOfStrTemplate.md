@@ -20,18 +20,18 @@ It is important to remember that
   - `StrTemplate("Name (version %1)");`
   - `StrTemplate("%1 (version%2)", Name);`
 
-2. не передается вообще никаких значений, кроме форматированной строки из-за большого число скобок внутри несложного выражения с `НСтр` и `СтрШаблон` Пример:
-- `СтрШаблон(НСтр("ru='Наименование (версия %1)'", Версия()));`
-  - здесь ошибочно не закрыта скобка для `НСтр`
-  - в итоге выражение после вычисления `НСтр` становится пустым.
+2. no values are passed at all, except for a formatted string due to the large number of parentheses inside a simple expression with `NStr` and `StrTemplate` Example:
+- `StrTemplate(NStr("ru = 'Name (version %1)'", Version()));`
+  - here the parenthesis is erroneously not closed for `NStr`
+  - as a result, the expression after evaluating `NStr` becomes empty.
 
-Выявить подобную ошибку чтением кода довольно сложно из-за наличия скобок. И можно поймать только в рантайме, получив исключение.
+It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
 
 Right:
-  - `СтрШаблон(НСтр("ru='Наименование (версия %1)'"), Версия());`
+  - `StrTemplate(NStr ("ru = 'Name (version %1)'"), Version());`
 
-3. Пример передачи цифр сразу после шаблонного значения
-  - `СтрШаблон("Наименование %(1)2"), Наименование);`
+3. An example of passing digits immediately after a template value
+  - `StrTemplate("Name %(1)2"), Name);`
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
