@@ -7,18 +7,18 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-При использовании метода `СтрШаблон` нужно внимательно составлять шаблонную строку и передавать правильное количество параметров. И можно довольно легко ошибиться при передаче значений для `СтрШаблон`.
+When using the `StrTemplate` method, you must carefully compose the template string and pass the correct number of parameters. So, it is quite easy to make mistakes when passing values for `StrTemplate`.
 
-Важно помнить, что
-- `СтрШаблон` принимает только параметры от `%1` до `%10`
-- если требуется передать сразу после шаблона число, нужно добавить скобки - `"%(1)45"`
+It is important to remember that
+- `StrTemplate` only accepts parameters from `%1` to `%10`
+- if you want to pass a number immediately after the template, you need to add parentheses - `"%(1)45"`
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-1. Количество переданных после шаблонной строки значений не равно (меньше или больше) максимальному номеру из строки вида %N внутри шаблонной строки
-  - `СтрШаблон("Наименование (версия %1)");`
-  - `СтрШаблон("%1 (версия %2)", Наименование);`
+1. The number of values passed after the template string is not equal (less or more) to the maximum number from a string like %N inside the template string
+  - `StrTemplate("Name (version %1)");`
+  - `StrTemplate("%1 (version%2)", Name);`
 
 2. не передается вообще никаких значений, кроме форматированной строки из-за большого число скобок внутри несложного выражения с `НСтр` и `СтрШаблон` Пример:
 - `СтрШаблон(НСтр("ru='Наименование (версия %1)'", Версия()));`
