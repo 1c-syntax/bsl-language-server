@@ -9,55 +9,55 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 It is important to specify the parameters correctly when writing to the Log event.
 
-You can't hide exceptions. При обработке исключений нужно выполнять запись в журнал регистрации с подробным представлением ошибки. Для этого нужно добавить в комментарий события результат `ПодробноеПредставлениеОшибки(ИнформацияОбОшибке())`
+You can't hide exceptions. При обработке исключений нужно выполнять запись в журнал регистрации с подробным представлением ошибки. To do this, add to the event comment the result `DetailErrorDescription(ErrorInfo())`
 
-Нельзя пропускать 2й параметр Уровень журнала регистрации. Если его не указать, по умолчанию 1С применит уровень ошибки Информация, и данная запись может потеряться в потоке записей.
+Do not skip the 2nd parameter Log level. If you do not specify it, by default 1C will apply the Information error level, and this record may be lost in the stream of records.
 
-Нельзя пропускать и 5й параметр - комментарий к событию записи в журнал регистрации.
+The 5th parameter - a comment to the event of writing to the logging log - must not be omitted either.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Примеры неверного кода
+Examples of Invalid Code
 ```bsl
-    ЗаписьЖурналаРегистрации("Событие");// ошибка
-    ЗаписьЖурналаРегистрации("Событие", УровеньЖурналаРегистрации.Ошибка);// ошибка
-    ЗаписьЖурналаРегистрации("Событие", УровеньЖурналаРегистрации.Ошибка, , );// ошибка
-    ЗаписьЖурналаРегистрации("Событие", , , , ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+    WriteLogEvent("Event");// error
+    WriteLogEvent("Event", EventLogLevel.Error);// error
+    WriteLogEvent("Event", EventLogLevel.Error, , );// error
+    WriteLogEvent("Event", , , , DetailErrorDescription(ErrorInfo()));
 
-    ЗаписьЖурналаРегистрации("Событие", УровеньЖурналаРегистрации.Ошибка, , , );// ошибка
+    WriteLogEvent("Event", EventLogLevel.Error, , , );// error
 
-    Попытка
-      КодСервер();
-    Исключение
-      ЗаписьЖурналаРегистрации("Событие", УровеньЖурналаРегистрации.Ошибка, , ,
-        ОписаниеОшибки()); // ошибка
-      ЗаписьЖурналаРегистрации("Событие", УровеньЖурналаРегистрации.Ошибка, , ,
-        "Комментарий 1"); // ошибка
-    КонецПопытки;
+    Try
+      ServerCode();
+    Except
+      WriteLogEvent("Event", EventLogLevel.Error, , ,
+        ErrorDescription()); // error
+      WriteLogEvent("Event", EventLogLevel.Error, , ,
+        "Commentary 1"); // error
+    EndTry;
 ```
 
-Правильный код
+Correct code
 ```bsl
-    Попытка
-      КодСервер();
-    Исключение
+    Try
+      ServerCode();
+    Except
 
-      ТекстОшибки = ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-      ЗаписьЖурналаРегистрации(НСтр("ru = 'Выполнение операции'"), УровеньЖурналаРегистрации.Ошибка, , ,
-         ТекстОшибки);
-    КонецПопытки;
+      ErrorText = DetailErrorDescription(ErrorInfo());
+      WriteLogEvent(NStr("en = 'Performing an operation'"), EventLogLevel.Error, , ,
+         ErrorText);
+    EndTry;
 
-    Попытка
-      КодСервер();
-    Исключение
+    Try
+      ServerCode();
+    Except
 
-      ТекстОшибки = ПодробноеПредставлениеОшибки(ИнформацияОбОшибке());
-      ЗаписьЖурналаРегистрации(НСтр("ru = 'Выполнение операции'"), УровеньЖурналаРегистрации.Ошибка, , ,
-         ТекстОшибки);
+      ErrorText = DetailErrorDescription(ErrorInfo());
+      WriteLogEvent(NStr("en = 'Performing an operation'"), EventLogLevel.Error, , ,
+         ErrorText);
 
-      ВызватьИсключение;
-    КонецПопытки;
+      Raise;
+    EndTry;
 ```
 
 ## Sources
@@ -68,8 +68,8 @@ You can't hide exceptions. При обработке исключений нуж
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* [Использование Журнала регистрации](https://its.1c.ru/db/v8std#content:498:hdoc)
-* [Перехват исключений в коде](https://its.1c.ru/db/v8std#content:499:hdoc)
+* [Using the event log (RU)](https://its.1c.ru/db/v8std#content:498:hdoc)
+* [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
 
 ## Snippets
 
