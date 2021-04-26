@@ -35,11 +35,11 @@ To create necessary files in right places, should run command `gradlew newDiagno
 
 ## Diagnostics implementation class
 
-Диагностика реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/main/java`.
+Diagnostics is implemented by adding a java class to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/main/java` directory.
 
-В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(при использовании ide список импорта обновляется автоматически)_. Необходимо следить за тем, чтобы импортировались **только** то, что необходимо для реализации, все неиспользуемое должно быть **удалено** _(если [настройки](EnvironmentSetting.md) выполнены верно, то ide сделает все автоматически)_.
+In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _ (if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
 
-Каждый класс диагностики должен иметь аннотацию `@DiagnosticMetadata`, содержащую метаданные диагностики. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
+Each diagnostic must have a `@DiagnosticMetadata`, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
 На момент написания статьи имеются следующие свойства:
 
