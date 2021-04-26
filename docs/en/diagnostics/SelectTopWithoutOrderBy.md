@@ -14,55 +14,55 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Использование конструкции `ПЕРВЫЕ N` без указания порядка сортировки в `УПОРЯДОЧИТЬ ПО` или условий в секции `ГДЕ` чревато получением неожиданных результатов:
-- В разных СУБД порядок возвращаемых результатов может отличаться
-- Порядок в разных копиях ИБ будет отличаться от порядка, который ожидает разработчик
+Using the `TOP N` construct without specifying the sort order in `ORDER BY` or conditions in the `WHERE` section is fraught with unexpected results:
+- The order of the returned results may differ in different DBMSs
+- The order in different copies of information security will differ from the order expected by the developer
 
-По стандарту, отсутствие предложения `УПОРЯДОЧИТЬ ПО` оправдано только в тех случаях, когда
+According to the standard, the absence of the sentence `ORDER BY` is justified only in cases where
 - the algorithm for processing query results does not rely on a specific order of records
-- результат обработки выполненного запроса не показывается пользователю
-- результат запроса - заведомо одна запись
+- the result of processing the executed request is not shown to the user
+- query result - obviously one record
 
-В приведенных случаях рекомендуется не добавлять предложение `УПОРЯДОЧИТЬ ПО` в текст запроса, так как это приводит к дополнительным затратам времени при выполнении запроса.
+In the above cases, it is recommended not to add the clause `ORDER BY` to the request body, as this leads to additional time-consuming execution of the request.
 
 ### Diagnostic ignorance in code
 
-В процессе анализа считаются ошибочными конструкции
-- Использование `ПЕРВЫЕ N` в объединении вне зависимости от наличия `УПОРЯДОЧИТЬ ПО`, т.к. упорядочивание происходит уже после объединения
-- Использование `ПЕРВЫЕ N`, где `N > 1` при отсутствии `УПОРЯДОЧИТЬ ПО`
-- Использование `ПЕРВЫЕ 1`, при отсутствии `УПОРЯДОЧИТЬ ПО` и условий в `ГДЕ`. Данное правило по умолчанию отключено параметром диагностики
+During the analysis, constructions are considered erroneous
+- Using `TOP N` in the union regardless of the presence of `ORDER BY` because ordering occurs after the union
+- Using `TOP N` where `N> 1` if missing `ORDER BY`
+- Using `TOP 1`, if there is no `ORDER BY` and conditions in `WHERE`. This rule is disabled by default by a diagnostic option
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-ВЫБРАТЬ ПЕРВЫЕ 1                            // <-- Нет ошибка, есть условие
-   Справочник.Ссылка
-ИЗ
-   Справочник.Контрагенты КАК Справочник
-ГДЕ
-   Справочник.Ссылка В (
-       ВЫБРАТЬ ПЕРВЫЕ 10                   // <-- Ошибка, нет сортировки
-           Ссылка
-       ИЗ
-           Справочник.Контрагенты)
+SELECT TOP 1 // < - No error, there is a condition
+   Reference.Link
+OF
+   Directory.Contractors AS Directory
+WHERE
+   Reference.Ref. IN (
+       SELECT TOP 10 // < - Error, no sorting
+           Link
+       OF
+           Reference, Contractors)
 
-ОБЪЕДИНИТЬ ВСЕ
+UNION ALL
 
-ВЫБРАТЬ ПЕРВЫЕ 10                          // <-- Ошибка, нет сортировки (и не может быть)
-   Справочник.Ссылка
-ИЗ
-   Справочник.Контрагенты КАК Справочник
+SELECT TOP 10 // < - Error, no sorting (and cannot be)
+   Reference.Link
+OF
+   Directory.Contractors AS Directory
 
-ОБЪЕДИНИТЬ ВСЕ
+UNION ALL
 
-ВЫБРАТЬ ПЕРВЫЕ 1                          // <-- Всегда ошибка, даже 1
-   Справочник.Ссылка
-ИЗ
-   Справочник.Контрагенты КАК Справочник
+SELECT TOP 1 // < - Always error, even 1
+   Reference.Link
+OF
+   Directory.Contractors AS Directory
 
-УПОРЯДОЧИТЬ ПО
-   Ссылка
+SORT BY
+   Link
 ```
 
 ## Sources
@@ -73,7 +73,7 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Стандарт: Упорядочивание результатов запроса](https://its.1c.ru/db/v8std#content:412:hdoc)
+- [Standard: Ordering Query Results](https://its.1c.ru/db/v8std#content:412:hdoc)
 
 ## Snippets
 
