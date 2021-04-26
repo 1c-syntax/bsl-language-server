@@ -7,34 +7,34 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Не следует использовать `ИЛИ` в секции `ГДЕ` запроса. Это может привести к тому, что СУБД не сможет использовать индексы таблиц и будет выполнять сканирование, что увеличит время работы запроса и вероятность возникновения блокировок. Вместо этого следует разбить один запрос на несколько и объединить результаты.
+Do not use `OR` in the `WHERE` section of the query. This can lead to the DBMS being unable to use the indexes of the tables and will perform scans, which will increase the query time and the likelihood of locks occurring. Instead, you should split one query into several and combine the results.
 
-Например, запрос
+For example, the query
 ```bsl
-ВЫБРАТЬ Товар.Наименование ИЗ Справочник.Товары КАК Товар 
-ГДЕ Артикул = "001" ИЛИ Цена = 10
+SELECT Item.Name FROM Directory.Products AS Item
+WHERE Article = "001" OR Price = 10
 ```
 
-следует заменить на запрос
+should be replaced with a query
 
 ```bsl
-ВЫБРАТЬ Товар.Наименование ИЗ Справочник.Товары КАК Товар ГДЕ Артикул = "001"
-ОБЪЕДИНИТЬ ВСЕ
-ВЫБРАТЬ Товар.Наименование ИЗ Справочник.Товары КАК Товар ГДЕ Цена = 10
+SELECT Product.Name FROM Directory.Products AS Product WHERE Article = "001"
+UNION ALL
+SELECT Product.Name FROM Directory.Products AS Product WHERE Price = 10
 ```
-> **Важно** - текущая реализация диагностики срабатывает на любое `ИЛИ` в секции `ГДЕ` и может выдавать ложные срабатывания для некоторых условий.
+> **Important** - the current diagnostic implementation triggers any `OR` in the `WHERE` section and may give false positives for some conditions.
 
-1) В основном условии оператор `ИЛИ` можно использовать только для последнего из используемых или единственного поля индекса, когда оператор `ИЛИ` можно заменить на оператор `В`.
+1) In the main condition, the `OR` operator can be used only for the last used or the only index field, when the `OR` operator can be replaced with the `IN` operator.
 
 CORRECT:
 
 ```bsl
-ГДЕ
-    Таблица.Поле = &Значение1
-    ИЛИ Таблица.Поле = &Значение2
+WHERE
+     Table.Field = &Value1
+     OR Table.Field = &Value2
 ```
 
-т.к. можно переписать при помощи оператора `В` (специально переписывать не нужно, можно оставить, как есть):
+since can be rewritten using the `IN` operator (you don't need to rewrite it specifically, you can leave it as it is):
 
 ```bsl
 WHERE
@@ -44,12 +44,12 @@ WHERE
 WRONG:
 
 ```bsl
-ГДЕ
-    Таблица.Поле1 = &Значение1
-    ИЛИ Таблица.Поле2 = &Значение2
+WHERE
+     Table.Field1 = &Value1
+     OR Table.Field2 = &Value2
 ```
 
-нельзя переписать при помощи `В`, но можно переписать при помощи `ОБЪЕДИНИТЬ ВСЕ` (каждое поле Поле1 и Поле2 должны быть проиндексированы):
+cannot be overwritten with `IN`, but can be overwritten with `UNION ALL` (each field Field1 and Field2 must be indexed):
 
 ```bsl
 WHERE
@@ -60,34 +60,34 @@ WHERE
 WHERE
     Table.Field2 = &Value1
 ```
-> Примечание: заменить `ИЛИ` на `ОБЪЕДИНИТЬ ВСЕ` можно не всегда, убедитесь, что результат будет действительно тем же, что и при `ИЛИ`, перед тем, как применять.
+> Note: replacing `OR` with `UNION ALL` is not always possible, make sure the result is indeed the same as `OR` before use.
 
-2) В дополнительном условии оператор ИЛИ можно использовать без ограничений.
+2) In an additional condition, the OR operator can be used without restrictions.
 
 CORRECT 1:
 
 ```bsl
-ГДЕ
-    Таблица.Поле1 = &Значение1 // Основное условие (использует индекс)
-    И // Дополнительное условие (можно использовать ИЛИ)
-    (Таблица.Поле2 = &Значение2 ИЛИ Таблица.Поле3 = &Значение3)
+WHERE
+     Table.Field1 = &Value1 // Main condition (uses index)
+     AND // Additional condition (you can use OR)
+     (Table.Field2 = &Value2 OR Table.Field3 = &Value3)
 ```
 
 CORRECT 2:
 
 ```bsl
-ГДЕ
-    (Таблица.Поле1 = &Значение1 ИЛИ Таблица.Поле1 = &Значение2)
-    И
-    (Таблица.Поле2 = &Значение3 ИЛИ Таблица.Поле2 = &Значение4)
+WHERE
+     (Table.Field1 = &Value1 OR Table.Field1 = &Value2)
+     AND
+     (Table.Field2 = &Value3 OR Table.Field2 = &Value4)
 ```
 
-т.к. можно переписать при помощи В (специально переписывать не нужно, можно оставить, как есть):
+since can be rewritten using the IN operator (you don't need to rewrite it specifically, you can leave it as it is):
 
 ```bsl
-ГДЕ
-    Таблица.Поле1 В (&Значения1)   // Основное условие
-    И Таблица.Поле2 В (&Значения2) // Дополнительное условие (или наоборот)
+WHERE
+     Table.Field1 B (&Values1) // Main condition
+     AND Table.Field2 B (&Values2) // Additional condition (or vice versa)
 ```
 
 ## Examples
@@ -96,9 +96,9 @@ CORRECT 2:
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-- [Стандарт - Эффективные условия запросов, п.2](https://its.1c.ru/db/v8std/content/658/hdoc)
-- [Использование логического ИЛИ в условиях - Типичные причины неоптимальной работы запросов и методы оптимизации](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm#or)
-- [Интересный анализ SQL-запросов в различных СУБД (не про 1С) - Статья на Хабре](https://m.habr.com/ru/company/lsfusion/blog/463095/)
+- [Standard - Effective Query Conditions, Clause 2](https://its.1c.ru/db/v8std/content/658/hdoc)
+- [Using Logical OR in Conditions - Typical Causes of Suboptimal Query Performance and Optimization Techniques](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm#or)
+- [Interesting analysis of SQL queries in various DBMS (not about 1C) - Article on Habr](https://m.habr.com/ru/company/lsfusion/blog/463095/)
 
 ## Snippets
 
