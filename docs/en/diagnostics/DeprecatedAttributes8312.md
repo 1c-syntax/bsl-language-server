@@ -11,16 +11,16 @@ The following items are deprecated and their use is not recommended since platfo
 * Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
 * ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
 * The following properties and methods of Chart object are obsolete and not recommended for use:
-   * ColorPalette
-   * GradientPaletteStartColor
-   * GradientPaletteEndColor
-   * GradientPaletteMaxColors
-   * GetPalette
-   * SetPalette
+   * ColorPalette;
+   * GradientPaletteStartColor;
+   * GradientPaletteEndColor;
+   * GradientPaletteMaxColors;
+   * GetPalette();
+   * SetPalette().
 * Names of properties of the object ChartPlotArea:
-   * ShowScale
-   * ScaleLines
-   * ScaleColor
+   * ShowScale;
+   * ScaleLines;
+   * ScaleColor.
 * Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:
 
    * ShowSeriesScaleLabels. Recommended to use the SeriesScale.ScaleLabelLocation;
