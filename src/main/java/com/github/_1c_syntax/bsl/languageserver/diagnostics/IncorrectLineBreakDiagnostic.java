@@ -61,19 +61,17 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    String[] contentList;
-    Object Range;
-
-    contentList = documentContext.getContentList();
-
-    checkContent(contentList, INCORRECT_START_LINE_PATTERN);
-    checkContent(contentList, INCORRECT_END_LINE_PATTERN);
+    checkContent(INCORRECT_START_LINE_PATTERN);
+    checkContent(INCORRECT_END_LINE_PATTERN);
 
   }
 
-  private void checkContent(String[] contentList, Pattern pattern) {
+  private void checkContent(Pattern pattern) {
 
+    String[] contentList;
     String checkText;
+
+    contentList = documentContext.getContentList();
 
     for (int i = 0; i < contentList.length; i++) {
 
