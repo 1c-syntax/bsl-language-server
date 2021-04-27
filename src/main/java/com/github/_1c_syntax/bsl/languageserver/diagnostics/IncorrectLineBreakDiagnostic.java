@@ -55,7 +55,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   );
 
   private static final Pattern INCORRECT_END_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "(\\sИЛИ|\\sИ|\\+|\\-|\\*|\\/|\\sOR|\\sAND)(\\s*?)$"
+    "(\\s+(?:ИЛИ|И|OR|AND)|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
   );
 
   private String CheckText;
