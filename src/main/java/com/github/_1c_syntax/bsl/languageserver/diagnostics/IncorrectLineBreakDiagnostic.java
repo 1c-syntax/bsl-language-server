@@ -65,8 +65,6 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     String[] ContentList;
     Object Range;
 
-    var matcher = INCORRECT_START_LINE_PATTERN.matcher(documentContext.getContent());
-
     ContentList = documentContext.getContentList();
 
     checkContent(ContentList, INCORRECT_START_LINE_PATTERN);
