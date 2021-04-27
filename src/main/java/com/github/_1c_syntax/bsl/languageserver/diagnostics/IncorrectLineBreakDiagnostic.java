@@ -51,11 +51,11 @@ import java.util.regex.Pattern;
 public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern INCORRECT_START_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "(:?^\\s*)(:?\\)|;|,|\\);)"
+    "^\\s*(:?\\)|;|,|\\);)"
   );
 
   private static final Pattern INCORRECT_END_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "(\\s+(?:ИЛИ|И|OR|AND)|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
+    "\\s+(:?ИЛИ|И|OR|AND|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
   );
 
   @Override
@@ -80,7 +80,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
       Matcher matcher = pattern.matcher(checkText);
 
       if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(i+1,1,i+1,0);
+        diagnosticStorage.addDiagnostic(i+1,matcher.start(1),i+1,matcher.end(1));
       }
     }
   }

@@ -40,18 +40,18 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
 
     assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
-      .hasRange(7, 1, 0)
-      .hasRange(8, 1, 0)
-      .hasRange(16, 1, 0)
-      .hasRange(17, 1, 0)
-      .hasRange(21, 1, 0)
-      .hasRange(29, 1, 0)
-      .hasRange(70, 1, 0)
-      .hasRange(83, 1, 0)
-      .hasRange(45, 1, 0)
-      .hasRange(47, 1, 0)
-      .hasRange(59, 1, 0)
-      .hasRange(61, 1, 0)
+      .hasRange(7, 32, 33)
+      .hasRange(8, 35, 36)
+      .hasRange(16, 32, 33)
+      .hasRange(17, 22, 23)
+      .hasRange(21, 49, 50)
+      .hasRange(29, 28, 29)
+      .hasRange(70, 80, 83)
+      .hasRange(83, 89, 92)
+      .hasRange(45, 25, 26)
+      .hasRange(47, 25, 26)
+      .hasRange(59, 4, 5)
+      .hasRange(61, 4, 5)
     ;
 
   }
