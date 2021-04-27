@@ -58,30 +58,29 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     "(\\s+(?:ИЛИ|И|OR|AND)|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
   );
 
-
   @Override
   protected void check() {
 
-    String[] ContentList;
+    String[] contentList;
     Object Range;
 
-    ContentList = documentContext.getContentList();
+    contentList = documentContext.getContentList();
 
-    checkContent(ContentList, INCORRECT_START_LINE_PATTERN);
-    checkContent(ContentList, INCORRECT_END_LINE_PATTERN);
+    checkContent(contentList, INCORRECT_START_LINE_PATTERN);
+    checkContent(contentList, INCORRECT_END_LINE_PATTERN);
 
   }
 
-  private void checkContent(String[] ContentList, Pattern Pattern) {
+  private void checkContent(String[] contentList, Pattern pattern) {
 
-    String CheckText;
+    String checkText;
     boolean startError;
 
-    for (int i = 0; i < ContentList.length; i++) {
+    for (int i = 0; i < contentList.length; i++) {
 
-      CheckText = ContentList[i];
+      checkText = contentList[i];
 
-      Matcher matcher = Pattern.matcher(CheckText);
+      Matcher matcher = pattern.matcher(checkText);
       startError = matcher.find();
       if (startError) {
         diagnosticStorage.addDiagnostic(i+1,1,i+1,0);
