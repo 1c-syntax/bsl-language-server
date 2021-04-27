@@ -74,15 +74,14 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   private void checkContent(String[] contentList, Pattern pattern) {
 
     String checkText;
-    boolean startError;
 
     for (int i = 0; i < contentList.length; i++) {
 
       checkText = contentList[i];
 
       Matcher matcher = pattern.matcher(checkText);
-      startError = matcher.find();
-      if (startError) {
+
+      if (matcher.find()) {
         diagnosticStorage.addDiagnostic(i+1,1,i+1,0);
       }
     }
