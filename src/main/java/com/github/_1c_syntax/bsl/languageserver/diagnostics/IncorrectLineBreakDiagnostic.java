@@ -34,6 +34,7 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,12 +58,23 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     "\\s+(:?ИЛИ|И|OR|AND|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
   );
 
+  private HashSet<Integer> setFirstQueryLines = new HashSet<Integer>();
+
   @Override
   protected void check() {
 
+    findFirstQueryLines();
+
     checkContent(INCORRECT_START_LINE_PATTERN);
     checkContent(INCORRECT_END_LINE_PATTERN);
+  }
 
+  private void findFirstQueryLines() {
+
+    documentContext.getQueries().forEach(query -> {
+        setFirstQueryLines.add(query.getAst().start.getLine());
+      }
+    );
   }
 
   private void checkContent(Pattern pattern) {
@@ -78,8 +90,8 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
       Matcher matcher = pattern.matcher(checkText);
 
-      if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(i + 1, matcher.start(1) , i + 1, matcher.end(1));
+      if (matcher.find() && !setFirstQueryLines.contains(i + 2)) {
+        diagnosticStorage.addDiagnostic(i + 1, matcher.start(1), i + 1, matcher.end(1));
       }
     }
   }
