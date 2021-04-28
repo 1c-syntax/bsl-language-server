@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
@@ -80,7 +79,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
       Matcher matcher = pattern.matcher(checkText);
 
       if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(i+1,matcher.start(1),i+1,matcher.end(1));
+        diagnosticStorage.addDiagnostic(i + 1, matcher.start(1) , i + 1, matcher.end(1));
       }
     }
   }

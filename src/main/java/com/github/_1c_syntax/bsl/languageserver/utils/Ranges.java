@@ -123,5 +123,4 @@ public final class Ranges {
       .filter(range -> (!range.getStart().equals(range.getEnd())))
       .findFirst();
   }
-
 }
