@@ -9,7 +9,7 @@
 
 A built-in language constructs, keywords must be written canonically.
 
-### Diagnostic ignorance in code
+### Keywords
 
 | RU                 | EN            |
 | ------------------ | ------------- |
