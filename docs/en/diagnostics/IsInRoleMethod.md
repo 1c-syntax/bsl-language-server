@@ -35,7 +35,7 @@ If IsInRole("Treasurer") OR PrivilegedMode() Then ...
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Standard: Checking access rights
+* Standard: [Checking access rights](https://its.1c.ru/db/v8std#content:737:hdoc)
 
 ## Snippets
 
