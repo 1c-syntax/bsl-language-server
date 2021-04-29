@@ -1,14 +1,14 @@
 # Using 'SELECT TOP' without 'ORDER BY' (SelectTopWithoutOrderBy)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`sql`<br>`suspicious` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                      Tags                       |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
+ | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`sql`<br>`suspicious` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `skipSelectTopOne` | `Boolean` | ```Skip 'SELECT TOP 1' if there is 'WHERE'``` | ```true``` 
+ |        Name        |   Type    | Description                               | Default value |
+ |:------------------:|:---------:|:----------------------------------------- |:-------------:|
+ | `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |    `true`     | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -78,7 +78,7 @@ SORT BY
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+### Parameter for config
 
 ```bsl
 // BSLLS:SelectTopWithoutOrderBy-off
