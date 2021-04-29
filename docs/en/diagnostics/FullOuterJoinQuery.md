@@ -47,5 +47,5 @@ EndProcedure
 ### Parameter for config
 
 ```json
-Параметр конфигурационного файла
+"FullOuterJoinQuery": false
 ```
