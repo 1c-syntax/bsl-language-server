@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1619187454382,
+  "lastUpdate": 1619695482773,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10292,6 +10292,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.2431469333514",
             "extra": "mean: 87.77997756004333 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ee42006b2b1f072d110261181f031237d204b424",
+          "message": "Merge pull request #1635 from huxuxuya/feature/IncorrectLineBreak",
+          "timestamp": "2021-04-29T14:11:50+03:00",
+          "tree_id": "8de52d88a6bce9845a75e9895337529989e9262b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ee42006b2b1f072d110261181f031237d204b424"
+        },
+        "date": 1619695477502,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.760107199351,
+            "unit": "sec",
+            "range": "stddev: 7.435677296267556",
+            "extra": "mean: 89.760107199351 sec\nrounds: 3"
           }
         ]
       }
