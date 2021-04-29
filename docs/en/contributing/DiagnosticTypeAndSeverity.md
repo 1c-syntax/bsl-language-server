@@ -27,7 +27,7 @@ The business logic of the application is not violated, a floating error, low-qua
 
 ### Information (INFO)
 
-A trivial error not related to the business logic of the application; poorly reproducible problem; unobtrusive, having no effect on the overall quality of the product. Используется только для `Дефектов кода`.
+A trivial error not related to the business logic of the application; poorly reproducible problem; unobtrusive, having no effect on the overall quality of the product. Used only for `Code Defects`.
 
 ## Diagnostics type
 
