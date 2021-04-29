@@ -1,15 +1,15 @@
 # The function always returns the same primitive value (FunctionReturnsSamePrimitive)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `5` | `design`<br>`badpractice` 
+ |  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |              Tags               |
+ |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------:|
+ | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `design`<br>`badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `skipAttachable` | `Boolean` | ```Ignore attachable methods``` | ```true``` 
- `caseSensitiveForString` | `Boolean` | ```Case sensitive for strings``` | ```false``` 
+ |           Name           |   Type    | Description                  | Default value |
+ |:------------------------:|:---------:|:---------------------------- |:-------------:|
+ |     `skipAttachable`     | `Boolean` | `Ignore attachable methods`  |    `true`     |
+ | `caseSensitiveForString` | `Boolean` | `Case sensitive for strings` |    `false`    | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
