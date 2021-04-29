@@ -22,10 +22,10 @@ This article contains rules of diagnostics usage, creation and information about
 Diagnostics consists of a set of files, which are described in detail in the sections below.   
 The required set of files as part of the diagnostics at the time of this writing and the rules for their naming
 
-- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic.java `
-- Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key% ` + ` DiagnoscticTest.java `
-- Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
-- Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
+- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key%` + `Diagnosctic.java`
+- Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key%` + `DiagnoscticTest.java`
+- Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key%` + `Diagnosctic_en.properties`
+- Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key%` + `Diagnosctic_en.properties`
 - Resource file (fixture) test.                The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic.bsl`
 - Diagnostic description file in Russian.   The file name is formed according to the principle `%DiagnosticKey%` + `.md`
 - Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `.md`
