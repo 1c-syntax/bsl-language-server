@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,12 +43,13 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements Symbol {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
 
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
 
+  DocumentContext owner;
   Range range;
   Range subNameRange;
 
@@ -54,22 +57,16 @@ public class MethodSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
   boolean export;
   Optional<MethodDescription> description;
 
   boolean deprecated;
-
-  /**
-   * Ссылка на объект метаданных, в модуле которого находится метод
-   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения
-   */
-  String mdoRef;
 
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();
@@ -81,12 +78,17 @@ public class MethodSymbol implements Symbol {
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
-      .filter(symbol -> symbol instanceof RegionSymbol)
-      .map(symbol -> (RegionSymbol) symbol);
+      .filter(RegionSymbol.class::isInstance)
+      .map(RegionSymbol.class::cast);
   }
 
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitMethod(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getSubNameRange();
   }
 }

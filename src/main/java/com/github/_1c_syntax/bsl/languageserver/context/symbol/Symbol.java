@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,58 +21,48 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.Getter;
-import lombok.Setter;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.SymbolTag;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Мета-информация о логически конечной единице в модуле (переменная, метод, класс и т.д.).
+ */
 public interface Symbol {
 
+  /**
+   * @return Имя символа.
+   */
   String getName();
 
+  /**
+   * @return Тип символа.
+   */
   SymbolKind getSymbolKind();
 
-  Range getRange();
-
-  Optional<Symbol> getParent();
-
-  void setParent(Optional<Symbol> symbol);
-
-  List<Symbol> getChildren();
-
+  /**
+   * @return Является ли символ "устаревшим".
+   */
   default boolean isDeprecated() {
     return false;
   }
 
-  default Optional<Symbol> getRootParent() {
-    return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
+  /**
+   * @return Список тегов символа.
+   */
+  default List<SymbolTag> getTags() {
+    return this.isDeprecated()
+      ? Collections.singletonList(SymbolTag.Deprecated)
+      : Collections.emptyList();
   }
 
+  /**
+   * Обработчик захода в символ при обходе символьного дерева.
+   *
+   * @param visitor Обходчик дерева.
+   */
   void accept(SymbolTreeVisitor visitor);
-
-  static Symbol emptySymbol() {
-    return new Symbol() {
-      @Getter
-      private final String name = "empty";
-      @Getter
-      private final SymbolKind symbolKind = SymbolKind.Null;
-      @Getter
-      private final Range range = Ranges.create(-1, 0, -1, 0);
-      @Getter
-      @Setter
-      private Optional<Symbol> parent = Optional.empty();
-      @Getter
-      private final List<Symbol> children = Collections.emptyList();
-
-      @Override
-      public void accept(SymbolTreeVisitor visitor) {
-      }
-    };
-  }
 
 }

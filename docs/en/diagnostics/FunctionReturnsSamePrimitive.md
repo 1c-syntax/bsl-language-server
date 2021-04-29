@@ -15,8 +15,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-A function should not return the same primitive value. If the result of the function isn't use into code, then you need the function
-rewrite to the procedure.
+A function should not return the same primitive value. If the result of the function isn't use into code, then you need the function rewrite to the procedure.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->

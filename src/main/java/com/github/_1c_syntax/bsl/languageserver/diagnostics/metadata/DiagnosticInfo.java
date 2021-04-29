@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -72,6 +73,24 @@ public class DiagnosticInfo {
 
   public DiagnosticCode getCode() {
     return diagnosticCode;
+  }
+
+  public String getDiagnosticCodeDescriptionHref() {
+    var language = configuration.getLanguage();
+    boolean useDevSite = configuration.isUseDevSite();
+
+    var siteRoot = configuration.getSiteRoot();
+    var devSuffix = useDevSite ? "/dev" : "";
+    var languageSuffix = language == Language.EN ? "/en" : "";
+
+    var siteDiagnosticsUrl = String.format(
+      "%s%s%s/diagnostics/",
+      siteRoot,
+      devSuffix,
+      languageSuffix
+    );
+
+    return siteDiagnosticsUrl + diagnosticCode.getStringValue();
   }
 
   public String getName() {

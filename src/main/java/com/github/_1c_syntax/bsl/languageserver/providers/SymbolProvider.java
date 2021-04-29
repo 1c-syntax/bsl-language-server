@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -70,7 +71,7 @@ public class SymbolProvider {
       .collect(Collectors.toList());
   }
 
-  private static Stream<Pair<URI, Symbol>> getSymbolPairs(DocumentContext documentContext) {
+  private static Stream<Pair<URI, SourceDefinedSymbol>> getSymbolPairs(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildrenFlat().stream()
       .filter(SymbolProvider::isSupported)
       .map(symbol -> Pair.of(documentContext.getUri(), symbol));
@@ -88,7 +89,7 @@ public class SymbolProvider {
     }
   }
 
-  private static SymbolInformation createSymbolInformation(Pair<URI, Symbol> symbolPair) {
+  private static SymbolInformation createSymbolInformation(Pair<URI, SourceDefinedSymbol> symbolPair) {
     var uri = symbolPair.getKey();
     var symbol = symbolPair.getValue();
     var symbolInformation = new SymbolInformation(
@@ -96,7 +97,7 @@ public class SymbolProvider {
       symbol.getSymbolKind(),
       new Location(uri.toString(), symbol.getRange())
     );
-    symbolInformation.setDeprecated(symbol.isDeprecated());
+    symbolInformation.setTags(symbol.getTags());
     return symbolInformation;
   }
 }

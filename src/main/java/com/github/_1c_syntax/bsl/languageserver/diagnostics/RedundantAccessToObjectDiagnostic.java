@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -67,7 +67,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
   private boolean needCheckName = false;
   private boolean skipLValue = false;
-  private Pattern namePattern;
   private Pattern namePatternWithDot;
 
   @DiagnosticParameter(
@@ -95,7 +94,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       documentContext.getMdObject().ifPresent(mdObjectBase -> {
         needCheckName = true;
         skipLValue = true;
-        namePattern = CaseInsensitivePattern.compile(String.format("^%s", mdObjectBase.getName()));
         namePatternWithDot = CaseInsensitivePattern.compile(
           String.format(getManagerModuleName(mdObjectBase.getType()), mdObjectBase.getName())
         );
@@ -142,10 +140,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
-    if (needCheckName && namePattern.matcher(identifier.getText()).matches() && modifiers.get(0) != null) {
-      diagnosticStorage.addDiagnostic(ctx.getStart());
-    }
-
     return ctx;
   }
 
@@ -162,11 +156,11 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       return ctx;
     }
 
-    if (PATTERN.matcher(identifier.getText()).matches() && acceptor.accessProperty() != null) {
-      diagnosticStorage.addDiagnostic(ctx.getStart());
-    }
-
-    if (needCheckName && namePattern.matcher(identifier.getText()).matches() && acceptor.accessProperty() != null) {
+    if (
+      PATTERN.matcher(identifier.getText()).matches()
+      && notHasAccessIndex(acceptor)
+      && hasAccessProperty(acceptor)
+    ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
@@ -195,5 +189,17 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     return typeModule == ModuleType.ObjectModule && !checkObjectModule
       || typeModule == ModuleType.RecordSetModule && !checkRecordSetModule
       || typeModule == ModuleType.FormModule && !checkFormModule;
+  }
+
+  private static boolean notHasAccessIndex(BSLParser.AcceptorContext acceptor) {
+    var modifiers = acceptor.modifier();
+    return modifiers == null
+      || modifiers.size() == 0
+      || modifiers.get(0) == null
+      || modifiers.get(0).accessIndex() == null;
+  }
+
+  private static boolean hasAccessProperty(BSLParser.AcceptorContext acceptor) {
+    return acceptor.accessProperty() != null;
   }
 }

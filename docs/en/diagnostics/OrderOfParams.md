@@ -17,7 +17,7 @@ Function CurrencyRateOnDate(Currency, Date = Notdefined) Export
 
 ## Sources
 
-- [Standard: Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
+* [Standard: Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
 
 ## Snippets
 

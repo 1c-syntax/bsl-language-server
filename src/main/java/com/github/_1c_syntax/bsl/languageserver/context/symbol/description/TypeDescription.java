@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,4 +44,14 @@ public class TypeDescription {
    * Параметры (ключи или поля) типа для сложных типов данных. Может быть пустым
    */
   List<ParameterDescription> parameters;
+  /**
+   * Если описание параметров содержит только ссылку, то здесь будет ее значение
+   * <p>
+   * TODO Временное решение, надо будет продумать в следующем релизе
+   */
+  String link;
+  /**
+   * Признак того, что параметр является гиперссылкой
+   */
+  boolean isHyperlink;
 }

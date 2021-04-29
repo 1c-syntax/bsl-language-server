@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,17 +38,23 @@ class StyleElementConstructorsDiagnosticTest extends AbstractDiagnosticTest<Styl
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
-      .hasRange(2, 12, 2, 37)
-      .hasRange(3, 12, 3, 33)
-      .hasRange(4, 12, 4, 25)
-      .hasRange(8, 9, 8, 33)
-      .hasRange(9, 9, 9, 31)
-      .hasRange(10, 9, 10, 19)
-      .hasRange(12, 9, 12, 23)
-      .hasRange(13, 9, 13, 33)
-      .hasRange(14, 9, 14, 37);
+      .hasRange(2, 12, 37)
+      .hasRange(3, 12, 33)
+      .hasRange(4, 12, 25)
+      .hasRange(8, 9, 33)
+      .hasRange(9, 9, 31)
+      .hasRange(10, 9, 19)
+      .hasRange(12, 9, 23)
+      .hasRange(13, 9, 33)
+      .hasRange(14, 9, 37)
+      .hasRange(24, 39, 53)
+      .hasRange(25, 39, 63)
+      .hasRange(26, 39, 67)
+      .hasRange(28, 39, 52)
+      .hasRange(29, 39, 60)
+      .hasRange(30, 39, 64);
 
   }
 }

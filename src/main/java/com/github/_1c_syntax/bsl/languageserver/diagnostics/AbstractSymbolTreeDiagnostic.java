@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,8 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 
@@ -33,15 +34,20 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
 
   @Override
   protected void check() {
-    visitChildren(documentContext.getSymbolTree().getChildren());
+    visit(documentContext.getSymbolTree().getModule());
   }
 
-  void visitChildren(List<Symbol> children) {
+  void visitChildren(List<SourceDefinedSymbol> children) {
     children.forEach(this::visit);
   }
 
-  void visit(Symbol symbol) {
+  void visit(SourceDefinedSymbol symbol) {
     symbol.accept(this);
+  }
+
+  @Override
+  public void visitModule(ModuleSymbol module) {
+    visitChildren(module.getChildren());
   }
 
   @Override

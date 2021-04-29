@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ class MissingParameterDescriptionDiagnosticTest extends AbstractDiagnosticTest<M
         28, 27, 36)
       .hasMessageOnRange("Необходимо исправить порядок описаний параметров",
         35, 8, 15)
-      .hasMessageOnRange("Необходимо добавить описание типа параметра \"Параметр2\"",
+      .hasMessageOnRange("Необходимо добавить описание параметра \"Параметр2\"",
         42, 27, 36)
       .hasMessageOnRange("Необходимо удалить описания параметров \"Параметр2\", отсутствующих в сигнатуре метода",
         50, 8, 15)

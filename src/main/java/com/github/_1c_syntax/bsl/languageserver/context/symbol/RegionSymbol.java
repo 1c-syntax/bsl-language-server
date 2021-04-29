@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,10 +41,11 @@ import java.util.stream.Collectors;
 @Builder(access = lombok.AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class RegionSymbol implements Symbol {
+public class RegionSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
+  DocumentContext owner;
   Range range;
   Range startRange;
   Range endRange;
@@ -53,10 +55,10 @@ public class RegionSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   public List<MethodSymbol> getMethods() {
     return children.stream()
@@ -68,5 +70,10 @@ public class RegionSymbol implements Symbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitRegion(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getRegionNameRange();
   }
 }

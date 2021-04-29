@@ -11,7 +11,7 @@ It is incorrect to use exceptions to cast a value to a type. For such operations
 
 ## Examples
 
-Incorrect:
+Wrong:
 
 ```bsl
 Try
@@ -28,9 +28,9 @@ TypeDescription = New TypeDescription("Number");
 NumberDaysAllowance = TypeDescription.CastValue(Value);
 ```
 
-## Reference
+## Sources
 
-- [Standard: Catch exceptions in code](https://its.1c.ru/db/v8std#content:499:hdoc)
+* [Standard: Catch exceptions in code](https://its.1c.ru/db/v8std#content:499:hdoc)
 
 ## Snippets
 

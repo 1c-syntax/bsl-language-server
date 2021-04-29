@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -38,6 +39,7 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 
+@DirtiesContext
 class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<RedundantAccessToObjectDiagnostic> {
   RedundantAccessToObjectDiagnosticTest() {
     super(RedundantAccessToObjectDiagnostic.class);
@@ -70,7 +72,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(75, 4, 75, 21);
+      .hasRange(78, 4, 78, 21);
   }
 
   @SneakyThrows

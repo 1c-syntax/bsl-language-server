@@ -61,7 +61,7 @@ If set to `true`
 
 ### Using `allowMultipleCommas` parameter
 
-The parameter has sense only if `,` is listed in one of three base parameters
+The parameter has sense only if `,` is listed in one of three base parameters Defaults to `false`
 
 If set to `false`
 
@@ -73,7 +73,7 @@ If set to `false`
 If set to `true`
 
 ```bsl
-CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Correct
+    CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Correct
 CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 

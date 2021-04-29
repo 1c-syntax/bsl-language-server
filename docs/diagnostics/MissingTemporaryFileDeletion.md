@@ -8,7 +8,7 @@
 
  Имя | Тип | Описание | Значение по умолчанию 
  :-: | :-: | :-- | :-: 
- `searchDeleteFileMethod` | `Строка` | ```Ключевые слова поиска методов удаления / перемещения файлов``` | ```УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``` 
+ `searchDeleteFileMethod` | `Строка` | ```Ключевые слова поиска методов удаления / перемещения файлов``` | ```УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -62,6 +62,6 @@
 
 ```json
 "MissingTemporaryFileDeletion": {
-    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"
+    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile"
 }
 ```

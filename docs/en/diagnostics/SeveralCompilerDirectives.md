@@ -7,13 +7,13 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Indication of several compilation directives for a method or a variable is an error. Besides, indication of several complilation directives adduce to uncertaint. Will the code be compiled? If yes, in what context?
+It is an error to specify multiple compilation directives to a module method or variable. In addition, specifying several different directives leads to ambiguities: will the code compile? And if so, in what context?
 
 ## Examples
 
-Incorrect
+Wrong
 
-```Bsl
+```bsl
 &AtServer
 &AtClient
 Var MyVariable;

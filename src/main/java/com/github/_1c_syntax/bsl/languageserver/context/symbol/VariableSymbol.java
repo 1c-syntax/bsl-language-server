@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import lombok.Builder;
@@ -41,10 +42,11 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements Symbol {
+public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
+  DocumentContext owner;
   Range range;
   Range variableNameRange;
 
@@ -52,10 +54,10 @@ public class VariableSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = Collections.emptyList();
+  List<SourceDefinedSymbol> children = Collections.emptyList();
 
   VariableKind kind;
   boolean export;
@@ -65,4 +67,10 @@ public class VariableSymbol implements Symbol {
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
   }
+
+  @Override
+  public Range getSelectionRange() {
+    return getVariableNameRange();
+  }
+
 }

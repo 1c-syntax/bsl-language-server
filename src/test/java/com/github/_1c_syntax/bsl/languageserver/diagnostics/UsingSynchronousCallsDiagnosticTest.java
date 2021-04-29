@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -36,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@DirtiesContext
 class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSynchronousCallsDiagnostic> {
   UsingSynchronousCallsDiagnosticTest() {
     super(UsingSynchronousCallsDiagnostic.class);

@@ -6,4 +6,4 @@
 
 Quick fixes are provided by classes that implement the QuickFixProvider interface. Currently, only diagnostic classes can be such classes.
 
-To add a quick fix to any diagnostics, implement the QuickFixProvider interface in it.
+To add a quick fix to any diagnostics, implement the QuickFixProvider interface in it. 

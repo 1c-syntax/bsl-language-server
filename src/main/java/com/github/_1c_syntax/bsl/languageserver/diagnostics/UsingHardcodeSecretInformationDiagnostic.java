@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -232,9 +232,9 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    boolean result = token.getType() == BSLParser.STRING && token.getText().length() > 2;
     if (result) {
-      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().replace("\"", "")).find();
+      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().substring(1, token.getText().length() - 1)).find();
       if (foundStars) {
         result = false;
       }

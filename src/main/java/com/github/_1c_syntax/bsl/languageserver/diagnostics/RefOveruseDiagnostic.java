@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -53,6 +54,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private static final String REF_REGEX = "Ссылка|Reference";
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile(REF_REGEX);
   private static final int BAD_CHILD_COUNT = 3;
+  private Collection<ParseTree> dataSourceCollection = new ArrayList<>();
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
@@ -62,24 +64,28 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return ctx;
     }
 
-    var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
-
     if (dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
       return ctx;
     }
+
+    var tableNames = dataSourceCollection.stream()
+      .map(RefOveruseDiagnostic::getTableNameOrAlias)
+      .collect(Collectors.toSet());
 
     if (dataSourceCollection.isEmpty()) {
       performSimpleCheck(columnsCollection);
       return ctx;
     }
 
-    Set<String> tableNames = dataSourceCollection.stream()
-      .map(RefOveruseDiagnostic::getTableNameOrAlias)
-      .collect(Collectors.toSet());
-
     columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
     return ctx;
 
+  }
+
+  @Override
+  public ParseTree visitSelectQuery(SDBLParser.SelectQueryContext ctx) {
+    this.dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
+    return super.visitSelectQuery(ctx);
   }
 
   private void performSimpleCheck(Collection<ParseTree> columnsCollection) {
@@ -96,24 +102,33 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return;
     }
 
-    var lastChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 1));
-    var penultimateChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 3));
+    // children:
+    //
+    // Контрагент.Ссылка.ЮрФизЛицо
+    //     ^     ^   ^  ^    ^
+    //     0     1   2  3    4
+    //
+    // Контрагент.ЮрФизЛицо
+    //     ^     ^    ^
+    //     0     1    2
 
-    if (lastChild != penultimateChild
-      && lastChild instanceof SDBLParser.IdentifierContext
-      && penultimateChild instanceof SDBLParser.IdentifierContext) {
+    final int childCount = ctx.children.size();
 
-      performCheck(ctx, (SDBLParser.IdentifierContext) lastChild,
-        (SDBLParser.IdentifierContext) penultimateChild, tableNames);
+    if (childCount < 3) {
+      return;
     }
 
-  }
+    var lastChild = ctx.getChild(childCount - 1);
+    // dots are also children of ColumnContext,
+    // that is why -3 must be an index of penultimate identifier
+    var penultimateChild = ctx.getChild(childCount - 3);
 
-  private void performCheck(SDBLParser.ColumnContext ctx, SDBLParser.IdentifierContext lastChild,
-                            SDBLParser.IdentifierContext penultimateChild, Set<String> tableNames) {
+    String lastIdentifierName = lastChild.getText();
+    String penultimateIdentifierName = penultimateChild.getText();
 
-    if (!tableNames.contains(penultimateChild.getText()) &&
-      REF_PATTERN.matcher(lastChild.getText()).matches()) {
+    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()
+      || (REF_PATTERN.matcher(lastIdentifierName).matches()
+      && !tableNames.contains(penultimateIdentifierName))) {
       diagnosticStorage.addDiagnostic(ctx);
     }
   }

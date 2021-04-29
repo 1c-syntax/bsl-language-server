@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,13 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DE
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
@@ -105,7 +105,7 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotNull();
 
-    assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
+    assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
   }

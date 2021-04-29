@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ public final class Trees {
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
     BSLParser.ANNOTATION_ATSERVER_SYMBOL,
     BSLParser.ANNOTATION_CUSTOM_SYMBOL,
-    BSLParser.ANNOTATION_UKNOWN,
+    BSLParser.ANNOTATION_UNKNOWN,
     BSLParser.LINE_COMMENT,
     BSLParser.WHITE_SPACE,
     BSLParser.AMPERSAND
@@ -251,6 +251,7 @@ public final class Trees {
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
+  @CheckForNull
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -271,6 +272,7 @@ public final class Trees {
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
+  @CheckForNull
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
     final var parent = tnc.getParent();
     if (parent == null) {

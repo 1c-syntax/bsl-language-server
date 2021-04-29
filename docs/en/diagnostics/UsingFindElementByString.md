@@ -22,11 +22,9 @@ Position = Catalogs.Positions.FindByCode("00-0000001");
 ```
 
 Acceptable use:
-
 ```bsl
 Catalogs.Currencies.FindByCode(CurrentData.CurrencyCodeDigital);
 ```
-
 ```bsl
 Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
 ```

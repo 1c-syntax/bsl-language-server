@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,16 +34,44 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель -&gt; дети
+ */
 @Value
 public class SymbolTree {
-  List<Symbol> children;
 
+  /**
+   * Корневой символ модуля документа.
+   */
+  ModuleSymbol module;
+
+  /**
+   * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
+   */
   @Getter(lazy = true)
-  List<Symbol> childrenFlat = createChildrenFlat();
+  List<SourceDefinedSymbol> childrenFlat = createChildrenFlat();
 
+  /**
+   * Список методов документа.
+   */
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
 
+  /**
+   * @return Список символов верхнего уровня за исключением символа модуля документа.
+   */
+  public List<SourceDefinedSymbol> getChildren() {
+    return module.getChildren();
+  }
+
+  /**
+   * Список всех символов всех уровней указанного типа (за исключением символа модуля документа),
+   * преобразованных в плоский список.
+   *
+   * @param clazz класс искомого символа.
+   * @param <T> тип искомого символа.
+   * @return плоский список символов указанного типа.
+   */
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
       .filter(clazz::isInstance)
@@ -51,17 +79,30 @@ public class SymbolTree {
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return Список областей, расположенных на верхнем уровне документа.
+   */
   public List<RegionSymbol> getModuleLevelRegions() {
     return getChildren().stream()
       .filter(RegionSymbol.class::isInstance)
-      .map(symbol -> (RegionSymbol) symbol)
+      .map(RegionSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return плоский список всех областей документа.
+   */
   public List<RegionSymbol> getRegionsFlat() {
     return getChildrenFlat(RegionSymbol.class);
   }
 
+  /**
+   * Попытка поиска символа метода по узлу дерева разбора.
+   * <p>
+   * Implementation note - Поиск осуществляется по месту определения метода (declaration).
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ метода.
+   */
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
     BSLParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
@@ -83,10 +124,33 @@ public class SymbolTree {
       .findAny();
   }
 
+  /**
+   * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
+   *
+   * @param methodName Имя метода
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(String methodName) {
+    return getMethods().stream()
+      .filter(methodSymbol -> methodName.equalsIgnoreCase(methodSymbol.getName()))
+      .findAny();
+  }
+
+  /**
+   * @return плоский список всех переменных документа.
+   */
   public List<VariableSymbol> getVariables() {
     return getChildrenFlat(VariableSymbol.class);
   }
 
+  /**
+   * Попытка поиска символа переменной по узлу дерева разбора.
+   * <p>
+   * Implementation note Поиск осуществляется по месту определения переменной (declaration).
+   *
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ переменной.
+   */
   public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
 
     BSLParserRuleContext varNameNode;
@@ -108,8 +172,28 @@ public class SymbolTree {
       .findAny();
   }
 
-  private List<Symbol> createChildrenFlat() {
-    List<Symbol> symbols = new ArrayList<>();
+  /**
+   * Поиск VariableSymbol в дереве по указанному имени (без учета регистра) и области объявления.
+   *
+   * @param variableName Имя переменной
+   * @param scopeSymbol Символ, внутри которого осуществляется поиск.
+   *                    Например, {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @return VariableSymbol, если он был найден в дереве символов.
+   */
+  public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
+    var scopeSymbolKind = scopeSymbol.getSymbolKind();
+
+    return getVariables().stream()
+      .filter(variableSymbol -> variableName.equalsIgnoreCase(variableSymbol.getName()))
+      .filter(variableSymbol -> variableSymbol.getRootParent(scopeSymbolKind)
+        .filter(scopeSymbol::equals)
+        .isPresent()
+      )
+      .findAny();
+  }
+
+  private List<SourceDefinedSymbol> createChildrenFlat() {
+    List<SourceDefinedSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
 
     return symbols;
@@ -119,7 +203,7 @@ public class SymbolTree {
     return getChildrenFlat(MethodSymbol.class);
   }
 
-  private static void flatten(Symbol symbol, List<Symbol> symbols) {
+  private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
     symbols.add(symbol);
     symbol.getChildren().forEach(child -> flatten(child, symbols));
   }

@@ -19,30 +19,28 @@ For example, it is unacceptable to leave such fragments in the code after debugg
 
 ```bsl
 Procedure BeforeDelete(Failure)
-	//If True Then
-	//	Message("For debugging");
-	//EndIf;
+    //If True Then
+    //  Message("For debugging");
+    //EndIf;
 EndProcedure
 ```
-
 also wrong:
-
 ```bsl
 Procedure BeforeDelete(Failure)
-	If True Then
-		// Ivanov: need fix
-	EndIf;
+    If True Then
+        // Ivanov: need fix
+    EndIf;
 EndProcedure
 ```
 
 Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.
 
-**ATTENTION** :
- A code block is considered commented , if at least one line inside the block is defined as code.
+**ATTENTION**:  
+A code block is considered commented, if at least one line inside the block is defined as code.
 
 ## Sources
 
-- [Source](https://its.1c.ru/db/v8std/content/456/hdoc)
+* [Source (RU)](https://its.1c.ru/db/v8std/content/456/hdoc)
 
 ## Snippets
 

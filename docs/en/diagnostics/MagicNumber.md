@@ -32,7 +32,7 @@ Good
 
 ```bsl
 Function GetsTheInterval (Duration in Seconds)
-    
+
     MinutesHour     = 60;
     SecondsMinute   = 60;
     SecondsHour     = SecondsMinute * MinutesHour;

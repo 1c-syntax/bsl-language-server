@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,7 +44,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class MethodSymbolComputerTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -61,7 +60,7 @@ class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(23);
+    assertThat(methods.size()).isEqualTo(24);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription()).isNotPresent();
@@ -219,12 +218,22 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).isByValue()).isFalse();
     assertThat(parameters.get(2).isOptional()).isTrue();
+    assertThat(parameters.get(2).getDefaultValue().getValue()).isEqualTo("0");
     assertThat(parameters.get(2).getRange()).isEqualTo(Ranges.create(14, 32, 38));
 
     assertThat(parameters.get(3).getName()).isEqualTo("Парам4");
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
+    assertThat(parameters.get(3).getDefaultValue().getValue()).isEqualTo("0");
     assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
+
+    parameters = methods.get(23).getParameters();
+    assertThat(parameters.get(0).getName()).isEqualTo("Парам1");
+    assertThat(parameters.get(0).getDescription()).isPresent();
+    assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
+    assertThat(parameters.get(1).getDescription()).isEmpty();
+    assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
+    assertThat(parameters.get(2).getDescription()).isPresent();
 
   }
 
@@ -249,13 +258,14 @@ class MethodSymbolComputerTest {
   }
 
   @Test
-  void testMdoRef() throws IOException {
+  @DirtiesContext
+  void testOwner() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 7);
-    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 2);
-    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);
+    checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
+    checkModule(serverContext, PATH_TO_CATALOG_FILE, 2);
+    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, 1);
   }
 
   @Test
@@ -279,7 +289,6 @@ class MethodSymbolComputerTest {
   private void checkModule(
     ServerContext serverContext,
     String path,
-    String mdoRef,
     int methodsCount
   ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
@@ -288,6 +297,6 @@ class MethodSymbolComputerTest {
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");
-    assertThat(methods.get(0).getMdoRef()).isEqualTo(mdoRef);
+    assertThat(methods.get(0).getOwner()).isEqualTo(documentContext);
   }
 }

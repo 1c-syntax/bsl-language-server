@@ -8,9 +8,9 @@ Output the analize result in stdout and/or attached logger. Output result, retur
 
 ## Sample output
 
-```
+```log
 Analysis date: 2019-01-28T15:32:06.856
-[FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
+[FileInfo(path=C:\src\cf\Catalogs\MyCatalog\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\Goods\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
   range = Range [
     start = Position [
       line = 55
@@ -24,7 +24,7 @@ Analysis date: 2019-01-28T15:32:06.856
   severity = Information
   code = "LineLengthDiagnostic"
   source = "bsl-language-server"
-  message = "Превышена длина строки"
+  message = "Line length exceeded"
   relatedInformation = null
 ]])]
 ```

@@ -1,6 +1,4 @@
-import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
@@ -9,24 +7,27 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.0.2"
-    id("org.sonarqube") version "3.0"
-    id("io.franzbecker.gradle-lombok") version "4.0.0"
-    id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.33.0"
-    id("io.freefair.javadoc-links") version "5.2.1"
-    id("org.springframework.boot") version "2.3.5.RELEASE"
+    id("net.kyori.indra.license-header") version "1.3.1"
+    id("org.sonarqube") version "3.1.1"
+    id("io.freefair.lombok") version "6.0.0-m2"
+    id("me.qoomon.git-versioning") version "4.2.0"
+    id("com.github.ben-manes.versions") version "0.38.0"
+    id("io.freefair.javadoc-links") version "6.0.0-m2"
+    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
+    id("org.springframework.boot") version "2.4.5"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
+    id("io.freefair.maven-central.validate-poms") version "6.0.0-m2"
+    id("ru.vyarus.pom") version "2.1.0"
 }
-
-apply(plugin = "io.spring.dependency-management")
 
 repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
 }
 
-group = "com.github.1c-syntax"
+group = "io.github.1c-syntax"
 
 gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     preferTags = true
@@ -38,14 +39,12 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription> {
+    commit(closureOf<VersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
 
-val jacksonVersion = "2.11.2"
-val junitVersion = "5.6.1"
-val languageToolVersion = "5.1"
+val languageToolVersion = "5.3"
 
 dependencies {
 
@@ -53,13 +52,13 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.5.2")
+    api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "2cfed6c4f59b3ea2e24e0badfd4f1ff21df7215a") {
+    api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -68,49 +67,43 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
-    api("com.github.1c-syntax", "mdclasses", "0.7.0")
+    api("com.github.1c-syntax", "mdclasses", "0.8.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
+    // AOP
+    implementation("org.aspectj", "aspectjrt", "1.9.6")
+
     // commons utils
     implementation("commons-io", "commons-io", "2.8.0")
-    implementation("org.apache.commons", "commons-lang3", "3.11")
+    implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.0")
+    implementation("me.tongfei", "progressbar", "0.9.1")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
-
-    // stat analysis
-    implementation("com.google.code.findbugs", "jsr305", "3.0.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // COMPILE
 
-    compileOnly("org.projectlombok", "lombok", lombok.version)
-    annotationProcessor("org.projectlombok", "lombok", lombok.version)
+    // stat analysis
+    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
 
     // TEST
 
-    // junit
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
-    testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
-
     // spring
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude("com.vaadin.external.google", "android-json")
+    }
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.18.0")
-    testImplementation("org.mockito", "mockito-core", "3.6.0")
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
 
@@ -185,10 +178,6 @@ tasks.processResources {
     }
 }
 
-jacoco {
-    toolVersion = "0.8.6"
-}
-
 license {
     header = rootProject.file("license/HEADER.txt")
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
@@ -217,40 +206,6 @@ sonarqube {
     }
 }
 
-lombok {
-    version = "1.18.16"
-    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
-}
-
-tasks {
-    val delombok by registering(JavaExec::class) {
-        dependsOn(compileJava)
-
-        main = project.extensions.findByType(io.franzbecker.gradle.lombok.LombokPluginExtension::class)!!.main
-        args = listOf("delombok")
-        classpath = project.configurations.getByName("compileClasspath")
-
-        jvmArgs = listOf("-Dfile.encoding=UTF-8")
-        val outputDir by extra { file("$buildDir/delombok") }
-        outputs.dir(outputDir)
-        sourceSets["main"].java.srcDirs.forEach {
-            inputs.dir(it)
-            args(it, "-d", outputDir)
-        }
-        doFirst {
-            outputDir.delete()
-        }
-    }
-
-    javadoc {
-        dependsOn(delombok)
-        val outputDir: File by delombok.get().extra
-        source = fileTree(outputDir)
-        isFailOnError = false
-        options.encoding = "UTF-8"
-    }
-}
-
 artifacts {
     archives(tasks["jar"])
     archives(tasks["sourcesJar"])
@@ -261,26 +216,63 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifact(tasks["jar"])
-            artifact(tasks["sourcesJar"])
+            from(components["java"])
             artifact(tasks["bootJar"])
-            artifact(tasks["javadocJar"])
-            pom.withXml {
-                val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
+            pom {
+                description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+                url.set("https://1c-syntax.github.io/bsl-language-server")
+                licenses {
+                    license {
+                        name.set("GNU LGPL 3")
+                        url.set("https://www.gnu.org/licenses/lgpl-3.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("asosnoviy")
+                        name.set("Alexey Sosnoviy")
+                        email.set("labotamy@gmail.com")
+                        url.set("https://github.com/asosnoviy")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("nixel2007")
+                        name.set("Nikita Gryzlov")
+                        email.set("nixel2007@gmail.com")
+                        url.set("https://github.com/nixel2007")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("theshadowco")
+                        name.set("Valery Maximov")
+                        email.set("maximovvalery@gmail.com")
+                        url.set("https://github.com/theshadowco")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("otymko")
+                        name.set("Oleg Tymko")
+                        email.set("olegtymko@yandex.ru")
+                        url.set("https://github.com/otymko")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/1c-syntax/bsl-language-server.git")
+                    developerConnection.set("scm:git:git@github.com:1c-syntax/bsl-language-server.git")
+                    url.set("https://github.com/1c-syntax/bsl-language-server")
+                }
             }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
-    if (dependency !is SelfResolvingDependency) {
-        val dependencyNode = dependenciesNode.appendNode("dependency")
-        dependencyNode.appendNode("groupId", dependency.group)
-        dependencyNode.appendNode("artifactId", dependency.name)
-        dependencyNode.appendNode("version", dependency.version)
-        dependencyNode.appendNode("scope", scope)
-    }
+tasks.withType<GenerateModuleMetadata> {
+    enabled = false
 }

@@ -9,10 +9,10 @@
 
 A built-in language constructs, keywords must be written canonically.
 
-**Keywords**
+### Keywords
 
 | RU                 | EN            |
-|--------------------|---------------|
+| ------------------ | ------------- |
 | ВызватьИсключение  | Raise         |
 | Выполнить          | Execute       |
 | ДобавитьОбработчик | AddHandler    |
@@ -37,7 +37,7 @@ A built-in language constructs, keywords must be written canonically.
 | Перейти            | Goto          |
 | Перем              | Var           |
 | По                 | For           |
-| Пока               | WHile         |
+| Пока               | While         |
 | Попытка            | Try           |
 | Процедура          | Procedure     |
 | Прервать           | Break         |
@@ -48,17 +48,17 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-**Preprocessor Instructions**
+### Preprocessor instrutions
 
 | RU                                 | EN                             |
-|------------------------------------|--------------------------------|
+| ---------------------------------- | ------------------------------ |
 | ВебКлиент                          | WebClient                      |
 | ВнешнееСоединение                  | ExternalConnection             |
 | Если                               | If                             |
 | И                                  | AND, And                       |
 | ИЛИ, Или                           | OR, Or                         |
 | Иначе                              | Else                           |
-| ИначеЕсли                          | ИначеЕсли                      |
+| ИначеЕсли                          | ElsIf                          |
 | КонецЕсли                          | EndIf                          |
 | КонецОбласти                       | EndRegion                      |
 | Клиент                             | Client                         |
@@ -75,10 +75,10 @@ A built-in language constructs, keywords must be written canonically.
 | ТолстыйКлиентУправляемоеПриложение | ThickClientManagedApplication  |
 | ТонкийКлиент                       | ThinClient                     |
 
-**Compilation directives**
+### Compilation directives
 
 | RU                             | EN                        |
-|--------------------------------|---------------------------|
+| ------------------------------ | ------------------------- |
 | НаКлиенте                      | AtClient                  |
 | НаСервере                      | AtServer                  |
 | НаСервереБезКонтекста          | AtServerNoContext         |
@@ -87,7 +87,7 @@ A built-in language constructs, keywords must be written canonically.
 
 ## Sources
 
-* [Standart: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
++ [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
 
 ## Snippets
 

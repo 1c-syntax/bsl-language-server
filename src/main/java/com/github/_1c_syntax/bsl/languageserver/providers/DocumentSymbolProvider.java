@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,12 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
@@ -38,6 +34,11 @@ import java.util.stream.Collectors;
 @Component
 public final class DocumentSymbolProvider {
 
+  /**
+   * Идентификатор источника символов документа.
+   */
+  public static final String LABEL = "BSL Language Server";
+
   public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .map(DocumentSymbolProvider::toDocumentSymbol)
@@ -45,36 +46,22 @@ public final class DocumentSymbolProvider {
       .collect(Collectors.toList());
   }
 
-  private static DocumentSymbol toDocumentSymbol(Symbol symbol) {
+  private static DocumentSymbol toDocumentSymbol(SourceDefinedSymbol symbol) {
     var documentSymbol = new DocumentSymbol(
       symbol.getName(),
       symbol.getSymbolKind(),
       symbol.getRange(),
-      getSelectionRange(symbol)
+      symbol.getSelectionRange()
     );
 
     List<DocumentSymbol> children = symbol.getChildren().stream()
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 
-    documentSymbol.setDeprecated(symbol.isDeprecated());
+    documentSymbol.setTags(symbol.getTags());
     documentSymbol.setChildren(children);
 
     return documentSymbol;
-  }
-
-  private static Range getSelectionRange(Symbol symbol) {
-    Range selectionRange;
-    if (symbol instanceof MethodSymbol) {
-      selectionRange = ((MethodSymbol) symbol).getSubNameRange();
-    } else if (symbol instanceof RegionSymbol) {
-      selectionRange = ((RegionSymbol) symbol).getRegionNameRange();
-    } else if (symbol instanceof VariableSymbol) {
-      selectionRange = ((VariableSymbol) symbol).getVariableNameRange();
-    } else {
-      selectionRange = symbol.getRange();
-    }
-    return selectionRange;
   }
 
 }

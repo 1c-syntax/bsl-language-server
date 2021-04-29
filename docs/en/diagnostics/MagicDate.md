@@ -22,7 +22,7 @@ Bad
 If now < '20151021' Then
     HoverBoardIsReal = Undefined;
 EndIf;
-``` 
+```
 
 Good
 

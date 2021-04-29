@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,12 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.net.URI;
 import java.nio.file.Paths;
@@ -39,7 +39,6 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class SymbolProviderTest {
 
   @Autowired
@@ -70,25 +69,25 @@ class SymbolProviderTest {
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "РегистрСведений1")
           && symbolInformation.getKind() == SymbolKind.Method
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("УстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
-          && symbolInformation.getDeprecated()
+          && symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("ВалютаУчета")
           && uriContains(symbolInformation, "ManagedApplicationModule")
           && symbolInformation.getKind() == SymbolKind.Variable
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
     ;
   }

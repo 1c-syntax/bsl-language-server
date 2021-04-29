@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,7 +39,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
   private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
@@ -145,7 +145,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       .hasRange(41, 1, 63)
       .hasRange(45, 1, 31)
       .hasRange(49, 1, 27)
-      .hasRange(88, 1, 18)
+      .hasRange(91, 1, 18)
     ;
   }
 

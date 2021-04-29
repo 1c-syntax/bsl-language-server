@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,36 +22,43 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLLanguageServerTest {
 
   @Autowired
   private BSLLanguageServer server;
 
   @Test
-  void initialize() {
+  void initialize() throws ExecutionException, InterruptedException {
     // given
     InitializeParams params = new InitializeParams();
 
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
+    params.setWorkspaceFolders(workspaceFolders);
+
     // when
-    CompletableFuture<InitializeResult> initialize = server.initialize(params);
+    InitializeResult initialize = server.initialize(params).get();
 
     // then
-    // TODO
-    //assertThat(initialize.get().getCapabilities()).extracting(ServerCapabilities::getCompletionProvider).isNotNull();
+    assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
   }
 
   @Test

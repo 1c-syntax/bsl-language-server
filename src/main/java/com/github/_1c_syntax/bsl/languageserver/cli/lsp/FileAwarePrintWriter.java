@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -54,7 +53,7 @@ public class FileAwarePrintWriter extends PrintWriter {
    * Конструктор по умолчанию. Отправляет вывод в /dev/null.
    */
   public FileAwarePrintWriter() {
-    super(OutputStream.nullOutputStream());
+    super(OutputStream.nullOutputStream(), false, StandardCharsets.UTF_8);
   }
 
   /**
@@ -115,12 +114,12 @@ public class FileAwarePrintWriter extends PrintWriter {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationFileChangeEvent}.
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangeEvent event) {
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
     setFile(event.getSource().getTraceLog());
   }
 

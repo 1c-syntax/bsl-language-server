@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,70 +22,38 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.SubNameContext;
-import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.hover.MarkupContentBuilder;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public final class HoverProvider {
 
-  public Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
+  private final ReferenceResolver referenceResolver;
+  private final Map<Class<Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
-    SubNameFinder finder = new SubNameFinder(params.getPosition());
-    finder.visit(documentContext.getAst());
+  public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
+    Position position = params.getPosition();
 
-    Token subName = finder.getSubName();
-    if (subName == null) {
-      return Optional.empty();
-    }
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap((Reference reference) -> {
+        var symbol = reference.getSymbol();
+        var range = reference.getSelectionRange();
 
-    Hover hover = new Hover();
-    MarkupContent content = new MarkupContent();
-    content.setValue(subName.getText());
-    hover.setContents(content);
-    hover.setRange(
-      new Range(
-        new Position(subName.getLine() - 1, subName.getCharPositionInLine()),
-        new Position(subName.getLine() - 1, subName.getCharPositionInLine() + subName.getText().length())
-      )
-    );
-
-    return Optional.of(hover);
-
+        return Optional.ofNullable(markupContentBuilders.get(symbol.getClass()))
+          .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
+          .map(content -> new Hover(content, range));
+      });
   }
 
-  private static final class SubNameFinder extends BSLParserBaseVisitor<ParseTree> {
-
-    private Token subName;
-    private final Position position;
-
-    private SubNameFinder(Position position) {
-      this.position = position;
-    }
-
-    @Override
-    public ParseTree visitSubName(SubNameContext ctx) {
-
-      Token token = ctx.start;
-      if (token.getLine() == position.getLine() + 1
-        && token.getCharPositionInLine() <= position.getCharacter()
-        && position.getCharacter() <= token.getCharPositionInLine() + token.getText().length()) {
-        subName = token;
-      }
-      return ctx;
-    }
-
-    Token getSubName() {
-      return subName;
-    }
-  }
 }

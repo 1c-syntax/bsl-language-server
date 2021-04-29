@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticCodeDescription;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
@@ -217,19 +218,25 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
+    var info = bslDiagnostic.getInfo();
+
     Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getInfo().getLSPSeverity(),
+      info.getLSPSeverity(),
       SOURCE
     );
 
-    diagnostic.setCode(bslDiagnostic.getInfo().getCode());
-    diagnostic.setTags(bslDiagnostic.getInfo().getLSPTags());
+    diagnostic.setCode(info.getCode());
+    diagnostic.setTags(info.getLSPTags());
+
+    var codeDescription = new DiagnosticCodeDescription(info.getDiagnosticCodeDescriptionHref());
+    diagnostic.setCodeDescription(codeDescription);
 
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);
     }
     return diagnostic;
   }
+
 }

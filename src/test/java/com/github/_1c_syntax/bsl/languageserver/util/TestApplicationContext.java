@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,11 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
+@Component
 public class TestApplicationContext implements ApplicationContextAware {
   private static ApplicationContext CONTEXT;
 

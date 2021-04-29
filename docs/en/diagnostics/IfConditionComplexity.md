@@ -20,7 +20,6 @@ Complex expressions (with more than 3 boolean constructs) must be extracted to s
 Bad:
 
 ```bsl
-
 If Id = "Expr1"
     Or Id = "Expr2"
     Or Id = "Expr3"
@@ -30,10 +29,10 @@ If Id = "Expr1"
     Or Id = "Expr7"
     Or Id = "Expr8"
     Or Id = "Expr9" Then
-	
+
    doSomeWork();
-	
-EndIf;
+
+EndIf; 
 ```
 
 Good:
@@ -44,7 +43,7 @@ If IsCorrectId(Id) Then
 КонецЕсли;
 
 Function IsCorrectId(Id)
-	
+
     Return Id = "Expr1"
             Or Id = "Expr2"
             Or Id = "Expr3"

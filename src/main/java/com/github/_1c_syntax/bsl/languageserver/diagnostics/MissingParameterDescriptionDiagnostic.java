@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,9 +59,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
 
     var description = methodSymbol.getDescription();
 
-    boolean hasDescription = description
-      .map(methodDescription -> !methodDescription.isEmpty())
-      .orElse(false);
+    boolean hasDescription = description.isPresent();
 
     if (!hasDescription) {
       return;
@@ -122,7 +120,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       }
 
       // параметр в описании есть, но нет типа и описания типа
-      if (description.getTypes().isEmpty() && description.getDescription().isEmpty()) {
+      if (description.getTypes().isEmpty()) {
         addDiagnostic(parameter, "emptyDescription");
       }
 

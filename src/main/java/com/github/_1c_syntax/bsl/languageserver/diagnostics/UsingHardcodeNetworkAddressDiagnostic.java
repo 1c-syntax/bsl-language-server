@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -93,7 +93,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
+    String content = ctx.getText().substring(1, ctx.getText().length() - 1);
     if (content.length() > 2) {
       Matcher matcherURL = patternURL.matcher(content);
       if (!matcherURL.find()) {

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -84,8 +84,9 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
-    if (content.length() > 2) {
+    // пропускаю 4 символа, т.к. 2 кавычки и значимые 2 символа точно не попадют под регулярки
+    if (ctx.getText().length() > 4) {
+      String content = ctx.getText().substring(1, ctx.getText().length() - 1);
       Matcher matcher = patternPath.matcher(content);
       Matcher matcherURL = patternURL.matcher(content);
       if (matcher.find() && !matcherURL.find()) {

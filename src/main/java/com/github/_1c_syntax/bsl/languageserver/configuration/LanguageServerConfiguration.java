@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,21 +29,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
@@ -74,7 +69,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LanguageServerConfiguration implements ApplicationEventPublisherAware {
+public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
@@ -92,6 +87,9 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
+  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+  private boolean useDevSite;
+
   @Nullable
   private File traceLog;
 
@@ -101,10 +99,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)
   private File configurationFile = new File(".bsl-language-server.json");
-
-  @JsonIgnore
-  @Getter(value = AccessLevel.NONE)
-  private ApplicationEventPublisher applicationEventPublisher;
 
   public void update(File configurationFile) {
     if (!configurationFile.exists()) {
@@ -124,17 +118,12 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     }
 
     this.configurationFile = configurationFile;
-    notifyConfigurationFileChanged();
 
     copyPropertiesFrom(configuration);
-    notifyConfigurationChanged();
   }
-
 
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
-    notifyConfigurationFileChanged();
-    notifyConfigurationChanged();
   }
   
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
@@ -198,11 +187,4 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
   }
 
-  private void notifyConfigurationFileChanged() {
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChangeEvent(this.configurationFile));
-  }
-
-  private void notifyConfigurationChanged() {
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangeEvent(this));
-  }
 }

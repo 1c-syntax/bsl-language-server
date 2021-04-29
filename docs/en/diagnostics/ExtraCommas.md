@@ -24,7 +24,7 @@ Result = Action (P1, P2);
 
 ## Sources
 
-* ["Code-writing conventions. Parameters of procedures and functions. Item 7"](https://its.1c.ru/db/v8std#content:640:hdoc)
+* [Code-writing conventions. Parameters of procedures and functions. Item 7](https://its.1c.ru/db/v8std#content:640:hdoc).
 
 ## Snippets
 

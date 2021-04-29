@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,54 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.documentlink.DocumentLinkSupplier;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLink;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Класс-провайдер для реализации формирования ссылки на страницу с информацией по диагностике
+ * Класс-провайдер для формирования списка ссылок на внешние источники информации.
  */
 @Component
 @RequiredArgsConstructor
 public class DocumentLinkProvider {
-  private final LanguageServerConfiguration configuration;
+  private final Collection<DocumentLinkSupplier> suppliers;
 
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
-
-    var linkOptions = configuration.getDocumentLinkOptions();
-    var language = configuration.getLanguage();
-
-    var siteRoot = linkOptions.getSiteRoot();
-    var devSuffix = linkOptions.isUseDevSite() ? "/dev" : "";
-    var languageSuffix = language == Language.EN ? "/en" : "";
-
-    var siteDiagnosticsUrl = String.format(
-      "%s%s%s/diagnostics/",
-      siteRoot,
-      devSuffix,
-      languageSuffix
-    );
-
-    return documentContext.getComputedDiagnostics().stream()
-      .map((Diagnostic diagnostic) -> {
-        var diagnosticCode = DiagnosticCode.getStringValue(diagnostic.getCode());
-
-        return new DocumentLink(
-          diagnostic.getRange(),
-          siteDiagnosticsUrl + diagnosticCode,
-          null,
-          Resources.getResourceString(language, this.getClass(), "tooltip", diagnosticCode)
-        );
-      })
+    return suppliers.stream()
+      .map(supplier -> supplier.getDocumentLinks(documentContext))
+      .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }
 }

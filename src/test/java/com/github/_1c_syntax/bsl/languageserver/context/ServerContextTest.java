@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -30,7 +31,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +41,7 @@ import java.nio.file.Paths;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";

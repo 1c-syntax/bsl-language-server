@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -91,7 +91,7 @@ class JUnitTestSuites {
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
-      Map<Either<String, Number>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
+      Map<Either<String, Integer>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
         .collect(Collectors.groupingBy(
           Diagnostic::getCode,
           Collectors.toList())

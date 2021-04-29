@@ -7,11 +7,9 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Method "CurrentDate" is deprecated. Use "CurrentSessionDate" instead.
+The "CurrentDate" function has been deprecated. It is recommended to use the "CurrentSessionDate" function.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
 Incorrect:
 
 ```bsl

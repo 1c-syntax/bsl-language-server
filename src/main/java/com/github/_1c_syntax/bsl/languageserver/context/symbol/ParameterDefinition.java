@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
+
+import java.util.Optional;
 
 /**
  * Класс хранит информацию о параметре метода.
@@ -32,8 +35,50 @@ import org.eclipse.lsp4j.Range;
 @Value
 @Builder
 public class ParameterDefinition {
+  /**
+   * Имя параметра.
+   */
   String name;
+
+  /**
+   * Передача параметра по значению.
+   */
   boolean byValue;
-  boolean optional;
+
+  /**
+   * Описание параметра.
+   */
+  Optional<ParameterDescription> description;
+
+  /**
+   * Значение по умолчанию.
+   */
+  DefaultValue defaultValue;
+
+  /**
+   * Место объявления параметра.
+   */
   Range range;
+
+  public boolean isOptional() {
+    return !DefaultValue.EMPTY.equals(defaultValue);
+  }
+
+  public enum ParameterType {
+    DATETIME,
+    BOOLEAN,
+    UNDEFINED,
+    NULL,
+    STRING,
+    NUMERIC,
+    EMPTY
+  }
+
+  @Value
+  public static class DefaultValue {
+    public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
+
+    ParameterType type;
+    String value;
+  }
 }

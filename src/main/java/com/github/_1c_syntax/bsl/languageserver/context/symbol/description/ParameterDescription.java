@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,7 +41,14 @@ public class ParameterDescription {
    */
   List<TypeDescription> types;
   /**
-   * Описание параметра. TODO а зачем, если все привязано к типам?
+   * Если описание параметров содержит только ссылку, то здесь будет ее значение
+   * <p>
+   * TODO Временное решение, надо будет продумать в следующем релизе
    */
-  String description;
+  String link;
+  /**
+   * Признак того, что параметр является гиперссылкой
+   */
+  boolean isHyperlink;
+
 }

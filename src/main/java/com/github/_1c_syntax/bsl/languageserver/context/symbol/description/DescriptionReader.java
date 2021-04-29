@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -50,31 +49,30 @@ public class DescriptionReader {
    */
   public static List<ParameterDescription> readParameters(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
 
-    List<ParameterDescription> result = new ArrayList<>();
-    var current = new TempParameterData();
-    var strings = getParametersStrings(ctx);
-    for (BSLMethodDescriptionParser.ParametersStringContext string : strings) {
-
-      // найдем дочерние ноды. на самом деле должна быть либо одна указанная нода, либо ни одной, что заставляет
-      // считать строку как описание
-      var child = Trees.findAllRuleNodes(string,
-        BSLMethodDescriptionParser.RULE_parameterString, BSLMethodDescriptionParser.RULE_subParameterString,
-        BSLMethodDescriptionParser.RULE_typeWithDescription)
-        .stream()
-        .findFirst();
-
-      // сразу необходимо обыграть неклассифицированную строку
-      if (child.isEmpty()) {
-        current = readUnknownParameterString(result, current, string);
-      } else {
-        var parameterPart = (BSLParserRuleContext) child.get();
-        current = readSpecialParameterString(result, current, parameterPart);
-      }
+    // параметров нет
+    if (ctx.parameters() == null) {
+      return Collections.emptyList();
     }
 
-    // не забываем сохранить последний прочитанный параметр
-    saveLastParameter(current, result);
-    return result;
+    // есть только гиперссылка вместо параметров
+    if (ctx.parameters().hyperlinkBlock() != null) {
+      List<ParameterDescription> result = new ArrayList<>();
+      if (ctx.parameters().hyperlinkBlock().hyperlinkType() != null) {
+        result.add(new ParameterDescription("",
+          Collections.emptyList(),
+          getDescriptionString(ctx.parameters().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
+          true));
+      }
+      return result;
+    }
+
+    // блок параметры есть, но самих нет
+    if (ctx.parameters().parameterString() == null) {
+      return Collections.emptyList();
+    }
+
+    return getParametersStrings(ctx.parameters().parameterString());
+
   }
 
   /**
@@ -85,40 +83,46 @@ public class DescriptionReader {
    */
   public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
 
-    var current = new TempParameterData();
-    var strings = getReturnedValuesStrings(ctx);
-    for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : strings) {
-      current.empty = false;
+    // возвращаемого значения нет
+    if (ctx.returnsValues() == null) {
+      return Collections.emptyList();
+    }
 
-      // найдем дочерние ноды. на самом деле должна быть либо одна указанная нода, либо ни одной, что заставляет
-      // считать строку как описание
-      var child = Trees.findAllRuleNodes(string,
-        BSLMethodDescriptionParser.RULE_returnsValueString, BSLMethodDescriptionParser.RULE_subParameterString,
-        BSLMethodDescriptionParser.RULE_typeWithDescription)
-        .stream()
-        .findFirst();
+    // есть только гиперссылка вместо значения
+    if (ctx.returnsValues().hyperlinkBlock() != null) {
+      List<TypeDescription> result = new ArrayList<>();
+      if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
+        result.add(new TypeDescription("",
+          "",
+          Collections.emptyList(),
+          getDescriptionString(ctx.returnsValues().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
+          true));
+      }
+      return result;
+    }
 
-      // сразу необходимо обыграть неклассифицированную строку
-      if (child.isEmpty()) {
-        // если прочитанных параметров не было, то учтем как тип без описания
-        if (current.children.isEmpty()) {
-          current.addType(string.getText());
-        } else {
-          // считаем что текущая строка является продолжением описания прочитанного на шаге ранее
-          current.appendDescription(string.getText());
-        }
-      } else {
-        var typePart = (BSLParserRuleContext) child.get();
-        // выполняется разбор параметров в зависимости от типа подстроки
-        if (typePart.getRuleIndex() == BSLMethodDescriptionParser.RULE_subParameterString) {
-          current.addSubParam((BSLMethodDescriptionParser.SubParameterStringContext) typePart);
-        } else {
-          current.addType(typePart);
-        }
+    // блок возвращаемого значения есть, но самих нет
+    if (ctx.returnsValues().returnsValuesString() == null) {
+      return Collections.emptyList();
+    }
+
+    var fakeParam = new TempParameterData("");
+    for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : ctx.returnsValues().returnsValuesString()) {
+      // это строка с возвращаемым значением
+      if (string.returnsValue() != null) {
+        fakeParam.addType(string.returnsValue().type(), string.returnsValue().typeDescription());
+      } else if (string.typesBlock() != null) { // это строка с описанием параметра
+        fakeParam.addType(string.typesBlock().type(), string.typesBlock().typeDescription());
+      } else if (string.typeDescription() != null) { // это строка с описанием
+        fakeParam.addTypeDescription(string.typeDescription());
+      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа
+        fakeParam.addSubParameter(string.subParameter());
+      } else { // прочее - пустая строка
+        // noop
       }
     }
 
-    return current.getReturnedValueDescription();
+    return fakeParam.makeParameterDescription().getTypes();
   }
 
   /**
@@ -138,22 +142,41 @@ public class DescriptionReader {
   }
 
   /**
-   * Выполняет разбор прочитанного AST дерева описания метода и возвращает список примеров (или вариантов вызова)
+   * Выполняет разбор прочитанного AST дерева описания метода и возвращает список вариантов вызова
+   *
+   * @param ctx Дерево описания метода
+   * @return Список вариантов вызова
+   */
+  public static List<String> readCallOptions(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.callOptions() != null) {
+      var strings = ctx.callOptions().callOptionsString();
+      if (strings != null) {
+        return strings.stream()
+          .map(DescriptionReader::getDescriptionString)
+          .filter((String s) -> !s.isBlank())
+          .collect(Collectors.toList());
+      }
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * Выполняет разбор прочитанного AST дерева описания метода и возвращает список примеров
    *
    * @param ctx Дерево описания метода
    * @return Список примеров
    */
-  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx,
-                                          int ruleIndex) {
-    var exampleStringNodes = Trees.findAllRuleNodes(ctx, ruleIndex);
-    if (exampleStringNodes.isEmpty()) {
-      return Collections.emptyList();
-    } else {
-      return exampleStringNodes.stream()
-        .map(parseTree -> parseTree.getText().strip())
-        .filter(str -> !str.isEmpty())
-        .collect(Collectors.toList());
+  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.examples() != null) {
+      var strings = ctx.examples().examplesString();
+      if (strings != null) {
+        return strings.stream()
+          .map(DescriptionReader::getDescriptionString)
+          .filter((String s) -> !s.isBlank())
+          .collect(Collectors.toList());
+      }
     }
+    return Collections.emptyList();
   }
 
   /**
@@ -163,13 +186,18 @@ public class DescriptionReader {
    * @return Описание назначения метода
    */
   public static String readPurposeDescription(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx.description() != null) {
-      var strings = ctx.description().descriptionString();
-      if (strings != null) {
-        return strings.stream()
-          .map(BSLParserRuleContext::getText)
-          .collect(Collectors.joining("\n"))
-          .strip();
+    if (ctx.descriptionBlock() != null) {
+      if (ctx.descriptionBlock().description() != null) {
+        var strings = ctx.descriptionBlock().description().descriptionString();
+        if (strings != null) {
+          return strings.stream()
+            .map(DescriptionReader::getDescriptionString)
+            .collect(Collectors.joining("\n"))
+            .strip();
+        }
+      }
+      if (ctx.descriptionBlock().hyperlinkBlock() != null) {
+        return getDescriptionString(ctx.descriptionBlock().hyperlinkBlock());
       }
     }
     return "";
@@ -183,252 +211,222 @@ public class DescriptionReader {
    * @return Ссылка в методе
    */
   public static String readLink(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx.description() != null) {
-      var allStrings = ctx.description().descriptionString();
-      if (allStrings == null) {
-        return "";
-      }
-
-      // достаем из описания непустые строки
-      var strings = allStrings.stream()
-        .filter(stringContext -> !stringContext.getText().isBlank())
-        .collect(Collectors.toList());
-      if (strings.size() == 1) {
-        AtomicReference<String> result = new AtomicReference<>("");
-        strings.get(0).getTokens(BSLMethodDescriptionParser.HYPERLINK).stream()
-          .findFirst()
-          .ifPresent(hyperLink -> result.set(hyperLink.getText().substring(HYPERLINK_REF_LEN)));
-
-        return result.get();
-      }
+    if (ctx.descriptionBlock() != null && ctx.descriptionBlock().hyperlinkBlock() != null) {
+      return getDescriptionString(ctx.descriptionBlock().hyperlinkBlock()).substring(HYPERLINK_REF_LEN);
     }
     return "";
   }
 
-  private List<? extends BSLMethodDescriptionParser.ParametersStringContext> getParametersStrings(
-    BSLMethodDescriptionParser.MethodDescriptionContext ast) {
-    if (ast.parameters() != null) {
-      var strings = ast.parameters().parametersString();
-      if (strings != null) {
-        return strings;
+  private String getDescriptionString(BSLParserRuleContext ctx) {
+    var strings = new StringJoiner("");
+    for (int i = 0; i < ctx.getChildCount(); i++) {
+      var child = ctx.getChild(i);
+
+      if (!(child instanceof BSLMethodDescriptionParser.StartPartContext)) {
+        strings.add(child.getText());
       }
     }
-    return Collections.emptyList();
+
+    return strings.toString().strip();
   }
 
-  private List<? extends BSLMethodDescriptionParser.ReturnsValuesStringContext> getReturnedValuesStrings(
-    BSLMethodDescriptionParser.MethodDescriptionContext ast) {
-    if (ast.returnsValues() != null) {
-      var strings = ast.returnsValues().returnsValuesString();
-      if (strings != null) {
-        return strings;
+  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+    List<ParameterDescription> result = new ArrayList<>();
+    var current = new TempParameterData();
+
+    for (BSLMethodDescriptionParser.ParameterStringContext string : strings) {
+      // это строка с параметром
+      if (string.parameter() != null) {
+        if (!current.isEmpty()) {
+          result.add(current.makeParameterDescription());
+        }
+        current = new TempParameterData(string.parameter());
+      } else if (string.typesBlock() != null) { // это строка с описанием параметра
+        current.addType(string.typesBlock().type(), string.typesBlock().typeDescription());
+      } else if (string.typeDescription() != null) { // это строка с описанием
+        if (current.isEmpty()) {
+          var text = string.typeDescription().getText().strip();
+          if (text.split("\\s").length == 1) {
+            current = new TempParameterData(text);
+          }
+        } else {
+          current.addTypeDescription(string.typeDescription());
+        }
+      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа
+        current.addSubParameter(string.subParameter());
+      } else { // прочее - пустая строка
+        // noop
       }
     }
-    return Collections.emptyList();
-  }
 
-  private static TempParameterData readSpecialParameterString(List<ParameterDescription> result,
-                                                              TempParameterData current,
-                                                              BSLParserRuleContext ctx) {
-    // выполняется разбор параметров в зависимости от типа подстроки
-    if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_parameterString) {
-      saveLastParameter(current, result);
-      current = new TempParameterData(ctx);
-    } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_subParameterString) {
-      current.addSubParam((BSLMethodDescriptionParser.SubParameterStringContext) ctx);
-    } else { // BSLMethodDescriptionParser.RULE_typeWithDescription
-      current.addType(ctx);
+    if (!current.isEmpty()) {
+      result.add(current.makeParameterDescription());
     }
-    return current;
-  }
 
-  private static TempParameterData readUnknownParameterString(List<ParameterDescription> result,
-                                                              TempParameterData current,
-                                                              BSLParserRuleContext string) {
-    // Строка может состоят из одного слова и пробелов, запомним на будущее
-    var isOneWord = string.getTokens().stream()
-      .filter(t -> t.getType() != BSLMethodDescriptionParser.SPACE
-        && t.getType() != BSLMethodDescriptionParser.EOL).count() == 1;
-
-    // если прочитанных параметров не было, то учтем как параметр без описания
-    if (isOneWord && current.isEmpty()) {
-      current = new TempParameterData(string.getText());
-      // некоторые параметры ранее были прочитаны, но если у них нет описания, то учтем как параметр без описания
-    } else if (isOneWord && current.missingLastDescription()) {
-      saveLastParameter(current, result);
-      current = new TempParameterData(string.getText());
-      // считаем что текущая строка является продолжением описания параметра, прочитанного на шаге ранее
-    } else {
-      current.appendDescription(string.getText());
-    }
-    return current;
-  }
-
-  private static void saveLastParameter(TempParameterData current, List<ParameterDescription> result) {
-    if (current.isEmpty()) {
-      return;
-    }
-    result.add(current.getParameterDescription());
+    return result;
   }
 
   /**
    * Служебный класс для временного хранения прочитанной информации из описания параметра
    */
-  private static class TempParameterData {
+  private static final class TempParameterData {
     private String name;
-    private final StringJoiner description;
     private boolean empty;
-    private final List<TempParameterData> children;
-    private TempParameterData last;
-    private TempParameterData parent;
+    private final List<TempParameterTypeData> types;
     private int level;
 
-    TempParameterData() {
-      name = "";
-      description = new StringJoiner("\n");
-      empty = true;
-      children = new ArrayList<>();
-      level = 0;
+    private TempParameterData() {
+      this.name = "";
+      this.empty = true;
+      this.types = new ArrayList<>();
+      this.level = 1;
     }
 
-    TempParameterData(String text) {
+    private TempParameterData(BSLMethodDescriptionParser.ParameterContext parameter) {
       this();
-      name = text.strip();
-      empty = false;
+      if (parameter.parameterName() != null) {
+        this.name = parameter.parameterName().getText().strip();
+        this.empty = false;
+        if (parameter.typesBlock() != null) {
+          addType(parameter.typesBlock().type(), parameter.typesBlock().typeDescription());
+        }
+      }
     }
 
-    TempParameterData(BSLParserRuleContext ctx) {
+    private TempParameterData(BSLMethodDescriptionParser.SubParameterContext subParameter, int level) {
       this();
-      readAndAddType(ctx);
+      this.level = level;
+      if (subParameter.parameterName() != null) {
+        this.name = subParameter.parameterName().getText().strip();
+        this.empty = false;
+        if (subParameter.typesBlock() != null) {
+          addType(subParameter.typesBlock().type(), subParameter.typesBlock().typeDescription());
+        }
+      }
     }
 
-    TempParameterData(BSLParserRuleContext ctx, TempParameterData current) {
+    private TempParameterData(String name) {
       this();
-      level = current.level + 1;
-      parent = current;
-      readAndAddType(ctx);
-    }
-
-    TempParameterData(String text, TempParameterData current) {
-      this(text);
-      level = current.level;
-      parent = current;
-    }
-
-    private void readAndAddType(BSLParserRuleContext ctx) {
-      Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_parameterName)
-        .ifPresent((BSLParserRuleContext child) -> {
-          name = child.getText();
-          empty = false;
-          addType(ctx);
-        });
+      this.name = name.strip();
+      this.empty = false;
     }
 
     private boolean isEmpty() {
       return empty;
     }
 
-    private void appendDescription(ParseTree ctx) {
-      appendDescription(ctx.getText());
+    private Optional<TempParameterTypeData> lastType() {
+      if (!types.isEmpty()) {
+        return Optional.of(types.get(types.size() - 1));
+      }
+      return Optional.empty();
     }
 
-    private void appendDescription(String text) {
-      if (!isEmpty()) {
-        if (last == null) {
-          description.add(text.strip());
-        } else {
-          last.appendDescription(text);
-        }
-      }
-    }
-
-    private void addType(BSLParserRuleContext ctx) {
-      if (isEmpty()) {
-        return;
-      }
-
-      if (last != null && !last.children.isEmpty()) {
-        last.addType(ctx);
-      } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_typeWithDescription
-        || ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_returnsValueString) {
-        addNewType(ctx);
-      } else {
-        Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_typeWithDescription)
-          .ifPresent(this::addNewType);
-      }
-    }
-
-    private void addType(String text) {
-      var newType = new TempParameterData(text, this);
-      children.add(newType);
-      last = newType;
-    }
-
-    private void addNewType(BSLParserRuleContext ctx) {
-      last = null;
-      Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_types).ifPresent(
-        (BSLParserRuleContext typeString) -> {
-          var newType = new TempParameterData(typeString.getText(), this);
-          Trees.findAllRuleNodes(ctx, BSLMethodDescriptionParser.RULE_typeDescription)
-            .stream().findFirst()
-            .ifPresent(newType::appendDescription);
-          children.add(newType);
-          last = newType;
-        });
-    }
-
-    private void addSubParam(BSLMethodDescriptionParser.SubParameterStringContext ctx) {
-      if (isEmpty()) {
-        return;
-      }
-
-      // если тип не определен был, то подчиненных параметров быть не может
-      if (last == null) {
-        appendDescription(ctx.getText());
-        return;
-      }
-      var child = ctx.starPreffix();
-      var subParamLevel = child.getText().length();
-      TempParameterData subParameter;
-      if (last.level >= subParamLevel) {
-        while (last.level >= subParamLevel) {
-          last = last.parent;
-        }
-      }
-      subParameter = new TempParameterData(ctx, last);
-      last.children.add(subParameter);
-      last = subParameter.last;
-    }
-
-    private boolean missingLastDescription() {
-      if (last != null) {
-        return last.missingLastDescription();
-      }
-      return description.toString().isEmpty();
-    }
-
-    private ParameterDescription getParameterDescription() {
-      var parameterTypes = children.stream()
-        .map((TempParameterData child) -> {
+    private ParameterDescription makeParameterDescription() {
+      var parameterTypes = types.stream()
+        .map((TempParameterTypeData child) -> {
           List<ParameterDescription> subParameters = new ArrayList<>();
-          if (!child.children.isEmpty()) {
-            child.children.forEach(subParam -> subParameters.add(subParam.getParameterDescription()));
+          if (!child.subParameters.isEmpty()) {
+            child.subParameters.forEach(subParam -> subParameters.add(subParam.makeParameterDescription()));
           }
-          return new TypeDescription(child.name, child.description.toString(), subParameters);
+          var link = "";
+          if(child.isHyperlink) {
+            link = child.name.substring(HYPERLINK_REF_LEN);
+          }
+          return new TypeDescription(child.name,
+            child.description.toString(),
+            subParameters,
+            link,
+            child.isHyperlink);
         }).collect(Collectors.toList());
-
-      var descriptionStr = description.toString();
-      if (descriptionStr.isEmpty() && parameterTypes.size() == 1) {
-        descriptionStr = parameterTypes.get(0).getDescription();
-      }
-      return new ParameterDescription(name, parameterTypes, descriptionStr);
+      return new ParameterDescription(name, parameterTypes, "", false);
     }
 
-    private List<TypeDescription> getReturnedValueDescription() {
-      if (!isEmpty()) {
-        return getParameterDescription().getTypes();
+    private void addType(@Nullable BSLMethodDescriptionParser.TypeContext paramType,
+                         @Nullable BSLMethodDescriptionParser.TypeDescriptionContext paramDescription) {
+      if (isEmpty() || paramType == null) {
+        return;
       }
-      return Collections.emptyList();
+
+      if (paramType.listTypes() != null) {
+        var stringTypes = paramType.listTypes().getText().split(",");
+        for (String stringType : stringTypes) {
+          if (!stringType.isBlank()) {
+            addType(paramDescription, stringType.strip(), false);
+          }
+        }
+      } else if (paramType.hyperlinkType() != null) {
+        addType(paramDescription, paramType.hyperlinkType().getText(), true);
+      } else if (paramType.simpleType() != null) {
+        addType(paramDescription, paramType.simpleType().getText(), false);
+      } else if (paramType.complexType() != null) {
+        addType(paramDescription, paramType.complexType().getText(), false);
+      } else {
+        // noop
+      }
+    }
+
+    private void addType(@Nullable BSLMethodDescriptionParser.TypeDescriptionContext descriptionContext,
+                         String text,
+                         boolean isHyperlink) {
+      var newType = new TempParameterTypeData(text, level, isHyperlink);
+      if (descriptionContext != null) {
+        newType.addTypeDescription(descriptionContext);
+      }
+      types.add(newType);
+    }
+
+    private void addTypeDescription(BSLMethodDescriptionParser.TypeDescriptionContext typeDescription) {
+      lastType().ifPresent(lastType -> lastType.addTypeDescription(typeDescription));
+    }
+
+    private void addSubParameter(BSLMethodDescriptionParser.SubParameterContext subParameter) {
+      lastType().ifPresent(lastType -> lastType.addSubParameter(subParameter));
+    }
+  }
+
+  /**
+   * Служебный класс для временного хранения прочитанной информации из описания типа
+   */
+  private static final class TempParameterTypeData {
+    private final String name;
+    private final StringJoiner description;
+    private final int level;
+    private final List<TempParameterData> subParameters;
+    private final boolean isHyperlink;
+
+    private TempParameterTypeData(String name, int level, boolean isHyperlink) {
+      this.name = name;
+      this.description = new StringJoiner("\n");
+      this.level = level;
+      this.subParameters = new ArrayList<>();
+      this.isHyperlink = isHyperlink;
+    }
+
+    private void addTypeDescription(BSLMethodDescriptionParser.TypeDescriptionContext typeDescription) {
+      if (typeDescription.getText() != null) {
+        this.description.add(typeDescription.getText().strip());
+      }
+    }
+
+    private Optional<TempParameterData> lastSubParameter() {
+      if (!subParameters.isEmpty()) {
+        return Optional.of(subParameters.get(subParameters.size() - 1));
+      }
+      return Optional.empty();
+    }
+
+    private void addSubParameter(BSLMethodDescriptionParser.SubParameterContext subParameter) {
+      var star = subParameter.getToken(BSLMethodDescriptionParser.STAR, 0);
+      if (star == null) {
+        return;
+      }
+
+      if (star.getText().length() == level) {
+        subParameters.add(new TempParameterData(subParameter, level + 1));
+      } else {
+        lastSubParameter().ifPresent(subParam -> subParam.addSubParameter(subParameter));
+      }
     }
   }
 }

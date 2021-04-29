@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,16 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@CleanupContextBeforeClassAndAfterClass
 class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<DeprecatedMethodCallDiagnostic> {
   DeprecatedMethodCallDiagnosticTest() {
     super(DeprecatedMethodCallDiagnostic.class);

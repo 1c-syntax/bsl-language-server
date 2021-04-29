@@ -11,10 +11,10 @@ Use of nested ternary operators decrease code readability.
 
 ## Examples
 
-Samples of wrong usage:
+### Incorrect use of ternary operators
 
 ```bsl
-Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz");
+Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz"); 
 ```
 
 ```bsl
@@ -25,17 +25,17 @@ If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 EndIf;
 ```
 
-Possible refactoring:
+### Possible implementation
 
 ```bsl
 If x % 15 = 0 Then
-	Result = "FizzBuzz";
+    Result = "FizzBuzz";
 ElseIf x % 3 = 0 Then
-	Result = "Fizz";
+    Result = "Fizz";
 ElseIf x % 5 = 0 Then
-	Result = "Buzz";
+    Result = "Buzz";
 Else
-	Result = x;
+    Result = x;
 EndIf;
 ```
 

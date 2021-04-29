@@ -18,8 +18,9 @@ Incorrect:
 For Each Iterator From Collection Loop
 
     ProcessElement(Collection);
-    
+
 EndLoop;
+
 ```
 
 Correct:
@@ -29,13 +30,15 @@ Correct:
 For Each Iterator From Collection Loop
 
     ProcessElement(Iterator);
-    
+
 EndLoop;
+
 ```
 
 ```bsl
 
 ProcessCollection(Collection);
+
 ```
 
 ## Snippets

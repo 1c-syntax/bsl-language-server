@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
@@ -35,12 +36,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParameterException;
+import picocli.CommandLine.Unmatched;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
@@ -81,11 +85,15 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     defaultValue = "")
   private String configurationOption;
 
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
+  @Unmatched
+  private List<String> unmatched;
 
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
+  private final Set<Pattern> allowedAdditionalArgs = Set.of(
+    CaseInsensitivePattern.compile("--spring\\."),
+    CaseInsensitivePattern.compile("--app\\."),
+    CaseInsensitivePattern.compile("--logging\\."),
+    CaseInsensitivePattern.compile("--debug")
+  );
 
   private final CommandLine.IFactory picocliFactory;
 
@@ -110,21 +118,22 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     if (args.length == 0) {
       args = addDefaultCommand(args);
     } else {
-      // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
-      // неизвестных параметров выдает ошибку
-      try {
-        var parseResult = cmd.parseArgs(args);
-        // если переданы параметры без команды и это не справка
-        // то считаем, что параметры для команды по умолчанию
-        if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
-          args = addDefaultCommand(args);
-        }
-      } catch (ParameterException ex) {
-        // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
-        // вдруг заработает
-        if (!ex.getCommandLine().getParseResult().hasSubcommand()) {
-          args = addDefaultCommand(args);
-        }
+      var parseResult = cmd.parseArgs(args);
+      var unmatchedArgs = parseResult.unmatched().stream()
+        .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))
+        .collect(Collectors.toList());
+
+      if (!unmatchedArgs.isEmpty()) {
+        unmatchedArgs.forEach(s -> cmd.getErr().println("Unknown option: '" + s + "'"));
+        cmd.usage(cmd.getOut());
+        exitCode = cmd.getCommandSpec().exitCodeOnInvalidInput();
+        return;
+      }
+
+      // если переданы параметры без команды и это не справка
+      // то считаем, что параметры для команды по умолчанию
+      if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+        args = addDefaultCommand(args);
       }
     }
 

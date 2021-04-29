@@ -17,8 +17,10 @@ Incorrect:
 
 If Find(Employee.Name, "Boris") > 0 Then
 
-EndIf;
+EndIf; 
+
 ```
+
 
 Correct:
 
@@ -26,7 +28,8 @@ Correct:
 
 If StrFind(Employee.Name, "Boris") > 0 Then
 
-EndIf;
+EndIf; 
+
 ```
 
 ## Snippets

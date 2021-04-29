@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -45,27 +46,32 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
   @Override
   public SymbolTree compute() {
 
+    ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
     List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
     List<VariableSymbol> variables = new VariableSymbolComputer(documentContext).compute();
 
-    List<Symbol> allOfThem = new ArrayList<>(methods);
+    List<SourceDefinedSymbol> allOfThem = new ArrayList<>(methods);
     allOfThem.addAll(regions);
     allOfThem.addAll(variables);
 
     allOfThem.sort(Comparator.comparingInt(symbol -> symbol.getRange().getStart().getLine()));
 
-    List<Symbol> topLevelSymbols = new ArrayList<>();
-    Symbol currentParent = Symbol.emptySymbol();
+    List<SourceDefinedSymbol> topLevelSymbols = new ArrayList<>();
+    SourceDefinedSymbol currentParent = moduleSymbol;
 
-    for (Symbol symbol : allOfThem) {
+    for (SourceDefinedSymbol symbol : allOfThem) {
       currentParent = placeSymbol(topLevelSymbols, currentParent, symbol);
     }
 
-    return new SymbolTree(topLevelSymbols);
+    return new SymbolTree(moduleSymbol);
   }
 
-  private static Symbol placeSymbol(List<Symbol> topLevelSymbols, Symbol currentParent, Symbol symbol) {
+  private static SourceDefinedSymbol placeSymbol(
+    List<SourceDefinedSymbol> topLevelSymbols,
+    SourceDefinedSymbol currentParent,
+    SourceDefinedSymbol symbol
+  ) {
 
     if (Ranges.containsRange(currentParent.getRange(), symbol.getRange())) {
       currentParent.getChildren().add(symbol);
@@ -74,7 +80,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
       return symbol;
     }
 
-    Optional<Symbol> maybeParent = currentParent.getParent();
+    Optional<SourceDefinedSymbol> maybeParent = currentParent.getParent();
     if (maybeParent.isEmpty()) {
       topLevelSymbols.add(symbol);
       return symbol;
@@ -82,4 +88,5 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     return placeSymbol(topLevelSymbols, maybeParent.get(), symbol);
   }
+
 }

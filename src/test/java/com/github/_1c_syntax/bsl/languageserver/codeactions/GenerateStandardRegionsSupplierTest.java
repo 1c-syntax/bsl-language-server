@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,20 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,11 +39,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class GenerateStandardRegionsSupplierTest {
 
   @Autowired
-  private CodeActionProvider codeActionProvider;
+  private GenerateStandardRegionsSupplier codeActionSupplier;
 
   @Test
   void testGetCodeActions() {
@@ -69,13 +64,10 @@ class GenerateStandardRegionsSupplierTest {
     params.setContext(codeActionContext);
 
     // when
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
-
-    System.out.println(codeActions.get(0).getRight().getEdit().getChanges());
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(2)
-      .extracting(Either::getRight)
+      .hasSize(1)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Generate missing regions"));
   }
 }

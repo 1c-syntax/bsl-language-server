@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,9 +25,9 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
 
 class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocalMethodDiagnostic> {
   UnusedLocalMethodDiagnosticTest() {
@@ -38,11 +38,31 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(1);
 
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(1, 10, 1, 24)
+      .hasRange(1, 10, 24)
+      .hasRange(70, 10, 41)
     ;
 
+  }
+
+  @Test
+  void testConfigure() {
+    // given
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("attachableMethodPrefixes", "ПодключаемаяМоя_");
+    diagnosticInstance.configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(1, 10, 24)
+      .hasRange(60, 10, 40)
+      .hasRange(63, 10, 39)
+    ;
   }
 }

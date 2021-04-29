@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 
 public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagnostic {
 
-  public static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile";
+  public static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile";
 
   private static final Pattern searchGetTempFileName = CaseInsensitivePattern.compile(
     "^(ПолучитьИмяВременногоФайла|GetTempFileName)"

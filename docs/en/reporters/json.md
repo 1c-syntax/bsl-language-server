@@ -6,6 +6,27 @@ Reporter option - `json`
 
 Output the analize result to file  `bsl-json.json` in the current workspace directory. Output the result of JSON serialization [AnalysisInfo](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/data/AnalysisInfo.java) object
 
+## Scheme:
+
+- *date* - date of analysis.
+- *fileinfos* - array of file information.
+- *sourceDir* - path to the source directory without the "file: ///" prefix.
+
+- ### fileinfo:
+  - *path* - path to the source file with "file:///" prefix.
+  - *mdoRef* - object reference description (empty value ("") is allowed). For example: "Catalog.Organizations"
+  - *diagnostics* - array of diagnostics information.
+  - *metrics* - file metrics (optional).
+
+  - #### diagnostic:
+    - *range* - Location of the error in the file.
+    - *severity* - One of Error, Warning, Hint, Information
+    - *code* - Diagnostic code.
+    - *source* - Diagnostics repo.
+    - *message* - Diagnostics message.
+    - *tags* - Diagnostics tags. (empty value allowed (null))
+    - *relatedInformation* - Array of the location of similar errors in the file or some additional information. (empty value allowed (null)).
+
 ## Sample output
 
 ```json
@@ -30,7 +51,7 @@ Output the analize result to file  `bsl-json.json` in the current workspace dire
                     "severity": "Error",
                     "code": "FunctionShouldHaveReturnDiagnostic",
                     "source": "bsl-language-server",
-                    "message": "Функция не содержит \"Возврат\"",
+                    "message": "Function should have \"Return\"",
                     "tags": null,
                     "relatedInformation": null
                 }

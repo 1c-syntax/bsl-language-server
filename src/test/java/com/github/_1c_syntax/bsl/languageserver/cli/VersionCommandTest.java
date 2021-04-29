@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
+ * Copyright © 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.AutoServerInfo;
+import org.eclipse.lsp4j.ServerInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 class VersionCommandTest {
 
   @MockBean
-  private AutoServerInfo autoServerInfo;
+  private ServerInfo serverInfo;
 
   @Autowired
   private VersionCommand command;
@@ -44,7 +44,7 @@ class VersionCommandTest {
   @Test
   void testFailedCall() {
     // given
-    when(autoServerInfo.getVersion()).thenReturn("");
+    when(serverInfo.getVersion()).thenReturn("");
 
     // when
     var call = command.call();
@@ -56,7 +56,7 @@ class VersionCommandTest {
   @Test
   void testSuccessfulCall() {
     // given
-    when(autoServerInfo.getVersion()).thenReturn("0.0.0");
+    when(serverInfo.getVersion()).thenReturn("0.0.0");
 
     // when
     var call = command.call();
