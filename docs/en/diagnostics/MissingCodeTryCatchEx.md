@@ -1,14 +1,14 @@
 # Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `15` | `standard`<br>`badpractice` 
+ |  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
+ |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+ | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `15`           | `standard`<br>`badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `commentAsCode` | `Boolean` | ```Treat comment in Raise section as code``` | ```false``` 
+ |      Name       |   Type    | Description                              | Default value |
+ |:---------------:|:---------:|:---------------------------------------- |:-------------:|
+ | `commentAsCode` | `Boolean` | `Treat comment in Raise section as code` |    `false`    | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -23,6 +23,7 @@ Try
     ....
 Raise // catch any exception
 EndTry;
+
 ```
 
 As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.
@@ -37,15 +38,15 @@ Raise
     // Explanation why catching all exceptions untraceable for enduser.
     // ....
     // Write to log for system administrator.
-    ЗаписьЖурналаРегистрации(НСтр("ru = 'Выполнение операции'"),
-       УровеньЖурналаРегистрации.Ошибка,,,
-       ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
-КонецПопытки;
+    WriteLogEvent(NStr("en = 'Action'"),
+       EventLogLevel.Error,,,
+       DetailErrorDescription(ErrorInfo()));
+EndTry;
 ```
 
 ## Sources
 
-- [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
+* [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
 
 ## Snippets
 

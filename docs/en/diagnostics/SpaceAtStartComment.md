@@ -1,25 +1,25 @@
 # Space at the beginning of the comment (SpaceAtStartComment)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `commentsAnnotation` | `String` | ```Skip comments-annotations staring with given substrings. List, values separated by comma``` | ```//@,//(c),//©``` 
+ |         Name         |   Type   | Description                                                                                               |  Default value  |
+ |:--------------------:|:--------:|:--------------------------------------------------------------------------------------------------------- |:---------------:|
+ | `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Between comment symbols "//" and comment text has to be a space.
 
-Exception from the rule is ***comments-annotations***, comments starting with special symbols sequence.
+Exception from the rule is _**comments-annotations**_, comments starting with special symbols sequence.
 
 ## Sources
 
-- [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
 
 ## Snippets
 

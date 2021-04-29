@@ -1,8 +1,8 @@
 # Else...The...ElseIf... statement should end with Else branch (IfElseIfEndsWithElse)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `badpractice` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `badpractice` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,13 +13,13 @@ Syntax construct **If ... Then ... ElseIf ...** must end with the **Else** branc
 
 ```bsl
 If x % 15 = 0 Then
-	Result = "FizzBuzz";
+    Result = "FizzBuzz";
 ElseIf x % 3 = 0 Then
-	Result = "Fizz";
+    Result = "Fizz";
 ElseIf x % 5 = 0 Then
-	Result = "Buzz";
+    Result = "Buzz";
 Else
-	Result = x;
+    Result = x;
 EndIf;
 ```
 

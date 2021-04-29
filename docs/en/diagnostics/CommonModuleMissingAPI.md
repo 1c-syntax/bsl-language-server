@@ -1,44 +1,44 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `1` | `brainoverload`<br>`suspicious` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
+ | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           | `brainoverload`<br>`suspicious` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-A common module should have at least one export method, and "ProgramInterface" or "ServiceProgramInterface" area.
+A common module must have at least one export method and region "Private" or "Internal".
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Неправильно
+Incorrect
 
 ```Bsl
-// begin module
+// Start module
 Procedure Test(A)
     A = A + 1;
 EndProcedure
-// end module
+// End module
 ```
 
-Правильно
+Correct
 
 ```Bsl
-// begin module
+// Start module
 #Region Internal
-Procedure Test(A)
+Procedure Test(A) Export
     A = A + 1;
 EndProcedure
 #EndRegion
-// end module
+// End module
 ```
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Standart: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 

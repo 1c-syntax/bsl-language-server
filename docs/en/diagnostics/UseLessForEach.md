@@ -1,8 +1,8 @@
 # Useless collection iteration (UseLessForEach)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `2` | `clumsy` 
+ |  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |   Tags   |
+ |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------:|
+ | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `2`           | `clumsy` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,8 +18,9 @@ Incorrect:
 For Each Iterator From Collection Loop
 
     ProcessElement(Collection);
-    
+
 EndLoop;
+
 ```
 
 Correct:
@@ -29,13 +30,15 @@ Correct:
 For Each Iterator From Collection Loop
 
     ProcessElement(Iterator);
-    
+
 EndLoop;
+
 ```
 
 ```bsl
 
 ProcessCollection(Collection);
+
 ```
 
 ## Snippets

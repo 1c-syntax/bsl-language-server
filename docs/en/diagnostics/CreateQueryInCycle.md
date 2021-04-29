@@ -1,19 +1,20 @@
 # Execution query on cycle (CreateQueryInCycle)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `20` | `performance` 
+ |  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |     Tags      |
+ |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-------------:|
+ | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `20`           | `performance` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Execution query in cycle
+Execution query in cycle.
 
 ## Examples
 
 Bad
 
-```Bsl
+```bsl
+
 // BanksToProcessing - contains an array of banks
 
 InidividualQuery = New Query("
@@ -31,11 +32,13 @@ For Each Bank From BanksToProcess Do
     ProcessBankAccounts(AccountsSelection.Account);
   EndDo;
 EndDo;
+
+
 ```
 
 Good
 
-```Bsl
+```bsl
 // BanksToProcess - contains an array of banks
 
 MergedQuery = New Query("
@@ -51,6 +54,7 @@ AccountsSelection = MergedQuery.Execute().Select();
 While AccountsSelection.Next() Do
   ProcessBankAccounts(AccountsSelection.Account);
 EndDo;
+
 ```
 
 ## Snippets

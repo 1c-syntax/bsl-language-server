@@ -1,15 +1,15 @@
 # Magic numbers (MagicNumber)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `badpractice` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `authorizedNumbers` | `String` | ```allowed numbers, coma separated. Example:-1,0,1,60``` | ```-1,0,1``` 
- `allowMagicIndexes` | `Boolean` | ```allow magic indexes``` | ```true``` 
+ |        Name         |   Type    | Description                                          | Default value |
+ |:-------------------:|:---------:|:---------------------------------------------------- |:-------------:|
+ | `authorizedNumbers` | `String`  | `allowed numbers, coma separated. Example:-1,0,1,60` |   `-1,0,1`    |
+ | `allowMagicIndexes` | `Boolean` | `allow magic indexes`                                |    `true`     | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -32,7 +32,7 @@ Good
 
 ```bsl
 Function GetsTheInterval (Duration in Seconds)
-    
+
     MinutesHour     = 60;
     SecondsMinute   = 60;
     SecondsHour     = SecondsMinute * MinutesHour;

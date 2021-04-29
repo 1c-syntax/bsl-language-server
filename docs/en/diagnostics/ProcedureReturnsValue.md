@@ -1,13 +1,13 @@
 # Procedure should not return Value (ProcedureReturnsValue)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `5` | `error` 
+ |  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
+ |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------:|
+ | `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |           `5`           | `error` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-`Procedure` , unlike a `Function` cannot return values. This diagnostic finds procedures where there is a `Return` statement with a value.
+`Procedure`, unlike a `Function` cannot return values. This diagnostic finds procedures where there is a `Return` statement with a value.
 
 ## Snippets
 

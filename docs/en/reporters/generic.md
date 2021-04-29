@@ -9,7 +9,6 @@ Output the analize result to file `bsl-generic-json.json` in the current workspa
 ## Sample output
 
 ```json
-
 {
     "issues": [
         {

@@ -1,14 +1,14 @@
 # Line Length limit (LineLength)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `standard`<br>`badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `maxLineLength` | `Integer` | ```Max length of string in characters``` | ```120``` 
+ |      Name       |   Type    | Description                          | Default value |
+ |:---------------:|:---------:|:------------------------------------ |:-------------:|
+ | `maxLineLength` | `Integer` | `Max length of string in characters` |     `120`     | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,7 +17,7 @@ If the line length is grater than 120 characters you should you line break. It i
 
 ## Sources
 
-- [Standart: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
 
 ## Snippets
 

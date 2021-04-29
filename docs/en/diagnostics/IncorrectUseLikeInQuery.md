@@ -1,8 +1,8 @@
 # Incorrect use of 'LIKE' (IncorrectUseLikeInQuery)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Critical` | `Yes` | `10` | `standard`<br>`sql`<br>`unpredictable` 
+ |  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                        Tags                        |
+ |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------:|
+ | `Error` | `BSL` | `Critical` |             `Yes`             |          `10`           | `standard`<br>`sql`<br>`unpredictable` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -10,6 +10,14 @@
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+When using the operator `LIKE` in the query text, it is allowed to use only
+- constant string literals
+- query parameters
+
+It is forbidden to form a template string using calculations, use string concatenation using the query language.
+
+Queries in which the control characters of the operator template `LIKE` are in query fields or in calculated expressions are interpreted differently on different DBMSs.
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

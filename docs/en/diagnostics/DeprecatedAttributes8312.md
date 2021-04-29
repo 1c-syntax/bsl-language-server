@@ -1,55 +1,42 @@
 # Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
+ | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `deprecated` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 The following items are deprecated and their use is not recommended since platform version 8.3.12:
+* Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
+* ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
+* The following properties and methods of Chart object are obsolete and not recommended for use:
+   * ColorPalette;
+   * GradientPaletteStartColor;
+   * GradientPaletteEndColor;
+   * GradientPaletteMaxColors;
+   * GetPalette();
+   * SetPalette().
+* Names of properties of the object ChartPlotArea:
+   * ShowScale;
+   * ScaleLines;
+   * ScaleColor.
+* Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:
 
-- Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum.<br>The Horizontal value of the ChildFormItemsGroup system enum is deprecated
-
-- ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
-
-- The following properties and methods of Chart object are obsolete and not recommended for use:
-
-    - ColorPalette
-    - GradientPaletteStartColor
-    - GradientPaletteEndColor
-    - GradientPaletteMaxColors
-    - GetPalette
-    - SetPalette
-
-- Names of properties of the object ChartPlotArea:
-
-    - ShowScale
-    - ScaleLines
-    - ScaleColor
-
-- Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:
-
-    - ShowSeriesScaleLabels - recommended to use the SeriesScale.ScaleLabelLocation
-    - ShowPointsScaleLabels- recommended to use the PointsScale.ScaleLabelLocation
-    - ShowValuesScaleLabels - recommended to use the ValuesScale.ScaleLabelLocation
-    - ShowScaleValueLines - recommended to use the ValuesScale.ОтображениеЛинийСетки
-    - ValueScaleFormat - recommended to use the ValuesScale.LabelFormat
-    - LabelsOrientation - recommended to use the PointsScale.LabelOrientation
-
-- Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
-
-- Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
-
-- Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format. It is recommended that you do not use this method.
+   * ShowSeriesScaleLabels. Recommended to use the SeriesScale.ScaleLabelLocation;
+   * ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;
+   * ShowValuesScaleLabels. Recommended to use the ValuesScale.ScaleLabelLocation;
+   * ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;
+   * ValueScaleFormat. Recommended to use the ValuesScale.LabelFormat;
+   * LabelsOrientation. Recommended to use the PointsScale.LabelOrientation.
+* Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
+* Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
+* Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format.
 
 ## Sources
-
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-[Platform 8.3.12 changelog](https://1c-dn.com/library/v8update_2079252603_new_functionality_and_changes/)
+Source: [Platform 8.3.12 changelog](https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm)
 
 ## Snippets
 

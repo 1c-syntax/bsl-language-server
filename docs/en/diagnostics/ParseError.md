@@ -1,8 +1,8 @@
 # Source code parse error (ParseError)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `error` 
+ |  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
+ |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-------:|
+ | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `error` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ Separate grammatical constructions, expressions, as well as declarations and pla
 
 ## Examples
 
-Incorrect:
+Wrong:
 
 ```bsl
 Procedure Example1()
@@ -44,9 +44,9 @@ Result = Example4(Parameter1,
   Parameter3);
 ```
 
-## Reference
+## Sources
 
-- [Standard: #439 Use of compilation and preprocessor directives](https://its.1c.ru/db/v8std#content:439:hdoc)
+* [Standard: Use of compilation and preprocessor directives (RU)](https://its.1c.ru/db/v8std#content:439:hdoc)
 
 ## Snippets
 

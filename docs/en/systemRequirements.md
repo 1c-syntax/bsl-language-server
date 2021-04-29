@@ -1,6 +1,6 @@
 # System requirements
 
-Using ` BSL Language Server ` has some limitations, listed bellow
+Using `BSL Language Server` has some limitations, listed bellow
 
 ## Supported Java Versions
 
@@ -15,5 +15,5 @@ JDK vendor is also interesting. Due to the changed licensing policy of Oracle, i
 `BSL Language Server` should work on all systems running modern desktop and server operating systems which supported Java. The most popular environments are tested as part of the build pipelines:
 
 - Windows 7/10, Windows server 2012 and higher supported
-- latest Linux OS supported
-- latest macos supported
+- latest Linux OS supported.
+- latest MacOS supported

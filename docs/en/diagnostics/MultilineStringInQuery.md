@@ -1,15 +1,31 @@
 # Multi-line literal in query (MultilineStringInQuery)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Critical` | `Yes` | `1` | `badpractice`<br>`suspicious`<br>`unpredictable` 
+ |  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                             Tags                             |
+ |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------------:|
+ | `Error` | `BSL` | `Critical` |             `Yes`             |           `1`           | `badpractice`<br>`suspicious`<br>`unpredictable` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+Multi-line literals are rarely used in query texts, mostly these are error results due to an incorrect number of double quotes.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+In the example below, the selection will have two fields instead of three.
+
+```bsl
+Query = New Query;
+Query.Text = "SELECT
+|   OrderGoods.Cargo AS Cargo,
+|   ISNULL(OrderGoods.Cargo.Code, "") AS CargoCode,
+|   ISNULL(OrderGoods.Cargo.Name, "") AS CargoName
+|FROM
+|   Document.Order.Goods AS OrderGoods
+|WHERE
+|   OrderGoods.Ref = &Ref";
+```
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

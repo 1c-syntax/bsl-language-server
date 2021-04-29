@@ -1,17 +1,15 @@
 # Using of the deprecated method "CurrentDate" (DeprecatedCurrentDate)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`deprecated`<br>`unpredictable` 
+ |  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                           Tags                            |
+ |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------------------------------:|
+ | `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`deprecated`<br>`unpredictable` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Method "CurrentDate" is deprecated. Use "CurrentSessionDate" instead.
+The "CurrentDate" function has been deprecated. It is recommended to use the "CurrentSessionDate" function.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
 Incorrect:
 
 ```bsl
