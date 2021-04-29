@@ -1,8 +1,8 @@
 # Global module with postfix "Client" (CommonModuleNameGlobalClient)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
