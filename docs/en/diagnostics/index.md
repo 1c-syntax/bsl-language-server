@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **140**
+Total: **141**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **44**
-* Code smell: **89**
+* Code smell: **90**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -76,6 +76,7 @@ Total: **140**
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` 
+ [IncorrectLineBreak](IncorrectLineBreak.md) | Incorrect expression line break | Yes | Info | Code smell | `standard`<br>`badpractice` 
  [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Incorrect use of 'LIKE' | Yes | Critical | Error | `standard`<br>`sql`<br>`unpredictable` 
  [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Incorrect use of "StrTemplate" | Yes | Blocker | Error | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br>`standard`<br>`unpredictable` 
