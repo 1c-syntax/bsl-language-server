@@ -1,14 +1,14 @@
 # Storing confidential information in code (UsingHardcodeSecretInformation)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard` 
+ |      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Vulnerability` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `searchWords` | `String` | ```Search keywords for confidential information in variables, structures, mappings.``` | ```Пароль|Password``` 
+ |     Name      |   Type   | Description                                                                        |   Default value   |
+ |:-------------:|:--------:|:---------------------------------------------------------------------------------- |:-----------------:|
+ | `searchWords` | `String` | `Search keywords for confidential information in variables, structures, mappings.` | `Пароль|Password` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
