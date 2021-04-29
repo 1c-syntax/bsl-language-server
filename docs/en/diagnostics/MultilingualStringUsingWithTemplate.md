@@ -1,14 +1,14 @@
 # Partially localized text is used in the StrTemplate function (MultilingualStringUsingWithTemplate)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Major` | `Yes` | `2` | `error`<br>`localize` 
+ |  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Tags             |
+ |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
+ | `Error` | `BSL` | `Major`  |             `Yes`             |           `2`           | `error`<br>`localize` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `declaredLanguages` | `String` | ```Declared languages``` | ```ru``` 
+ |        Name         |   Type   | Description          | Default value |
+ |:-------------------:|:--------:|:-------------------- |:-------------:|
+ | `declaredLanguages` | `String` | `Declared languages` |     `ru`      | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
