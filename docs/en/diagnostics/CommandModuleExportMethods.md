@@ -1,8 +1,8 @@
 # Export methods in command and general command modules (CommandModuleExportMethods)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |             Tags             |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
+ | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `standard`<br>`clumsy` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
