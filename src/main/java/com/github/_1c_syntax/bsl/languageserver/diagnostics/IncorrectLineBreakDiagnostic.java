@@ -21,22 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashSet;
-import java.util.Optional;
-import java.util.regex.Matcher;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -55,42 +47,36 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   );
 
   private static final Pattern INCORRECT_END_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "\\s+(:?ИЛИ|И|OR|AND|\\+|-|\\/|%|\\*)\\s*(?:\\/\\/.*)?$"
+    "\\s+(:?ИЛИ|И|OR|AND|\\+|-|/|%|\\*)\\s*(?://.*)?$"
   );
 
-  private HashSet<Integer> setFirstQueryLines = new HashSet<Integer>();
+  // +1 for next line and +1 for 1..n based line numbers.
+  private static final int QUERY_START_LINE_OFFSET = 2;
+
+  private final Set<Integer> queryFirstLines = new HashSet<>();
 
   @Override
   protected void check() {
-
-    findFirstQueryLines();
+    findQueryFirstLines();
 
     checkContent(INCORRECT_START_LINE_PATTERN);
     checkContent(INCORRECT_END_LINE_PATTERN);
   }
 
-  private void findFirstQueryLines() {
-
-    documentContext.getQueries().forEach(query -> {
-        setFirstQueryLines.add(query.getAst().start.getLine());
-      }
-    );
+  private void findQueryFirstLines() {
+    documentContext.getQueries().forEach(query -> queryFirstLines.add(query.getAst().getStart().getLine()));
   }
 
   private void checkContent(Pattern pattern) {
-
-    String[] contentList;
+    String[] contentList = documentContext.getContentList();
     String checkText;
 
-    contentList = documentContext.getContentList();
-
-    for (int i = 0; i < contentList.length; i++) {
-
+    for (var i = 0; i < contentList.length; i++) {
       checkText = contentList[i];
 
-      Matcher matcher = pattern.matcher(checkText);
+      var matcher = pattern.matcher(checkText);
 
-      if (matcher.find() && !setFirstQueryLines.contains(i + 2)) {
+      if (matcher.find() && !queryFirstLines.contains(i + QUERY_START_LINE_OFFSET)) {
         diagnosticStorage.addDiagnostic(i + 1, matcher.start(1), i + 1, matcher.end(1));
       }
     }
