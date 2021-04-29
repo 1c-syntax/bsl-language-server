@@ -9,7 +9,7 @@
 
 The analyzer found a code fragment that most probably has a logic error. There is an operator (, <=, >=, =, <>, AND, OR, -, /) in the program text to the left and to the right of which there are identical subexpressions.
 
-## Snippets
+## Examples
 
 ```bsl
 If Summ <> 0 AND Summ <> 0 Then
