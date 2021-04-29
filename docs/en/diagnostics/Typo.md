@@ -1,15 +1,15 @@
 # Typo (Typo)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```3``` 
- `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated)``` | `````` 
+ |        Name         |   Type    | Description                                        | Default value |
+ |:-------------------:|:---------:|:-------------------------------------------------- |:-------------:|
+ |   `minWordLength`   | `Integer` | `Minimum length for checked words`                 |      `3`      |
+ | `userWordsToIgnore` | `String`  | `Dictionary for excluding words (comma separated)` | ``````  | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
