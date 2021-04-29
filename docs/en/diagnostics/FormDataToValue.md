@@ -1,8 +1,8 @@
 # FormDataToValue method call (FormDataToValue)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `5` | `badpractice` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+ | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `badpractice` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
