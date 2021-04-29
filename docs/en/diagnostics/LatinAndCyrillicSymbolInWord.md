@@ -1,14 +1,14 @@
 # Mixing Latin and Cyrillic characters in one identifier (LatinAndCyrillicSymbolInWord)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `5` | `brainoverload`<br>`suspicious` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `5`           | `brainoverload`<br>`suspicious` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `excludeWords` | `String` | ```A list of exclusion words, specified as a comma-separated string``` | ```ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси``` 
+ |      Name      |   Type   | Description                                                        |                                                                             Default value                                                                              |
+ |:--------------:|:--------:|:------------------------------------------------------------------ |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+ | `excludeWords` | `String` | `A list of exclusion words, specified as a comma-separated string` | `ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
