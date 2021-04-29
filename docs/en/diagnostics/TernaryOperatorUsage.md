@@ -1,8 +1,8 @@
 # Ternary operator usage (TernaryOperatorUsage)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `3` | `brainoverload` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |      Tags       |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `No`              |           `3`           | `brainoverload` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
