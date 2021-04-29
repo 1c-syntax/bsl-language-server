@@ -1,8 +1,8 @@
 # All variables declarations must have a description (MissingVariablesDescription)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -27,12 +27,12 @@ Var Context; // Detailed description that explains the purpose of the variable
 Var Context;
 ```
 
-## Sources
+## Источники
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
-## Snippets
+## Сниппеты
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
