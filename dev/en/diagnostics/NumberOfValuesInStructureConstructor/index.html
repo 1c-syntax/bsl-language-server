@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -872,45 +872,45 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.</p>
+<p>When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
-   <span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных,</span>
-   <span class="s">|НеРедактироватьСхемуКомпоновкиДанных,</span>
-   <span class="s">|НеНастраиватьУсловноеОформление,</span>
-   <span class="s">|НеНастраиватьВыбор,</span>
-   <span class="s">|НеНастраиватьПорядок,</span>
-   <span class="s">|АдресСхемыКомпоновкиДанных,</span>
-   <span class="s">|АдресНастроекКомпоновкиДанных,</span>
-   <span class="s">|УникальныйИдентификатор,</span>
-   <span class="s">|Заголовок&quot;</span><span class="p">,</span>
-   <span class="kc">Истина</span><span class="p">,</span>
-   <span class="kc">Истина</span><span class="p">,</span>
-   <span class="kc">Истина</span><span class="p">,</span>
-   <span class="kc">Истина</span><span class="p">,</span>
-   <span class="kc">Истина</span><span class="p">,</span>
-   <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресСхемыКомпоновкиДанных</span><span class="p">,</span>
-   <span class="o">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
-        <span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">,</span>
-        <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">),</span>
-   <span class="nv">УникальныйИдентификатор</span><span class="p">,</span>
-   <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">));</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Parameters</span>  <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span>
+   <span class="s1">&quot;UseParam1,</span>
+   <span class="s">|UseParam2,</span>
+   <span class="s">|UseParam3,</span>
+   <span class="s">|UseParam4,</span>
+   <span class="s">|UseParam5,</span>
+   <span class="s">|DataAddress,</span>
+   <span class="s">|SettingsAddress,</span>
+   <span class="s">|UUID,</span>
+   <span class="s">|Description&quot;</span><span class="p">,</span>
+   <span class="kc">True</span><span class="p">,</span>
+   <span class="kc">True</span><span class="p">,</span>
+   <span class="kc">True</span><span class="p">,</span>
+   <span class="kc">True</span><span class="p">,</span>
+   <span class="kc">True</span><span class="p">,</span>
+   <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">,</span>
+   <span class="o">?</span><span class="p">(</span><span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span><span class="p">,</span>
+        <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">,</span>
+        <span class="nv">EmptyAddress</span><span class="p">()),</span>
+   <span class="nv">UUID</span><span class="p">,</span>
+   <span class="nv">Description</span><span class="p">));</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Parameters</span>  <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">;</span>
 
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеНастраиватьВыбор&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеНастраиватьПорядок&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;АдресСхемыКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресСхемыКомпоновкиДанных</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;АдресНастроекКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
-                                                                                                                         <span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">,</span>
-                                                                                                                         <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">));</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;УникальныйИдентификатор &quot;</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Заголовок&quot;</span><span class="p">,</span> <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UseParam1&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UseParam2&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UseParam3&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UseParam4&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UseParam5&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;DataAddress&quot;</span><span class="p">,</span> <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;SettingsAddress&quot;</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span><span class="p">,</span>
+                                                                                                                         <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">,</span>
+                                                                                                                         <span class="nv">EmptyAddress</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;UUID &quot;</span><span class="p">,</span> <span class="nv">UUID</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Insert</span><span class="p">(</span><span class="s1">&quot;Description&quot;</span><span class="p">,</span> <span class="nv">Description</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
 <ul>

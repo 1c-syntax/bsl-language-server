@@ -467,7 +467,7 @@
   
     <li class="md-nav__item">
       <a href="../EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -622,7 +622,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -634,7 +634,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -903,18 +903,17 @@
 <h2 id="Create-Diagnostic">Create Diagnostic<a class="headerlink" href="#Create-Diagnostic" title="Permanent link">&para;</a></h2>
 <p>Below is an example of creating diagnostics based on the already created one.</p>
 <h3 id="Determining-the-purpose-of-diagnostic">Determining the purpose of diagnostic<a class="headerlink" href="#Determining-the-purpose-of-diagnostic" title="Permanent link">&para;</a></h3>
-<p>Before implementing a new diagnostic, you need to define its purpose - what error (or deficiency) you need to detect. As an example, we will write a diagnostic that checks for the presence of a semicolon <code>;</code> at the end of each expression.
- The next step is to come up with a unique diagnostic key, under which it will be added to the general list of diagnostics. Let's take the name <code>SemicolonPresence</code>.</p>
+<p>Before implementing a new diagnostic, you need to define its purpose - what error (or deficiency) you need to detect. As an example, we will write a diagnostic that checks for the presence of a semicolon <code>;</code> at the end of each expression.<br />
+The next step is to come up with a unique diagnostic key, under which it will be added to the general list of diagnostics. Let's take the name <code>SemicolonPresence</code>.</p>
 <h3 id="Diagnostic-implementation-class">Diagnostic implementation class<a class="headerlink" href="#Diagnostic-implementation-class" title="Permanent link">&para;</a></h3>
-<p>In the directory <code>src/main/java</code>  in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, create the <code>SemicolonPresenceDiagnostic.java</code> diagnostic class file.
- In the file, create the class of the same name, inherited from the <code>AbstractVisitorDiagnostic</code> class. The result will be</p>
+<p>In the directory <code>src/main/java</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, create the <code>SemicolonPresenceDiagnostic.java</code> diagnostic class file.<br />
+In the file, create the class of the same name, inherited from the <code>AbstractVisitorDiagnostic</code> class. The result will be</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. ПDetails on annotations in [article][DiagnosticStructure].
- In the example, we implement diagnostics related to the quality of the code (<code>CODE_SMELL</code>), low priority (<code>MINOR</code>), which requires 1 minute to fix and related to the 1C standard. Final class view</p>
+<p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. Details on annotations in [article][DiagnosticStructure]. In the example, we implement diagnostics related to the quality of the code (<code>CODE_SMELL</code>), low priority (<code>MINOR</code>), which requires 1 minute to fix and related to the 1C standard. The resulting annotated class</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
 <span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
@@ -929,32 +928,32 @@
 <span class="p">}</span>
 </code></pre></div>
 <h3 id="Class-resources">Class resources<a class="headerlink" href="#Class-resources" title="Permanent link">&para;</a></h3>
-<p>In the directory <code>src/main/resources</code>  in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create 2 diagnostic resource files. In our example, these will be files <code>SemicolonPresenceDiagnostic_ru.properties</code> and <code>SemicolonPresenceDiagnostic_en.properties</code>.
-In the created files, write the name of the diagnostic (parameter <code>diagnosticName</code>) and the warning message (<code>diagnosticMessage</code>).
- In our example, the contents of the files will be</p>
+<p>In the directory <code>src/main/resources</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create 2 diagnostic resource files. In our example, these will be files <code>SemicolonPresenceDiagnostic_ru.properties</code> and <code>SemicolonPresenceDiagnostic_en.properties</code>.<br />
+Save the name (parameter <code>diagnosticName</code>) and message (<code>diagnosticMessage</code>) of the diagnostic in the created files.<br />
+In our example, the contents of the files will be like this</p>
 <p>File <code>SemicolonPresenceDiagnostic_ru.properties</code></p>
-<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Пропущена точка с запятой в конце выражения</span>
-<span class="na">diagnosticName</span><span class="o">=</span><span class="s">Выражение должно заканчиваться &quot;;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span> <span class="o">=</span><span class="s">Missing semicolon at end of expression</span>
+<span class="na">diagnosticName</span> <span class="o">=</span><span class="s">Expression must end with &quot;;&quot;</span>
 </code></pre></div>
 <p>File <code>SemicolonPresenceDiagnostic_en.properties</code></p>
 <div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Missed semicolon at the end of statement</span>
 <span class="na">diagnosticName</span><span class="o">=</span><span class="s">Statement should end with &quot;;&quot;</span>
 </code></pre></div>
 <h3 id="Test-fixtures">Test fixtures<a class="headerlink" href="#Test-fixtures" title="Permanent link">&para;</a></h3>
-<p>For testing purposes, let's add a file to the project containing examples of both erroneous and correct code. We will place the <code>SemicolonPresenceDiagnostic.bsl</code> file with fixtures in the  <code>src/test/resources</code> resources directory in the  <code>diagnostics</code> package.
- As data for testing, let's add the code to the file</p>
+<p>For testing purposes, let's add a file to the project containing examples of both erroneous and correct code. We will place the <code>SemicolonPresenceDiagnostic.bsl</code> file with fixtures in the <code>src/test/resources</code> resources directory in the <code>diagnostics</code> package.<br />
+As data for testing, let's add the code to the file</p>
 <div class="highlight"><pre><span></span><code><span class="nv">A</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 <span class="nv">If</span> <span class="kc">True</span> <span class="k">Then</span>
   <span class="nv">A</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
   <span class="nv">A</span> <span class="o">=</span> <span class="m">0</span>           <span class="c c-Singleline">// Diagnostics should work here</span>
 <span class="nv">EndIf</span>             <span class="c c-Singleline">// and here</span>
 </code></pre></div>
-<p><strong>Attention!</strong>
- It is necessary to mark with comments the places where the diagnostics should work.</p>
+<p><strong>Attention!</strong><br />
+It is necessary to mark with comments the places where the diagnostics should work.</p>
 <h3 id="Test-writing">Test writing<a class="headerlink" href="#Test-writing" title="Permanent link">&para;</a></h3>
-<p>In the directory <code>src/test/java</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create a file <code>SemicolonPresenceDiagnosticTest.java</code> for the test diagnostic class.
- In the file, create a class inherited from the <code>AbstractDiagnosticTest</code> class for the generated diagnostic class.
- Result</p>
+<p>In the directory <code>src/test/java</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create a file <code>SemicolonPresenceDiagnosticTest.java</code> for the test diagnostic class.<br />
+In the file, create a class of the same name inherited from the <code>AbstractDiagnosticTest</code> class for the created diagnostic class. <br />
+As a result, we get</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
 <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="p">{</span>
@@ -995,8 +994,8 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
 </code></pre></div>
 <h3 id="Diagnostic-algorithm-implementation">Diagnostic algorithm implementation<a class="headerlink" href="#Diagnostic-algorithm-implementation" title="Permanent link">&para;</a></h3>
 <p>According to the rules of the grammar of the language, described in the project <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>, for our example, it is necessary to analyze nodes with the type <code>statement</code>. Need to use visitor <code>visitStatement</code>. Each selected node of the AST-tree must contain an ending "semicolon" represented by node <code>SEMICOLON</code>.</p>
-<p>Thus, the check will be to find the <code>SEMICOLON</code>  token in each <code>statement</code> node. If the token is not found, then an error must be filed.
- After the implementation of the verification algorithm, the file will take the form</p>
+<p>Thus, the check will be to find the <code>SEMICOLON</code> token in each <code>statement</code> node. If the token is not found, then an error must be added.<br />
+After implementation of the check, the file will take the form</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
 <span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
@@ -1009,9 +1008,12 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
 <span class="p">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span>         <span class="k">if</span> <span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+    <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// selected visitor</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>                                <span class="c1">// getting child node SEMICOLON</span>
+            <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>                     <span class="c1">// adding error</span>
         <span class="p">}</span>
+        <span class="c1">// For non-terminal expressions, the super method must be</span>
+        <span class="c1">//  called as the return value.</span>
         <span class="k">return</span> <span class="kd">super</span><span class="p">.</span><span class="na">visitStatement</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -1020,9 +1022,9 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
 <h3 id="Creating-a-diagnostic-description">Creating a diagnostic description<a class="headerlink" href="#Creating-a-diagnostic-description" title="Permanent link">&para;</a></h3>
 <p>To describe the created diagnostics, create two files <code>SemicolonPresence.md</code>: in catalog<code>docs/diagnostics</code> in Russian, in catalog <code>docs/en/diagnostics</code> in English.</p>
 <h2 id="Completion">Completion<a class="headerlink" href="#Completion" title="Permanent link">&para;</a></h2>
-<p>After successfully testing the diagnostics, add it to the list of implemented diagnostics of the project by editing the files <code>docs/index.md</code> for the Russian and <code>docs/en/index.md</code> for the English.
- Updating the documentation index can be done automatically by running the updateDiagnosticsIndex gradle task (from the command line or IDE)<code>gradlew updateDiagnosticsIndex</code>.
-In order not to forget to perform all the necessary actions before finishing development, you should use the special command <code>gradlew precommit</code> command line or <code>precommit</code> from the Gradle taskbar in the IDE.</p>
+<p>After successfully testing the diagnostics, add it to the list of implemented diagnostics of the project by editing the files <code>docs/index.md</code> for the Russian and <code>docs/en/index.md</code> for the English.<br />
+Updating the documentation index can be done automatically by running the updateDiagnosticsIndex gradle task (from the command line or IDE)<code>gradlew updateDiagnosticsIndex</code>.<br />
+In order not to forget anything, it is easier to run the command <code>gradlew precommit</code> from the command line or <code>precommit</code> from the Gradle taskbar in the IDE. </p>
                 
               
               
@@ -1062,7 +1064,7 @@ In order not to forget to perform all the necessary actions before finishing dev
               <span class="md-footer__direction">
                 Next
               </span>
-              Структура диагностики, назначение и содержимое файлов
+              Diagnostics structure, files contents and purpose
             </div>
           </div>
           <div class="md-footer__button md-icon">

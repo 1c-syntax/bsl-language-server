@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,16 +854,14 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 <p>In most cases, you should use the FormAttributeToValue method, instead of the FormDataToValue.</p>
 <p>The recommendation is due to considerations of unification of the application code and the fact that the syntax of the FormAttributeToValue is simpler than FormDataToValue.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="highlight"><pre><span></span><code>Procedure Test()
-    Form=Doc.GetForm(&quot;DocumentForm&quot;);
-    FD = Form.FormDataToValue(Object, Type(&quot;ValueTable&quot;));
-EndProcedure
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Test</span><span class="p">()</span>
+    <span class="nv">Form</span><span class="o">=</span><span class="nv">Doc</span><span class="o">.</span><span class="nb">GetForm</span><span class="p">(</span><span class="s1">&quot;DocumentForm&quot;</span><span class="p">);</span>
+    <span class="nv">FD</span> <span class="o">=</span> <span class="nv">Form</span><span class="o">.</span><span class="nb">FormDataToValue</span><span class="p">(</span><span class="nv">Object</span><span class="p">,</span> <span class="nb">Type</span><span class="p">(</span><span class="s1">&quot;ValueTable&quot;</span><span class="p">));</span>
+<span class="k">EndProcedure</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

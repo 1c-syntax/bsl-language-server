@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -873,18 +873,36 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 <p>All actions in the event-handler procedures BeforeWrite, OnWrite, BeforeDelete should be performed after checking for DataExchange.Load.</p>
-<p>This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created.</p>
+<p>This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created. In this case, all data is loaded into the Information Base "as is", without distortion (changes), checks or any other actions that prevent data loading.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Bad:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>      <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>         <span class="nv">RandomAlgorithm</span><span class="p">();</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     //     // ...      EndProcedure</span>
+<p>Bad:
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span> 
+
+     <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>
+        <span class="nv">RumMyFunction</span><span class="p">();</span>
+    <span class="nv">EndIf</span><span class="p">;</span>
+
+    <span class="c c-Singleline">// other code</span>
+    <span class="c c-Singleline">//</span>
+    <span class="c c-Singleline">// ...</span>
+
+<span class="k">EndProcedure</span>
 </code></pre></div>
-<p>Good:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>     <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>          <span class="k">Return</span><span class="p">;</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     // ... EndProcedure</span>
-</code></pre></div>
+Good:
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span> 
+
+     <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>
+        <span class="k">Return</span><span class="p">;</span>
+    <span class="nv">EndIf</span><span class="p">;</span>
+
+    <span class="c c-Singleline">// other code</span>
+    <span class="c c-Singleline">//</span>
+    <span class="c c-Singleline">// ...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

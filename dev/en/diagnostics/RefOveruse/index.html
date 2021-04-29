@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,25 +854,21 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 <p>Using ".Ref" to a field of a reference type will result in an implicit left join with the source table of this field, and it has no value, but only generates excessive load on the DBMS.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="highlight"><pre><span></span><code>Query.Text = &quot;Select Files.File.Ref, // error
-   | Files.File
-   | From
-   | InternalFiles AS Files&quot;;
+<div class="highlight"><pre><span></span><code><span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s1">&quot;Select Files.File.Ref, // error</span>
+   <span class="s">| Files.File</span>
+   <span class="s">| From</span>
+   <span class="s">| InternalFiles AS Files&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
 <!-- Примеры источников
 
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
 <ul>
 <li>Useful Information: <a href="https://its.1c.ru/db/v8std/content/654/hdoc">Dereferencing Complex Type Reference Fields in Query Language</a></li>
 </ul>

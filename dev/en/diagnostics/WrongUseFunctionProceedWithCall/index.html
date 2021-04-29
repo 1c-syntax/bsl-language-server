@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -857,10 +857,10 @@
 <p>You should call ProceedWithCall function only in Extensions and only methods annotated with &amp;AROUND.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<div class="highlight"><pre><span></span><code>&amp;AtClient
-Procedure Test()
-    ProceedWithCall(); // there is error    
-EndProcedure
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;AtClient</span>
+<span class="nv">Procedure</span> <span class="nv">Test</span><span class="p">()</span>
+    <span class="nv">ProceedWithCall</span><span class="p">();</span> <span class="c c-Singleline">// there is error    </span>
+<span class="k">EndProcedure</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

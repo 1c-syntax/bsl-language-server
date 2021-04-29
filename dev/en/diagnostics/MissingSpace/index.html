@@ -16,7 +16,7 @@
     
     
       
-        <title>Missing spaces to the left or right of operators + - * / = % =, keywords, and also to the right of , and ; (MissingSpace) - BSL Language Server Dev</title>
+        <title>Missing spaces to the left or right of operators `+ - * / = % =`, keywords, and also to the right of `,` and `;` (MissingSpace) - BSL Language Server Dev</title>
       
     
     
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; (MissingSpace)
+              Missing spaces to the left or right of operators `+ - * / = % < > <> <= >=`, keywords, and also to the right of `,` and `;` (MissingSpace)
             
           </span>
         </div>
@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -828,7 +828,7 @@
                   </a>
                 
                 
-                <h1 id="Missing-spaces-to-the-left-or-right-of-operators-----------keywords-and-also-to-the-right-of--and--MissingSpace">Missing spaces to the left or right of operators + - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=, keywords, and also to the right of , and ; (MissingSpace)<a class="headerlink" href="#Missing-spaces-to-the-left-or-right-of-operators-----------keywords-and-also-to-the-right-of--and--MissingSpace" title="Permanent link">&para;</a></h1>
+                <h1 id="Missing-spaces-to-the-left-or-right-of-operators-----------keywords-and-also-to-the-right-of--and--MissingSpace">Missing spaces to the left or right of operators <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, keywords, and also to the right of <code>,</code> and <code>;</code> (MissingSpace)<a class="headerlink" href="#Missing-spaces-to-the-left-or-right-of-operators-----------keywords-and-also-to-the-right-of--and--MissingSpace" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -865,19 +865,19 @@
 <tr>
 <td align="center"><code>listForCheckLeft</code></td>
 <td align="center"><code>String</code></td>
-<td align="left"><code>List to check for the space to the left of (separated by space)</code></td>
+<td align="left"><code>List to check for the space to the left of (separated by space). Example: ) =</code></td>
 <td align="center">``````</td>
 </tr>
 <tr>
 <td align="center"><code>listForCheckRight</code></td>
 <td align="center"><code>String</code></td>
-<td align="left"><code>List to check for the space to the right of (separated by space)</code></td>
+<td align="left"><code>List to check for the space to the right of (separated by space). Example: ( =</code></td>
 <td align="center"><code>, ;</code></td>
 </tr>
 <tr>
 <td align="center"><code>listForCheckLeftAndRight</code></td>
 <td align="center"><code>String</code></td>
-<td align="left"><code>List to check for the space from both sides of (separated by space)</code></td>
+<td align="left"><code>List to check for the space from both sides of (separated by space) Example: + - * / = % &lt; &gt;</code></td>
 <td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
 </tr>
 <tr>
@@ -923,13 +923,13 @@
 <span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 <h3 id="Using-allowMultipleCommas-parameter">Using <code>allowMultipleCommas</code> parameter<a class="headerlink" href="#Using-allowMultipleCommas-parameter" title="Permanent link">&para;</a></h3>
-<p>The parameter has sense only if <code>,</code> is listed in one of three base parameters</p>
+<p>The parameter has sense only if <code>,</code> is listed in one of three base parameters Defaults to <code>false</code></p>
 <p>If set to <code>false</code></p>
 <div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Bad</span>
     <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 <p>If set to <code>true</code></p>
-<div class="highlight"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Correct</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Correct</span>
 <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>

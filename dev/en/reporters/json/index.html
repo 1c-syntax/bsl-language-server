@@ -465,7 +465,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -564,7 +564,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -576,7 +576,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -708,6 +708,13 @@
         <li class="md-nav__item">
   <a href="#Description" class="md-nav__link">
     Description
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Scheme" class="md-nav__link">
+    Scheme:
   </a>
   
 </li>
@@ -883,6 +890,35 @@
 <p>Reporter option - <code>json</code></p>
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Output the analize result to file  <code>bsl-json.json</code> in the current workspace directory. Output the result of JSON serialization <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/data/AnalysisInfo.java">AnalysisInfo</a> object</p>
+<h2 id="Scheme">Scheme:<a class="headerlink" href="#Scheme" title="Permanent link">&para;</a></h2>
+<ul>
+<li><em>date</em> - date of analysis.</li>
+<li><em>fileinfos</em> - array of file information.</li>
+<li>
+<p><em>sourceDir</em> - path to the source directory without the "file: ///" prefix.</p>
+</li>
+<li>
+<h3 id="fileinfo">fileinfo:<a class="headerlink" href="#fileinfo" title="Permanent link">&para;</a></h3>
+</li>
+<li><em>path</em> - path to the source file with "file:///" prefix.</li>
+<li><em>mdoRef</em> - object reference description (empty value ("") is allowed). For example: "Catalog.Organizations"</li>
+<li><em>diagnostics</em> - array of diagnostics information.</li>
+<li>
+<p><em>metrics</em> - file metrics (optional).</p>
+</li>
+<li>
+<h4 id="diagnostic">diagnostic:<a class="headerlink" href="#diagnostic" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>range</em> - Location of the error in the file.</li>
+<li><em>severity</em> - One of Error, Warning, Hint, Information</li>
+<li><em>code</em> - Diagnostic code.</li>
+<li><em>source</em> - Diagnostics repo.</li>
+<li><em>message</em> - Diagnostics message.</li>
+<li><em>tags</em> - Diagnostics tags. (empty value allowed (null))</li>
+<li><em>relatedInformation</em> - Array of the location of similar errors in the file or some additional information. (empty value allowed (null)).</li>
+</ul>
+</li>
+</ul>
 <h2 id="Sample-output">Sample output<a class="headerlink" href="#Sample-output" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
     <span class="nt">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-01-21 01:29:27&quot;</span><span class="p">,</span>
@@ -905,7 +941,7 @@
                     <span class="nt">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;Error&quot;</span><span class="p">,</span>
                     <span class="nt">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;FunctionShouldHaveReturnDiagnostic&quot;</span><span class="p">,</span>
                     <span class="nt">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;bsl-language-server&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Функция не содержит \&quot;Возврат\&quot;&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Function should have \&quot;Return\&quot;&quot;</span><span class="p">,</span>
                     <span class="nt">&quot;tags&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
                     <span class="nt">&quot;relatedInformation&quot;</span><span class="p">:</span> <span class="kc">null</span>
                 <span class="p">}</span>

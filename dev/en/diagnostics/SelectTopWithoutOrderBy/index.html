@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -874,9 +874,50 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>Using the <code>TOP N</code> construct without specifying the sort order in <code>ORDER BY</code> or conditions in the <code>WHERE</code> section is fraught with unexpected results:
+- The order of the returned results may differ in different DBMSs
+- The order in different copies of information security will differ from the order expected by the developer</p>
+<p>According to the standard, the absence of the sentence <code>ORDER BY</code> is justified only in cases where
+- the algorithm for processing query results does not rely on a specific order of records
+- the result of processing the executed request is not shown to the user
+- query result - obviously one record</p>
+<p>In the above cases, it is recommended not to add the clause <code>ORDER BY</code> to the request body, as this leads to additional time-consuming execution of the request.</p>
+<h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
+<p>During the analysis, constructions are considered erroneous
+- Using <code>TOP N</code> in the union regardless of the presence of <code>ORDER BY</code> because ordering occurs after the union
+- Using <code>TOP N</code> where <code>N&gt; 1</code> if missing <code>ORDER BY</code>
+- Using <code>TOP 1</code>, if there is no <code>ORDER BY</code> and conditions in <code>WHERE</code>. This rule is disabled by default by a diagnostic option</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">TOP</span> <span class="m">1</span> <span class="c c-Singleline">// &lt; - No error, there is a condition</span>
+   <span class="nv">Reference</span><span class="o">.</span><span class="nv">Link</span>
+<span class="nv">OF</span>
+   <span class="nv">Directory</span><span class="o">.</span><span class="nv">Contractors</span> <span class="nv">AS</span> <span class="nv">Directory</span>
+<span class="nv">WHERE</span>
+   <span class="nv">Reference</span><span class="o">.</span><span class="nv">Ref</span><span class="o">.</span> <span class="nv">IN</span> <span class="p">(</span>
+       <span class="nv">SELECT</span> <span class="nv">TOP</span> <span class="m">10</span> <span class="c c-Singleline">// &lt; - Error, no sorting</span>
+           <span class="nv">Link</span>
+       <span class="nv">OF</span>
+           <span class="nv">Reference</span><span class="p">,</span> <span class="nv">Contractors</span><span class="p">)</span>
+
+<span class="nv">UNION</span> <span class="nv">ALL</span>
+
+<span class="nv">SELECT</span> <span class="nv">TOP</span> <span class="m">10</span> <span class="c c-Singleline">// &lt; - Error, no sorting (and cannot be)</span>
+   <span class="nv">Reference</span><span class="o">.</span><span class="nv">Link</span>
+<span class="nv">OF</span>
+   <span class="nv">Directory</span><span class="o">.</span><span class="nv">Contractors</span> <span class="nv">AS</span> <span class="nv">Directory</span>
+
+<span class="nv">UNION</span> <span class="nv">ALL</span>
+
+<span class="nv">SELECT</span> <span class="nv">TOP</span> <span class="m">1</span> <span class="c c-Singleline">// &lt; - Always error, even 1</span>
+   <span class="nv">Reference</span><span class="o">.</span><span class="nv">Link</span>
+<span class="nv">OF</span>
+   <span class="nv">Directory</span><span class="o">.</span><span class="nv">Contractors</span> <span class="nv">AS</span> <span class="nv">Directory</span>
+
+<span class="nv">SORT</span> <span class="nv">BY</span>
+   <span class="nv">Link</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -885,13 +926,16 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:412:hdoc">Standard: Ordering Query Results</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-<h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
+<h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:SelectTopWithoutOrderBy-off</span>
 <span class="c c-Singleline">// BSLLS:SelectTopWithoutOrderBy-on</span>
 </code></pre></div>
-<h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
+<h3 id="Parameter-for-config_1">Parameter for config<a class="headerlink" href="#Parameter-for-config_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;SelectTopWithoutOrderBy&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;skipSelectTopOne&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>

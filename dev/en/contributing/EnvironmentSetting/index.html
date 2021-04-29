@@ -16,7 +16,7 @@
     
     
       
-        <title>Требования к окружению - BSL Language Server Dev</title>
+        <title>Environment requirements - BSL Language Server Dev</title>
       
     
     
@@ -71,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Требования-к-окружению" class="md-skip">
+        <a href="#Environment-requirements" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Требования к окружению
+              Environment requirements
             
           </span>
         </div>
@@ -478,12 +478,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Требования к окружению
+          Environment requirements
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Требования к окружению
+        Environment requirements
       </a>
       
         
@@ -608,7 +608,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -620,7 +620,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -874,7 +874,7 @@
                   </a>
                 
                 
-                <h1 id="Требования-к-окружению">Требования к окружению<a class="headerlink" href="#Требования-к-окружению" title="Permanent link">&para;</a></h1>
+                <h1 id="Environment-requirements">Environment requirements<a class="headerlink" href="#Environment-requirements" title="Permanent link">&para;</a></h1>
 <p>Development is underway using <a href="https://www.jetbrains.com/idea/">IntelliJ IDEA Community Edition</a>.</p>
 <h2 id="Required-Software">Required Software<a class="headerlink" href="#Required-Software" title="Permanent link">&para;</a></h2>
 <ul>
@@ -891,8 +891,8 @@
 <ul>
 <li>Configure <a href="https://www.jetbrains.com/help/idea/sdk.html#manage_sdks">Java SDK на JDK11</a></li>
 <li>Enable annotation processing: <code>File -&gt; Settings -&gt; Build, Execution, Deployment -&gt; Compiler -&gt; Annotation Processors -&gt; Enable annotation processing</code></li>
-<li>Configure auto import settings, details in the <a href="https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html">article</a>. Attention:<ul>
-<li>There is no need to start optimization of imports of the entire project, this is followed by maintainers.</li>
+<li>Configure auto import settings, details in the <a href="https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html">article</a>. Pay special attention to import optimization.<ul>
+<li>There is no need to start optimization of imports of the entire project, this is followed by maintainers. If, after optimizing imports, changed files appeared that did not change during the development process, you should notify the maintainers and roll back these changes.</li>
 </ul>
 </li>
 </ul>

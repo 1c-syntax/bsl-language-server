@@ -16,7 +16,7 @@
     
     
       
-        <title>Структура диагностики, назначение и содержимое файлов - BSL Language Server Dev</title>
+        <title>Diagnostics structure, files contents and purpose - BSL Language Server Dev</title>
       
     
     
@@ -71,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Структура-диагностики-назначение-и-содержимое-файлов" class="md-skip">
+        <a href="#Diagnostics-structure-files-contents-and-purpose" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Структура диагностики, назначение и содержимое файлов
+              Diagnostics structure, files contents and purpose
             
           </span>
         </div>
@@ -467,7 +467,7 @@
   
     <li class="md-nav__item">
       <a href="../EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -576,9 +576,74 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Diagnostics structure, files contents and purpose
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-structure" class="md-nav__link">
+    Diagnostics structure
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-implementation-class" class="md-nav__link">
+    Diagnostics implementation class
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-test-class" class="md-nav__link">
+    Diagnostics test class
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-resources" class="md-nav__link">
+    Diagnostics resources
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-test-resources" class="md-nav__link">
+    Diagnostics test resources
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Diagnostics-description" class="md-nav__link">
+    Diagnostics description
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -590,7 +655,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -844,7 +909,283 @@
                   </a>
                 
                 
-                <h1 id="Структура-диагностики-назначение-и-содержимое-файлов">Структура диагностики, назначение и содержимое файлов<a class="headerlink" href="#Структура-диагностики-назначение-и-содержимое-файлов" title="Permanent link">&para;</a></h1>
+                <h1 id="Diagnostics-structure-files-contents-and-purpose">Diagnostics structure, files contents and purpose<a class="headerlink" href="#Diagnostics-structure-files-contents-and-purpose" title="Permanent link">&para;</a></h1>
+<p>This article contains rules of diagnostics usage, creation and information about content templates.</p>
+<ul>
+<li><a href="#%d0%a1%d1%82%d1%80%d1%83%d0%ba%d1%82%d1%83%d1%80%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d0%bd%d0%b0%d0%b7%d0%bd%d0%b0%d1%87%d0%b5%d0%bd%d0%b8%d0%b5-%d0%b8-%d1%81%d0%be%d0%b4%d0%b5%d1%80%d0%b6%d0%b8%d0%bc%d0%be%d0%b5-%d1%84%d0%b0%d0%b9%d0%bb%d0%be%d0%b2">Diagnostics structure, files contents and purpose</a></li>
+<li><a href="#%d0%a1%d0%be%d1%81%d1%82%d0%b0%d0%b2-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics structure</a></li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d0%b8-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics implementation class</a><ul>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d1%83%d1%8e%d1%89%d0%b8%d0%b9-%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d1%84%d0%b5%d0%b9%d1%81-bsldiagnostic">Diagnostics class, implements BSLDiagnostic interface</a></li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractdiagnostic">Diagnostics class, inherits from AbstractDiagnostic</a></li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractvisitordiagnostic">Diagnostics class, inherits from AbstractVisitorDiagnostic</a></li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95">Diagnostics class, inherits from AbstractListenerDiagnostic <strong>(Work in Progress)</strong></a></li>
+</ul>
+</li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics test class</a><ul>
+<li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics test</a></li>
+<li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba">Test of configuration method for parametrized diagnostics</a></li>
+<li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95">Quick fixes test <strong>(Work in progress)</strong></a></li>
+</ul>
+</li>
+<li><a href="#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics resources</a></li>
+<li><a href="#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics test resources</a></li>
+<li><a href="#%d0%9e%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics description</a></li>
+</ul>
+<h2 id="Diagnostics-structure">Diagnostics structure<a class="headerlink" href="#Diagnostics-structure" title="Permanent link">&para;</a></h2>
+<p>Diagnostics consists of a set of files, which are described in detail in the sections below. <br />
+The required set of files as part of the diagnostics at the time of this writing and the rules for their naming</p>
+<ul>
+<li>Diagnostic implementation class.                 The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic.java</code></li>
+<li>Diagnostics test class.                      The file name is generated according to the principle <code>% Diagnostic Key%</code> + <code>DiagnoscticTest.java</code></li>
+<li>Diagnostic resource file in Russian.    The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic_en.properties</code></li>
+<li>Diagnostic resource file in English. The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic_en.properties</code></li>
+<li>Resource file (fixture) test.                The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>Diagnosctic.bsl</code></li>
+<li>Diagnostic description file in Russian.   The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>.md</code></li>
+<li>Diagnostic resource file in English. The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>.md</code></li>
+</ul>
+<p><strong>Note:</strong><br />
+To create necessary files in right places, should run command <code>gradlew newDiagnostic --key="KeyDiagnostic"</code>, where <code>KeyDiagnostic</code> should be replaced with your own diagnostics key. Details in help <code>gradlew -q help --task newDiagnostic</code>.</p>
+<h2 id="Diagnostics-implementation-class">Diagnostics implementation class<a class="headerlink" href="#Diagnostics-implementation-class" title="Permanent link">&para;</a></h2>
+<p>Diagnostics is implemented by adding a java class to the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package in the <code>src/main/java</code> directory.</p>
+<p>In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)<em>. It is necessary to ensure that <strong>only</strong> is imported that is necessary for implementation, everything unused should be <strong>removed</strong> _ (if <a href="../EnvironmentSetting/">settings</a> are correct, then ide will do everything automatically)</em>.</p>
+<p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java">file</a>.</p>
+<p>На момент написания статьи имеются следующие свойства:</p>
+<ul>
+<li>The type of diagnostics is <code>type</code> and its importance is <code>severity</code>, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к <a href="../DiagnosticTypeAndSeverity/">статье</a>.</li>
+<li>Время на исправление замечания <code>minutesToFix</code> (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.</li>
+<li>Набор тэгов <code>tag</code> диагностики, указывающих группы, к котором она относится. Read more about tags in the <a href="../DiagnosticTag/">article</a>.</li>
+<li>Границы применимости <code>scope</code> (по умолчанию <code>ALL</code>, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.</li>
+<li>Default diagnostic active <code>activatedByDefault</code> (default <code>True</code>). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.</li>
+<li>Режим совместимости <code>compatibilityMode</code>, по которому фильтруются диагностики при использовании метаданных. The default is <code>UNDEFINED</code>.</li>
+</ul>
+<p>Последние два могут быть опущены.</p>
+<p>Annotation example</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="n">activatedByDefault</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>          <span class="c1">// Deactivated by default</span>
+  <span class="n">scope</span> <span class="o">=</span> <span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span>         <span class="c1">// Applicable only for BSL</span>
+  <span class="n">compatibilityMode</span> <span class="o">=</span> <span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span> <span class="c1">// 8.3.3 compatibility mode</span>
+  <span class="n">tags</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>             <span class="c1">// This is a diagnosis for violation of the 1C standard</span>
+  <span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
+<ul>
+<li>для простых диагностик (проверка контекста модуля) стоит использовать наследование <code>AbstractVisitor</code> с реализацией единственного метода <code>check</code></li>
+<li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наследовать класс от <code>AbstractListenerDiagnostic</code></li>
+<li>в остальных случаях нужно использовать стратегию <code>визитера</code> и</li>
+<li><code>AbstractVisitorDiagnostic</code> for diagnostics of 1C code</li>
+<li><code>AbstractSDBLVisitorDiagnostic</code> for diagnostics of 1C query</li>
+</ul>
+<p>Examples</p>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractListenerDiagnostic</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span>
+</code></pre></div>
+<p>Диагностика может предоставлять т.н. <code>быстрые исправления</code>, для чего класс диагностики должен реализовывать интерфейс <code>QuickFixProvider</code>. Подробно о добавлении <code>быстрых исправлений</code> в диагностику написано <a href="../DiagnosticQuickFix/">статье</a>.</p>
+<p>Examples</p>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractListenerDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+<p>После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в <a href="../DiagnostcAddSettings/">статье</a>.</p>
+<p>Ниже приведены отличия в реализации классов диагностик.</p>
+<h3 id="Diagnostics-class-implements-BSLDiagnostic-interface">Diagnostics class, implements BSLDiagnostic interface<a class="headerlink" href="#Diagnostics-class-implements-BSLDiagnostic-interface" title="Permanent link">&para;</a></h3>
+<p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечаний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
+<div class="highlight"><pre><span></span><code> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">;</span>
+</code></pre></div>
+<p>In the class, you need to implement:</p>
+<ul>
+<li>метод <code>getDiagnostics</code> принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний <code>List&lt;Diagnostic&gt;</code></li>
+<li>метод <code>getInfo</code>, возвращающий значение свойства <code>info</code></li>
+<li>метод <code>setInfo</code>, для установки значения свойства <code>info</code></li>
+</ul>
+<p>Ниже приведена общая структура метода <code>getDiagnostics</code></p>
+<div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Clearing diagnostics storage</span>
+    <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">clearDiagnostics</span><span class="p">();</span>
+
+    <span class="n">documentContext</span><span class="p">.</span><span class="na">getComments</span><span class="p">()</span>  <span class="c1">// Getting the collection of tokens, here comments</span>
+      <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>         <span class="c1">// Search for &quot;necessary&quot; - those that the diagnostics is aimed at detecting</span>
+        <span class="o">!</span><span class="n">goodCommentPattern</span><span class="p">.</span><span class="na">matcher</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">()).</span><span class="na">matches</span><span class="p">())</span>
+      <span class="p">.</span><span class="na">sequential</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">forEach</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>        <span class="c1">// Adding errors, here for each token a separate error</span>
+        <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+
+    <span class="c1">// Return of found</span>
+    <span class="k">return</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">();</span>
+  <span class="p">}</span>
+</code></pre></div>
+<h3 id="Diagnostics-class-inherits-from-AbstractDiagnostic">Diagnostics class, inherits from AbstractDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractDiagnostic" title="Permanent link">&para;</a></h3>
+<p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. В классе диагностики необходимо реализовать метод <code>check</code> - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
+  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="n">t</span><span class="p">.</span><span class="na">getType</span><span class="p">()</span> <span class="o">==</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">IDENTIFIER</span> <span class="o">&amp;&amp;</span>
+          <span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toUpperCase</span><span class="p">(</span><span class="n">Locale</span><span class="p">.</span><span class="na">ENGLISH</span><span class="p">).</span><span class="na">contains</span><span class="p">(</span><span class="s">&quot;Ё&quot;</span><span class="p">))</span>
+      <span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">token</span> <span class="o">-&gt;</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">token</span><span class="p">));</span>
+  <span class="p">}</span>
+</code></pre></div>
+<h3 id="Diagnostics-class-inherits-from-AbstractVisitorDiagnostic">Diagnostics class, inherits from AbstractVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractVisitorDiagnostic" title="Permanent link">&para;</a></h3>
+<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>BSLParserBaseVisitor</code>. Необходимо обратить внимание, что для упрощения добавлены <code>обобщенные</code> визитеры, например вместо реализации <code>visitFunction</code> для функции и <code>visitProcedure</code> для процедуры можно использовать <code>visitSub</code>, обобщающий работу с методами.</p>
+<p>В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище <code>diagnosticStorage</code> <em>(поле уже определено в абстрактном классе)</em>. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.</p>
+<p>Примерная структура метода</p>
+<div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span>                 <span class="c1">// Visitor for module variables</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// Finding child nodes</span>
+      <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>                                         <span class="c1">// Adding a error to the entire site</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ctx</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Если диагностика <strong>не предусматривает</strong> анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный <code>super-метод</code>.<br />
+Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.</p>
+<p>Examples:</p>
+<ul>
+<li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
+<li>Диагностика для блока условия или области должна вызывать <code>super-метод</code>, т.к. они существуют и используются (например <code>return super.visitSub(ctx)</code> для методов)</li>
+</ul>
+<h3 id="Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic">Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic" title="Permanent link">&para;</a></h3>
+<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка запросов, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>SDBLParserBaseVisitor</code>.</p>
+<p>Остальные правила использования идентичны <code>AbstractVisitorDiagnostic</code>.</p>
+<h3 id="Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress">Diagnostics class, inherits from AbstractListenerDiagnostic <strong>(Work in Progress)</strong><a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress" title="Permanent link">&para;</a></h3>
+<p><em><strong>&lt;В разработке&gt;</strong></em></p>
+<h2 id="Diagnostics-test-class">Diagnostics test class<a class="headerlink" href="#Diagnostics-test-class" title="Permanent link">&para;</a></h2>
+<p>При написании тестов используется фреймворк <a href="https://junit.org/junit5/">JUnit5</a>, для утверждений - библиотека <a href="https://joel-costigliola.github.io/assertj/">AssertJ</a>, предоставляющая <a href="https://ru.wikipedia.org/wiki/Fluent_interface">текучий/fluent-интерфейс</a> "ожиданий", подобно привычной многим библиотеке <a href="https://github.com/oscript-library/asserts">asserts</a> для <a href="http://oscript.io/">OneScript</a>.</p>
+<p>Теста реализуется посредством добавления java-класса в пакет <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> в каталоге <code>src/test/java</code>.</p>
+<p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(аналогично классу реализации диагностики)</em>.<br />
+В файле необходимо создать одноименный файлу класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.</p>
+<p>Test class example</p>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">org.eclipse.lsp4j.Diagnostic</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.utils.Ranges</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">org.junit.jupiter.api.Test</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="p">;</span>
+
+<span class="kn">import static</span> <span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">TemplateDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">TemplateDiagnostic</span><span class="o">&gt;</span> <span class="p">{</span>
+
+    <span class="n">TemplateDiagnosticTest</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">super</span><span class="p">(</span><span class="n">TemplateDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест <code>@Test</code>.</p>
+<p>В тестовом классе обязательно должны присутствовать методы для тестирования</p>
+<ul>
+<li>тест диагностики, самой по себе</li>
+<li>тест метода конфигурирования для параметризованных диагностик</li>
+<li>тест "быстрых замен" при их наличии</li>
+</ul>
+<h3 id="Diagnostics-test">Diagnostics test<a class="headerlink" href="#Diagnostics-test" title="Permanent link">&para;</a></h3>
+<p>Упрощенно, тест диагностики состоит из следующих шагов</p>
+<ul>
+<li>получение списка замечаний диагностики</li>
+<li>проверка количества срабатываний</li>
+<li>проверка местоположения срабатываний</li>
+</ul>
+<p>Первый шагом необходимо получить список замечаний диагностики вызовом метода <code>getDiagnostics()</code> <em>(реализован в классе <code>AbstractDiagnosticTest</code>)</em>. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.<br />
+Следующим шагом необходимо, с помощью утверждения <code>hasSize()</code> убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.<br />
+После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом <code>getRange()</code>, с ожидаемой областью <em>(стоит использовать класс <code>RangeHelper</code> для упрощения формирования контрольнх значений)</em>.<br />
+В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом <code>getMessage()</code> диагностики.</p>
+<p>Test method example</p>
+<div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
+    <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// getting a list of diagnostics</span>
+
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// checking the number of errors found</span>
+
+      <span class="c1">// verification of special cases</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)))</span>
+        <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">)));</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер <code>util.Assertions.assertThat</code> и тогда пример выше будет выглядеть следующим образом:</p>
+<div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
+    <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// getting a list of diagnostics</span>
+
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// checking the number of errors found</span>
+
+      <span class="c1">// проверка частных случаев</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
+    <span class="p">}</span>
+</code></pre></div>
+<h3 id="Test-of-configuration-method-for-parametrized-diagnostics">Test of configuration method for parametrized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parametrized-diagnostics" title="Permanent link">&para;</a></h3>
+<p>Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.<br />
+Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом <code>getDefaultDiagnosticConfiguration()</code>, используя информацию текущего объекта диагностики <code>diagnosticInstance.getInfo()</code>. Полученный результат представляет собой соответствие, в котором, методом <code>put</code>, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом <code>configure()</code> текущего объекта диагностики <code>diagnosticInstance</code>.</p>
+<p>Test method example</p>
+<div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
+    <span class="kt">void</span> <span class="nf">testConfigure</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// получение настроек диагностики по умолчанию</span>
+        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
+
+        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// установка параметру &quot;templateParem&quot; значения &quot;newValue&quot;</span>
+        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// применение настроек</span>
+
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// получение списка замечаний диагностики</span>
+
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// проверка количества обнаруженных замечаний</span>
+
+        <span class="c1">// проверка частных случаев</span>
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+          <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
+          <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
+    <span class="p">}</span>
+</code></pre></div>
+<h3 id="Quick-fixes-test-Work-in-progress">Quick fixes test <strong>(Work in progress)</strong><a class="headerlink" href="#Quick-fixes-test-Work-in-progress" title="Permanent link">&para;</a></h3>
+<p><em><strong>&lt;В разработке&gt;</strong></em></p>
+<h2 id="Diagnostics-resources">Diagnostics resources<a class="headerlink" href="#Diagnostics-resources" title="Permanent link">&para;</a></h2>
+<p>BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге <code>src/main/resources</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".</p>
+<p>Обязательные параметры, используемые при добавлении замечания по диагностике методам <code>diagnosticStorage.addDiagnostic</code></p>
+<ul>
+<li>diagnosticMessage - diagnostic message. Значение поддерживает параметризацию (см <code>String.format</code>)</li>
+<li>diagnosticName - Diagnostic name, human-readable</li>
+</ul>
+<p>Для <code>быстрых исправлений</code> применяется параметр <code>quickFixMessage</code>, содержащий описание действия-исправления.</p>
+<h2 id="Diagnostics-test-resources">Diagnostics test resources<a class="headerlink" href="#Diagnostics-test-resources" title="Permanent link">&para;</a></h2>
+<p>В качестве фикстур используется содержимое ресурсного файла теста, расположенного в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>. Файл должен содержать необходимые примеры кода на языке 1С <em>(или oscript)</em>.<br />
+Необходимо добавлять как ошиочный, так и корректный код, <strong>помечая с помощью комментариев места, где диагностика должна зафиксировать замечания, а где нет</strong>. Лукчше всего, если тестовые примеры будут <code>реальиными</code>, из практики, а не синтетическими, придуманными <code>под диагностику</code>.</p>
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
+<p>Описание диагностики создается в формате <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> в двух вариантах - для русского и английчского языков. Файлы с описанием располагаются в каталоге <code>docs/diagnostics</code> для русского языка, для английского в <code>docs/diagnostics</code>.<br />
+Файл в общем случае описания имеет следующую структуру</p>
+<ul>
+<li>Заголовок, равный значению <code>diagnosticName</code> из файла ресурса диагностики соответствующего языка</li>
+<li>Описание параметров диагностики при их наличии</li>
+<li>Тело с описанием диагностики, указанием "почему так плохо"</li>
+<li>Исключительные ситуации, когда диагностика не детектирует замечание</li>
+<li>Examples of good and bad code</li>
+<li>Algorithm of diagnostics for complex</li>
+<li>Ссылки на источники, если диагностика является реализацией стандарта (например на <a href="https://its.1c.ru">ИТС</a>).</li>
+</ul>
+<p>Кроме непосредственно создания файлов описания диагностики, необходимо обновлять индекс-файлы <code>index.md</code> для каждого языка, добавляя диагностику в таблицу реализованных.</p>
                 
               
               
@@ -884,7 +1225,7 @@
               <span class="md-footer__direction">
                 Next
               </span>
-              Типы и важность диагностик
+              Diagnostics types and severity
             </div>
           </div>
           <div class="md-footer__button md-icon">

@@ -469,7 +469,7 @@
   
     <li class="md-nav__item">
       <a href="../EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -615,7 +615,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -627,7 +627,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -882,52 +882,36 @@
                 
                 
                 <h1 id="Quick-start">Quick start<a class="headerlink" href="#Quick-start" title="Permanent link">&para;</a></h1>
-<p>The following describes the steps to get started quickly.</p>
+<p>The following describes the steps to get started quickly</p>
 <h2 id="Create-new-diagnostics">Create new diagnostics<a class="headerlink" href="#Create-new-diagnostics" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Create project directory <code>bsl-language-server</code></li>
 <li>Clone the project repository to the created directory <code>https://github.com/1c-syntax/bsl-language-server.git</code></li>
 <li>Set up the environment according to the <a href="../EnvironmentSetting/">instructions</a></li>
-<li>Execute commands to ignore changes in service files<ol>
+<li>Execute commands to ignore changes in service files</li>
 <li><code>git update-index --assume-unchanged ./.idea/compiler.xml</code></li>
 <li><code>git update-index --assume-unchanged ./.idea/encodings.xml</code></li>
 <li><code>git update-index --assume-unchanged ./.idea/misc.xml</code></li>
-</ol>
-</li>
 <li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
 <li>Run (from context menu or ide console) command <code>gradlew test</code>, if passed then all settings are correct</li>
-<li>Make yourself familiar with  <a href="../DiagnosticExample/">diagnostics development example</a> , <a href="../DiagnosticStructure/">structure and files purpose description,</a> and other articles in the <a href="../">section for developers</a></li>
+<li>Make yourself familiar with <a href="../DiagnosticExample/">diagnostics development example</a>, <a href="../DiagnosticStructure/">structure and files purpose description,</a> and other articles in the <a href="../">section for developers</a></li>
 </ol>
 <h2 id="Using-the-AST-Debugger">Using the AST Debugger<a class="headerlink" href="#Using-the-AST-Debugger" title="Permanent link">&para;</a></h2>
 <p>To analyze the AST tree when creating diagnostics, you may need to get a visual representation of the tree. To do this, follow these steps</p>
 <ul>
+<li>Create <code>bsl-parser</code> project directory</li>
+<li>Clone the project repository into the created directory <code>https://github.com/1c-syntax/bsl-parser.git</code></li>
+<li>Set up the environment according to the <a href="../EnvironmentSetting/">instruction</a> <em>(if not previously performed)</em></li>
+<li>Install <code>ANTLR v4 grammar plugin</code></li>
 <li>
-<p>Create <code>bsl-parser</code> project directory</p>
-</li>
-<li>
-<p>Clone the project repository into the created directory <code>https://github.com/1c-syntax/bsl-parser.git</code></p>
-</li>
-<li>
-<p>Set up the environment according to the <a href="../EnvironmentSetting/">instruction</a> <em>(if not previously performed)</em></p>
-</li>
-<li>
-<p>Install <code>ANTLR v4 grammar plugin</code></p>
-<ul>
-<li>restart IDEA</li>
-</ul>
+<p>restart IDEA</p>
 </li>
 <li>
 <p>Set up the plugin -  <code>File | Settings | Languages &amp; Frameworks | ANTLR v4 default project settings</code> <code>ANTLR v4 grammar plugin</code></p>
-<ul>
+</li>
 <li>Set up <code>Case transformation in the Preview window</code> in <code>Transform to uppercase when lexing</code></li>
-</ul>
-</li>
-<li>
-<p>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</p>
-</li>
-<li>
-<p>After downloading:</p>
-<ul>
+<li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
+<li>After downloading:</li>
 <li>To analyze bsl files (1C code)<ul>
 <li>Open <code>src/main/antlr/BSLParser.g4</code></li>
 <li>Place the cursor on the line with the rule <code>file:</code> (the first rule in the file) and select the context menu item <code>Test Rule file</code></li>
@@ -938,8 +922,6 @@
 <li>Open <code>src/main/antlr/SDBLParser.g4</code></li>
 <li>Place the cursor on the line with the rule <code>queryPackage:</code> (the first rule in the file) and select the context menu item <code>Test Rule queryPackage</code></li>
 <li>In the opened window, select a sdbl-file or paste text from the clipboard</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -970,7 +952,7 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Требования к окружению
+              Environment requirements
             </div>
           </div>
         </a>

@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -855,26 +855,24 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>It is not recommended to use constructors of other objects in the structure constructor if these constructors accept parameters. In particular, in the constructor of one structure it is not recommended to create other structures with the declaration of property values.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">НоменклатураСервер</span><span class="o">.</span><span class="nv">ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции</span><span class="p">(</span>
-  <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="p">,</span>
-  <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
-  <span class="s1">&quot;ЗаполнитьПризнакХарактеристикиИспользуются,</span>
-  <span class="s">|ЗаполнитьПризнакТипНоменклатуры, ЗаполнитьПризнакВариантОформленияПродажи&quot;</span><span class="p">,</span>
-   <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span><span class="s1">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s1">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">),</span>
-   <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span><span class="s1">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s1">&quot;ТипНоменклатуры&quot;</span><span class="p">),</span>
-   <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span><span class="s1">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s1">&quot;ВариантОформленияПродажи&quot;</span><span class="p">)</span>
+<p>Incorrect</p>
+<div class="highlight"><pre><span></span><code><span class="nv">GoodsServer</span><span class="o">.</span><span class="nv">MakeGoods</span><span class="p">(</span>
+  <span class="nv">Object</span><span class="o">.</span><span class="nv">Products</span><span class="p">,</span>
+  <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span>
+  <span class="s1">&quot;CharacteristicsUsed,</span>
+  <span class="s">|Type, Variant&quot;</span><span class="p">,</span>
+   <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;CharacteristicsUsed&quot;</span><span class="p">),</span>
+   <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;Type&quot;</span><span class="p">),</span>
+   <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;Variant&quot;</span><span class="p">)</span>
   <span class="p">)</span>
  <span class="p">);</span>
 </code></pre></div>
-<p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыЗаполненияРеквизитов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
-<span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;ЗаполнитьПризнакХарактеристикиИспользуются&quot;</span><span class="p">,</span>
-                                                          <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span><span class="s1">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s1">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">));</span>
-<span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;ЗаполнитьПризнакТипНоменклатуры&quot;</span><span class="p">,</span>
-                                                          <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span><span class="s1">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s1">&quot;ТипНоменклатуры&quot;</span><span class="p">));</span>
-<span class="nv">НоменклатураСервер</span><span class="o">.</span><span class="nv">ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции</span><span class="p">(</span><span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="p">,</span>
-                                                          <span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="p">);</span>
+<p>Correct</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Parameters</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">;</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;CharacteristicsUsed&quot;</span><span class="p">,</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;CharacteristicsUsed&quot;</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Type&quot;</span><span class="p">,</span>                <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;Type&quot;</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Variant&quot;</span><span class="p">,</span>             <span class="k">New</span> <span class="nv">Structure</span><span class="p">(</span><span class="s1">&quot;Good&quot;</span><span class="p">,</span> <span class="s1">&quot;Variant&quot;</span><span class="p">));</span>
+<span class="nv">GoodsServer</span><span class="o">.</span><span class="nv">MakeGoods</span><span class="p">(</span><span class="nv">Object</span><span class="o">.</span><span class="nv">Products</span><span class="p">,</span>     <span class="nv">Parameters</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

@@ -419,8 +419,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit-" class="md-nav__link">
-    How to increase the maximum line length in diagnostics? Line length limit ?
+  <a href="#How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit" class="md-nav__link">
+    How to increase the maximum line length in diagnostics Line length limit?
   </a>
   
 </li>
@@ -535,7 +535,7 @@
   
     <li class="md-nav__item">
       <a href="../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -634,7 +634,7 @@
   
     <li class="md-nav__item">
       <a href="../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -646,7 +646,7 @@
   
     <li class="md-nav__item">
       <a href="../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -904,28 +904,28 @@
 <p>This section contains the most frequently asked questions and answers.</p>
 <h2 id="How-to-change-the-language-of-diagnostic-messages">How to change the language of diagnostic messages?<a class="headerlink" href="#How-to-change-the-language-of-diagnostic-messages" title="Permanent link">&para;</a></h2>
 <p>To change the language of displayed messages from Russian (default) to English, you can use the configuration file. The configuration options can be found in the <a href="../features/ConfigurationFile/">description of configuration file.</a></p>
-<h2 id="How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit-">How to increase the maximum line length in diagnostics? <code>Line length limit</code> ?<a class="headerlink" href="#How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit-" title="Permanent link">&para;</a></h2>
+<h2 id="How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit">How to increase the maximum line length in diagnostics <code>Line length limit</code>?<a class="headerlink" href="#How-to-increase-the-maximum-line-length-in-diagnostics-Line-length-limit" title="Permanent link">&para;</a></h2>
 <p>All diagnostics has a page with a description in the <code>Diagnostics</code> section, for example, <a href="../diagnostics/LineLength/">Line length limit</a>. If the diagnosis can change its behavior, then on the description page there will be parameters with a description of what they affect. In this case, the <code>maxLineLength</code> parameter is responsible for the maximum line length.</p>
 <h2 id="How-to-disable-Lens-on-cognitive-complexity">How to disable Lens on cognitive complexity?<a class="headerlink" href="#How-to-disable-Lens-on-cognitive-complexity" title="Permanent link">&para;</a></h2>
-<p>To disable the <code>lense</code> with information about cognitive complexity, you should use the configuration file in which <code>showCognitiveComplexity</code> set to <code>false</code> . The configuration options can be found in the <a href="../features/ConfigurationFile/">description of the configuration file.</a></p>
+<p>To disable the <code>lens</code> with information about cognitive complexity, you should use the configuration file in which <code>showCognitiveComplexity</code> set to <code>false</code>. The configuration options can be found in the <a href="../features/ConfigurationFile/">description of the configuration file.</a></p>
 <h2 id="I-think-that-the-diagnosis-does-not-work-correctly-What-to-do">I think that the diagnosis does not work correctly. What to do?<a class="headerlink" href="#I-think-that-the-diagnosis-does-not-work-correctly-What-to-do" title="Permanent link">&para;</a></h2>
 <p>In case of doubt (or confidence) that the diagnosis is not working correctly, there are two ways</p>
 <ul>
 <li>contact the <a href="https://t.me/bsl_language_server">telegram</a> chat and describe situation, maybe still there is no error</li>
-<li>create issue ( <a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a> ) in the project repository of the appropriate type, where to attach the error description and, it is very desirable, code examples where the diagnosis does not work correctly.</li>
+<li>create issue (<a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a>) in the project repository of the appropriate type, where to attach the error description and, it is very desirable, code examples where the diagnosis does not work correctly.</li>
 </ul>
-<h2 id="BSL-Language-Server-and-SonarQube-plugin-are-the-same-things"><code>BSL Language Server</code> and SonarQube plugin are the same things?<a class="headerlink" href="#BSL-Language-Server-and-SonarQube-plugin-are-the-same-things" title="Permanent link">&para;</a></h2>
+<h2 id="BSL-Language-Server-and-SonarQube-plugin-are-the-same-things"><code>BSL Language Server</code> and <code>SonarQube</code> plugin are the same things?<a class="headerlink" href="#BSL-Language-Server-and-SonarQube-plugin-are-the-same-things" title="Permanent link">&para;</a></h2>
 <p><code>BSL Language Server</code> is a stand-alone application, the implementation of the server side of the LSP protocol. The plugin for <code>SonarQube</code> uses the <code>BSL Language Server</code> to analyze the BSL source code (1C configurations, 1Script and 1Script.Web scripts).</p>
 <p><code>BSL Language Server</code> can be used with any application that has an LSP client implementation. Verified connections:</p>
 <ul>
-<li>plugin for <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a> ;</li>
-<li>additional utility for 1C:Enterprise in DESIGNER mode <a href="https://github.com/otymko/phoenixbsl">Phoenix BSL</a> ;</li>
-<li>plugin for <a href="https://github.com/sublimelsp/LSP">Sublime Text</a> .</li>
+<li>plugin for <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a>;</li>
+<li>additional utility for 1C:Enterprise in DESIGNER mode <a href="https://github.com/otymko/phoenixbsl">Phoenix BSL</a>;</li>
+<li>plugin for <a href="https://github.com/sublimelsp/LSP">Sublime Text</a>.</li>
 </ul>
 <p>Also through direct import <code>BSL Language Server</code> work:</p>
 <ul>
 <li>plugin for <a href="https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator">1C: Enterprise development tools</a> (own implementation, without LSP);</li>
-<li>plugin for <a href="https://github.com/1c-syntax/sonar-bsl-plugin-community">SonarQube</a> ;</li>
+<li>plugin for <a href="https://github.com/1c-syntax/sonar-bsl-plugin-community">SonarQube</a>;</li>
 </ul>
                 
               

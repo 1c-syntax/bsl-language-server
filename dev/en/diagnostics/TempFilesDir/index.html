@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,8 +854,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<p>When you use GetTemporaryFileName, 1С:Enterprise retains control over these files and by default deletes them as soon as a working process (if a file is created on the server side) or client application (if a file is created on the client side) is restarted.</p>
+<p>When you use GetTemporaryFileName(), 1С:Enterprise retains control over these files and by default deletes them as soon as a working process (if a file is created on the server side) or client application (if a file is created on the client side) is restarted.</p>
 <p>If a temporary file name is generated otherwise, and the application code fails (or is for any other reason unable) to delete a temporary file, it is not controlled by the platform and is saved in the file system for an indefinite time. Lost temporary files accumulated in the system can pose a serious problem, specifically for infobases with a great number of active users (for example, in the service mode).</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -885,7 +884,7 @@
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Source: <a href="https://support.1ci.com/hc/en-us/articles/360011122319-Access-to-the-file-system-from-the-configuration-code">Standard: Temporary Files and Directories</a></li>
+<li>Source: <a href="https://its.1c.ru/db/v8std#content:542:hdoc">Standard: Temporary Files and Directories</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

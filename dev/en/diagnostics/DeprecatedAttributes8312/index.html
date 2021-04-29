@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,59 +854,36 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<p>The following items are deprecated and their use is not recommended since platform version 8.3.12:</p>
+<p>The following items are deprecated and their use is not recommended since platform version 8.3.12:
+* Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
+* ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
+* The following properties and methods of Chart object are obsolete and not recommended for use:
+   * ColorPalette;
+   * GradientPaletteStartColor;
+   * GradientPaletteEndColor;
+   * GradientPaletteMaxColors;
+   * GetPalette();
+   * SetPalette().
+* Names of properties of the object ChartPlotArea:
+   * ShowScale;
+   * ScaleLines;
+   * ScaleColor.
+* Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:</p>
 <ul>
-<li>
-<p>Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum.<br>The Horizontal value of the ChildFormItemsGroup system enum is deprecated</p>
-</li>
-<li>
-<p>ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;</p>
-</li>
-<li>
-<p>The following properties and methods of Chart object are obsolete and not recommended for use:</p>
-<ul>
-<li>ColorPalette</li>
-<li>GradientPaletteStartColor</li>
-<li>GradientPaletteEndColor</li>
-<li>GradientPaletteMaxColors</li>
-<li>GetPalette</li>
-<li>SetPalette</li>
-</ul>
-</li>
-<li>
-<p>Names of properties of the object ChartPlotArea:</p>
-<ul>
-<li>ShowScale</li>
-<li>ScaleLines</li>
-<li>ScaleColor</li>
-</ul>
-</li>
-<li>
-<p>Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:</p>
-<ul>
-<li>ShowSeriesScaleLabels - recommended to use the SeriesScale.ScaleLabelLocation</li>
-<li>ShowPointsScaleLabels- recommended to use the PointsScale.ScaleLabelLocation</li>
-<li>ShowValuesScaleLabels - recommended to use the ValuesScale.ScaleLabelLocation</li>
-<li>ShowScaleValueLines - recommended to use the ValuesScale.ОтображениеЛинийСетки</li>
-<li>ValueScaleFormat - recommended to use the ValuesScale.LabelFormat</li>
-<li>LabelsOrientation - recommended to use the PointsScale.LabelOrientation</li>
-</ul>
-</li>
-<li>
-<p>Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</p>
-</li>
-<li>
-<p>Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</p>
-</li>
-<li>
-<p>Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format. It is recommended that you do not use this method.</p>
-</li>
+<li>ShowSeriesScaleLabels. Recommended to use the SeriesScale.ScaleLabelLocation;</li>
+<li>ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;</li>
+<li>ShowValuesScaleLabels. Recommended to use the ValuesScale.ScaleLabelLocation;</li>
+<li>ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;</li>
+<li>ValueScaleFormat. Recommended to use the ValuesScale.LabelFormat;</li>
+<li>LabelsOrientation. Recommended to use the PointsScale.LabelOrientation.</li>
+<li>Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</li>
+<li>Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</li>
+<li>Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format.</li>
 </ul>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-<p><a href="https://1c-dn.com/library/v8update_2079252603_new_functionality_and_changes/">Platform 8.3.12 changelog</a></p>
+<p>Source: <a href="https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm">Platform 8.3.12 changelog</a></p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

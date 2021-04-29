@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -853,14 +853,13 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Don't delete elements of collection %s when iterating through collection using the 
-operator <strong>For each ... In ... Do</strong>. Because it change index of next element.</p>
-<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<p>Don't delete elements of collection %s when iterating through collection using the operator <strong>For each ... In ... Do</strong>. Because it change index of next element.</p>
+<p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">For</span> <span class="k">each</span> <span class="nv">Element</span> <span class="nv">In</span> <span class="nv">Collection</span> <span class="k">Do</span>
    <span class="nv">Collection</span><span class="o">.</span><span class="nv">Delete</span><span class="p">(</span><span class="nv">Element</span><span class="p">)</span>
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
-<p>Alternatively remove elements from the end:</p>
+<p>Alternatively, remove elements from the end:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">IndexOf</span> <span class="o">=</span> <span class="nv">Numbers</span><span class="o">.</span><span class="nv">UBound</span><span class="p">();</span>
 <span class="k">While</span> <span class="nv">IndexOf</span> <span class="o">&gt;=</span> <span class="m">0</span> <span class="k">Do</span>
     <span class="nv">If</span> <span class="nv">Numbers</span><span class="p">[</span><span class="nv">IndexOf</span><span class="p">]</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Then</span>
@@ -871,7 +870,7 @@ operator <strong>For each ... In ... Do</strong>. Because it change index of nex
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc">1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3" (RU)</a></li>
+<li><a href="https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc">1C: Programming for Beginners. Development in the system "1C: Enterprise 8.3" (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

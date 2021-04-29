@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,26 +854,30 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 <p>To check access rights in the code, use the AccessRight method.</p>
-<p>When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method. If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call.</p>
-<p>If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.</p>
+<p>When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method.</p>
+<p>If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call. If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="highlight"><pre><span></span><code>Incorrect: If IsInRole(&quot;AddChangeWorldCountries&quot;) Then ... If IsInRole(&quot;ViewPopularCountriesReport&quot;) Then ...
+<p>Wrong:
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">RolesAvailable</span><span class="p">(</span><span class="s1">&quot;AddingChangingCountriesWorld&quot;</span><span class="p">)</span> <span class="k">Then</span><span class="o">...</span>
+<span class="nv">If</span> <span class="nv">RolesAvailable</span><span class="p">(</span><span class="s1">&quot;ViewPopularCountriesReport&quot;</span><span class="p">)</span> <span class="k">Then</span> <span class="o">...</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>Correct example: If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ... If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...
+Correct:
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nb">AccessRight</span><span class="p">(</span><span class="s1">&quot;Edit&quot;</span><span class="p">,</span> <span class="nb">Metadata</span><span class="o">.</span><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">WorldCountries</span><span class="p">)</span> <span class="k">Then</span> <span class="o">...</span>
+<span class="nv">If</span> <span class="nb">AccessRight</span><span class="p">(</span><span class="s1">&quot;View&quot;</span><span class="p">,</span> <span class="nb">Metadata</span><span class="o">.</span><span class="nb">Reports</span><span class="o">.</span><span class="nv">PopularCountries</span><span class="p">)</span> <span class="k">Then</span> <span class="o">...</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>Incorrect: If IsInRole(&quot;Paymaster&quot;) Then ...
+Wrong:
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">RolesAvailable</span><span class="p">(</span><span class="s1">&quot;Treasurer&quot;</span><span class="p">)</span> <span class="k">Then</span><span class="o">...</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>Correct example: If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...
-</code></pre></div>
+Сorrect:
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nb">IsInRole</span><span class="p">(</span><span class="s1">&quot;Treasurer&quot;</span><span class="p">)</span> <span class="nv">OR</span> <span class="nb">PrivilegedMode</span><span class="p">()</span> <span class="k">Then</span> <span class="o">...</span>
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
-<li><a href="https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights">Standard: Checking access rights</a></li>
+<li>Standard: <a href="https://its.1c.ru/db/v8std#content:737:hdoc">Checking access rights</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,23 +854,21 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>The analyzer found a code fragment that most probably has a logic error. There is an operator (, &lt;=, &gt;=, =, &lt;&gt;, AND, OR, -, /) in the program text to the left and to the right of which there are identical subexpressions.</p>
-<p>Consider an example:</p>
+<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>
 
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-<p>In this case, the <code>AND</code> operator is surrounded by identical subexpressions <code>Summ &lt;&gt; 0</code> and it allows us to
-detect an error made through inattention. The correct code that will not look suspicious to the analyzer looks in the
-following way:</p>
+<p>In this case, the <code>AND</code> operator is surrounded by identical subexpressions <code>Summ &lt;&gt; 0</code> and it allows us to detect an error made through inattention. The correct code that will not look suspicious to the analyzer looks in the following way:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">SummNDS</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>
 
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-<p>or</p>
+<p>OR</p>
 <div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>

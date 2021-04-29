@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -853,28 +853,25 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.
-For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
-<p>Checked the use of unavailable in :</p>
+<p>In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
+<p>Checked the use of unavailable in:</p>
 <ul>
 <li>COMObject</li>
 <li>Mail</li>
 </ul>
 <p><strong>Checking the value of the condition is not satisfied.</strong></p>
 <h3 id="Addition">Addition<a class="headerlink" href="#Addition" title="Permanent link">&para;</a></h3>
-<p>When found unavailable in Linux objects, the method is checked to include condition flow for platform type.</p>
-<ul>
-<li><code>Linux_x86</code></li>
-<li><code>Windows</code></li>
-<li><code>MacOs</code></li>
-</ul>
+<p>When found unavailable in Linux objects, the method is checked to include condition flow for platform type:
+* <code>Linux_x86</code>
+* <code>Windows</code>
+* <code>MacOs</code></p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>or</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
+<p><div class="highlight"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
 </code></pre></div>
-<p>Instead of this you can use <code>StartApplication()</code>.</p>
+Instead of this you can use <code>StartApplication()</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
 <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">SystemInformation</span><span class="o">.</span><span class="nv">PlatformType</span> <span class="o">=</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86</span> <span class="nv">OR</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86_64</span> <span class="k">Then</span>
     <span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>

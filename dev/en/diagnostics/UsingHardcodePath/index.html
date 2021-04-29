@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -883,13 +883,11 @@
 <li>Store in separate module, where this diagnostic is disabled (not recommended).</li>
 <li>Store in Catalog, Exchange plan node and etc.</li>
 </ul>
-<h3 id="Characteristic">Characteristic<a class="headerlink" href="#Characteristic" title="Permanent link">&para;</a></h3>
-<p>When search for Windows / Unix  paths, also check for URL in a string. URL search keywords:</p>
-<ul>
-<li><code>http</code></li>
-<li><code>https</code></li>
-<li><code>ftp</code></li>
-</ul>
+<h3 id="Implementation-features">Implementation features<a class="headerlink" href="#Implementation-features" title="Permanent link">&para;</a></h3>
+<p>When search for Windows / Unix  paths, also check for URL in a string. URL search keywords:
+* <code>http</code>
+* <code>https</code>
+* <code>ftp</code></p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">EchangeFolder</span> <span class="o">=</span> <span class="s1">&quot;c:/exchange/dataexchange&quot;</span><span class="p">;</span>

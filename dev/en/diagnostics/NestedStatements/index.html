@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -872,15 +872,15 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Nested "If, "For", "For Each", "While" and "Try" operators are the key ingredients for creating so-called "spaghetti code"</p>
+<p>Nested "If, "For", "For Each", "While" and "Try" operators are the key ingredients for creating so-called "spaghetti code".</p>
 <p>Such code is hard for reading, refactoring and support.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Acceptable - level = 1</span>
+<p>Wrong</p>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Allowed - level = 1</span>
   <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-  <span class="nv">If</span> <span class="nv">SomethingElse</span> <span class="k">Then</span>             <span class="c c-Singleline">// Acceptable - level = 2</span>
+  <span class="nv">If</span> <span class="nv">Some</span> <span class="k">Then</span>             <span class="c c-Singleline">// Allowed - level = 2</span>
     <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-    <span class="nv">For</span> <span class="nv">Nom</span> <span class="o">=</span> <span class="m">0</span> <span class="k">to</span> <span class="m">10</span> <span class="nv">Loop</span>          <span class="c c-Singleline">// Acceptable - level = 3</span>
+    <span class="nv">For</span> <span class="nv">Num</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="nv">Do</span>          <span class="c c-Singleline">// Allowed - level = 3</span>
       <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
       <span class="nv">If</span> <span class="nv">OneMoreCondition</span> <span class="k">Then</span>     <span class="c c-Singleline">// Acceptable - level = 4, limit is reached, not yet breached</span>
         <span class="nv">If</span> <span class="nv">SomethingElse</span> <span class="k">Then</span>        <span class="c c-Singleline">// Level = 5, Limit is breached</span>
@@ -888,7 +888,7 @@
         <span class="nv">EndIf</span><span class="p">;</span>
         <span class="k">Return</span><span class="p">;</span>
       <span class="nv">EndIf</span><span class="p">;</span>
-    <span class="nv">EndLoop</span><span class="p">;</span>
+    <span class="k">EndDo</span><span class="p">;</span>
   <span class="nv">EndIf</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>

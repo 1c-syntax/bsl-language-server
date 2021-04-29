@@ -469,7 +469,7 @@
   
     <li class="md-nav__item">
       <a href="../EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -657,7 +657,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -669,7 +669,7 @@
   
     <li class="md-nav__item">
       <a href="../DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -927,7 +927,7 @@
 <p>This document contains general guidelines for writing code in the BSL Language Server project.</p>
 <p>Try to stick to them and the code review process will be simple.</p>
 <h2 id="General-recommendations">General recommendations<a class="headerlink" href="#General-recommendations" title="Permanent link">&para;</a></h2>
-<p>If a method can legally return <code>null</code>, it is recommended that you return <code>Optional&lt;T&gt;</code> instead of explicitly returning <code>null</code>. Exceptions (eg high frequency or performance functions) are negotiated separately.</p>
+<p>If a method can legally return <code>null</code>, it is recommended that you return <code>Optional&lt;T&gt;</code> instead of explicitly returning <code>null</code>. Exceptions (eg. high frequency or performance functions) are negotiated separately.</p>
 <h2 id="Formatting">Formatting<a class="headerlink" href="#Formatting" title="Permanent link">&para;</a></h2>
 <ol>
 <li>All code in the modules should be automatically formatted.</li>
@@ -950,7 +950,7 @@
 <h2 id="Static-analysis">Static analysis<a class="headerlink" href="#Static-analysis" title="Permanent link">&para;</a></h2>
 <p>BSL Language Server code is automatically checked against coding standards on the SonarCloud service - <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server">project link</a>.</p>
 <p>The list of activated rules and their settings can be viewed in the quality profile <a href="https://sonarcloud.io/organizations/1c-syntax/rules?activation=true&amp;qprofile=AWdJBUnB2EsKsQgQiNpk">1c-syntax way</a>.</p>
-<p>Due to security restrictions, pull requests not from the repository  <code>1c-syntax/bsl-language-server</code> are not checked for compliance. After accepting the pull request, it is recommended to go to <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server">the project page on SonarCloud</a> and view the list of comments filtered by author.</p>
+<p>Due to security restrictions, pull requests not from the repository <code>1c-syntax/bsl-language-server</code> are not checked for compliance. After accepting the pull request, it is recommended to go to <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server">the project page on SonarCloud</a> and view the list of comments filtered by author. Pull-request with fixes is welcome.</p>
 <h2 id="Linter">Linter<a class="headerlink" href="#Linter" title="Permanent link">&para;</a></h2>
 <p>To improve the quality of the code and preliminary check for compliance with standards, it is recommended to install plugin <a href="https://www.sonarlint.org">SonarLint</a> in your IDE.</p>
 <p>To automatically download and parameterize rules in accordance with the settings on SonarCloud, it may be necessary to "bind" the local project to the SonarCloud project. If your IDE cannot find a matching project on SonarCloud, contact the project maintainers to add you to the "Members" list on SonarCloud.</p>
@@ -966,11 +966,11 @@
 <h2 id="External-dependencies">External dependencies<a class="headerlink" href="#External-dependencies" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Connecting new libraries to the implementation scope should be done carefully, with control over the increase in the size of the resulting jar file. If possible, "unnecessary" and unused sub-dependencies should be excluded through <code>exclude</code>.</li>
-<li>Explicit linking of the <code>com.google.guava</code>, <code>Google Collections</code> ibrary or other parts of the Guava family of libraries is prohibited. <strong>If absolutely necessary</strong>, it is permissible to copy the implementation from <code>Guava</code> inside the BSL Language Server, subject to the terms of the Guava license. For everything else, there is Apache Commons.</li>
+<li>Explicit linking of the <code>com.google.guava</code>, <code>Google Collections</code> library or other parts of the Guava family of libraries is prohibited. <strong>If absolutely necessary</strong>, it is permissible to copy the implementation from <code>Guava</code> inside the BSL Language Server, subject to the terms of the Guava license. For everything else, there is Apache Commons.</li>
 <li>Import of <code>*.google.*</code> classes, as well as other parts of Guava libraries, is prohibited. With no exceptions.</li>
 </ol>
 <blockquote>
-<p>In the process ...</p>
+<p>In the process...</p>
 </blockquote>
                 
               

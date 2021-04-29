@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -853,9 +853,7 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>In most scenarios, we recommend that you do not use global variables and use other 1C:Enterprise script tools instead.
-Since monitoring the visibility (usage) areas of such variables is tricky,
-they often might cause issues that cannot be easily located.</p>
+<p>In most scenarios, we recommend that you do not use global variables and use other 1C:Enterprise script tools instead. Since monitoring the visibility (usage) areas of such variables is tricky, they often might cause issues that cannot be easily located.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -867,8 +865,7 @@ they often might cause issues that cannot be easily located.</p>
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
-<p>We recommend that you use the AdditionalProperties object property for passing parameters between event subscription handlers
-and for passing parameters from external script to object module event handlers.</p>
+<p>We recommend that you use the AdditionalProperties object property for passing parameters between event subscription handlers and for passing parameters from external script to object module event handlers</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>
 
   <span class="nv">If</span> <span class="nv">AdditionalProperties</span><span class="o">.</span><span class="nv">Property</span><span class="p">(</span><span class="s1">&quot;FileConversion&quot;</span><span class="p">)</span> <span class="k">Then</span> 
@@ -884,10 +881,7 @@ and for passing parameters from external script to object module event handlers.
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников -->
 
-<ul>
-<li><a href="https://1c-dn.com/library/using_global_variables_in_modules/">Standard: Using global variables in modules</a></li>
-<li><a href="https://its.1c.ru/db/v8std#content:639:hdoc">Standard: Using global variables in modules(RU)</a></li>
-</ul>
+<p><a href="https://its.1c.ru/db/v8std#content:639:hdoc">Standard: Using global variables in modules</a></p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

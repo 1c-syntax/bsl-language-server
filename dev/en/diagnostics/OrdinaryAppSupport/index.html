@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -854,13 +854,12 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<p>To maintain backward compatibility with various proprietary and third-party solutions, external processes and reports developed on previous versions of the 1C: Enterprise platform 8.0 and 8.1, the configuration should also support launching in regular application (thick client) and external connection modes for administrators (users with full rights).</p>
+<p>To maintain backward compatibility with various proprietary and third-party solutions, external data processes and reports developed on previous versions of the 1C: Enterprise platform 8.0 and 8.1, the configuration should also support launching in ordinary application (thick client) and external connection modes for administrators (users with full rights).</p>
 <p>For this it is recommended:</p>
 <ul>
 <li>The configuration property "Use managed forms in a ordinary application" is set to True.</li>
 <li>Set the property "Use ordinary forms in managed mode" to False.</li>
-<li>adhere to the general scheme for setting the attributes of common modules, and conduct the development itself in the Designer in edit mode for both launch modes - managed and ordinary applications (Service menu - Options - General tab).</li>
+<li>Adhere to the general scheme for setting the attributes of common modules, and conduct the development itself in the Designer in edit mode for both launch modes - managed and ordinary applications (Service menu - Options - General tab).</li>
 </ul>
 <p>When developing in EDT, properties are set through the Designer.</p>
 <p>The refusal to support the launch of configuration in the ordinary application and external connection modes for administrators is possible only in certain justified cases.</p>

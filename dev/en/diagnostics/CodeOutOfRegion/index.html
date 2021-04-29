@@ -463,7 +463,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/EnvironmentSetting/" class="md-nav__link">
-        Требования к окружению
+        Environment requirements
       </a>
     </li>
   
@@ -562,7 +562,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticStructure/" class="md-nav__link">
-        Структура диагностики, назначение и содержимое файлов
+        Diagnostics structure, files contents and purpose
       </a>
     </li>
   
@@ -574,7 +574,7 @@
   
     <li class="md-nav__item">
       <a href="../../contributing/DiagnosticTypeAndSeverity/" class="md-nav__link">
-        Типы и важность диагностик
+        Diagnostics types and severity
       </a>
     </li>
   
@@ -874,15 +874,15 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>The code of module should be structured and divided into regions.
- The requirement to structure code by regions is to improve code readability and maintainability and development by group of authors and in finalizing application solutions on specific implementations.</p>
+<p>The code of module should be structured and divided into regions.<br />
+The requirement to structure code by regions is to improve code readability and maintainability and development by group of authors (developers) and in finalizing application solutions on specific implementations.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <div class="highlight"><pre><span></span><code><span class="kd">#Region &lt;RegionName&gt;</span>
 </code></pre></div>
 <p>The standard describes only 10 region names, the names of nested regions are not checked.</p>
-<p>Correct:</p>
+<p>Correct:
 <div class="highlight"><pre><span></span><code><span class="kd">#Region Private</span>
 <span class="kd">#Region Print</span>
 <span class="c c-Singleline">// Methods code</span>
@@ -891,58 +891,20 @@
 <span class="c c-Singleline">// Methods code</span>
 <span class="kd">#EndRegion</span>
 <span class="kd">#EndRegion</span>
-</code></pre></div>
-<p>Name matching table (full in <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">source code</a>):</p>
-<table>
-<thead>
-<tr>
-<th>RU</th>
-<th>EN</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ПрограммныйИнтерфейс</td>
-<td>Public</td>
-</tr>
-<tr>
-<td>СлужебныйПрограммныйИнтерфейс</td>
-<td>Internal</td>
-</tr>
-<tr>
-<td>СлужебныеПроцедурыИФункции</td>
-<td>Private</td>
-</tr>
-<tr>
-<td>ОбработчикиСобытий</td>
-<td>EventHandlers</td>
-</tr>
-<tr>
-<td>ОбработчикиСобытийФормы</td>
-<td>FormEventHandlers</td>
-</tr>
-<tr>
-<td>ОбработчикиСобытийЭлементовШапкиФормы</td>
-<td>FormHeaderItemsEventHandlers</td>
-</tr>
-<tr>
-<td>ОбработчикиКомандФормы</td>
-<td>FormCommandsEventHandlers</td>
-</tr>
-<tr>
-<td>ОписаниеПеременных</td>
-<td>Variables</td>
-</tr>
-<tr>
-<td>Инициализация</td>
-<td>Initialize</td>
-</tr>
-<tr>
-<td>ОбработчикиСобытийЭлементовТаблицыФормы</td>
-<td>FormTableItemsEventHandlers</td>
-</tr>
-</tbody>
-</table>
+</code></pre></div></p>
+<p>Name matching table (full in <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">source code</a>):
+| RU                                      | EN                           |
+| --------------------------------------- | ---------------------------- |
+| ПрограммныйИнтерфейс                    | Public                       |
+| СлужебныйПрограммныйИнтерфейс           | Internal                     |
+| СлужебныеПроцедурыИФункции              | Private                      |
+| ОбработчикиСобытий                      | EventHandlers                |
+| ОбработчикиСобытийФормы                 | FormEventHandlers            |
+| ОбработчикиСобытийЭлементовШапкиФормы   | FormHeaderItemsEventHandlers |
+| ОбработчикиКомандФормы                  | FormCommandsEventHandlers    |
+| ОписаниеПеременных                      | Variables                    |
+| Инициализация                           | Initialize                   |
+| ОбработчикиСобытийЭлементовТаблицыФормы | FormTableItemsEventHandlers  |</p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
