@@ -1,8 +1,8 @@
 # IsInRole global method call (IsInRoleMethod)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `5` | `error` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |  Tags   |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------:|
+ | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `error` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
