@@ -197,6 +197,9 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectLineBreak": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectLineBreak"
+                },
                 "IncorrectUseLikeInQuery": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
                 },
