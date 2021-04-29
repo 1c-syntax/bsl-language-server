@@ -1,8 +1,8 @@
 # Unsafe SafeMode method call (UnsafeSafeModeMethodCall)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Blocker` | `Yes` | `1` | `deprecated`<br>`error` 
+ |  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |             Tags              |
+ |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
+ | `Error` | `BSL` | `Blocker` |             `Yes`             |           `1`           | `deprecated`<br>`error` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
