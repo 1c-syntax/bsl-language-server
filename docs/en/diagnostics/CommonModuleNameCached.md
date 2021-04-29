@@ -8,7 +8,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Use the "Cached" and "ClientCached" postfixes for the modules that implement functions with repeated use of return values (upon the call or session time) on the server and on the client respectively. "Cached") и "КлиентПовтИсп" (англ. "ClientCached") соответственно.
+Use the "Cached" (rus. ПовтИсп) and "ClientCached" (rus. КлиентПовтИсп) postfixes for the modules that implement functions with repeated use of return values (upon the call or session time) on the server and on the client respectively.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
