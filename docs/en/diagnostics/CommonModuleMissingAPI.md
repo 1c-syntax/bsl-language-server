@@ -1,4 +1,4 @@
-# Common module must have API (CommonModuleMissingAPI)
+# Common module should have a programming interface (CommonModuleMissingAPI)
 
  |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
  |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
