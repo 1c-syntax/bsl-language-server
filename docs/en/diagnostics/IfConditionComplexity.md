@@ -1,14 +1,14 @@
 # Usage of complex expressions in the "If" condition (IfConditionComplexity)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |      Tags       |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
- | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `5`           | `brainoverload` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `5` | `brainoverload` 
 
-## Parameters
+## Parameters 
 
- |            Name            |   Type    | Description                                                         | Default value |
- |:--------------------------:|:---------:|:------------------------------------------------------------------- |:-------------:|
- | `maxIfConditionComplexity` | `Integer` | `Acceptable number of logical expressions in operator If condition` |      `3`      | 
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxIfConditionComplexity` | `Integer` | ```Acceptable number of logical expressions in operator If condition``` | ```3``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

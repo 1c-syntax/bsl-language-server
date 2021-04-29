@@ -1,14 +1,14 @@
 # Empty code block (EmptyCodeBlock)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                Tags                 |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
- | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `badpractice`<br>`suspicious` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `5` | `badpractice`<br>`suspicious` 
 
-## Parameters
+## Parameters 
 
- |      Name       |   Type    | Description       | Default value |
- |:---------------:|:---------:|:----------------- |:-------------:|
- | `commentAsCode` | `Boolean` | `Comment as code` |    `false`    | 
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `commentAsCode` | `Boolean` | ```Comment as code``` | ```false``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

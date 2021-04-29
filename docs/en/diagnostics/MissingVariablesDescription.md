@@ -1,8 +1,8 @@
 # All variables declarations must have a description (MissingVariablesDescription)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
- | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `standard` | 
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -12,7 +12,6 @@ All module variables and export variables must have comments.
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-## Sources
 Incorrect:
 
 ```bsl
@@ -28,9 +27,8 @@ Var Context; // Detailed description that explains the purpose of the variable
 Var Context;
 ```
 
-## Snippets
+## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
 
 * Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 

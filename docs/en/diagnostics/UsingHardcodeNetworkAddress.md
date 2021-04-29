@@ -1,14 +1,14 @@
 # Using hardcode ip addresses in code (UsingHardcodeNetworkAddress)
 
- |      Type       |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
- |:---------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
- | `Vulnerability` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `15`           | `standard` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Vulnerability` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `standard` 
 
-## Parameters
+## Parameters 
 
- |          Name          |   Type   | Description                       |                                  Default value                                  |
- |:----------------------:|:--------:|:--------------------------------- |:-------------------------------------------------------------------------------:|
- | `searchWordsExclusion` | `String` | `Keywords to exclude from search` | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` | 
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `searchWordsExclusion` | `String` | ```Keywords to exclude from search``` | ```Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

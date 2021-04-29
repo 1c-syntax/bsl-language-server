@@ -1,14 +1,14 @@
 # Timeouts working with external resources (TimeoutsInExternalResources)
 
- |  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |                Tags                 |
- |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
- | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `unpredictable`<br>`standard` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br>`standard` 
 
-## Parameters
+## Parameters 
 
- |                  Name                   |   Type    | Description                                     | Default value |
- |:---------------------------------------:|:---------:|:----------------------------------------------- |:-------------:|
- | `analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` |    `true`     | 
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `analyzeInternetMailProfileZeroTimeout` | `Boolean` | ```Analyze the timeout for "InternetMailProfile"``` | ```true``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
