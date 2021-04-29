@@ -7,7 +7,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.3.1"
+    id("net.kyori.indra.license-header") version "2.0.0"
     id("org.sonarqube") version "3.1.1"
     id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.2.0"
