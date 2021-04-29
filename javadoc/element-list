@@ -1,4 +1,6 @@
 com.github._1c_syntax.bsl.languageserver
+com.github._1c_syntax.bsl.languageserver.aop
+com.github._1c_syntax.bsl.languageserver.aop.measures
 com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
@@ -8,10 +10,11 @@ com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink
+com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
-com.github._1c_syntax.bsl.languageserver.context.infrastructure
+com.github._1c_syntax.bsl.languageserver.context.events
 com.github._1c_syntax.bsl.languageserver.context.symbol
 com.github._1c_syntax.bsl.languageserver.context.symbol.annotations
 com.github._1c_syntax.bsl.languageserver.context.symbol.description
@@ -20,11 +23,14 @@ com.github._1c_syntax.bsl.languageserver.diagnostics
 com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure
 com.github._1c_syntax.bsl.languageserver.diagnostics.metadata
 com.github._1c_syntax.bsl.languageserver.diagnostics.typo
+com.github._1c_syntax.bsl.languageserver.documentlink
 com.github._1c_syntax.bsl.languageserver.folding
+com.github._1c_syntax.bsl.languageserver.hover
 com.github._1c_syntax.bsl.languageserver.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
 com.github._1c_syntax.bsl.languageserver.providers
 com.github._1c_syntax.bsl.languageserver.recognizer
+com.github._1c_syntax.bsl.languageserver.references
 com.github._1c_syntax.bsl.languageserver.reporters
 com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind

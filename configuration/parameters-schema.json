@@ -144,6 +144,16 @@
             "title": "Common module invalid type",
             "$id": "#/definitions/CommonModuleInvalidType"
         },
+        "CommonModuleMissingAPI": {
+            "description": "Common module should have a programming interface",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module should have a programming interface",
+            "$id": "#/definitions/CommonModuleMissingAPI"
+        },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
             "default": true,
@@ -269,6 +279,16 @@
                 }
             },
             "$id": "#/definitions/ConsecutiveEmptyLines"
+        },
+        "CrazyMultilineString": {
+            "description": "Crazy multiline literals",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Crazy multiline literals",
+            "$id": "#/definitions/CrazyMultilineString"
         },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
@@ -520,6 +540,16 @@
             "title": "FormDataToValue method call",
             "$id": "#/definitions/FormDataToValue"
         },
+        "FullOuterJoinQuery": {
+            "description": "Using of \"FULL OUTER JOIN\" in queries",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using of \"FULL OUTER JOIN\" in queries",
+            "$id": "#/definitions/FullOuterJoinQuery"
+        },
         "FunctionNameStartsWithGet": {
             "description": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "default": false,
@@ -652,6 +682,36 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectLineBreak": {
+            "description": "Incorrect expression line break",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect expression line break",
+            "$id": "#/definitions/IncorrectLineBreak"
+        },
+        "IncorrectUseLikeInQuery": {
+            "description": "Incorrect use of 'LIKE'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of 'LIKE'",
+            "$id": "#/definitions/IncorrectUseLikeInQuery"
+        },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,
@@ -727,6 +787,16 @@
                 }
             },
             "$id": "#/definitions/LineLength"
+        },
+        "LogicalOrInTheWhereSectionOfQuery": {
+            "description": "Using a logical \"OR\" in the \"WHERE\" section of a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using a logical \"OR\" in the \"WHERE\" section of a query",
+            "$id": "#/definitions/LogicalOrInTheWhereSectionOfQuery"
         },
         "MagicDate": {
             "description": "Magic dates",
@@ -907,7 +977,7 @@
             "properties": {
                 "searchDeleteFileMethod": {
                     "description": "Keywords to search for delete/move files methods",
-                    "default": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile",
+                    "default": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u043e\u0432|BeginDeletingFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile",
                     "type": "string",
                     "title": "Keywords to search for delete/move files methods"
                 }
@@ -923,6 +993,16 @@
             ],
             "title": "All variables declarations must have a description",
             "$id": "#/definitions/MissingVariablesDescription"
+        },
+        "MultilineStringInQuery": {
+            "description": "Multi-line literal in query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Multi-line literal in query",
+            "$id": "#/definitions/MultilineStringInQuery"
         },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
@@ -1210,6 +1290,24 @@
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
         },
+        "SelectTopWithoutOrderBy": {
+            "description": "Using 'SELECT TOP' without 'ORDER BY'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'SELECT TOP' without 'ORDER BY'",
+            "properties": {
+                "skipSelectTopOne": {
+                    "description": "Skip 'SELECT TOP 1' if there is 'WHERE'",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Skip 'SELECT TOP 1' if there is 'WHERE'"
+                }
+            },
+            "$id": "#/definitions/SelectTopWithoutOrderBy"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": true,
@@ -1436,6 +1534,14 @@
                 "object"
             ],
             "title": "Unused local method",
+            "properties": {
+                "attachableMethodPrefixes": {
+                    "description": "Method prefixes (comma separated)",
+                    "default": "\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0430\u0435\u043c\u044b\u0439_,attachable_",
+                    "type": "string",
+                    "title": "Method prefixes (comma separated)"
+                }
+            },
             "$id": "#/definitions/UnusedLocalMethod"
         },
         "UnusedParameters": {
@@ -1447,6 +1553,16 @@
             ],
             "title": "Unused parameter",
             "$id": "#/definitions/UnusedParameters"
+        },
+        "UsageWriteLogEvent": {
+            "description": "Incorrect use of the method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of the method",
+            "$id": "#/definitions/UsageWriteLogEvent"
         },
         "UseLessForEach": {
             "description": "Useless collection iteration",
@@ -1552,6 +1668,16 @@
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"
         },
+        "UsingLikeInQuery": {
+            "description": "Using 'LIKE' in query",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'LIKE' in query",
+            "$id": "#/definitions/UsingLikeInQuery"
+        },
         "UsingModalWindows": {
             "description": "Using modal windows",
             "default": true,
@@ -1617,6 +1743,26 @@
             ],
             "title": "Using deprecated property \"ThisForm\"",
             "$id": "#/definitions/UsingThisForm"
+        },
+        "VirtualTableCallWithoutParameters": {
+            "description": "Virtual table call without parameters",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Virtual table call without parameters",
+            "$id": "#/definitions/VirtualTableCallWithoutParameters"
+        },
+        "WrongUseFunctionProceedWithCall": {
+            "description": "Wrong use of ProceedWithCall function",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong use of ProceedWithCall function",
+            "$id": "#/definitions/WrongUseFunctionProceedWithCall"
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",

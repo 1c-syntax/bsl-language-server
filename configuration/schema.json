@@ -56,6 +56,9 @@
                 "CommonModuleInvalidType": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
                 },
+                "CommonModuleMissingAPI": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleMissingAPI"
+                },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },
@@ -88,6 +91,9 @@
                 },
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
+                },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
                 },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
@@ -155,6 +161,9 @@
                 "FormDataToValue": {
                     "$ref": "parameters-schema.json#/definitions/FormDataToValue"
                 },
+                "FullOuterJoinQuery": {
+                    "$ref": "parameters-schema.json#/definitions/FullOuterJoinQuery"
+                },
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
@@ -188,6 +197,15 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectLineBreak": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectLineBreak"
+                },
+                "IncorrectUseLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
+                },
+                "IncorrectUseOfStrTemplate": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
@@ -205,6 +223,9 @@
                 },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
+                },
+                "LogicalOrInTheWhereSectionOfQuery": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },
                 "MagicDate": {
                     "$ref": "parameters-schema.json#/definitions/MagicDate"
@@ -238,6 +259,9 @@
                 },
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
+                },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
@@ -302,6 +326,9 @@
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
+                "SelectTopWithoutOrderBy": {
+                    "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
+                },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
                 },
@@ -362,6 +389,9 @@
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
                 },
+                "UsageWriteLogEvent": {
+                    "$ref": "parameters-schema.json#/definitions/UsageWriteLogEvent"
+                },
                 "UseLessForEach": {
                     "$ref": "parameters-schema.json#/definitions/UseLessForEach"
                 },
@@ -386,6 +416,9 @@
                 "UsingHardcodeSecretInformation": {
                     "$ref": "parameters-schema.json#/definitions/UsingHardcodeSecretInformation"
                 },
+                "UsingLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/UsingLikeInQuery"
+                },
                 "UsingModalWindows": {
                     "$ref": "parameters-schema.json#/definitions/UsingModalWindows"
                 },
@@ -400,6 +433,12 @@
                 },
                 "UsingThisForm": {
                     "$ref": "parameters-schema.json#/definitions/UsingThisForm"
+                },
+                "VirtualTableCallWithoutParameters": {
+                    "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
+                },
+                "WrongUseFunctionProceedWithCall": {
+                    "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
@@ -431,7 +470,6 @@
             "$id": "#/properties/codeLens",
             "type": "object",
             "title": "Code Lens configuration.",
-            "default": null,
             "properties": {
                 "showCognitiveComplexity": {
                     "$id": "#/properties/showCognitiveComplexity",
@@ -451,19 +489,12 @@
             "$id": "#/properties/documentLink",
             "type": "object",
             "title": "Document link configuration.",
-            "default": null,
             "properties": {
-                "useDevSite": {
-                    "$id": "#/properties/useDevSite",
+                "showDiagnosticDescription": {
+                    "$id": "#/properties/showDiagnosticDescription",
                     "type": "boolean",
-                    "title": "Use develop version of site for documentation links.",
+                    "title": "Show additional links to diagnostics documentation.",
                     "default": false
-                },
-                "siteRoot": {
-                    "$id": "#/properties/siteRoot",
-                    "type": "string",
-                    "title": "Root URL for documentation links.",
-                    "default": "https://1c-syntax.github.io/bsl-language-server"
                 }
             }
         },
@@ -471,7 +502,6 @@
             "$id": "#/properties/diagnostics",
             "type": "object",
             "title": "Diagnostics configuration.",
-            "default": null,
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/parameters"
@@ -561,6 +591,18 @@
                     ]
                 }
             }
+        },
+        "useDevSite": {
+            "$id": "#/properties/useDevSite",
+            "type": "boolean",
+            "title": "Use develop version of site for documentation links.",
+            "default": false
+        },
+        "siteRoot": {
+            "$id": "#/properties/siteRoot",
+            "type": "string",
+            "title": "Root URL for documentation links.",
+            "default": "https://1c-syntax.github.io/bsl-language-server"
         },
         "traceLog": {
             "$id": "#/properties/traceLog",
