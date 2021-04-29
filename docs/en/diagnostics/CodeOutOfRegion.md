@@ -1,14 +1,14 @@
 # Code out of region (CodeOutOfRegion)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `checkUnknownModuleType` | `Boolean` | ```Check unknown module type``` | ```false``` 
+ |           Name           |   Type    | Description                 | Default value |
+ |:------------------------:|:---------:|:--------------------------- |:-------------:|
+ | `checkUnknownModuleType` | `Boolean` | `Check unknown module type` |    `false`    | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
