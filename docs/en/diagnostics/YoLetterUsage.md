@@ -1,8 +1,8 @@
 # Using Russian character "yo" ("ё") in code (YoLetterUsage)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `5` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `5`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
