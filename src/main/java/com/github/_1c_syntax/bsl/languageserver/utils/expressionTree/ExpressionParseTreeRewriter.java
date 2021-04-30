@@ -181,7 +181,29 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     if(ctx.IDENTIFIER() != null){
       operands.push(TerminalSymbolNode.Identifier(ctx.IDENTIFIER()));
     }
-    throw new NotImplementedException();
+
+    var modifiers = ctx.modifier();
+    for (var modifier: modifiers) {
+      modifier.accept(this);
+    }
+
+    return null;
+  }
+
+  @Override
+  public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
+    var target = operands.pop();
+    operands.push(BinaryOperationNode.Create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.Identifier(ctx.IDENTIFIER())));
+    return null;
+  }
+
+  @Override
+  public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
+    var target = operands.pop();
+    var rewriter = new ExpressionParseTreeRewriter();
+    ctx.accept(rewriter);
+    operands.push(rewriter.getExpressionTree());
+    return null;
   }
 
   private void buildOperation() {
