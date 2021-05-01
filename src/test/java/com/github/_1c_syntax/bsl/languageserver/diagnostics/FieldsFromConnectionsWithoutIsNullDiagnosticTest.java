@@ -24,7 +24,7 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
       .hasRange(30, 13, 30, 31)
       .hasRange(47, 9, 47, 25)
       .hasRange(57, 13, 57, 27)
-      .hasRange(87, 30, 87, 48);
+      .hasRange(87, 8, 87, 26);
 
   }
 }

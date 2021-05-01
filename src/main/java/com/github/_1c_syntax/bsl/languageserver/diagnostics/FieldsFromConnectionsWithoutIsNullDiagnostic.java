@@ -9,6 +9,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -40,30 +41,25 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   private static final List<Integer> JOIN_STATEMENTS = Arrays.asList(JOIN_STATEMENTS_ROOT, SDBLParser.RULE_joinStatement);
 
   @Override
-  public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    final var tableName = Optional.of(ctx)
-      .map(this::getDataSourceContext)
+  public ParseTree visitJoinPart(SDBLParser.JoinPartContext joinPartCtx) {
+    joinedTable(joinPartCtx)
+      .ifPresent(tableName -> checkQuery(tableName, joinPartCtx));
+
+    return super.visitJoinPart(joinPartCtx);
+  }
+
+  @NotNull
+  private Optional<String> joinedTable(SDBLParser.JoinPartContext joinPartCtx) {
+    return Optional.of(joinPartCtx)
+      .map(this::joinedDataSourceContext)
       // TODO алиас не всегда задан, проверить без него
       .map(SDBLParser.DataSourceContext::alias)
       .map(SDBLParser.AliasContext::identifier)
-      .map(BSLParserRuleContext::getText)
-      .orElse("");
-
-    Optional.ofNullable(Trees.getRootParent(ctx, RULE_QUERIES))
-      .ifPresent(queryCtx -> {
-        checkSelect(tableName, queryCtx);
-        checkWhere(tableName, queryCtx);
-      });
-//    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
-
-//    checkJoin(tableName, ctx.joinExpression());
-    // TODO нужно проверять любые выражения, а не только из ВЫБРАТЬ
-
-    return super.visitJoinPart(ctx);
+      .map(BSLParserRuleContext::getText);
   }
 
   @Nullable
-  private SDBLParser.DataSourceContext getDataSourceContext(SDBLParser.JoinPartContext joinPartContext) {
+  private SDBLParser.DataSourceContext joinedDataSourceContext(SDBLParser.JoinPartContext joinPartContext) {
     if (joinPartContext.LEFT() != null){
       return joinPartContext.dataSource();
     }
@@ -71,10 +67,19 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       return ((SDBLParser.DataSourceContext) joinPartContext.getParent());
     }
     // TODO проверить ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ - обе таблицы нужно проверять
-//        else if(joinPartContext.FULL() != null){
-//          return ((SDBLParser.DataSourceContext)joinPartContext.getParent());
-//        }
     return null;
+  }
+
+  private void checkQuery(String joinedTableName, SDBLParser.JoinPartContext joinPartCtx) {
+    Optional.ofNullable(Trees.getRootParent(joinPartCtx, RULE_QUERIES))
+      .ifPresent(queryCtx -> {
+        checkSelect(joinedTableName, queryCtx);
+        checkWhere(joinedTableName, queryCtx);
+      });
+//    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
+
+    checkAllJoins(joinedTableName, joinPartCtx);
+    // TODO нужно проверять любые выражения, а не только из ВЫБРАТЬ
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
@@ -123,6 +128,18 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       .map(SDBLParser.StatementContext::column);
 
     checkColumn(tableName, columnContextStream, WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT);
+  }
+
+  private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
+    Optional.ofNullable(Trees.getRootParent(currentJoinPart, SDBLParser.RULE_dataSource))
+      .filter(ctx -> ctx instanceof SDBLParser.DataSourceContext)
+//      .map(ctx -> ((SDBLParser.DataSourceContext)ctx).joinPart())
+      .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext)ctx).joinPart().stream())
+//      .stream()
+//    ..joinPart().stream()
+      .filter(joinPartContext -> joinPartContext != currentJoinPart)
+      .map(SDBLParser.JoinPartContext::joinExpression)
+      .forEach(joinExpressionContext -> checkJoin(tableName, joinExpressionContext));
   }
 
   private void checkJoin(String tableName, SDBLParser.JoinExpressionContext joinExpression) {
