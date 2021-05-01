@@ -133,10 +133,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
     Optional.ofNullable(Trees.getRootParent(currentJoinPart, SDBLParser.RULE_dataSource))
       .filter(ctx -> ctx instanceof SDBLParser.DataSourceContext)
-//      .map(ctx -> ((SDBLParser.DataSourceContext)ctx).joinPart())
       .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext)ctx).joinPart().stream())
-//      .stream()
-//    ..joinPart().stream()
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
       .map(SDBLParser.JoinPartContext::joinExpression)
       .forEach(joinExpressionContext -> checkJoin(tableName, joinExpressionContext));
