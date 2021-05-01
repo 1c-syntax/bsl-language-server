@@ -17,11 +17,12 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(4, 13, 4, 30)
       .hasRange(16, 13, 16, 31)
-      .hasRange(30, 13, 30, 31);
+      .hasRange(30, 13, 30, 31)
+      .hasRange(47, 9, 47, 25);
 
   }
 }
