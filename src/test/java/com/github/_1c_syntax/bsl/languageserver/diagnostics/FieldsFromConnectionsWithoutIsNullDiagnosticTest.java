@@ -59,7 +59,6 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
       Ranges.create(87, 8, 87, 26)
       );
 
-//      TODO выправить значения
     checkContent(
       diagnostics.get(6),
       Ranges.create(104, 5, 105, 46),
@@ -68,6 +67,8 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
         Ranges.create(98, 13, 98, 31),
         Ranges.create(100, 5, 100, 28))
       );
+
+    assertThat(diagnostics).hasSize(7);
 
   }
 
