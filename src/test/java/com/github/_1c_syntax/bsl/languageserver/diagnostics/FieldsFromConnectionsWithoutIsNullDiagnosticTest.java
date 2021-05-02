@@ -68,7 +68,13 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
         Ranges.create(100, 5, 100, 28))
       );
 
-    assertThat(diagnostics).hasSize(7);
+    checkContent(
+      diagnostics.get(7),
+      Ranges.create(154, 8, 155, 50),
+      Ranges.create(151, 8, 151, 28)
+      );
+
+    assertThat(diagnostics).hasSize(8);
 
   }
 

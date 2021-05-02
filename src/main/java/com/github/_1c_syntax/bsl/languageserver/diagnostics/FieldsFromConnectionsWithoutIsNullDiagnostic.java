@@ -9,7 +9,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import lombok.val;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -20,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,14 +36,17 @@ import java.util.stream.Stream;
 )
 public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final List<Integer> RULE_QUERIES = Arrays.asList(SDBLParser.RULE_query, SDBLParser.RULE_temporaryTableMainQuery);
+  private static final Set<Integer> RULE_QUERIES = Set.of(SDBLParser.RULE_query,
+    SDBLParser.RULE_temporaryTableMainQuery, SDBLParser.RULE_temporaryTableQuery);
 
-  private static final Integer SELECT_STATEMENTS_ROOT = SDBLParser.RULE_selectedField;
-  private static final List<Integer> SELECT_STATEMENTS = Arrays.asList(SELECT_STATEMENTS_ROOT, SDBLParser.RULE_selectStatement);
-  private static final Integer WHERE_STATEMENTS_ROOT = SDBLParser.RULE_where;
-  private static final List<Integer> WHERE_STATEMENTS = Arrays.asList(WHERE_STATEMENTS_ROOT, SDBLParser.RULE_whereStatement);
-  private static final Integer JOIN_STATEMENTS_ROOT = SDBLParser.RULE_joinPart;
-  private static final List<Integer> JOIN_STATEMENTS = Arrays.asList(JOIN_STATEMENTS_ROOT, SDBLParser.RULE_joinStatement);
+  private static final Set<Integer> SELECT_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_selectedField, SDBLParser.RULE_temporaryTableSelectedField);
+  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SDBLParser.RULE_selectedField,
+    SDBLParser.RULE_temporaryTableSelectedField, SDBLParser.RULE_selectStatement);
+
+  private static final Set<Integer> WHERE_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_where);
+  private static final Set<Integer> WHERE_STATEMENTS = Set.of(SDBLParser.RULE_where, SDBLParser.RULE_whereStatement);
+  private static final Set<Integer> JOIN_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_joinPart);
+  private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, SDBLParser.RULE_joinStatement);
 
   private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
 
@@ -97,10 +100,6 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
 
         checkAllJoins(joinedTableName, joinPartCtx);
       });
-
-//    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
-
-// TODO нужно проверять любые выражения - из СГРУППИРОВАТЬ, ИМЕЮЩИЕ и т.п.
   }
 
   private boolean haveNotIsNullInsideWhere(BSLParserRuleContext queryCtx, String joinedTableName) {
@@ -135,7 +134,10 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       .findAny().isPresent();
   }
 
-  private Stream<SDBLParser.ColumnContext> haveMatchedExpressionForTable(String tableName, BSLParserRuleContext expression, Integer parentStatementIndex, List<Integer> statements, Integer statementsRoot) {
+  private Stream<SDBLParser.ColumnContext> haveMatchedExpressionForTable(
+    String tableName, BSLParserRuleContext expression, Integer parentStatementIndex,
+    Set<Integer> statements, Set<Integer> statementsRoot) {
+
     return Optional.of(expression)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, parentStatementIndex).stream())
       .flatMap(parseTree -> Trees.getFirstChild(parseTree, SDBLParser.RULE_statement).stream())
@@ -147,16 +149,16 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   private boolean checkColumn(String tableName, SDBLParser.ColumnContext columnCtx,
-                              List<Integer> statements, Integer statementsRoot) {
+                              Set<Integer> statements, Set<Integer> statementsRoot) {
     return Optional.of(columnCtx)
       .filter(columnContext -> columnContext.tableName.getText().equalsIgnoreCase(tableName))
       .filter(columnContext -> !haveIsNullInside(columnContext, statements, statementsRoot))
       .isPresent();
   }
 
-  private boolean haveIsNullInside(BSLParserRuleContext ctx, List<Integer> statements, Integer rootParentIndex) {
+  private boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements, Set<Integer> rootParentIndex) {
     var selectStatement = Trees.getRootParent(ctx, statements);
-    if (selectStatement == null || selectStatement.getRuleIndex() == rootParentIndex || selectStatement.getChildCount() == 0) {
+    if (selectStatement == null || rootParentIndex.contains(selectStatement.getRuleIndex()) || selectStatement.getChildCount() == 0) {
       return false;
     }
     final var child = selectStatement.getChild(0);
@@ -196,14 +198,14 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
-    Trees.getFirstChild(query, SDBLParser.RULE_selectedFields)
+    Trees.getFirstChild(query, SDBLParser.RULE_selectedFields, SDBLParser.RULE_temporaryTableSelectedFields)
       .ifPresent(ctx -> checkStatements(tableName, ctx, SDBLParser.RULE_selectStatement,
         SELECT_STATEMENTS, SELECT_STATEMENTS_ROOT));
   }
 
   private void checkStatements(
     String tableName, BSLParserRuleContext expression, Integer parentStatementIndex,
-    List<Integer> statements, Integer statementsRoot) {
+    Set<Integer> statements, Set<Integer> statementsRoot) {
 
     haveMatchedExpressionForTable(tableName, expression, parentStatementIndex, statements, statementsRoot)
       .forEach(nodesForIssues::add);
