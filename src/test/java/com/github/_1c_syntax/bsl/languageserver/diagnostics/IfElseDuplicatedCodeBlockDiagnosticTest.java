@@ -40,7 +40,7 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(7);
 
     checkDiagnosticContent(
       diagnostics.get(0),
@@ -70,6 +70,18 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
       diagnostics.get(4),
       Ranges.create(53, 2, 54, 10),
       Ranges.create(56, 2, 57, 10)
+    );
+
+    checkDiagnosticContent(
+      diagnostics.get(5),
+      Ranges.create(102, 8, 102, 37),
+      Ranges.create(98, 13, 98, 31)
+    );
+
+    checkDiagnosticContent(
+      diagnostics.get(6),
+      Ranges.create(103, 5, 104, 46),
+      Ranges.create(99, 5, 99, 19)
     );
 
   }

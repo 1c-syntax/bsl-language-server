@@ -14,9 +14,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,8 +51,8 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext joinPartCtx) {
 
     try {
-      joinedTable(joinPartCtx)
-        .ifPresent(tableName -> checkQuery(tableName, joinPartCtx));
+      joinedTables(joinPartCtx)
+        .forEach(tableName -> checkQuery(tableName, joinPartCtx));
 
       if (!nodesForIssues.isEmpty()){
         diagnosticStorage.addDiagnostic(joinPartCtx, getRelatedInformation(joinPartCtx));
@@ -68,25 +68,27 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   @Nonnull
-  private Optional<String> joinedTable(SDBLParser.JoinPartContext joinPartCtx) {
+  private Stream<String> joinedTables(SDBLParser.JoinPartContext joinPartCtx) {
     return Optional.of(joinPartCtx)
-      .map(this::joinedDataSourceContext)
-      // TODO алиас не всегда задан, проверить без него
+      .stream().flatMap(joinPartContext ->  joinedDataSourceContext(joinPartContext).stream())
+      .filter(Objects::nonNull)
       .map(SDBLParser.DataSourceContext::alias)
       .map(SDBLParser.AliasContext::identifier)
       .map(BSLParserRuleContext::getText);
   }
 
-  @Nullable
-  private SDBLParser.DataSourceContext joinedDataSourceContext(SDBLParser.JoinPartContext joinPartContext) {
+  private List<SDBLParser.DataSourceContext> joinedDataSourceContext(SDBLParser.JoinPartContext joinPartContext) {
     if (joinPartContext.LEFT() != null){
-      return joinPartContext.dataSource();
+      return Collections.singletonList(joinPartContext.dataSource());
     }
     else if(joinPartContext.RIGHT() != null){
-      return ((SDBLParser.DataSourceContext) joinPartContext.getParent());
+      return Collections.singletonList(((SDBLParser.DataSourceContext) joinPartContext.getParent()));
     }
-    // TODO проверить ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ - обе таблицы нужно проверять
-    return null;
+    else if(joinPartContext.FULL() != null){
+      return Arrays.asList(((SDBLParser.DataSourceContext) joinPartContext.getParent()),
+        joinPartContext.dataSource());
+    }
+    return Collections.emptyList();
   }
 
   private void checkQuery(String joinedTableName, SDBLParser.JoinPartContext joinPartCtx) {
@@ -99,7 +101,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
 //    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
 
     checkAllJoins(joinedTableName, joinPartCtx);
-// TODO нужно проверять любые выражения, а не только из ВЫБРАТЬ
+// TODO нужно проверять любые выражения - из СГРУППИРОВАТЬ, ИМЕЮЩИЕ и т.п.
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
