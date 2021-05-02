@@ -4,24 +4,29 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.CRITICAL,
+  minutesToFix = 2,
   tags = {
     DiagnosticTag.SQL,
     DiagnosticTag.SUSPICIOUS,
@@ -40,15 +45,29 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   private static final Integer JOIN_STATEMENTS_ROOT = SDBLParser.RULE_joinPart;
   private static final List<Integer> JOIN_STATEMENTS = Arrays.asList(JOIN_STATEMENTS_ROOT, SDBLParser.RULE_joinStatement);
 
+  private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
+
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext joinPartCtx) {
-    joinedTable(joinPartCtx)
-      .ifPresent(tableName -> checkQuery(tableName, joinPartCtx));
+
+    try {
+      joinedTable(joinPartCtx)
+        .ifPresent(tableName -> checkQuery(tableName, joinPartCtx));
+
+      if (!nodesForIssues.isEmpty()){
+        diagnosticStorage.addDiagnostic(joinPartCtx, getRelatedInformation(joinPartCtx));
+      }
+
+    } catch (Exception e){
+      nodesForIssues.clear();
+      throw e;
+    }
+    nodesForIssues.clear();
 
     return super.visitJoinPart(joinPartCtx);
   }
 
-  @NotNull
+  @Nonnull
   private Optional<String> joinedTable(SDBLParser.JoinPartContext joinPartCtx) {
     return Optional.of(joinPartCtx)
       .map(this::joinedDataSourceContext)
@@ -76,15 +95,15 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
         checkSelect(joinedTableName, queryCtx);
         checkWhere(joinedTableName, queryCtx);
       });
+
 //    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
 
     checkAllJoins(joinedTableName, joinPartCtx);
-    // TODO нужно проверять любые выражения, а не только из ВЫБРАТЬ
+// TODO нужно проверять любые выражения, а не только из ВЫБРАТЬ
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
-    final var selectedFieldsCtx = Trees.getFirstChild(query, SDBLParser.RULE_selectedFields);
-    final var columnContextStream = selectedFieldsCtx
+    final var columnContextStream = Trees.getFirstChild(query, SDBLParser.RULE_selectedFields)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_selectStatement).stream())
       .filter(parseTree -> parseTree instanceof SDBLParser.SelectStatementContext)
       .map(parseTree -> ((SDBLParser.SelectStatementContext) parseTree).statement())
@@ -99,7 +118,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
     columnContextStream.filter(Objects::nonNull)
       .filter(columnContext -> columnContext.tableName.getText().equalsIgnoreCase(tableName))
       .filter(columnContext -> dontInnerIsNull(columnContext, statements, statementsRoot))
-      .forEach(diagnosticStorage::addDiagnostic);
+      .forEach(nodesForIssues::add);
   }
 
   private boolean dontInnerIsNull(BSLParserRuleContext ctx, List<Integer> statements, Integer rootParentIndex) {
@@ -115,8 +134,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   private void checkWhere(String tableName, BSLParserRuleContext query) {
-    final var whereCtx = Trees.getFirstChild(query, SDBLParser.RULE_where);
-    final var columnContextStream = whereCtx
+    final var columnContextStream = Trees.getFirstChild(query, SDBLParser.RULE_where)
       .filter(bslParserRuleContext -> bslParserRuleContext.getChildCount() > 0)
       .map(ctx -> (SDBLParser.WhereContext) ctx)
       .map(SDBLParser.WhereContext::whereExpression)
@@ -149,5 +167,14 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       .map(SDBLParser.StatementContext::column);
 
     checkColumn(tableName, columnContextStream, JOIN_STATEMENTS, JOIN_STATEMENTS_ROOT);
+  }
+  private List<DiagnosticRelatedInformation> getRelatedInformation(SDBLParser.JoinPartContext self) {
+    return nodesForIssues.stream()
+      .filter(context -> !context.equals(self))
+      .map(context -> RelatedInformation.create(
+        documentContext.getUri(),
+        Ranges.create(context),
+        "+1"
+      )).collect(Collectors.toList());
   }
 }
