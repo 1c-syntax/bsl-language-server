@@ -72,9 +72,13 @@ class ReferenceIndexReferenceFinderTest {
 
     var uri = documentContext.getUri();
     var position = new Position(1, 10);
-    var location = new Location(uri.toString(), Ranges.create(1, 4, 16));
 
-    var expectedReference = Reference.of(method, method, location);
+    var expectedReference = Reference.builder()
+      .from(method)
+      .symbol(method)
+      .uri(uri)
+      .selectionRange(Ranges.create(1, 4, 16))
+      .build();
     when(referenceIndex.getReference(uri, position)).thenReturn(Optional.of(expectedReference));
 
     // when
@@ -155,9 +159,13 @@ class ReferenceIndexReferenceFinderTest {
 
     var uri = documentContext.getUri();
     var position = new Position(1, 1);
-    var location = new Location(uri.toString(), Ranges.create(1, 1, 2));
 
-    var expectedReference = Reference.of(method, method, location);
+    var expectedReference = Reference.builder()
+      .from(method)
+      .symbol(method)
+      .uri(uri)
+      .selectionRange(Ranges.create(1, 1, 2))
+      .build();
     when(referenceIndex.getReference(uri, position)).thenReturn(Optional.of(expectedReference));
 
     // when

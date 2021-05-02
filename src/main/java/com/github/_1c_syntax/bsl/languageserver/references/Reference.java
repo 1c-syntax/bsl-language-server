@@ -23,9 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 import java.util.Optional;
@@ -34,27 +37,38 @@ import java.util.Optional;
  * Ссылка на символ.
  */
 @Value
+@Builder
 public class Reference {
 
   /**
    * Символ, в котором располагается данная ссылка.
    */
+  @NonNull
   SourceDefinedSymbol from;
 
   /**
    * Символ, на который указывает ссылка.
    */
+  @NonNull
   Symbol symbol;
 
   /**
    * URI, в котором находится ссылка.
    */
+  @NonNull
   URI uri;
 
   /**
    * Диапазон, в котором располагается ссылка.
    */
+  @NonNull
   Range selectionRange;
+
+  /**
+   * Признак указывающий на перезапись значения в месте расположения ссылки
+   */
+  @Builder.Default
+  boolean isWrite = false;
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
@@ -68,10 +82,6 @@ public class Reference {
 
   public Location toLocation() {
     return new Location(uri.toString(), selectionRange);
-  }
-
-  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange());
   }
 
 }

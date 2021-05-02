@@ -52,11 +52,13 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
     return symbolTree.getChildrenFlat()
       .stream()
       .filter(sourceDefinedSymbol -> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
-      .map(sourceDefinedSymbol -> new Reference(
-        symbolTree.getModule(),
-        sourceDefinedSymbol,
-        uri,
-        sourceDefinedSymbol.getSelectionRange())
+      .map(
+        sourceDefinedSymbol -> Reference.builder()
+          .from(symbolTree.getModule())
+          .symbol(sourceDefinedSymbol)
+          .uri(uri)
+          .selectionRange(sourceDefinedSymbol.getSelectionRange())
+          .build()
       )
       .findFirst();
   }

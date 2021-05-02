@@ -44,12 +44,12 @@ class ReferenceTest {
     when(methodSymbol.getSelectionRange()).thenReturn(selectionRange);
 
     // when
-    var reference = new Reference(
-      moduleSymbol,
-      methodSymbol,
-      FAKE_DOCUMENT_URI,
-      selectionRange
-    );
+    var reference = Reference.builder()
+      .from(moduleSymbol)
+      .symbol(methodSymbol)
+      .uri(FAKE_DOCUMENT_URI)
+      .selectionRange(selectionRange)
+      .build();
 
     // then
     assertThat(reference.getSourceDefinedSymbol()).hasValue(methodSymbol);
@@ -65,12 +65,12 @@ class ReferenceTest {
 
     when(methodSymbol.getSelectionRange()).thenReturn(selectionRange);
 
-    var reference = new Reference(
-      moduleSymbol,
-      methodSymbol,
-      FAKE_DOCUMENT_URI,
-      selectionRange
-    );
+    var reference = Reference.builder()
+      .from(moduleSymbol)
+      .symbol(methodSymbol)
+      .uri(FAKE_DOCUMENT_URI)
+      .selectionRange(selectionRange)
+      .build();
 
     // when
     Location location = reference.toLocation();
@@ -78,29 +78,5 @@ class ReferenceTest {
     // then
     assertThat(location.getUri()).isEqualTo(FAKE_DOCUMENT_URI.toString());
     assertThat(location.getRange()).isEqualTo(methodSymbol.getSelectionRange());
-  }
-
-  @Test
-  void testOf() {
-    // given
-    var methodSymbol = mock(MethodSymbol.class);
-    var moduleSymbol = mock(ModuleSymbol.class);
-    var selectionRange = mock(Range.class);
-
-    when(methodSymbol.getSelectionRange()).thenReturn(selectionRange);
-
-    var reference = new Reference(
-      moduleSymbol,
-      methodSymbol,
-      FAKE_DOCUMENT_URI,
-      selectionRange
-    );
-    var location = reference.toLocation();
-
-    // when
-    var newReference = Reference.of(moduleSymbol, methodSymbol, location);
-
-    // then
-    assertThat(newReference).isEqualTo(reference);
   }
 }

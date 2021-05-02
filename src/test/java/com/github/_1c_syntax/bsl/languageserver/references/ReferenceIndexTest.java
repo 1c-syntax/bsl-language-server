@@ -64,15 +64,20 @@ class ReferenceIndexTest {
     var method = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
     var uri = documentContext.getUri();
-    var location = new Location(uri.toString(), Ranges.create(1, 4, 16));
 
     // when
     var references = referenceIndex.getReferencesTo(method);
+    var reference= Reference.builder()
+      .from(method)
+      .symbol(method)
+      .uri(uri)
+      .selectionRange(Ranges.create(1, 4, 16))
+      .build();
 
     // then
     assertThat(references)
       .isNotEmpty()
-      .contains(Reference.of(method, method, location))
+      .contains(reference)
     ;
   }
 
@@ -83,16 +88,19 @@ class ReferenceIndexTest {
     var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
     var module = documentContext.getSymbolTree().getModule();
 
-    var uri = documentContext.getUri();
-    var location = new Location(uri.toString(), Ranges.create(4, 0, 18));
-
     // when
     var references = referenceIndex.getReferencesTo(method);
+    var reference= Reference.builder()
+      .from(module)
+      .symbol(method)
+      .uri(documentContext.getUri())
+      .selectionRange(Ranges.create(4, 0, 18))
+      .build();
 
     // then
     assertThat(references)
       .isNotEmpty()
-      .contains(Reference.of(module, method, location))
+      .contains(reference)
     ;
   }
 
@@ -103,15 +111,20 @@ class ReferenceIndexTest {
     var method = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
     var uri = documentContext.getUri();
-    var location = new Location(uri.toString(), Ranges.create(1, 4, 16));
 
     // when
     var references = referenceIndex.getReferencesTo(method);
+    var reference= Reference.builder()
+      .from(method)
+      .symbol(method)
+      .uri(uri)
+      .selectionRange(Ranges.create(1, 4, 16))
+      .build();
 
     // then
     assertThat(references)
       .isNotEmpty()
-      .contains(Reference.of(method, method, location))
+      .contains(reference)
     ;
   }
 
@@ -124,15 +137,20 @@ class ReferenceIndexTest {
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
-    var location = new Location(uri.toString(), Ranges.create(2, 22, 41));
 
     // when
     var references = referenceIndex.getReferencesTo(calledMethodSymbol);
+    var reference= Reference.builder()
+      .from(methodSymbol)
+      .symbol(calledMethodSymbol)
+      .uri(uri)
+      .selectionRange(Ranges.create(2, 22, 41))
+      .build();
 
     // then
     assertThat(references)
       .isNotEmpty()
-      .contains(Reference.of(methodSymbol, calledMethodSymbol, location))
+      .contains(reference)
     ;
   }
 
@@ -184,10 +202,24 @@ class ReferenceIndexTest {
     var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
-    var uri = documentContext.getUri().toString();
-    var locationLocal = new Location(uri, Ranges.create(1, 4, 16));
-    var locationCommonModule = new Location(uri, Ranges.create(2, 22, 41));
-    var locationManagerModule = new Location(uri, Ranges.create(3, 38, 57));
+    var referenceLocal = Reference.builder()
+      .from(localMethodSymbol)
+      .symbol(localMethodSymbol)
+      .uri(documentContext.getUri())
+      .selectionRange(Ranges.create(1, 4, 16))
+      .build();
+    var referenceCommonModule = Reference.builder()
+      .from(localMethodSymbol)
+      .symbol(commonModuleMethodSymbol)
+      .uri(documentContext.getUri())
+      .selectionRange(Ranges.create(2, 22, 41))
+      .build();
+    var referenceManagerModule = Reference.builder()
+      .from(localMethodSymbol)
+      .symbol(managerModuleMethodSymbol)
+      .uri(documentContext.getUri())
+      .selectionRange(Ranges.create(3, 38, 57))
+      .build();
 
     // when
     var references = referenceIndex.getReferencesFrom(localMethodSymbol);
@@ -195,9 +227,9 @@ class ReferenceIndexTest {
     // then
     assertThat(references)
       .hasSize(3)
-      .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
-      .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
-      .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
+      .contains(referenceLocal)
+      .contains(referenceCommonModule)
+      .contains(referenceManagerModule)
     ;
   }
 
@@ -210,16 +242,19 @@ class ReferenceIndexTest {
     var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
-    var uri = commonModuleContext.getUri().toString();
-    var locationCommonModule = new Location(uri, Ranges.create(55, 38, 57));
-
     // when
     var references = referenceIndex.getReferencesFrom(commonModuleMethodSymbol);
+    var reference = Reference.builder()
+      .from(commonModuleMethodSymbol)
+      .symbol(managerModuleMethodSymbol)
+      .uri(commonModuleContext.getUri())
+      .selectionRange(Ranges.create(55, 38, 57))
+      .build();
 
     // then
     assertThat(references)
       .hasSize(1)
-      .contains(Reference.of(commonModuleMethodSymbol, managerModuleMethodSymbol, locationCommonModule))
+      .contains(reference)
     ;
   }
 

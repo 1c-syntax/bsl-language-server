@@ -19,12 +19,33 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-public enum VariableKind {
-  DYNAMIC,
-  LOCAL,
-  PARAMETER,
-  MODULE,
-  GLOBAL
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
+@CleanupContextBeforeClassAndAfterClass
+class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLocalVariableDiagnostic> {
+  UnusedLocalVariableDiagnosticTest() {
+    super(UnusedLocalVariableDiagnostic.class);
+  }
+
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics, true)
+      .hasRange(0, 6, 36)
+      .hasRange(14, 10, 35)
+      .hasRange(14, 37, 63)
+      .hasRange(19, 4, 28)
+      .hasRange(41, 0, 25);
+
+  }
 }
