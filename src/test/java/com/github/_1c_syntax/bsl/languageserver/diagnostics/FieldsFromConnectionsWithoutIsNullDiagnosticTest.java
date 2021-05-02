@@ -7,6 +7,8 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -20,8 +22,6 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics).hasSize(6);
 
     checkContent(
       diagnostics.get(0),
@@ -57,7 +57,17 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
       diagnostics.get(5),
       Ranges.create(84, 5, 85, 46),
       Ranges.create(87, 8, 87, 26)
-    );
+      );
+
+//      TODO выправить значения
+    checkContent(
+      diagnostics.get(6),
+      Ranges.create(104, 5, 105, 46),
+      Arrays.asList(
+        Ranges.create(99, 5, 99, 19),
+        Ranges.create(98, 13, 98, 31),
+        Ranges.create(100, 5, 100, 28))
+      );
 
   }
 
@@ -66,12 +76,22 @@ class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosti
     Range diagnosticRange,
     Range relatedLocationRange
   ) {
+    checkContent(diagnostic, diagnosticRange, Collections.singletonList(relatedLocationRange));
+  }
+
+  private void checkContent(
+    Diagnostic diagnostic,
+    Range diagnosticRange,
+    List<Range> relatedLocationRanges
+  ) {
     assertThat(diagnostic.getRange()).isEqualTo(diagnosticRange);
     List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
-    assertThat(relatedInformationList).hasSize(1);
+    assertThat(relatedInformationList).hasSize(relatedLocationRanges.size());
 
-    DiagnosticRelatedInformation relatedInformation = relatedInformationList.get(0);
-    Assertions.assertThat(relatedInformation.getLocation().getRange()).isEqualTo(relatedLocationRange);
-
+    for (int i = 0; i < relatedLocationRanges.size(); i++) {
+      var relatedInformation = relatedInformationList.get(i);
+      var relatedLocationRange = relatedLocationRanges.get(i);
+      Assertions.assertThat(relatedInformation.getLocation().getRange()).isEqualTo(relatedLocationRange);
+    }
   }
 }

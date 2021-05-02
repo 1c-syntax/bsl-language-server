@@ -13,7 +13,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,7 +66,6 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
     return super.visitJoinPart(joinPartCtx);
   }
 
-  @Nonnull
   private Stream<String> joinedTables(SDBLParser.JoinPartContext joinPartCtx) {
     return Optional.of(joinPartCtx)
       .stream().flatMap(joinPartContext ->  joinedDataSourceContext(joinPartContext).stream())
@@ -100,23 +98,34 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
 
 //    TODO проверить и RULE_query и RULE_temporaryTableMainQuery
 
+//    TODO исключить замечание, если в условии ГДЕ есть проверка на ЕСТЬ NULL (или НЕ ЕСТЬ NULL ?? )
+
     checkAllJoins(joinedTableName, joinPartCtx);
 // TODO нужно проверять любые выражения - из СГРУППИРОВАТЬ, ИМЕЮЩИЕ и т.п.
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
-    final var columnContextStream = Trees.getFirstChild(query, SDBLParser.RULE_selectedFields)
-      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_selectStatement).stream())
-      .filter(parseTree -> parseTree instanceof SDBLParser.SelectStatementContext)
-      .map(parseTree -> ((SDBLParser.SelectStatementContext) parseTree).statement())
-      .filter(Objects::nonNull)
-      .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
-      .map(SDBLParser.StatementContext::column);
-
-    checkColumn(tableName, columnContextStream, SELECT_STATEMENTS, SELECT_STATEMENTS_ROOT);
+    Trees.getFirstChild(query, SDBLParser.RULE_selectedFields)
+      .ifPresent(ctx -> checkStatements(tableName, ctx, SDBLParser.RULE_selectStatement, SELECT_STATEMENTS, SELECT_STATEMENTS_ROOT));
   }
 
-  private void checkColumn(String tableName, Stream<SDBLParser.ColumnContext> columnContextStream, List<Integer> statements, Integer statementsRoot) {
+  private void checkStatements(
+    String tableName, BSLParserRuleContext expression, Integer parentStatementIndex,
+    List<Integer> statements, Integer statementsRoot) {
+
+    final var columnContextStream = Optional.of(expression)
+      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, parentStatementIndex).stream())
+      .flatMap(parseTree -> Trees.getFirstChild(parseTree, SDBLParser.RULE_statement).stream())
+      .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
+      .flatMap(column -> Trees.getFirstChild(column, SDBLParser.RULE_column).stream())
+      .filter(ctx -> ctx instanceof SDBLParser.ColumnContext)
+      .map(ctx -> (SDBLParser.ColumnContext)ctx);
+
+    checkColumn(tableName, columnContextStream, statements, statementsRoot);
+  }
+
+  private void checkColumn(String tableName, Stream<SDBLParser.ColumnContext> columnContextStream,
+                           List<Integer> statements, Integer statementsRoot) {
     columnContextStream.filter(Objects::nonNull)
       .filter(columnContext -> columnContext.tableName.getText().equalsIgnoreCase(tableName))
       .filter(columnContext -> dontInnerIsNull(columnContext, statements, statementsRoot))
@@ -124,7 +133,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   private boolean dontInnerIsNull(BSLParserRuleContext ctx, List<Integer> statements, Integer rootParentIndex) {
-    BSLParserRuleContext selectStatement = Trees.getRootParent(ctx, statements);
+    var selectStatement = Trees.getRootParent(ctx, statements);
     if (selectStatement == null || selectStatement.getRuleIndex() == rootParentIndex || selectStatement.getChildCount() == 0){
       return true;
     }
@@ -136,18 +145,12 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
   }
 
   private void checkWhere(String tableName, BSLParserRuleContext query) {
-    final var columnContextStream = Trees.getFirstChild(query, SDBLParser.RULE_where)
+    Trees.getFirstChild(query, SDBLParser.RULE_where)
       .filter(bslParserRuleContext -> bslParserRuleContext.getChildCount() > 0)
       .map(ctx -> (SDBLParser.WhereContext) ctx)
       .map(SDBLParser.WhereContext::whereExpression)
-      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_whereStatement).stream())
-      .filter(parseTree -> parseTree instanceof SDBLParser.WhereStatementContext)
-      .map(parseTree -> ((SDBLParser.WhereStatementContext) parseTree).statement())
-      .filter(Objects::nonNull)
-      .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
-      .map(SDBLParser.StatementContext::column);
+      .ifPresent(exprCtx -> checkStatements(tableName, exprCtx, SDBLParser.RULE_whereStatement, WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT));
 
-    checkColumn(tableName, columnContextStream, WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT);
   }
 
   private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
@@ -156,23 +159,12 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext)ctx).joinPart().stream())
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
       .map(SDBLParser.JoinPartContext::joinExpression)
-      .forEach(joinExpressionContext -> checkJoin(tableName, joinExpressionContext));
+      .forEach(joinExpressionContext -> checkStatements(tableName, joinExpressionContext, SDBLParser.RULE_joinStatement, JOIN_STATEMENTS, JOIN_STATEMENTS_ROOT));
   }
 
-  private void checkJoin(String tableName, SDBLParser.JoinExpressionContext joinExpression) {
-    final var columnContextStream = Optional.of(joinExpression)
-      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_joinStatement).stream())
-      .filter(parseTree -> parseTree instanceof SDBLParser.JoinStatementContext)
-      .map(parseTree -> ((SDBLParser.JoinStatementContext) parseTree).statement())
-      .filter(Objects::nonNull)
-      .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
-      .map(SDBLParser.StatementContext::column);
-
-    checkColumn(tableName, columnContextStream, JOIN_STATEMENTS, JOIN_STATEMENTS_ROOT);
-  }
   private List<DiagnosticRelatedInformation> getRelatedInformation(SDBLParser.JoinPartContext self) {
     return nodesForIssues.stream()
-      .filter(context -> !context.equals(self))
+      .filter(ctx -> !ctx.equals(self))
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
         Ranges.create(context),
