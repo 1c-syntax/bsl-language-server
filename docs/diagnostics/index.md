@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **141**
+Общее количество: **142**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
-* Ошибка: **44**
+* Ошибка: **45**
 * Дефект кода: **90**
 
 
@@ -63,6 +63,7 @@
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Выполнение произвольного кода в общем модуле на сервере | Да | Критичный | Потенциальная уязвимость | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
+ [FieldsFromConnectionsWithoutIsNull](FieldsFromConnectionsWithoutIsNull.md) | Неточное использование полей из таблиц левых или правых соединений, без проверки на NULL или приведения через ЕстьNULL | Да | Критичный | Ошибка | `sql`<br>`suspicious`<br>`unpredictable` 
  [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` 

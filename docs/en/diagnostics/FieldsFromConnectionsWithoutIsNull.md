@@ -1,8 +1,8 @@
-# <Diagnostic name> (FieldsFromConnectionsWithoutIsNull)
+# Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL (FieldsFromConnectionsWithoutIsNull)
 
-<Metadata>
-
-## <Params>
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `2` | `sql`<br>`suspicious`<br>`unpredictable` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,8 +20,8 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
@@ -32,5 +32,5 @@
 ### Parameter for config
 
 ```json
-"FieldsFromConnectionsWithoutIsNull": <DiagnosticConfig>
+"FieldsFromConnectionsWithoutIsNull": false
 ```

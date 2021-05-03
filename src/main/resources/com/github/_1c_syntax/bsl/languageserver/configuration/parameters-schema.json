@@ -530,6 +530,16 @@
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
         },
+        "FieldsFromConnectionsWithoutIsNull": {
+            "description": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "$id": "#/definitions/FieldsFromConnectionsWithoutIsNull"
+        },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
             "default": true,

@@ -158,6 +158,9 @@
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
+                "FieldsFromConnectionsWithoutIsNull": {
+                    "$ref": "parameters-schema.json#/definitions/FieldsFromConnectionsWithoutIsNull"
+                },
                 "FormDataToValue": {
                     "$ref": "parameters-schema.json#/definitions/FormDataToValue"
                 },

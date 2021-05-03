@@ -1,8 +1,8 @@
-# <Diagnostic name> (FieldsFromConnectionsWithoutIsNull)
+# Неточное использование полей из таблиц левых или правых соединений, без проверки на NULL или приведения через ЕстьNULL (FieldsFromConnectionsWithoutIsNull)
 
-<Metadata>
-
-## <Params>
+ Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Ошибка` | `BSL`<br>`OS` | `Критичный` | `Да` | `2` | `sql`<br>`suspicious`<br>`unpredictable` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -71,8 +71,8 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
@@ -83,5 +83,5 @@
 ### Параметр конфигурационного файла
 
 ```json
-"FieldsFromConnectionsWithoutIsNull": <DiagnosticConfig>
+"FieldsFromConnectionsWithoutIsNull": false
 ```
