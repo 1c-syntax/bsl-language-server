@@ -34,9 +34,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class FieldsFromConnectionsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<FieldsFromConnectionsWithoutIsNullDiagnostic> {
-  FieldsFromConnectionsWithoutIsNullDiagnosticTest() {
-    super(FieldsFromConnectionsWithoutIsNullDiagnostic.class);
+class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<FieldsFromJoinsWithoutIsNullDiagnostic> {
+  FieldsFromJoinsWithoutIsNullDiagnosticTest() {
+    super(FieldsFromJoinsWithoutIsNullDiagnostic.class);
   }
 
   @Test

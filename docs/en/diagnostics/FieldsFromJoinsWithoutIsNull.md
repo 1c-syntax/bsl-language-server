@@ -1,4 +1,4 @@
-# Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL (FieldsFromConnectionsWithoutIsNull)
+# Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL (FieldsFromJoinsWithoutIsNull)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -34,12 +34,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:FieldsFromConnectionsWithoutIsNull-off
-// BSLLS:FieldsFromConnectionsWithoutIsNull-on
+// BSLLS:FieldsFromJoinsWithoutIsNull-off
+// BSLLS:FieldsFromJoinsWithoutIsNull-on
 ```
 
 ### Parameter for config
 
 ```json
-"FieldsFromConnectionsWithoutIsNull": false
+"FieldsFromJoinsWithoutIsNull": false
 ```

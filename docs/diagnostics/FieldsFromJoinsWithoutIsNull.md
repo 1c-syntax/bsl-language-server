@@ -1,4 +1,4 @@
-# Неточное использование полей из таблиц левых или правых соединений, без проверки на NULL или приведения через ЕстьNULL (FieldsFromConnectionsWithoutIsNull)
+# Неточное использование полей из таблиц левых или правых соединений, без проверки на NULL или приведения через ЕстьNULL (FieldsFromJoinsWithoutIsNull)
 
  Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -76,12 +76,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:FieldsFromConnectionsWithoutIsNull-off
-// BSLLS:FieldsFromConnectionsWithoutIsNull-on
+// BSLLS:FieldsFromJoinsWithoutIsNull-off
+// BSLLS:FieldsFromJoinsWithoutIsNull-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"FieldsFromConnectionsWithoutIsNull": false
+"FieldsFromJoinsWithoutIsNull": false
 ```

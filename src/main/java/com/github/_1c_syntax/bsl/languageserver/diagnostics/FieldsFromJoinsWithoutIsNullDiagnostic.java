@@ -55,7 +55,7 @@ import java.util.stream.Stream;
   }
 
 )
-public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Set<Integer> RULE_QUERIES = Set.of(SDBLParser.RULE_query,
     SDBLParser.RULE_temporaryTableMainQuery, SDBLParser.RULE_temporaryTableQuery);
