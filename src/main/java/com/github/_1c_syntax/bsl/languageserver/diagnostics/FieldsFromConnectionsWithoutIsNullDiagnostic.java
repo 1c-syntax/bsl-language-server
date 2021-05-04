@@ -96,6 +96,7 @@ public class FieldsFromConnectionsWithoutIsNullDiagnostic extends AbstractSDBLVi
       .stream().flatMap(joinPartContext -> joinedDataSourceContext(joinPartContext).stream())
       .filter(Objects::nonNull)
       .map(SDBLParser.DataSourceContext::alias)
+      .filter(Objects::nonNull)
       .map(SDBLParser.AliasContext::identifier)
       .map(BSLParserRuleContext::getText);
   }
