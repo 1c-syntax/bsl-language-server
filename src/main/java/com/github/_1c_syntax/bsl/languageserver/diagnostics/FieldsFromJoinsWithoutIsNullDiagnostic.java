@@ -68,6 +68,8 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   private static final Set<Integer> WHERE_STATEMENTS = Set.of(SDBLParser.RULE_where, SDBLParser.RULE_whereStatement);
   private static final Set<Integer> JOIN_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_joinPart);
   private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, SDBLParser.RULE_joinStatement);
+  public static final int IS_NOT_NULL_EXPR_MEMBERS_COUNT = 4;
+  public static final int IS_NULL_EXPR_MEMBERS_COUNT = 3;
 
   private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
 
@@ -133,7 +135,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private boolean haveFirstIsThenNotThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-    if (whereMember.getChildCount() != 4) {
+    if (whereMember.getChildCount() != IS_NOT_NULL_EXPR_MEMBERS_COUNT) {
       return false;
     }
     final var childIS = whereMember.getChild(1);
@@ -166,7 +168,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
       .flatMap(column -> Trees.getFirstChild(column, SDBLParser.RULE_column).stream())
       .filter(ctx -> ctx instanceof SDBLParser.ColumnContext)
-      .map(ctx -> (SDBLParser.ColumnContext) ctx)
+      .map(SDBLParser.ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, statementsRoot));
   }
 
@@ -205,7 +207,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private boolean haveFirstIsThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-    if (whereMember.getChildCount() != 3) {
+    if (whereMember.getChildCount() != IS_NULL_EXPR_MEMBERS_COUNT) {
       return false;
     }
     final var childIS = whereMember.getChild(1);
@@ -236,7 +238,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   private void checkWhere(String tableName, BSLParserRuleContext query) {
     Trees.getFirstChild(query, SDBLParser.RULE_where)
       .filter(bslParserRuleContext -> bslParserRuleContext.getChildCount() > 0)
-      .map(ctx -> (SDBLParser.WhereContext) ctx)
+      .map(SDBLParser.WhereContext.class::cast)
       .map(SDBLParser.WhereContext::whereExpression)
       .ifPresent(exprCtx -> checkStatements(tableName, exprCtx, SDBLParser.RULE_whereStatement,
         WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT));
