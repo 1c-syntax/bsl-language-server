@@ -23,62 +23,45 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 public enum BslOperator {
+
   // binary
-  ADD,
-  SUBTRACT,
-  MULTIPLY,
-  DIVIDE,
-  MODULO,
-  DEREFERENCE,
-  INDEX_ACCESS,
-  EQUAL,
-  LESS,
-  LESS_OR_EQUAL,
-  GREATER,
-  GREATER_OR_EQUAL,
-  NOT_EQUAL,
-  AND,
-  OR,
+  ADD(1),
+  SUBTRACT(1),
+
+  MULTIPLY(2),
+  DIVIDE(2),
+  MODULO(2),
+
+  EQUAL(3),
+  LESS(3),
+  LESS_OR_EQUAL(3),
+  GREATER(3),
+  GREATER_OR_EQUAL(3),
+  NOT_EQUAL(3),
+
+  AND(4),
+  OR(5),
+
+  NOT(6),
+
   // unary
-  UNARY_MINUS,
-  UNARY_PLUS,
-  NOT,
+  UNARY_MINUS(7),
+  UNARY_PLUS(7),
+
+  DEREFERENCE(8),
+  INDEX_ACCESS(8),
+
   //ternary,
-  CONDITIONAL;
+  CONDITIONAL(9);
 
-  public static int getPriority(BslOperator operator) {
-    switch (operator){
-      case ADD:
-      case SUBTRACT:
-        return 1;
-      case MULTIPLY:
-      case DIVIDE:
-      case MODULO:
-        return 2;
-      case EQUAL:
-      case NOT_EQUAL:
-      case LESS:
-      case LESS_OR_EQUAL:
-      case GREATER:
-      case GREATER_OR_EQUAL:
-        return 3;
-      case AND:
-        return 4;
-      case OR:
-        return 5;
-      case NOT:
-        return 6;
-      case UNARY_MINUS:
-      case UNARY_PLUS:
-        return 7;
-      case INDEX_ACCESS:
-      case DEREFERENCE:
-        return 8;
-      case CONDITIONAL:
-        return 9;
-    }
+  private final int priority;
 
-    throw new IllegalArgumentException();
+  BslOperator(int priority){
+    this.priority = priority;
+  }
+
+  public int getPriority() {
+    return this.priority;
   }
 
 }

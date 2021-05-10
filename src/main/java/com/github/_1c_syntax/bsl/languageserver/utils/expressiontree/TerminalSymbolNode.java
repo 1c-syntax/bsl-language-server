@@ -30,19 +30,19 @@ public class TerminalSymbolNode extends BslExpression{
     super(type);
   }
 
-  public static TerminalSymbolNode Literal(BSLParser.ConstValueContext constant){
+  public static TerminalSymbolNode literal(BSLParser.ConstValueContext constant){
     var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
     node.setRepresentingAst(constant);
     return node;
   }
 
-  public static TerminalSymbolNode Literal(TerminalNode constant){
+  public static TerminalSymbolNode literal(TerminalNode constant){
     var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
     node.setRepresentingAst(constant);
     return node;
   }
 
-  public static TerminalSymbolNode Identifier(TerminalNode identifier){
+  public static TerminalSymbolNode identifier(TerminalNode identifier){
     var node = new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER);
     node.setRepresentingAst(identifier);
     return node;

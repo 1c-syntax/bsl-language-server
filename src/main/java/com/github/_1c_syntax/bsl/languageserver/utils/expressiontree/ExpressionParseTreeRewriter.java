@@ -26,19 +26,24 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
-import com.sun.istack.NotNull;
+import org.jetbrains.annotations.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree> {
 
-  private Stack<BslExpression> operands = new Stack<>();
-  private Stack<BslOperator> operatorsInFly = new Stack<>();
+  private Deque<BslExpression> operands = new ArrayDeque<>();
+  private Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
   
   private BslExpression resultExpression;
+
+  public BslExpression getExpressionTree() {
+    return resultExpression;
+  }
 
   @Override
   public ParseTree visitExpression(@NotNull BSLParser.ExpressionContext ctx) {
@@ -58,12 +63,12 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       }
     }
 
-    while (!operatorsInFly.empty()){
+    while (!operatorsInFly.isEmpty()){
       buildOperation();
     }
     resultExpression = operands.pop();
 
-    return null;
+    return ctx;
   }
 
   @Override
@@ -74,7 +79,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       visitUnaryModifier(unary);
       ctx.getChild(1).accept(this);
       buildOperation();
-      return null;
+      return ctx;
     }
 
     return super.visitMember(ctx);
@@ -87,17 +92,17 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     processOperation(operator);
 
-    return null;
+    return ctx;
   }
 
   private void processOperation(BslOperator operator){
-    if(operatorsInFly.empty()) {
+    if(operatorsInFly.isEmpty()) {
       operatorsInFly.push(operator);
       return;
     }
 
     var lastSeenOperator = operatorsInFly.peek();
-    if(BslOperator.getPriority(lastSeenOperator) <= BslOperator.getPriority(operator)){
+    if(lastSeenOperator.getPriority() <= operator.getPriority()){
       buildOperation();
     }
 
@@ -144,15 +149,15 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
           return BslOperator.GREATER_OR_EQUAL;
       }
     }
-    return null;
+    throw new IllegalStateException();
   }
 
   @Override
   public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
 
-    var node = TerminalSymbolNode.Literal(ctx);
+    var node = TerminalSymbolNode.literal(ctx);
     operands.push(node);
-    return null;
+    return ctx;
   }
 
   @Override
@@ -180,7 +185,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
     if(ctx.IDENTIFIER() != null){
-      operands.push(TerminalSymbolNode.Identifier(ctx.IDENTIFIER()));
+      operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
     }
 
     var modifiers = ctx.modifier();
@@ -194,7 +199,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
     var target = operands.pop();
-    operands.push(BinaryOperationNode.Create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.Identifier(ctx.IDENTIFIER())));
+    operands.push(BinaryOperationNode.Create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.identifier(ctx.IDENTIFIER())));
     return null;
   }
 
@@ -208,7 +213,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private void buildOperation() {
-    if(operatorsInFly.empty()){
+    if(operatorsInFly.isEmpty()){
       return;
     }
 
@@ -229,9 +234,5 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
         var binaryOp = BinaryOperationNode.Create(operator, left, right);
         operands.push(binaryOp);
     }
-  }
-
-  public BslExpression getExpressionTree() {
-    return resultExpression;
   }
 }

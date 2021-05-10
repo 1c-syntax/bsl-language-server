@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperatio
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ExpressionParseTreeRewriterTest {
 
   @Test
-  void SimpleBinaryOperationRewrite(){
+  void simpleBinaryOperationRewrite(){
 
     var expressionTree = getExpressionTree("А = 2 + 3;");
     assertThat(expressionTree instanceof BinaryOperationNode).isTrue();
@@ -52,7 +53,7 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  void SimpleUnaryOperationRewrite(){
+  void simpleUnaryOperationRewrite(){
 
     var expressionTree = getExpressionTree("А = -2 + 3;");
     assertThat(expressionTree instanceof BinaryOperationNode).isTrue();
@@ -65,7 +66,7 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  void BinaryExpressionsChain(){
+  void binaryExpressionsChain(){
     var code = "А = 2 + 2 + 3 - 1";
     var expressionTree = getExpressionTree(code);
 
@@ -77,7 +78,7 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  void BinaryExpressionsPriority(){
+  void binaryExpressionsPriority(){
 
     // в конце
     var code = "А = 2 + 2 * 3";
@@ -95,6 +96,37 @@ class ExpressionParseTreeRewriterTest {
     assertThat(binary.getOperator() == BslOperator.MULTIPLY).isTrue();
     assertThat(binary.getLeft().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
     assertThat(binary.getRight() instanceof BinaryOperationNode).isTrue();
+
+  }
+
+  @Test
+  public void booleanAndArithmeticPriority(){
+    var code = "Рез = А > 2 И Б + 3 < 0";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
+    assertThat(((BinaryOperationNode)binary.getLeft()).getOperator()).isEqualTo(BslOperator.GREATER);
+    assertThat(((BinaryOperationNode)binary.getRight()).getOperator()).isEqualTo(BslOperator.LESS);
+
+    var additionOnLeft = ((BinaryOperationNode)binary.getRight()).getLeft();
+    assertThat(additionOnLeft.getNodeType() == ExpressionNodeType.BINARY_OP).isTrue();
+
+  }
+
+  @Test
+  public void booleanPriority(){
+    var code = "Рез = А или Б и не В";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.OR);
+    assertThat((binary.getLeft()).getNodeType()).isEqualTo(ExpressionNodeType.IDENTIFIER);
+    assertThat(((BinaryOperationNode)binary.getRight()).getOperator()).isEqualTo(BslOperator.AND);
+
+    var negation = ((BinaryOperationNode)binary.getRight()).getRight();
+    assertThat(negation.getNodeType() == ExpressionNodeType.UNARY_OP).isTrue();
+    assertThat(((UnaryOperationNode)negation).getOperator() == BslOperator.NOT).isTrue();
 
   }
 
