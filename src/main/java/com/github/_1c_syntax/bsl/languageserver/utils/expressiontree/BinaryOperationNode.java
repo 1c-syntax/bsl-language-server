@@ -20,27 +20,36 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class UnaryOperationNode extends BslOperationNode{
-  private BslExpression operand;
+public class BinaryOperationNode extends BslOperationNode{
+  private BslExpression leftOperand;
+  private BslExpression rightOperand;
 
-  private UnaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.UNARY_OP, operator);
+  private BinaryOperationNode(BslOperator operator) {
+    super(ExpressionNodeType.BINARY_OP, operator);
   }
 
-  private void setOperand(BslExpression operand){
-    this.operand = operand;
+  private void setLeft(BslExpression left){
+    leftOperand = left;
   }
 
-  public BslExpression getOperand() {
-    return operand;
+  private void setRight(BslExpression right){
+    rightOperand = right;
   }
 
-  public static UnaryOperationNode Create(BslOperator operator, BslExpression expression){
-    var node = new UnaryOperationNode(operator);
-    node.setOperand(expression);
+  public BslExpression getLeft() {
+    return leftOperand;
+  }
+
+  public BslExpression getRight() {
+    return rightOperand;
+  }
+
+  public static BinaryOperationNode Create(BslOperator operator, BslExpression left, BslExpression right){
+    var node = new BinaryOperationNode(operator);
+    node.setLeft(left);
+    node.setRight(right);
     return node;
   }
-
 }

@@ -20,12 +20,13 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.antlr.v4.runtime.misc.NotNull;
+
+import com.sun.istack.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.NotImplementedException;

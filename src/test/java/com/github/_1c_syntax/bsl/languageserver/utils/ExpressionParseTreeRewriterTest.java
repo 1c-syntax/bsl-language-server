@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.BinaryOperationNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.BslExpression;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.BslOperationNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.BslOperator;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.ExpressionParseTreeRewriter;
-import com.github._1c_syntax.bsl.languageserver.utils.expressionTree.TerminalSymbolNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

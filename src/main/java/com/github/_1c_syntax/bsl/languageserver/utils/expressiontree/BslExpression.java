@@ -20,20 +20,28 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import org.apache.commons.lang3.NotImplementedException;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-public abstract class BslOperationNode extends BslExpression{
+public abstract class BslExpression {
 
-  private final BslOperator operator;
+  private final ExpressionNodeType nodeType;
+  private ParseTree treeItem;
 
-  protected BslOperationNode(ExpressionNodeType type, BslOperator operator) {
-    super(type);
-    this.operator = operator;
+  protected BslExpression(ExpressionNodeType type){
+    nodeType = type;
   }
 
-  public BslOperator getOperator() {
-    return operator;
+  public ExpressionNodeType getNodeType(){
+    return nodeType;
+  }
+
+  public void setRepresentingAst(ParseTree treeItem){
+    this.treeItem = treeItem;
+  }
+
+  public ParseTree getRepresentingAst() {
+    return treeItem;
   }
 }

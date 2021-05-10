@@ -20,36 +20,31 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+public class TerminalSymbolNode extends BslExpression{
+  private TerminalSymbolNode(ExpressionNodeType type) {
+    super(type);
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
+  public static TerminalSymbolNode Literal(BSLParser.ConstValueContext constant){
+    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
+    node.setRepresentingAst(constant);
+    return node;
   }
 
-  private void setRight(BslExpression right){
-    rightOperand = right;
+  public static TerminalSymbolNode Literal(TerminalNode constant){
+    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
+    node.setRepresentingAst(constant);
+    return node;
   }
 
-  public BslExpression getLeft() {
-    return leftOperand;
-  }
-
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode Create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
+  public static TerminalSymbolNode Identifier(TerminalNode identifier){
+    var node = new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER);
+    node.setRepresentingAst(identifier);
     return node;
   }
 }

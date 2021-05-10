@@ -20,7 +20,7 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 public enum BslOperator {
   // binary

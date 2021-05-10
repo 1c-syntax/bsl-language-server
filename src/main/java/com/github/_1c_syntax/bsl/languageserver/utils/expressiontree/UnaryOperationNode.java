@@ -20,31 +20,27 @@
  * License along with BSL Language Server.
  */
 
-package com.github._1c_syntax.bsl.languageserver.utils.expressionTree;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.TerminalNode;
+public class UnaryOperationNode extends BslOperationNode{
+  private BslExpression operand;
 
-public class TerminalSymbolNode extends BslExpression{
-  private TerminalSymbolNode(ExpressionNodeType type) {
-    super(type);
+  private UnaryOperationNode(BslOperator operator) {
+    super(ExpressionNodeType.UNARY_OP, operator);
   }
 
-  public static TerminalSymbolNode Literal(BSLParser.ConstValueContext constant){
-    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
-    node.setRepresentingAst(constant);
+  private void setOperand(BslExpression operand){
+    this.operand = operand;
+  }
+
+  public BslExpression getOperand() {
+    return operand;
+  }
+
+  public static UnaryOperationNode Create(BslOperator operator, BslExpression expression){
+    var node = new UnaryOperationNode(operator);
+    node.setOperand(expression);
     return node;
   }
 
-  public static TerminalSymbolNode Literal(TerminalNode constant){
-    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
-    node.setRepresentingAst(constant);
-    return node;
-  }
-
-  public static TerminalSymbolNode Identifier(TerminalNode identifier){
-    var node = new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER);
-    node.setRepresentingAst(identifier);
-    return node;
-  }
 }
