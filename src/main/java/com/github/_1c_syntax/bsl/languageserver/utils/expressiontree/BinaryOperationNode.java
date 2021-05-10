@@ -46,7 +46,7 @@ public class BinaryOperationNode extends BslOperationNode{
     return rightOperand;
   }
 
-  public static BinaryOperationNode Create(BslOperator operator, BslExpression left, BslExpression right){
+  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
     var node = new BinaryOperationNode(operator);
     node.setLeft(left);
     node.setRight(right);

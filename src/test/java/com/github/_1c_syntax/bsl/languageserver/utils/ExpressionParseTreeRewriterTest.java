@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -127,6 +128,67 @@ class ExpressionParseTreeRewriterTest {
     var negation = ((BinaryOperationNode)binary.getRight()).getRight();
     assertThat(negation.getNodeType() == ExpressionNodeType.UNARY_OP).isTrue();
     assertThat(((UnaryOperationNode)negation).getOperator() == BslOperator.NOT).isTrue();
+
+  }
+
+  @Test
+  public void dereferenceOfProperty(){
+    var code = "Рез = Структура.Свойство";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+  }
+
+  @Test
+  public void dereferenceOfMethod(){
+    var code = "Рез = Структура.Метод()";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.CALL);
+  }
+
+  @Test
+  public void indexAccessToVariable(){
+    var code = "Рез = Массив[10]";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
+  }
+
+  @Test
+  public void chainedModifiers(){
+    var code = "Рез = Структура.Массив[10 + 2].Свойство1.Свойство2[Структура.Свойство3]";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode)expressionTree;
+
+    // should be:
+    // INDEX_ACCESS(N, DEREFERENCE(Структура.Свойство3))
+    // N:= DEREFERENCE(M, Свойство2)
+    // M:= DEREFERENCE(INDEX_ACCESS(L, 10+2), Свойство1)
+    // L:= DEREFERENCE(Структура, Массив)
+
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
+
+    var indexArgument = (BinaryOperationNode)binary.getRight();
+    assertThat(indexArgument.getRight().getRepresentingAst().getText()).isEqualTo("Свойство3");
+    assertThat(indexArgument.getLeft().getRepresentingAst().getText()).isEqualTo("Структура");
+
+    var N = (BinaryOperationNode)binary.getLeft();
+    assertThat(N.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(N.getRight().getRepresentingAst().getText()).isEqualTo("Свойство2");
+
+    var M = (BinaryOperationNode)N.getLeft();
+    assertThat(M.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(M.getRight().getRepresentingAst().getText()).isEqualTo("Свойство1");
+
+    var leftOfM = (BinaryOperationNode)M.getLeft();
+    assertThat(leftOfM.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
+
+    var L = (BinaryOperationNode)leftOfM.getLeft();
+    assertThat(L.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(L.getLeft().getRepresentingAst().getText()).isEqualTo("Структура");
+    assertThat(L.getRight().getRepresentingAst().getText()).isEqualTo("Массив");
 
   }
 

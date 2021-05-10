@@ -193,23 +193,25 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       modifier.accept(this);
     }
 
-    return null;
+    return ctx;
   }
 
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
     var target = operands.pop();
-    operands.push(BinaryOperationNode.Create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.identifier(ctx.IDENTIFIER())));
-    return null;
+    operands.push(BinaryOperationNode.create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.identifier(ctx.IDENTIFIER())));
+    return ctx;
   }
 
   @Override
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
     var target = operands.pop();
     var rewriter = new ExpressionParseTreeRewriter();
-    ctx.accept(rewriter);
-    operands.push(rewriter.getExpressionTree());
-    return null;
+    ctx.expression().accept(rewriter);
+
+    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, rewriter.getExpressionTree());
+    operands.push(indexOperation);
+    return ctx;
   }
 
   private void buildOperation() {
@@ -231,7 +233,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       default:
         var right = operands.pop();
         var left = operands.pop();
-        var binaryOp = BinaryOperationNode.Create(operator, left, right);
+        var binaryOp = BinaryOperationNode.create(operator, left, right);
         operands.push(binaryOp);
     }
   }
