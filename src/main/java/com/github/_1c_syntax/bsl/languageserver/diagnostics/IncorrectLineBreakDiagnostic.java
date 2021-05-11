@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -42,6 +43,11 @@ import java.util.regex.Pattern;
 )
 public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
+  // forbidden characters at the beginning of the line
+  private static final String DEFAULT_LIST_FOR_CHECK_START = ") ; , );";
+  // forbidden end-of-line characters
+  private static final String DEFAULT_LIST_FOR_CHECK_END = "ИЛИ И OR AND + - / % *";
+
   private static final Pattern INCORRECT_START_LINE_PATTERN = CaseInsensitivePattern.compile(
     "^\\s*(:?\\)|;|,|\\);)"
   );
@@ -54,6 +60,18 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   private static final int QUERY_START_LINE_OFFSET = 2;
 
   private final Set<Integer> queryFirstLines = new HashSet<>();
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_START
+  )
+  private String listForCheckStart = DEFAULT_LIST_FOR_CHECK_START;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_END
+  )
+  private String listForCheckEnd = DEFAULT_LIST_FOR_CHECK_END;
 
   @Override
   protected void check() {

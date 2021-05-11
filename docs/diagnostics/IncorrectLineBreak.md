@@ -54,8 +54,8 @@
 ```json
 "IncorrectLineBreak": {
   "checkFirstSymbol": true,
-  "listOfIncorrectFirstSymbol": ")|;|,|);",
+  "listOfIncorrectFirstSymbol": ") ; , );",
   "checkLastSymbol": true,
-  "listOfIncorrectLastSymbol": "ИЛИ|И|OR|AND|+|-|/|%|*"
+  "listOfIncorrectLastSymbol": "ИЛИ И OR AND + - / % *"
  }
 ```
