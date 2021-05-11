@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -105,6 +106,16 @@ public final class Ranges {
     int endChar = token.getCharPositionInLine() + token.getText().length();
 
     return create(startLine, startChar, endLine, endChar);
+  }
+
+  public static Range create(ParseTree tree) {
+    if (tree instanceof TerminalNode) {
+      return Ranges.create((TerminalNode) tree);
+    } else if (tree instanceof Token) {
+      return Ranges.create((Token) tree);
+    } else {
+      return Ranges.create((ParserRuleContext) tree);
+    }
   }
 
   public static boolean containsRange(Range bigger, Range smaller) {
