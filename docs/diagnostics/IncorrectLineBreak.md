@@ -52,5 +52,10 @@
 ### Параметр конфигурационного файла
 
 ```json
-"IncorrectLineBreak": false
+"IncorrectLineBreak": {
+  "checkFirstSymbol": true,
+  "listOfIncorrectFirstSymbol": ")|;|,|);",
+  "checkLastSymbol": true,
+  "listOfIncorrectLastSymbol": "ИЛИ|И|OR|AND|+|-|/|%|*"
+ }
 ```
