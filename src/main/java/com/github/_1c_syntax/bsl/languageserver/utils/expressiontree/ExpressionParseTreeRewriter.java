@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -33,11 +32,13 @@ import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree> {
 
-  private Deque<BslExpression> operands = new ArrayDeque<>();
-  private Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
+  private final Deque<BslExpression> operands = new ArrayDeque<>();
+  private final Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
   
   private BslExpression resultExpression;
 
@@ -187,12 +188,55 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     if(ctx.IDENTIFIER() != null){
       operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
     }
+    else{
+      var childVariant = ctx.children.get(0);
+      childVariant.accept(this);
+    }
 
     var modifiers = ctx.modifier();
     for (var modifier: modifiers) {
       modifier.accept(this);
     }
 
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+
+    var name = ctx.methodName().IDENTIFIER();
+    var callNode = MethodCallNode.create(name);
+    callNode.setRepresentingAst(ctx);
+
+    var paramList = ctx.doCall().callParamList();
+    var parameters = paramList.callParam();
+    addCallArguments(callNode, parameters);
+    operands.push(callNode);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    var typeName = ctx.typeName();
+    var args = ctx.doCall().callParamList().callParam();
+    ConstructorCallNode callNode;
+    if(typeName == null){
+      // function style
+      var typeNameArg = args.get(0);
+      args = args.stream().skip(1).collect(Collectors.toList());
+      callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
+    }
+    else{
+      // static style
+      var typeNameTerminal = TerminalSymbolNode.literal(typeName.IDENTIFIER());
+      callNode = ConstructorCallNode.createStatic(typeNameTerminal);
+    }
+
+    callNode.setRepresentingAst(ctx);
+
+    addCallArguments(callNode, args);
+
+    operands.push(callNode);
     return ctx;
   }
 
@@ -206,12 +250,52 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
     var target = operands.pop();
-    var rewriter = new ExpressionParseTreeRewriter();
-    ctx.expression().accept(rewriter);
 
-    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, rewriter.getExpressionTree());
+    var expressionArg = makeSubexpression(ctx.expression());
+
+    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg);
     operands.push(indexOperation);
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
+    var target = operands.pop();
+    var methodCall = ctx.methodCall();
+    var callNode = MethodCallNode.create(methodCall.methodName().IDENTIFIER());
+    addCallArguments(callNode, methodCall.doCall().callParamList().callParam());
+    operands.push(BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode));
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
+
+    var ternary = TernaryOperatorNode.create(
+      makeSubexpression(ctx.expression(0)),
+      makeSubexpression(ctx.expression(1)),
+      makeSubexpression(ctx.expression(2))
+    );
+
+    operands.push(ternary);
+
+    return ctx;
+  }
+
+  private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx){
+    var rewriter = new ExpressionParseTreeRewriter();
+    ctx.accept(rewriter);
+    return rewriter.getExpressionTree();
+  }
+
+  private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
+    for (BSLParser.CallParamContext parameter : args) {
+      if (parameter.expression() == null) {
+        callNode.addArgument(new SkippedCallArgumentNode());
+      } else {
+        callNode.addArgument(makeSubexpression(parameter.expression()));
+      }
+    }
   }
 
   private void buildOperation() {

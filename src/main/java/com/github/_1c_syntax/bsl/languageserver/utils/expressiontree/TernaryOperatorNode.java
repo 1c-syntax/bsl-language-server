@@ -21,34 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+public class TernaryOperatorNode extends BslExpression {
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+  private final BslExpression condition;
+  private final BslExpression truePart;
+  private final BslExpression falsePart;
+
+  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {
+    super(ExpressionNodeType.TERNARY_OP);
+    this.condition = condition;
+    this.truePart = truePart;
+    this.falsePart = falsePart;
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
+  public static TernaryOperatorNode create(BslExpression condition, BslExpression truePart, BslExpression falsePart){
+    return new TernaryOperatorNode(condition, truePart, falsePart);
   }
 
-  private void setRight(BslExpression right){
-    rightOperand = right;
+  public BslExpression getCondition() {
+    return condition;
   }
 
-  public BslExpression getLeft() {
-    return leftOperand;
+  public BslExpression getTruePart() {
+    return truePart;
   }
 
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
+  public BslExpression getFalsePart() {
+    return falsePart;
   }
 }

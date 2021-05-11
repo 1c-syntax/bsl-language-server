@@ -21,34 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+public abstract class AbstractCallNode extends BslExpression {
+
+  private final List<BslExpression> callArguments = new ArrayList<>();
+
+  protected AbstractCallNode() {
+    super(ExpressionNodeType.CALL);
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
+  public void addArgument(BslExpression argument) {
+    callArguments.add(argument);
   }
 
-  private void setRight(BslExpression right){
-    rightOperand = right;
-  }
-
-  public BslExpression getLeft() {
-    return leftOperand;
-  }
-
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
+  public List<BslExpression> arguments(){
+    return Collections.unmodifiableList(callArguments);
   }
 }

@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import org.antlr.v4.runtime.tree.ParseTree;

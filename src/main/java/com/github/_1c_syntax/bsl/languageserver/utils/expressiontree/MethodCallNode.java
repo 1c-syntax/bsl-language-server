@@ -21,34 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+public class MethodCallNode extends AbstractCallNode {
+
+  private final TerminalNode name;
+
+  private MethodCallNode(TerminalNode name){
+    super();
+    this.name = name;
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
+  public static MethodCallNode create(TerminalNode name){
+    return new MethodCallNode(name);
   }
 
-  private void setRight(BslExpression right){
-    rightOperand = right;
-  }
-
-  public BslExpression getLeft() {
-    return leftOperand;
-  }
-
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
+  public TerminalNode getName() {
+    return name;
   }
 }

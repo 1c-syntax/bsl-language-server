@@ -26,8 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
@@ -189,6 +192,51 @@ class ExpressionParseTreeRewriterTest {
     assertThat(L.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
     assertThat(L.getLeft().getRepresentingAst().getText()).isEqualTo("Структура");
     assertThat(L.getRight().getRepresentingAst().getText()).isEqualTo("Массив");
+
+  }
+
+  @Test
+  public void canBuildGlobalCall(){
+    var code = "Рез = Метод(1,,3)";
+    var expressionTree = getExpressionTree(code);
+
+    var call = (MethodCallNode)expressionTree;
+    assertThat(call.getName().getText()).isEqualTo("Метод");
+    assertThat(call.arguments()).hasSize(3);
+    assertThat(call.arguments().get(1)).isExactlyInstanceOf(SkippedCallArgumentNode.class);
+  }
+
+  @Test
+  public void canBuildGlobalCallWithModifiers(){
+    var code = "Рез = Метод(1,,3).Свойство";
+    var expressionTree = getExpressionTree(code);
+
+    var deref = (BinaryOperationNode)expressionTree;
+    var call = (MethodCallNode)deref.getLeft();
+    assertThat(call.getName().getText()).isEqualTo("Метод");
+    assertThat(call.arguments()).hasSize(3);
+    assertThat(call.arguments().get(1)).isExactlyInstanceOf(SkippedCallArgumentNode.class);
+  }
+
+  @Test
+  public void canCallDynamicConstructor(){
+    var code = "Рез = Новый(ПеремИмяТипа, Арг)";
+    var constructor = (ConstructorCallNode)getExpressionTree(code);
+
+    assertThat(constructor.isStaticallyTyped()).isFalse();
+    assertThat(constructor.getTypeName().getNodeType()).isEqualTo(ExpressionNodeType.IDENTIFIER);
+    assertThat(constructor.arguments()).hasSize(1);
+
+  }
+
+  @Test
+  public void canCallStaticConstructor(){
+    var code = "Рез = Новый ИмяТипа(Арг)";
+    var constructor = (ConstructorCallNode)getExpressionTree(code);
+
+    assertThat(constructor.isStaticallyTyped()).isTrue();
+    assertThat(constructor.getTypeName().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(constructor.arguments()).hasSize(1);
 
   }
 

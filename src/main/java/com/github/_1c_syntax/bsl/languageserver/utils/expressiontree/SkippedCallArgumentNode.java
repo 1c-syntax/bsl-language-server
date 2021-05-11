@@ -21,34 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+public class SkippedCallArgumentNode extends BslExpression {
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
-  }
-
-  private void setLeft(BslExpression left){
-    leftOperand = left;
-  }
-
-  private void setRight(BslExpression right){
-    rightOperand = right;
-  }
-
-  public BslExpression getLeft() {
-    return leftOperand;
-  }
-
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
+  protected SkippedCallArgumentNode() {
+    super(ExpressionNodeType.SKIPPED_CALL_ARG);
   }
 }

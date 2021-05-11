@@ -21,34 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+public class ConstructorCallNode extends AbstractCallNode {
 
-  private BinaryOperationNode(BslOperator operator) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+  private final BslExpression typeName;
+
+  private ConstructorCallNode(BslExpression typeName){
+    this.typeName = typeName;
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
+  public boolean isStaticallyTyped(){
+    return typeName instanceof TerminalSymbolNode && typeName.getNodeType() == ExpressionNodeType.LITERAL;
   }
 
-  private void setRight(BslExpression right){
-    rightOperand = right;
+  public BslExpression getTypeName(){
+    return typeName;
   }
 
-  public BslExpression getLeft() {
-    return leftOperand;
+  public static ConstructorCallNode createStatic(TerminalSymbolNode typeName){
+    return new ConstructorCallNode(typeName);
   }
 
-  public BslExpression getRight() {
-    return rightOperand;
+  public static ConstructorCallNode createDynamic(BslExpression typeNameExpression){
+    return new ConstructorCallNode(typeNameExpression);
   }
 
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
-  }
 }
