@@ -89,8 +89,7 @@ class ReferenceResolverTest {
       ReferenceFinder zeroLineReferenceFinder,
       ReferenceFinder firstLineReferenceFinder
     ) {
-      var referenceResolver = new ReferenceResolver();
-      referenceResolver.setFinders(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
+      var referenceResolver = new ReferenceResolver(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
       return referenceResolver;
     }
 
