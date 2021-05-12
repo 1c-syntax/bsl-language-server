@@ -42,127 +42,127 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ExpressionParseTreeRewriterTest {
 
   @Test
-  void simpleBinaryOperationRewrite(){
+  void simpleBinaryOperationRewrite() {
 
     var expressionTree = getExpressionTree("А = 2 + 3;");
-    assertThat(expressionTree instanceof BinaryOperationNode).isTrue();
+    assertThat(expressionTree).isInstanceOf(BinaryOperationNode.class);
 
-    var binary = (BinaryOperationNode)expressionTree;
-    assertThat(binary.getNodeType() == ExpressionNodeType.BINARY_OP).isTrue();
-    assertThat(binary.getLeft().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
-    assertThat(binary.getRight().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
-    assertThat(binary.getOperator() == BslOperator.ADD).isTrue();
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getNodeType()).isEqualTo(ExpressionNodeType.BINARY_OP);
+    assertThat(binary.getLeft().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.ADD);
 
   }
 
   @Test
-  void simpleUnaryOperationRewrite(){
+  void simpleUnaryOperationRewrite() {
 
     var expressionTree = getExpressionTree("А = -2 + 3;");
-    assertThat(expressionTree instanceof BinaryOperationNode).isTrue();
+    assertThat(expressionTree).isInstanceOf(BinaryOperationNode.class);
 
-    var binary = (BinaryOperationNode)expressionTree;
-    assertThat(binary.getLeft().getNodeType() == ExpressionNodeType.UNARY_OP).isTrue();
-    assertThat(((BslOperationNode) binary.getLeft()).getOperator() == BslOperator.UNARY_MINUS).isTrue();
-    assertThat(binary.getRight().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
-    assertThat(binary.getOperator() == BslOperator.ADD).isTrue();
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getLeft().getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+    assertThat(((BslOperationNode) binary.getLeft()).getOperator()).isEqualTo(BslOperator.UNARY_MINUS);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.ADD);
   }
 
   @Test
-  void binaryExpressionsChain(){
+  void binaryExpressionsChain() {
     var code = "А = 2 + 2 + 3 - 1";
     var expressionTree = getExpressionTree(code);
 
-    var binary = (BinaryOperationNode)expressionTree;
-    assertThat(binary.getOperator() == BslOperator.SUBTRACT).isTrue();
-    assertThat(binary.getLeft() instanceof BinaryOperationNode).isTrue();
-    assertThat(binary.getRight().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.SUBTRACT);
+    assertThat(binary.getLeft()).isInstanceOf(BinaryOperationNode.class);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
 
   }
 
   @Test
-  void binaryExpressionsPriority(){
+  void binaryExpressionsPriority() {
 
     // в конце
     var code = "А = 2 + 2 * 3";
     var expressionTree = getExpressionTree(code);
 
-    var binary = (BinaryOperationNode)expressionTree;
-    assertThat(binary.getOperator() == BslOperator.MULTIPLY).isTrue();
-    assertThat(binary.getLeft() instanceof BinaryOperationNode).isTrue();
-    assertThat(binary.getRight().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.MULTIPLY);
+    assertThat(binary.getLeft()).isInstanceOf(BinaryOperationNode.class);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
 
     // в начале
     code = "А = 2 * 2 + 3";
     expressionTree = getExpressionTree(code);
-    binary = (BinaryOperationNode)expressionTree;
-    assertThat(binary.getOperator() == BslOperator.MULTIPLY).isTrue();
-    assertThat(binary.getLeft().getNodeType() == ExpressionNodeType.LITERAL).isTrue();
-    assertThat(binary.getRight() instanceof BinaryOperationNode).isTrue();
+    binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.MULTIPLY);
+    assertThat(binary.getLeft().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(binary.getRight()).isInstanceOf(BinaryOperationNode.class);
 
   }
 
   @Test
-  public void booleanAndArithmeticPriority(){
+  void booleanAndArithmeticPriority() {
     var code = "Рез = А > 2 И Б + 3 < 0";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
 
     assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
-    assertThat(((BinaryOperationNode)binary.getLeft()).getOperator()).isEqualTo(BslOperator.GREATER);
-    assertThat(((BinaryOperationNode)binary.getRight()).getOperator()).isEqualTo(BslOperator.LESS);
+    assertThat(((BinaryOperationNode) binary.getLeft()).getOperator()).isEqualTo(BslOperator.GREATER);
+    assertThat(((BinaryOperationNode) binary.getRight()).getOperator()).isEqualTo(BslOperator.LESS);
 
-    var additionOnLeft = ((BinaryOperationNode)binary.getRight()).getLeft();
-    assertThat(additionOnLeft.getNodeType() == ExpressionNodeType.BINARY_OP).isTrue();
+    var additionOnLeft = ((BinaryOperationNode) binary.getRight()).getLeft();
+    assertThat(additionOnLeft.getNodeType()).isEqualTo(ExpressionNodeType.BINARY_OP);
 
   }
 
   @Test
-  public void booleanPriority(){
+  void booleanPriority() {
     var code = "Рез = А или Б и не В";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
 
     assertThat(binary.getOperator()).isEqualTo(BslOperator.OR);
     assertThat((binary.getLeft()).getNodeType()).isEqualTo(ExpressionNodeType.IDENTIFIER);
-    assertThat(((BinaryOperationNode)binary.getRight()).getOperator()).isEqualTo(BslOperator.AND);
+    assertThat(((BinaryOperationNode) binary.getRight()).getOperator()).isEqualTo(BslOperator.AND);
 
-    var negation = ((BinaryOperationNode)binary.getRight()).getRight();
-    assertThat(negation.getNodeType() == ExpressionNodeType.UNARY_OP).isTrue();
-    assertThat(((UnaryOperationNode)negation).getOperator() == BslOperator.NOT).isTrue();
+    var negation = ((BinaryOperationNode) binary.getRight()).getRight();
+    assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+    assertThat(((UnaryOperationNode) negation).getOperator()).isEqualTo(BslOperator.NOT);
 
   }
 
   @Test
-  public void dereferenceOfProperty(){
+  void dereferenceOfProperty() {
     var code = "Рез = Структура.Свойство";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
     assertThat(binary.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
   }
 
   @Test
-  public void dereferenceOfMethod(){
+  void dereferenceOfMethod() {
     var code = "Рез = Структура.Метод()";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
     assertThat(binary.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
     assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.CALL);
   }
 
   @Test
-  public void indexAccessToVariable(){
+  void indexAccessToVariable() {
     var code = "Рез = Массив[10]";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
     assertThat(binary.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
   }
 
   @Test
-  public void chainedModifiers(){
+  void chainedModifiers() {
     var code = "Рез = Структура.Массив[10 + 2].Свойство1.Свойство2[Структура.Свойство3]";
     var expressionTree = getExpressionTree(code);
-    var binary = (BinaryOperationNode)expressionTree;
+    var binary = (BinaryOperationNode) expressionTree;
 
     // should be:
     // INDEX_ACCESS(N, DEREFERENCE(Структура.Свойство3))
@@ -172,22 +172,22 @@ class ExpressionParseTreeRewriterTest {
 
     assertThat(binary.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
 
-    var indexArgument = (BinaryOperationNode)binary.getRight();
+    var indexArgument = (BinaryOperationNode) binary.getRight();
     assertThat(indexArgument.getRight().getRepresentingAst().getText()).isEqualTo("Свойство3");
     assertThat(indexArgument.getLeft().getRepresentingAst().getText()).isEqualTo("Структура");
 
-    var N = (BinaryOperationNode)binary.getLeft();
+    var N = (BinaryOperationNode) binary.getLeft();
     assertThat(N.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
     assertThat(N.getRight().getRepresentingAst().getText()).isEqualTo("Свойство2");
 
-    var M = (BinaryOperationNode)N.getLeft();
+    var M = (BinaryOperationNode) N.getLeft();
     assertThat(M.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
     assertThat(M.getRight().getRepresentingAst().getText()).isEqualTo("Свойство1");
 
-    var leftOfM = (BinaryOperationNode)M.getLeft();
+    var leftOfM = (BinaryOperationNode) M.getLeft();
     assertThat(leftOfM.getOperator()).isEqualTo(BslOperator.INDEX_ACCESS);
 
-    var L = (BinaryOperationNode)leftOfM.getLeft();
+    var L = (BinaryOperationNode) leftOfM.getLeft();
     assertThat(L.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
     assertThat(L.getLeft().getRepresentingAst().getText()).isEqualTo("Структура");
     assertThat(L.getRight().getRepresentingAst().getText()).isEqualTo("Массив");
@@ -195,32 +195,32 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  public void canBuildGlobalCall(){
+  void canBuildGlobalCall() {
     var code = "Рез = Метод(1,,3)";
     var expressionTree = getExpressionTree(code);
 
-    var call = (MethodCallNode)expressionTree;
+    var call = (MethodCallNode) expressionTree;
     assertThat(call.getName().getText()).isEqualTo("Метод");
     assertThat(call.arguments()).hasSize(3);
     assertThat(call.arguments().get(1)).isExactlyInstanceOf(SkippedCallArgumentNode.class);
   }
 
   @Test
-  public void canBuildGlobalCallWithModifiers(){
+  void canBuildGlobalCallWithModifiers() {
     var code = "Рез = Метод(1,,3).Свойство";
     var expressionTree = getExpressionTree(code);
 
-    var deref = (BinaryOperationNode)expressionTree;
-    var call = (MethodCallNode)deref.getLeft();
+    var deref = (BinaryOperationNode) expressionTree;
+    var call = (MethodCallNode) deref.getLeft();
     assertThat(call.getName().getText()).isEqualTo("Метод");
     assertThat(call.arguments()).hasSize(3);
     assertThat(call.arguments().get(1)).isExactlyInstanceOf(SkippedCallArgumentNode.class);
   }
 
   @Test
-  public void canCallDynamicConstructor(){
+  void canCallDynamicConstructor() {
     var code = "Рез = Новый(ПеремИмяТипа, Арг)";
-    var constructor = (ConstructorCallNode)getExpressionTree(code);
+    var constructor = (ConstructorCallNode) getExpressionTree(code);
 
     assertThat(constructor.isStaticallyTyped()).isFalse();
     assertThat(constructor.getTypeName().getNodeType()).isEqualTo(ExpressionNodeType.IDENTIFIER);
@@ -229,9 +229,9 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  public void canCallStaticConstructor(){
+  void canCallStaticConstructor() {
     var code = "Рез = Новый ИмяТипа(Арг)";
-    var constructor = (ConstructorCallNode)getExpressionTree(code);
+    var constructor = (ConstructorCallNode) getExpressionTree(code);
 
     assertThat(constructor.isStaticallyTyped()).isTrue();
     assertThat(constructor.getTypeName().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
@@ -239,12 +239,12 @@ class ExpressionParseTreeRewriterTest {
 
   }
 
-  BSLParser.ExpressionContext parse(String code){
+  BSLParser.ExpressionContext parse(String code) {
     var dContext = TestUtils.getDocumentContext(code);
     return dContext.getAst().fileCodeBlock().codeBlock().statement(0).assignment().expression();
   }
 
-  BslExpression getExpressionTree(String code){
+  BslExpression getExpressionTree(String code) {
     var expression = parse(code);
     var rewriter = new ExpressionParseTreeRewriter();
     expression.accept(rewriter);

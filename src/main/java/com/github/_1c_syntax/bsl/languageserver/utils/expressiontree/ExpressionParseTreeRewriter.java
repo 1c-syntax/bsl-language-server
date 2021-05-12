@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -55,7 +54,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var count = ctx.getChildCount();
 
     if (count > 1) {
-      for (int i = 1; i < count; ++i) {
+      for (var i = 1; i < count; ++i) {
         var child = ctx.getChild(i);
         if (child.getClass() == BSLParser.OperationContext.class) {
           visitOperation((BSLParser.OperationContext) child);
@@ -71,7 +70,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       buildOperation();
     }
 
-    if(!addToOperands)
+    if (!addToOperands)
       resultExpression = operands.pop();
 
     recursionLevel--;
@@ -148,6 +147,8 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
           return BslOperator.GREATER;
         case BSLLexer.GREATER_OR_EQUAL:
           return BslOperator.GREATER_OR_EQUAL;
+        default:
+          break;
       }
     }
     throw new IllegalStateException();
@@ -283,9 +284,6 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
     ctx.accept(this);
     return operands.pop();
-//    var rewriter = new ExpressionParseTreeRewriter();
-//    ctx.accept(rewriter);
-//    return rewriter.getExpressionTree();
   }
 
   private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {

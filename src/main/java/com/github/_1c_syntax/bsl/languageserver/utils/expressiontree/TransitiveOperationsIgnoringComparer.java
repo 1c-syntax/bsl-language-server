@@ -28,24 +28,24 @@ public class TransitiveOperationsIgnoringComparer extends DefaultNodeEqualityCom
   @Override
   protected boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
 
-    if(first.getOperator() != second.getOperator()){
+    if (first.getOperator() != second.getOperator()) {
       return false;
     }
 
     var operator = first.getOperator();
-    if(isTransitiveOperation(operator))
+    if (isTransitiveOperation(operator))
       return super.binaryOperationsEqual(first, second) ||
-        (equal(first.getLeft(), second.getRight()) && equal(first.getRight(), second.getLeft()));
+        (areEqual(first.getLeft(), second.getRight()) && areEqual(first.getRight(), second.getLeft()));
 
     return super.binaryOperationsEqual(first, second);
 
   }
 
-  public void logicalOperationsAsTransitive(boolean transitivityFlag){
+  public void logicalOperationsAsTransitive(boolean transitivityFlag) {
     logicalsAreTransitive = transitivityFlag;
   }
 
-  private boolean isTransitiveOperation(BslOperator operator){
+  private boolean isTransitiveOperation(BslOperator operator) {
     return operator == BslOperator.ADD ||
       operator == BslOperator.EQUAL ||
       operator == BslOperator.MULTIPLY ||

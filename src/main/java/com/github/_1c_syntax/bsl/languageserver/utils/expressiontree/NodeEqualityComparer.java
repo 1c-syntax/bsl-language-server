@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import java.util.Comparator;
-
 public interface NodeEqualityComparer {
-  boolean equal(BslExpression first, BslExpression second);
+  boolean areEqual(BslExpression first, BslExpression second);
 }

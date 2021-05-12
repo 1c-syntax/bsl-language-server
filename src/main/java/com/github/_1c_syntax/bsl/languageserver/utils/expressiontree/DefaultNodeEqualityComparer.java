@@ -28,7 +28,7 @@ import java.util.List;
 public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   @Override
-  public boolean equal(BslExpression first, BslExpression second) {
+  public boolean areEqual(BslExpression first, BslExpression second) {
     if (first == second)
       return true;
 
@@ -41,15 +41,15 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
       case IDENTIFIER:
         return identifiersEqual((TerminalSymbolNode) first, (TerminalSymbolNode) second);
       case BINARY_OP:
-        return binaryOperationsEqual((BinaryOperationNode)first, (BinaryOperationNode)second);
+        return binaryOperationsEqual((BinaryOperationNode) first, (BinaryOperationNode) second);
       case UNARY_OP:
-        return unaryOperationsEqual((UnaryOperationNode)first, (UnaryOperationNode)second);
+        return unaryOperationsEqual((UnaryOperationNode) first, (UnaryOperationNode) second);
       case TERNARY_OP:
-        return ternaryOperatorsEqual((TernaryOperatorNode)first, (TernaryOperatorNode)second);
+        return ternaryOperatorsEqual((TernaryOperatorNode) first, (TernaryOperatorNode) second);
       case SKIPPED_CALL_ARG:
         return true;
       case CALL:
-        return callStatementsEqual((AbstractCallNode)first, (AbstractCallNode)second);
+        return callStatementsEqual((AbstractCallNode) first, (AbstractCallNode) second);
       default:
         throw new IllegalStateException();
     }
@@ -57,25 +57,24 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
   }
 
   protected boolean callStatementsEqual(AbstractCallNode first, AbstractCallNode second) {
-    if(first instanceof MethodCallNode){
-      return methodCallsEqual((MethodCallNode)first, (MethodCallNode)second);
-    }
-    else {
-      return constructorCallsEqual((ConstructorCallNode)first, (ConstructorCallNode)second);
+    if (first instanceof MethodCallNode) {
+      return methodCallsEqual((MethodCallNode) first, (MethodCallNode) second);
+    } else {
+      return constructorCallsEqual((ConstructorCallNode) first, (ConstructorCallNode) second);
     }
   }
 
   protected boolean constructorCallsEqual(ConstructorCallNode first, ConstructorCallNode second) {
-    return equal(first.getTypeName(), second.getTypeName()) && argumentsEqual(first.arguments(), second.arguments());
+    return areEqual(first.getTypeName(), second.getTypeName()) && argumentsEqual(first.arguments(), second.arguments());
   }
 
   protected boolean argumentsEqual(List<BslExpression> argumentsOfFirst, List<BslExpression> argumentsOfSecond) {
 
-    if(argumentsOfFirst.size() != argumentsOfSecond.size())
+    if (argumentsOfFirst.size() != argumentsOfSecond.size())
       return false;
 
-    for (int i = 0; i < argumentsOfFirst.size(); i++){
-      if(!equal(argumentsOfFirst.get(i), argumentsOfSecond.get(i))){
+    for (var i = 0; i < argumentsOfFirst.size(); i++) {
+      if (!areEqual(argumentsOfFirst.get(i), argumentsOfSecond.get(i))) {
         return false;
       }
     }
@@ -89,23 +88,23 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
   }
 
   protected boolean ternaryOperatorsEqual(TernaryOperatorNode first, TernaryOperatorNode second) {
-    return equal(first.getCondition(), second.getCondition()) &&
-      equal(first.getTruePart(), second.getTruePart()) &&
-      equal(first.getFalsePart(), second.getFalsePart());
+    return areEqual(first.getCondition(), second.getCondition()) &&
+      areEqual(first.getTruePart(), second.getTruePart()) &&
+      areEqual(first.getFalsePart(), second.getFalsePart());
   }
 
   protected boolean unaryOperationsEqual(UnaryOperationNode first, UnaryOperationNode second) {
-    if(first.getOperator() != second.getOperator())
+    if (first.getOperator() != second.getOperator())
       return false;
 
-    return equal(first.getOperand(), second.getOperand());
+    return areEqual(first.getOperand(), second.getOperand());
   }
 
   protected boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
-    if(first.getOperator() != second.getOperator())
+    if (first.getOperator() != second.getOperator())
       return false;
 
-    return equal(first.getLeft(), second.getLeft()) && equal(first.getRight(), second.getRight());
+    return areEqual(first.getLeft(), second.getLeft()) && areEqual(first.getRight(), second.getRight());
 
   }
 
