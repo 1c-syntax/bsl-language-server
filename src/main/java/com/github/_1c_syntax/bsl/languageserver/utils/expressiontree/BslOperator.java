@@ -48,10 +48,7 @@ public enum BslOperator {
   UNARY_PLUS(7),
 
   DEREFERENCE(8),
-  INDEX_ACCESS(8),
-
-  //ternary,
-  CONDITIONAL(9);
+  INDEX_ACCESS(8);
 
   private final int priority;
 

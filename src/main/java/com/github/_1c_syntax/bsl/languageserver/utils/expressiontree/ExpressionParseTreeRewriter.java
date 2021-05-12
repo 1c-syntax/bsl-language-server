@@ -312,8 +312,6 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
         var operation = UnaryOperationNode.Create(operator, operand);
         operands.push(operation);
         break;
-      case CONDITIONAL:
-        throw new NotImplementedException();
       default:
         var right = operands.pop();
         var left = operands.pop();
