@@ -39,6 +39,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   private final Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
 
   private BslExpression resultExpression;
+  private int recursionLevel = -1;
 
   public BslExpression getExpressionTree() {
     return resultExpression;
@@ -46,6 +47,9 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
+
+    var nestingCount = operatorsInFly.size();
+    recursionLevel++;
 
     visitMember(ctx.member(0));
     var count = ctx.getChildCount();
@@ -61,11 +65,16 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       }
     }
 
-    while (!operatorsInFly.isEmpty()) {
+    var addToOperands = recursionLevel > 0;
+
+    while (nestingCount < operatorsInFly.size()) {
       buildOperation();
     }
-    resultExpression = operands.pop();
 
+    if(!addToOperands)
+      resultExpression = operands.pop();
+
+    recursionLevel--;
     return ctx;
   }
 
@@ -272,9 +281,11 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
-    var rewriter = new ExpressionParseTreeRewriter();
-    ctx.accept(rewriter);
-    return rewriter.getExpressionTree();
+    ctx.accept(this);
+    return operands.pop();
+//    var rewriter = new ExpressionParseTreeRewriter();
+//    ctx.accept(rewriter);
+//    return rewriter.getExpressionTree();
   }
 
   private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
