@@ -77,7 +77,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
       var matcher = pattern.matcher(checkText);
 
       if (matcher.find() && !queryFirstLines.contains(i + QUERY_START_LINE_OFFSET)) {
-        diagnosticStorage.addDiagnostic(i + 1, matcher.start(1), i + 1, matcher.end(1));
+        diagnosticStorage.addDiagnostic(i, matcher.start(1), i, matcher.end(1));
       }
     }
   }

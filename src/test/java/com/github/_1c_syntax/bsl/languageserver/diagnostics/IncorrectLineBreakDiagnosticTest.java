@@ -38,19 +38,22 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
-      .hasRange(7, 32, 33)
-      .hasRange(8, 35, 36)
-      .hasRange(16, 32, 33)
-      .hasRange(17, 22, 23)
-      .hasRange(21, 49, 50)
-      .hasRange(70, 80, 83)
-      .hasRange(83, 89, 92)
-      .hasRange(45, 25, 26)
-      .hasRange(47, 25, 26)
-      .hasRange(59, 4, 5)
-      .hasRange(61, 4, 5)
+      .hasRange(6, 32, 33)
+      .hasRange(7, 35, 36)
+      .hasRange(15, 32, 33)
+      .hasRange(16, 22, 23)
+      .hasRange(20, 49, 50)
+      .hasRange(69, 80, 83)
+      .hasRange(82, 89, 92)
+      .hasRange(44, 25, 26)
+      .hasRange(46, 25, 26)
+      .hasRange(58, 4, 5)
+      .hasRange(60, 4, 5)
+      .hasRange(101, 2, 3)
+      .hasRange(105, 2, 3)
+      .hasRange(109, 2, 3)
     ;
 
   }
