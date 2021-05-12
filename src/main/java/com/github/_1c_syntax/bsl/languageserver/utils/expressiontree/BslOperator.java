@@ -21,6 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum BslOperator {
 
   // binary
@@ -54,13 +59,5 @@ public enum BslOperator {
   CONDITIONAL(9);
 
   private final int priority;
-
-  BslOperator(int priority){
-    this.priority = priority;
-  }
-
-  public int getPriority() {
-    return this.priority;
-  }
 
 }

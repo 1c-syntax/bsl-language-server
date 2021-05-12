@@ -21,27 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
+
+@Value
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class ConstructorCallNode extends AbstractCallNode {
 
-  private final BslExpression typeName;
+  BslExpression typeName;
 
-  private ConstructorCallNode(BslExpression typeName){
-    this.typeName = typeName;
-  }
-
-  public boolean isStaticallyTyped(){
+  public boolean isStaticallyTyped() {
     return typeName instanceof TerminalSymbolNode && typeName.getNodeType() == ExpressionNodeType.LITERAL;
   }
 
-  public BslExpression getTypeName(){
-    return typeName;
-  }
-
-  public static ConstructorCallNode createStatic(TerminalSymbolNode typeName){
+  public static ConstructorCallNode createStatic(TerminalSymbolNode typeName) {
     return new ConstructorCallNode(typeName);
   }
 
-  public static ConstructorCallNode createDynamic(BslExpression typeNameExpression){
+  public static ConstructorCallNode createDynamic(BslExpression typeNameExpression) {
     return new ConstructorCallNode(typeNameExpression);
   }
 

@@ -19,16 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.Value;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
-@Value(staticConstructor = "create")
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class MethodCallNode extends AbstractCallNode {
-  TerminalNode name;
-}
+import javax.annotation.ParametersAreNonnullByDefault;

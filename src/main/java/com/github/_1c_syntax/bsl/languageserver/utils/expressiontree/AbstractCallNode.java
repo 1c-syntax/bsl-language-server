@@ -37,7 +37,7 @@ public abstract class AbstractCallNode extends BslExpression {
     callArguments.add(argument);
   }
 
-  public List<BslExpression> arguments(){
+  public List<BslExpression> arguments() {
     return Collections.unmodifiableList(callArguments);
   }
 }
