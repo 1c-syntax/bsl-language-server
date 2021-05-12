@@ -24,24 +24,24 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-public class TerminalSymbolNode extends BslExpression{
+public class TerminalSymbolNode extends BslExpression {
   private TerminalSymbolNode(ExpressionNodeType type) {
     super(type);
   }
 
-  public static TerminalSymbolNode literal(BSLParser.ConstValueContext constant){
+  public static TerminalSymbolNode literal(BSLParser.ConstValueContext constant) {
     var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
     node.setRepresentingAst(constant);
     return node;
   }
 
-  public static TerminalSymbolNode literal(TerminalNode constant){
+  public static TerminalSymbolNode literal(TerminalNode constant) {
     var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
     node.setRepresentingAst(constant);
     return node;
   }
 
-  public static TerminalSymbolNode identifier(TerminalNode identifier){
+  public static TerminalSymbolNode identifier(TerminalNode identifier) {
     var node = new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER);
     node.setRepresentingAst(identifier);
     return node;

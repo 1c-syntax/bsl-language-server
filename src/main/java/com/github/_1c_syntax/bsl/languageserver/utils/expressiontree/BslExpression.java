@@ -21,26 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+@Data
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public abstract class BslExpression {
-
   private final ExpressionNodeType nodeType;
-  private ParseTree treeItem;
-
-  protected BslExpression(ExpressionNodeType type){
-    nodeType = type;
-  }
-
-  public ExpressionNodeType getNodeType(){
-    return nodeType;
-  }
-
-  public void setRepresentingAst(ParseTree treeItem){
-    this.treeItem = treeItem;
-  }
-
-  public ParseTree getRepresentingAst() {
-    return treeItem;
-  }
+  private ParseTree representingAst;
 }

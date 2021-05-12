@@ -21,16 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public abstract class BslOperationNode extends BslExpression{
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 
-  private final BslOperator operator;
+@Value
+@NonFinal
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public abstract class BslOperationNode extends BslExpression {
+
+  BslOperator operator;
 
   protected BslOperationNode(ExpressionNodeType type, BslOperator operator) {
     super(type);
     this.operator = operator;
   }
 
-  public BslOperator getOperator() {
-    return operator;
-  }
 }

@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-
-import org.jetbrains.annotations.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.NotImplementedException;
@@ -39,7 +37,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
   private final Deque<BslExpression> operands = new ArrayDeque<>();
   private final Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
-  
+
   private BslExpression resultExpression;
 
   public BslExpression getExpressionTree() {
@@ -47,24 +45,23 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   @Override
-  public ParseTree visitExpression(@NotNull BSLParser.ExpressionContext ctx) {
+  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
 
     visitMember(ctx.member(0));
     var count = ctx.getChildCount();
 
-    if(count > 1){
-      for (int i = 1; i < count; ++i){
+    if (count > 1) {
+      for (int i = 1; i < count; ++i) {
         var child = ctx.getChild(i);
-        if(child.getClass() == BSLParser.OperationContext.class){
+        if (child.getClass() == BSLParser.OperationContext.class) {
           visitOperation((BSLParser.OperationContext) child);
-        }
-        else if(child.getClass() == BSLParser.MemberContext.class){
+        } else if (child.getClass() == BSLParser.MemberContext.class) {
           visitMember((BSLParser.MemberContext) child);
         }
       }
     }
 
-    while (!operatorsInFly.isEmpty()){
+    while (!operatorsInFly.isEmpty()) {
       buildOperation();
     }
     resultExpression = operands.pop();
@@ -76,7 +73,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
 
     var unary = ctx.unaryModifier();
-    if(unary != null) {
+    if (unary != null) {
       visitUnaryModifier(unary);
       ctx.getChild(1).accept(this);
       buildOperation();
@@ -96,14 +93,14 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private void processOperation(BslOperator operator){
-    if(operatorsInFly.isEmpty()) {
+  private void processOperation(BslOperator operator) {
+    if (operatorsInFly.isEmpty()) {
       operatorsInFly.push(operator);
       return;
     }
 
     var lastSeenOperator = operatorsInFly.peek();
-    if(lastSeenOperator.getPriority() <= operator.getPriority()){
+    if (lastSeenOperator.getPriority() <= operator.getPriority()) {
       buildOperation();
     }
 
@@ -111,31 +108,25 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private BslOperator getOperator(BSLParser.OperationContext ctx) {
-    if(ctx.PLUS() != null){
+    if (ctx.PLUS() != null) {
       return BslOperator.ADD;
-    }else if(ctx.MINUS() != null){
+    } else if (ctx.MINUS() != null) {
       return BslOperator.SUBTRACT;
-    }
-    else if(ctx.MUL() != null){
+    } else if (ctx.MUL() != null) {
       return BslOperator.MULTIPLY;
-    }
-    else if(ctx.QUOTIENT() != null){
+    } else if (ctx.QUOTIENT() != null) {
       return BslOperator.DIVIDE;
-    }
-    else if(ctx.MODULO() != null){
+    } else if (ctx.MODULO() != null) {
       return BslOperator.MODULO;
-    }
-    else if(ctx.boolOperation() != null){
-      if(ctx.boolOperation().AND_KEYWORD() != null){
+    } else if (ctx.boolOperation() != null) {
+      if (ctx.boolOperation().AND_KEYWORD() != null) {
         return BslOperator.AND;
-      }
-      else{
+      } else {
         return BslOperator.OR;
       }
-    }
-    else if(ctx.compareOperation() != null){
-      var token = ((TerminalNode)ctx.compareOperation().getChild(0)).getSymbol().getType();
-      switch (token){
+    } else if (ctx.compareOperation() != null) {
+      var token = ((TerminalNode) ctx.compareOperation().getChild(0)).getSymbol().getType();
+      switch (token) {
         case BSLLexer.ASSIGN:
           return BslOperator.EQUAL;
         case BSLLexer.NOT_EQUAL:
@@ -163,10 +154,10 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitUnaryModifier(BSLParser.UnaryModifierContext ctx) {
-    var child = (TerminalNode)ctx.getChild(0);
+    var child = (TerminalNode) ctx.getChild(0);
     var token = (child).getSymbol().getType();
 
-    switch (token){
+    switch (token) {
       case BSLLexer.PLUS:
         operatorsInFly.push(BslOperator.UNARY_PLUS);
         break;
@@ -180,21 +171,20 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
         throw new IllegalArgumentException();
     }
 
-    return null;
+    return ctx;
   }
 
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-    if(ctx.IDENTIFIER() != null){
+    if (ctx.IDENTIFIER() != null) {
       operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
-    }
-    else{
+    } else {
       var childVariant = ctx.children.get(0);
       childVariant.accept(this);
     }
 
     var modifiers = ctx.modifier();
-    for (var modifier: modifiers) {
+    for (var modifier : modifiers) {
       modifier.accept(this);
     }
 
@@ -220,13 +210,12 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var typeName = ctx.typeName();
     var args = ctx.doCall().callParamList().callParam();
     ConstructorCallNode callNode;
-    if(typeName == null){
+    if (typeName == null) {
       // function style
       var typeNameArg = args.get(0);
       args = args.stream().skip(1).collect(Collectors.toList());
       callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
-    }
-    else{
+    } else {
       // static style
       var typeNameTerminal = TerminalSymbolNode.literal(typeName.IDENTIFIER());
       callNode = ConstructorCallNode.createStatic(typeNameTerminal);
@@ -282,7 +271,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx){
+  private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
     var rewriter = new ExpressionParseTreeRewriter();
     ctx.accept(rewriter);
     return rewriter.getExpressionTree();
@@ -299,17 +288,17 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private void buildOperation() {
-    if(operatorsInFly.isEmpty()){
+    if (operatorsInFly.isEmpty()) {
       return;
     }
 
     var operator = operatorsInFly.pop();
-    switch (operator){
+    switch (operator) {
       case UNARY_MINUS:
       case UNARY_PLUS:
       case NOT:
         var operand = operands.pop();
-        var operation = UnaryOperationNode.Create(operator, operand);
+        var operation = UnaryOperationNode.create(operator, operand);
         operands.push(operation);
         break;
       default:

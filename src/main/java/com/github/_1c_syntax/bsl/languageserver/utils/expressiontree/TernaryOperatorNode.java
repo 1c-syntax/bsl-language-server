@@ -21,11 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
+
+@Value(staticConstructor = "create")
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class TernaryOperatorNode extends BslExpression {
 
-  private final BslExpression condition;
-  private final BslExpression truePart;
-  private final BslExpression falsePart;
+  BslExpression condition;
+  BslExpression truePart;
+  BslExpression falsePart;
 
   protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {
     super(ExpressionNodeType.TERNARY_OP);
@@ -34,19 +41,4 @@ public class TernaryOperatorNode extends BslExpression {
     this.falsePart = falsePart;
   }
 
-  public static TernaryOperatorNode create(BslExpression condition, BslExpression truePart, BslExpression falsePart){
-    return new TernaryOperatorNode(condition, truePart, falsePart);
-  }
-
-  public BslExpression getCondition() {
-    return condition;
-  }
-
-  public BslExpression getTruePart() {
-    return truePart;
-  }
-
-  public BslExpression getFalsePart() {
-    return falsePart;
-  }
 }

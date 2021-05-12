@@ -21,25 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class UnaryOperationNode extends BslOperationNode{
-  private BslExpression operand;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
 
-  private UnaryOperationNode(BslOperator operator) {
+@Value
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = true)
+public class UnaryOperationNode extends BslOperationNode {
+  BslExpression operand;
+
+  private UnaryOperationNode(BslOperator operator, BslExpression operand) {
     super(ExpressionNodeType.UNARY_OP, operator);
-  }
-
-  private void setOperand(BslExpression operand){
     this.operand = operand;
   }
 
-  public BslExpression getOperand() {
-    return operand;
-  }
-
-  public static UnaryOperationNode Create(BslOperator operator, BslExpression expression){
-    var node = new UnaryOperationNode(operator);
-    node.setOperand(expression);
-    return node;
+  public static UnaryOperationNode create(BslOperator operator, BslExpression expression) {
+    return new UnaryOperationNode(operator, expression);
   }
 
 }

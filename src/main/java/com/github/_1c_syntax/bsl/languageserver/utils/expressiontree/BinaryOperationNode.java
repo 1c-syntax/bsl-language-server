@@ -21,34 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public class BinaryOperationNode extends BslOperationNode{
-  private BslExpression leftOperand;
-  private BslExpression rightOperand;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
 
-  private BinaryOperationNode(BslOperator operator) {
+@Value
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class BinaryOperationNode extends BslOperationNode {
+  BslExpression left;
+  BslExpression right;
+
+  private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right) {
     super(ExpressionNodeType.BINARY_OP, operator);
+    this.left = left;
+    this.right = right;
   }
 
-  private void setLeft(BslExpression left){
-    leftOperand = left;
-  }
-
-  private void setRight(BslExpression right){
-    rightOperand = right;
-  }
-
-  public BslExpression getLeft() {
-    return leftOperand;
-  }
-
-  public BslExpression getRight() {
-    return rightOperand;
-  }
-
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right){
-    var node = new BinaryOperationNode(operator);
-    node.setLeft(left);
-    node.setRight(right);
-    return node;
+  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right) {
+    return new BinaryOperationNode(operator, left, right);
   }
 }
