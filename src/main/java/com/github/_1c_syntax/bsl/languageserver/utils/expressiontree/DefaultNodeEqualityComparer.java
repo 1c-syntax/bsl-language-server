@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 
 import java.util.List;
 
-public class DefaultEqualityComparer implements NodeEqualityComparer {
+public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   @Override
   public boolean equal(BslExpression first, BslExpression second) {
@@ -56,7 +56,7 @@ public class DefaultEqualityComparer implements NodeEqualityComparer {
 
   }
 
-  private boolean callStatementsEqual(AbstractCallNode first, AbstractCallNode second) {
+  protected boolean callStatementsEqual(AbstractCallNode first, AbstractCallNode second) {
     if(first instanceof MethodCallNode){
       return methodCallsEqual((MethodCallNode)first, (MethodCallNode)second);
     }
@@ -65,11 +65,11 @@ public class DefaultEqualityComparer implements NodeEqualityComparer {
     }
   }
 
-  private boolean constructorCallsEqual(ConstructorCallNode first, ConstructorCallNode second) {
+  protected boolean constructorCallsEqual(ConstructorCallNode first, ConstructorCallNode second) {
     return equal(first.getTypeName(), second.getTypeName()) && argumentsEqual(first.arguments(), second.arguments());
   }
 
-  private boolean argumentsEqual(List<BslExpression> argumentsOfFirst, List<BslExpression> argumentsOfSecond) {
+  protected boolean argumentsEqual(List<BslExpression> argumentsOfFirst, List<BslExpression> argumentsOfSecond) {
 
     if(argumentsOfFirst.size() != argumentsOfSecond.size())
       return false;
@@ -83,25 +83,25 @@ public class DefaultEqualityComparer implements NodeEqualityComparer {
     return true;
   }
 
-  private boolean methodCallsEqual(MethodCallNode first, MethodCallNode second) {
+  protected boolean methodCallsEqual(MethodCallNode first, MethodCallNode second) {
     return first.getName().getText().equalsIgnoreCase(second.getName().getText())
       && argumentsEqual(first.arguments(), second.arguments());
   }
 
-  private boolean ternaryOperatorsEqual(TernaryOperatorNode first, TernaryOperatorNode second) {
+  protected boolean ternaryOperatorsEqual(TernaryOperatorNode first, TernaryOperatorNode second) {
     return equal(first.getCondition(), second.getCondition()) &&
       equal(first.getTruePart(), second.getTruePart()) &&
       equal(first.getFalsePart(), second.getFalsePart());
   }
 
-  private boolean unaryOperationsEqual(UnaryOperationNode first, UnaryOperationNode second) {
+  protected boolean unaryOperationsEqual(UnaryOperationNode first, UnaryOperationNode second) {
     if(first.getOperator() != second.getOperator())
       return false;
 
     return equal(first.getOperand(), second.getOperand());
   }
 
-  private boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
+  protected boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
     if(first.getOperator() != second.getOperator())
       return false;
 
@@ -109,11 +109,11 @@ public class DefaultEqualityComparer implements NodeEqualityComparer {
 
   }
 
-  private boolean identifiersEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
+  protected boolean identifiersEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
     return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 
-  private boolean literalsEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
+  protected boolean literalsEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
     return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 }
