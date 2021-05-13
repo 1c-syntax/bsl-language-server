@@ -83,7 +83,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     var operation = operands.peek();
     assert operation != null; // для спокойствия сонара
-    
+
     if(operation.getRepresentingAst() == null)
       operation.setRepresentingAst(ctx);
 

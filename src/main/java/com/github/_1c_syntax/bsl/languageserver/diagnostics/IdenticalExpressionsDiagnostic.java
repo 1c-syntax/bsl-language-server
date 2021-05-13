@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.DefaultNode
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -68,7 +69,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     if (binariesList.isEmpty())
       return ctx;
 
-    var comparer = new DefaultNodeEqualityComparer();
+    var comparer = new TransitiveOperationsIgnoringComparer();
     binariesList
       .stream()
       .filter(x -> checkEquality(comparer, x))
