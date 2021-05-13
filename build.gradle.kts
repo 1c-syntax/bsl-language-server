@@ -179,7 +179,8 @@ tasks.processResources {
 }
 
 license {
-    header = rootProject.file("license/HEADER.txt")
+    header(file("license/HEADER.txt"))
+    charset("UTF-8")
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
