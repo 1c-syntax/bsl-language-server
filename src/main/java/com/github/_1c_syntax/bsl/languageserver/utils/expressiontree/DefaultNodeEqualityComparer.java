@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 
 import java.util.List;
 
+/**
+ * Стандартный алгоритм сравнения выражений. Сравнивает выражения на идентичность.
+ */
 public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   @Override
@@ -102,6 +105,9 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   protected boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
     if (first.getOperator() != second.getOperator())
+      return false;
+
+    if(first.getOperator() == BslOperator.DEREFERENCE || first.getOperator() == BslOperator.INDEX_ACCESS)
       return false;
 
     return areEqual(first.getLeft(), second.getLeft()) && areEqual(first.getRight(), second.getRight());

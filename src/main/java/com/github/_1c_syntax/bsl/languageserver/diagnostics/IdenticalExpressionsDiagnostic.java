@@ -70,6 +70,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
 
     var comparer = new TransitiveOperationsIgnoringComparer();
+    comparer.logicalOperationsAsTransitive(true);
     binariesList
       .stream()
       .filter(x -> checkEquality(comparer, x))

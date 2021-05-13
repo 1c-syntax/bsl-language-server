@@ -33,6 +33,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Преобразователь выражения в дерево вычисления.
+ */
 public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree> {
 
   @Value
@@ -51,10 +54,17 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   private BslExpression resultExpression;
   private int recursionLevel = -1;
 
+  /**
+   * @return результирующее выражение в виде дерева вычисления операций
+   */
   public BslExpression getExpressionTree() {
     return resultExpression;
   }
 
+  /**
+   * @param ctx выражение для создания дерева
+   * @return ParseTree стандартного интерфейса antlr4
+   */
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
 

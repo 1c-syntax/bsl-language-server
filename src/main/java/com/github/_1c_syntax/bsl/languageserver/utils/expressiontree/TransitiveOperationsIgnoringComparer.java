@@ -21,6 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+/**
+ * Стратегия сравнения выражений с учетом транзитивности операторов
+ * А = Б будет эквивалентно Б = А
+ * если включить режим транзитивности логических операций, то эквивалентны будут
+ * "А и Б" и "Б и А" (см. метод logicalOperationsAsTransitive)
+ */
 public class TransitiveOperationsIgnoringComparer extends DefaultNodeEqualityComparer {
 
   private boolean logicalsAreTransitive = false;
@@ -41,11 +47,18 @@ public class TransitiveOperationsIgnoringComparer extends DefaultNodeEqualityCom
 
   }
 
+  /**
+   * @param transitivityFlag Включает режим транзитивности логических операций
+   * если true, то операторы И/ИЛИ считаются транзитивными (не учитывается сокращенное выполнение логических операций)
+   */
   public void logicalOperationsAsTransitive(boolean transitivityFlag) {
     logicalsAreTransitive = transitivityFlag;
   }
 
   private boolean isTransitiveOperation(BslOperator operator) {
+    if(operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS)
+      return false;
+
     return operator == BslOperator.ADD ||
       operator == BslOperator.EQUAL ||
       operator == BslOperator.MULTIPLY ||

@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
+/**
+ * Интерфейс стратегии сравнения узлов деревьев выражений
+ */
 public interface NodeEqualityComparer {
   boolean areEqual(BslExpression first, BslExpression second);
 }
