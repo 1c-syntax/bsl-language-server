@@ -32,13 +32,13 @@ public class BinaryOperationNode extends BslOperationNode {
   BslExpression left;
   BslExpression right;
 
-  private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right) {
-    super(ExpressionNodeType.BINARY_OP, operator);
+  private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right, String actualSourceCode) {
+    super(ExpressionNodeType.BINARY_OP, operator, actualSourceCode);
     this.left = left;
     this.right = right;
   }
 
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right) {
-    return new BinaryOperationNode(operator, left, right);
+  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right, String actualSourceCode) {
+    return new BinaryOperationNode(operator, left, right, actualSourceCode);
   }
 }

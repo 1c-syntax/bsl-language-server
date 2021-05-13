@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -34,8 +35,18 @@ import java.util.stream.Collectors;
 
 public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree> {
 
+  @Value
+  private static class OperatorInCode {
+    BslOperator operator;
+    String actualSourceCode; // ИЛИ vs OR в диагностических сообщениях, как написано в коде
+
+    public int getPriority() {
+      return operator.getPriority();
+    }
+  }
+
   private final Deque<BslExpression> operands = new ArrayDeque<>();
-  private final Deque<BslOperator> operatorsInFly = new ArrayDeque<>();
+  private final Deque<OperatorInCode> operatorsInFly = new ArrayDeque<>();
 
   private BslExpression resultExpression;
   private int recursionLevel = -1;
@@ -70,8 +81,15 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       buildOperation();
     }
 
-    if (!addToOperands)
+    var operation = operands.peek();
+    assert operation != null; // для спокойствия сонара
+    
+    if(operation.getRepresentingAst() == null)
+      operation.setRepresentingAst(ctx);
+
+    if (!addToOperands) {
       resultExpression = operands.pop();
+    }
 
     recursionLevel--;
     return ctx;
@@ -96,12 +114,12 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     BslOperator operator = getOperator(ctx);
 
-    processOperation(operator);
+    processOperation(new OperatorInCode(operator, ctx.getText()));
 
     return ctx;
   }
 
-  private void processOperation(BslOperator operator) {
+  private void processOperation(OperatorInCode operator) {
     if (operatorsInFly.isEmpty()) {
       operatorsInFly.push(operator);
       return;
@@ -167,19 +185,23 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var child = (TerminalNode) ctx.getChild(0);
     var token = (child).getSymbol().getType();
 
+    BslOperator operator;
+
     switch (token) {
       case BSLLexer.PLUS:
-        operatorsInFly.push(BslOperator.UNARY_PLUS);
+        operator = BslOperator.UNARY_PLUS;
         break;
       case BSLLexer.MINUS:
-        operatorsInFly.push(BslOperator.UNARY_MINUS);
+        operator = BslOperator.UNARY_MINUS;
         break;
       case BSLLexer.NOT_KEYWORD:
-        operatorsInFly.push(BslOperator.NOT);
+        operator = BslOperator.NOT;
         break;
       default:
         throw new IllegalArgumentException();
     }
+
+    operatorsInFly.push(new OperatorInCode(operator, child.getText()));
 
     return ctx;
   }
@@ -242,7 +264,12 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
     var target = operands.pop();
-    operands.push(BinaryOperationNode.create(BslOperator.DEREFERENCE, target, TerminalSymbolNode.identifier(ctx.IDENTIFIER())));
+    var operation = BinaryOperationNode.create(
+      BslOperator.DEREFERENCE,
+      target,
+      TerminalSymbolNode.identifier(ctx.IDENTIFIER()), "");
+    operation.setRepresentingAst(ctx);
+    operands.push(operation);
     return ctx;
   }
 
@@ -252,7 +279,8 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     var expressionArg = makeSubexpression(ctx.expression());
 
-    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg);
+    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg, "");
+    indexOperation.setRepresentingAst(ctx);
     operands.push(indexOperation);
     return ctx;
   }
@@ -263,7 +291,9 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var methodCall = ctx.methodCall();
     var callNode = MethodCallNode.create(methodCall.methodName().IDENTIFIER());
     addCallArguments(callNode, methodCall.doCall().callParamList().callParam());
-    operands.push(BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode));
+    var operation = BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode, "");
+    operation.setRepresentingAst(ctx);
+    operands.push(operation);
     return ctx;
   }
 
@@ -276,6 +306,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
       makeSubexpression(ctx.expression(2))
     );
 
+    ternary.setRepresentingAst(ctx);
     operands.push(ternary);
 
     return ctx;
@@ -283,7 +314,11 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
   private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
     ctx.accept(this);
-    return operands.pop();
+    var operand = operands.pop();
+    if (operand.getRepresentingAst() == null)
+      operand.setRepresentingAst(ctx);
+
+    return operand;
   }
 
   private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
@@ -302,18 +337,18 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     }
 
     var operator = operatorsInFly.pop();
-    switch (operator) {
+    switch (operator.getOperator()) {
       case UNARY_MINUS:
       case UNARY_PLUS:
       case NOT:
         var operand = operands.pop();
-        var operation = UnaryOperationNode.create(operator, operand);
+        var operation = UnaryOperationNode.create(operator.getOperator(), operand, operator.getActualSourceCode());
         operands.push(operation);
         break;
       default:
         var right = operands.pop();
         var left = operands.pop();
-        var binaryOp = BinaryOperationNode.create(operator, left, right);
+        var binaryOp = BinaryOperationNode.create(operator.getOperator(), left, right, operator.getActualSourceCode());
         operands.push(binaryOp);
     }
   }

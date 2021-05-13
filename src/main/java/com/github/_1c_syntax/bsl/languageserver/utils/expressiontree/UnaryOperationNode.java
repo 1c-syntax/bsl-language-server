@@ -31,13 +31,13 @@ import lombok.Value;
 public class UnaryOperationNode extends BslOperationNode {
   BslExpression operand;
 
-  private UnaryOperationNode(BslOperator operator, BslExpression operand) {
-    super(ExpressionNodeType.UNARY_OP, operator);
+  private UnaryOperationNode(BslOperator operator, BslExpression operand, String operationContext) {
+    super(ExpressionNodeType.UNARY_OP, operator, operationContext);
     this.operand = operand;
   }
 
-  public static UnaryOperationNode create(BslOperator operator, BslExpression expression) {
-    return new UnaryOperationNode(operator, expression);
+  public static UnaryOperationNode create(BslOperator operator, BslExpression expression, String operationContext) {
+    return new UnaryOperationNode(operator, expression, operationContext);
   }
 
 }

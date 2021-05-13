@@ -33,10 +33,12 @@ import lombok.experimental.NonFinal;
 public abstract class BslOperationNode extends BslExpression {
 
   BslOperator operator;
+  String sourceCodeOperator;
 
-  protected BslOperationNode(ExpressionNodeType type, BslOperator operator) {
+  protected BslOperationNode(ExpressionNodeType type, BslOperator operator, String sourceCodeOperator) {
     super(type);
     this.operator = operator;
+    this.sourceCodeOperator = sourceCodeOperator;
   }
 
 }

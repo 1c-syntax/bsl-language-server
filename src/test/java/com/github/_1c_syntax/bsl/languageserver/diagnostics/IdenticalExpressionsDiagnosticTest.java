@@ -39,7 +39,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
   void runTest() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
       .hasRange(4, 9, 4, 25)
       .hasRange(6, 16, 6, 31)
@@ -50,7 +50,13 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
       .hasRange(21, 16, 21, 33)
       .hasRange(25, 9, 25, 38)
       .hasRange(27, 16, 27, 43)
-      .hasRange(31, 16, 31, 33);
+      .hasRange(31, 16, 31, 33)
+      .hasRange(39, 4, 39, 43)
+      .hasRange(40, 5, 40, 20)
+      .hasRange(44, 10, 44, 27)
+      .hasRange(46, 10, 46, 52)
+      .hasRange(50, 10, 50, 38)
+    ;
   }
 
 }
