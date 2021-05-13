@@ -195,3 +195,13 @@
 //
 Функция BUG_1488_2(РежимДиалога)
 КонецФункции
+
+// Specifies settings for reading values from JSON format
+//
+// Returns:
+//  Structure - contains:
+// * ReadToMap - Boolean - default is True
+// * PropertiesWithDateValuesNames - Array contains String - for every fields with date values
+//                                 - String - if JSON has only one date field
+Функция BUG_1641()
+КонецФункции
