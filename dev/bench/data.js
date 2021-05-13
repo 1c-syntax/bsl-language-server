@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1620806433140,
+  "lastUpdate": 1620911379401,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10509,6 +10509,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.257473111385417",
             "extra": "mean: 90.07381264368694 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8112d97f54152cf7cfc72da3441158d6f4ce846f",
+          "message": "Merge pull request #1660 from 1c-syntax/fix/description-reader-parser\n\nОбновление парсера. Fix #1641. Fix #1620",
+          "timestamp": "2021-05-13T16:00:33+03:00",
+          "tree_id": "c748288ff650fb243cb8e4f9e3260adb030fb6e5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8112d97f54152cf7cfc72da3441158d6f4ce846f"
+        },
+        "date": 1620911377166,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.34550213813782,
+            "unit": "sec",
+            "range": "stddev: 3.4559063562515786",
+            "extra": "mean: 90.34550213813782 sec\nrounds: 3"
           }
         ]
       }
