@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -55,6 +56,20 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
       .hasRange(105, 2, 3)
       .hasRange(109, 2, 3)
     ;
+
+  }
+
+  @Test
+  void testConfigure() {
+
+    List<Diagnostic> diagnostics;
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkFirstSymbol", true);
+    configuration.put("listOfIncorrectFirstSymbol", ") ; , );");
+    configuration.put("checkLastSymbol", true);
+    configuration.put("listOfIncorrectLastSymbol", "ИЛИ И OR AND + - / % *");
+    diagnosticInstance.configure(configuration);
 
   }
 }

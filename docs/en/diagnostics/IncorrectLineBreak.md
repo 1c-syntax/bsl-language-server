@@ -4,6 +4,15 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `2` | `standard`<br>`badpractice` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `checkFirstSymbol` | `Boolean` | ```Check beginning of line for invalid characters``` | ```false``` 
+ `listOfIncorrectFirstSymbol` | `String` | ```Space-separated characters that should not start the line``` | ```) ; , );``` 
+ `checkLastSymbol` | `Boolean` | ```Check end of line for invalid characters``` | ```false``` 
+ `listOfIncorrectLastSymbol` | `String` | ```Space-separated characters that must not end in strings``` | ```ИЛИ И OR AND + - / % *``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -51,5 +60,10 @@ AmountDocument = AmountWithoutDiscount +
 ### Parameter for config
 
 ```json
-"IncorrectLineBreak": false
+"IncorrectLineBreak": {
+    "checkFirstSymbol": false,
+    "listOfIncorrectFirstSymbol": ") ; , );",
+    "checkLastSymbol": false,
+    "listOfIncorrectLastSymbol": "ИЛИ И OR AND + - / % *"
+}
 ```

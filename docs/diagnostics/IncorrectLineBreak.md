@@ -4,6 +4,15 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Дефект кода` | `BSL`<br>`OS` | `Информационный` | `Да` | `2` | `standard`<br>`badpractice` 
 
+## Параметры 
+
+ Имя | Тип | Описание | Значение по умолчанию 
+ :-: | :-: | :-- | :-: 
+ `checkFirstSymbol` | `Булево` | ```Проверять начало строки на некорректные символы``` | ```false``` 
+ `listOfIncorrectFirstSymbol` | `Строка` | ```Символы через пробел, на которые не должна начинаться строка``` | ```) ; , );``` 
+ `checkLastSymbol` | `Булево` | ```Проверять конец строки на некорректные символы``` | ```false``` 
+ `listOfIncorrectLastSymbol` | `Строка` | ```Символы через пробел, на которые не должна заканчиваться стро``` | ```ИЛИ И OR AND + - / % *``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -53,9 +62,9 @@
 
 ```json
 "IncorrectLineBreak": {
-  "checkFirstSymbol": true,
-  "listOfIncorrectFirstSymbol": ") ; , );",
-  "checkLastSymbol": true,
-  "listOfIncorrectLastSymbol": "ИЛИ И OR AND + - / % *"
- }
+    "checkFirstSymbol": false,
+    "listOfIncorrectFirstSymbol": ") ; , );",
+    "checkLastSymbol": false,
+    "listOfIncorrectLastSymbol": "ИЛИ И OR AND + - / % *"
+}
 ```

@@ -43,8 +43,12 @@ import java.util.regex.Pattern;
 )
 public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
+  // check first symbol
+  private static final boolean DEFAULT_CHECK_START = false;
   // forbidden characters at the beginning of the line
   private static final String DEFAULT_LIST_FOR_CHECK_START = ") ; , );";
+  // check last symbol
+  private static final boolean DEFAULT_CHECK_END = false;
   // forbidden end-of-line characters
   private static final String DEFAULT_LIST_FOR_CHECK_END = "ИЛИ И OR AND + - / % *";
 
@@ -62,16 +66,28 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   private final Set<Integer> queryFirstLines = new HashSet<>();
 
   @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_CHECK_START
+  )
+  private boolean checkFirstSymbol = DEFAULT_CHECK_START;
+
+  @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_START
   )
-  private String listForCheckStart = DEFAULT_LIST_FOR_CHECK_START;
+  private String listOfIncorrectFirstSymbol = DEFAULT_LIST_FOR_CHECK_START;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_CHECK_END
+  )
+  private boolean checkLastSymbol = DEFAULT_CHECK_END;
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_END
   )
-  private String listForCheckEnd = DEFAULT_LIST_FOR_CHECK_END;
+  private String listOfIncorrectLastSymbol = DEFAULT_LIST_FOR_CHECK_END;
 
   @Override
   protected void check() {

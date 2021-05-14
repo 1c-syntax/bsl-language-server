@@ -690,6 +690,32 @@
                 "object"
             ],
             "title": "Incorrect expression line break",
+            "properties": {
+                "checkFirstSymbol": {
+                    "description": "Check beginning of line for invalid characters",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check beginning of line for invalid characters"
+                },
+                "checkLastSymbol": {
+                    "description": "Check end of line for invalid characters",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check end of line for invalid characters"
+                },
+                "listOfIncorrectLastSymbol": {
+                    "description": "Space-separated characters that must not end in strings",
+                    "default": "\u0418\u041b\u0418 \u0418 OR AND + - / % *",
+                    "type": "string",
+                    "title": "Space-separated characters that must not end in strings"
+                },
+                "listOfIncorrectFirstSymbol": {
+                    "description": "Space-separated characters that should not start the line",
+                    "default": ") ; , );",
+                    "type": "string",
+                    "title": "Space-separated characters that should not start the line"
+                }
+            },
             "$id": "#/definitions/IncorrectLineBreak"
         },
         "IncorrectUseLikeInQuery": {
