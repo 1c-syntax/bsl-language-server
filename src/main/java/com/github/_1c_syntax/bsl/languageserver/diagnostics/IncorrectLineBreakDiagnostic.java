@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -44,21 +45,13 @@ import java.util.regex.Pattern;
 public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
   // check first symbol
-  private static final boolean DEFAULT_CHECK_START = false;
+  private static final boolean DEFAULT_CHECK_START = true;
   // forbidden characters at the beginning of the line
-  private static final String DEFAULT_LIST_FOR_CHECK_START = ") ; , );";
+  private static final String DEFAULT_LIST_FOR_CHECK_START = "\\)|;|,|\\);";
   // check last symbol
-  private static final boolean DEFAULT_CHECK_END = false;
+  private static final boolean DEFAULT_CHECK_END = true;
   // forbidden end-of-line characters
-  private static final String DEFAULT_LIST_FOR_CHECK_END = "ИЛИ И OR AND + - / % *";
-
-  private static final Pattern INCORRECT_START_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "^\\s*(:?\\)|;|,|\\);)"
-  );
-
-  private static final Pattern INCORRECT_END_LINE_PATTERN = CaseInsensitivePattern.compile(
-    "\\s+(:?ИЛИ|И|OR|AND|\\+|-|/|%|\\*)\\s*(?://.*)?$"
-  );
+  private static final String DEFAULT_LIST_FOR_CHECK_END = "ИЛИ|И|OR|AND|\\+|-|/|%|\\*";
 
   // +1 for next line and +1 for 1..n based line numbers.
   private static final int QUERY_START_LINE_OFFSET = 2;
@@ -76,6 +69,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_START
   )
   private String listOfIncorrectFirstSymbol = DEFAULT_LIST_FOR_CHECK_START;
+  private Pattern INCORRECT_START_LINE_PATTERN = getPatternSearch("^\\s*(:?", listOfIncorrectFirstSymbol, ")");
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -88,13 +82,34 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_END
   )
   private String listOfIncorrectLastSymbol = DEFAULT_LIST_FOR_CHECK_END;
+  private Pattern INCORRECT_END_LINE_PATTERN = getPatternSearch("\\s+(:?", listOfIncorrectLastSymbol, ")\\s*(?://.*)?$");
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+
+    super.configure(configuration);
+
+    listOfIncorrectFirstSymbol = (String) configuration.getOrDefault("listOfIncorrectFirstSymbol", DEFAULT_LIST_FOR_CHECK_START);
+    listOfIncorrectLastSymbol = (String) configuration.getOrDefault("listOfIncorrectLastSymbol", DEFAULT_LIST_FOR_CHECK_END);
+    INCORRECT_START_LINE_PATTERN = getPatternSearch("^\\s*(:?", listOfIncorrectFirstSymbol, ")");
+    INCORRECT_END_LINE_PATTERN = getPatternSearch("\\s+(:?", listOfIncorrectLastSymbol, ")\\s*(?://.*)?$");
+  }
+
+  public Pattern getPatternSearch(String StartPattern, String SearchSymbols, String EndPattern) {
+    return Pattern.compile(StartPattern + SearchSymbols + EndPattern);
+  }
 
   @Override
   protected void check() {
+
     findQueryFirstLines();
 
-    checkContent(INCORRECT_START_LINE_PATTERN);
-    checkContent(INCORRECT_END_LINE_PATTERN);
+    if (checkFirstSymbol){
+      checkContent(INCORRECT_START_LINE_PATTERN);
+    }
+    if (checkLastSymbol) {
+      checkContent(INCORRECT_END_LINE_PATTERN);
+    }
   }
 
   private void findQueryFirstLines() {

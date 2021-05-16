@@ -693,27 +693,27 @@
             "properties": {
                 "checkFirstSymbol": {
                     "description": "Check beginning of line for invalid characters",
-                    "default": false,
+                    "default": true,
                     "type": "boolean",
                     "title": "Check beginning of line for invalid characters"
                 },
                 "checkLastSymbol": {
                     "description": "Check end of line for invalid characters",
-                    "default": false,
+                    "default": true,
                     "type": "boolean",
                     "title": "Check end of line for invalid characters"
                 },
                 "listOfIncorrectLastSymbol": {
-                    "description": "Space-separated characters that must not end in strings",
-                    "default": "\u0418\u041b\u0418 \u0418 OR AND + - / % *",
+                    "description": "Vertical bar-separated characters that must not end in strings(special characters must be escaped)",
+                    "default": "\u0418\u041b\u0418|\u0418|OR|AND|\\+|-|/|%|\\*",
                     "type": "string",
-                    "title": "Space-separated characters that must not end in strings"
+                    "title": "Vertical bar-separated characters that must not end in strings(special characters must be escaped)"
                 },
                 "listOfIncorrectFirstSymbol": {
-                    "description": "Space-separated characters that should not start the line",
-                    "default": ") ; , );",
+                    "description": "Vertical bar-separated characters that should not start the line(special characters must be escaped)",
+                    "default": "\\)|;|,|\\);",
                     "type": "string",
-                    "title": "Space-separated characters that should not start the line"
+                    "title": "Vertical bar-separated characters that should not start the line(special characters must be escaped)"
                 }
             },
             "$id": "#/definitions/IncorrectLineBreak"

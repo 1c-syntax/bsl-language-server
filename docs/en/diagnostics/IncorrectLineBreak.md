@@ -8,10 +8,10 @@
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
- `checkFirstSymbol` | `Boolean` | ```Check beginning of line for invalid characters``` | ```false``` 
- `listOfIncorrectFirstSymbol` | `String` | ```Space-separated characters that should not start the line``` | ```) ; , );``` 
- `checkLastSymbol` | `Boolean` | ```Check end of line for invalid characters``` | ```false``` 
- `listOfIncorrectLastSymbol` | `String` | ```Space-separated characters that must not end in strings``` | ```ИЛИ И OR AND + - / % *``` 
+ `checkFirstSymbol` | `Boolean` | ```Check beginning of line for invalid characters``` | ```true``` 
+ `listOfIncorrectFirstSymbol` | `String` | ```Vertical bar-separated characters that should not start the line(special characters must be escaped)``` | ```\)|;|,|\);``` 
+ `checkLastSymbol` | `Boolean` | ```Check end of line for invalid characters``` | ```true``` 
+ `listOfIncorrectLastSymbol` | `String` | ```Vertical bar-separated characters that must not end in strings(special characters must be escaped)``` | ```ИЛИ|И|OR|AND|\+|-|/|%|\*``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -61,9 +61,9 @@ AmountDocument = AmountWithoutDiscount +
 
 ```json
 "IncorrectLineBreak": {
-    "checkFirstSymbol": false,
-    "listOfIncorrectFirstSymbol": ") ; , );",
-    "checkLastSymbol": false,
-    "listOfIncorrectLastSymbol": "ИЛИ И OR AND + - / % *"
+    "checkFirstSymbol": true,
+    "listOfIncorrectFirstSymbol": "\\)|;|,|\\);",
+    "checkLastSymbol": true,
+    "listOfIncorrectLastSymbol": "ИЛИ|И|OR|AND|\\+|-|/|%|\\*"
 }
 ```

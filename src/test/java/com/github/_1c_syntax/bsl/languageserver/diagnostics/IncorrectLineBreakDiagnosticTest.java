@@ -37,6 +37,8 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
   @Test
   void test() {
 
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(14);
@@ -66,10 +68,54 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("checkFirstSymbol", true);
-    configuration.put("listOfIncorrectFirstSymbol", ") ; , );");
+    configuration.put("listOfIncorrectFirstSymbol", "\\)|;|,|\\);");
     configuration.put("checkLastSymbol", true);
-    configuration.put("listOfIncorrectLastSymbol", "ИЛИ И OR AND + - / % *");
+    configuration.put("listOfIncorrectLastSymbol", "ИЛИ|И|OR|AND|\\+|-|/|%|\\*");
     diagnosticInstance.configure(configuration);
+
+  }
+
+  @Test
+  void testDisableDiagnostics() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkFirstSymbol", false);
+    configuration.put("listOfIncorrectFirstSymbol", "\\)|;|,|\\);");
+    configuration.put("checkLastSymbol", false);
+    configuration.put("listOfIncorrectLastSymbol", "ИЛИ|И|OR|AND|\\+|-|/|%|\\*");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testNixelCodestyle() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkFirstSymbol", true);
+    configuration.put("listOfIncorrectFirstSymbol", ";|,|\\);");
+    configuration.put("checkLastSymbol", true);
+    configuration.put("listOfIncorrectLastSymbol", "ИЛИ|И|OR|AND|\\+|-|/|%|\\*");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics, true)
+      .hasRange(6, 32, 33)
+      .hasRange(7, 35, 36)
+      .hasRange(15, 32, 33)
+      .hasRange(16, 22, 23)
+      .hasRange(20, 49, 50)
+      .hasRange(69, 80, 83)
+      .hasRange(82, 89, 92)
+      .hasRange(44, 25, 26)
+      .hasRange(46, 25, 26)
+      .hasRange(58, 4, 5)
+      .hasRange(60, 4, 5)
+    ;
 
   }
 }
