@@ -62,20 +62,6 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
   }
 
   @Test
-  void testConfigure() {
-
-    List<Diagnostic> diagnostics;
-
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("checkFirstSymbol", true);
-    configuration.put("listOfIncorrectFirstSymbol", "\\)|;|,|\\);");
-    configuration.put("checkLastSymbol", true);
-    configuration.put("listOfIncorrectLastSymbol", "ИЛИ|И|OR|AND|\\+|-|/|%|\\*");
-    diagnosticInstance.configure(configuration);
-
-  }
-
-  @Test
   void testDisableDiagnostics() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
