@@ -34,7 +34,7 @@ AmountDocument = AmountWithoutDiscount +
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Источник: [Стандарт: Перенос выражений (RU)](https://its.1c.ru/db/v8std#content:444:hdoc)
+* Standard: [Wrap expressions (RU)](https://its.1c.ru/db/v8std#content:444:hdoc)
 
 ## Snippets
 
