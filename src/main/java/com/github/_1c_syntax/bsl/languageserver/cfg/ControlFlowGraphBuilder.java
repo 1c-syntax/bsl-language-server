@@ -31,35 +31,153 @@ import java.util.Deque;
 public class ControlFlowGraphBuilder extends BSLParserBaseVisitor<ParseTree> {
 
   private ControlFlowGraph graph;
-  private Deque<CfgVertex> buildStack;
-  private ExitVertex exit;
+  private Deque<JumpStateRecord> buildStack;
+  private Deque<CfgVertex> orphanedVertices;
+  private LinearBlockVertex currentBlock;
+
+  private static class JumpStateRecord {
+    public CfgVertex loopEnd;
+    public CfgVertex loopBegin;
+    public CfgVertex methodExit;
+    public CfgVertex tryBlock;
+  }
 
   public ControlFlowGraph buildGraph(BSLParser.CodeBlockContext block) {
 
-    exit = new ExitVertex();
     buildStack = new ArrayDeque<>();
+    orphanedVertices = new ArrayDeque<>();
     graph = new ControlFlowGraph();
+
+    var methodExitState = new JumpStateRecord();
+    methodExitState.methodExit = new ExitVertex();
+    graph.addVertex(methodExitState.methodExit);
+    pushState(methodExitState);
 
     block.accept(this);
 
-    graph.addVertex(exit);
-    graph.addEdge(buildStack.pop(), exit);
+    connectOrphanedNodes(methodExitState.methodExit, 0);
 
     return graph;
   }
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
-    var topVertex = buildStack.peek();
-    var vertex = new LinearBlockVertex();
-    buildStack.push(vertex);
-    super.visitCodeBlock(ctx);
-    graph.addVertex(vertex);
 
+    var topVertex = orphanedVertices.peek();
+    var vertex = new LinearBlockVertex();
+    if(graph.getEntryPoint() == null)
+      graph.setEntryPoint(vertex);
+
+    graph.addVertex(vertex);
     if(topVertex != null) {
       graph.addEdge(topVertex, vertex);
     }
 
+    currentBlock = vertex;
+    super.visitCodeBlock(ctx);
+    orphanedVertices.push(vertex);
+
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitWaitStatement(BSLParser.WaitStatementContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitAddHandlerStatement(BSLParser.AddHandlerStatementContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitRemoveHandlerStatement(BSLParser.RemoveHandlerStatementContext ctx) {
+    currentBlock.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    var condition = new BranchingVertex();
+    graph.addVertex(condition);
+
+    var node = currentBlock;
+    graph.addEdge(node, condition);
+
+    ctx.ifBranch().accept(this);
+
+    var alternativeConditions = ctx.elsifBranch();
+    //
+
+    var elseBranch = ctx.elseBranch();
+    if(elseBranch != null){
+      elseBranch.accept(this);
+    }
+    else{
+      orphanedVertices.push(condition);
+    }
+
+    return ctx;
+
+  }
+
+  private void pushState(JumpStateRecord state) {
+
+    var top = buildStack.peek();
+    if(top == null){
+      buildStack.push(state);
+      return;
+    }
+
+    if(state.loopEnd != null)
+      state.loopEnd = top.loopEnd;
+
+    if(state.loopBegin != null)
+      state.loopBegin = top.loopBegin;
+
+    if(state.methodExit != null)
+      state.methodExit = top.methodExit;
+
+    if(state.tryBlock != null)
+      state.tryBlock = top.tryBlock;
+
+  }
+
+  private JumpStateRecord popState(){
+    return buildStack.pop();
+  }
+
+  private JumpStateRecord topState() {
+    var state = buildStack.peek();
+    if(state == null)
+      throw new IllegalStateException();
+
+    return state;
+  }
+
+  private void connectOrphanedNodes(CfgVertex connectTo, int nestingLevel){
+    while (nestingLevel < orphanedVertices.size()) {
+      graph.addEdge(orphanedVertices.pop(), connectTo);
+    }
   }
 }

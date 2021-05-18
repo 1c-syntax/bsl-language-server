@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,15 +45,22 @@ class ControlFlowGraphBuilderTest {
     var builder = new ControlFlowGraphBuilder();
     var graph = builder.buildGraph(parseTree);
 
-    var vertices = new ArrayList<>(graph.vertexSet());
+    var vertices = traverseToOrderedList(graph);
     assertThat(vertices.size()).isEqualTo(2);
-    assertThat(vertices.get(0) instanceof LinearBlockVertex);
-    assertThat(vertices.get(1) instanceof ExitVertex);
+    assertThat(vertices.get(0) instanceof LinearBlockVertex).isTrue();
+    assertThat(vertices.get(1) instanceof ExitVertex).isTrue();
 
     var outgoing = graph.outgoingEdgesOf(vertices.get(0));
     assertThat(outgoing.size()).isEqualTo(1);
     var exitVertex = graph.getEdgeTarget((CfgEdge)(outgoing.toArray()[0]));
     assertThat(exitVertex).isEqualTo(vertices.get(1));
+  }
+
+  private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
+    var traverse = new DepthFirstIterator<CfgVertex, CfgEdge>(graph, graph.getEntryPoint());
+    var list = new ArrayList<CfgVertex>();
+    traverse.forEachRemaining(x -> list.add(x));
+    return list;
   }
 
   BSLParser.CodeBlockContext parse(String code) {

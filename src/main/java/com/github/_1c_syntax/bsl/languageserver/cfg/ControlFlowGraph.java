@@ -21,10 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
+
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex,CfgEdge> {
+
+  @Getter
+  @Setter
+  private CfgVertex entryPoint;
+
   public ControlFlowGraph() {
     super(CfgEdge.class);
   }
+
 }
