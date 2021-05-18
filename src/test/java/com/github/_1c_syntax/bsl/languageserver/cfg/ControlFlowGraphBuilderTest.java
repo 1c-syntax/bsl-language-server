@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.jgrapht.traverse.BreadthFirstIterator;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ControlFlowGraphBuilderTest {
 
   @Test
-  void linearBlockCanBeBuilt(){
+  void linearBlockCanBeBuilt() {
 
     var code = "А = 1; Б = 2; В = 3;";
 
@@ -47,19 +48,54 @@ class ControlFlowGraphBuilderTest {
 
     var vertices = traverseToOrderedList(graph);
     assertThat(vertices.size()).isEqualTo(2);
-    assertThat(vertices.get(0) instanceof LinearBlockVertex).isTrue();
+    assertThat(vertices.get(0) instanceof BasicBlockVertex).isTrue();
     assertThat(vertices.get(1) instanceof ExitVertex).isTrue();
 
     var outgoing = graph.outgoingEdgesOf(vertices.get(0));
     assertThat(outgoing.size()).isEqualTo(1);
-    var exitVertex = graph.getEdgeTarget((CfgEdge)(outgoing.toArray()[0]));
+    var exitVertex = graph.getEdgeTarget((CfgEdge) (outgoing.toArray()[0]));
     assertThat(exitVertex).isEqualTo(vertices.get(1));
   }
 
+  @Test
+  void branchingWithOneBranch() {
+
+    var code = "А = 1;\n" +
+      "Если Б = 2 Тогда\n" +
+      "    В = 4;\n" +
+      "КонецЕсли;";
+
+    var parseTree = parse(code);
+    var builder = new ControlFlowGraphBuilder();
+    var graph = builder.buildGraph(parseTree);
+
+    var vertices = traverseToOrderedList(graph);
+
+    assertThat(vertices.get(0)).isInstanceOf(BasicBlockVertex.class);
+    assertThat(graph.getEdge(vertices.get(0), vertices.get(1))).isNotNull();
+    assertThat(vertices.get(1)).isInstanceOf(BranchingVertex.class);
+    assertThat(graph.outgoingEdgesOf(vertices.get(1)).size()).isEqualTo(2);
+
+    assertThat(vertices.get(2)).isInstanceOf(ExitVertex.class);
+    assertThat(graph.incomingEdgesOf(vertices.get(2)).size()).isEqualTo(2);
+
+    var branches = graph.outgoingEdgesOf(vertices.get(1))
+      .stream()
+      .collect(Collectors.toMap(CfgEdge::getType, graph::getEdgeTarget));
+
+    var trueBlock = (BasicBlockVertex) vertices.get(3);
+    assertThat(trueBlock.statements().get(0).getText()).isEqualTo("В=4;");
+    assertThat(branches.get(CfgEdgeType.TRUE_BRANCH)).isEqualTo(trueBlock);
+
+    var falseBlock = vertices.get(2);
+    assertThat(branches.get(CfgEdgeType.FALSE_BRANCH)).isEqualTo(falseBlock);
+
+  }
+
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
-    var traverse = new DepthFirstIterator<CfgVertex, CfgEdge>(graph, graph.getEntryPoint());
+    var traverse = new DepthFirstIterator<>(graph, graph.getEntryPoint());
     var list = new ArrayList<CfgVertex>();
-    traverse.forEachRemaining(x -> list.add(x));
+    traverse.forEachRemaining(list::add);
     return list;
   }
 

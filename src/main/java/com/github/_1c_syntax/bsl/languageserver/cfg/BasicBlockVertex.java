@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LinearBlockVertex extends CfgVertex {
+public class BasicBlockVertex extends CfgVertex {
 
   private final List<BSLParserRuleContext> statements = new ArrayList<>();
 
@@ -34,7 +34,7 @@ public class LinearBlockVertex extends CfgVertex {
     return statements;
   }
 
-  public void addStatement(BSLParserRuleContext statement){
+  public void addStatement(BSLParserRuleContext statement) {
     statements.add(statement);
   }
 }

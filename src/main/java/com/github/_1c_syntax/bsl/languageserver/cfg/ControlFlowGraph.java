@@ -26,7 +26,7 @@ import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 
-public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex,CfgEdge> {
+public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   @Getter
   @Setter
