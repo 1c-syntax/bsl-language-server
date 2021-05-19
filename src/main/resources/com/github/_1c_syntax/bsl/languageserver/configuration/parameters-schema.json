@@ -704,16 +704,16 @@
                     "title": "Check end of line for invalid characters"
                 },
                 "listOfIncorrectLastSymbol": {
-                    "description": "Vertical bar-separated characters that must not end in strings(special characters must be escaped)",
+                    "description": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)",
                     "default": "\u0418\u041b\u0418|\u0418|OR|AND|\\+|-|/|%|\\*",
                     "type": "string",
-                    "title": "Vertical bar-separated characters that must not end in strings(special characters must be escaped)"
+                    "title": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)"
                 },
                 "listOfIncorrectFirstSymbol": {
-                    "description": "Vertical bar-separated characters that should not start the line(special characters must be escaped)",
+                    "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
                     "default": "\\)|;|,|\\);",
                     "type": "string",
-                    "title": "Vertical bar-separated characters that should not start the line(special characters must be escaped)"
+                    "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
                 }
             },
             "$id": "#/definitions/IncorrectLineBreak"

@@ -9,9 +9,9 @@
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
  `checkFirstSymbol` | `Boolean` | ```Check beginning of line for invalid characters``` | ```true``` 
- `listOfIncorrectFirstSymbol` | `String` | ```Vertical bar-separated characters that should not start the line(special characters must be escaped)``` | ```\)|;|,|\);``` 
+ `listOfIncorrectFirstSymbol` | `String` | ```Vertical bar-separated characters that should not start the line (special characters must be escaped)``` | ```\)|;|,|\);``` 
  `checkLastSymbol` | `Boolean` | ```Check end of line for invalid characters``` | ```true``` 
- `listOfIncorrectLastSymbol` | `String` | ```Vertical bar-separated characters that must not end in strings(special characters must be escaped)``` | ```ИЛИ|И|OR|AND|\+|-|/|%|\*``` 
+ `listOfIncorrectLastSymbol` | `String` | ```Vertical bar-separated characters that must not end in the line (special characters must be escaped)``` | ```ИЛИ|И|OR|AND|\+|-|/|%|\*``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
