@@ -96,7 +96,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   }
 
   public Pattern getPatternSearch(String StartPattern, String SearchSymbols, String EndPattern) {
-    return Pattern.compile(StartPattern + SearchSymbols + EndPattern);
+    return CaseInsensitivePattern.compile(StartPattern + SearchSymbols + EndPattern);
   }
 
   @Override
