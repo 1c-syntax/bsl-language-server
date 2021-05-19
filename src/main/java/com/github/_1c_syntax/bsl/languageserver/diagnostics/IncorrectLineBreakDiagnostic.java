@@ -95,7 +95,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     INCORRECT_END_LINE_PATTERN = getPatternSearch("\\s+(:?", listOfIncorrectLastSymbol, ")\\s*(?://.*)?$");
   }
 
-  public Pattern getPatternSearch(String StartPattern, String SearchSymbols, String EndPattern) {
+  private static Pattern getPatternSearch(String StartPattern, String SearchSymbols, String EndPattern) {
     return CaseInsensitivePattern.compile(StartPattern + SearchSymbols + EndPattern);
   }
 
