@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1620911379401,
+  "lastUpdate": 1621598846527,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10540,6 +10540,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.4559063562515786",
             "extra": "mean: 90.34550213813782 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "theshadowco",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "maximovvalery@gmail.com",
+            "name": "theshadowco",
+            "username": "theshadowco"
+          },
+          "distinct": true,
+          "id": "4a75dbbe73e6d55101102f8b65a6315f14292be5",
+          "message": "Revert \"Update build.gradle.kts\"\n\nThis reverts commit 82fe6d9efa879f96dfd2b0f964c874bb6965639a.",
+          "timestamp": "2021-05-21T14:58:23+03:00",
+          "tree_id": "9de8378a0601918691031e4a292a8a035a4978a0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4a75dbbe73e6d55101102f8b65a6315f14292be5"
+        },
+        "date": 1621598842199,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.45729064941406,
+            "unit": "sec",
+            "range": "stddev: 2.386560559136845",
+            "extra": "mean: 86.45729064941406 sec\nrounds: 3"
           }
         ]
       }
