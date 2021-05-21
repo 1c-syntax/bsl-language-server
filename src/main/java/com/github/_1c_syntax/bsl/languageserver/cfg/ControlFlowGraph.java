@@ -25,6 +25,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
@@ -34,6 +37,10 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   public ControlFlowGraph() {
     super(CfgEdge.class);
+  }
+
+  public void addEdge(CfgVertex source, CfgVertex target, CfgEdgeType type) {
+    addEdge(source, target, new CfgEdge(type));
   }
 
 }

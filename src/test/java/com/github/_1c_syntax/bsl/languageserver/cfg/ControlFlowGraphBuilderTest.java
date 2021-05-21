@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.jgrapht.traverse.BreadthFirstIterator;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,13 +42,13 @@ class ControlFlowGraphBuilderTest {
     var code = "А = 1; Б = 2; В = 3;";
 
     var parseTree = parse(code);
-    var builder = new ControlFlowGraphBuilder();
+    var builder = new CfgBuildingParseTreeVisitor();
     var graph = builder.buildGraph(parseTree);
 
     var vertices = traverseToOrderedList(graph);
     assertThat(vertices.size()).isEqualTo(2);
-    assertThat(vertices.get(0) instanceof BasicBlockVertex).isTrue();
-    assertThat(vertices.get(1) instanceof ExitVertex).isTrue();
+    assertThat(vertices.get(0)).isInstanceOf(BasicBlockVertex.class);
+    assertThat(vertices.get(1)).isInstanceOf(ExitVertex.class);
 
     var outgoing = graph.outgoingEdgesOf(vertices.get(0));
     assertThat(outgoing.size()).isEqualTo(1);
@@ -66,33 +65,36 @@ class ControlFlowGraphBuilderTest {
       "КонецЕсли;";
 
     var parseTree = parse(code);
-    var builder = new ControlFlowGraphBuilder();
+    var builder = new CfgBuildingParseTreeVisitor();
     var graph = builder.buildGraph(parseTree);
 
-    var vertices = traverseToOrderedList(graph);
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.availableRoutes().size()).isEqualTo(2);
 
-    assertThat(vertices.get(0)).isInstanceOf(BasicBlockVertex.class);
-    assertThat(graph.getEdge(vertices.get(0), vertices.get(1))).isNotNull();
-    assertThat(vertices.get(1)).isInstanceOf(BranchingVertex.class);
-    assertThat(graph.outgoingEdgesOf(vertices.get(1)).size()).isEqualTo(2);
+    var branch = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    var body = (BasicBlockVertex)walker.getCurrentNode();
+    assertThat(body.statements().get(0).getText()).isEqualTo("В=4;");
 
-    assertThat(vertices.get(2)).isInstanceOf(ExitVertex.class);
-    assertThat(graph.incomingEdgesOf(vertices.get(2)).size()).isEqualTo(2);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+    assertThat(walker.availableRoutes().size()).isEqualTo(0);
 
-    var branches = graph.outgoingEdgesOf(vertices.get(1))
-      .stream()
-      .collect(Collectors.toMap(CfgEdge::getType, graph::getEdgeTarget));
-
-    var trueBlock = (BasicBlockVertex) vertices.get(3);
-    assertThat(trueBlock.statements().get(0).getText()).isEqualTo("В=4;");
-    assertThat(branches.get(CfgEdgeType.TRUE_BRANCH)).isEqualTo(trueBlock);
-
-    var falseBlock = vertices.get(2);
-    assertThat(branches.get(CfgEdgeType.FALSE_BRANCH)).isEqualTo(falseBlock);
+    var exit = walker.getCurrentNode();
+    walker.walkTo(branch);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.getCurrentNode()).isEqualTo(exit);
+    assertThat(graph.incomingEdgesOf(exit).size()).isEqualTo(2);
 
   }
 
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
+    assertThat(graph.getEntryPoint()).isNotNull();
     var traverse = new DepthFirstIterator<>(graph, graph.getEntryPoint());
     var list = new ArrayList<CfgVertex>();
     traverse.forEachRemaining(list::add);

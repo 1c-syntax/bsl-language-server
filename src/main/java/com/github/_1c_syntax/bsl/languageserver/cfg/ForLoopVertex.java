@@ -21,5 +21,5 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-public abstract class BranchingVertex extends CfgVertex {
+public class ForLoopVertex extends LoopVertex{
 }

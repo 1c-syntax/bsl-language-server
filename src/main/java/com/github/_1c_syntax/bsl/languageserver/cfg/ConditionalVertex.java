@@ -21,5 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-public abstract class BranchingVertex extends CfgVertex {
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ConditionalVertex extends BranchingVertex {
+  private final BSLParser.ExpressionContext expression;
 }
