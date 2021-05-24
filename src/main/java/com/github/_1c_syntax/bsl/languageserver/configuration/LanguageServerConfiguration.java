@@ -125,7 +125,7 @@ public class LanguageServerConfiguration {
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
   }
-  
+
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;

@@ -136,7 +136,7 @@ public class ConfigurationFileSystemWatcher {
       SensitivityWatchEventModifier.HIGH
     );
 
-    LOGGER.debug("Watch for configuration file changes in {}", configurationDir.toString());
+    LOGGER.debug("Watch for configuration file changes in {}", configurationDir);
   }
 
   private boolean isConfigurationFile(File pathname) {

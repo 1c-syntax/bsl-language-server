@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -50,8 +50,8 @@ public class ExecuteExternalCodeInCommonModuleDiagnostic extends AbstractExecute
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     // если модуль не серверный, не внешнее соединение и не обычный клиент, то не проверяем
     if (documentContext.getMdObject()
-      .filter(CommonModule.class::isInstance)
-      .map(CommonModule.class::cast)
+      .filter(MDCommonModule.class::isInstance)
+      .map(MDCommonModule.class::cast)
       .filter(commonModule -> commonModule.isServer()
         || commonModule.isClientOrdinaryApplication()
         || commonModule.isExternalConnection())

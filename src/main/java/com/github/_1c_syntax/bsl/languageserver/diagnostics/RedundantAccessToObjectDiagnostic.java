@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.MDOType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
@@ -134,8 +134,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
     if (
       PATTERN.matcher(identifier.getText()).matches()
-      && modifiers.get(0) != null
-      && modifiers.get(0).accessIndex() == null
+        && modifiers.get(0) != null
+        && modifiers.get(0).accessIndex() == null
     ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
@@ -158,8 +158,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
     if (
       PATTERN.matcher(identifier.getText()).matches()
-      && notHasAccessIndex(acceptor)
-      && hasAccessProperty(acceptor)
+        && notHasAccessIndex(acceptor)
+        && hasAccessProperty(acceptor)
     ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
