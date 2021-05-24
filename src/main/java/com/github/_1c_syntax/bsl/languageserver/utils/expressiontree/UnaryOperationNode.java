@@ -25,6 +25,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
+/**
+ * Класс, представляющий унарное выражение
+ */
 @Value
 @EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
@@ -36,6 +39,14 @@ public class UnaryOperationNode extends BslOperationNode {
     this.operand = operand;
   }
 
+  /** Конструирует унарную операцию
+   * @param operator оператор
+   * @param expression аргумент операции
+   * @param operationContext строковое представление оператора,
+   *                         как он указан в коде с учетом регистра и языка.
+   *                         Используется в диагностических сообщениях.
+   * @return созданная ветка унарной операции
+   */
   public static UnaryOperationNode create(BslOperator operator, BslExpression expression, String operationContext) {
     return new UnaryOperationNode(operator, expression, operationContext);
   }

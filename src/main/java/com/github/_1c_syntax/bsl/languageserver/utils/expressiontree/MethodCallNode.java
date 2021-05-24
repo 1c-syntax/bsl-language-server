@@ -26,6 +26,9 @@ import lombok.ToString;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+/**
+ * Ветка дерева выражений, олицетворяющая вызов метода
+ */
 @Value(staticConstructor = "create")
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)

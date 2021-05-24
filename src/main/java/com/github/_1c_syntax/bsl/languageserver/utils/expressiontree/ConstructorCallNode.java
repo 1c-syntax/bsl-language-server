@@ -35,14 +35,28 @@ public class ConstructorCallNode extends AbstractCallNode {
 
   BslExpression typeName;
 
+  /**
+   * @return Истина, если конструктор вызван статическим указанием имени типа.
+   * Ложь, если это вызов в функциональном стиле с указанием имени типа строкой.
+   */
   public boolean isStaticallyTyped() {
     return typeName instanceof TerminalSymbolNode && typeName.getNodeType() == ExpressionNodeType.LITERAL;
   }
 
+  /**
+   * Конструирование статического вызова конструктора
+   * @param typeName терминальный символ имени типа
+   * @return ветка конструктора
+   */
   public static ConstructorCallNode createStatic(TerminalSymbolNode typeName) {
     return new ConstructorCallNode(typeName);
   }
 
+  /**
+   * Конструирование вызова конструктора в функциональном стиле
+   * @param typeNameExpression подвыражение с именем типа
+   * @return ветка конструктора
+   */
   public static ConstructorCallNode createDynamic(BslExpression typeNameExpression) {
     return new ConstructorCallNode(typeNameExpression);
   }

@@ -38,6 +38,15 @@ public class BinaryOperationNode extends BslOperationNode {
     this.right = right;
   }
 
+  /** Конструирует ветку бинарной операции
+   * @param operator оператор
+   * @param left левая часть операции
+   * @param right правая часть операции
+   * @param actualSourceCode строковое представление оператора,
+   *                         как он указан в коде с учетом регистра и языка.
+   *                         Используется в диагностических сообщениях.
+   * @return созданная ветка бинарной операции
+   */
   public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right, String actualSourceCode) {
     return new BinaryOperationNode(operator, left, right, actualSourceCode);
   }

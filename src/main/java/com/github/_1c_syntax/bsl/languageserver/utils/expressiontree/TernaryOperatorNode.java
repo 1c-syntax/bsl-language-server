@@ -25,6 +25,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
+/**
+ * Ветка тернарного оператора
+ */
 @Value(staticConstructor = "create")
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)

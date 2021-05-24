@@ -35,8 +35,9 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
     if (first == second)
       return true;
 
-    if (first.getClass() != second.getClass() || first.getNodeType() != second.getNodeType())
+    if (first.getClass() != second.getClass() || first.getNodeType() != second.getNodeType()) {
       return false;
+    }
 
     switch (first.getNodeType()) {
       case LITERAL:
@@ -73,8 +74,9 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   protected boolean argumentsEqual(List<BslExpression> argumentsOfFirst, List<BslExpression> argumentsOfSecond) {
 
-    if (argumentsOfFirst.size() != argumentsOfSecond.size())
+    if (argumentsOfFirst.size() != argumentsOfSecond.size()) {
       return false;
+    }
 
     for (var i = 0; i < argumentsOfFirst.size(); i++) {
       if (!areEqual(argumentsOfFirst.get(i), argumentsOfSecond.get(i))) {
@@ -97,18 +99,21 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
   }
 
   protected boolean unaryOperationsEqual(UnaryOperationNode first, UnaryOperationNode second) {
-    if (first.getOperator() != second.getOperator())
+    if (first.getOperator() != second.getOperator()) {
       return false;
+    }
 
     return areEqual(first.getOperand(), second.getOperand());
   }
 
   protected boolean binaryOperationsEqual(BinaryOperationNode first, BinaryOperationNode second) {
-    if (first.getOperator() != second.getOperator())
+    if (first.getOperator() != second.getOperator()) {
       return false;
+    }
 
-    if(first.getOperator() == BslOperator.DEREFERENCE || first.getOperator() == BslOperator.INDEX_ACCESS)
+    if (first.getOperator() == BslOperator.DEREFERENCE || first.getOperator() == BslOperator.INDEX_ACCESS) {
       return false;
+    }
 
     return areEqual(first.getLeft(), second.getLeft()) && areEqual(first.getRight(), second.getRight());
 

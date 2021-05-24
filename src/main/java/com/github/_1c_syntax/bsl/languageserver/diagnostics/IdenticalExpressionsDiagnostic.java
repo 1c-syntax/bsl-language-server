@@ -66,15 +66,15 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     var tree = rewriter.getExpressionTree();
 
     var binariesList = flattenBinaryOperations(tree);
-    if (binariesList.isEmpty())
+    if (binariesList.isEmpty()) {
       return ctx;
+    }
 
     var comparer = new TransitiveOperationsIgnoringComparer();
     comparer.logicalOperationsAsTransitive(true);
     binariesList
       .stream()
       .filter(x -> checkEquality(comparer, x))
-      .collect(Collectors.toList())
       .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
         info.getMessage(x.getSourceCodeOperator(), getSomeText(x))));
 
@@ -84,13 +84,14 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   private boolean checkEquality(DefaultNodeEqualityComparer comparer, BinaryOperationNode node) {
 
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
-    if(justEqual)
+    if (justEqual) {
       return true;
+    }
 
     var operator = node.getOperator();
-    if((operator == BslOperator.AND || operator == BslOperator.OR) && node.getLeft().getNodeType() == ExpressionNodeType.BINARY_OP){
-      var leftOp = (BinaryOperationNode)node.getLeft();
-      if(leftOp.getOperator() == operator){
+    if ((operator == BslOperator.AND || operator == BslOperator.OR) && node.getLeft().getNodeType() == ExpressionNodeType.BINARY_OP) {
+      var leftOp = (BinaryOperationNode) node.getLeft();
+      if (leftOp.getOperator() == operator) {
         // это комплементарная операция
         return comparer.areEqual(leftOp.getRight(), node.getRight());
       }
@@ -101,11 +102,13 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private String getSomeText(BinaryOperationNode node) {
 
-    if (node.getLeft().getRepresentingAst() != null)
+    if (node.getLeft().getRepresentingAst() != null) {
       return node.getLeft().getRepresentingAst().getText();
+    }
 
-    if (node.getRight().getRepresentingAst() != null)
+    if (node.getRight().getRepresentingAst() != null) {
       return node.getRight().getRepresentingAst().getText();
+    }
 
     return node.getRepresentingAst() == null ? "" : node.getRepresentingAst().getText();
   }
@@ -138,12 +141,14 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
         // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
         // лучше выкинем их сразу
-        if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS)
+        if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
           return;
+        }
 
         // одинаковые умножения и сложения - не считаем, см. тесты
-        if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY)
+        if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
           list.add(binary);
+        }
 
         gatherBinaryOperations(list, binary.getLeft());
         gatherBinaryOperations(list, binary.getRight());
