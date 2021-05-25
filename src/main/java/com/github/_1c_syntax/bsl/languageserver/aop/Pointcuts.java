@@ -38,6 +38,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver..*)")
   public void isBSLLanguageServerScope() {
+    // no-op
   }
 
   /**
@@ -45,6 +46,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration)")
   public void isLanguageServerConfiguration() {
+    // no-op
   }
 
   /**
@@ -52,6 +54,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.DocumentContext)")
   public void isDocumentContext() {
+    // no-op
   }
 
   /**
@@ -59,6 +62,7 @@ public class Pointcuts {
    */
   @Pointcut("within(org.eclipse.lsp4j.services.LanguageServer+)")
   public void isLanguageServer() {
+    // no-op
   }
 
   /**
@@ -66,6 +70,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
   public void isServerContext() {
+    // no-op
   }
 
   /**
@@ -73,6 +78,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic+)")
   public void isBSLDiagnostic() {
+    // no-op
   }
 
   /**
@@ -80,6 +86,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* rebuild(..))")
   public void isRebuildCall() {
+    // no-op
   }
 
   /**
@@ -87,6 +94,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* update(..))")
   public void isUpdateCall() {
+    // no-op
   }
 
   /**
@@ -94,6 +102,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* reset(..))")
   public void isResetCall() {
+    // no-op
   }
 
   /**
@@ -101,6 +110,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* getDiagnostics(..))")
   public void isGetDiagnosticsCall() {
+    // no-op
   }
 
   /**
@@ -108,5 +118,6 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
   public void isInitializeCall() {
+    // no-op
   }
 }
