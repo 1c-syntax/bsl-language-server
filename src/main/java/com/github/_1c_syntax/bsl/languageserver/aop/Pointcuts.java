@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
+import org.eclipse.lsp4j.services.LanguageServer;
 
 /**
  * Сборник общих Pointcut для AOP-слоя.
@@ -51,6 +52,13 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.DocumentContext)")
   public void isDocumentContext() {
+  }
+
+  /**
+   * Это обращение к реализации {@link LanguageServer}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.LanguageServer+)")
+  public void isLanguageServer() {
   }
 
   /**
@@ -93,5 +101,12 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* getDiagnostics(..))")
   public void isGetDiagnosticsCall() {
+  }
+
+  /**
+   * Это вызов метода initialize.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
+  public void isInitializeCall() {
   }
 }
