@@ -851,6 +851,43 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Parameters">Parameters<a class="headerlink" href="#Parameters" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th align="center">Type</th>
+<th align="left">Description</th>
+<th align="center">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>checkFirstSymbol</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>Check beginning of line for invalid characters</code></td>
+<td align="center"><code>true</code></td>
+</tr>
+<tr>
+<td align="center"><code>listOfIncorrectFirstSymbol</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>Vertical bar-separated characters that should not start the line (special characters must be escaped)</code></td>
+<td align="center"><code>\)|;|,|\);</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkLastSymbol</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>Check end of line for invalid characters</code></td>
+<td align="center"><code>true</code></td>
+</tr>
+<tr>
+<td align="center"><code>listOfIncorrectLastSymbol</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>Vertical bar-separated characters that must not end in the line (special characters must be escaped)</code></td>
+<td align="center"><code>ИЛИ|И|OR|AND|\+|-|/|%|\*</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Long arithmetic expressions are carried as follows:
@@ -889,7 +926,12 @@ operands on a new line are preceded by standard indentation, or they are aligned
 <span class="c c-Singleline">// BSLLS:IncorrectLineBreak-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;IncorrectLineBreak&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;IncorrectLineBreak&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;checkFirstSymbol&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nt">&quot;listOfIncorrectFirstSymbol&quot;</span><span class="p">:</span> <span class="s2">&quot;\\)|;|,|\\);&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;checkLastSymbol&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nt">&quot;listOfIncorrectLastSymbol&quot;</span><span class="p">:</span> <span class="s2">&quot;ИЛИ|И|OR|AND|\\+|-|/|%|\\*&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
                 
               
