@@ -2,10 +2,19 @@
 
  |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
  |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
- | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `2`           | `standard`<br>`badpractice` | 
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `2`           | `standard`<br>`badpractice` |
+
+## Параметры
+
+ |             Имя              |   Тип    | Описание                                                                                                                     |     Значение по умолчанию     |
+ |:----------------------------:|:--------:|:---------------------------------------------------------------------------------------------------------------------------- |:-----------------------------:|
+ |      `checkFirstSymbol`      | `Булево` | `Проверять начало строки на некорректные символы`                                                                            |            `true`             |
+ | `listOfIncorrectFirstSymbol` | `Строка` | `Символы через вертикальную черту, с которых не должна начинаться строка (специальные символы должны быть экранированы)`     |        `\)|;|,|\);`         |
+ |      `checkLastSymbol`       | `Булево` | `Проверять конец строки на некорректные символы`                                                                             |            `true`             |
+ | `listOfIncorrectLastSymbol`  | `Строка` | `Символы через вертикальную черту, на которые не должна заканчиваться строка (специальные символы должны быть экранированы)` | `ИЛИ|И|OR|AND|\+|-|/|%|\*` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Long arithmetic expressions are carried as follows: one entry can contain more than one operand; when wrapping, operation characters are written at the beginning of the line (and not at the end of the previous line); operands on a new line are preceded by standard indentation, or they are aligned to the beginning of the first operand, regardless of the operation signs.
@@ -22,7 +31,7 @@ Complex logical conditions in If ... ElseIf ... EndIf should be carried as follo
 * logical operators AND, OR are placed at the beginning of a line, and not at the end of the previous line;
 * all conditions are preceded by the standard first indent, or they are aligned at the start of work without taking into account the logical operator (it is recommended to use spaces to align expressions relative to the first line).
 
-## Examples
+## Примеры
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
@@ -31,12 +40,12 @@ AmountDocument = AmountWithoutDiscount +
                  AmountAutomaticDiscount;
 ```
 
-## Sources
+## Источники
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Standard: [Wrap expressions (RU)](https://its.1c.ru/db/v8std#content:444:hdoc)
 
-## Snippets
+## Сниппеты
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
@@ -49,5 +58,10 @@ AmountDocument = AmountWithoutDiscount +
 ### Parameter for config
 
 ```json
-"IncorrectLineBreak": false
+"IncorrectLineBreak": {
+    "checkFirstSymbol": true,
+    "listOfIncorrectFirstSymbol": "\\)|;|,|\\);",
+    "checkLastSymbol": true,
+    "listOfIncorrectLastSymbol": "ИЛИ|И|OR|AND|\\+|-|/|%|\\*"
+}
 ```
