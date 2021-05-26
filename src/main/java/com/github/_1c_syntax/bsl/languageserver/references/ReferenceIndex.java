@@ -55,7 +55,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReferenceIndex {
 
-  private final ReferenceResolver referenceResolver;
   private final ServerContext serverContext;
 
   /**
@@ -90,7 +89,7 @@ public class ReferenceIndex {
 
     return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
       .stream()
-      .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
+      .map(location -> getReference(URI.create(location.getUri()), location.getRange()))
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -107,6 +106,14 @@ public class ReferenceIndex {
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
+  }
+
+  public Optional<Reference> getReference(URI uri, Range range) {
+    return Optional.ofNullable(referencesRanges.getOrDefault(uri, Collections.emptyMap()).get(range))
+      .map(ref -> buildReference(uri, range.getStart(), ref, range))
+      .stream()
+      .flatMap(Optional::stream)
+      .findFirst();
   }
 
   /**
