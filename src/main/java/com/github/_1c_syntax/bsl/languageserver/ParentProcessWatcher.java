@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Отслеживатель жизни родительского процесса, запустившего Language Server.
+ * Наблюдатель за жизнью родительского процесса, запустившего Language Server.
  */
 @Component
 @Slf4j
