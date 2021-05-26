@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1622020716094,
+  "lastUpdate": 1622037932868,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10633,6 +10633,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3332287208884719",
             "extra": "mean: 85.87503306070964 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "6c2a86e45f6b66354ad71d8e379fc032c182145e",
+          "message": "Исправление неработающего аспекта из-за lazy-init при запуске BSL LS через биндинг-класс",
+          "timestamp": "2021-05-26T16:56:29+03:00",
+          "tree_id": "573a3a5f37019bb283a2e30dd4ac8231d067f11d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6c2a86e45f6b66354ad71d8e379fc032c182145e"
+        },
+        "date": 1622037927959,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.49697995185852,
+            "unit": "sec",
+            "range": "stddev: 1.0212947695750798",
+            "extra": "mean: 88.49697995185852 sec\nrounds: 3"
           }
         ]
       }
