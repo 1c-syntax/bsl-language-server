@@ -73,11 +73,11 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
-  void testNixelCodestyle() {
+  void testTrailingBraceCodestyle() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("checkFirstSymbol", true);

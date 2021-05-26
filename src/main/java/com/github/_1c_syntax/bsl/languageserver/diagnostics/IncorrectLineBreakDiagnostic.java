@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.HashSet;
@@ -68,8 +69,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_START
   )
-  private String listOfIncorrectFirstSymbol = DEFAULT_LIST_FOR_CHECK_START;
-  private Pattern INCORRECT_START_LINE_PATTERN = getPatternSearch("^\\s*(:?", listOfIncorrectFirstSymbol, ")");
+  private Pattern listOfIncorrectFirstSymbol = createPatternIncorrectStartLine(DEFAULT_LIST_FOR_CHECK_START);
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -81,22 +81,18 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_END
   )
-  private String listOfIncorrectLastSymbol = DEFAULT_LIST_FOR_CHECK_END;
-  private Pattern INCORRECT_END_LINE_PATTERN = getPatternSearch("\\s+(:?", listOfIncorrectLastSymbol, ")\\s*(?://.*)?$");
+  private Pattern listOfIncorrectLastSymbol = createPatternIncorrectEndLine(DEFAULT_LIST_FOR_CHECK_END);
 
   @Override
   public void configure(Map<String, Object> configuration) {
+    DiagnosticHelper.configureDiagnostic(this, configuration, "checkFirstSymbol", "checkLastSymbol");
 
-    super.configure(configuration);
-
-    listOfIncorrectFirstSymbol = (String) configuration.getOrDefault("listOfIncorrectFirstSymbol", DEFAULT_LIST_FOR_CHECK_START);
-    listOfIncorrectLastSymbol = (String) configuration.getOrDefault("listOfIncorrectLastSymbol", DEFAULT_LIST_FOR_CHECK_END);
-    INCORRECT_START_LINE_PATTERN = getPatternSearch("^\\s*(:?", listOfIncorrectFirstSymbol, ")");
-    INCORRECT_END_LINE_PATTERN = getPatternSearch("\\s+(:?", listOfIncorrectLastSymbol, ")\\s*(?://.*)?$");
-  }
-
-  private static Pattern getPatternSearch(String StartPattern, String SearchSymbols, String EndPattern) {
-    return CaseInsensitivePattern.compile(StartPattern + SearchSymbols + EndPattern);
+    listOfIncorrectFirstSymbol = createPatternIncorrectStartLine(
+      (String) configuration.getOrDefault("listOfIncorrectFirstSymbol", DEFAULT_LIST_FOR_CHECK_START)
+    );
+    listOfIncorrectLastSymbol = createPatternIncorrectEndLine(
+      (String) configuration.getOrDefault("listOfIncorrectLastSymbol", DEFAULT_LIST_FOR_CHECK_END)
+    );
   }
 
   @Override
@@ -105,10 +101,10 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     findQueryFirstLines();
 
     if (checkFirstSymbol){
-      checkContent(INCORRECT_START_LINE_PATTERN);
+      checkContent(listOfIncorrectFirstSymbol);
     }
     if (checkLastSymbol) {
-      checkContent(INCORRECT_END_LINE_PATTERN);
+      checkContent(listOfIncorrectLastSymbol);
     }
   }
 
@@ -129,5 +125,25 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
         diagnosticStorage.addDiagnostic(i, matcher.start(1), i, matcher.end(1));
       }
     }
+  }
+
+  private static Pattern getPatternSearch(String startPattern, String searchSymbols, String endPattern) {
+    return CaseInsensitivePattern.compile(startPattern + searchSymbols + endPattern);
+  }
+
+  private static Pattern createPatternIncorrectStartLine(String listOfSymbols) {
+    return getPatternSearch(
+      "^\\s*(:?",
+      listOfSymbols,
+      ")"
+    );
+  }
+
+  private static Pattern createPatternIncorrectEndLine(String listOfSymbols) {
+    return getPatternSearch(
+      "\\s+(:?",
+      listOfSymbols,
+      ")\\s*(?://.*)?$"
+    );
   }
 }
