@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1621598846527,
+  "lastUpdate": 1622018432858,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10571,6 +10571,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.386560559136845",
             "extra": "mean: 86.45729064941406 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0ac7638ea5ed422aeaf120d91cf8bf5d104a7a1e",
+          "message": "Merge pull request #1671 from 1c-syntax/feature/force-close-on-parent-process-crash",
+          "timestamp": "2021-05-26T11:31:29+03:00",
+          "tree_id": "4e5fd39802549f8742b07f3c659fef7f3ec11ce4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0ac7638ea5ed422aeaf120d91cf8bf5d104a7a1e"
+        },
+        "date": 1622018426840,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.83183519045512,
+            "unit": "sec",
+            "range": "stddev: 4.753941446960971",
+            "extra": "mean: 88.83183519045512 sec\nrounds: 3"
           }
         ]
       }
