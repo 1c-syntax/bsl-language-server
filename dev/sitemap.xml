@@ -1,99 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/faq/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/systemRequirements/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/EnvironmentSetting/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/FastStart/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/StyleGuide/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticDevWorkFlow/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticExample/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticStructure/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticTypeAndSeverity/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticTag/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnostcAddSettings/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticQuickFix/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/json/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/generic/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/junit/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/tslint/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/console/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/features/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/features/ConfigurationFile/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/features/DiagnosticIgnorance/</loc>
-     <lastmod>2021-05-12</lastmod>
+     <lastmod>2021-05-26</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
