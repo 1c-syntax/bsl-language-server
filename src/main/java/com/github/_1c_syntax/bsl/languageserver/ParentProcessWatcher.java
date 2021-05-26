@@ -65,11 +65,11 @@ public class ParentProcessWatcher {
       return;
     }
 
-    var processIsAlive = ProcessHandle.of(parentProcessId)
+    boolean processIsAlive = ProcessHandle.of(parentProcessId)
       .map(ProcessHandle::isAlive)
-      .orElse(Boolean.FALSE);
+      .orElse(false);
 
-    if (processIsAlive.equals(Boolean.FALSE)) {
+    if (!processIsAlive) {
       LOGGER.error("Parent process with pid {} is not found. Closing application...", parentProcessId);
       languageServer.exit();
     }
