@@ -176,6 +176,34 @@ class ControlFlowGraphBuilderTest {
 
   }
 
+  @Test
+  void whileLoopTest() {
+    var code = "А = 1;\n" +
+      "Пока Б = 1 Цикл\n" +
+      "    В = 1;\n" +
+      "КонецЦикла;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isFalse();
+
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(WhileLoopVertex.class);
+    var loopStart = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    walker.walkNext(CfgEdgeType.LOOP_ITERATION);
+    assertThat(walker.getCurrentNode()).isEqualTo(loopStart);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
     assertThat(graph.getEntryPoint()).isNotNull();
     var traverse = new DepthFirstIterator<>(graph, graph.getEntryPoint());

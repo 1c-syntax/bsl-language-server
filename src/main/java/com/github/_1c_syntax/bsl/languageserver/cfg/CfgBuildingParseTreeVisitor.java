@@ -59,12 +59,6 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return graph;
   }
 
-  private void removeOrphanedNodes() {
-    graph.vertexSet().stream()
-      .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
-      .forEach(x -> graph.removeVertex(x));
-  }
-
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
     var compound = ctx.compoundStatement();
@@ -74,24 +68,6 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     blocks.addStatement(ctx);
 
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {
-    blocks.addStatement(ctx);
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitAddHandlerStatement(BSLParser.AddHandlerStatementContext ctx) {
-    blocks.addStatement(ctx);
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitRemoveHandlerStatement(BSLParser.RemoveHandlerStatementContext ctx) {
-    blocks.addStatement(ctx);
     return ctx;
   }
 
@@ -147,31 +123,6 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {
-
-    if (!(currentBlock.end() instanceof BasicBlockVertex)) {
-      graph.addEdge(currentBlock.end(), vertex);
-      return;
-    }
-
-    var currentTail = (BasicBlockVertex) currentBlock.end();
-    if (currentTail.statements().isEmpty()) {
-      // перевести все связи на новую вершину
-      var incoming = graph.incomingEdgesOf(currentTail);
-      for (var edge : incoming) {
-        var source = graph.getEdgeSource(edge);
-        graph.addEdge(source, vertex, edge.getType());
-      }
-      graph.removeVertex(currentTail);
-
-      // заменить в текущем блоке хвост на новую вершину
-      currentBlock.replaceEnd(vertex);
-    } else {
-      graph.addEdge(currentBlock.end(), vertex);
-    }
-
-  }
-
   @Override
   public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
 
@@ -212,5 +163,82 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     blocks.getCurrentBlock().getBuildParts().push(block.end());
 
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
+
+    var loopStart = new WhileLoopVertex(ctx.expression());
+    graph.addVertex(loopStart);
+
+    connectGraphTail(blocks.getCurrentBlock(), loopStart);
+
+    blocks.getCurrentBlock().split();
+    graph.addVertex(blocks.getCurrentBlock().end());
+
+    var jumpState = new StatementsBlockWriter.JumpInformationRecord();
+    jumpState.loopContinue = loopStart;
+    jumpState.loopBreak = blocks.getCurrentBlock().end();
+
+    blocks.enterBlock(jumpState);
+
+    ctx.codeBlock().accept(this);
+
+    var body = blocks.leaveBlock();
+
+    graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
+    graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
+    graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
+
+    return ctx;
+
+  }
+
+  @Override
+  public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitAddHandlerStatement(BSLParser.AddHandlerStatementContext ctx) {
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitRemoveHandlerStatement(BSLParser.RemoveHandlerStatementContext ctx) {
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {
+
+    if (!(currentBlock.end() instanceof BasicBlockVertex)) {
+      graph.addEdge(currentBlock.end(), vertex);
+      return;
+    }
+
+    var currentTail = (BasicBlockVertex) currentBlock.end();
+    if (currentTail.statements().isEmpty()) {
+      // перевести все связи на новую вершину
+      var incoming = graph.incomingEdgesOf(currentTail);
+      for (var edge : incoming) {
+        var source = graph.getEdgeSource(edge);
+        graph.addEdge(source, vertex, edge.getType());
+      }
+      graph.removeVertex(currentTail);
+
+      // заменить в текущем блоке хвост на новую вершину
+      currentBlock.replaceEnd(vertex);
+    } else {
+      graph.addEdge(currentBlock.end(), vertex);
+    }
+  }
+
+  private void removeOrphanedNodes() {
+    graph.vertexSet().stream()
+      .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
+      .forEach(x -> graph.removeVertex(x));
   }
 }
