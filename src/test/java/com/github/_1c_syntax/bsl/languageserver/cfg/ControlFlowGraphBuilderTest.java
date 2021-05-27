@@ -78,8 +78,7 @@ class ControlFlowGraphBuilderTest {
     var branch = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
-    var body = (BasicBlockVertex)walker.getCurrentNode();
-    assertThat(body.statements().get(0).getText()).isEqualTo("В=4;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
 
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
@@ -90,6 +89,90 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     assertThat(walker.getCurrentNode()).isEqualTo(exit);
     assertThat(graph.incomingEdgesOf(exit).size()).isEqualTo(2);
+
+  }
+
+  @Test
+  void conditionWithElse() {
+    var code = "А = 1;\n" +
+      "Если Б = 2 Тогда\n" +
+      "    В = 4;\n" +
+      "Иначе\n" +
+      "    В = 5;" +
+      "КонецЕсли;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    walker.walkNext();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    var fork = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+
+    walker.walkTo(fork);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=5;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
+  @Test
+  void multipleConditionsTest() {
+    var code = "Если Б = 1 Тогда\n" +
+      "    В = 1;\n" +
+      "ИначеЕсли Б = 2 Тогда\n" +
+      "    В = 2;\n" +
+      "ИначеЕсли Б = 3 Тогда\n" +
+      "    В = 3;" +
+      "Иначе\n" +
+      "    В = 4;" +
+      "КонецЕсли;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    var topCondition = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+
+    walker.walkTo(topCondition);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    var cond = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=2;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+
+    walker.walkTo(cond);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    cond = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+
+    walker.walkTo(cond);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
   }
 
@@ -104,5 +187,10 @@ class ControlFlowGraphBuilderTest {
   BSLParser.CodeBlockContext parse(String code) {
     var dContext = TestUtils.getDocumentContext(code);
     return dContext.getAst().fileCodeBlock().codeBlock();
+  }
+
+  private String textOfCurrentNode(ControlFlowGraphWalker walker) {
+    var block = (BasicBlockVertex) walker.getCurrentNode();
+    return block.statements().get(0).getText();
   }
 }

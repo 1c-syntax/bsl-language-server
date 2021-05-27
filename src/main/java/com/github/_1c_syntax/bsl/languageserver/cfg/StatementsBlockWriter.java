@@ -70,7 +70,7 @@ public class StatementsBlockWriter {
     }
 
     public void split() {
-      if(subgraphBegin == subgraphEnd) {
+      if(subgraphBegin instanceof BasicBlockVertex && subgraphBegin == subgraphEnd) {
         subgraphBegin = statements;
       }
 
@@ -86,6 +86,13 @@ public class StatementsBlockWriter {
       return subgraphEnd;
     }
 
+    public void replaceEnd(CfgVertex vertex) {
+      if((subgraphBegin == subgraphEnd)) {
+        subgraphBegin = vertex;
+      }
+
+      subgraphEnd = vertex;
+    }
   }
 
   private final Deque<StatementsBlockRecord> blocks = new ArrayDeque<>();

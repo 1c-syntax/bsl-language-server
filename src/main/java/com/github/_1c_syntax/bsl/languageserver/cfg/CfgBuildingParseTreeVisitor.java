@@ -47,11 +47,22 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.addVertex(builtBlock.begin());
     graph.addVertex(builtBlock.end());
 
-    connectGraphTail((BasicBlockVertex) builtBlock.end(), exitPoints.methodReturn);
+    connectGraphTail(builtBlock, exitPoints.methodReturn);
+    removeOrphanedNodes();
 
-    graph.setEntryPoint(builtBlock.begin());
+    if (graph.containsVertex(builtBlock.begin())) {
+      graph.setEntryPoint(builtBlock.begin());
+    } else {
+      graph.setEntryPoint(exitPoints.methodReturn);
+    }
 
     return graph;
+  }
+
+  private void removeOrphanedNodes() {
+    graph.vertexSet().stream()
+      .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
+      .forEach(x -> graph.removeVertex(x));
   }
 
   @Override
@@ -90,7 +101,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var conditionStatement = new ConditionalVertex(ctx.ifBranch().expression());
     graph.addVertex(conditionStatement);
 
-    connectGraphTail((BasicBlockVertex) blocks.getCurrentBlock().end(), conditionStatement);
+    connectGraphTail(blocks.getCurrentBlock(), conditionStatement);
 
     // подграф if
     blocks.enterBlock();
@@ -136,16 +147,27 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private void connectGraphTail(BasicBlockVertex tail, CfgVertex vertex) {
-    if (tail.statements().isEmpty()) {
-      var incoming = graph.incomingEdgesOf(tail);
+  private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {
+
+    if (!(currentBlock.end() instanceof BasicBlockVertex)) {
+      graph.addEdge(currentBlock.end(), vertex);
+      return;
+    }
+
+    var currentTail = (BasicBlockVertex) currentBlock.end();
+    if (currentTail.statements().isEmpty()) {
+      // перевести все связи на новую вершину
+      var incoming = graph.incomingEdgesOf(currentTail);
       for (var edge : incoming) {
         var source = graph.getEdgeSource(edge);
         graph.addEdge(source, vertex, edge.getType());
       }
-      graph.removeVertex(tail);
+      graph.removeVertex(currentTail);
+
+      // заменить в текущем блоке хвост на новую вершину
+      currentBlock.replaceEnd(vertex);
     } else {
-      graph.addEdge(tail, vertex);
+      graph.addEdge(currentBlock.end(), vertex);
     }
 
   }
