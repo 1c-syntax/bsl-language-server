@@ -36,6 +36,7 @@ public class StatementsBlockWriter {
     public CfgVertex methodReturn;
     public CfgVertex loopBreak;
     public CfgVertex loopContinue;
+    public CfgVertex exceptionHandler;
   }
 
   public static class StatementsBlockRecord {
@@ -120,6 +121,10 @@ public class StatementsBlockWriter {
 
       if (newJumpStates.loopContinue == null) {
         newJumpStates.loopContinue = current.jumpContext.loopContinue;
+      }
+
+      if (newJumpStates.exceptionHandler == null) {
+        newJumpStates.exceptionHandler = current.jumpContext.exceptionHandler;
       }
     }
 

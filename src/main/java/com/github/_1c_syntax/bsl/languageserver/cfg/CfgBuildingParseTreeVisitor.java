@@ -40,6 +40,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     var exitPoints = new StatementsBlockWriter.JumpInformationRecord();
     exitPoints.methodReturn = new ExitVertex();
+    exitPoints.exceptionHandler = exitPoints.methodReturn;
+
     graph.addVertex(exitPoints.methodReturn);
 
     blocks.enterBlock(exitPoints);
@@ -239,8 +241,55 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitReturnStatement(BSLParser.ReturnStatementContext ctx) {
+    blocks.addStatement(ctx);
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.methodReturn);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
+
+    var tryBranch = new TryExceptVertex(ctx);
+    graph.addVertex(tryBranch);
+    connectGraphTail(blocks.getCurrentBlock(), tryBranch);
+
+    // весь блок try
+    blocks.enterBlock();
+
+    blocks.enterBlock();
+    ctx.exceptCodeBlock().accept(this);
+    var exception = blocks.leaveBlock();
+
+    var jumpInfo = new StatementsBlockWriter.JumpInformationRecord();
+    jumpInfo.exceptionHandler = exception.begin();
+
+    blocks.enterBlock(jumpInfo);
+    ctx.tryCodeBlock().accept(this);
+    var success = blocks.leaveBlock();
+
+    graph.addEdge(tryBranch, success.begin(), CfgEdgeType.TRUE_BRANCH);
+    blocks.getCurrentBlock().getBuildParts().push(success.end());
+
+    graph.addEdge(tryBranch, exception.begin(), CfgEdgeType.FALSE_BRANCH);
+    blocks.getCurrentBlock().getBuildParts().push(exception.end());
+
+    var builtBlock = blocks.leaveBlock();
+
+    blocks.getCurrentBlock().split();
+    graph.addVertex(blocks.getCurrentBlock().end());
+    while (!builtBlock.getBuildParts().isEmpty()) {
+      graph.addEdge(builtBlock.getBuildParts().pop(), blocks.getCurrentBlock().end());
+    }
+
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitRaiseStatement(BSLParser.RaiseStatementContext ctx) {
+    blocks.addStatement(ctx);
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+    makeJump(jumps.exceptionHandler);
     return ctx;
   }
 
