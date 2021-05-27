@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   private StatementsBlockWriter blocks;
@@ -167,31 +170,23 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-
     var loopStart = new WhileLoopVertex(ctx.expression());
-    graph.addVertex(loopStart);
-
-    connectGraphTail(blocks.getCurrentBlock(), loopStart);
-
-    blocks.getCurrentBlock().split();
-    graph.addVertex(blocks.getCurrentBlock().end());
-
-    var jumpState = new StatementsBlockWriter.JumpInformationRecord();
-    jumpState.loopContinue = loopStart;
-    jumpState.loopBreak = blocks.getCurrentBlock().end();
-
-    blocks.enterBlock(jumpState);
-
-    ctx.codeBlock().accept(this);
-
-    var body = blocks.leaveBlock();
-
-    graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
-    graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
-    graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
-
+    buildLoopSubgraph(ctx.codeBlock(), loopStart);
     return ctx;
+  }
 
+  @Override
+  public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
+    var loopStart = new ForLoopVertex(ctx);
+    buildLoopSubgraph(ctx.codeBlock(), loopStart);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    var loopStart = new ForeachLoopVertex(ctx);
+    buildLoopSubgraph(ctx.codeBlock(), loopStart);
+    return ctx;
   }
 
   @Override
@@ -210,6 +205,72 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   public ParseTree visitRemoveHandlerStatement(BSLParser.RemoveHandlerStatementContext ctx) {
     blocks.addStatement(ctx);
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+    makeJump(jumps.loopBreak);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitGotoStatement(BSLParser.GotoStatementContext ctx) {
+    // джампы потом как-нибудь поймем как обрабатывать
+    // пока пусть будет как обычный стейтмент
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitLabel(BSLParser.LabelContext ctx) {
+    // джампы потом как-нибудь поймем как обрабатывать
+    // пока пусть будет как обычный стейтмент
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+    makeJump(jumps.loopContinue);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitReturnStatement(BSLParser.ReturnStatementContext ctx) {
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+    makeJump(jumps.methodReturn);
+    return ctx;
+  }
+
+  private void makeJump(CfgVertex jumpTarget) {
+    blocks.getCurrentBlock().split();
+    graph.addVertex(blocks.getCurrentBlock().end());
+
+    graph.addEdge(blocks.getCurrentBlock().begin(), jumpTarget);
+  }
+
+  private void buildLoopSubgraph(BSLParser.CodeBlockContext ctx, LoopVertex loopStart) {
+    graph.addVertex(loopStart);
+    connectGraphTail(blocks.getCurrentBlock(), loopStart);
+
+    blocks.getCurrentBlock().split();
+    graph.addVertex(blocks.getCurrentBlock().end());
+
+    var jumpState = new StatementsBlockWriter.JumpInformationRecord();
+    jumpState.loopContinue = loopStart;
+    jumpState.loopBreak = blocks.getCurrentBlock().end();
+
+    blocks.enterBlock(jumpState);
+
+    ctx.accept(this);
+
+    var body = blocks.leaveBlock();
+
+    graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
+    graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
+    graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
   }
 
   private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {

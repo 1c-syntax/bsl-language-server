@@ -204,6 +204,78 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
   }
 
+  @Test
+  void testInnerLoops() {
+
+    var code = "А = 1;\n" +
+      "Пока Б = 1 Цикл\n" +
+      "   В = 1;\n" +
+      "   Если А = 1 Тогда\n" +
+      "     Продолжить;\n" +
+      "   КонецЕсли;\n" +
+      "   Для Сч = 1 По 5 Цикл\n" +
+      "     Б = 1;\n" +
+      "     Прервать;\n" +
+      "     В = 2;\n" +
+      "   КонецЦикла;\n" +
+      "   Прервано = Истина;\n" +
+      "КонецЦикла;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    walker.walkNext();
+    var firstLoopStart = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    walker.walkNext();
+    var condition = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+
+    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).size()).isEqualTo(1);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isEqualTo(firstLoopStart);
+    walker.walkTo(condition);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ForLoopVertex.class);
+
+    var secondLoopStart = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1;");
+    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).size()).isEqualTo(1);
+    walker.walkNext();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Прервано=Истина;");
+
+    var secondLoopEnd = walker.getCurrentNode();
+
+    assertThat(graph.getEdge(secondLoopStart, secondLoopEnd).getType()).isEqualTo(CfgEdgeType.FALSE_BRANCH);
+
+    // входящих - 2. переход из головы цикла и переход из блока до Прервать
+    assertThat(graph.incomingEdgesOf(secondLoopEnd).size()).isEqualTo(2);
+    var edgeOfBreak = graph.incomingEdgesOf(secondLoopEnd)
+      .stream()
+      .filter(x->x.getType() == CfgEdgeType.DIRECT)
+      .findFirst();
+
+    assertThat(edgeOfBreak.isPresent()).isTrue();
+    walker.walkTo(secondLoopStart);
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).contains(edgeOfBreak.get())).isTrue();
+
+    // LOOP от мертвого куска существует
+    assertThat(graph.incomingEdgesOf(secondLoopStart).isEmpty()).isFalse();
+
+    walker.walkTo(secondLoopEnd);
+    walker.walkNext(CfgEdgeType.LOOP_ITERATION);
+    assertThat(walker.getCurrentNode()).isEqualTo(firstLoopStart);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
     assertThat(graph.getEntryPoint()).isNotNull();
     var traverse = new DepthFirstIterator<>(graph, graph.getEntryPoint());

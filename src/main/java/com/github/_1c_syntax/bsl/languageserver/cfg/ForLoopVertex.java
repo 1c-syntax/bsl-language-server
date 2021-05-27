@@ -21,5 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-public class ForLoopVertex extends LoopVertex{
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ForLoopVertex extends LoopVertex {
+  private final BSLParser.ForStatementContext loopHeader;
 }
