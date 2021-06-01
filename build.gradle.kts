@@ -11,7 +11,7 @@ plugins {
     id("org.sonarqube") version "3.2.0"
     id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.2.0"
-    id("com.github.ben-manes.versions") version "0.38.0"
+    id("com.github.ben-manes.versions") version "0.39.0"
     id("io.freefair.javadoc-links") version "6.0.0-m2"
     id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
     id("org.springframework.boot") version "2.4.5"
