@@ -40,7 +40,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -90,7 +89,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     var operator = node.getOperator();
     if ((operator == BslOperator.AND || operator == BslOperator.OR) && node.getLeft().getNodeType() == ExpressionNodeType.BINARY_OP) {
-      var leftOp = (BinaryOperationNode) node.getLeft();
+      var leftOp = node.getLeft().<BinaryOperationNode>cast();
       if (leftOp.getOperator() == operator) {
         // это комплементарная операция
         return comparer.areEqual(leftOp.getRight(), node.getRight());
@@ -122,18 +121,18 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   private void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
     switch (tree.getNodeType()) {
       case CALL:
-        for (var expr : ((AbstractCallNode) tree).arguments()) {
+        for (var expr : tree.<AbstractCallNode>cast().arguments()) {
           gatherBinaryOperations(list, expr);
         }
         break;
       case UNARY_OP:
-        gatherBinaryOperations(list, ((UnaryOperationNode) tree).getOperand());
+        gatherBinaryOperations(list, tree.<UnaryOperationNode>cast().getOperand());
         break;
       case TERNARY_OP:
         var ternary = (TernaryOperatorNode) tree;
-        gatherBinaryOperations(list, (ternary).getCondition());
-        gatherBinaryOperations(list, (ternary).getTruePart());
-        gatherBinaryOperations(list, (ternary).getFalsePart());
+        gatherBinaryOperations(list, ternary.getCondition());
+        gatherBinaryOperations(list, ternary.getTruePart());
+        gatherBinaryOperations(list, ternary.getFalsePart());
         break;
       case BINARY_OP:
         var binary = (BinaryOperationNode) tree;

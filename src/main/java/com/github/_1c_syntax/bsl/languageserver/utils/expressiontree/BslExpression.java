@@ -33,4 +33,14 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public abstract class BslExpression {
   private final ExpressionNodeType nodeType;
   private ParseTree representingAst;
+
+  /**
+   * Синтаксический-помощник для более удобных downcast-ов
+   * @param <T> тип, к которому надо привести данный узел
+   * @return значение заданного типа
+   */
+  @SuppressWarnings("unchecked")
+  public <T extends BslExpression> T cast() {
+    return (T)this;
+  }
 }
