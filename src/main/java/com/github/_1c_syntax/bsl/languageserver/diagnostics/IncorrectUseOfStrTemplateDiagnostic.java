@@ -96,7 +96,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     boolean haveParams = usedParamsCount > 0;
 
     final String templateString = getTemplateString(params.get(0));
-    if (templateString == null){
+    if (templateString == null) {
       return false;
     }
 
@@ -152,7 +152,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     if (constValue != null) {
       return Optional.of(constValue);
     }
-    if (isFullSearch){
+    if (isFullSearch) {
       final var complexIdentifier = memberContext.complexIdentifier();
       if (complexIdentifier != null) {
         return calcAssignedValueForIdentifier(complexIdentifier);
@@ -163,7 +163,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
 
   private static Optional<BSLParser.ConstValueContext> calcAssignedValueForIdentifier(BSLParser.ComplexIdentifierContext complexIdentifier) {
     final var identifier = complexIdentifier.IDENTIFIER();
-    if (identifier == null){
+    if (identifier == null) {
       return Optional.empty();
     }
     final var varName = identifier.getText();
@@ -172,14 +172,14 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       BSLParser.RULE_statement));
     while (true) {
       prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement), BSLParser.RULE_statement);
-      if (prevStatement == null){
+      if (prevStatement == null) {
         break;
       }
       final var constValueContext = Optional.ofNullable(prevStatement.assignment())
         .filter(assignment -> isAssignmentForVar(varName, assignment))
         .map(BSLParser.AssignmentContext::expression)
         .flatMap(expression -> getConstValue(Optional.of(expression), false));
-      if (constValueContext.isPresent()){
+      if (constValueContext.isPresent()) {
         return constValueContext;
       }
     }
@@ -194,7 +194,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     if (pos > 0) {
       for (int i = pos - 1; i >= 0; i--) {
         final var prev = (BSLParserRuleContext) children.get(i);
-        if (prev.getRuleIndex() == rule_statement){
+        if (prev.getRuleIndex() == rule_statement) {
           return prev;
         }
       }
@@ -205,7 +205,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
 
   private static boolean isAssignmentForVar(String varName, BSLParser.AssignmentContext assignment) {
     final var lValue = assignment.lValue();
-    if (lValue == null){
+    if (lValue == null) {
       return false;
     }
     final var identifier = lValue.IDENTIFIER();

@@ -79,7 +79,7 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
       stringJoiner.add(Pattern.quote(elem.trim()));
     }
 
-    return CaseInsensitivePattern.compile("(?:^" + stringJoiner.toString() + ")");
+    return CaseInsensitivePattern.compile("(?:^" + stringJoiner + ")");
   }
 
   @Override

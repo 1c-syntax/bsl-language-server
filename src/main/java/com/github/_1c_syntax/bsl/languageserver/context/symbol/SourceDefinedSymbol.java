@@ -31,6 +31,7 @@ import java.util.Optional;
 /**
  * Мета-информация о логически конечной единице, созданной и описанной в исходном коде, например,
  * объявленный в коде метод, созданная область и т.д.
+ *
  * @see Symbol
  */
 public interface SourceDefinedSymbol extends Symbol {

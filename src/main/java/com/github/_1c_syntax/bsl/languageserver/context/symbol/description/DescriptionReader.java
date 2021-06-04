@@ -330,7 +330,7 @@ public class DescriptionReader {
             child.subParameters.forEach(subParam -> subParameters.add(subParam.makeParameterDescription()));
           }
           var link = "";
-          if(child.isHyperlink) {
+          if (child.isHyperlink) {
             link = child.name.substring(HYPERLINK_REF_LEN);
           }
           return new TypeDescription(child.name,

@@ -157,6 +157,6 @@ public final class DiagnosticHelper {
       stringJoiner.add(Pattern.quote(elem.trim()));
     }
 
-    return CaseInsensitivePattern.compile("(?:^" + stringJoiner.toString() + ").*");
+    return CaseInsensitivePattern.compile("(?:^" + stringJoiner + ").*");
   }
 }
