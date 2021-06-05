@@ -178,6 +178,13 @@ tasks.processResources {
     }
 }
 
+tasks.javadoc {
+    options {
+        this as StandardJavadocDocletOptions
+        links("https://1c-syntax.github.io/mdclasses/dev/javadoc")
+    }
+}
+
 license {
     header = rootProject.file("license/HEADER.txt")
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
