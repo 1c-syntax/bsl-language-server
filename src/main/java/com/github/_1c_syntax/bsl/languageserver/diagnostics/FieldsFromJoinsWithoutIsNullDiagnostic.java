@@ -167,6 +167,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .flatMap(parseTree -> Trees.getFirstChild(parseTree, SDBLParser.RULE_statement).stream())
       .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
       .flatMap(column -> Trees.getFirstChild(column, SDBLParser.RULE_column).stream())
+      .filter(Objects::nonNull)
       .filter(ctx -> ctx instanceof SDBLParser.ColumnContext)
       .map(SDBLParser.ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, statementsRoot));
