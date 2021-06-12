@@ -95,7 +95,13 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
       Ranges.create(151, 8, 151, 28)
       );
 
-    assertThat(diagnostics).hasSize(8);
+    checkContent(
+      diagnostics.get(8),
+      Ranges.create(194, 5, 195, 50),
+      Ranges.create(192, 13, 192, 32)
+      );
+
+    assertThat(diagnostics).hasSize(9);
 
   }
 

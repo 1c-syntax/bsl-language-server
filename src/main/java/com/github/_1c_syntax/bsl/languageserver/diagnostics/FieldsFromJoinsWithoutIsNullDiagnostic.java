@@ -163,6 +163,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     Set<Integer> statements, Set<Integer> statementsRoot) {
 
     return Optional.of(expression)
+      .filter(expr -> !haveFirstIsThenNullInsideWhereExpression(expr, tableName))
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, parentStatementIndex).stream())
       .flatMap(parseTree -> Trees.getFirstChild(parseTree, SDBLParser.RULE_statement).stream())
       .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
@@ -171,6 +172,30 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(ctx -> ctx instanceof SDBLParser.ColumnContext)
       .map(SDBLParser.ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, statementsRoot));
+  }
+
+  private boolean haveFirstIsThenNullInsideWhereExpression(BSLParserRuleContext expression, String tableName) {
+    return Trees.findAllRuleNodes(expression, SDBLParser.RULE_whereMember).stream()
+      .anyMatch(ctx -> haveFirstIsThenNullInsideWhereMember((BSLParserRuleContext) ctx, tableName));
+  }
+
+  private boolean haveFirstIsThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
+    if (whereMember.getChildCount() != IS_NULL_EXPR_MEMBERS_COUNT) {
+      return false;
+    }
+    final var childIS = whereMember.getChild(1);
+    final var childNULL = whereMember.getChild(2);
+
+    final var matched = isTerminalNode(childIS, SDBLParser.IS) &&
+      isTerminalNode(childNULL, SDBLParser.NULL);
+    if (!matched) {
+      return false;
+    }
+    return matchExpressionInsideWhereMember(whereMember, joinedTableName);
+  }
+
+  private boolean isTerminalNode(ParseTree node, int nodeType) {
+    return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == nodeType;
   }
 
   private boolean checkColumn(String tableName, SDBLParser.ColumnContext columnCtx,
@@ -193,33 +218,13 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     return haveIsNullInside((BSLParserRuleContext) selectStatement.getParent(), statements, rootParentIndex);
   }
 
-  private boolean isTerminalNode(ParseTree node, int nodeType) {
-    return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == nodeType;
-  }
-
   private boolean haveNotIsNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
     if (Trees.getFirstChild(whereMember, SDBLParser.RULE_whereStatement)
       .filter(ctx -> ctx.getChildCount() == 0 || !isTerminalNode(ctx.getChild(0), SDBLParser.NOT))
       .isPresent()) {
       return false;
     }
-    return Trees.findAllRuleNodes(whereMember, SDBLParser.RULE_whereMember).stream()
-      .anyMatch(ctx -> haveFirstIsThenNullInsideWhereMember((BSLParserRuleContext) ctx, joinedTableName));
-  }
-
-  private boolean haveFirstIsThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-    if (whereMember.getChildCount() != IS_NULL_EXPR_MEMBERS_COUNT) {
-      return false;
-    }
-    final var childIS = whereMember.getChild(1);
-    final var childNULL = whereMember.getChild(2);
-
-    final var matched = isTerminalNode(childIS, SDBLParser.IS) &&
-      isTerminalNode(childNULL, SDBLParser.NULL);
-    if (!matched) {
-      return false;
-    }
-    return matchExpressionInsideWhereMember(whereMember, joinedTableName);
+    return haveFirstIsThenNullInsideWhereExpression(whereMember, joinedTableName);
   }
 
   private void checkSelect(String tableName, BSLParserRuleContext query) {
