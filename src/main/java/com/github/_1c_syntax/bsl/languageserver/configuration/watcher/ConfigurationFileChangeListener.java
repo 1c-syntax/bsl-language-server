@@ -51,8 +51,8 @@ public class ConfigurationFileChangeListener {
    * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
    *
    * @param configurationFile Изменившийся файл конфигурации, содержащий
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
-   * @param eventKind Тип события, произошедшего с файлом.
+   *                          {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * @param eventKind         Тип события, произошедшего с файлом.
    */
   public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {

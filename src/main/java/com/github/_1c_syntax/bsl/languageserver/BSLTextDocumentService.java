@@ -205,7 +205,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    
+
     return CompletableFuture.supplyAsync(() -> {
       List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
       if (callHierarchyItems.isEmpty()) {

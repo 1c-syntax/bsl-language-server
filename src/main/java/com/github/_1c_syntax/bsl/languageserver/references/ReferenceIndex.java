@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import org.apache.commons.collections4.MultiMapUtils;
@@ -55,7 +55,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReferenceIndex {
 
-  private final ReferenceResolver referenceResolver;
   private final ServerContext serverContext;
 
   /**
@@ -90,7 +89,7 @@ public class ReferenceIndex {
 
     return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
       .stream()
-      .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
+      .map(location -> getReference(URI.create(location.getUri()), location.getRange()))
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -98,7 +97,7 @@ public class ReferenceIndex {
   /**
    * Поиск символа по позиции курсора.
    *
-   * @param uri URI документа, в котором необходимо осуществить поиск.
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
    * @param position позиция курсора.
    * @return данные ссылки.
    */
@@ -107,6 +106,14 @@ public class ReferenceIndex {
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
+  }
+
+  public Optional<Reference> getReference(URI uri, Range range) {
+    return Optional.ofNullable(referencesRanges.getOrDefault(uri, Collections.emptyMap()).get(range))
+      .map(ref -> buildReference(uri, range.getStart(), ref, range))
+      .stream()
+      .flatMap(Optional::stream)
+      .findFirst();
   }
 
   /**
@@ -156,11 +163,11 @@ public class ReferenceIndex {
   /**
    * Добавить вызов метода в индекс.
    *
-   * @param uri URI документа, откуда произошел вызов.
-   * @param mdoRef Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param uri        URI документа, откуда произошел вызов.
+   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
-   * @param range Диапазон, в котором происходит обращение к символу.
+   * @param range      Диапазон, в котором происходит обращение к символу.
    */
   @Synchronized
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
