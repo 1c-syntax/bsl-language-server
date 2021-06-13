@@ -1,0 +1,11 @@
+<testsuites name="bsl-language-server">
+  <testsuite name="src\test\java\diagnostics\CanonicalSpellingKeywordsDiagnostic.bsl">
+    <testcase name="test3" classname="src\test\java\diagnostics\CanonicalSpellingKeywordsDiagnostic.bsl">
+      <failure type="error" message="message4"><![CDATA[line: 1, column: 1, text: message4
+line: 4, column: 1, text: message4]]></failure>
+    </testcase>
+    <testcase name="test" classname="src\test\java\diagnostics\CanonicalSpellingKeywordsDiagnostic.bsl">
+      <failure type="error" message="message"><![CDATA[line: 1, column: 1, text: message]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

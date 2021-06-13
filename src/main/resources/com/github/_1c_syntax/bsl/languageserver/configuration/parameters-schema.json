@@ -1364,6 +1364,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "SetPermissionsForNewObjects": {
+            "description": "<Diagnostic name>",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "<Diagnostic name>",
+            "$id": "#/definitions/SetPermissionsForNewObjects"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,

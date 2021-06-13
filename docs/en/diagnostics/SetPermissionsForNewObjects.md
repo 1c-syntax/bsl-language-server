@@ -1,27 +1,24 @@
 # <Diagnostic name> (SetPermissionsForNewObjects)
 
-<Metadata>
-
-## <Params>
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Vulnerability` | `BSL`<br>`OS` | `Critical` | `Yes` | `1` | `standard`<br>`badpractice`<br>`design` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+When adding a new role, the "Set permissions for new objects" attribute may be set incorrectly, which will lead to the accumulation of rights in this role for all objects added after it and excessive rights for users with this role.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* Standard: [Set permissions for new objects and feilds objects (RU)](https://its.1c.ru/db/v8std/content/532/hdoc)
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
@@ -32,5 +29,5 @@
 ### Parameter for config
 
 ```json
-"SetPermissionsForNewObjects": <DiagnosticConfig>
+"SetPermissionsForNewObjects": false
 ```
