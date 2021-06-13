@@ -4,11 +4,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.val;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.VULNERABILITY,
@@ -25,16 +23,31 @@ import java.util.stream.Collectors;
 )
 public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
+  private static final String NAME_FULL_ACCESS_ROLE_RU = "ПолныеПрава";
+  private static final String NAME_FULL_ACCESS_ROLE_EN = "FullAccess";
+
   @Override
   public void check() {
 
     val configuration = documentContext.getServerContext().getConfiguration();
 
-    final Set<MDObjectBase> rolesWithSetForNewObjects = configuration.getRoles();
+    val roles = configuration.getRoles();
 
-    for (role : rolesWithSetForNewObjects)
+    for (var role : roles)
     {
-      diagnosticStorage.addDiagnostic();
+      var nameRole = role.getName();
+
+      if (!nameRole.equals(NAME_FULL_ACCESS_ROLE_RU)
+        && !nameRole.equals(NAME_FULL_ACCESS_ROLE_EN)
+        && role.getRoleData().isSetForNewObjects())
+      {
+
+        var range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
+        if (range.isEmpty()) {
+          return;
+        }
+        diagnosticStorage.addDiagnostic(range.get());
+      }
     }
 
   }

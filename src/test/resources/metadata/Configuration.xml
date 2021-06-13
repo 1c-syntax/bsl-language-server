@@ -183,6 +183,9 @@
 		</Properties>
 		<ChildObjects>
 			<Language>Русский</Language>
+			<Role>Роль1</Role>
+			<Role>Роль2</Role>
+			<Role>ПолныеПрава</Role>
 			<CommonModule>ПервыйОбщийМодуль</CommonModule>
 			<CommonModule>КлиентскийОбщийМодуль</CommonModule>
 			<CommonModule>ГлобальныйСерверныйМодуль</CommonModule>

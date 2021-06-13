@@ -1,5 +1,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import lombok.val;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -12,14 +13,19 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     super(SetPermissionsForNewObjectsDiagnostic.class);
   }
 
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+
   @Test
   void test() {
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    initServerContext(PATH_TO_METADATA);
+    val configuration = context.getConfiguration();
 
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(6, 0, 6, 20);
+    if (!configuration.getRoles().isEmpty()){
+      List<Diagnostic> diagnostics = getDiagnostics();
+      assertThat(diagnostics).hasSize(1);
+    }
 
   }
+
 }
