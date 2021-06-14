@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import lombok.val;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.junit.jupiter.api.Test;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 
+@CleanupContextBeforeClassAndAfterClass
 class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<SetPermissionsForNewObjectsDiagnostic> {
-
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   SetPermissionsForNewObjectsDiagnosticTest() {
     super(SetPermissionsForNewObjectsDiagnostic.class);
@@ -36,15 +36,10 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
 
   @Test
   void test() {
-
     initServerContext(PATH_TO_METADATA);
-    val configuration = context.getConfiguration();
 
-    if (!configuration.getRoles().isEmpty()){
-      var diagnostics = getDiagnostics();
-      assertThat(diagnostics).hasSize(1);
-    }
-
+    var diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
   }
 
 }
