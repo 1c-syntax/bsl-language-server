@@ -39,7 +39,10 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     initServerContext(PATH_TO_METADATA);
 
     var diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics)
+      .hasSize(1)
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Роль1"))
+    ;
   }
 
 }

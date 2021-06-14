@@ -26,8 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import lombok.val;
+
+import java.util.function.Predicate;
 
 @DiagnosticMetadata(
   type = DiagnosticType.VULNERABILITY,
@@ -50,24 +52,17 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
 
-    val configuration = documentContext.getServerContext().getConfiguration();
+    var tokens = documentContext.getTokens();
 
-    val roles = configuration.getRoles();
-
-    for (var role : roles){
-      var nameRole = role.getName();
-
-      if (!nameRole.equals(NAME_FULL_ACCESS_ROLE_RU)
-        && !nameRole.equals(NAME_FULL_ACCESS_ROLE_EN)
-        && role.getRoleData().isSetForNewObjects()){
-
-        var range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
-        if (range.isEmpty()) {
-          return;
-        }
-        diagnosticStorage.addDiagnostic(range.get());
-      }
-    }
+    Ranges.getFirstSignificantTokenRange(tokens).ifPresent(range ->
+      documentContext.getServerContext().getConfiguration().getRoles().stream()
+        .filter(role -> role.getRoleData().isSetForNewObjects())
+        .map(MDRole::getName)
+        .filter(Predicate.not(NAME_FULL_ACCESS_ROLE_RU::equals))
+        .filter(Predicate.not(NAME_FULL_ACCESS_ROLE_EN::equals))
+        .map(info::getMessage)
+        .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage))
+    );
 
   }
 
