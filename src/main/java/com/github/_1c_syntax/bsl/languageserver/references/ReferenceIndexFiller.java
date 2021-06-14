@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.context.ContextStorage;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -43,17 +44,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex.GLOBAL_METHOD_MDO_REF;
+
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndexFiller {
-
-  private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
+    private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
     ModuleType.ManagerModule,
     ModuleType.CommonModule,
     ModuleType.UNKNOWN
   );
 
   private final ReferenceIndex index;
+  private final ContextStorage contextStorage;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -108,11 +111,16 @@ public class ReferenceIndexFiller {
       var moduleType = documentContext.getModuleType();
       var methodName = ctx.methodName().getStart();
       var methodNameText = methodName.getText();
+      var range = Ranges.create(methodName);
 
-      documentContext.getSymbolTree().getMethods().stream()
-        .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
-        .findAny()
-        .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
+      var isLocalMethod = documentContext.getSymbolTree().getMethods().stream()
+        .anyMatch(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText));
+
+      if (isLocalMethod) {
+        addMethodCall(mdoRef, moduleType, methodNameText, range);
+      } else {
+        addMethodCall(GLOBAL_METHOD_MDO_REF, ModuleType.UNKNOWN, methodNameText, range);
+      }
 
       return super.visitGlobalMethodCall(ctx);
     }

@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReferenceIndex {
 
+  public static final String GLOBAL_METHOD_MDO_REF = "Global.Method";
+
   private final ServerContext serverContext;
 
   /**

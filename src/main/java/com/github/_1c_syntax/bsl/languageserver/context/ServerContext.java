@@ -23,6 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.Configuration;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
@@ -43,12 +46,16 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -157,6 +164,28 @@ public abstract class ServerContext {
 
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  public Set<AbstractMDObjectBase> getGlobalModules() {
+
+    Set<AbstractMDObjectBase> globalModules = new HashSet<>();
+
+    getConfiguration().getCommonModules().values().stream()
+      .filter(MDCommonModule::isGlobal)
+      .collect(Collectors.toCollection(() -> globalModules));
+
+    var globalClientModuleModuleTypes = EnumSet.of(
+      ModuleType.ApplicationModule,
+      ModuleType.ManagedApplicationModule,
+      ModuleType.OrdinaryApplicationModule
+    );
+
+    getConfiguration().getModules().stream()
+      .filter(mdoModule -> globalClientModuleModuleTypes.contains(mdoModule.getModuleType()))
+      .map(MDOModule::getOwner)
+      .collect(Collectors.toCollection(() -> globalModules));
+
+    return globalModules;
   }
 
   @Lookup

@@ -68,6 +68,7 @@ dependencies {
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
     api("com.github.1c-syntax", "mdclasses", "v0.9.1")
+    api("com.github.1c-syntax", "bsl-context", "431fb370f478eec9e7ad36bded53a65f913c77e7")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
