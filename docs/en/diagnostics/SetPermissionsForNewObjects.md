@@ -2,7 +2,7 @@
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
- `Vulnerability` | `BSL`<br>`OS` | `Critical` | `Yes` | `1` | `standard`<br>`badpractice`<br>`design` 
+ `Vulnerability` | `BSL` | `Critical` | `Yes` | `1` | `standard`<br>`badpractice`<br>`design` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

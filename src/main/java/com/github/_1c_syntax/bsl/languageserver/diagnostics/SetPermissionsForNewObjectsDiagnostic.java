@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -34,14 +35,15 @@ import java.util.function.Predicate;
 @DiagnosticMetadata(
   type = DiagnosticType.VULNERABILITY,
   severity = DiagnosticSeverity.CRITICAL,
+  scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.ManagedApplicationModule
+  },
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE,
     DiagnosticTag.DESIGN
-  },
-  modules = {
-    ModuleType.ManagedApplicationModule
   }
 )
 public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
