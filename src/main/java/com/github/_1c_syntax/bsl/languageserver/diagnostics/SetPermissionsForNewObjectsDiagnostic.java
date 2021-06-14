@@ -54,14 +54,12 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
     val roles = configuration.getRoles();
 
-    for (var role : roles)
-    {
+    for (var role : roles){
       var nameRole = role.getName();
 
       if (!nameRole.equals(NAME_FULL_ACCESS_ROLE_RU)
         && !nameRole.equals(NAME_FULL_ACCESS_ROLE_EN)
-        && role.getRoleData().isSetForNewObjects())
-      {
+        && role.getRoleData().isSetForNewObjects()){
 
         var range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
         if (range.isEmpty()) {

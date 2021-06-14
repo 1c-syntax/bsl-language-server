@@ -1,16 +1,1 @@
-<coverage version="1">
-  <file path="src\test\resources\context\DocumentContextLocForCoverTest.bsl">
-    <lineToCover lineNumber="5" covered="false"/>
-    <lineToCover lineNumber="6" covered="false"/>
-    <lineToCover lineNumber="10" covered="false"/>
-    <lineToCover lineNumber="11" covered="false"/>
-    <lineToCover lineNumber="12" covered="false"/>
-    <lineToCover lineNumber="18" covered="false"/>
-    <lineToCover lineNumber="26" covered="false"/>
-    <lineToCover lineNumber="28" covered="false"/>
-    <lineToCover lineNumber="31" covered="false"/>
-    <lineToCover lineNumber="32" covered="false"/>
-    <lineToCover lineNumber="35" covered="false"/>
-    <lineToCover lineNumber="37" covered="false"/>
-  </file>
-</coverage>
+
