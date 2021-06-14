@@ -1,4 +1,4 @@
-# <Diagnostic name> (SetPermissionsForNewObjects)
+# The check box «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 

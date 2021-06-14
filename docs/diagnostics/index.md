@@ -123,7 +123,7 @@
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
- [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | <Имя диагностики> | Да | Критичный | Уязвимость | `standard`<br>`badpractice`<br>`design` 
+ [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | Флажок «Устанавливать права для новых объектов» должен быть установлен только у роли ПолныеПрава | Да | Критичный | Уязвимость | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | Критичный | Ошибка | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` 
  [StyleElementConstructors](StyleElementConstructors.md) | Конструктор элемента стиля | Да | Незначительный | Ошибка | `standard`<br>`badpractice` 

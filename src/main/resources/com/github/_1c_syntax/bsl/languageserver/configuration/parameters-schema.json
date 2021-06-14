@@ -1365,13 +1365,13 @@
             "$id": "#/definitions/SemicolonPresence"
         },
         "SetPermissionsForNewObjects": {
-            "description": "<Diagnostic name>",
+            "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "<Diagnostic name>",
+            "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "$id": "#/definitions/SetPermissionsForNewObjects"
         },
         "SeveralCompilerDirectives": {
