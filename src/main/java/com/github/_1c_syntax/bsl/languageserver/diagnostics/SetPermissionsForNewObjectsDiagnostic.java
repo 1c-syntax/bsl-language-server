@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -30,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 @DiagnosticMetadata(
@@ -48,8 +50,13 @@ import java.util.function.Predicate;
 )
 public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
-  private static final String NAME_FULL_ACCESS_ROLE_RU = "ПолныеПрава";
-  private static final String NAME_FULL_ACCESS_ROLE_EN = "FullAccess";
+  private static final String NAMES_FULL_ACCESS_ROLE = "FullAccess,ПолныеПрава";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + NAMES_FULL_ACCESS_ROLE
+  )
+  private final String[] namesFullAccessRole = NAMES_FULL_ACCESS_ROLE.split(",");
 
   @Override
   public void check() {
@@ -60,8 +67,7 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
       documentContext.getServerContext().getConfiguration().getRoles().stream()
         .filter(role -> role.getRoleData().isSetForNewObjects())
         .map(MDRole::getName)
-        .filter(Predicate.not(NAME_FULL_ACCESS_ROLE_RU::equals))
-        .filter(Predicate.not(NAME_FULL_ACCESS_ROLE_EN::equals))
+        .filter(Predicate.not(x -> Arrays.asList(namesFullAccessRole).contains(x)))
         .map(info::getMessage)
         .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage))
     );

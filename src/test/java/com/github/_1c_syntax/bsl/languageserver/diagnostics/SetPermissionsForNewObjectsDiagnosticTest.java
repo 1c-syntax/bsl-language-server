@@ -36,6 +36,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
 
   @Test
   void test() {
+
     initServerContext(PATH_TO_METADATA);
 
     var diagnostics = getDiagnostics();
@@ -44,5 +45,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
       .anyMatch(diagnostic -> diagnostic.getMessage().contains("Роль1"))
     ;
   }
+
+
 
 }
