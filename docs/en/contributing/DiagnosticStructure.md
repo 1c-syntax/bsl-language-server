@@ -68,7 +68,7 @@ Annotation example
 )
 ```
 
-Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
+Class should implement the interface `BSLDiagnostic`. If diagnostic bases on AST, that class should extends at one of classes, that implement `BSLDiagnostic` below:
 
 - для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
 - при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
