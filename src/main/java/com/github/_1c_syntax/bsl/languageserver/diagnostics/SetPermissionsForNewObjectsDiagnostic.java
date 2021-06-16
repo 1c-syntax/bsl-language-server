@@ -32,6 +32,9 @@ import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 @DiagnosticMetadata(
@@ -56,7 +59,14 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = "" + NAMES_FULL_ACCESS_ROLE
   )
-  private final String[] namesFullAccessRole = NAMES_FULL_ACCESS_ROLE.split(",");
+
+  private Set<String> namesFullAccessRole = getSetFromString(NAMES_FULL_ACCESS_ROLE);
+
+  private Set<String> getSetFromString(String inputParam){
+    return new HashSet<>(
+      Arrays.asList(inputParam.split(","))
+    );
+  }
 
   @Override
   public void check() {
@@ -67,11 +77,17 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
       documentContext.getServerContext().getConfiguration().getRoles().stream()
         .filter(role -> role.getRoleData().isSetForNewObjects())
         .map(MDRole::getName)
-        .filter(Predicate.not(x -> Arrays.asList(namesFullAccessRole).contains(x)))
+        .filter(Predicate.not(namesFullAccessRole::contains))
         .map(info::getMessage)
         .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage))
     );
+  }
 
+  @Override
+  public void configure(Map<String, Object> configuration){
+    var namesFullAccessRoleString = (String) configuration
+      .getOrDefault("namesFullAccessRole", NAMES_FULL_ACCESS_ROLE);
+    this.namesFullAccessRole = getSetFromString(namesFullAccessRoleString);
   }
 
 }

@@ -46,6 +46,37 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     ;
   }
 
+  @Test
+  void testConfigureRole2() {
 
+    var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("namesFullAccessRole", "Роль2");//тогда проверка должна сработать и на роль ПолныеПрава
+    diagnosticInstance.configure(configuration);
+
+    initServerContext(PATH_TO_METADATA);
+
+    var diagnostics = getDiagnostics();
+    assertThat(diagnostics)
+      .hasSize(2)//Роль1 и ПолныеПрава
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Роль1"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("ПолныеПрава"))
+    ;
+  }
+
+  @Test
+  void testConfigureRole1() {
+
+    var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("namesFullAccessRole", "Роль1");
+    diagnosticInstance.configure(configuration);
+
+    initServerContext(PATH_TO_METADATA);
+
+    var diagnostics = getDiagnostics();
+    assertThat(diagnostics)
+      .hasSize(1)
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("ПолныеПрава"))
+    ;
+  }
 
 }
