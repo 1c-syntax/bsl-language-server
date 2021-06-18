@@ -37,10 +37,10 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
+import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -214,7 +214,7 @@ public class DocumentContext {
     return supportVariants.getOrCompute();
   }
 
-  public Optional<MDObjectBase> getMdObject() {
+  public Optional<AbstractMDObjectBase> getMdObject() {
     return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 

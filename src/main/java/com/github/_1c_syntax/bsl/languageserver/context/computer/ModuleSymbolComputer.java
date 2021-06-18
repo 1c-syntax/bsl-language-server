@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.EnumSet;

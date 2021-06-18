@@ -11,7 +11,7 @@ plugins {
     id("org.sonarqube") version "3.2.0"
     id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.2.0"
-    id("com.github.ben-manes.versions") version "0.38.0"
+    id("com.github.ben-manes.versions") version "0.39.0"
     id("io.freefair.javadoc-links") version "6.0.0-m2"
     id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
     id("org.springframework.boot") version "2.4.5"
@@ -58,7 +58,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "4063bc4b13455702f6cbc61ccd63b056fd22d217") {
+    api("com.github.1c-syntax", "bsl-parser", "0.19.3") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -67,7 +67,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
-    api("com.github.1c-syntax", "mdclasses", "0.8.0")
+    api("com.github.1c-syntax", "mdclasses", "v0.9.1")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -175,6 +175,13 @@ tasks.processResources {
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
+    }
+}
+
+tasks.javadoc {
+    options {
+        this as StandardJavadocDocletOptions
+        links("https://1c-syntax.github.io/mdclasses/dev/javadoc")
     }
 }
 
