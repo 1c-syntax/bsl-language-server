@@ -31,8 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -62,12 +60,6 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
   private Set<String> namesFullAccessRole = getSetFromString(NAMES_FULL_ACCESS_ROLE);
 
-  private Set<String> getSetFromString(String inputParam){
-    return new HashSet<>(
-      Arrays.asList(inputParam.split(","))
-    );
-  }
-
   @Override
   public void check() {
 
@@ -88,6 +80,10 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     var namesFullAccessRoleString = (String) configuration
       .getOrDefault("namesFullAccessRole", NAMES_FULL_ACCESS_ROLE);
     this.namesFullAccessRole = getSetFromString(namesFullAccessRoleString);
+  }
+
+  private Set<String> getSetFromString(String inputParam){
+    return Set.of(inputParam.split(","));
   }
 
 }
