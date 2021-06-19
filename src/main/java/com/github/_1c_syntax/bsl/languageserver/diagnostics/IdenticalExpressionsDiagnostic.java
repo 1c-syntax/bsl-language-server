@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.DefaultNodeEqualityComparer;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -71,32 +72,55 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     var comparer = new TransitiveOperationsIgnoringComparer();
     comparer.logicalOperationsAsTransitive(true);
+    var skippedNodes = new HashSet<BinaryOperationNode>();
     binariesList
       .stream()
-      .filter(x -> checkEquality(comparer, x))
+      .filter(x -> checkEquality(comparer, x, skippedNodes))
       .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
         info.getMessage(x.getSourceCodeOperator(), getSomeText(x))));
 
     return ctx;
   }
 
-  private boolean checkEquality(DefaultNodeEqualityComparer comparer, BinaryOperationNode node) {
+  private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node, HashSet<BinaryOperationNode> skippedNodes) {
+
+    if(skippedNodes.contains(node))
+      return false;
 
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
       return true;
     }
 
-    var operator = node.getOperator();
-    if ((operator == BslOperator.AND || operator == BslOperator.OR) && node.getLeft().getNodeType() == ExpressionNodeType.BINARY_OP) {
-      var leftOp = node.getLeft().<BinaryOperationNode>cast();
-      if (leftOp.getOperator() == operator) {
-        // это комплементарная операция
-        return comparer.areEqual(leftOp.getRight(), node.getRight());
+    if (isComplementary(node)) {
+      var subNodes = new ArrayList<BslExpression>();
+      while (true) {
+
+        if(alreadySeen(comparer, subNodes, node.getLeft())){
+          return true;
+        }
+        subNodes.add(node.getLeft());
+        var next = node.getRight();
+        if (next instanceof BinaryOperationNode && isComplementary((BinaryOperationNode) next)) {
+          node = (BinaryOperationNode) next;
+          skippedNodes.add(node);
+        } else {
+          if(alreadySeen(comparer, subNodes, node.getLeft())) {
+            return true;
+          }
+          subNodes.add(node.getLeft());
+          break;
+        }
       }
+
+      return alreadySeen(comparer, subNodes, node.getRight());
     }
 
     return false;
+  }
+
+  private boolean alreadySeen(NodeEqualityComparer comparer, List<BslExpression> subNodes, BslExpression node){
+    return subNodes.stream().anyMatch(x -> comparer.areEqual(x, node));
   }
 
   private String getSomeText(BinaryOperationNode node) {
@@ -152,9 +176,19 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
         gatherBinaryOperations(list, binary.getLeft());
         gatherBinaryOperations(list, binary.getRight());
         break;
+
       default:
         break; // для спокойствия сонара
     }
+  }
+
+  private boolean isComplementary(BinaryOperationNode binary) {
+    var operator = binary.getOperator();
+    if ((operator == BslOperator.OR || operator == BslOperator.AND) && binary.getRight() instanceof BinaryOperationNode) {
+      return ((BinaryOperationNode) binary.getRight()).getOperator() == operator;
+    }
+
+    return false;
   }
 
   private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {

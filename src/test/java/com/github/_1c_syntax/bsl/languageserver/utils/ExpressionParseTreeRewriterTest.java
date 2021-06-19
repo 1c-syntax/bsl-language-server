@@ -313,8 +313,8 @@ class ExpressionParseTreeRewriterTest {
 
     binary = (BinaryOperationNode) not.getOperand();
     assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
-    assertThat(this.<BinaryOperationNode>getNodeAs(binary.getLeft()).getOperator()).isEqualTo(BslOperator.EQUAL);
-    assertThat(this.<BinaryOperationNode>getNodeAs(binary.getRight()).getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(binary.getLeft().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(binary.getRight().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
   }
 
   BslExpression getExpressionTree(String code) {
@@ -324,9 +324,4 @@ class ExpressionParseTreeRewriterTest {
 
     return rewriter.getExpressionTree();
   }
-
-  <T extends BslExpression> T getNodeAs(BslExpression node) {
-    return (T) node;
-  }
-
 }

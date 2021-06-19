@@ -49,3 +49,5 @@
 ИначеЕсли (1 = А) ИЛИ (А = 1) Тогда // use TransitiveIgnoringComparer in diagnostic (slower)
     Б = 14;
 КонецЕсли;
+
+//Б = А = 12 ИЛИ А = 13 ИЛИ А = 12;
