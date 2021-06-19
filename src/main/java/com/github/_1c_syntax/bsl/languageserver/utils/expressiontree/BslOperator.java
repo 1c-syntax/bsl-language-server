@@ -28,25 +28,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum BslOperator {
 
-  // binary
-  ADD(1),
-  SUBTRACT(1),
+  OR(1),
+  AND(2),
+  NOT(3),
 
-  MULTIPLY(2),
-  DIVIDE(2),
-  MODULO(2),
+  EQUAL(4),
+  LESS(4),
+  LESS_OR_EQUAL(4),
+  GREATER(4),
+  GREATER_OR_EQUAL(4),
+  NOT_EQUAL(4),
 
-  EQUAL(3),
-  LESS(3),
-  LESS_OR_EQUAL(3),
-  GREATER(3),
-  GREATER_OR_EQUAL(3),
-  NOT_EQUAL(3),
+  ADD(5),
+  SUBTRACT(5),
 
-  AND(4),
-  OR(5),
-
-  NOT(6),
+  MULTIPLY(6),
+  DIVIDE(6),
+  MODULO(6),
 
   // unary
   UNARY_MINUS(7),
@@ -56,5 +54,7 @@ public enum BslOperator {
   INDEX_ACCESS(8);
 
   private final int priority;
+
+  public static final int MAX_PRIORITY = 9;
 
 }

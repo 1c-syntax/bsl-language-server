@@ -94,7 +94,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var operation = operands.peek();
     assert operation != null; // для спокойствия сонара
 
-    if(operation.getRepresentingAst() == null) {
+    if (operation.getRepresentingAst() == null) {
       operation.setRepresentingAst(ctx);
     }
 
@@ -109,15 +109,60 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
 
-    var unary = ctx.unaryModifier();
-    if (unary != null) {
-      visitUnaryModifier(unary);
-      ctx.getChild(1).accept(this);
-      buildOperation();
-      return ctx;
+    // нужен ручной dispatch на конкретного child,
+    // т.к. нет отдельного правила для подвыражения в скобках
+    //  constValue
+    //    | complexIdentifier
+    //    | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
+    //    | (WAIT_KEYWORD (IDENTIFIER | globalMethodCall))
+
+    var unaryModifier = ctx.unaryModifier();
+    var childIndex = 0;
+    if (unaryModifier != null) {
+      visitUnaryModifier(unaryModifier);
+      childIndex = 1;
     }
 
-    return super.visitMember(ctx);
+    var dispatchChild = ctx.getChild(childIndex);
+    if (dispatchChild instanceof TerminalNode) {
+      var token = ((TerminalNode) dispatchChild).getSymbol().getType();
+
+      // ручная диспетчеризация
+      switch (token) {
+        case BSLLexer.LPAREN:
+          visitParenthesis(ctx.expression(), ctx.modifier());
+          break;
+        case BSLLexer.WAIT_KEYWORD:
+          visitAwaitedMember(ctx.getChild(childIndex + 1));
+          break;
+        default:
+          throw new IllegalStateException("Unexpected rule " + dispatchChild);
+      }
+
+    } else {
+      dispatchChild.accept(this);
+    }
+
+    if (unaryModifier != null) {
+      buildOperation();
+    }
+
+    return ctx;
+  }
+
+  private void visitParenthesis(BSLParser.ExpressionContext expression, List<? extends BSLParser.ModifierContext> modifiers) {
+
+    visitExpression(expression);
+
+    for (var modifier : modifiers) {
+      modifier.accept(this);
+    }
+
+  }
+
+  private void visitAwaitedMember(ParseTree child) {
+    // TODO: придумать как представлять WAIT и стоит ли
+    child.accept(this);
   }
 
   @Override
@@ -137,7 +182,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     }
 
     var lastSeenOperator = operatorsInFly.peek();
-    if (lastSeenOperator.getPriority() <= operator.getPriority()) {
+    if (lastSeenOperator.getPriority() > operator.getPriority()) {
       buildOperation();
     }
 
@@ -145,6 +190,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private BslOperator getOperator(BSLParser.OperationContext ctx) {
+    // TODO: переделать на getRuleIndex для производительности
     if (ctx.PLUS() != null) {
       return BslOperator.ADD;
     } else if (ctx.MINUS() != null) {
