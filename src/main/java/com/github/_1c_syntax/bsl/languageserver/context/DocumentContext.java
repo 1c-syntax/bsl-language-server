@@ -372,9 +372,29 @@ public class DocumentContext {
   }
 
   private static boolean mustCovered(Tree node) {
-    return node instanceof BSLParser.StatementContext
-      || node instanceof BSLParser.GlobalMethodCallContext
-      || node instanceof BSLParser.Var_nameContext;
+    if (node instanceof BSLParser.GlobalMethodCallContext) {
+      return true;
+    }
+
+    if (node instanceof BSLParser.StatementContext) {
+      return statementMustCovered((BSLParser.StatementContext) node);
+    }
+    return false;
+  }
+
+  private static boolean statementMustCovered(BSLParser.StatementContext statement) {
+    final var ctx = Optional.of(statement);
+    final var havePreprocessor = ctx
+      .map(BSLParser.StatementContext::preprocessor)
+      .isPresent();
+    if (havePreprocessor) {
+      return false;
+    }
+    final var haveTry = ctx
+      .map(BSLParser.StatementContext::compoundStatement)
+      .map(BSLParser.CompoundStatementContext::tryStatement)
+      .isPresent();
+    return !haveTry;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {

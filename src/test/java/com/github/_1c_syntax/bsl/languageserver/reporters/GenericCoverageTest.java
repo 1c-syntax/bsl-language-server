@@ -83,11 +83,32 @@ class GenericCoverageTest {
     GenericCoverageReport.GenericCoverageReportEntry fileEntry = report.getFile().get(0);
 
     assertThat(fileEntry.getPath()).isEqualTo(fileInfo.getPath().toString());
-    assertThat(fileEntry.getLineToCover().size()).isEqualTo(12);
 
-    GenericCoverageReport.LineToCoverEntry lineToCover = fileEntry.getLineToCover().get(0);
+    checkLineToCoverEntry(fileEntry, 0, 6);
+    checkLineToCoverEntry(fileEntry, 1, 10);
+    checkLineToCoverEntry(fileEntry, 2, 11);
+    checkLineToCoverEntry(fileEntry, 3, 13);
+    checkLineToCoverEntry(fileEntry, 4, 18);
+    checkLineToCoverEntry(fileEntry, 5, 28);
+    checkLineToCoverEntry(fileEntry, 6, 31);
+    checkLineToCoverEntry(fileEntry, 7, 32);
+    checkLineToCoverEntry(fileEntry, 8, 35);
+    checkLineToCoverEntry(fileEntry, 9, 37);
+    checkLineToCoverEntry(fileEntry, 10, 44);
+    checkLineToCoverEntry(fileEntry, 11, 45);
+    checkLineToCoverEntry(fileEntry, 12, 49);
+    checkLineToCoverEntry(fileEntry, 13, 50);
+    checkLineToCoverEntry(fileEntry, 14, 54);
+    checkLineToCoverEntry(fileEntry, 15, 58);
+    checkLineToCoverEntry(fileEntry, 16, 60);
 
-    assertThat(lineToCover.getLineNumber()).isEqualTo(5);
+    assertThat(fileEntry.getLineToCover().size()).isEqualTo(17);
+  }
+
+  private static void checkLineToCoverEntry(GenericCoverageReport.GenericCoverageReportEntry fileEntry, int index, int expectedLine) {
+    GenericCoverageReport.LineToCoverEntry lineToCover = fileEntry.getLineToCover().get(index);
+
+    assertThat(lineToCover.getLineNumber()).isEqualTo(expectedLine);
     assertThat(lineToCover.isCovered()).isFalse();
   }
 }
