@@ -152,7 +152,8 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
   private void visitParenthesis(BSLParser.ExpressionContext expression, List<? extends BSLParser.ModifierContext> modifiers) {
 
-    visitExpression(expression);
+    var subExpr = makeSubexpression(expression);
+    operands.push(subExpr);
 
     for (var modifier : modifiers) {
       modifier.accept(this);
@@ -370,12 +371,10 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
-    ctx.accept(this);
-    var operand = operands.pop();
-    if (operand.getRepresentingAst() == null)
-      operand.setRepresentingAst(ctx);
+    var rewriter = new ExpressionParseTreeRewriter();
+    rewriter.visitExpression(ctx);
 
-    return operand;
+    return rewriter.getExpressionTree();
   }
 
   private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {

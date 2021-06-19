@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -277,12 +278,43 @@ class ExpressionParseTreeRewriterTest {
 
   @Test
   void canProcessModifiersAfterParenthesis() {
+    var code = "А = 2 * (ВСкобках()).Свойство";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.MULTIPLY);
+    assertThat(binary.getLeft().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat(binary.getRight()).isInstanceOf(BinaryOperationNode.class);
 
+    binary = (BinaryOperationNode) binary.getRight();
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.DEREFERENCE);
   }
 
   BSLParser.ExpressionContext parse(String code) {
     var dContext = TestUtils.getDocumentContext(code);
     return dContext.getAst().fileCodeBlock().codeBlock().statement(0).assignment().expression();
+  }
+
+  @Test
+  void realLifeHardExpression() {
+    var code = "СодержитПоля = ВложенныеЭлементы.Количество() > 0\n" +
+      "И Не (ВложенныеЭлементы.Количество() = 1\n" +
+      "И ТипЗнч(ВложенныеЭлементы[0]) = Тип(\"АвтоВыбранноеПолеКомпоновкиДанных\"));";
+
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode) expressionTree;
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
+    assertThat(binary.getLeft()).isInstanceOf(BinaryOperationNode.class);
+    assertThat(((BinaryOperationNode) binary.getLeft()).getOperator()).isEqualTo(BslOperator.GREATER);
+
+    assertThat(binary.getRight()).isInstanceOf(UnaryOperationNode.class);
+    var not = (UnaryOperationNode) binary.getRight();
+    assertThat(not.getOperator()).isEqualTo(BslOperator.NOT);
+    assertThat(not.getOperand()).isInstanceOf(BinaryOperationNode.class);
+
+    binary = (BinaryOperationNode) not.getOperand();
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
+    assertThat(this.<BinaryOperationNode>getNodeAs(binary.getLeft()).getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(this.<BinaryOperationNode>getNodeAs(binary.getRight()).getOperator()).isEqualTo(BslOperator.EQUAL);
   }
 
   BslExpression getExpressionTree(String code) {
@@ -291,6 +323,10 @@ class ExpressionParseTreeRewriterTest {
     expression.accept(rewriter);
 
     return rewriter.getExpressionTree();
+  }
+
+  <T extends BslExpression> T getNodeAs(BslExpression node) {
+    return (T) node;
   }
 
 }

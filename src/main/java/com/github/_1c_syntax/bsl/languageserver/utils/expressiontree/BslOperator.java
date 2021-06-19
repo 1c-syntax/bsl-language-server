@@ -54,7 +54,4 @@ public enum BslOperator {
   INDEX_ACCESS(8);
 
   private final int priority;
-
-  public static final int MAX_PRIORITY = 9;
-
 }
