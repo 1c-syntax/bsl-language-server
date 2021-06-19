@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
-  private MDObjectBase module;
+  private AbstractMDObjectBase module;
   private DocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {

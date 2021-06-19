@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -47,7 +47,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
     super(CommonModuleInvalidTypeDiagnostic.class);
   }
 
-  private CommonModule module;
+  private MDCommonModule module;
   private DocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -178,7 +178,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
       context
     ));
 
-    module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
 
   }
 }

@@ -27,6 +27,7 @@ import java.util.Optional;
 
 /**
  * Возможность сущности иметь описание.
+ *
  * @see SourceDefinedSymbolDescription
  */
 public interface Describable {

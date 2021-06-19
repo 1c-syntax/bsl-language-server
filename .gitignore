@@ -72,3 +72,4 @@ public/
 # jpackage
 bsl-language-server/
 bsl-language-server_*.zip
+/.idea/misc.xml

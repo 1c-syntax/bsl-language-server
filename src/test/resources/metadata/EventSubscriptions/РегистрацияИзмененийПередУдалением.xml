@@ -11,7 +11,7 @@
 			</Synonym>
 			<Comment/>
 			<Source>
-				<v8:Type>cfg:CatalogObject.Судьи</v8:Type>
+				<v8:Type>cfg:CatalogObject.Справочник1</v8:Type>
 			</Source>
 			<Event>BeforeDelete</Event>
 			<Handler>CommonModule.ПервыйОбщийМодуль.РегистрацияИзмененийПередУдалением</Handler>

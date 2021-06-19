@@ -87,7 +87,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
         diagnosticStorage.addDiagnostic(
           errorToken,
-          info.getMessage(initialExpectedString + sj.toString())
+          info.getMessage(initialExpectedString + sj)
         );
       });
   }

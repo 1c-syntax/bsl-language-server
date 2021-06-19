@@ -203,7 +203,7 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if(tree instanceof BSLParserRuleContext) {
+    if (tree instanceof BSLParserRuleContext) {
       addDiagnostic((BSLParserRuleContext) tree);
     } else if (tree instanceof TerminalNode) {
       addDiagnostic((TerminalNode) tree);
