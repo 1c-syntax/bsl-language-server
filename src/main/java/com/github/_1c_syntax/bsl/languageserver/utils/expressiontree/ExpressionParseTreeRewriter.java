@@ -29,6 +29,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -298,7 +299,14 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
     var typeName = ctx.typeName();
-    var args = ctx.doCall().callParamList().callParam();
+
+    List<? extends BSLParser.CallParamContext> args;
+    var call = ctx.doCall();
+    if (call == null) {
+      args = Collections.emptyList();
+    } else {
+      args = ctx.doCall().callParamList().callParam();
+    }
     ConstructorCallNode callNode;
     if (typeName == null) {
       // function style
