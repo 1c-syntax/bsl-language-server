@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCal
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.DefaultNodeEqualityComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -39,7 +38,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -72,20 +70,16 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     var comparer = new TransitiveOperationsIgnoringComparer();
     comparer.logicalOperationsAsTransitive(true);
-    var skippedNodes = new HashSet<BinaryOperationNode>();
     binariesList
       .stream()
-      .filter(x -> checkEquality(comparer, x, skippedNodes))
+      .filter(x -> checkEquality(comparer, x))
       .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
         info.getMessage(x.getSourceCodeOperator(), getSomeText(x))));
 
     return ctx;
   }
 
-  private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node, HashSet<BinaryOperationNode> skippedNodes) {
-
-    if(skippedNodes.contains(node))
-      return false;
+  private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node) {
 
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
@@ -93,34 +87,26 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     if (isComplementary(node)) {
-      var subNodes = new ArrayList<BslExpression>();
+      // left не должен встречаться ни в одной из подветок right
+      var searchableLeft = node.getLeft();
+      BinaryOperationNode complementaryNode = node.getRight().cast();
       while (true) {
+        var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
+          comparer.areEqual(searchableLeft, complementaryNode.getRight());
 
-        if(alreadySeen(comparer, subNodes, node.getLeft())){
+        if(equal)
           return true;
+
+        if(isComplementary(complementaryNode)) {
+          complementaryNode = complementaryNode.getRight().cast();
         }
-        subNodes.add(node.getLeft());
-        var next = node.getRight();
-        if (next instanceof BinaryOperationNode && isComplementary((BinaryOperationNode) next)) {
-          node = (BinaryOperationNode) next;
-          skippedNodes.add(node);
-        } else {
-          if(alreadySeen(comparer, subNodes, node.getLeft())) {
-            return true;
-          }
-          subNodes.add(node.getLeft());
+        else {
           break;
         }
       }
-
-      return alreadySeen(comparer, subNodes, node.getRight());
     }
 
     return false;
-  }
-
-  private boolean alreadySeen(NodeEqualityComparer comparer, List<BslExpression> subNodes, BslExpression node){
-    return subNodes.stream().anyMatch(x -> comparer.areEqual(x, node));
   }
 
   private String getSomeText(BinaryOperationNode node) {
