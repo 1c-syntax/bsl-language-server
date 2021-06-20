@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1623922573977,
+  "lastUpdate": 1624213192796,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10881,6 +10881,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.08849030780328",
             "extra": "mean: 87.47393075625102 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "63ebd90eefd64f33449975f22c1905fee00171c5",
+          "message": "Merge pull request #1688 from EvgSychev/feature/SetPermissionsForNewObjects",
+          "timestamp": "2021-06-20T21:11:08+03:00",
+          "tree_id": "5e38ddeec40702ace2b902746bf3d2b1282bf9c9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/63ebd90eefd64f33449975f22c1905fee00171c5"
+        },
+        "date": 1624213189135,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 85.89015499750774,
+            "unit": "sec",
+            "range": "stddev: 2.5299544003524534",
+            "extra": "mean: 85.89015499750774 sec\nrounds: 3"
           }
         ]
       }
