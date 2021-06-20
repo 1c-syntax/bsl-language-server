@@ -1364,6 +1364,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "SetPermissionsForNewObjects": {
+            "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "$id": "#/definitions/SetPermissionsForNewObjects"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
