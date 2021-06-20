@@ -338,6 +338,9 @@
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
                 },
+                "SetPermissionsForNewObjects": {
+                    "$ref": "parameters-schema.json#/definitions/SetPermissionsForNewObjects"
+                },
                 "SeveralCompilerDirectives": {
                     "$ref": "parameters-schema.json#/definitions/SeveralCompilerDirectives"
                 },
