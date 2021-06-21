@@ -200,7 +200,7 @@ class DocumentContextTest {
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
 
-    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
+    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(6, 10, 11, 13, 18, 28, 31, 32, 35, 37, 44, 45, 49, 50, 54, 58, 60);
 
   }
 
