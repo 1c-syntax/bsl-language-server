@@ -63,7 +63,7 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
     documentContext.getSymbolTree().getModuleLevelRegions()
       .stream()
-      .filter(regionSymbol -> !regionSymbol.getChildren().isEmpty())
+      .filter(regionSymbol -> !regionSymbol.getMethods().isEmpty())
       .filter(regionSymbol -> PUBLIC.matcher(regionSymbol.getName()).find())
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }
