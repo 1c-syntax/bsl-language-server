@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1624213192796,
+  "lastUpdate": 1624460169041,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10912,6 +10912,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.5299544003524534",
             "extra": "mean: 85.89015499750774 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "int-it@yandex.ru",
+            "name": "Alexey Sosnoviy",
+            "username": "asosnoviy"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3c078b36a36dcfa7a29856a6adbd9a001b2f5b39",
+          "message": "Merge pull request #1698 from 1c-syntax/fix/CachedPublicDiagnostic\n\nfix #1689",
+          "timestamp": "2021-06-23T17:47:13+03:00",
+          "tree_id": "7a4dbf7ecad3347e989fcf758747c95043e67a71",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3c078b36a36dcfa7a29856a6adbd9a001b2f5b39"
+        },
+        "date": 1624460162052,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 84.05834889411926,
+            "unit": "sec",
+            "range": "stddev: 1.435660930893055",
+            "extra": "mean: 84.05834889411926 sec\nrounds: 3"
           }
         ]
       }
