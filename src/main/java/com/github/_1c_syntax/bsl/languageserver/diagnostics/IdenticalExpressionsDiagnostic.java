@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -35,10 +38,14 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOper
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -109,17 +116,17 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     return false;
   }
 
-  private String getSomeText(BinaryOperationNode node) {
+  private static String getSomeText(BinaryOperationNode node) {
 
-    if (node.getLeft().getRepresentingAst() != null) {
-      return node.getLeft().getRepresentingAst().getText();
-    }
+    List<Token> tokens = Optional.ofNullable(node.getLeft().getRepresentingAst())
+      .or(() -> Optional.ofNullable(node.getRight().getRepresentingAst()))
+      .or(() -> Optional.ofNullable(node.getRepresentingAst()))
+      .map(Trees::getTokens)
+      .orElseGet(Collections::emptyList);
 
-    if (node.getRight().getRepresentingAst() != null) {
-      return node.getRight().getRepresentingAst().getText();
-    }
+    // todo: очень плохое место для этого метода
+    return FormatProvider.getNewText(tokens, Ranges.create(), 0, new FormattingOptions()).trim();
 
-    return node.getRepresentingAst() == null ? "" : node.getRepresentingAst().getText();
   }
 
   private List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
