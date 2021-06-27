@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -256,11 +257,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       .filter(assignmentContext -> assignmentContext.lValue().getText().equalsIgnoreCase(varName));
   }
 
-  private static boolean isInsideExceptBlock(BSLParser.GlobalMethodCallContext ctx) {
-    return Trees.getRootParent(ctx, BSLParser.RULE_exceptCodeBlock) != null;
-  }
-
-  private static boolean isInsideExceptBlock(BSLParser.CodeBlockContext ctx) {
+  private static boolean isInsideExceptBlock(BSLParserRuleContext ctx) {
     return Trees.getRootParent(ctx, BSLParser.RULE_exceptCodeBlock) != null;
   }
 
