@@ -42,7 +42,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   @Value
   private static class OperatorInCode {
     BslOperator operator;
-    String actualSourceCode; // ИЛИ vs OR в диагностических сообщениях, как написано в коде
+    ParseTree actualSourceCode; // ИЛИ vs OR в диагностических сообщениях, как написано в коде
 
     public int getPriority() {
       return operator.getPriority();
@@ -172,7 +172,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     BslOperator operator = getOperator(ctx);
 
-    processOperation(new OperatorInCode(operator, ctx.getText()));
+    processOperation(new OperatorInCode(operator, ctx));
 
     return ctx;
   }
@@ -192,7 +192,6 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
   }
 
   private BslOperator getOperator(BSLParser.OperationContext ctx) {
-    // TODO: переделать на getRuleIndex для производительности
     if (ctx.PLUS() != null) {
       return BslOperator.ADD;
     } else if (ctx.MINUS() != null) {
@@ -260,7 +259,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
         throw new IllegalArgumentException();
     }
 
-    operatorsInFly.push(new OperatorInCode(operator, child.getText()));
+    operatorsInFly.push(new OperatorInCode(operator, child));
 
     return ctx;
   }
@@ -333,8 +332,8 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var operation = BinaryOperationNode.create(
       BslOperator.DEREFERENCE,
       target,
-      TerminalSymbolNode.identifier(ctx.IDENTIFIER()), "");
-    operation.setRepresentingAst(ctx);
+      TerminalSymbolNode.identifier(ctx.IDENTIFIER()), ctx);
+
     operands.push(operation);
     return ctx;
   }
@@ -345,8 +344,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
 
     var expressionArg = makeSubexpression(ctx.expression());
 
-    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg, "");
-    indexOperation.setRepresentingAst(ctx);
+    var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg, ctx);
     operands.push(indexOperation);
     return ctx;
   }
@@ -357,8 +355,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     var methodCall = ctx.methodCall();
     var callNode = MethodCallNode.create(methodCall.methodName().IDENTIFIER());
     addCallArguments(callNode, methodCall.doCall().callParamList().callParam());
-    var operation = BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode, "");
-    operation.setRepresentingAst(ctx);
+    var operation = BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode, ctx);
     operands.push(operation);
     return ctx;
   }

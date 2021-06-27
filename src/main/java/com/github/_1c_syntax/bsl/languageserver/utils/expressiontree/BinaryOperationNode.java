@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -32,22 +33,24 @@ public class BinaryOperationNode extends BslOperationNode {
   BslExpression left;
   BslExpression right;
 
-  private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right, String actualSourceCode) {
+  private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right, ParseTree actualSourceCode) {
     super(ExpressionNodeType.BINARY_OP, operator, actualSourceCode);
     this.left = left;
     this.right = right;
   }
 
-  /** Конструирует ветку бинарной операции
-   * @param operator оператор
-   * @param left левая часть операции
-   * @param right правая часть операции
+  /**
+   * Конструирует ветку бинарной операции
+   *
+   * @param operator         оператор
+   * @param left             левая часть операции
+   * @param right            правая часть операции
    * @param actualSourceCode строковое представление оператора,
    *                         как он указан в коде с учетом регистра и языка.
    *                         Используется в диагностических сообщениях.
    * @return созданная ветка бинарной операции
    */
-  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right, String actualSourceCode) {
+  public static BinaryOperationNode create(BslOperator operator, BslExpression left, BslExpression right, ParseTree actualSourceCode) {
     return new BinaryOperationNode(operator, left, right, actualSourceCode);
   }
 }

@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +62,20 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
       .hasRange(52, 4, 52, 32)
       .hasRange(53, 4, 53, 43)
     ;
+  }
+
+  @Test
+  void checkMessage() {
+    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n"+
+      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n"+
+      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n"+
+      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n"+
+      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
   }
 
 }

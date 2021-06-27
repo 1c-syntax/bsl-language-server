@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
  * Класс, представляющий унарное выражение
@@ -34,7 +35,7 @@ import lombok.Value;
 public class UnaryOperationNode extends BslOperationNode {
   BslExpression operand;
 
-  private UnaryOperationNode(BslOperator operator, BslExpression operand, String operationContext) {
+  private UnaryOperationNode(BslOperator operator, BslExpression operand, ParseTree operationContext) {
     super(ExpressionNodeType.UNARY_OP, operator, operationContext);
     this.operand = operand;
   }
@@ -47,7 +48,7 @@ public class UnaryOperationNode extends BslOperationNode {
    *                         Используется в диагностических сообщениях.
    * @return созданная ветка унарной операции
    */
-  public static UnaryOperationNode create(BslOperator operator, BslExpression expression, String operationContext) {
+  public static UnaryOperationNode create(BslOperator operator, BslExpression expression, ParseTree operationContext) {
     return new UnaryOperationNode(operator, expression, operationContext);
   }
 

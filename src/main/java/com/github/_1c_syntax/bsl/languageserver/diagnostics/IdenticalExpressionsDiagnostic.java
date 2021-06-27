@@ -43,9 +43,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -81,7 +79,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(x -> checkEquality(comparer, x))
       .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
-        info.getMessage(x.getSourceCodeOperator(), getSomeText(x))));
+        info.getMessage(x.getRepresentingAst().getText(), getOperandText(x))));
 
     return ctx;
   }
@@ -101,13 +99,12 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
         var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
           comparer.areEqual(searchableLeft, complementaryNode.getRight());
 
-        if(equal)
+        if (equal)
           return true;
 
-        if(isComplementary(complementaryNode)) {
+        if (isComplementary(complementaryNode)) {
           complementaryNode = complementaryNode.getRight().cast();
-        }
-        else {
+        } else {
           break;
         }
       }
@@ -116,17 +113,43 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     return false;
   }
 
-  private static String getSomeText(BinaryOperationNode node) {
+  private static String getOperandText(BinaryOperationNode node) {
 
-    List<Token> tokens = Optional.ofNullable(node.getLeft().getRepresentingAst())
-      .or(() -> Optional.ofNullable(node.getRight().getRepresentingAst()))
-      .or(() -> Optional.ofNullable(node.getRepresentingAst()))
-      .map(Trees::getTokens)
-      .orElseGet(Collections::emptyList);
+    assert node.getRepresentingAst() != null;
+
+    var pairedOperand = node.getLeft();
+    List<Token> tokens = new ArrayList<>();
+
+    fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
     return FormatProvider.getNewText(tokens, Ranges.create(), 0, new FormattingOptions()).trim();
 
+  }
+
+  private static List<Token> collectTokensForUnaryOperation(UnaryOperationNode unary, List<Token> tokens) {
+    tokens.addAll(Trees.getTokens(unary.getRepresentingAst()));
+    fillTokens(unary.getOperand(), tokens);
+    return tokens;
+  }
+
+  private static List<Token> collectTokensForBinaryOperation(BinaryOperationNode binary, List<Token> tokens) {
+
+    fillTokens(binary.getLeft(), tokens);
+    tokens.addAll(Trees.getTokens(binary.getRepresentingAst()));
+    fillTokens(binary.getRight(), tokens);
+
+    return tokens;
+  }
+
+  private static void fillTokens(BslExpression node, List<Token> collection) {
+    if (node instanceof BinaryOperationNode) {
+      collectTokensForBinaryOperation(node.cast(), collection);
+    } else if (node instanceof UnaryOperationNode) {
+      collectTokensForUnaryOperation(node.cast(), collection);
+    } else {
+      collection.addAll(Trees.getTokens(node.getRepresentingAst()));
+    }
   }
 
   private List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {

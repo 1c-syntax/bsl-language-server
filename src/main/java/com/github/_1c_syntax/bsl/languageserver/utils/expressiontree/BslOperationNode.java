@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 @Value
 @NonFinal
@@ -33,12 +34,11 @@ import lombok.experimental.NonFinal;
 public abstract class BslOperationNode extends BslExpression {
 
   BslOperator operator;
-  String sourceCodeOperator;
 
-  protected BslOperationNode(ExpressionNodeType type, BslOperator operator, String sourceCodeOperator) {
+  protected BslOperationNode(ExpressionNodeType type, BslOperator operator, ParseTree sourceCodeOperator) {
     super(type);
     this.operator = operator;
-    this.sourceCodeOperator = sourceCodeOperator;
+    this.setRepresentingAst(sourceCodeOperator);
   }
 
 }
