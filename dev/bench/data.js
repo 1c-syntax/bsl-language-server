@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1624460169041,
+  "lastUpdate": 1624790966526,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10943,6 +10943,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.435660930893055",
             "extra": "mean: 84.05834889411926 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1bbf2025a28bc3d5310ddd1e50fbed78dccc8863",
+          "message": "Merge pull request #1703 from ovcharenko-di/fix/issue1702\n\nУстранил NPE в SelectTopWithoutOrderByDiagnostic",
+          "timestamp": "2021-06-27T13:40:35+03:00",
+          "tree_id": "ff57aaa9666328de7f0b2de777fcb54cf227467a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1bbf2025a28bc3d5310ddd1e50fbed78dccc8863"
+        },
+        "date": 1624790961561,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.23372030258179,
+            "unit": "sec",
+            "range": "stddev: 1.1287126895256334",
+            "extra": "mean: 88.23372030258179 sec\nrounds: 3"
           }
         ]
       }
