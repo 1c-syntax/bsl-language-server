@@ -25,18 +25,20 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   private StatementsBlockWriter blocks;
   private ControlFlowGraph graph;
+  private Map<String, LabelVertex> jumpLabels;
 
   public ControlFlowGraph buildGraph(BSLParser.CodeBlockContext block) {
 
     blocks = new StatementsBlockWriter();
     graph = new ControlFlowGraph();
+    jumpLabels = new HashMap<>();
 
     var exitPoints = new StatementsBlockWriter.JumpInformationRecord();
     exitPoints.methodReturn = new ExitVertex();
@@ -65,14 +67,20 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-    var compound = ctx.compoundStatement();
-    if (compound != null) {
-      return super.visitStatement(ctx);
-    }
-
+  public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
     blocks.addStatement(ctx);
+    return ctx;
+  }
 
+  @Override
+  public ParseTree visitWaitStatement(BSLParser.WaitStatementContext ctx) {
+    blocks.addStatement(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+    blocks.addStatement(ctx);
     return ctx;
   }
 
@@ -218,17 +226,29 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitGotoStatement(BSLParser.GotoStatementContext ctx) {
-    // джампы потом как-нибудь поймем как обрабатывать
-    // пока пусть будет как обычный стейтмент
+
     blocks.addStatement(ctx);
+
+    var name = ctx.labelName().getText();
+    var labelVertex = createOrGetKnownLabel(name);
+
+    makeJump(labelVertex);
+
     return ctx;
   }
 
   @Override
   public ParseTree visitLabel(BSLParser.LabelContext ctx) {
-    // джампы потом как-нибудь поймем как обрабатывать
-    // пока пусть будет как обычный стейтмент
-    blocks.addStatement(ctx);
+    var name = ctx.labelName().getText();
+    var labelVertex = createOrGetKnownLabel(name);
+
+    var block = blocks.getCurrentBlock();
+    var oldEnd = block.end();
+    block.split();
+    graph.addVertex(block.end());
+    graph.addEdge(oldEnd, labelVertex);
+    graph.addEdge(labelVertex, block.end());
+
     return ctx;
   }
 
@@ -294,10 +314,11 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   private void makeJump(CfgVertex jumpTarget) {
+    var oldEnd = blocks.getCurrentBlock().end();
     blocks.getCurrentBlock().split();
     graph.addVertex(blocks.getCurrentBlock().end());
 
-    graph.addEdge(blocks.getCurrentBlock().begin(), jumpTarget);
+    graph.addEdge(oldEnd, jumpTarget);
   }
 
   private void buildLoopSubgraph(BSLParser.CodeBlockContext ctx, LoopVertex loopStart) {
@@ -350,5 +371,16 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.vertexSet().stream()
       .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
       .forEach(x -> graph.removeVertex(x));
+  }
+
+  private LabelVertex createOrGetKnownLabel(String labelName) {
+    LabelVertex labelVertex = jumpLabels.get(labelName);
+    if(labelVertex == null) {
+      labelVertex = new LabelVertex(labelName);
+      jumpLabels.put(labelName, labelVertex);
+      graph.addVertex(labelVertex);
+    }
+
+    return labelVertex;
   }
 }

@@ -78,7 +78,7 @@ class ControlFlowGraphBuilderTest {
     var branch = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4");
 
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
@@ -113,13 +113,13 @@ class ControlFlowGraphBuilderTest {
     var fork = walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
     walker.walkTo(fork);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=5;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=5");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
   }
@@ -147,7 +147,7 @@ class ControlFlowGraphBuilderTest {
     var topCondition = walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
@@ -156,7 +156,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.isOnBranch()).isTrue();
     var cond = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=2;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=2");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
@@ -164,13 +164,13 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     cond = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
     walker.walkTo(cond);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
@@ -197,7 +197,7 @@ class ControlFlowGraphBuilderTest {
     var loopStart = walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1");
     walker.walkNext(CfgEdgeType.LOOP_ITERATION);
     assertThat(walker.getCurrentNode()).isEqualTo(loopStart);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
@@ -230,7 +230,7 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext();
     var firstLoopStart = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=1");
     walker.walkNext();
     var condition = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
@@ -245,10 +245,10 @@ class ControlFlowGraphBuilderTest {
 
     var secondLoopStart = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1");
     assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).size()).isEqualTo(1);
     walker.walkNext();
-    assertThat(textOfCurrentNode(walker)).isEqualTo("Прервано=Истина;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Прервано=Истина");
 
     var secondLoopEnd = walker.getCurrentNode();
 
@@ -292,15 +292,64 @@ class ControlFlowGraphBuilderTest {
     walker.start();
     assertThat(walker.isOnBranch()).isTrue();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
 
     walker.start();
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
-    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1;");
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
+  @Test
+  void linearBlockWithLabel() {
+    var code = "А = 1;\n" +
+      "Б = 2;\n" +
+      "~Прыг:\n" +
+      "В = 4;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(LabelVertex.class);
+    assertThat(((LabelVertex) walker.getCurrentNode()).getLabelName()).isEqualTo("Прыг");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=4");
+    walker.walkNext();
+    assertThat(walker.availableRoutes()).hasSize(0);
+  }
+
+  @Test
+  void linearBlockWithJumpToLabel() {
+    var code = "А = 1;\n" +
+      "Б = 2;\n" +
+      "~Прыг:\n" +
+      "В = 4;\n" +
+      "Перейти ~Прыг;\n" +
+      "МертвыйКод = Истина;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(LabelVertex.class);
+    assertThat(((LabelVertex) walker.getCurrentNode()).getLabelName()).isEqualTo("Прыг");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(LabelVertex.class);
   }
 
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
