@@ -71,7 +71,7 @@ public class StatementsBlockWriter {
     }
 
     public void split() {
-      if(subgraphBegin instanceof BasicBlockVertex && subgraphBegin == subgraphEnd) {
+      if (subgraphBegin instanceof BasicBlockVertex && subgraphBegin == subgraphEnd) {
         subgraphBegin = statements;
       }
 
@@ -88,7 +88,7 @@ public class StatementsBlockWriter {
     }
 
     public void replaceEnd(CfgVertex vertex) {
-      if((subgraphBegin == subgraphEnd)) {
+      if ((subgraphBegin == subgraphEnd)) {
         subgraphBegin = vertex;
       }
 

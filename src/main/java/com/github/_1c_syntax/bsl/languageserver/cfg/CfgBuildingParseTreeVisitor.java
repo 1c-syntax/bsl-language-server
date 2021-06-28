@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree> {
 
@@ -130,7 +131,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     while (!currentLevelBlock.getBuildParts().isEmpty()) {
-      graph.addEdge(currentLevelBlock.getBuildParts().pop(), upperBlock.end());
+      var blockTail = currentLevelBlock.getBuildParts().pop();
+      if (graph.incomingEdgesOf(blockTail).isEmpty() && blockTail instanceof BasicBlockVertex) {
+        // это мертвый код. Он может быть пустым блоком
+        // тогда он не нужен сам по себе
+        var basicBlock = (BasicBlockVertex) blockTail;
+        if (basicBlock.statements().isEmpty())
+          continue;
+      }
+      graph.addEdge(blockTail, upperBlock.end());
     }
 
     return ctx;
@@ -232,7 +241,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var name = ctx.labelName().getText();
     var labelVertex = createOrGetKnownLabel(name);
 
-    makeJump(labelVertex);
+    var block = blocks.getCurrentBlock();
+    connectGraphTail(block, labelVertex);
+
+    // создадим новый end, в который будут помещаться все будущие строки
+    block.split();
+    graph.addVertex(block.end());
 
     return ctx;
   }
@@ -241,12 +255,17 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   public ParseTree visitLabel(BSLParser.LabelContext ctx) {
     var name = ctx.labelName().getText();
     var labelVertex = createOrGetKnownLabel(name);
-
     var block = blocks.getCurrentBlock();
-    var oldEnd = block.end();
+
+    // это может быть пустой блок/первая метка в блоке
+    // корректно соединим с заменой пустого блока на эту вершину
+    connectGraphTail(block, labelVertex);
+
+    // создадим новый end, в который будут помещаться все будущие строки
     block.split();
     graph.addVertex(block.end());
-    graph.addEdge(oldEnd, labelVertex);
+
+    // присоединим ребро от вершины-метки к вершине-продолжению
     graph.addEdge(labelVertex, block.end());
 
     return ctx;
@@ -314,11 +333,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   private void makeJump(CfgVertex jumpTarget) {
-    var oldEnd = blocks.getCurrentBlock().end();
+    connectGraphTail(blocks.getCurrentBlock(), jumpTarget);
     blocks.getCurrentBlock().split();
     graph.addVertex(blocks.getCurrentBlock().end());
-
-    graph.addEdge(oldEnd, jumpTarget);
   }
 
   private void buildLoopSubgraph(BSLParser.CodeBlockContext ctx, LoopVertex loopStart) {
@@ -368,14 +385,18 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   private void removeOrphanedNodes() {
-    graph.vertexSet().stream()
+    var orphans = graph.vertexSet().stream()
       .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
-      .forEach(x -> graph.removeVertex(x));
+      .collect(Collectors.toList());
+
+    // в одном стриме бывает ConcurrentModificationException
+    // делаем через другую коллекцию
+    orphans.forEach(x -> graph.removeVertex(x));
   }
 
   private LabelVertex createOrGetKnownLabel(String labelName) {
     LabelVertex labelVertex = jumpLabels.get(labelName);
-    if(labelVertex == null) {
+    if (labelVertex == null) {
       labelVertex = new LabelVertex(labelName);
       jumpLabels.put(labelName, labelVertex);
       graph.addVertex(labelVertex);

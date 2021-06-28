@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -235,8 +238,6 @@ class ControlFlowGraphBuilderTest {
     var condition = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
 
-    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).size()).isEqualTo(1);
-    walker.walkNext();
     assertThat(walker.getCurrentNode()).isEqualTo(firstLoopStart);
     walker.walkTo(condition);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
@@ -258,7 +259,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(graph.incomingEdgesOf(secondLoopEnd).size()).isEqualTo(2);
     var edgeOfBreak = graph.incomingEdgesOf(secondLoopEnd)
       .stream()
-      .filter(x->x.getType() == CfgEdgeType.DIRECT)
+      .filter(x -> x.getType() == CfgEdgeType.DIRECT)
       .findFirst();
 
     assertThat(edgeOfBreak.isPresent()).isTrue();
@@ -350,6 +351,40 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(LabelVertex.class);
+  }
+
+  @Test
+  void hardcoreCrazyJumpingTest() {
+
+    var code = getResourceFile("hardcoreCrazyJumpingTest");
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    // пока пусть хотя бы просто не падает.
+    assertThat(graph.vertexSet()).isNotEmpty();
+
+    var list = graph.vertexSet().stream()
+      .filter(x -> x instanceof BasicBlockVertex)
+      .filter(x -> ((BasicBlockVertex) x).statements().size() == 0)
+      .collect(Collectors.toList());
+
+    assertThat(list).isEmpty();
+    assertThat(graph.vertexSet()).hasSize(18);
+  }
+
+  @SneakyThrows
+  private String getResourceFile(String name) {
+
+    String filePath = "cfg/" + name + ".bsl";
+
+    return IOUtils.resourceToString(
+      filePath,
+      StandardCharsets.UTF_8,
+      this.getClass().getClassLoader()
+    );
+
   }
 
   private List<CfgVertex> traverseToOrderedList(ControlFlowGraph graph) {
