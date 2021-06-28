@@ -35,7 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
   scope = DiagnosticScope.BSL,
   tags = {
@@ -48,37 +48,21 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class AssignAliasFieldsInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitAlias(SDBLParser.AliasContext ctx) {
-
-    var isValidationContext = ctx.getParent() instanceof SDBLParser.SelectedFieldContext
-      && Trees.getAncestorByRuleIndex(ctx, SDBLParser.RULE_union) == null;
-
-    if (isValidationContext && (ctx.identifier() == null || ctx.AS() == null)) {
-      diagnosticStorage.addDiagnostic(ctx);
-    }
-    return super.visitAlias(ctx);
-  }
-
-  @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
 
     if (ctx.getParent().getRuleIndex() == SDBLParser.RULE_subquery) {
 
-      for (SDBLParser.SelectedFieldContext selectedField :
-
-        ctx.selectedFields().selectedField()) {
-
+      ctx.selectedFields().selectedField().forEach(selectedField ->
+      {
         var AliasContext = selectedField.alias();
 
         if (AliasContext.identifier() == null || AliasContext.AS() == null) {
-          diagnosticStorage.addDiagnostic(ctx);
+          diagnosticStorage.addDiagnostic(selectedField, info.getMessage(selectedField.getText()));
         }
 
-      }
-
-
-      return super.visitQuery(ctx);
+      });
     }
-
+    return super.visitQuery(ctx);
 
   }
+}

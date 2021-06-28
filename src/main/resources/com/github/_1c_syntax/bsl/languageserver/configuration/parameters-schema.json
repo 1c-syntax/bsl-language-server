@@ -4,6 +4,16 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AssignAliasFieldsInQuery": {
+            "description": "Assigning aliases to selected fields in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assigning aliases to selected fields in a query",
+            "$id": "#/definitions/AssignAliasFieldsInQuery"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
