@@ -46,6 +46,12 @@
 		<Metadata name="InformationRegister.РегистрСведений1.ManagerModule" id="59f8d329-f39c-4999-b470-ae9fc74511ac.2" configVersion="c4e48c2d2c58b248853b1ac895b8b73b00000000"/>
 		<Metadata name="InformationRegister.РегистрСведений1.RecordSetModule" id="59f8d329-f39c-4999-b470-ae9fc74511ac.1" configVersion="06b59af4264e034181b5d6874163ecff00000000"/>
 		<Metadata name="Language.Русский" id="25fc0fbb-4f5a-4c96-b67b-21cda9c17a1d" configVersion="f67cae024dcfb24db586fa316966658b00000000"/>
+		<Metadata name="Role.ПолныеПрава" id="463de255-ab61-47be-8ea6-d6611313830a" configVersion="955d0abbe9987c42abe96637eef3ddf300000000"/>
+		<Metadata name="Role.ПолныеПрава.Rights" id="463de255-ab61-47be-8ea6-d6611313830a.0" configVersion="c15922cf4aa827488626586651048e6100000000"/>
+		<Metadata name="Role.Роль1" id="e7c3b5c6-2ebe-4931-ab80-e875f8d33d26" configVersion="645402f79eae1d49b8185e256ed85da300000000"/>
+		<Metadata name="Role.Роль1.Rights" id="e7c3b5c6-2ebe-4931-ab80-e875f8d33d26.0" configVersion="1218d41e54b78d4f8aa72adfdb9fddfd00000000"/>
+		<Metadata name="Role.Роль2" id="09c51db6-ef04-485c-a474-f29ab9aa5ee7" configVersion="a75d72b930d7bd42a7959ade7127d46c00000000"/>
+		<Metadata name="Role.Роль2.Rights" id="09c51db6-ef04-485c-a474-f29ab9aa5ee7.0" configVersion="0ce856d8e00457458461ef5c9f5b231f00000000"/>
 		<Metadata name="WebService.WebСервис1" id="0b4a4c9c-76e9-455c-9471-249051a8301d" configVersion="3027d5337883fd4b83cebbe022e7360000000000">
 			<Metadata name="WebService.WebСервис1.Operation.Операция1" id="bc99d837-aee6-40ee-8940-3a81dddf477c"/>
 		</Metadata>
