@@ -68,7 +68,7 @@ class LatinAndCyrillicSymbolInWordDiagnosticTest extends AbstractDiagnosticTest<
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("excludeWords", "Namе, ВИмениEnglish, ComОбъект2, ПеременнаяA");
-    configuration.put("allowTrailingPartsInAnotherLanguage", "true");
+    configuration.put("allowTrailingPartsInAnotherLanguage", true);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
