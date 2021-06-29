@@ -42,6 +42,7 @@ Also, the diagnostics detects the erroneous use of characters from another langu
 
 ```json
 "LatinAndCyrillicSymbolInWord": {
-    "excludeWords": "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси"
+    "excludeWords": "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси",
+    "allowTrailingPartsInAnotherLanguage": true
 }
 ```
