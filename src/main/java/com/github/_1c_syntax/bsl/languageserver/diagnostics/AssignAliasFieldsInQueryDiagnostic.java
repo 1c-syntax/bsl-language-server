@@ -21,16 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import com.sun.source.tree.Tree;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -50,18 +46,14 @@ public class AssignAliasFieldsInQueryDiagnostic extends AbstractSDBLVisitorDiagn
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
 
-    if (ctx.getParent().getRuleIndex() == SDBLParser.RULE_subquery) {
-
-      ctx.selectedFields().selectedField().forEach(selectedField ->
-      {
-        var AliasContext = selectedField.alias();
-
-        if (AliasContext.identifier() == null || AliasContext.AS() == null) {
-          diagnosticStorage.addDiagnostic(selectedField, info.getMessage(selectedField.getText()));
-        }
-
-      });
+    if (ctx.getParent().getRuleIndex() != SDBLParser.RULE_subquery) {
+      return super.visitQuery(ctx);
     }
+
+    ctx.selectedFields().selectedField().stream()
+      .filter(sf -> sf.alias().identifier() == null || sf.alias().AS() == null)
+      .forEach(sf -> diagnosticStorage.addDiagnostic(sf, info.getMessage(sf.getText())));
+
     return super.visitQuery(ctx);
 
   }
