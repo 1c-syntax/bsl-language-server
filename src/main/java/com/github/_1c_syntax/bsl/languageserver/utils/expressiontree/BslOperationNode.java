@@ -36,9 +36,8 @@ public abstract class BslOperationNode extends BslExpression {
   BslOperator operator;
 
   protected BslOperationNode(ExpressionNodeType type, BslOperator operator, ParseTree sourceCodeOperator) {
-    super(type);
+    super(type, sourceCodeOperator);
     this.operator = operator;
-    this.setRepresentingAst(sourceCodeOperator);
   }
 
 }
