@@ -25,12 +25,25 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.FormattingOptions;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -47,49 +60,154 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
 
-    List<? extends BSLParser.OperationContext> onlyOperation = ctx.operation();
-
-    if (sufficientSize(ctx) || !isUniformExpression(onlyOperation)) {
-      return super.visitChildren(ctx);
+    if (sufficientSize(ctx)) {
+      return ctx;
     }
 
-    List<? extends BSLParser.MemberContext> onlyMembers = ctx.member();
+    var rewriter = new ExpressionParseTreeRewriter();
+    rewriter.visitExpression(ctx);
+    var tree = rewriter.getExpressionTree();
 
-    List<ParseTree> identicalExpressions = onlyMembers
+    var binariesList = flattenBinaryOperations(tree);
+    if (binariesList.isEmpty()) {
+      return ctx;
+    }
+
+    var comparer = new TransitiveOperationsIgnoringComparer();
+    comparer.logicalOperationsAsTransitive(true);
+    binariesList
       .stream()
-      .filter((ParseTree t) -> onlyMembers
-        .stream()
-        .filter((ParseTree p) -> DiagnosticHelper.equalNodes(t, p)).count() > 1)
-      .collect((Collectors.toList()));
+      .filter(x -> checkEquality(comparer, x))
+      .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(x.getRepresentingAst().getText(), getOperandText(x))));
 
-    if (!identicalExpressions.isEmpty()) {
-      diagnosticStorage.addDiagnostic(
-        ctx,
-        info.getMessage(onlyOperation.get(0).getText(), identicalExpressions.get(0).getText())
-      );
+    return ctx;
+  }
+
+  private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node) {
+
+    var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
+    if (justEqual) {
+      return true;
     }
 
-    return super.visitChildren(ctx);
+    if (isComplementary(node)) {
+      // left не должен встречаться ни в одной из подветок right
+      var searchableLeft = node.getLeft();
+      BinaryOperationNode complementaryNode = node.getRight().cast();
+      while (true) {
+        var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
+          comparer.areEqual(searchableLeft, complementaryNode.getRight());
 
+        if (equal)
+          return true;
+
+        if (isComplementary(complementaryNode)) {
+          complementaryNode = complementaryNode.getRight().cast();
+        } else {
+          break;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private static String getOperandText(BinaryOperationNode node) {
+
+    assert node.getRepresentingAst() != null;
+
+    var pairedOperand = node.getLeft();
+    List<Token> tokens = new ArrayList<>();
+
+    fillTokens(pairedOperand, tokens);
+
+    // todo: очень плохое место для этого метода
+    return FormatProvider.getNewText(tokens, Ranges.create(), 0, new FormattingOptions()).trim();
+
+  }
+
+  private static List<Token> collectTokensForUnaryOperation(UnaryOperationNode unary, List<Token> tokens) {
+    tokens.addAll(Trees.getTokens(unary.getRepresentingAst()));
+    fillTokens(unary.getOperand(), tokens);
+    return tokens;
+  }
+
+  private static List<Token> collectTokensForBinaryOperation(BinaryOperationNode binary, List<Token> tokens) {
+
+    fillTokens(binary.getLeft(), tokens);
+    tokens.addAll(Trees.getTokens(binary.getRepresentingAst()));
+    fillTokens(binary.getRight(), tokens);
+
+    return tokens;
+  }
+
+  private static void fillTokens(BslExpression node, List<Token> collection) {
+    if (node instanceof BinaryOperationNode) {
+      collectTokensForBinaryOperation(node.cast(), collection);
+    } else if (node instanceof UnaryOperationNode) {
+      collectTokensForUnaryOperation(node.cast(), collection);
+    } else {
+      collection.addAll(Trees.getTokens(node.getRepresentingAst()));
+    }
+  }
+
+  private List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
+    var list = new ArrayList<BinaryOperationNode>();
+    gatherBinaryOperations(list, tree);
+    return list;
+  }
+
+  private void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
+    switch (tree.getNodeType()) {
+      case CALL:
+        for (var expr : tree.<AbstractCallNode>cast().arguments()) {
+          gatherBinaryOperations(list, expr);
+        }
+        break;
+      case UNARY_OP:
+        gatherBinaryOperations(list, tree.<UnaryOperationNode>cast().getOperand());
+        break;
+      case TERNARY_OP:
+        var ternary = (TernaryOperatorNode) tree;
+        gatherBinaryOperations(list, ternary.getCondition());
+        gatherBinaryOperations(list, ternary.getTruePart());
+        gatherBinaryOperations(list, ternary.getFalsePart());
+        break;
+      case BINARY_OP:
+        var binary = (BinaryOperationNode) tree;
+        var operator = binary.getOperator();
+
+        // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
+        // лучше выкинем их сразу
+        if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
+          return;
+        }
+
+        // одинаковые умножения и сложения - не считаем, см. тесты
+        if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
+          list.add(binary);
+        }
+
+        gatherBinaryOperations(list, binary.getLeft());
+        gatherBinaryOperations(list, binary.getRight());
+        break;
+
+      default:
+        break; // для спокойствия сонара
+    }
+  }
+
+  private boolean isComplementary(BinaryOperationNode binary) {
+    var operator = binary.getOperator();
+    if ((operator == BslOperator.OR || operator == BslOperator.AND) && binary.getRight() instanceof BinaryOperationNode) {
+      return ((BinaryOperationNode) binary.getRight()).getOperator() == operator;
+    }
+
+    return false;
   }
 
   private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
     return ctx.children.size() < MIN_EXPRESSION_SIZE;
-  }
-
-  private static boolean isUniformExpression(List<? extends BSLParser.OperationContext> operation) {
-    List<Integer> groupOperation = groupIdenticalOperation(operation);
-
-    return groupOperation.size() == 1
-      && groupOperation.get(0) != BSLParser.MUL
-      && groupOperation.get(0) != BSLParser.PLUS;
-  }
-
-  private static List<Integer> groupIdenticalOperation(List<? extends BSLParser.OperationContext> operation) {
-    return operation
-      .stream()
-      .map((BSLParser.OperationContext o) -> o.start.getType())
-      .distinct()
-      .collect(Collectors.toList());
   }
 }
