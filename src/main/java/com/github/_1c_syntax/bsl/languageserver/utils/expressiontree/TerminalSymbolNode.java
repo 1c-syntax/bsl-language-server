@@ -22,14 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * Терминальный узел дерева выражений
  */
 public class TerminalSymbolNode extends BslExpression {
-  private TerminalSymbolNode(ExpressionNodeType type) {
-    super(type);
+  private TerminalSymbolNode(ExpressionNodeType type, ParseTree representingAst) {
+    super(type, representingAst);
   }
 
   /**
@@ -37,9 +38,7 @@ public class TerminalSymbolNode extends BslExpression {
    * @return терминал константы
    */
   public static TerminalSymbolNode literal(BSLParser.ConstValueContext constant) {
-    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
-    node.setRepresentingAst(constant);
-    return node;
+    return new TerminalSymbolNode(ExpressionNodeType.LITERAL, constant);
   }
 
   /**
@@ -47,9 +46,7 @@ public class TerminalSymbolNode extends BslExpression {
    * @return терминал константы
    */
   public static TerminalSymbolNode literal(TerminalNode constant) {
-    var node = new TerminalSymbolNode(ExpressionNodeType.LITERAL);
-    node.setRepresentingAst(constant);
-    return node;
+    return new TerminalSymbolNode(ExpressionNodeType.LITERAL, constant);
   }
 
   /**
@@ -57,8 +54,6 @@ public class TerminalSymbolNode extends BslExpression {
    * @return терминал идентификатора
    */
   public static TerminalSymbolNode identifier(TerminalNode identifier) {
-    var node = new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER);
-    node.setRepresentingAst(identifier);
-    return node;
+    return new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER, identifier);
   }
 }
