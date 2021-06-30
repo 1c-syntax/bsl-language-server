@@ -66,16 +66,28 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void checkMessage() {
-    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n"+
+    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n" +
       "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+  }
+
+  @Test
+  void testThatPopularQuantificationSkipped() {
+    var code = "А = Байты / 1024 / 1024;\n" +
+      "В = Время / 24 / 60 / 60;\n" +
+      "Б = Байты = 1024 / \"1024\"";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(0);
+
   }
 
 }

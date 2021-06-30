@@ -32,8 +32,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCal
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -88,6 +90,12 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
+      // отбрасывает популярные деления на время и байты
+      // 1024 / 1024; 60 / 60;
+      if (isPopularQuantification(node)) {
+        return false;
+      }
+
       return true;
     }
 
@@ -108,6 +116,24 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
           break;
         }
       }
+    }
+
+    return false;
+  }
+
+  private boolean isPopularQuantification(BinaryOperationNode node) {
+    if (node.getOperator() == BslOperator.DIVIDE
+      && node.getLeft().getNodeType() == ExpressionNodeType.LITERAL) {
+
+      // проверяем только левое, т.к. принципиальное равенство L и R проверено выше по стеку
+      // left заведомо равен right
+      var leftAst = (BSLParser.ConstValueContext) node.getLeft().getRepresentingAst();
+      var number = leftAst.numeric();
+      if (number != null) {
+        var text = number.getText();
+        return text.equals("60") || text.equals("1024");
+      }
+
     }
 
     return false;
