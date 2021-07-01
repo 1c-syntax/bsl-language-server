@@ -1,15 +1,15 @@
 # Space at the beginning of the comment (SpaceAtStartComment)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
- | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `standard` |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
 ## Parameters
 
- |         Name         |   Type   | Description                                                                                               |  Default value  |
- |:--------------------:|:--------:|:--------------------------------------------------------------------------------------------------------- |:---------------:|
- | `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` | 
 
+|         Name         |   Type   |                                                Description                                                | Значение<br>по умолчанию |
+|:--------------------:|:--------:|:---------------------------------------------------------------------------------------------------------:|:------------------------------:|
+| `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` |        `//@,//(c),//©`         |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
