@@ -1,15 +1,15 @@
 # Using hardcode file paths in code (UsingHardcodePath)
 
- |  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
- |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
- | `Error` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
 ## Parameters
 
- |           Name            |   Type   | Description                                      |                                       Default value                                        |
- |:-------------------------:|:--------:|:------------------------------------------------ |:------------------------------------------------------------------------------------------:|
- | `searchWordsStdPathsUnix` | `String` | `Search keywords for standard Unix root folders` | `bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var` | 
 
+|           Name            |   Type   |                   Description                    |                               Значение<br>по умолчанию                               |
+|:-------------------------:|:--------:|:------------------------------------------------:|:------------------------------------------------------------------------------------------:|
+| `searchWordsStdPathsUnix` | `String` | `Search keywords for standard Unix root folders` | `bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
