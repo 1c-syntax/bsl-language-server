@@ -1372,6 +1372,14 @@
                 "object"
             ],
             "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "properties": {
+                "namesFullAccessRole": {
+                    "description": "Name of the role with full rights",
+                    "default": "FullAccess,\u041f\u043e\u043b\u043d\u044b\u0435\u041f\u0440\u0430\u0432\u0430",
+                    "type": "string",
+                    "title": "Name of the role with full rights"
+                }
+            },
             "$id": "#/definitions/SetPermissionsForNewObjects"
         },
         "SeveralCompilerDirectives": {
