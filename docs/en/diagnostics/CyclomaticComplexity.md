@@ -1,16 +1,16 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
- |     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |      Tags       |
- |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
- | `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `25`           | `brainoverload` |
+|     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |      Теги       |
+|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
+| `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `25`           | `brainoverload` |
 
 ## Parameters
 
- |         Name          |   Type    | Description            | Default value |
- |:---------------------:|:---------:|:---------------------- |:-------------:|
- | `complexityThreshold` | `Integer` | `Complexity threshold` |     `20`      |
- |   `checkModuleBody`   | `Boolean` | `Check module body`    |    `true`     | 
 
+|         Name          |   Type    |      Description       | Значение<br>по умолчанию |
+|:---------------------:|:---------:|:----------------------:|:------------------------------:|
+| `complexityThreshold` | `Integer` | `Complexity threshold` |              `20`              |
+|   `checkModuleBody`   | `Boolean` |  `Check module body`   |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
