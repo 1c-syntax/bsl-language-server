@@ -846,7 +846,7 @@
 <th align="center">Важность</th>
 <th align="center">Включена<br>по умолчанию</th>
 <th align="center">Время на<br>исправление (мин)</th>
-<th align="center">Тэги</th>
+<th align="center">Теги</th>
 </tr>
 </thead>
 <tbody>
@@ -857,6 +857,25 @@
 <td align="center"><code>Да</code></td>
 <td align="center"><code>1</code></td>
 <td align="center"><code>standard</code><br><code>badpractice</code><br><code>design</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="Параметры">Параметры<a class="headerlink" href="#Параметры" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="center">Описание</th>
+<th align="center">Значение<br>по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>namesFullAccessRole</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="center"><code>Наименование роли с полными правами</code></td>
+<td align="center"><code>FullAccess,ПолныеПрава</code></td>
 </tr>
 </tbody>
 </table>
@@ -877,7 +896,9 @@
 <span class="c c-Singleline">// BSLLS:SetPermissionsForNewObjects-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;SetPermissionsForNewObjects&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;SetPermissionsForNewObjects&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;namesFullAccessRole&quot;</span><span class="p">:</span> <span class="s2">&quot;FullAccess,ПолныеПрава&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
                 
               
