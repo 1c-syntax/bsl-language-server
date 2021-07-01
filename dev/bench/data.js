@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1625167436806,
+  "lastUpdate": 1625167968271,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11129,6 +11129,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.686660953689721",
             "extra": "mean: 89.10125207901001 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b4c1127cc89a0fcf3c1013f6b74c60a5874c37ac",
+          "message": "Merge pull request #1707 from Chipazawra/AssignAliasFieldsInQuery",
+          "timestamp": "2021-07-01T22:19:21+03:00",
+          "tree_id": "072329797985a52bd428652f737a37ff9705bde8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b4c1127cc89a0fcf3c1013f6b74c60a5874c37ac"
+        },
+        "date": 1625167964346,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 85.91448585192363,
+            "unit": "sec",
+            "range": "stddev: 0.8878906677547197",
+            "extra": "mean: 85.91448585192363 sec\nrounds: 3"
           }
         ]
       }
