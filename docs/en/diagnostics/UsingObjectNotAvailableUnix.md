@@ -1,8 +1,8 @@
 # Using unavailable in Unix objects (UsingObjectNotAvailableUnix)
 
- |  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |              Tags              |
- |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------:|
- | `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           | `standard`<br>`lockinos` | 
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |              Теги              |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           | `standard`<br>`lockinos` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
