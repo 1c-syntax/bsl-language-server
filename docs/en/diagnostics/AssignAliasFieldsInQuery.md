@@ -2,7 +2,7 @@
 
 |     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `10`           |       `standard`<br>`sql`<br>`badpractice`       |
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |       `standard`<br>`sql`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -32,7 +32,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 10,
+  minutesToFix = 1,
   scope = DiagnosticScope.BSL,
   tags = {
     DiagnosticTag.STANDARD,
