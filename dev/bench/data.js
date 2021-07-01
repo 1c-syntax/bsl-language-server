@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1625167968271,
+  "lastUpdate": 1625168496738,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11160,6 +11160,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8878906677547197",
             "extra": "mean: 85.91448585192363 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8efea021859338018dc120859aa06f8039223082",
+          "message": "Merge pull request #1699 from 1c-syntax/feature/coverageLocDeprecated\n\ncovlocData Deprecated",
+          "timestamp": "2021-07-01T22:23:44+03:00",
+          "tree_id": "4e3bc0097ba29bd0f0ed21d90c50f60de8d7c2a4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8efea021859338018dc120859aa06f8039223082"
+        },
+        "date": 1625168494378,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.11737545331319,
+            "unit": "sec",
+            "range": "stddev: 3.0095222940685122",
+            "extra": "mean: 88.11737545331319 sec\nrounds: 3"
           }
         ]
       }
