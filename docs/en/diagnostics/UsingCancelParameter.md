@@ -1,8 +1,8 @@
 # Using parameter "Cancel" (UsingCancelParameter)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
- | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `standard`<br>`badpractice` | 
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Теги                |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+| `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `standard`<br>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
