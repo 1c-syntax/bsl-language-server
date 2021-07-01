@@ -1,15 +1,15 @@
 # Using 'SELECT TOP' without 'ORDER BY' (SelectTopWithoutOrderBy)
 
- |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                      Tags                       |
- |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
- | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`sql`<br>`suspicious` |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                      Теги                       |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`sql`<br>`suspicious` |
 
 ## Parameters
 
- |        Name        |   Type    | Description                               | Default value |
- |:------------------:|:---------:|:----------------------------------------- |:-------------:|
- | `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |    `true`     | 
 
+|        Name        |   Type    |                Description                | Значение<br>по умолчанию |
+|:------------------:|:---------:|:-----------------------------------------:|:------------------------------:|
+| `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
