@@ -334,8 +334,6 @@ public class DocumentContext {
     metricsTemp.setNclocData(nclocData);
     metricsTemp.setNcloc(nclocData.length);
 
-    metricsTemp.setCovlocData(computeCovlocData());
-
     int lines;
     final List<Token> tokensUnboxed = getTokens();
     if (tokensUnboxed.isEmpty()) {
@@ -359,22 +357,6 @@ public class DocumentContext {
     metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
 
     return metricsTemp;
-  }
-
-  private int[] computeCovlocData() {
-
-    return Trees.getDescendants(getAst()).stream()
-      .filter(Predicate.not(TerminalNodeImpl.class::isInstance))
-      .filter(DocumentContext::mustCovered)
-      .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
-      .distinct().toArray();
-
-  }
-
-  private static boolean mustCovered(Tree node) {
-    return node instanceof BSLParser.StatementContext
-      || node instanceof BSLParser.GlobalMethodCallContext
-      || node instanceof BSLParser.Var_nameContext;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
