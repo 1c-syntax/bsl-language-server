@@ -885,6 +885,8 @@
 
 <p>При разработке не стоит использовать идентификаторы, состоящие из символов разных языков, т.к. это усложняет их дальнейшее использование, заставляя переключать раскладку.<br />
 Диагностика обнаруживает и ошибочное использование символов из другого языка, когда он был использован не преднамеренно, например использование символов с одинаковым начертанием <code>o</code>, <code>c</code>, <code>B</code>, <code>p</code> и т.д.</p>
+<p>Для снижения "шума" на именах состоящих из нескольких слов, начинающихся либо заканчивающихся на слово на другом языке, в диагностику добавлен параметр, включенный по умолчанию.<br />
+Если параметр включен, то <strong>НЕ</strong> считаются ошибочными имена вида <code>ZebraДрайвер</code>, <code>КодHTTP</code>, <code>SMSШлюз</code> и подобные им. </p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -904,7 +906,8 @@
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;LatinAndCyrillicSymbolInWord&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;excludeWords&quot;</span><span class="p">:</span> <span class="s2">&quot;ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси&quot;</span>
+    <span class="nt">&quot;excludeWords&quot;</span><span class="p">:</span> <span class="s2">&quot;ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;allowTrailingPartsInAnotherLanguage&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>
 </code></pre></div>
                 
