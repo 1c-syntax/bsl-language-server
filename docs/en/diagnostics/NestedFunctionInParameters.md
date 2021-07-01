@@ -1,8 +1,8 @@
 # Initialization of method and constructor parameters by calling nested methods (NestedFunctionInParameters)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                            Tags                            |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
- | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `2`           | `standard`<br>`brainoverload`<br>`badpractice` | 
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                            Теги                            |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
+| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `2`           | `standard`<br>`brainoverload`<br>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
