@@ -23,6 +23,9 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AssignAliasFieldsInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
