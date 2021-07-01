@@ -1,8 +1,8 @@
 # Excessive AutoTest Check (ExcessiveAutoTestCheck)
 
- |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags               |
- |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
- | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `standard`<br>`deprecated` | 
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Теги               |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
+| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `standard`<br>`deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
