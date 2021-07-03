@@ -1,6 +1,6 @@
 # Unary Plus sign in string concatenation (UnaryPlusInConcatenation)
 
-|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |                 Теги                  |
+|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |           `1`           | `suspicious`<br>`brainoverload` |
 
