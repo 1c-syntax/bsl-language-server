@@ -1,6 +1,6 @@
 # Nested constructors with parameters in structure declaration (NestedConstructorsInStructureDeclaration)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                  Теги                  |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                  Tags                  |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |          `10`           | `badpractice`<br>`brainoverload` |
 
