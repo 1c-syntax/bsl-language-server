@@ -1,6 +1,6 @@
 # Magic numbers (MagicNumber)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Теги      |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `1`           | `badpractice` |
 
