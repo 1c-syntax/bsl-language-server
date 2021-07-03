@@ -1,6 +1,6 @@
 # Insert a collection into itself (SelfInsertion)
 
-|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                            Теги                            |
+|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                            Tags                            |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `standard`<br>`unpredictable`<br>`performance` |
 
