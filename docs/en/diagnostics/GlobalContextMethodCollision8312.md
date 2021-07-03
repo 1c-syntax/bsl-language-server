@@ -1,6 +1,6 @@
 # Global context method names collision (GlobalContextMethodCollision8312)
 
-|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |               Теги               |
+|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |               Tags               |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |          `10`           | `error`<br>`unpredictable` |
 
