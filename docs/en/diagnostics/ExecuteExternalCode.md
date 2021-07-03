@@ -1,6 +1,6 @@
 # Executing of external code on the server (ExecuteExternalCode)
 
-|      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |            Теги             |
+|      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |            Tags             |
 |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------:|
 | `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           | `error`<br>`standard` |
 
