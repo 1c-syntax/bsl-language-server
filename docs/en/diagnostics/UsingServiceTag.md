@@ -1,6 +1,6 @@
 # Using service tags (UsingServiceTag)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Теги      |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `0`           | `badpractice` |
 
