@@ -1,6 +1,6 @@
 # Order of Parameters in method (OrderOfParams)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |             Теги             |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |             Tags             |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `30`           | `standard`<br>`design` |
 
