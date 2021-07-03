@@ -1,6 +1,6 @@
 # Virtual table call without parameters (VirtualTableCallWithoutParameters)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                       Теги                       |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |           `5`           | `sql`<br>`standard`<br>`performance` |
 
