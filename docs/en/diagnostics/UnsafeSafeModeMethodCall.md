@@ -1,6 +1,6 @@
 # Unsafe SafeMode method call (UnsafeSafeModeMethodCall)
 
-|  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |             Теги              |
+|  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |             Tags              |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
 | `Error` | `BSL` | `Blocker` |             `Yes`             |           `1`           | `deprecated`<br>`error` |
 
