@@ -1,6 +1,6 @@
 # Using hardcode file paths in code (UsingHardcodePath)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
