@@ -1,6 +1,6 @@
 # Using hardcode ip addresses in code (UsingHardcodeNetworkAddress)
 
-|      Type       |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|      Type       |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:---------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Vulnerability` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
