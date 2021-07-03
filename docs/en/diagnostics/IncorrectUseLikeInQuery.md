@@ -1,6 +1,6 @@
 # Incorrect use of 'LIKE' (IncorrectUseLikeInQuery)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                        Теги                        |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                        Tags                        |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |          `10`           | `standard`<br>`sql`<br>`unpredictable` |
 
