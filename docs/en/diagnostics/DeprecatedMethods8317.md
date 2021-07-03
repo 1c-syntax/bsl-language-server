@@ -1,6 +1,6 @@
 # Using of deprecated platform 8.3.17 global methods (DeprecatedMethods8317)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Теги     |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `deprecated` |
 
