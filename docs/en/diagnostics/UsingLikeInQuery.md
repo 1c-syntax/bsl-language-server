@@ -1,6 +1,6 @@
 # Using 'LIKE' in query (UsingLikeInQuery)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |              Теги              |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |              Tags              |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------:|
 | `Error` | `BSL` | `Critical` |             `No`              |          `10`           | `sql`<br>`unpredictable` |
 
