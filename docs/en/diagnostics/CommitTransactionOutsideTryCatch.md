@@ -1,6 +1,6 @@
 # Violating transaction rules for the 'CommitTransaction' method (CommitTransactionOutsideTryCatch)
 
-|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `standard` |
 
