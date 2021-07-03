@@ -1,6 +1,6 @@
 # Missing spaces to the left or right of operators `+ - * / = % < > <> <= >=`, keywords, and also to the right of `,` and `;` (MissingSpace)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Теги      |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `badpractice` |
 
