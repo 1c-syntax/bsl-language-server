@@ -1,6 +1,6 @@
 # FormDataToValue method call (FormDataToValue)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Теги      |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags      |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `badpractice` |
 
