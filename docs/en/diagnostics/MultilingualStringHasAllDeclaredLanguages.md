@@ -1,6 +1,6 @@
 # There is a localized text for all languages declared in the configuration (MultilingualStringHasAllDeclaredLanguages)
 
-|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Теги             |
+|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Tags             |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
 | `Error` | `BSL` | `Minor`  |             `Yes`             |           `2`           | `error`<br>`localize` |
 
