@@ -1,6 +1,6 @@
 # Duplicated conditions in If...Then...ElseIf... statements (IfElseDuplicatedCondition)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Теги     |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `10`           | `suspicious` |
 
