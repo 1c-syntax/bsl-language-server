@@ -1,6 +1,6 @@
 # Ternary operator usage (TernaryOperatorUsage)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |      Теги       |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |      Tags       |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
 | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `No`              |           `3`           | `brainoverload` |
 
