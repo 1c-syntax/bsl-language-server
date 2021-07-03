@@ -1,6 +1,6 @@
 # "goto" statement should not be used (UsingGoto)
 
-|     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Теги                |
+|     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Tags                |
 |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `standard`<br>`badpractice` |
 
