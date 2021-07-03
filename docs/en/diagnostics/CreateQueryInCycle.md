@@ -1,6 +1,6 @@
 # Execution query on cycle (CreateQueryInCycle)
 
-|  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |     Теги      |
+|  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |     Tags      |
 |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `20`           | `performance` |
 
