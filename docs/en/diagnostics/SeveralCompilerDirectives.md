@@ -1,6 +1,6 @@
 # Erroneous indication of several compilation directives (SeveralCompilerDirectives)
 
-|  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Теги               |
+|  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Tags               |
 |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `unpredictable`<br>`error` |
 
