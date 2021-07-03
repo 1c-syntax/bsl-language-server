@@ -1,6 +1,6 @@
 # There is no check for the attribute DataExchange.Load in the object's event handler (DataExchangeLoading)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                            Теги                            |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                            Tags                            |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |           `5`           | `standard`<br>`badpractice`<br>`unpredictable` |
 
