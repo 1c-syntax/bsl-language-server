@@ -1,6 +1,6 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
-|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `15`           | `standard` |
 
