@@ -1,6 +1,6 @@
 # Executing of external code in a common module on the server (ExecuteExternalCodeInCommonModule)
 
-|        Type        | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |               Теги                |
+|        Type        | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |               Tags                |
 |:------------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Security Hotspot` | `BSL` | `Critical` |             `Yes`             |          `15`           | `badpractice`<br>`standard` |
 
