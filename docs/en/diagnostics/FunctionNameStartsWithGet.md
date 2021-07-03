@@ -1,6 +1,6 @@
 # Function name shouldn't start with "Получить" (FunctionNameStartsWithGet)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Теги    |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `No`              |           `3`           | `standard` |
 
