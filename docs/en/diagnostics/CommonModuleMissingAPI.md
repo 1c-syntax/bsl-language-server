@@ -1,6 +1,6 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                 Теги                  |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
 | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           | `brainoverload`<br>`suspicious` |
 
