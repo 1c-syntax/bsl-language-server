@@ -1,6 +1,6 @@
 # Commas without a parameter at the end of a method call (ExtraCommas)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Теги                |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `1`           | `standard`<br>`badpractice` |
 
