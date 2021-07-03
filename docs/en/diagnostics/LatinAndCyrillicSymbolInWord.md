@@ -1,16 +1,16 @@
 # Mixing Latin and Cyrillic characters in one identifier (LatinAndCyrillicSymbolInWord)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                 Теги                  |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `5`           | `brainoverload`<br>`suspicious` |
 
 ## Parameters
 
 
-|                 Name                  |   Type   |                            Description                             |                                                                     Значение<br>по умолчанию                                                                     |
-|:-------------------------------------:|:--------:|:------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|            `excludeWords`             | `String` | `A list of exclusion words, specified as a comma-separated string` | `ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси` |
-| `allowTrailingPartsInAnotherLanguage` | `Булево` | `Разрешить начинать или заканчивать имя со слова на другом языке`  |                                                                                 `true`                                                                                 |
+|                 Name                  |   Type    |                            Description                             |                                                                     Значение<br>по умолчанию                                                                     |
+|:-------------------------------------:|:---------:|:------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|            `excludeWords`             | `String`  | `A list of exclusion words, specified as a comma-separated string` | `ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси` |
+| `allowTrailingPartsInAnotherLanguage` | `Boolean` | `Разрешить начинать или заканчивать имя со слова на другом языке`  |                                                                                 `true`                                                                                 |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
