@@ -1,6 +1,6 @@
 # Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
 
-|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Теги                |
+|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |          `15`           | `standard`<br>`badpractice` |
 
