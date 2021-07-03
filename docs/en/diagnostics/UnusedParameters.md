@@ -1,6 +1,6 @@
 # Unused parameter (UnusedParameters)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Теги            |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Tags            |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------:|
 | `Code smell` | `OS`  | `Major`  |             `Yes`             |           `5`           | `design`<br>`unused` |
 
