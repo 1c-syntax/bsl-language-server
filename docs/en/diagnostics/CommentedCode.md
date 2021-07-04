@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|    Name     |  Type   | Description | Значение<br>по умолчанию |
-|:-----------:|:-------:|:-----------:|:------------------------------:|
-| `threshold` | `Float` | `Threshold` |             `0.9`              |
+|    Name     |  Type   | Description | Default value |
+|:-----------:|:-------:|:-----------:|:-------------:|
+| `threshold` | `Float` | `Threshold` |     `0.9`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
