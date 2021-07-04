@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|                  Name                   |   Type    |                   Description                   | Значение<br>по умолчанию |
-|:---------------------------------------:|:---------:|:-----------------------------------------------:|:------------------------------:|
-| `analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` |             `true`             |
+|                  Name                   |   Type    |                   Description                   | Default value |
+|:---------------------------------------:|:---------:|:-----------------------------------------------:|:-------------:|
+| `analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
