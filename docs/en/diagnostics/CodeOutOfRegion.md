@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|           Name           |   Type    |         Description         | Значение<br>по умолчанию |
-|:------------------------:|:---------:|:---------------------------:|:------------------------------:|
-| `checkUnknownModuleType` | `Boolean` | `Check unknown module type` |            `false`             |
+|           Name           |   Type    |         Description         | Default value |
+|:------------------------:|:---------:|:---------------------------:|:-------------:|
+| `checkUnknownModuleType` | `Boolean` | `Check unknown module type` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
