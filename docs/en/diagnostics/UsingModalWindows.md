@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|        Name         |   Type    |              Description              | Значение<br>по умолчанию |
-|:-------------------:|:---------:|:-------------------------------------:|:------------------------------:|
-| `forceModalityMode` | `Boolean` | `Ignore configurations modality mode` |            `false`             |
+|        Name         |   Type    |              Description              | Default value |
+|:-------------------:|:---------:|:-------------------------------------:|:-------------:|
+| `forceModalityMode` | `Boolean` | `Ignore configurations modality mode` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
