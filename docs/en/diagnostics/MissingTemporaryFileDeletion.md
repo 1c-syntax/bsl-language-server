@@ -7,7 +7,7 @@
 ## Parameters
 
 
-|           Name           |   Type   |                    Description                     |                               Значение<br>по умолчанию                                |
+|           Name           |   Type   |                    Description                     |                                        Default value                                        |
 |:------------------------:|:--------:|:--------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
 | `searchDeleteFileMethod` | `String` | `Keywords to search for delete/move files methods` | `УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
