@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Общее количество: **143**
+Total: **143**
 
 * Security Hotspot: **4**
-* Уязвимость: **4**
+* Vulnerability: **4**
 * Error: **44**
-* Дефект кода: **91**
+* Code smell: **91**
 
 
 <table spaces-before="0">
