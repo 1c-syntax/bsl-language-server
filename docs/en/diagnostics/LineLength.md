@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|      Name       |   Type    |             Description              | Значение<br>по умолчанию |
-|:---------------:|:---------:|:------------------------------------:|:------------------------------:|
-| `maxLineLength` | `Integer` | `Max length of string in characters` |             `120`              |
+|      Name       |   Type    |             Description              | Default value |
+|:---------------:|:---------:|:------------------------------------:|:-------------:|
+| `maxLineLength` | `Integer` | `Max length of string in characters` |     `120`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
