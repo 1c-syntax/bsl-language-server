@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|       Name       |   Type    |                              Description                              | Значение<br>по умолчанию |
-|:----------------:|:---------:|:---------------------------------------------------------------------:|:------------------------------:|
-| `checkAllRegion` | `Boolean` | `Check methods without regard to the areas in which they are located` |            `false`             |
+|       Name       |   Type    |                              Description                              | Default value |
+|:----------------:|:---------:|:---------------------------------------------------------------------:|:-------------:|
+| `checkAllRegion` | `Boolean` | `Check methods without regard to the areas in which they are located` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 All public methods located inside regions must have a description.
