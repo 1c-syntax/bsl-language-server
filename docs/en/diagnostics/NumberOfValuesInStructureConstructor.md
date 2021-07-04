@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|       Name       |   Type    |                            Description                            | Значение<br>по умолчанию |
-|:----------------:|:---------:|:-----------------------------------------------------------------:|:------------------------------:|
-| `maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` |              `3`               |
+|       Name       |   Type    |                            Description                            | Default value |
+|:----------------:|:---------:|:-----------------------------------------------------------------:|:-------------:|
+| `maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
