@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|           Name           |   Type    |             Description             | Значение<br>по умолчанию |
-|:------------------------:|:---------:|:-----------------------------------:|:------------------------------:|
-| `maxOptionalParamsCount` | `Integer` | `Max number of optional parameters` |              `3`               |
+|           Name           |   Type    |             Description             | Default value |
+|:------------------------:|:---------:|:-----------------------------------:|:-------------:|
+| `maxOptionalParamsCount` | `Integer` | `Max number of optional parameters` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
