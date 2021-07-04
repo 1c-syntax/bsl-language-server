@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|        Name         |   Type    |                    Description                     | Значение<br>по умолчанию |
-|:-------------------:|:---------:|:--------------------------------------------------:|:------------------------------:|
-|   `minWordLength`   | `Integer` |         `Minimum length for checked words`         |              `3`               |
-| `userWordsToIgnore` | `String`  | `Dictionary for excluding words (comma separated)` |              ``              |
+|        Name         |   Type    |                    Description                     | Default value |
+|:-------------------:|:---------:|:--------------------------------------------------:|:-------------:|
+|   `minWordLength`   | `Integer` |         `Minimum length for checked words`         |      `3`      |
+| `userWordsToIgnore` | `String`  | `Dictionary for excluding words (comma separated)` |     ``      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
