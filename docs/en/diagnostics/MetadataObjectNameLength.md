@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|             Name              |   Type    |                         Description                          | Значение<br>по умолчанию |
-|:-----------------------------:|:---------:|:------------------------------------------------------------:|:------------------------------:|
-| `maxMetadataObjectNameLength` | `Integer` | `Permissible length of the name of the configuration object` |              `80`              |
+|             Name              |   Type    |                         Description                          | Default value |
+|:-----------------------------:|:---------:|:------------------------------------------------------------:|:-------------:|
+| `maxMetadataObjectNameLength` | `Integer` | `Permissible length of the name of the configuration object` |     `80`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
