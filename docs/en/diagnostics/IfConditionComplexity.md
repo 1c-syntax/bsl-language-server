@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|            Name            |   Type    |                             Description                             | Значение<br>по умолчанию |
-|:--------------------------:|:---------:|:-------------------------------------------------------------------:|:------------------------------:|
-| `maxIfConditionComplexity` | `Integer` | `Acceptable number of logical expressions in operator If condition` |              `3`               |
+|            Name            |   Type    |                             Description                             | Default value |
+|:--------------------------:|:---------:|:-------------------------------------------------------------------:|:-------------:|
+| `maxIfConditionComplexity` | `Integer` | `Acceptable number of logical expressions in operator If condition` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
