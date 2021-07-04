@@ -7,7 +7,7 @@
 ## Parameters
 
 
-|            Name            |   Type    |                                             Description                                              |        Значение<br>по умолчанию        |
+|            Name            |   Type    |                                             Description                                              |                Default value                 |
 |:--------------------------:|:---------:|:----------------------------------------------------------------------------------------------------:|:--------------------------------------------:|
 |     `listForCheckLeft`     | `String`  |           `List to check for the space to the left of (separated by space). Example: ) =`            |                     ``                     |
 |    `listForCheckRight`     | `String`  |           `List to check for the space to the right of (separated by space). Example: ( =`           |                    `, ;`                     |
