@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|      Name       |   Type    |               Description                | Значение<br>по умолчанию |
-|:---------------:|:---------:|:----------------------------------------:|:------------------------------:|
-| `commentAsCode` | `Boolean` | `Treat comment in Raise section as code` |            `false`             |
+|      Name       |   Type    |               Description                | Default value |
+|:---------------:|:---------:|:----------------------------------------:|:-------------:|
+| `commentAsCode` | `Boolean` | `Treat comment in Raise section as code` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
