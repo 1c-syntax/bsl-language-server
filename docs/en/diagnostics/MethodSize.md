@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|      Name       |   Type    |       Description        | Значение<br>по умолчанию |
-|:---------------:|:---------:|:------------------------:|:------------------------------:|
-| `maxMethodSize` | `Integer` | `Max method line count.` |             `200`              |
+|      Name       |   Type    |       Description        | Default value |
+|:---------------:|:---------:|:------------------------:|:-------------:|
+| `maxMethodSize` | `Integer` | `Max method line count.` |     `200`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
