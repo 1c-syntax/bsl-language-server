@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|     Name      |   Type   |                                    Description                                     | Значение<br>по умолчанию |
-|:-------------:|:--------:|:----------------------------------------------------------------------------------:|:------------------------------:|
-| `searchWords` | `String` | `Search keywords for confidential information in variables, structures, mappings.` |       `Пароль|Password`        |
+|     Name      |   Type   |                                    Description                                     |   Default value   |
+|:-------------:|:--------:|:----------------------------------------------------------------------------------:|:-----------------:|
+| `searchWords` | `String` | `Search keywords for confidential information in variables, structures, mappings.` | `Пароль|Password` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
