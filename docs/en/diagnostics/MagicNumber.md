@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|        Name         |   Type    |                     Description                      | Значение<br>по умолчанию |
-|:-------------------:|:---------:|:----------------------------------------------------:|:------------------------------:|
-| `authorizedNumbers` | `String`  | `allowed numbers, coma separated. Example:-1,0,1,60` |            `-1,0,1`            |
-| `allowMagicIndexes` | `Boolean` |                `allow magic indexes`                 |             `true`             |
+|        Name         |   Type    |                     Description                      | Default value |
+|:-------------------:|:---------:|:----------------------------------------------------:|:-------------:|
+| `authorizedNumbers` | `String`  | `allowed numbers, coma separated. Example:-1,0,1,60` |   `-1,0,1`    |
+| `allowMagicIndexes` | `Boolean` |                `allow magic indexes`                 |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
