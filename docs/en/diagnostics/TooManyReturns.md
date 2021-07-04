@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|       Name        |   Type    |                  Description                   | Значение<br>по умолчанию |
-|:-----------------:|:---------:|:----------------------------------------------:|:------------------------------:|
-| `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` |              `3`               |
+|       Name        |   Type    |                  Description                   | Default value |
+|:-----------------:|:---------:|:----------------------------------------------:|:-------------:|
+| `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
