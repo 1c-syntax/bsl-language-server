@@ -7,7 +7,7 @@
 ## Parameters
 
 
-|           Name            |   Type   |                   Description                    |                               Значение<br>по умолчанию                               |
+|           Name            |   Type   |                   Description                    |                                       Default value                                        |
 |:-------------------------:|:--------:|:------------------------------------------------:|:------------------------------------------------------------------------------------------:|
 | `searchWordsStdPathsUnix` | `String` | `Search keywords for standard Unix root folders` | `bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
