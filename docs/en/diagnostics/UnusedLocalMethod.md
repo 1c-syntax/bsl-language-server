@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|            Name            |   Type   |             Description             | Значение<br>по умолчанию |
-|:--------------------------:|:--------:|:-----------------------------------:|:------------------------------:|
-| `attachableMethodPrefixes` | `String` | `Method prefixes (comma separated)` |  `подключаемый_,attachable_`   |
+|            Name            |   Type   |             Description             |        Default value        |
+|:--------------------------:|:--------:|:-----------------------------------:|:---------------------------:|
+| `attachableMethodPrefixes` | `String` | `Method prefixes (comma separated)` | `подключаемый_,attachable_` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
