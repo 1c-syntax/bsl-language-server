@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|       Name        |   Type    |    Description     | Значение<br>по умолчанию |
-|:-----------------:|:---------:|:------------------:|:------------------------------:|
-| `maxAllowedLevel` | `Integer` | `Max nested level` |              `4`               |
+|       Name        |   Type    |    Description     | Default value |
+|:-----------------:|:---------:|:------------------:|:-------------:|
+| `maxAllowedLevel` | `Integer` | `Max nested level` |      `4`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
