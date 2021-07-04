@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|         Name          |   Type    |      Description       | Значение<br>по умолчанию |
-|:---------------------:|:---------:|:----------------------:|:------------------------------:|
-| `complexityThreshold` | `Integer` | `Complexity threshold` |              `20`              |
-|   `checkModuleBody`   | `Boolean` |  `Check module body`   |             `true`             |
+|         Name          |   Type    |      Description       | Default value |
+|:---------------------:|:---------:|:----------------------:|:-------------:|
+| `complexityThreshold` | `Integer` | `Complexity threshold` |     `20`      |
+|   `checkModuleBody`   | `Boolean` |  `Check module body`   |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
