@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|        Name         |   Type   |     Description      | Значение<br>по умолчанию |
-|:-------------------:|:--------:|:--------------------:|:------------------------------:|
-| `declaredLanguages` | `String` | `Declared languages` |              `ru`              |
+|        Name         |   Type   |     Description      | Default value |
+|:-------------------:|:--------:|:--------------------:|:-------------:|
+| `declaredLanguages` | `String` | `Declared languages` |     `ru`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
