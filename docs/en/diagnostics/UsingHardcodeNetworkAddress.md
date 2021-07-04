@@ -7,7 +7,7 @@
 ## Parameters
 
 
-|          Name          |   Type   |            Description            |                         Значение<br>по умолчанию                          |
+|          Name          |   Type   |            Description            |                                  Default value                                  |
 |:----------------------:|:--------:|:---------------------------------:|:-------------------------------------------------------------------------------:|
 | `searchWordsExclusion` | `String` | `Keywords to exclude from search` | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
