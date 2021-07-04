@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|           Name           |   Type    |         Description          | Значение<br>по умолчанию |
-|:------------------------:|:---------:|:----------------------------:|:------------------------------:|
-|     `skipAttachable`     | `Boolean` | `Ignore attachable methods`  |             `true`             |
-| `caseSensitiveForString` | `Boolean` | `Case sensitive for strings` |            `false`             |
+|           Name           |   Type    |         Description          | Default value |
+|:------------------------:|:---------:|:----------------------------:|:-------------:|
+|     `skipAttachable`     | `Boolean` | `Ignore attachable methods`  |    `true`     |
+| `caseSensitiveForString` | `Boolean` | `Case sensitive for strings` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
