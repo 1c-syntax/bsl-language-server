@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|           Name           |   Type    |                Description                | Значение<br>по умолчанию |
-|:------------------------:|:---------:|:-----------------------------------------:|:------------------------------:|
-| `allowedEmptyLinesCount` | `Integer` | `Maximum allowed consecutive empty lines` |              `1`               |
+|           Name           |   Type    |                Description                | Default value |
+|:------------------------:|:---------:|:-----------------------------------------:|:-------------:|
+| `allowedEmptyLinesCount` | `Integer` | `Maximum allowed consecutive empty lines` |      `1`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
