@@ -21,15 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatSelectionRanges;
 
 @SpringBootTest
 class SelectionRangeProviderTest {
@@ -39,17 +43,108 @@ class SelectionRangeProviderTest {
   @Autowired
   private SelectionRangeProvider provider;
 
-  @Test
-  void test() {
-    // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+  private DocumentContext documentContext;
 
-    var textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
-    var positions = List.of(new Position(18, 10));
-    SelectionRangeParams params = new SelectionRangeParams(textDocument, positions);
+  @BeforeEach
+  void init() {
+    documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+  }
+
+  @Test
+  void testGlobalMethodCallCapturesSemicolon() {
+    // given
+    var params = selection(18, 10);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 4, 12)
+      .hasParentWithRange(18, 4, 17)
+    ;
   }
 
+  @Test
+  void testStatementCapturesStatementBlockAfterStatement() {
+    // given
+    var params = selection(4, 20);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(4, 2, 20)
+      .extractParent().hasRange(4, 2, 44)
+      .extractParent().hasRange(4, 2, 6, 104)
+    ;
+  }
+
+  @Test
+  void testStatementCapturesStatementBlockBeforeStatement() {
+    // given
+    var params = selection(6, 20);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(6, 2, 20)
+      .extractParent().hasRange(6, 2, 104)
+      .extractParent().hasRange(4, 2, 6, 104)
+    ;
+  }
+
+  @Test
+  void testStatementCapturesStatementBlockAroundStatement() {
+    // given
+    var params = selection(5, 20);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(5, 2, 20)
+      .extractParent().hasRange(5, 2, 110)
+      .extractParent().hasRange(4, 2, 6, 104)
+    ;
+  }
+
+  @Test
+  void testSingleStatementNotCapturesStatementBlock() {
+    // given
+    var params = selection(18, 10);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 4, 12)
+      .extractParent().hasRange(18, 4, 17)
+      .extractParent() // codeBlock
+      .extractParent() // sub
+      .extractParent() // file
+      .hasRange(documentContext.getSymbolTree().getModule().getRange())
+    ;
+  }
+
+  private SelectionRangeParams selection(int line, int character) {
+    var textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
+    var positions = List.of(new Position(line, character));
+    return new SelectionRangeParams(textDocument, positions);
+  }
 }
