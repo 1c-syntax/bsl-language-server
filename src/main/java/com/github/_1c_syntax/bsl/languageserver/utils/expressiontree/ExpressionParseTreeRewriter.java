@@ -82,6 +82,8 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
           visitOperation((BSLParser.OperationContext) child);
         } else if (child.getClass() == BSLParser.MemberContext.class) {
           visitMember((BSLParser.MemberContext) child);
+        } else {
+          throw new IllegalStateException();
         }
       }
     }
@@ -191,7 +193,7 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     operatorsInFly.push(operator);
   }
 
-  private BslOperator getOperator(BSLParser.OperationContext ctx) {
+  private static BslOperator getOperator(BSLParser.OperationContext ctx) {
     if (ctx.PLUS() != null) {
       return BslOperator.ADD;
     } else if (ctx.MINUS() != null) {
@@ -375,14 +377,14 @@ public class ExpressionParseTreeRewriter extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
+  private static BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
     var rewriter = new ExpressionParseTreeRewriter();
     rewriter.visitExpression(ctx);
 
     return rewriter.getExpressionTree();
   }
 
-  private void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
+  private static void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
     for (BSLParser.CallParamContext parameter : args) {
       if (parameter.expression() == null) {
         callNode.addArgument(new SkippedCallArgumentNode());

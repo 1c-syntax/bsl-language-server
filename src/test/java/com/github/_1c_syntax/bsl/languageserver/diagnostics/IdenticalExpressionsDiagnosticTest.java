@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -66,16 +65,50 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void checkMessage() {
-    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n"+
-      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n"+
+    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n" +
+      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n" +
       "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+  }
+
+  @Test
+  void testThatPopularQuantificationSkipped() {
+    var code = "А = Байты / 1024 / 1024;\n" +
+      "В = Время / 24 / 60 / 60;\n" +
+      "Б = Байты = 1024 / \"1024\"";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).isEmpty();
+
+  }
+
+  @Test
+  void testThatConfiguredPopularQuantificationSkipped() {
+    var code = "А = Байты / 1024 / 1024;\n" +
+      "В = Время / 24 / 60 / 60;\n" +
+      "Б = Байты = 1024 / \"1024\"";
+
+    // получение текущей конфигурации диагностики
+    var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+
+    // установка нового значения
+    configuration.put("popularDivisors", "1024");
+
+    // переконфигурирование
+    diagnosticInstance.configure(configuration);
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.get(0).getMessage()).contains("60");
+
   }
 
 }

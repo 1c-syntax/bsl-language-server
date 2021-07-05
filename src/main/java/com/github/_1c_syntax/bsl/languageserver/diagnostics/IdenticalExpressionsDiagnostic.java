@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -32,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCal
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -43,7 +45,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -56,6 +63,33 @@ import java.util.List;
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
+  private static final String POPULAR_DIVISORS_DEFAULT_VALUE = "60, 1024";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
+  )
+  private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
+
+  private static Set<String> parseCommaSeparatedSet(String values) {
+    if (values.trim().isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return Arrays.stream(values.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
+
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+
+    String popularDivisorsValue =
+      (String) configuration.getOrDefault("popularDivisors", POPULAR_DIVISORS_DEFAULT_VALUE);
+
+    popularDivisors = parseCommaSeparatedSet(popularDivisorsValue);
+  }
 
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
@@ -88,6 +122,10 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
+      // отбрасывает популярные деления на время и байты
+      if (isPopularQuantification(node)) {
+        return false;
+      }
       return true;
     }
 
@@ -99,8 +137,9 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
         var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
           comparer.areEqual(searchableLeft, complementaryNode.getRight());
 
-        if (equal)
+        if (equal) {
           return true;
+        }
 
         if (isComplementary(complementaryNode)) {
           complementaryNode = complementaryNode.getRight().cast();
@@ -108,6 +147,28 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
           break;
         }
       }
+    }
+
+    return false;
+  }
+
+  private boolean isPopularQuantification(BinaryOperationNode node) {
+    if (popularDivisors.isEmpty()) {
+      return false; // выключено игнорирование популярных делителей
+    }
+
+    if (node.getOperator() == BslOperator.DIVIDE
+      && node.getLeft().getNodeType() == ExpressionNodeType.LITERAL) {
+
+      // проверяем только левое, т.к. принципиальное равенство L и R проверено выше по стеку
+      // left заведомо равен right
+      var leftAst = (BSLParser.ConstValueContext) node.getLeft().getRepresentingAst();
+      var number = leftAst.numeric();
+      if (number != null) {
+        var text = number.getText();
+        return popularDivisors.contains(text);
+      }
+
     }
 
     return false;
@@ -152,13 +213,13 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
+  private static List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
     var list = new ArrayList<BinaryOperationNode>();
     gatherBinaryOperations(list, tree);
     return list;
   }
 
-  private void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
+  private static void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
     switch (tree.getNodeType()) {
       case CALL:
         for (var expr : tree.<AbstractCallNode>cast().arguments()) {
@@ -198,9 +259,10 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private boolean isComplementary(BinaryOperationNode binary) {
+  private static boolean isComplementary(BinaryOperationNode binary) {
     var operator = binary.getOperator();
-    if ((operator == BslOperator.OR || operator == BslOperator.AND) && binary.getRight() instanceof BinaryOperationNode) {
+    if ((operator == BslOperator.OR || operator == BslOperator.AND)
+      && binary.getRight() instanceof BinaryOperationNode) {
       return ((BinaryOperationNode) binary.getRight()).getOperator() == operator;
     }
 

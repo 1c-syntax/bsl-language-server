@@ -32,8 +32,9 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
   @Override
   public boolean areEqual(BslExpression first, BslExpression second) {
-    if (first == second)
+    if (first == second) {
       return true;
+    }
 
     if (first.getClass() != second.getClass() || first.getNodeType() != second.getNodeType()) {
       return false;
