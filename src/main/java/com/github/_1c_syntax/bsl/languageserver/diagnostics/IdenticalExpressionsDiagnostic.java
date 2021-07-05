@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -45,7 +46,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -58,6 +61,28 @@ import java.util.List;
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
+  private static final String POPULAR_DIVISORS_DEFAULT_VALUE = "60, 1024";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
+  )
+  private String popularDivisors = POPULAR_DIVISORS_DEFAULT_VALUE;
+  private List<String> parsedPopularDivisors;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+
+    String popularDivisorsValue =
+      (String) configuration.getOrDefault("popularDivisors", POPULAR_DIVISORS_DEFAULT_VALUE);
+
+    if (popularDivisorsValue.trim().isEmpty()) {
+      parsedPopularDivisors = new ArrayList<>();
+      return;
+    }
+
+    parsedPopularDivisors = Arrays.asList(popularDivisorsValue.split(","));
+  }
 
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
@@ -122,6 +147,10 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isPopularQuantification(BinaryOperationNode node) {
+    if (parsedPopularDivisors.isEmpty()) {
+      return false; // выключено игнорирование популярных делителей
+    }
+
     if (node.getOperator() == BslOperator.DIVIDE
       && node.getLeft().getNodeType() == ExpressionNodeType.LITERAL) {
 
@@ -131,7 +160,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       var number = leftAst.numeric();
       if (number != null) {
         var text = number.getText();
-        return text.equals("60") || text.equals("1024");
+        return parsedPopularDivisors.contains(text);
       }
 
     }
