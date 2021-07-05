@@ -76,7 +76,9 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       return Collections.emptySet();
     }
 
-    return Arrays.stream(values.split(",")).collect(Collectors.toSet());
+    return Arrays.stream(values.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
 
   }
 
@@ -121,7 +123,10 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
       // отбрасывает популярные деления на время и байты
-      return !isPopularQuantification(node);
+      if (isPopularQuantification(node)) {
+        return false;
+      }
+      return true;
     }
 
     if (isComplementary(node)) {
