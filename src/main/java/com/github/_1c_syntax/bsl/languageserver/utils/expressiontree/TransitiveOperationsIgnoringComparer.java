@@ -39,9 +39,10 @@ public class TransitiveOperationsIgnoringComparer extends DefaultNodeEqualityCom
     }
 
     var operator = first.getOperator();
-    if (isTransitiveOperation(operator))
+    if (isTransitiveOperation(operator)) {
       return super.binaryOperationsEqual(first, second) ||
         (areEqual(first.getLeft(), second.getRight()) && areEqual(first.getRight(), second.getLeft()));
+    }
 
     return super.binaryOperationsEqual(first, second);
 
@@ -49,19 +50,25 @@ public class TransitiveOperationsIgnoringComparer extends DefaultNodeEqualityCom
 
   /**
    * @param transitivityFlag Включает режим транзитивности логических операций
-   *                         если true, то операторы И/ИЛИ считаются транзитивными (не учитывается сокращенное выполнение логических операций)
+   *                         если true, то операторы И/ИЛИ считаются транзитивными
+   *                         (не учитывается сокращенное выполнение логических операций)
    */
   public void logicalOperationsAsTransitive(boolean transitivityFlag) {
     logicalsAreTransitive = transitivityFlag;
   }
 
   private boolean isTransitiveOperation(BslOperator operator) {
-    if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS)
+    if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
       return false;
+    }
 
     return operator == BslOperator.ADD ||
       operator == BslOperator.EQUAL ||
       operator == BslOperator.MULTIPLY ||
-      (logicalsAreTransitive && (operator == BslOperator.AND || operator == BslOperator.OR));
+      isTransitiveLogicalOp(operator);
+  }
+
+  private boolean isTransitiveLogicalOp(BslOperator operator) {
+    return logicalsAreTransitive && (operator == BslOperator.AND || operator == BslOperator.OR);
   }
 }
