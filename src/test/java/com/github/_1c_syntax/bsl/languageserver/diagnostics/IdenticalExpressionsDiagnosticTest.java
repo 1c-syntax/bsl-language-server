@@ -85,7 +85,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 

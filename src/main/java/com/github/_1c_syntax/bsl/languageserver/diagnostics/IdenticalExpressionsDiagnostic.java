@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -47,8 +46,11 @@ import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -67,8 +69,16 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
   )
-  private String popularDivisors = POPULAR_DIVISORS_DEFAULT_VALUE;
-  private List<String> parsedPopularDivisors;
+  private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
+
+  private static Set<String> parseCommaSeparatedSet(String values) {
+    if (values.trim().isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return Arrays.stream(values.split(",")).collect(Collectors.toSet());
+
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -76,12 +86,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     String popularDivisorsValue =
       (String) configuration.getOrDefault("popularDivisors", POPULAR_DIVISORS_DEFAULT_VALUE);
 
-    if (popularDivisorsValue.trim().isEmpty()) {
-      parsedPopularDivisors = new ArrayList<>();
-      return;
-    }
-
-    parsedPopularDivisors = Arrays.asList(popularDivisorsValue.split(","));
+    popularDivisors = parseCommaSeparatedSet(popularDivisorsValue);
   }
 
   @Override
@@ -116,12 +121,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
       // отбрасывает популярные деления на время и байты
-      // 1024 / 1024; 60 / 60;
-      if (isPopularQuantification(node)) {
-        return false;
-      }
-
-      return true;
+      return !isPopularQuantification(node);
     }
 
     if (isComplementary(node)) {
@@ -132,8 +132,9 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
         var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
           comparer.areEqual(searchableLeft, complementaryNode.getRight());
 
-        if (equal)
+        if (equal) {
           return true;
+        }
 
         if (isComplementary(complementaryNode)) {
           complementaryNode = complementaryNode.getRight().cast();
@@ -147,7 +148,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isPopularQuantification(BinaryOperationNode node) {
-    if (parsedPopularDivisors.isEmpty()) {
+    if (popularDivisors.isEmpty()) {
       return false; // выключено игнорирование популярных делителей
     }
 
@@ -160,7 +161,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       var number = leftAst.numeric();
       if (number != null) {
         var text = number.getText();
-        return parsedPopularDivisors.contains(text);
+        return popularDivisors.contains(text);
       }
 
     }
@@ -207,13 +208,13 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
+  private static List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
     var list = new ArrayList<BinaryOperationNode>();
     gatherBinaryOperations(list, tree);
     return list;
   }
 
-  private void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
+  private static void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
     switch (tree.getNodeType()) {
       case CALL:
         for (var expr : tree.<AbstractCallNode>cast().arguments()) {
@@ -253,9 +254,10 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private boolean isComplementary(BinaryOperationNode binary) {
+  private static boolean isComplementary(BinaryOperationNode binary) {
     var operator = binary.getOperator();
-    if ((operator == BslOperator.OR || operator == BslOperator.AND) && binary.getRight() instanceof BinaryOperationNode) {
+    if ((operator == BslOperator.OR || operator == BslOperator.AND)
+      && binary.getRight() instanceof BinaryOperationNode) {
       return ((BinaryOperationNode) binary.getRight()).getOperator() == operator;
     }
 
