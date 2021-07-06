@@ -21,25 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.Data;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 
-public class StatementsBlockWriter {
+class StatementsBlockWriter {
 
-  public static class JumpInformationRecord {
-    public CfgVertex methodReturn;
-    public CfgVertex loopBreak;
-    public CfgVertex loopContinue;
-    public CfgVertex exceptionHandler;
+  static class JumpInformationRecord {
+    CfgVertex methodReturn;
+    CfgVertex loopContinue;
+    CfgVertex loopBreak;
+    CfgVertex exceptionHandler;
   }
 
-  public static class StatementsBlockRecord {
+  static class StatementsBlockRecord {
 
     private CfgVertex subgraphBegin;
     private CfgVertex subgraphEnd;

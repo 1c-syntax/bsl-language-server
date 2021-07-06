@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import lombok.Getter;
 import org.jgrapht.graph.DefaultEdge;
 
-public class CfgEdge extends DefaultEdge {
+public final class CfgEdge extends DefaultEdge {
   @Getter
   private final CfgEdgeType type;
 
