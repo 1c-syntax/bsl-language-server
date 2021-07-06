@@ -12,7 +12,7 @@ public abstract class AbstractCfgVisitor {
 
   @FunctionalInterface
   private interface VertexVisitor {
-    boolean invoke(AbstractCfgVisitor target, CfgVertex vertex);
+    void invoke(AbstractCfgVisitor target, CfgVertex vertex);
   }
 
   @FunctionalInterface
@@ -68,8 +68,8 @@ public abstract class AbstractCfgVisitor {
   /**
    * @param v вершина линейного блока.
    */
-  protected boolean visitBasicBlock(BasicBlockVertex v) {
-    return true;
+  protected void visitBasicBlock(BasicBlockVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
@@ -79,9 +79,8 @@ public abstract class AbstractCfgVisitor {
    *
    * @param v посещаемая ветка
    */
-  protected boolean visitBranchingVertex(BranchingVertex v) {
+  protected void visitBranchingVertex(BranchingVertex v) {
     dispatchVertex(v);
-    return false;
   }
 
   /**
@@ -91,58 +90,57 @@ public abstract class AbstractCfgVisitor {
    *
    * @param v посещаемая ветка
    */
-  protected boolean visitLoopVertex(LoopVertex v) {
+  protected void visitLoopVertex(LoopVertex v) {
     dispatchVertex(v);
-    return false;
   }
 
   /**
    * @param v обход условной ветки
    */
-  protected boolean visitConditionalVertex(ConditionalVertex v) {
-    return true;
+  protected void visitConditionalVertex(ConditionalVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход цикла while
    */
-  protected boolean visitWhileLoopVertex(WhileLoopVertex v) {
-    return true;
+  protected void visitWhileLoopVertex(WhileLoopVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход цикла for
    */
-  protected boolean visitForLoopVertex(ForLoopVertex v) {
-    return true;
+  protected void visitForLoopVertex(ForLoopVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход цикла forEach
    */
-  protected boolean visitForeachLoopVertex(ForeachLoopVertex v) {
-    return true;
+  protected void visitForeachLoopVertex(ForeachLoopVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход узла метки
    */
-  protected boolean visitLabelVertex(LabelVertex v) {
-    return true;
+  protected void visitLabelVertex(LabelVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход узла метки
    */
-  protected boolean visitTryExceptVertex(TryExceptVertex v) {
-    return true;
+  protected void visitTryExceptVertex(TryExceptVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
    * @param v обход узла метки
    */
-  protected boolean visitExitVertex(ExitVertex v) {
-    return false;
+  protected void visitExitVertex(ExitVertex v) {
+    dispatchRoutes(v);
   }
 
   /**
@@ -203,20 +201,14 @@ public abstract class AbstractCfgVisitor {
       throw new IllegalStateException();
     }
 
-    var shouldWalkRoutes = dispatch.invoke(this, v);
-    if (shouldWalkRoutes) {
-      dispatchRoutes(v);
-    }
+    dispatch.invoke(this, v);
   }
 
   private void visitSuperclassingVertexType(BranchingVertex v) {
-    if (v instanceof LoopVertex && visitLoopVertex((LoopVertex) v)) {
-      dispatchRoutes(v);
+    if (v instanceof LoopVertex) {
+      visitLoopVertex((LoopVertex) v);
     } else {
-      if (visitBranchingVertex(v)) {
-        dispatchRoutes(v);
-      }
+      visitBranchingVertex(v);
     }
   }
-
 }
