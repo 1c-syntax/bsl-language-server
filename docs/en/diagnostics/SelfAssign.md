@@ -1,8 +1,8 @@
 # Variable is assigned to itself (SelfAssign)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `suspicious` 
+|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
+| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `10`           | `suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

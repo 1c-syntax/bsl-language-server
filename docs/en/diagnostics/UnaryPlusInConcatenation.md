@@ -1,8 +1,8 @@
 # Unary Plus sign in string concatenation (UnaryPlusInConcatenation)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `1` | `suspicious`<br>`brainoverload` 
+|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
+|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `1`           |    `suspicious`<br>`brainoverload`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

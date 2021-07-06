@@ -1,8 +1,8 @@
 # Missed postfix "FullAccess" (CommonModuleNameFullAccess)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Security Hotspot` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable` 
+|        Type        | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|:------------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
+| `Security Hotspot` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

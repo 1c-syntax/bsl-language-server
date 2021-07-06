@@ -36,6 +36,7 @@ public class MetricStorage {
   private int comments;
   private int statements;
   private int[] nclocData;
+  @Deprecated
   private int[] covlocData;
   private int cognitiveComplexity;
   private int cyclomaticComplexity;
