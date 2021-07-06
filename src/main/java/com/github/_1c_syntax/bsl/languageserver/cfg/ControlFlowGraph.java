@@ -25,10 +25,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-
-
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   @Getter

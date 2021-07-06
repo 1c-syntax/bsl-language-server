@@ -24,8 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @RequiredArgsConstructor
 public class ControlFlowGraphWalker {
@@ -38,29 +37,22 @@ public class ControlFlowGraphWalker {
     currentNode = graph.getEntryPoint();
   }
 
-  public List<CfgEdge> availableRoutes() {
-    return graph.outgoingEdgesOf(currentNode)
-      .stream()
-      .collect(Collectors.toUnmodifiableList());
+  public Set<CfgEdge> availableRoutes() {
+    return graph.outgoingEdgesOf(currentNode);
   }
 
   public CfgEdge walkNext() {
     var edges = availableRoutes();
-    if (edges.size() == 1) {
-      currentNode = graph.getEdgeTarget(edges.get(0));
-      return edges.get(0);
-    } else {
-      var edgeOrNot = edges.stream()
-        .filter(x -> x.getType() == CfgEdgeType.DIRECT)
-        .findFirst();
+    var edgeOrNot = edges.stream()
+      .filter(x -> x.getType() == CfgEdgeType.DIRECT)
+      .findFirst();
 
-      if (edgeOrNot.isPresent()) {
-        currentNode = graph.getEdgeTarget(edgeOrNot.get());
-        return edgeOrNot.get();
-      }
-
-      throw new IllegalStateException("DIRECT edge is not found for node " + currentNode);
+    if (edgeOrNot.isPresent()) {
+      currentNode = graph.getEdgeTarget(edgeOrNot.get());
+      return edgeOrNot.get();
     }
+
+    throw new IllegalStateException("DIRECT edge is not found for node " + currentNode);
   }
 
   public CfgEdge walkNext(CfgEdgeType edgeType) {
