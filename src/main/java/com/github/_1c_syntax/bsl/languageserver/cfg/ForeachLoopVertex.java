@@ -22,11 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ForeachLoopVertex extends LoopVertex {
   private final BSLParser.ForEachStatementContext loopHeader;
+
+  @Override
+  public Optional<BSLParserRuleContext> getAst() {
+    return Optional.of(loopHeader);
+  }
 }

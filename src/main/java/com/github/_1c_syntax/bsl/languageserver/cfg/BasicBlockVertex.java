@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BasicBlockVertex extends CfgVertex {
 
@@ -36,5 +37,14 @@ public class BasicBlockVertex extends CfgVertex {
 
   public void addStatement(BSLParserRuleContext statement) {
     statements.add(statement);
+  }
+
+  @Override
+  public Optional<BSLParserRuleContext> getAst() {
+    if(statements.isEmpty()) {
+      return super.getAst();
+    }
+
+    return Optional.of(statements.get(0));
   }
 }

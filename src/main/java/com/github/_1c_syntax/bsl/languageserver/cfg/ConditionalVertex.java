@@ -22,11 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ConditionalVertex extends BranchingVertex {
   private final BSLParser.ExpressionContext expression;
+
+  @Override
+  public Optional<BSLParserRuleContext> getAst() {
+    return Optional.of(expression);
+  }
 }

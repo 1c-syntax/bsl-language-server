@@ -21,5 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+
+import java.util.Optional;
+
 public abstract class CfgVertex {
+  public Optional<BSLParserRuleContext> getAst() {
+    return Optional.empty();
+  }
 }
