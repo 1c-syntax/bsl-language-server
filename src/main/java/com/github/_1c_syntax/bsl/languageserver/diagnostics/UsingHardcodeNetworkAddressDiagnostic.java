@@ -66,9 +66,16 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   private static final String REGEX_ALPHABET = "[A-zА-я]";
 
+  private static final String REGEX_POPULAR_VERSION = "^(1|2|3|8\\.3|11)\\.";
+
   private static final Pattern patternNetworkAddress = CaseInsensitivePattern.compile(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
   private static final Pattern patternAlphabet = CaseInsensitivePattern.compile(REGEX_ALPHABET);
+
+  /**
+   * Паттерн для исключения популярных версий из списка IP-адресов. Например, `2.5.4.10`.
+   */
+  private static final Pattern POPULAR_VERSION_PATTERN = Pattern.compile(REGEX_POPULAR_VERSION);
 
   @DiagnosticParameter(
     type = String.class,
@@ -120,6 +127,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       if (skipStatement(ctx, BSLParser.RULE_statement)
         || skipStatement(ctx, BSLParser.RULE_param)
         || itVersionReturn(ctx)) {
+        return;
+      }
+
+      if (POPULAR_VERSION_PATTERN.matcher(content).find()) {
         return;
       }
 
