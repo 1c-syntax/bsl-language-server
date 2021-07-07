@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatSelectionRanges;
 
@@ -139,6 +140,21 @@ class SelectionRangeProviderTest {
       .extractParent() // sub
       .extractParent() // file
       .hasRange(documentContext.getSymbolTree().getModule().getRange())
+    ;
+  }
+
+  @Test
+  void emptySelection() {
+    // given
+    var params = selection(1, 0);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .allMatch(Objects::isNull)
     ;
   }
 
