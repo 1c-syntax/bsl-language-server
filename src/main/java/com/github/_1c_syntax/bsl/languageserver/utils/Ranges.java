@@ -108,6 +108,12 @@ public final class Ranges {
     return create(startLine, startChar, endLine, endChar);
   }
 
+  /**
+   * Создание Range для узла дерева разбора.
+   *
+   * @param tree - дерево разбора.
+   * @return - полученный Range.
+   */
   public static Range create(ParseTree tree) {
     if (tree instanceof TerminalNode) {
       return Ranges.create((TerminalNode) tree);
