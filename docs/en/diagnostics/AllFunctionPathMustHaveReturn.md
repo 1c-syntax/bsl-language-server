@@ -6,18 +6,22 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+Functions should not have an implicit return. All returned values must be shown excplicitly.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+```bsl
+Function CalculadeDiscount(ShoppingCart)
+    If ShoppingCart.Rows.Count() > 10 Then
+        Return Discounts.DiscountForABigCart(ShoppingCart);
+    ElIf ShoppingCart.HasLoyaltyCard Then
+        // Return is missed unintentionally
+        // causing unexpected return of Undefined
+        Discounts.DiscountByLoyaltyCard(ShoppingCart);
+    Else 
+        Return 0;
+    EndIf;
+EndFunction
+```
 
 ## Snippets
 <!-- Блоки ниже заполняются автоматически, не трогать -->
