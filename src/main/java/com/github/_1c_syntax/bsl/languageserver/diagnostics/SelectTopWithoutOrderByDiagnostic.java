@@ -70,8 +70,11 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
   }
 
   private void checkQuery(SDBLParser.QueryContext ctx, boolean canTopOne) {
-    // top is missing
-    if (ctx.limitations().top() == null) {
+
+    SDBLParser.LimitationsContext limitations = ctx.limitations();
+
+    //limitations or top is missing
+    if (limitations == null || limitations.top() == null) {
       return;
     }
 
