@@ -42,10 +42,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     jumpLabels = new HashMap<>();
 
     var exitPoints = new StatementsBlockWriter.JumpInformationRecord();
-    exitPoints.methodReturn = new ExitVertex();
+    exitPoints.methodReturn = graph.getExitPoint();
     exitPoints.exceptionHandler = exitPoints.methodReturn;
-
-    graph.addVertex(exitPoints.methodReturn);
 
     blocks.enterBlock(exitPoints);
 
@@ -395,7 +393,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   private LabelVertex createOrGetKnownLabel(String labelName) {
-    LabelVertex labelVertex = jumpLabels.get(labelName);
+    var labelVertex = jumpLabels.get(labelName);
     if (labelVertex == null) {
       labelVertex = new LabelVertex(labelName);
       jumpLabels.put(labelName, labelVertex);

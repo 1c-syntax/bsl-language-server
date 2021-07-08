@@ -31,8 +31,13 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
   @Setter
   private CfgVertex entryPoint;
 
+  @Getter
+  private ExitVertex exitPoint;
+
   public ControlFlowGraph() {
     super(CfgEdge.class);
+    exitPoint = new ExitVertex();
+    addVertex(exitPoint);
   }
 
   public void addEdge(CfgVertex source, CfgVertex target, CfgEdgeType type) {

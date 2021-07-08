@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.LoopVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -57,11 +59,13 @@ import java.util.stream.Collectors;
 )
 public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final boolean LOOPS_EXECUTED_ONCE_DEFAULT = true;
+
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + true
+    defaultValue = "" + LOOPS_EXECUTED_ONCE_DEFAULT
   )
-  private static boolean loopsExecutedAtLeastOnce = true;
+  private static boolean loopsExecutedAtLeastOnce = LOOPS_EXECUTED_ONCE_DEFAULT;
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
@@ -123,17 +127,46 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
   private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v) {
     if(v instanceof BasicBlockVertex) {
-      var block = (BasicBlockVertex)v;
-      if(!block.statements().isEmpty()) {
-        var lastStatement = block.statements().get(block.statements().size()-1);
+      return checkBasicBlockExitingNode((BasicBlockVertex) v);
+    } else if(v instanceof LoopVertex) {
+      return checkLoopExitingNode((LoopVertex) v);
+    }
 
-        var nodes = Trees.findAllRuleNodes(lastStatement, BSLParser.RULE_returnStatement, BSLParser.RULE_raiseStatement);
-        if(nodes.isEmpty()) {
-          return v.getAst();
-        }
+    return v.getAst();
+  }
+
+  private Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
+    if(!block.statements().isEmpty()) {
+      var lastStatement = block.statements().get(block.statements().size()-1);
+
+      var nodes = Trees.findAllRuleNodes(lastStatement, BSLParser.RULE_returnStatement, BSLParser.RULE_raiseStatement);
+      if(nodes.isEmpty()) {
+        return block.getAst();
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<BSLParserRuleContext> checkLoopExitingNode(LoopVertex v) {
+    if(v instanceof WhileLoopVertex) {
+      var whileLoop = (WhileLoopVertex) v;
+      if(isEndlessLoop(whileLoop)) {
         return Optional.empty();
       }
     }
+
+    if(loopsExecutedAtLeastOnce) {
+      // из цикла в exit может придти только falseBranch или пустое тело цикла
+      // и то и другое не нужно нам в рамках диагностики
+      return Optional.empty();
+    }
     return v.getAst();
+  }
+
+  private boolean isEndlessLoop(WhileLoopVertex whileLoop) {
+    var expression = whileLoop.getExpression();
+    return expression.getChildCount() == 1
+      && expression.member(0).constValue() != null
+      && expression.member(0).constValue().TRUE() != null;
   }
 }
