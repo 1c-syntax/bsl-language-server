@@ -34,14 +34,15 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   }
 
   @Test
-  void test() {
+  void testDefaultBehavior() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(0, 8, 0, 20)
-      .hasRange(25, 8, 25, 20);
+      .hasRange(0, 8, 0, 27)
+      .hasRange(25, 8, 25, 19)
+      .hasRange(36, 8, 36, 23);
 
   }
 }

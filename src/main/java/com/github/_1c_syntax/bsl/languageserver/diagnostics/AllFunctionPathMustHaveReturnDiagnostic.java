@@ -77,7 +77,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
       return ctx;
     }
 
-    //checkAllPathsHaveReturns(ctx);
+    checkAllPathsHaveReturns(ctx);
 
     return ctx;
 
@@ -108,7 +108,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
     var listOfMessages = new ArrayList<DiagnosticRelatedInformation>();
     listOfMessages.add(RelatedInformation.create(documentContext.getUri(),
-      Ranges.create(ctx.funcDeclaration()),
+      Ranges.create(ctx.funcDeclaration().subName()),
       info.getMessage()));
 
     incomingVertices.stream()
@@ -117,7 +117,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
         info.getMessage()))
       .collect(Collectors.toCollection(()->listOfMessages));
 
-    diagnosticStorage.addDiagnostic(ctx.funcDeclaration(), listOfMessages);
+    diagnosticStorage.addDiagnostic(ctx.funcDeclaration().subName(), listOfMessages);
 
   }
 

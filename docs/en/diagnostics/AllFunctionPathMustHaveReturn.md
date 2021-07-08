@@ -1,9 +1,15 @@
 # All execution paths of a function must have a Return statement (AllFunctionPathMustHaveReturn)
 
-<Metadata>
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                             Tags                             |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           |       `unpredictable`<br>`badpractice`<br>`suspicious`       |
 
-## <Params>
+## Parameters 
 
+
+|            Name            |   Type    |                Description                | Default value |
+|:--------------------------:|:---------:|:-----------------------------------------:|:-------------:|
+| `loopsExecutedAtLeastOnce` | `Boolean` | `Assume loops are executed at least once` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 Functions should not have an implicit return. All returned values must be shown excplicitly.
@@ -24,8 +30,8 @@ EndFunction
 ```
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
@@ -36,5 +42,7 @@ EndFunction
 ### Parameter for config
 
 ```json
-"AllFunctionPathMustHaveReturn": <DiagnosticConfig>
+"AllFunctionPathMustHaveReturn": {
+    "loopsExecutedAtLeastOnce": true
+}
 ```

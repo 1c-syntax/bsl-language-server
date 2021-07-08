@@ -4,6 +4,24 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
         "AssignAliasFieldsInQuery": {
             "description": "Assigning aliases to selected fields in a query",
             "default": true,
@@ -642,6 +660,14 @@
                 "object"
             ],
             "title": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
+            "properties": {
+                "popularDivisors": {
+                    "description": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation",
+                    "default": "60, 1024",
+                    "type": "string",
+                    "title": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation"
+                }
+            },
             "$id": "#/definitions/IdenticalExpressions"
         },
         "IfConditionComplexity": {
