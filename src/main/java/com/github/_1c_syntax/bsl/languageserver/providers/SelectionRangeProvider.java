@@ -254,5 +254,4 @@ public class SelectionRangeProvider {
     return Positions.isBefore(start, position) || start.equals(position);
   }
 
-
 }

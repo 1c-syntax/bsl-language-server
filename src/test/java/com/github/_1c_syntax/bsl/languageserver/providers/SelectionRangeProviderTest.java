@@ -158,6 +158,62 @@ class SelectionRangeProviderTest {
     ;
   }
 
+  @Test
+  void selectionInNestedCall() {
+    // given
+    var params = selection(5, 70);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(5, 67, 107)
+      .extractParent().hasRange(5, 30, 108)
+      .extractParent().hasRange(5, 21, 109)
+      .extractParent().hasRange(5, 2, 110)
+    ;
+  }
+
+  @Test
+  void ifBranchWithoutElseMatchesIfStatement() {
+    // given
+    var params = selection(25, 15);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(25, 8, 16)
+      .extractParent().hasRange(25, 8, 21)
+      .extractParent().hasRange(24, 4, 26, 14)
+    ;
+  }
+
+  @Test
+  void ifBranchWithElseNotMatchIfStatement() {
+    // given
+    var params = selection(29, 15);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(29, 8, 16)
+      .extractParent().hasRange(29, 8, 21)
+      .extractParent().hasRange(28, 4, 29, 21)
+      .extractParent().hasRange(28, 4, 32, 14)
+    ;
+  }
+
   private SelectionRangeParams selection(int line, int character) {
     var textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
     var positions = List.of(new Position(line, character));
