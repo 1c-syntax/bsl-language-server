@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.spy;

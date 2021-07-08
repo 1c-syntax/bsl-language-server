@@ -1,17 +1,17 @@
 # Redundant access to an object (RedundantAccessToObject)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
+| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           |    `standard`<br>`clumsy`    |
 
 ## Parameters 
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `checkObjectModule` | `Boolean` | ```Check object modules``` | ```true``` 
- `checkFormModule` | `Boolean` | ```Check form modules``` | ```true``` 
- `checkRecordSetModule` | `Boolean` | ```Check record set modules``` | ```true``` 
 
+|          Name          |   Type    |        Description         | Default value |
+|:----------------------:|:---------:|:--------------------------:|:-------------:|
+|  `checkObjectModule`   | `Boolean` |   `Check object modules`   |    `true`     |
+|   `checkFormModule`    | `Boolean` |    `Check form modules`    |    `true`     |
+| `checkRecordSetModule` | `Boolean` | `Check record set modules` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 In the forms and modules of objects, it is wrong to refer to the attributes through the property ThisObject. In common modules, it is redundant to refer to methods through their name, except for modules with Cashed.

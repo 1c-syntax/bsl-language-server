@@ -39,20 +39,21 @@ class LatinAndCyrillicSymbolInWordDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(14);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
       // методы
-      .hasRange(2, 10, 23)
-      .hasRange(9, 8, 21)
       .hasRange(30, 17, 26)
       .hasRange(30, 33, 39)
+      .hasRange(34, 10, 19)
       // переменные
       .hasRange(0, 6, 10)
       .hasRange(5, 20, 23)
       .hasRange(12, 10, 12)
       .hasRange(13, 10, 15)
-      .hasRange(15, 4, 14)
       .hasRange(16, 4, 23)
+      .hasRange(35, 10, 21)
+      .hasRange(36, 10, 22)
+      .hasRange(37, 10, 18)
       // аннотации
       .hasRange(19, 1, 10)
       .hasRange(23, 11, 19)
@@ -66,22 +67,25 @@ class LatinAndCyrillicSymbolInWordDiagnosticTest extends AbstractDiagnosticTest<
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("excludeWords", "Namе, ВИмениEnglish, ComОбъект2");
+    configuration.put("excludeWords", "Namе, ВИмениEnglish, ComОбъект2, ПеременнаяA");
+    configuration.put("allowTrailingPartsInAnotherLanguage", true);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(13);
     assertThat(diagnostics, true)
       // методы
-      .hasRange(9, 8, 21)
       .hasRange(30, 17, 26)
       .hasRange(30, 33, 39)
+      .hasRange(34, 10, 19)
       // переменные
       .hasRange(5, 20, 23)
       .hasRange(12, 10, 12)
       .hasRange(13, 10, 15)
       .hasRange(16, 4, 23)
+      .hasRange(36, 10, 22)
+      .hasRange(37, 10, 18)
       // аннотации
       .hasRange(19, 1, 10)
       .hasRange(23, 11, 19)
@@ -91,4 +95,43 @@ class LatinAndCyrillicSymbolInWordDiagnosticTest extends AbstractDiagnosticTest<
     ;
 
   }
+
+  @Test
+  void testConfigureNotAllowTrailing() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("excludeWords", "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, " +
+      "ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси");
+    configuration.put("allowTrailingPartsInAnotherLanguage", false);
+
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(18);
+    assertThat(diagnostics, true)
+      // методы
+      .hasRange(2, 10, 23)
+      .hasRange(9, 8, 21)
+      .hasRange(30, 17, 26)
+      .hasRange(30, 33, 39)
+      .hasRange(34, 10, 19)
+      // переменные
+      .hasRange(5, 20, 23)
+      .hasRange(12, 10, 12)
+      .hasRange(13, 10, 15)
+      .hasRange(15, 4, 14)
+      .hasRange(16, 4, 23)
+      .hasRange(36, 10, 22)
+      .hasRange(37, 10, 18)
+      // аннотации
+      .hasRange(19, 1, 10)
+      .hasRange(23, 11, 19)
+      // остальное
+      .hasRange(27, 9, 15)
+      .hasRange(31, 13, 19)
+    ;
+
+  }
+
 }

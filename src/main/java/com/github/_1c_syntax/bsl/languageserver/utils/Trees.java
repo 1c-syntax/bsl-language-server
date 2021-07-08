@@ -34,6 +34,7 @@ import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +69,47 @@ public final class Trees {
 
   public static List<Tree> getChildren(Tree t) {
     return org.antlr.v4.runtime.tree.Trees.getChildren(t);
+  }
+
+  /**
+   * Список токенов дерева разбора.
+   * <p>
+   * Токены формируются на основании всех потомков вида {@link TerminalNode} переданного дерева.
+   *
+   * @param tree Дерево разбора
+   * @return Список токенов
+   */
+  public static List<Token> getTokens(ParseTree tree) {
+    if (tree instanceof BSLParserRuleContext) {
+      return ((BSLParserRuleContext) tree).getTokens();
+    }
+
+    if (tree instanceof TerminalNode) {
+      TerminalNode node = (TerminalNode) tree;
+      var token = node.getSymbol();
+      return List.of(token);
+    }
+
+    if (tree.getChildCount() == 0) {
+      return Collections.emptyList();
+    }
+
+    List<Token> results = new ArrayList<>();
+    getTokensFromParseTree(tree, results);
+    return Collections.unmodifiableList(results);
+  }
+
+  private static void getTokensFromParseTree(ParseTree tree, List<Token> tokens) {
+    for (var i = 0; i < tree.getChildCount(); i++) {
+      ParseTree child = tree.getChild(i);
+      if (child instanceof TerminalNode) {
+        TerminalNode node = (TerminalNode) child;
+        var token = node.getSymbol();
+        tokens.add(token);
+      } else {
+        getTokensFromParseTree(child, tokens);
+      }
+    }
   }
 
   public static Collection<ParseTree> findAllTokenNodes(ParseTree t, int ttype) {

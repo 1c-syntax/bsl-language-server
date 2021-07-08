@@ -1,8 +1,8 @@
 # Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
+| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

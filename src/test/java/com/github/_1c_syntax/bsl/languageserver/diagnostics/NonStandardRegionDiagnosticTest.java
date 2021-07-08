@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -174,13 +174,13 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(11, 1, 38)
-      .hasRange(24, 1, 16)
-      .hasRange(28, 1, 32)
-      .hasRange(32, 1, 46)
-      .hasRange(36, 1, 63)
-      .hasRange(40, 1, 31)
-      .hasRange(52, 1, 18)
+      .hasRange(13, 1, 38)
+      .hasRange(26, 1, 16)
+      .hasRange(30, 1, 32)
+      .hasRange(34, 1, 46)
+      .hasRange(38, 1, 63)
+      .hasRange(42, 1, 31)
+      .hasRange(54, 1, 18)
     ;
   }
 
