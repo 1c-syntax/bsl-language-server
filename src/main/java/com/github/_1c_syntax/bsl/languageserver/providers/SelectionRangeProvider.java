@@ -46,6 +46,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер, обрабатывающий запросы textDocument/selectionRange.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange">Selection Range Request specification</a>.
+ */
 @Component
 public class SelectionRangeProvider {
 
@@ -72,6 +77,13 @@ public class SelectionRangeProvider {
     BSLParser.RULE_assignment
   );
 
+  /**
+   * Получение данных о {@link SelectionRange} по позиции в документе.
+   *
+   * @param documentContext контекст документа.
+   * @param params параметры вызова.
+   * @return список найденных диапазонов.
+   */
   public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
 
     var positions = params.getPositions();
