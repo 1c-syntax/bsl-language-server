@@ -41,7 +41,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
 
     assertThat(diagnostics, true)
       .hasRange(2, 15, 2, 31)
@@ -55,6 +55,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(55, 13, 18)
       .hasRange(57, 104, 114)
       .hasRange(65, 9, 22)
+      .hasRange(71, 6, 15)
     ;
 
   }
@@ -72,7 +73,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
 
     // Изменяем ключевые слова исключения для поиска IP адресов
     // when
@@ -82,7 +83,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(13);
 
   }
 }
