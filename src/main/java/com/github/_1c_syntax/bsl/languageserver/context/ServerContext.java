@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -166,9 +166,9 @@ public abstract class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
-  public Set<AbstractMDObjectBase> getGlobalModules() {
+  public Set<AbstractMDObjectBSL> getGlobalModules() {
 
-    Set<AbstractMDObjectBase> globalModules = new HashSet<>();
+    Set<AbstractMDObjectBSL> globalModules = new HashSet<>();
 
     getConfiguration().getCommonModules().values().stream()
       .filter(MDCommonModule::isGlobal)

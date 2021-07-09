@@ -174,7 +174,7 @@ class ReferenceIndexTest {
     // then
     assertThat(reference.getFrom()).isEqualTo(methodSymbol);
     assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(5, 4, 41));
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(5, 4, 29));
     assertThat(reference.getUri()).isEqualTo(uri);
   }
 
@@ -215,7 +215,7 @@ class ReferenceIndexTest {
 
     // then
     assertThat(references)
-      .hasSize(3)
+      .hasSize(5)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
       .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
       .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
