@@ -239,9 +239,9 @@ public class SelectionRangeProvider {
           return Optional.of(terminalNode);
         }
       } else {
-        var maybeNode = findNodeContainsPosition((BSLParserRuleContext) child, position);
-        if (maybeNode.isPresent()) {
-          return maybeNode;
+        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
+        if (node.isPresent()) {
+          return node;
         }
       }
     }
