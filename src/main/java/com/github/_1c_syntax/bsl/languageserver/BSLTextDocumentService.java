@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
@@ -70,6 +71,8 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.SelectionRange;
+import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -98,6 +101,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
   private final CallHierarchyProvider callHierarchyProvider;
+  private final SelectionRangeProvider selectionRangeProvider;
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -237,6 +241,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     return CompletableFuture.supplyAsync(() -> callHierarchyProvider.outgoingCalls(documentContext, params));
+  }
+
+  @Override
+  public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> selectionRangeProvider.getSelectionRange(documentContext, params));
   }
 
   @Override
