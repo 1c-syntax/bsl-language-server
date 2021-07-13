@@ -23,7 +23,7 @@ jobs:
         java-version: 11
         distribution: 'adopt'
     - name: SonarCloud Scan
-      run: ./gradlew check sonarqube
+      run: ./gradlew check sonarqube -stacktrace --debug
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
