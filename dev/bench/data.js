@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626065986737,
+  "lastUpdate": 1626170958678,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11284,6 +11284,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9535820520912189",
             "extra": "mean: 86.16437514623006 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d07a073700814c9b88badb547e446ca2a5aec40d",
+          "message": "Исправлена установка классификатора для тонких жарников после обновления до spring boot 2.5\n\nSee `https://github.com/spring-projects/spring-boot/issues/23797`",
+          "timestamp": "2021-07-13T13:00:02+03:00",
+          "tree_id": "fe5cd8e1881ad9103df514be29e4d1ba75ac6d73",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d07a073700814c9b88badb547e446ca2a5aec40d"
+        },
+        "date": 1626170954256,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.69595090548198,
+            "unit": "sec",
+            "range": "stddev: 2.336381866597124",
+            "extra": "mean: 89.69595090548198 sec\nrounds: 3"
           }
         ]
       }
