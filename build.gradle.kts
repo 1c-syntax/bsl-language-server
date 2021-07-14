@@ -129,6 +129,7 @@ tasks.jar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     enabled = true
+    archiveClassifier.set("")
 }
 
 tasks.bootJar {
