@@ -36,14 +36,47 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   @Test
   void testDefaultBehavior() {
 
+    var config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    diagnosticInstance.configure(config);
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 27)
       .hasRange(25, 8, 25, 19)
-      //.hasRange(36, 8, 36, 23)
     ;
 
+  }
+
+  @Test
+  void testLoopsCanBeNotVisited() {
+
+    var config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    config.put("loopsExecutedAtLeastOnce", false);
+    diagnosticInstance.configure(config);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 27)
+      .hasRange(25, 8, 25, 19)
+      .hasRange(36, 8, 36, 23)
+    ;
+  }
+
+  @Test
+  void testElsIfClausesWithoutElse() {
+
+    var config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    config.put("ignoreMissingElseOnExit", true);
+    diagnosticInstance.configure(config);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(25, 8, 25, 19)
+    ;
   }
 }

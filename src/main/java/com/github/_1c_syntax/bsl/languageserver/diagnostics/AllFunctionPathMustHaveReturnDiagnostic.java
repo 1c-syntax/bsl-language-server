@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.LoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
@@ -60,12 +63,19 @@ import java.util.stream.Collectors;
 public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final boolean LOOPS_EXECUTED_ONCE_DEFAULT = true;
+  private static final boolean IGNORE_ELSELESS_SWITCHES = false;
 
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "" + LOOPS_EXECUTED_ONCE_DEFAULT
   )
   private static boolean loopsExecutedAtLeastOnce = LOOPS_EXECUTED_ONCE_DEFAULT;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + IGNORE_ELSELESS_SWITCHES
+  )
+  private static boolean ignoreMissingElseOnExit = IGNORE_ELSELESS_SWITCHES;
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
@@ -101,7 +111,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
     var incomingVertices = graph.incomingEdgesOf(exitNode.get()).stream()
       .map(graph::getEdgeSource)
-      .map(this::nonExplicitReturnNode)
+      .map(vertex -> nonExplicitReturnNode(vertex, graph))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .collect(Collectors.toList());
@@ -125,14 +135,34 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
   }
 
-  private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v) {
+  private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v, ControlFlowGraph graph) {
     if(v instanceof BasicBlockVertex) {
       return checkBasicBlockExitingNode((BasicBlockVertex) v);
     } else if(v instanceof LoopVertex) {
       return checkLoopExitingNode((LoopVertex) v);
+    } else if (v instanceof ConditionalVertex) {
+      return checkElseIfClauseExitingNode((ConditionalVertex) v, graph);
     }
 
     return v.getAst();
+  }
+
+  private Optional<BSLParserRuleContext> checkElseIfClauseExitingNode(ConditionalVertex v, ControlFlowGraph graph) {
+    // check if this vertex connected to exit by FALSE branch
+    var edgeOrNot = graph.getAllEdges(v, graph.getExitPoint()).stream()
+      .filter(x -> x.getType() == CfgEdgeType.FALSE_BRANCH)
+      .findAny();
+
+    if(edgeOrNot.isEmpty()){
+      return Optional.empty();
+    }
+
+    var expression = v.getExpression();
+    if (expression.parent instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {
+      return Optional.of((BSLParser.ElsifBranchContext)expression.parent);
+    }
+
+    return Optional.empty();
   }
 
   private Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
