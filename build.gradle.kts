@@ -66,7 +66,7 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.1")
+    api("com.github.1c-syntax", "utils", "0.3.2")
     api("com.github.1c-syntax", "mdclasses", "v0.9.1")
 
     // JLanguageTool
