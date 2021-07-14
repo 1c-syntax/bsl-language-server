@@ -862,16 +862,26 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
-<p>Синтаксическая конструкция <strong>Если...Тогда...ИначеЕсли...</strong> должна завершаться ветвью <strong>Иначе</strong>.</p>
+<p>Правило применяется всякий раз, когда условный оператор <strong>Если Тогда ИначеЕсли</strong> содержит одну или несколько конструкций <strong>ИначеЕсли</strong>.
+За последней конструкцией <strong>ИначеЕсли</strong> должна следовать конструкция <strong>Иначе</strong>.</p>
+<p>Требование к заключительной конструкции <strong>Иначе</strong> - это защитное программирование.
+Такие конструкции устойчивы к возможным изменениям и не маскируют возможные ошибки.</p>
+<p>Конструкция <strong>Иначе</strong> должна либо принимать соответствующие меры, либо содержать подходящий комментарий относительно того, почему не предпринимается никаких действий. </p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">;</span>
-<span class="k">ИначеЕсли</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">;</span>
-<span class="k">ИначеЕсли</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">5</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">;</span>
+<p>Неправильно:</p>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">ТипЗнч</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Тип</span><span class="p">(</span><span class="s1">&quot;Структура&quot;</span><span class="p">)</span> <span class="k">Тогда</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">ЗаполнитьПоСтруктуре</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">);</span>
+<span class="k">ИначеЕсли</span> <span class="nb">ТипЗнч</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Тип</span><span class="p">(</span><span class="s1">&quot;Документ.Ссылка.ВажныйДокумент&quot;</span><span class="p">)</span> <span class="k">Тогда</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">ЗаполнитьПоДокументу</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">);</span>
+<span class="k">КонецЕсли</span><span class="p">;</span>
+</code></pre></div>
+<p>Правильно:</p>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">ТипЗнч</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Тип</span><span class="p">(</span><span class="s1">&quot;Структура&quot;</span><span class="p">)</span> <span class="k">Тогда</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">ЗаполнитьПоСтруктуре</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">);</span>
+<span class="k">ИначеЕсли</span> <span class="nb">ТипЗнч</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Тип</span><span class="p">(</span><span class="s1">&quot;Документ.Ссылка.ВажныйДокумент&quot;</span><span class="p">)</span> <span class="k">Тогда</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">ЗаполнитьПоДокументу</span><span class="p">(</span><span class="nv">ВходящийПараметр</span><span class="p">);</span>
 <span class="k">Иначе</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">x</span><span class="p">;</span>
+    <span class="nv">ВызватьИсключение</span> <span class="s1">&quot;Передан параметр неверного типа&quot;</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
