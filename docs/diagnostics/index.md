@@ -8,16 +8,17 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **143**
+Общее количество: **144**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
 * Ошибка: **44**
-* Дефект кода: **91**
+* Дефект кода: **92**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
+ [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | Все возможные пути выполнения функции должны содержать оператор Возврат | Да | Информационный | Дефект кода | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Назначение псевдонимов выбранным полям в запросе | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br>`design` 

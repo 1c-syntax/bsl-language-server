@@ -23,6 +23,9 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AllFunctionPathMustHaveReturn": {
+                    "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
+                },
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
