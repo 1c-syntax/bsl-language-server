@@ -158,6 +158,27 @@ class ReferenceIndexTest {
   }
 
   @Test
+  void testGetReferenceToGlobalMethodFromApplicationModule() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+    var applicationModuleContext = serverContext.getDocument("Configuration.Конфигурация", ModuleType.ManagedApplicationModule).orElseThrow();
+    var calledMethodSymbol = applicationModuleContext.getSymbolTree().getMethodSymbol("ПроцедураМодуляПриложения").orElseThrow();
+
+    var uri = documentContext.getUri();
+    var position = new Position(5, 20);
+
+    // when
+    var reference = referenceIndex.getReference(uri, position).orElseThrow();
+
+    // then
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(5, 4, 29));
+    assertThat(reference.getUri()).isEqualTo(uri);
+  }
+
+  @Test
   void testCantGetReferenceToNonExportCommonModuleMethod() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
@@ -194,7 +215,7 @@ class ReferenceIndexTest {
 
     // then
     assertThat(references)
-      .hasSize(3)
+      .hasSize(5)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
       .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
       .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
