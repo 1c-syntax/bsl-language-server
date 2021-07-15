@@ -52,10 +52,10 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(12, 44, 12, 85)
       .hasRange(20, 18, 20, 29)
       .hasRange(23, 7, 23, 119)
-      .hasRange(43, 33, 43, 42)
       .hasRange(55, 13, 18)
       .hasRange(57, 104, 114)
       .hasRange(65, 9, 22)
+      .hasRange(71, 6, 15)
     ;
 
   }
@@ -83,7 +83,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(18);
+    assertThat(diagnostics).hasSize(13);
 
   }
 }
