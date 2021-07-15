@@ -1,0 +1,121 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright © 2018-2021
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.providers;
+
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Color;
+import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.DocumentColorParams;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@Component
+public class ColorProvider {
+
+  private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
+  private static final Pattern COLOR_PATTERN = CaseInsensitivePattern.compile("^(?:Цвет|Color)$");
+
+  public List<ColorInformation> getDocumentColor(DocumentContext documentContext, DocumentColorParams params) {
+
+    var newExpressions = Trees.findAllRuleNodes(
+      documentContext.getAst(),
+      BSLParser.RULE_newExpression
+    );
+
+    return newExpressions.stream()
+      .map(BSLParser.NewExpressionContext.class::cast)
+      .filter(newExpression -> COLOR_PATTERN.matcher(typeName(newExpression)).matches())
+//      .filter(newExpression -> newExpression.doCall() == null || !newExpression.doCall().callParamList().isEmpty())
+      .map(ColorProvider::toColorInformation)
+      .collect(Collectors.toList());
+
+  }
+
+  private static String typeName(BSLParser.NewExpressionContext ctx) {
+    if (ctx.typeName() != null) {
+      return ctx.typeName().getText();
+    }
+
+    if (ctx.doCall() == null || ctx.doCall().callParamList().isEmpty()) {
+      return "";
+    }
+
+    return QUOTE_PATTERN.matcher(ctx.doCall().callParamList().callParam(0).getText()).replaceAll("");
+  }
+
+  private static ColorInformation toColorInformation(BSLParser.NewExpressionContext ctx) {
+    byte redPosition;
+    byte greenPosition;
+    byte bluePosition;
+
+    if (ctx.typeName() != null) {
+      redPosition = 0;
+      greenPosition = 1;
+      bluePosition = 2;
+    } else {
+      redPosition = 1;
+      greenPosition = 2;
+      bluePosition = 3;
+    }
+
+    var callParams = Optional.ofNullable(ctx.doCall())
+      .map(BSLParser.DoCallContext::callParamList)
+      .orElseGet(() -> new BSLParser.CallParamListContext(null, 0));
+
+    double red = getColorValue(callParams, redPosition);
+    double green = getColorValue(callParams, greenPosition);
+    double blue = getColorValue(callParams, bluePosition);
+
+    var range = Ranges.create(ctx);
+    var color = new Color(red, green, blue, 255);
+
+    return new ColorInformation(range, color);
+  }
+
+  private static Double getColorValue(BSLParser.CallParamListContext callParams, byte colorPosition) {
+    return Optional.ofNullable(callParams.callParam(colorPosition))
+      .map(BSLParser.CallParamContext::expression)
+      .filter(expression -> expression.getTokens().size() == 1)
+      .map(expression -> expression.getTokens().get(0))
+      .map(Token::getText)
+      .map(ColorProvider::tryParseInteger)
+      .map(colorValue -> (double) colorValue / 255)
+      .orElse(0.0);
+  }
+
+  private static Integer tryParseInteger(String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+}
