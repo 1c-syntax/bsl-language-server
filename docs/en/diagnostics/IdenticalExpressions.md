@@ -4,6 +4,12 @@
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           | `suspicious` |
 
+## Parameters 
+
+
+|       Name        |   Type   |                                                                                       Description                                                                                        | Default value |
+|:-----------------:|:--------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------:|
+| `popularDivisors` | `String` | `There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation` |  `60, 1024`   |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -52,5 +58,7 @@ EndIf;
 ### Parameter for config
 
 ```json
-"IdenticalExpressions": false
+"IdenticalExpressions": {
+    "popularDivisors": "60, 1024"
+}
 ```

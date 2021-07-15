@@ -319,9 +319,6 @@ class ExpressionParseTreeRewriterTest {
 
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
-    var rewriter = new ExpressionParseTreeRewriter();
-    expression.accept(rewriter);
-
-    return rewriter.getExpressionTree();
+    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
   }
 }
