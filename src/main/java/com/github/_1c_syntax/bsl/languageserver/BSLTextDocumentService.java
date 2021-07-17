@@ -271,7 +271,12 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<ColorPresentation>> colorPresentation(ColorPresentationParams params) {
-    return CompletableFuture.completedFuture(Collections.emptyList());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> colorProvider.getColorPresentation(documentContext, params));
   }
 
   @Override

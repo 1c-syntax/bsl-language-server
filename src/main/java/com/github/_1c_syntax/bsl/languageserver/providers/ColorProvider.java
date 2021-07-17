@@ -31,7 +31,10 @@ import lombok.Getter;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Color;
 import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.ColorPresentation;
+import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.DocumentColorParams;
+import org.eclipse.lsp4j.TextEdit;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -84,6 +87,38 @@ public class ColorProvider {
 
     return colorInformation;
   }
+
+  public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {
+
+    var range = params.getRange();
+    var color = params.getColor();
+
+    int red = (int) (color.getRed() * COLOR_MAX_VALUE);
+    int green = (int) (color.getGreen() * COLOR_MAX_VALUE);
+    int blue = (int) (color.getBlue() * COLOR_MAX_VALUE);
+
+    var colorPresentations = new ArrayList<ColorPresentation>();
+
+    colorPresentations.add(
+      new ColorPresentation(
+        "Через конструктор",
+        new TextEdit(range, String.format("Новый Цвет(%d, %d, %d)", red, green, blue))
+      )
+    );
+
+    WebColor.findByColor(red, green, blue).ifPresent(webColor ->
+      colorPresentations.add(
+        new ColorPresentation(
+          "Через WebЦвет",
+          new TextEdit(range, "WebЦвета." + webColor.getRu())
+        )
+      )
+    );
+
+    return colorPresentations;
+
+  }
+
 
   private static String typeName(BSLParser.NewExpressionContext ctx) {
     if (ctx.typeName() != null) {
@@ -168,6 +203,7 @@ public class ColorProvider {
 
     return colors;
   }
+
 
   @AllArgsConstructor
   @Getter
@@ -327,5 +363,14 @@ public class ColorProvider {
     private final int green;
     private final int blue;
 
+    public static Optional<WebColor> findByColor(int red, int green, int blue) {
+      for (WebColor color : values()) {
+        if (color.getRed() == red && color.getGreen() == green && color.getBlue() == blue) {
+          return Optional.of(color);
+        }
+      }
+
+      return Optional.empty();
+    }
   }
 }
