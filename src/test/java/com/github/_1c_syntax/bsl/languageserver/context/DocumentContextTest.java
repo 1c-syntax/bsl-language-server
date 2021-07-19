@@ -195,16 +195,6 @@ class DocumentContextTest {
   }
 
   @Test
-  void testComputeMetricsLocForCover() {
-
-    DocumentContext documentContext =
-      getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
-
-    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
-
-  }
-
-  @Test
   void testComputeMetricsComments() {
 
     DocumentContext documentContext =

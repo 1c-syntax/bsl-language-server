@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.when;
 
 @DirtiesContext
 class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameCachedDiagnostic> {
-  private CommonModule module;
+  private MDCommonModule module;
   private DocumentContext documentContext;
 
   CommonModuleNameCachedDiagnosticTest() {
@@ -178,7 +178,7 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
     ));
 
 
-    module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
 
   }
 

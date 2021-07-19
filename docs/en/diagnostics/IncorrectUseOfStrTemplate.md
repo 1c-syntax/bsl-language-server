@@ -1,8 +1,8 @@
 # Incorrect use of "StrTemplate" (IncorrectUseOfStrTemplate)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `1` | `brainoverload`<br>`suspicious`<br>`unpredictable` 
+|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                              Tags                              |
+|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `1`           |       `brainoverload`<br>`suspicious`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

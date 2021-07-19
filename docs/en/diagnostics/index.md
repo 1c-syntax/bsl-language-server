@@ -8,16 +8,17 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **141**
+Total: **143**
 
 * Security Hotspot: **4**
-* Vulnerability: **3**
+* Vulnerability: **4**
 * Error: **44**
-* Code smell: **90**
+* Code smell: **91**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
+ [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
@@ -123,6 +124,7 @@ Total: **141**
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | The check box «Set permissions for new objects» should only be selected for the FullAccess role | Yes | Critical | Vulnerability | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 
  [StyleElementConstructors](StyleElementConstructors.md) | Style element constructor | Yes | Minor | Error | `standard`<br>`badpractice` 

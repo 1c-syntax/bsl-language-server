@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
@@ -63,15 +63,16 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
     documentContext.getSymbolTree().getModuleLevelRegions()
       .stream()
+      .filter(regionSymbol -> !regionSymbol.getMethods().isEmpty())
       .filter(regionSymbol -> PUBLIC.matcher(regionSymbol.getName()).find())
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }
 
   private boolean isCashed(DocumentContext documentContext) {
     return documentContext.getMdObject()
-      .filter(CommonModule.class::isInstance)
-      .map(CommonModule.class::cast)
-      .map(CommonModule::getReturnValuesReuse)
+      .filter(MDCommonModule.class::isInstance)
+      .map(MDCommonModule.class::cast)
+      .map(MDCommonModule::getReturnValuesReuse)
       .filter(this::isReuseValue)
       .isPresent();
   }
