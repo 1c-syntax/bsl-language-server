@@ -76,7 +76,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    threshold = (float) configuration.getOrDefault("threshold", threshold);
+    threshold = ((Number) configuration.getOrDefault("threshold", threshold)).floatValue();
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
