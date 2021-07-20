@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626791414020,
+  "lastUpdate": 1626792555847,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11501,6 +11501,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.098542293408255",
             "extra": "mean: 94.87541778882344 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a90702b259c92b1a8dcac659d62ab705e46bc0a",
+          "message": "Merge pull request #1726 from EvilBeaver/fix/expression-visitor-api",
+          "timestamp": "2021-07-20T17:13:42+03:00",
+          "tree_id": "f5bd96154cb634340e3070861d6c197a1109c283",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4a90702b259c92b1a8dcac659d62ab705e46bc0a"
+        },
+        "date": 1626792551404,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.45288173357646,
+            "unit": "sec",
+            "range": "stddev: 1.3711527003013457",
+            "extra": "mean: 95.45288173357646 sec\nrounds: 3"
           }
         ]
       }
