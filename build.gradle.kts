@@ -45,6 +45,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 })
 
 val languageToolVersion = "5.3"
+aspectj.version.set("1.9.7")
 
 dependencies {
 
@@ -75,16 +76,16 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.6")
+    implementation("org.aspectj", "aspectjrt", aspectj.version.get())
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.8.0")
+    implementation("commons-io", "commons-io", "2.11.0")
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.1")
+    implementation("me.tongfei", "progressbar", "0.9.2")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -104,7 +105,7 @@ dependencies {
 
     // test utils
     testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
-    testImplementation("org.awaitility", "awaitility", "4.0.3")
+    testImplementation("org.awaitility", "awaitility", "4.1.0")
 }
 
 java {
