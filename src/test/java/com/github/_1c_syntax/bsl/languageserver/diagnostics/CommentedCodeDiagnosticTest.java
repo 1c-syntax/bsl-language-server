@@ -25,9 +25,9 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -61,7 +61,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
 
-    Vector<Object> thresholdVariants = new Vector<>();
+    List<Object> thresholdVariants = new ArrayList<>();
     thresholdVariants.add(Float.valueOf(1f));
     thresholdVariants.add(Double.valueOf(1));
     thresholdVariants.add(Integer.valueOf(1));
