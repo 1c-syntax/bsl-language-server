@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626759502767,
+  "lastUpdate": 1626790836251,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11439,6 +11439,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.227236724091714",
             "extra": "mean: 93.12709633509319 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1b1bf6b0685bcdaa452b10e8cf2ac2281e70cd42",
+          "message": "Merge pull request #1712 from 1c-syntax/feature/fixMissingTemporaryFileDeletion",
+          "timestamp": "2021-07-20T17:04:18+03:00",
+          "tree_id": "17665927d1e64af6a07df2612c62da4547191752",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1b1bf6b0685bcdaa452b10e8cf2ac2281e70cd42"
+        },
+        "date": 1626790831321,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.820565700531,
+            "unit": "sec",
+            "range": "stddev: 1.626297484941885",
+            "extra": "mean: 94.820565700531 sec\nrounds: 3"
           }
         ]
       }
