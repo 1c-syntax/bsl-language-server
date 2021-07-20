@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,12 +60,19 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("threshold", 1f);
-    diagnosticInstance.configure(configuration);
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    List<Object> thresholdVariants = new ArrayList<>();
+    thresholdVariants.add(Float.valueOf(1f));
+    thresholdVariants.add(Double.valueOf(1));
+    thresholdVariants.add(Integer.valueOf(1));
 
-    assertThat(diagnostics).isEmpty();
+    for (Object threshold : thresholdVariants){
+      configuration.put("threshold", threshold);
+      diagnosticInstance.configure(configuration);
+
+      List<Diagnostic> diagnostics = getDiagnostics();
+      assertThat(diagnostics).isEmpty();
+    }
 
   }
 
