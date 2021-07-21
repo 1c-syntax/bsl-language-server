@@ -68,6 +68,7 @@ class GenericReporterTest {
 
   @AfterEach
   void tearDown() {
+    System.gc();
     FileUtils.deleteQuietly(file);
   }
 
