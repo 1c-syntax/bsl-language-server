@@ -13,7 +13,7 @@ plugins {
     id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
     id("io.freefair.javadoc-links") version "6.0.0-m2"
-    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
+    id("io.freefair.javadoc-utf-8") version "6.1.0-m1"
     id("org.springframework.boot") version "2.5.2"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "5aabc5c989236ec316468eaa0730c1201f6a23e3"
