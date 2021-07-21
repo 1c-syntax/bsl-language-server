@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1626794135570,
+  "lastUpdate": 1626867727693,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11563,6 +11563,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.863732930699834",
             "extra": "mean: 93.76637395222981 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "925439b261cb50fd9ccf799d8398c75b2ec3d92a",
+          "message": "Стабилизация удаления файлов на windows\n\nВызов gc освободит лишние недозакрытые объекты, работающие с файлом.",
+          "timestamp": "2021-07-21T14:23:18+03:00",
+          "tree_id": "6e522904b00dbde6a84abcfd320fcb1361c4b188",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/925439b261cb50fd9ccf799d8398c75b2ec3d92a"
+        },
+        "date": 1626867725318,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.46440800031026,
+            "unit": "sec",
+            "range": "stddev: 0.5660362279788954",
+            "extra": "mean: 93.46440800031026 sec\nrounds: 3"
           }
         ]
       }
