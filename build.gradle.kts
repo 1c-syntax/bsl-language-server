@@ -7,7 +7,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.3.1"
+    id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
     id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.3.0"
@@ -188,7 +188,8 @@ tasks.javadoc {
 }
 
 license {
-    header = rootProject.file("license/HEADER.txt")
+    header(rootProject.file("license/HEADER.txt"))
+    newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
