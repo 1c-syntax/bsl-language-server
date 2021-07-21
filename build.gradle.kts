@@ -7,18 +7,18 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.3.1"
+    id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.0.0-m2"
+    id("io.freefair.lombok") version "6.1.0-m1"
+    id("io.freefair.javadoc-links") version "6.1.0-m1"
+    id("io.freefair.javadoc-utf-8") version "6.1.0-m1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0-m1"
+    id("io.freefair.maven-central.validate-poms") version "6.1.0-m1"
     id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("io.freefair.javadoc-links") version "6.0.0-m2"
-    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
     id("org.springframework.boot") version "2.5.2"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "5aabc5c989236ec316468eaa0730c1201f6a23e3"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
-    id("io.freefair.maven-central.validate-poms") version "6.0.0-m2"
+    id("com.github.1c-syntax.bslls-dev-tools") version "d5920b5c1052ff1406a04132a24be5765e41c42e"
     id("ru.vyarus.pom") version "2.2.0"
 }
 
@@ -188,7 +188,8 @@ tasks.javadoc {
 }
 
 license {
-    header = rootProject.file("license/HEADER.txt")
+    header(rootProject.file("license/HEADER.txt"))
+    newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
