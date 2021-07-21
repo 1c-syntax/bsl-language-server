@@ -19,38 +19,40 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.color;
 
-import com.github._1c_syntax.bsl.languageserver.color.ColorInformationSupplier;
-import com.github._1c_syntax.bsl.languageserver.color.ColorPresentationSupplier;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.ColorInformation;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
-import org.springframework.stereotype.Component;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
-@RequiredArgsConstructor
-public class ColorProvider {
-  private final List<ColorInformationSupplier> colorInformationSuppliers;
-  private final List<ColorPresentationSupplier> colorPresentationSuppliers;
+import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_COMPONENT_VALUE;
 
-  public List<ColorInformation> getDocumentColor(DocumentContext documentContext) {
-    return colorInformationSuppliers.stream()
-      .map(colorInformationSupplier -> colorInformationSupplier.getColorInformation(documentContext))
-      .flatMap(Collection::stream)
+public class WebColorPresentationSupplier implements ColorPresentationSupplier {
+
+  @Override
+  public List<ColorPresentation> getColorPresentation(ColorPresentationParams params) {
+
+    var range = params.getRange();
+    var color = params.getColor();
+
+    int red = (int) (color.getRed() * MAX_COLOR_COMPONENT_VALUE);
+    int green = (int) (color.getGreen() * MAX_COLOR_COMPONENT_VALUE);
+    int blue = (int) (color.getBlue() * MAX_COLOR_COMPONENT_VALUE);
+
+    return WebColor.findByColor(red, green, blue)
+      .map(webColor -> toColorPresentation(range, webColor))
+      .stream()
       .collect(Collectors.toList());
   }
 
-  public List<ColorPresentation> getColorPresentation(ColorPresentationParams params) {
-    return colorPresentationSuppliers.stream()
-      .map(colorPresentationSupplier -> colorPresentationSupplier.getColorPresentation(params))
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+  private ColorPresentation toColorPresentation(Range range, WebColor webColor) {
+    return new ColorPresentation(
+      "Через WebЦвет",
+      new TextEdit(range, "WebЦвета." + webColor.getRu())
+    );
   }
 }
