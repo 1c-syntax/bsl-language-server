@@ -42,6 +42,8 @@
 * Переходы к определению методов
 * Поиск мест использования методов
 * Иерархия вызовов методов
+* Расширение текущего выделения (expand selection)
+* Отображение представления цвета и конвертация между `Цвет` и `WebЦвета`
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)
 * Запуск движка диагностик из командной строки
@@ -92,8 +94,8 @@
     | [codeLens/refresh](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [documentLink](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Показ гиперссылок на документацию по диагностикам.<br />tooltipSupport = true<br />resolveProvider = false | да               |
     | [documentLink/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-    | [documentColor](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-    | [colorPresentation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [documentColor](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+    | [colorPresentation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [rangeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
