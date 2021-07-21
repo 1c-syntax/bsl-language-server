@@ -55,6 +55,7 @@ class JsonReporterTest {
 
   @AfterEach
   void tearDown() {
+    System.gc();
     FileUtils.deleteQuietly(file);
   }
 

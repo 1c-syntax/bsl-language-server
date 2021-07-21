@@ -98,9 +98,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    var rewriter = new ExpressionParseTreeRewriter();
-    rewriter.visitExpression(ctx);
-    var tree = rewriter.getExpressionTree();
+    var tree = ExpressionParseTreeRewriter.buildExpressionTree(ctx);
 
     var binariesList = flattenBinaryOperations(tree);
     if (binariesList.isEmpty()) {
