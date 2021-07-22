@@ -47,9 +47,9 @@ public class ColorProvider {
       .collect(Collectors.toList());
   }
 
-  public List<ColorPresentation> getColorPresentation(ColorPresentationParams params) {
+  public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {
     return colorPresentationSuppliers.stream()
-      .map(colorPresentationSupplier -> colorPresentationSupplier.getColorPresentation(params))
+      .map(colorPresentationSupplier -> colorPresentationSupplier.getColorPresentation(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }

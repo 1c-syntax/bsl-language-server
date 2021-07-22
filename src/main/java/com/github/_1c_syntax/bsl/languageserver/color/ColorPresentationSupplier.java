@@ -21,11 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.color;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 
 import java.util.List;
 
 public interface ColorPresentationSupplier {
-  List<ColorPresentation> getColorPresentation(ColorPresentationParams params);
+  List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params);
 }

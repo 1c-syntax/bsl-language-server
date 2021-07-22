@@ -21,20 +21,33 @@
  */
 package com.github._1c_syntax.bsl.languageserver.color;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_COMPONENT_VALUE;
 
+@Component
+@RequiredArgsConstructor
 public class WebColorPresentationSupplier implements ColorPresentationSupplier {
 
+  private static final String VIA_WEB_COLOR_KEY = "viaWebColors";
+  private static final String WEB_COLOR_DOT_KEY = "webColorDot";
+
+  private final LanguageServerConfiguration configuration;
+
   @Override
-  public List<ColorPresentation> getColorPresentation(ColorPresentationParams params) {
+  public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {
 
     var range = params.getRange();
     var color = params.getColor();
@@ -44,15 +57,35 @@ public class WebColorPresentationSupplier implements ColorPresentationSupplier {
     int blue = (int) (color.getBlue() * MAX_COLOR_COMPONENT_VALUE);
 
     return WebColor.findByColor(red, green, blue)
-      .map(webColor -> toColorPresentation(range, webColor))
+      .map(webColor -> toColorPresentation(documentContext, range, webColor))
       .stream()
       .collect(Collectors.toList());
   }
 
-  private ColorPresentation toColorPresentation(Range range, WebColor webColor) {
-    return new ColorPresentation(
-      "Через WebЦвет",
-      new TextEdit(range, "WebЦвета." + webColor.getRu())
+  private ColorPresentation toColorPresentation(DocumentContext documentContext, Range range, WebColor webColor) {
+    var language = configuration.getLanguage();
+    var scriptLocale = documentContext.getScriptVariantLocale();
+
+    var label = Resources.getResourceString(language, getClass(), VIA_WEB_COLOR_KEY);
+    var newText = Resources.getResourceString(
+      scriptLocale,
+      getClass(),
+      WEB_COLOR_DOT_KEY,
+      webColorName(webColor, scriptLocale)
     );
+
+    var textEdit = new TextEdit(range, newText);
+    return new ColorPresentation(
+      label,
+      textEdit
+    );
+  }
+
+  private String webColorName(WebColor webColor, Locale locale) {
+    if (locale.equals(Locale.ENGLISH)) {
+      return webColor.getEn();
+    } else {
+      return webColor.getRu();
+    }
   }
 }
