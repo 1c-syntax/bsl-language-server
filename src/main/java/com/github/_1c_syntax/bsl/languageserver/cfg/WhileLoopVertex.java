@@ -23,18 +23,22 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
-@Data
+@RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class WhileLoopVertex extends LoopVertex{
-  private final BSLParser.ExpressionContext expression;
+public class WhileLoopVertex extends LoopVertex {
+  private final BSLParser.WhileStatementContext ast;
+
+  public BSLParser.ExpressionContext getExpression() {
+    return ast.expression();
+  }
 
   @Override
   public Optional<BSLParserRuleContext> getAst() {
-    return Optional.of(expression);
+    return Optional.of(ast);
   }
 }

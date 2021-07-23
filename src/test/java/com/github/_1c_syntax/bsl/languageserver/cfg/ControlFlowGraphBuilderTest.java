@@ -197,7 +197,7 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext();
     assertThat(walker.isOnBranch()).isTrue();
     assertThat(walker.getCurrentNode()).isInstanceOf(WhileLoopVertex.class);
-    var loopStart = walker.getCurrentNode();
+    var loopStart = (WhileLoopVertex)walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("В=1");
@@ -205,6 +205,14 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isEqualTo(loopStart);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+
+    var ast = loopStart.getAst();
+    var expression = loopStart.getExpression();
+    assertThat(ast).isPresent();
+    assertThat(ast.get()).isInstanceOf(BSLParser.WhileStatementContext.class);
+    assertThat(expression).isInstanceOf(BSLParser.ExpressionContext.class);
+    assertThat(expression.getParent()).isEqualTo(ast.get());
+
   }
 
   @Test

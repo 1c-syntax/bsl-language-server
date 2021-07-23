@@ -23,18 +23,33 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 import java.util.Optional;
 
-@Data
 @EqualsAndHashCode(callSuper = true)
 public class ConditionalVertex extends BranchingVertex {
-  private final BSLParser.ExpressionContext expression;
+  private final BSLParserRuleContext ast;
+
+  public ConditionalVertex(BSLParser.IfBranchContext ctx) {
+    ast = ctx;
+  }
+
+  public ConditionalVertex(BSLParser.ElsifBranchContext ctx) {
+    ast = ctx;
+  }
+
+  public BSLParser.ExpressionContext getExpression() {
+    if (ast instanceof BSLParser.IfBranchContext) {
+      return ((BSLParser.IfBranchContext) ast).expression();
+    } else if (ast instanceof BSLParser.ElsifBranchContext) {
+      return ((BSLParser.ElsifBranchContext) ast).expression();
+    }
+
+    throw new IllegalStateException();
+  }
 
   @Override
   public Optional<BSLParserRuleContext> getAst() {
-    return Optional.of(expression);
+    return Optional.of(ast);
   }
 }

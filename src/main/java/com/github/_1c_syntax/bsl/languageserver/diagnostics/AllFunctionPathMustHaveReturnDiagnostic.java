@@ -69,13 +69,13 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     type = Boolean.class,
     defaultValue = "" + LOOPS_EXECUTED_ONCE_DEFAULT
   )
-  private static boolean loopsExecutedAtLeastOnce = LOOPS_EXECUTED_ONCE_DEFAULT;
+  private boolean loopsExecutedAtLeastOnce = LOOPS_EXECUTED_ONCE_DEFAULT;
 
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "" + IGNORE_ELSELESS_SWITCHES
   )
-  private static boolean ignoreMissingElseOnExit = IGNORE_ELSELESS_SWITCHES;
+  private boolean ignoreMissingElseOnExit = IGNORE_ELSELESS_SWITCHES;
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
@@ -112,8 +112,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     var incomingVertices = graph.incomingEdgesOf(exitNode.get()).stream()
       .map(graph::getEdgeSource)
       .map(vertex -> nonExplicitReturnNode(vertex, graph))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
 
     if (incomingVertices.isEmpty()) {
@@ -126,8 +125,8 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
       info.getMessage()));
 
     incomingVertices.stream()
-      .map(x -> RelatedInformation.create(documentContext.getUri(),
-        Ranges.create(x),
+      .map(vertex -> RelatedInformation.create(documentContext.getUri(),
+        Ranges.create(vertex),
         info.getMessage()))
       .collect(Collectors.toCollection(() -> listOfMessages));
 
@@ -150,7 +149,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   private Optional<BSLParserRuleContext> checkElseIfClauseExitingNode(ConditionalVertex v, ControlFlowGraph graph) {
     // check if this vertex connected to exit by FALSE branch
     var edgeOrNot = graph.getAllEdges(v, graph.getExitPoint()).stream()
-      .filter(x -> x.getType() == CfgEdgeType.FALSE_BRANCH)
+      .filter(edge -> edge.getType() == CfgEdgeType.FALSE_BRANCH)
       .findAny();
 
     if (edgeOrNot.isEmpty()) {
@@ -158,8 +157,8 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     }
 
     var expression = v.getExpression();
-    if (expression.parent instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {
-      return Optional.of((BSLParser.ElsifBranchContext) expression.parent);
+    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {
+      return Optional.of((BSLParser.ElsifBranchContext) expression.getParent());
     }
 
     return Optional.empty();

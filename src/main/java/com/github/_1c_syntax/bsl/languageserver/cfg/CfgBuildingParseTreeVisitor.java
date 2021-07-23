@@ -86,7 +86,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
 
-    var conditionStatement = new ConditionalVertex(ctx.ifBranch().expression());
+    var conditionStatement = new ConditionalVertex(ctx.ifBranch());
     graph.addVertex(conditionStatement);
 
     connectGraphTail(blocks.getCurrentBlock(), conditionStatement);
@@ -148,7 +148,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     var previousCondition = blocks.getCurrentBlock().getBuildParts().pop();
 
-    var condition = new ConditionalVertex(ctx.expression());
+    var condition = new ConditionalVertex(ctx);
     graph.addVertex(condition);
     graph.addEdge(previousCondition, condition, CfgEdgeType.FALSE_BRANCH);
 
@@ -187,7 +187,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-    var loopStart = new WhileLoopVertex(ctx.expression());
+    var loopStart = new WhileLoopVertex(ctx);
     buildLoopSubgraph(ctx.codeBlock(), loopStart);
     return ctx;
   }
@@ -393,6 +393,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   private LabelVertex createOrGetKnownLabel(String labelName) {
+    // Don't trust Sonar. Предложение заменить на computeIfAbsent
+    // вызывает ConcurrentModificationException
+
     var labelVertex = jumpLabels.get(labelName);
     if (labelVertex == null) {
       labelVertex = new LabelVertex(labelName);
