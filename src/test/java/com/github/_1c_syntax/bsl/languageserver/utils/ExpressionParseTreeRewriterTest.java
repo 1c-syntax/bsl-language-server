@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -319,9 +319,6 @@ class ExpressionParseTreeRewriterTest {
 
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
-    var rewriter = new ExpressionParseTreeRewriter();
-    expression.accept(rewriter);
-
-    return rewriter.getExpressionTree();
+    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
   }
 }

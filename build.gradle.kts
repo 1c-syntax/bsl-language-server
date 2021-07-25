@@ -7,18 +7,18 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.3.1"
+    id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.0.0-m2"
-    id("me.qoomon.git-versioning") version "4.2.1"
+    id("io.freefair.lombok") version "6.1.0-m1"
+    id("io.freefair.javadoc-links") version "6.1.0-m1"
+    id("io.freefair.javadoc-utf-8") version "6.1.0-m1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0-m1"
+    id("io.freefair.maven-central.validate-poms") version "6.1.0-m1"
+    id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("io.freefair.javadoc-links") version "6.0.0-m2"
-    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
-    id("org.springframework.boot") version "2.5.2"
+    id("org.springframework.boot") version "2.5.3"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "5aabc5c989236ec316468eaa0730c1201f6a23e3"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
-    id("io.freefair.maven-central.validate-poms") version "6.0.0-m2"
+    id("com.github.1c-syntax.bslls-dev-tools") version "d5920b5c1052ff1406a04132a24be5765e41c42e"
     id("ru.vyarus.pom") version "2.2.0"
 }
 
@@ -45,6 +45,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 })
 
 val languageToolVersion = "5.3"
+aspectj.version.set("1.9.7")
 
 dependencies {
 
@@ -66,7 +67,7 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.1")
+    api("com.github.1c-syntax", "utils", "0.3.2")
     api("com.github.1c-syntax", "mdclasses", "v0.9.1")
 
     // JLanguageTool
@@ -75,16 +76,16 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.6")
+    implementation("org.aspectj", "aspectjrt", aspectj.version.get())
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.8.0")
+    implementation("commons-io", "commons-io", "2.11.0")
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.1")
+    implementation("me.tongfei", "progressbar", "0.9.2")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -107,7 +108,7 @@ dependencies {
 
     // test utils
     testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
-    testImplementation("org.awaitility", "awaitility", "4.0.3")
+    testImplementation("org.awaitility", "awaitility", "4.1.0")
 }
 
 java {
@@ -190,7 +191,8 @@ tasks.javadoc {
 }
 
 license {
-    header = rootProject.file("license/HEADER.txt")
+    header(rootProject.file("license/HEADER.txt"))
+    newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
