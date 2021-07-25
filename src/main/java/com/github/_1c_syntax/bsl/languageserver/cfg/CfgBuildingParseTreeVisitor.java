@@ -225,13 +225,6 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   @Override
-  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
-    var jumps = blocks.getCurrentBlock().getJumpContext();
-    makeJump(jumps.loopBreak);
-    return ctx;
-  }
-
-  @Override
   public ParseTree visitGotoStatement(BSLParser.GotoStatementContext ctx) {
 
     blocks.addStatement(ctx);
@@ -271,6 +264,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
+    blocks.addStatement(ctx);
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.loopContinue);
     return ctx;
@@ -281,6 +275,14 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     blocks.addStatement(ctx);
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.methodReturn);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
+    blocks.addStatement(ctx);
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+    makeJump(jumps.loopBreak);
     return ctx;
   }
 
