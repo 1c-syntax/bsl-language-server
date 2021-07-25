@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.UNPREDICTABLE,
