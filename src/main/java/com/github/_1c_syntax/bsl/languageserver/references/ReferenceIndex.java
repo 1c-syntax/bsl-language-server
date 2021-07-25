@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
@@ -50,10 +52,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndex {
+
+  public static final String GLOBAL_METHOD_MDO_REF = "Global.Method";
 
   private final ServerContext serverContext;
 
@@ -202,11 +207,19 @@ public class ReferenceIndex {
     ModuleType moduleType = ModuleType.valueOf(multikey.getKey(1));
     String symbolName = multikey.getKey(2);
 
-    return serverContext.getDocument(mdoRef, moduleType)
+    Stream<DocumentContext> reffedModules = serverContext.getDocument(mdoRef, moduleType).stream();
+    Stream<DocumentContext> globalModules = serverContext.getGlobalModules().stream()
+      .map(AbstractMDObjectBSL::getModules)
+      .flatMap(Collection::stream)
+      .map(MDOModule::getUri)
+      .map(serverContext::getDocument);
+
+    return Stream.concat(reffedModules, globalModules)
       .map(DocumentContext::getSymbolTree)
-      // TODO: SymbolTree#getSymbol(Position)?
-      //  Для поиска не только методов, но и переменных, которые могут иметь одинаковые имена
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName).stream())
+      .map(SourceDefinedSymbol.class::cast)
+      .findAny();
+
   }
 
   private SourceDefinedSymbol getFromSymbol(URI uri, Position position) {
