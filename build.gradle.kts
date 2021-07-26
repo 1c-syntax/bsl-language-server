@@ -13,7 +13,7 @@ plugins {
     id("io.freefair.javadoc-links") version "6.1.0-m1"
     id("io.freefair.javadoc-utf-8") version "6.1.0-m3"
     id("io.freefair.aspectj.post-compile-weaving") version "6.1.0-m3"
-    id("io.freefair.maven-central.validate-poms") version "6.1.0-m1"
+    id("io.freefair.maven-central.validate-poms") version "6.1.0-m3"
     id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
     id("org.springframework.boot") version "2.5.3"
