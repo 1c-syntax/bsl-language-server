@@ -49,33 +49,9 @@ import java.util.List;
 public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitSelectMember(SDBLParser.SelectMemberContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.selectStatement());
-    return super.visitSelectMember(ctx);
-  }
-
-  @Override
-  public ParseTree visitVirtualTableMember(SDBLParser.VirtualTableMemberContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.virtualTableStatement());
-    return super.visitVirtualTableMember(ctx);
-  }
-
-  @Override
-  public ParseTree visitJoinMember(SDBLParser.JoinMemberContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.joinStatement());
-    return super.visitJoinMember(ctx);
-  }
-
-  @Override
-  public ParseTree visitWhereMember(SDBLParser.WhereMemberContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.whereStatement());
-    return super.visitWhereMember(ctx);
-  }
-
-  @Override
-  public ParseTree visitGroupByMember(SDBLParser.GroupByMemberContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.groupByStatement());
-    return super.visitGroupByMember(ctx);
+  public ParseTree visitLikeStatement(SDBLParser.LikeStatementContext ctx) {
+    checkRightStatement(ctx, ctx.LIKE(), ctx.statement());
+    return super.visitLikeStatement(ctx);
   }
 
   private void checkRightStatement(BSLParserRuleContext ctx,
