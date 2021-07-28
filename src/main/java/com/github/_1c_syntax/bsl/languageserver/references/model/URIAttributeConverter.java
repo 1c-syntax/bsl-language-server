@@ -21,41 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.eclipse.lsp4j.Range;
-
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
-import javax.persistence.Transient;
+import javax.persistence.AttributeConverter;
 import java.net.URI;
 
-@Embeddable
-@Getter
-@Setter
-@NoArgsConstructor
-public class Location {
-
-  @Convert(converter = URIAttributeConverter.class)
-  private URI uri;
-
-  private int startLine;
-  private int startCharacter;
-  private int endLine;
-  private int endCharacter;
-
-  @Transient
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+public class URIAttributeConverter implements AttributeConverter<URI, String> {
+  @Override
+  public String convertToDatabaseColumn(URI attribute) {
+    return attribute.toString();
   }
 
-  public void setRange(Range range) {
-    startLine = range.getStart().getLine();
-    startCharacter = range.getStart().getCharacter();
-    endLine = range.getEnd().getLine();
-    endCharacter = range.getEnd().getCharacter();
+  @Override
+  public URI convertToEntityAttribute(String dbData) {
+    return URI.create(dbData);
   }
-
 }
