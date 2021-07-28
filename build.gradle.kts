@@ -72,7 +72,7 @@ dependencies {
     api("com.github.1c-syntax", "mdclasses", "0.9.2")
 
     // in-memory db
-    implementation("com.h2database", "h2", "1.4.200")
+    api("com.h2database", "h2", "1.4.200")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
