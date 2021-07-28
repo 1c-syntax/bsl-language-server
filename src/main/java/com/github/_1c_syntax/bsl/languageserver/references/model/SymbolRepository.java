@@ -23,11 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface SymbolRepository extends JpaRepository<Symbol, Long> {
 
   Optional<Symbol> findByMdoRefAndModuleTypeAndSymbolName(String mdoRef, ModuleType moduleType, String symbolName);

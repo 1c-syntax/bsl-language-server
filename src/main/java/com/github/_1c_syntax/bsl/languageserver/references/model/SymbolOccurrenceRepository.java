@@ -23,11 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.util.Streamable;
-import org.springframework.stereotype.Repository;
 
 import java.net.URI;
 
-@Repository
 public interface SymbolOccurrenceRepository extends JpaRepository<SymbolOccurrence, Long> {
 
   void deleteAllByLocationUri(URI uri);
