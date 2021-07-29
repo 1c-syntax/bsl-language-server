@@ -29,10 +29,13 @@ import org.eclipse.lsp4j.Range;
 
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import java.net.URI;
 
 @Embeddable
+@Table(indexes = @Index(columnList = "uri"))
 @Getter
 @Setter
 @NoArgsConstructor

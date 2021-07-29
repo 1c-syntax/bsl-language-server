@@ -28,13 +28,15 @@ import lombok.Setter;
 import org.eclipse.lsp4j.SymbolKind;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.util.List;
 
 @Entity
+@Table(indexes = @Index(columnList = "mdoRef, moduleType"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,7 +52,7 @@ public class Symbol {
   private SymbolKind symbolKind;
   private String symbolName;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "symbol")
+  @OneToMany(mappedBy = "symbol")
   private List<SymbolOccurrence> occurrences;
 
 }

@@ -22,12 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.util.Streamable;
 
 import java.net.URI;
 
 public interface SymbolOccurrenceRepository extends JpaRepository<SymbolOccurrence, Long> {
 
+  @Modifying
+  @Query("delete from SymbolOccurrence where location.uri=:uri")
   void deleteAllByLocationUri(URI uri);
 
   Streamable<SymbolOccurrence> getAllByLocationUri(URI uri);
