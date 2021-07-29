@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.Range;
 
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.Index;
@@ -42,6 +43,7 @@ import java.net.URI;
 public class Location {
 
   @Convert(converter = URIAttributeConverter.class)
+  @Column(columnDefinition = "LONGVARCHAR")
   private URI uri;
 
   private int startLine;
