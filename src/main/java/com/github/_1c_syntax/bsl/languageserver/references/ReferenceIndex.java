@@ -65,6 +65,7 @@ public class ReferenceIndex {
    * @param symbol Символ, для которого необходимо осуществить поиск ссылок.
    * @return Список ссылок на символ.
    */
+  @Transactional
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
@@ -111,7 +112,7 @@ public class ReferenceIndex {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .map(this::buildReference)
       .flatMap(Optional::stream)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   /**
