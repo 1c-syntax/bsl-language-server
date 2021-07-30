@@ -30,13 +30,17 @@ import org.eclipse.lsp4j.SymbolKind;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.util.List;
 
 @Entity
-@Table(indexes = @Index(columnList = "mdoRef, moduleType"))
+@Table(
+  uniqueConstraints = @UniqueConstraint(
+    columnNames = {"mdoRef", "moduleType", "scopeName", "symbolKind", "symbolName"}
+  )
+)
 @Getter
 @Setter
 @NoArgsConstructor

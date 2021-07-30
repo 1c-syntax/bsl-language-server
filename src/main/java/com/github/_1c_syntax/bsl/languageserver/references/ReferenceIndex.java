@@ -38,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -142,16 +143,25 @@ public class ReferenceIndex {
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
-    // todo: race condition?
     var symbol = symbolRepository.findByMdoRefAndModuleTypeAndSymbolName(mdoRef, moduleType, symbolNameCanonical)
       .orElseGet(() -> {
         var newSymbol = new Symbol();
 
         newSymbol.setMdoRef(mdoRef);
         newSymbol.setModuleType(moduleType);
+        newSymbol.setScopeName("");
+        newSymbol.setSymbolKind(SymbolKind.Method);
         newSymbol.setSymbolName(symbolNameCanonical);
 
-        return symbolRepository.save(newSymbol);
+        try {
+          return symbolRepository.save(newSymbol);
+        } catch (DataIntegrityViolationException ignored) {
+          return symbolRepository.findByMdoRefAndModuleTypeAndSymbolName(
+            mdoRef,
+            moduleType,
+            symbolNameCanonical
+          ).orElseThrow();
+        }
       });
 
     var location = new Location();
