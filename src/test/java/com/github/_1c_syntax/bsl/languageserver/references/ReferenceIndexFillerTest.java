@@ -67,6 +67,41 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
+  void testFindVariables() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(25, 24)
+    );
+    assertThat(referencedSymbol).isPresent();
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Первая");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getFrom)
+      .extracting(Symbol::getName)
+      .isEqualTo("ТретийМетод");
+
+    var scopeMethod = documentContext
+      .getSymbolTree()
+      .getMethodSymbol("ТретийМетод");
+    assertThat(scopeMethod).isPresent();
+    var references = referenceIndex.getReferencesFrom(scopeMethod.get());
+    assertThat(references).hasSize(11);
+
+    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).hasSize(5);
+  }
+
+  @Test
   void testRebuildClearReferences() {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
