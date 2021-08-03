@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -30,8 +32,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -63,11 +67,13 @@ public class ReferenceIndexFiller {
 
   public void fill(DocumentContext documentContext) {
     index.clearReferences(documentContext.getUri());
-    new ReferenceFinder(documentContext).visitFile(documentContext.getAst());
+    BSLParser.FileContext documentContextAst = documentContext.getAst();
+    new MethodSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
+    new VariableSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
   }
 
   @RequiredArgsConstructor
-  private class ReferenceFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+  private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
 
@@ -171,4 +177,113 @@ public class ReferenceIndexFiller {
         .orElse(Optional.empty());
     }
   }
+
+  @RequiredArgsConstructor
+  private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+
+    private final DocumentContext documentContext;
+
+    @Override
+    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+      if (ctx.IDENTIFIER() == null) {
+        return super.visitLValue(ctx);
+      }
+
+      findVariableSymbol(ctx, ctx.IDENTIFIER().getText()).ifPresent(s -> {
+        if (notVariableInitialization(ctx, s)) {
+          addVariableUsage(
+            s.getRootParent(SymbolKind.Method),
+            ctx.IDENTIFIER().getText(),
+            Ranges.create(ctx.IDENTIFIER()),
+            false
+          );
+        }
+      });
+
+      return ctx;
+    }
+
+    @Override
+    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+      if (ctx.IDENTIFIER() == null) {
+        return super.visitCallStatement(ctx);
+      }
+
+      var variableName = ctx.IDENTIFIER().getText();
+      findVariableSymbol(ctx, variableName)
+        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
+      return super.visitCallStatement(ctx);
+    }
+
+    @Override
+    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+      if (ctx.IDENTIFIER() == null) {
+        return super.visitComplexIdentifier(ctx);
+      }
+
+      var variableName = ctx.IDENTIFIER().getText();
+      findVariableSymbol(ctx, variableName)
+        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
+      return super.visitComplexIdentifier(ctx);
+    }
+
+    private Optional<VariableSymbol> findVariableSymbol(ParserRuleContext ctx, String variableName) {
+      var variableSymbol = documentContext.getSymbolTree()
+        .getVariableSymbol(variableName, getVariableScope(ctx));
+
+      if (variableSymbol.isPresent()) {
+        return variableSymbol;
+      }
+
+      return documentContext.getSymbolTree()
+        .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
+    }
+
+    private SourceDefinedSymbol getVariableScope(ParserRuleContext ctx) {
+
+      if (ctx instanceof BSLParser.SubContext) {
+        var methodSymbol = documentContext
+          .getSymbolTree()
+          .getMethodSymbol((BSLParser.SubContext) ctx);
+
+        if (methodSymbol.isPresent()) {
+          return methodSymbol.get();
+        }
+      }
+
+      var parent = ctx.getParent();
+      if (parent != null) {
+        return getVariableScope(parent);
+      }
+
+      return documentContext.getSymbolTree().getModule();
+    }
+
+    private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {
+      return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
+    }
+
+    private void addVariableUsage(Optional<SourceDefinedSymbol> methodSymbol,
+                                  String variableName,
+                                  Range range,
+                                  boolean usage) {
+      String methodName = "";
+
+      if (methodSymbol.isPresent()) {
+        methodName = methodSymbol.get().getName();
+      }
+
+      index.addVariableUsage(
+        documentContext.getUri(),
+        MdoRefBuilder.getMdoRef(documentContext),
+        documentContext.getModuleType(),
+        methodName,
+        variableName,
+        range,
+        !usage
+      );
+    }
+
+  }
+
 }

@@ -69,7 +69,6 @@ public class ReferenceIndex {
     var moduleType = symbol.getOwner().getModuleType();
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
-    // this#toSymbol
     var symbolDto = Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
@@ -168,6 +167,49 @@ public class ReferenceIndex {
     locationRepository.updateLocation(symbolOccurrence);
   }
 
+  /**
+   * Добавить обращение к переменной в индекс.
+   *
+   * @param uri          URI документа, откуда произошел вызов.
+   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType   Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
+   * @param variableName Имя переменной, к которой происходит обращение.
+   * @param range        Диапазон, в котором происходит обращение к символу.
+   * @param updating     Признак обновления значения переменной.
+   */
+  public void addVariableUsage(URI uri,
+                               String mdoRef,
+                               ModuleType moduleType,
+                               String methodName,
+                               String variableName,
+                               Range range,
+                               boolean updating) {
+    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
+    String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH);
+
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName(methodNameCanonical)
+      .symbolKind(SymbolKind.Variable)
+      .symbolName(symbolNameCanonical)
+      .build();
+
+    var location = new Location();
+    location.setUri(uri);
+    location.setRange(range);
+
+    var symbolOccurrence = SymbolOccurrence.builder()
+      .occurrenceType(updating ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
+      .symbol(symbol)
+      .location(location)
+      .build();
+
+    symbolOccurrenceRepository.save(symbolOccurrence);
+    locationRepository.updateLocation(symbolOccurrence);
+  }
+
   private Optional<Reference> buildReference(
     SymbolOccurrence symbolOccurrence
   ) {
@@ -189,10 +231,16 @@ public class ReferenceIndex {
     ModuleType moduleType = symbolEntity.getModuleType();
     String symbolName = symbolEntity.getSymbolName();
 
+    if (symbolEntity.getSymbolKind() == SymbolKind.Variable) {
+      return serverContext.getDocument(mdoRef, moduleType)
+        .map(DocumentContext::getSymbolTree)
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.getScopeName())
+        .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
+        .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+    }
+
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
-      // TODO: SymbolTree#getSymbol(Position)?
-      //  Для поиска не только методов, но и переменных, которые могут иметь одинаковые имена
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
