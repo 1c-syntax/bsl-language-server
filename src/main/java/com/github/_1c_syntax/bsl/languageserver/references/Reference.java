@@ -56,6 +56,11 @@ public class Reference {
    */
   Range selectionRange;
 
+  /**
+   * Признак указания на обновление значения переменной.
+   */
+  boolean updating;
+
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
       .filter(SourceDefinedSymbol.class::isInstance)
@@ -71,7 +76,11 @@ public class Reference {
   }
 
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange());
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), false);
+  }
+
+  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, boolean updating) {
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), updating);
   }
 
 }

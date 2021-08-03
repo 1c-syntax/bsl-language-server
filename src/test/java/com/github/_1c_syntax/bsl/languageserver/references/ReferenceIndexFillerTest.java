@@ -89,6 +89,10 @@ class ReferenceIndexFillerTest {
       .extracting(Symbol::getName)
       .isEqualTo("ТретийМетод");
 
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::isUpdating)
+      .isEqualTo(false);
+
     var scopeMethod = documentContext
       .getSymbolTree()
       .getMethodSymbol("ТретийМетод");

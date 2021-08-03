@@ -192,12 +192,10 @@ public class ReferenceIndex {
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
-      .symbolName(symbolNameCanonical)
+      .symbolName(variableNameCanonical)
       .build();
 
-    var location = new Location();
-    location.setUri(uri);
-    location.setRange(range);
+    var location = new Location(uri, range);
 
     var symbolOccurrence = SymbolOccurrence.builder()
       .occurrenceType(updating ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
@@ -219,7 +217,7 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
-        return new Reference(from, symbol, uri, range);
+        return new Reference(from, symbol, uri, range, symbolOccurrence.isUpdating());
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }

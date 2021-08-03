@@ -56,7 +56,8 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
         symbolTree.getModule(),
         sourceDefinedSymbol,
         uri,
-        sourceDefinedSymbol.getSelectionRange())
+        sourceDefinedSymbol.getSelectionRange(),
+        false)
       )
       .findFirst();
   }
