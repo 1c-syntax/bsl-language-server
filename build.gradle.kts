@@ -59,6 +59,7 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-data-jpa")
+    api("org.springframework.retry:spring-retry")
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
