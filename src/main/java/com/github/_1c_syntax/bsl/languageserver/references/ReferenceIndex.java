@@ -193,12 +193,10 @@ public class ReferenceIndex {
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
-      .symbolName(symbolNameCanonical)
+      .symbolName(variableNameCanonical)
       .build();
 
-    var location = new Location();
-    location.setUri(uri);
-    location.setRange(range);
+    var location = new Location(uri, range);
 
     var symbolOccurrence = SymbolOccurrence.builder()
       .occurrenceType(updating ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
