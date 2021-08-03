@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.ColorInformationsAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.ColorPresentationsAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangeAssert;
@@ -30,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangesAss
 import com.github._1c_syntax.bsl.languageserver.util.assertions.SelectionRangesAssert;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.SelectionRange;
@@ -64,5 +66,9 @@ public class Assertions extends org.assertj.core.api.Assertions {
 
   public static ColorInformationsAssert assertThatColorInformations(List<ColorInformation> actual) {
     return new ColorInformationsAssert(actual);
+  }
+
+  public static ColorPresentationsAssert assertThatColorPresentations(List<ColorPresentation> actual) {
+    return new ColorPresentationsAssert(actual);
   }
 }

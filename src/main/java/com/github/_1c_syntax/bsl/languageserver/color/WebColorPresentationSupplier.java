@@ -81,7 +81,7 @@ public class WebColorPresentationSupplier implements ColorPresentationSupplier {
     );
   }
 
-  private String webColorName(WebColor webColor, Locale locale) {
+  private static String webColorName(WebColor webColor, Locale locale) {
     if (locale.equals(Locale.ENGLISH)) {
       return webColor.getEn();
     } else {

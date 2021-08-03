@@ -38,10 +38,10 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   }
 
   /**
-   * Ассерт для проверки совпадения цвета и диапазона
+   * Ассерт для проверки совпадения цвета.
    *
-   * @param color   Цвет (см. {@link org.eclipse.lsp4j.Color}
-   * @return Ссылка на объект для текучести
+   * @param color Цвет (см. {@link org.eclipse.lsp4j.Color}.
+   * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasColor(Color color) {
 
@@ -52,10 +52,10 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   }
 
   /**
-   * Ассерт для проверки совпадения цвета и диапазона
+   * Ассерт для проверки совпадения диапазона.
    *
-   * @param range   Диапазон (см. {@link org.eclipse.lsp4j.Range}.
-   * @return Ссылка на объект для текучести
+   * @param range Диапазон (см. {@link org.eclipse.lsp4j.Range}.
+   * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasRange(Range range) {
 
@@ -66,11 +66,11 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   }
 
   /**
-   * Ассерт для проверки совпадения цвета и диапазона
+   * Ассерт для проверки совпадения цвета и диапазона.
    *
-   * @param color   Цвет (см. {@link org.eclipse.lsp4j.Color}
-   * @param range   Диапазон (см. {@link org.eclipse.lsp4j.Range}.
-   * @return Ссылка на объект для текучести
+   * @param color Цвет (см. {@link org.eclipse.lsp4j.Color}.
+   * @param range Диапазон (см. {@link org.eclipse.lsp4j.Range}.
+   * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasColorAndRange(Color color, Range range) {
     return anySatisfy(colorInformation ->
