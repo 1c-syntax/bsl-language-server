@@ -34,6 +34,7 @@ import java.util.List;
 public interface ColorPresentationSupplier {
   /**
    * @param documentContext Контекст документа, для которого надо рассчитать данные о представлении элемента цвета.
+   * @param params          Параметры вызова.
    * @return Список представлений элемента цвета.
    */
   List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params);

@@ -50,8 +50,8 @@ public class ColorProvider {
   /**
    * Получение данных о {@link ColorInformation} в документе.
    *
-   * @param documentContext контекст документа.
-   * @return список найденных мест с использованием элементов цвета.
+   * @param documentContext Контекст документа.
+   * @return Список найденных мест с использованием элементов цвета.
    */
   public List<ColorInformation> getDocumentColor(DocumentContext documentContext) {
     return colorInformationSuppliers.stream()
@@ -63,9 +63,9 @@ public class ColorProvider {
   /**
    * Получение данных о {@link ColorPresentation} в документе.
    *
-   * @param documentContext контекст документа.
-   * @param params параметры вызова.
-   * @return список представлений элемента цвета.
+   * @param documentContext Контекст документа.
+   * @param params          Параметры вызова.
+   * @return Список представлений элемента цвета.
    */
   public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {
     return colorPresentationSuppliers.stream()
