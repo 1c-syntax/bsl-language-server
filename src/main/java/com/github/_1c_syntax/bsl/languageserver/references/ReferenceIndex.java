@@ -39,6 +39,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,6 +141,7 @@ public class ReferenceIndex {
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
+  @Retryable(DataIntegrityViolationException.class)
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
@@ -153,15 +155,7 @@ public class ReferenceIndex {
         newSymbol.setSymbolKind(SymbolKind.Method);
         newSymbol.setSymbolName(symbolNameCanonical);
 
-        try {
-          return symbolRepository.save(newSymbol);
-        } catch (DataIntegrityViolationException ignored) {
-          return symbolRepository.findByMdoRefAndModuleTypeAndSymbolName(
-            mdoRef,
-            moduleType,
-            symbolNameCanonical
-          ).orElseThrow();
-        }
+        return symbolRepository.save(newSymbol);
       });
 
     var location = new Location();
