@@ -34,12 +34,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code textDocument/documentColor}
+ * и {@code textDocument/colorPresentation}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor">Document Color Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation">Color Presentation Request specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 public class ColorProvider {
   private final List<ColorInformationSupplier> colorInformationSuppliers;
   private final List<ColorPresentationSupplier> colorPresentationSuppliers;
 
+  /**
+   * Получение данных о {@link ColorInformation} в документе.
+   *
+   * @param documentContext контекст документа.
+   * @return список найденных мест с использованием элементов цвета.
+   */
   public List<ColorInformation> getDocumentColor(DocumentContext documentContext) {
     return colorInformationSuppliers.stream()
       .map(colorInformationSupplier -> colorInformationSupplier.getColorInformation(documentContext))
@@ -47,6 +60,13 @@ public class ColorProvider {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Получение данных о {@link ColorPresentation} в документе.
+   *
+   * @param documentContext контекст документа.
+   * @param params параметры вызова.
+   * @return список представлений элемента цвета.
+   */
   public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {
     return colorPresentationSuppliers.stream()
       .map(colorPresentationSupplier -> colorPresentationSupplier.getColorPresentation(documentContext, params))

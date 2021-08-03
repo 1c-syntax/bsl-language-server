@@ -27,6 +27,14 @@ import org.eclipse.lsp4j.ColorPresentationParams;
 
 import java.util.List;
 
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.ColorProvider}
+ * данными о представлении элемента цвета в документе.
+ */
 public interface ColorPresentationSupplier {
+  /**
+   * @param documentContext Контекст документа, для которого надо рассчитать данные о представлении элемента цвета.
+   * @return Список представлений элемента цвета.
+   */
   List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params);
 }

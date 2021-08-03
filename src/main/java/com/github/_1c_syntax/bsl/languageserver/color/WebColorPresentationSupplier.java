@@ -37,6 +37,10 @@ import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_COMPONENT_VALUE;
 
+/**
+ * Сапплаер данными о представлении элемента цвета через обращение
+ * к системному перечислению {@code WebЦвета}.
+ */
 @Component
 @RequiredArgsConstructor
 public class WebColorPresentationSupplier implements ColorPresentationSupplier {

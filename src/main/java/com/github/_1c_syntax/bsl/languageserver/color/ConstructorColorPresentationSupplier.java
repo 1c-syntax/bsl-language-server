@@ -34,6 +34,10 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_COMPONENT_VALUE;
 
+/**
+ * Сапплаер данными о представлении элемента цвета через конструктор
+ * {@code Новый Цвет()}.
+ */
 @Component
 @RequiredArgsConstructor
 public class ConstructorColorPresentationSupplier implements ColorPresentationSupplier {

@@ -23,8 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.color;
 
 import lombok.experimental.UtilityClass;
 
+/**
+ * Служебный класс для констант по работе с объектом {@code Цвет}.
+ */
 @UtilityClass
 public class BSLColor {
+  /**
+   * Альфа-канал цвета по умолчанию как значение из диапазона [0...255].
+   */
   public static final int DEFAULT_ALPHA_CHANNEL = 255;
+  /**
+   * Максимальное значение компонента цвета (диапазон [0...255]).
+   */
   public static final int MAX_COLOR_COMPONENT_VALUE = 255;
 }

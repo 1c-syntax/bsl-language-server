@@ -39,6 +39,10 @@ import java.util.stream.Collectors;
 import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.DEFAULT_ALPHA_CHANNEL;
 import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_COMPONENT_VALUE;
 
+/**
+ * Сапплаер данными о наличии использования элементов цвета через обращение
+ * к системному перечислению {@code WebЦвета}.
+ */
 @Component
 public class WebColorInformationSupplier implements ColorInformationSupplier {
 

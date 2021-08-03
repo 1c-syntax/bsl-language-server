@@ -26,6 +26,9 @@ import lombok.Getter;
 
 import java.util.Optional;
 
+/**
+ * Данные о цветах системного перечисления @{code WebЦвета}.
+ */
 @AllArgsConstructor
 @Getter
 public enum WebColor {

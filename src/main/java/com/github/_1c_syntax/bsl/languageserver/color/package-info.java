@@ -19,21 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+/**
+ * Пакет предназначен для реализации различных видов представления цвета ("documentColor" и "colorPresentation"),
+ * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.ColorProvider}.
+ */
+@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.color;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.ColorInformation;
-
-import java.util.List;
-
-/**
- * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.ColorProvider}
- * данными о наличии использования элементов цвета в документе.
- */
-public interface ColorInformationSupplier {
-  /**
-   * @param documentContext Контекст документа, для которого надо рассчитать данные об использовании элементов цвета.
-   * @return Список использований элементов цвета.
-   */
-  List<ColorInformation> getColorInformation(DocumentContext documentContext);
-}
+import javax.annotation.ParametersAreNonnullByDefault;
