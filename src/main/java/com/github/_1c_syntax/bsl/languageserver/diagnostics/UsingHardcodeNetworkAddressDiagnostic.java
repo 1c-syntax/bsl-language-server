@@ -72,16 +72,20 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
   private static final Pattern patternAlphabet = CaseInsensitivePattern.compile(REGEX_ALPHABET);
 
-  /**
-   * Паттерн для исключения популярных версий из списка IP-адресов. Например, `2.5.4.10`.
-   */
-  private static final Pattern POPULAR_VERSION_PATTERN = Pattern.compile(REGEX_POPULAR_VERSION);
-
   @DiagnosticParameter(
     type = String.class,
     defaultValue = REGEX_EXCLUSION
   )
   private Pattern searchWordsExclusion = CaseInsensitivePattern.compile(REGEX_EXCLUSION);
+
+  /**
+   * Паттерн для исключения популярных версий из списка IP-адресов. Например, `2.5.4.10`.
+   */
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = REGEX_POPULAR_VERSION
+  )
+  private Pattern searchPopularVersionExclusion = CaseInsensitivePattern.compile(REGEX_POPULAR_VERSION);
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -90,6 +94,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
     searchWordsExclusion = CaseInsensitivePattern.compile(searchWordsExclusionProperty);
 
+    // Паттерн исключения популярных версий
+    String searchPopularVersionExclusionProperty =
+      (String) configuration.getOrDefault("searchPopularVersionExclusion", REGEX_POPULAR_VERSION);
+    searchPopularVersionExclusion = CaseInsensitivePattern.compile(searchPopularVersionExclusionProperty);
   }
 
   /**
@@ -130,7 +138,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
-      if (POPULAR_VERSION_PATTERN.matcher(content).find()) {
+      if (searchPopularVersionExclusion.matcher(content).find()) {
         return;
       }
 

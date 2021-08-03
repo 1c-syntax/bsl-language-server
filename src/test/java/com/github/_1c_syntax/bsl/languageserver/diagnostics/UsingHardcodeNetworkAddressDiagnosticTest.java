@@ -36,7 +36,6 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
   @Test
   void test() {
-
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
@@ -55,14 +54,11 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(55, 13, 18)
       .hasRange(57, 104, 114)
       .hasRange(65, 9, 22)
-      .hasRange(71, 6, 15)
-    ;
-
+      .hasRange(71, 6, 15);
   }
 
   @Test
   void testConfigure() {
-
     List<Diagnostic> diagnostics;
     Map<String, Object> configuration;
 
@@ -85,5 +81,14 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     // then
     assertThat(diagnostics).hasSize(13);
 
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    // убираем 2.* из исключения
+    configuration.put("searchPopularVersionExclusion", "^(1|3|8\\.3|11)\\.");
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(15);
   }
 }
