@@ -66,6 +66,8 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   private static final String REGEX_ALPHABET = "[A-zА-я]";
 
+  private static final String REGEX_POPULAR_VERSION = "^(1|2|3|8\\.3|11)\\.";
+
   private static final Pattern patternNetworkAddress = CaseInsensitivePattern.compile(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
   private static final Pattern patternAlphabet = CaseInsensitivePattern.compile(REGEX_ALPHABET);
@@ -76,6 +78,15 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   )
   private Pattern searchWordsExclusion = CaseInsensitivePattern.compile(REGEX_EXCLUSION);
 
+  /**
+   * Паттерн для исключения популярных версий из списка IP-адресов. Например, `2.5.4.10`.
+   */
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = REGEX_POPULAR_VERSION
+  )
+  private Pattern searchPopularVersionExclusion = CaseInsensitivePattern.compile(REGEX_POPULAR_VERSION);
+
   @Override
   public void configure(Map<String, Object> configuration) {
     // Слова исключения, при поиске IP адресов
@@ -83,6 +94,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
     searchWordsExclusion = CaseInsensitivePattern.compile(searchWordsExclusionProperty);
 
+    // Паттерн исключения популярных версий
+    String searchPopularVersionExclusionProperty =
+      (String) configuration.getOrDefault("searchPopularVersionExclusion", REGEX_POPULAR_VERSION);
+    searchPopularVersionExclusion = CaseInsensitivePattern.compile(searchPopularVersionExclusionProperty);
   }
 
   /**
@@ -120,6 +135,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       if (skipStatement(ctx, BSLParser.RULE_statement)
         || skipStatement(ctx, BSLParser.RULE_param)
         || itVersionReturn(ctx)) {
+        return;
+      }
+
+      if (searchPopularVersionExclusion.matcher(content).find()) {
         return;
       }
 
