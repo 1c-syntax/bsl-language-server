@@ -41,7 +41,17 @@ public class Resources {
    */
   public String getResourceString(Language language, Class<?> clazz, String key) {
     String languageCode = language.getLanguageCode();
-    Locale locale = Locale.forLanguageTag(languageCode);
+    var locale = Locale.forLanguageTag(languageCode);
+    return ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key).intern();
+  }
+
+  /**
+   * @param locale Язык получения ресурсной строки.
+   * @param clazz  Класс, ресурсы которого необходимо прочитать.
+   * @param key    Ключ из {@link ResourceBundle}.
+   * @return Содержимое ресурса.
+   */
+  public String getResourceString(Locale locale, Class<?> clazz, String key) {
     return ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key).intern();
   }
 
@@ -54,5 +64,16 @@ public class Resources {
    */
   public String getResourceString(Language language, Class<?> clazz, String key, Object... args) {
     return String.format(getResourceString(language, clazz, key), args).intern();
+  }
+
+  /**
+   * @param locale Язык получения ресурсной строки.
+   * @param clazz  Класс, ресурсы которого необходимо прочитать.
+   * @param key    Ключ из {@link ResourceBundle}.
+   * @param args   Аргументы для форматирования ресурсной строки.
+   * @return Содержимое ресурса.
+   */
+  public String getResourceString(Locale locale, Class<?> clazz, String key, Object... args) {
+    return String.format(getResourceString(locale, clazz, key), args).intern();
   }
 }
