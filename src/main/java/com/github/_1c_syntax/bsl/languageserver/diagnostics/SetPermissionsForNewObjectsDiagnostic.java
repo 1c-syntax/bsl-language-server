@@ -82,7 +82,7 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     this.namesFullAccessRole = getSetFromString(namesFullAccessRoleString);
   }
 
-  private Set<String> getSetFromString(String inputParam){
+  private static Set<String> getSetFromString(String inputParam){
     return Set.of(inputParam.split(","));
   }
 
