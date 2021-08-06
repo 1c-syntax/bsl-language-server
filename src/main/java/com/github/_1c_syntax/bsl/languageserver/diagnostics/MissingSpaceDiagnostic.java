@@ -132,11 +132,11 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
     for (Token token : tokens) {
 
-      boolean leftComputed = false;
-      boolean rightComputed = false;
+      var leftComputed = false;
+      var rightComputed = false;
 
-      boolean noSpaceLeft = false;
-      boolean noSpaceRight = false;
+      var noSpaceLeft = false;
+      var noSpaceRight = false;
 
       String tokenText = token.getText();
 
@@ -194,16 +194,16 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
       boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
-      Range range = diagnostic.getRange();
+      var range = diagnostic.getRange();
 
       if (missedLeft) {
-        TextEdit textEdit = new TextEdit(
+        var textEdit = new TextEdit(
           new Range(range.getStart(), range.getStart()),
           " ");
         textEdits.add(textEdit);
       }
       if (missedRight) {
-        TextEdit textEdit = new TextEdit(
+        var textEdit = new TextEdit(
           new Range(range.getEnd(), range.getEnd()),
           " ");
         textEdits.add(textEdit);
@@ -239,7 +239,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
 
-    Token previousToken = tokens.get(t.getTokenIndex() - 1);
+    var previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
       && !StringUtils.isWhitespace(previousToken.getText());
   }

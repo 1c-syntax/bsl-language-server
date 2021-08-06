@@ -56,7 +56,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParameterDefinition> parameters = documentContext
       .getSymbolTree()
-      .getMethodSymbol((BSLParserRuleContext) ctx.getParent())
+      .getMethodSymbol(ctx.getParent())
       .stream()
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
@@ -73,7 +73,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       .collect(
         Collectors.toMap(
           ParseTree::getText,
-          node -> (BSLParserRuleContext) node,
+          BSLParserRuleContext.class::cast,
           (existing, replacement) -> existing,
           CaseInsensitiveMap::new)
       );

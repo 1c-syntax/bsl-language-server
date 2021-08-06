@@ -33,7 +33,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
-import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,7 +73,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
+      var rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
         Ranges.containsRange(
           rangeCodeBlock,

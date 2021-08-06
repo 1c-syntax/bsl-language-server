@@ -28,12 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -108,9 +107,9 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().substring(1, ctx.getText().length() - 1);
+    var content = ctx.getText().substring(1, ctx.getText().length() - 1);
     if (content.length() > 2) {
-      Matcher matcherURL = patternURL.matcher(content);
+      var matcherURL = patternURL.matcher(content);
       if (!matcherURL.find()) {
         processVisitString(ctx, content);
       }
@@ -119,7 +118,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   }
 
   private void processVisitString(BSLParser.StringContext ctx, String content) {
-    Matcher matcher = patternNetworkAddress.matcher(content);
+    var matcher = patternNetworkAddress.matcher(content);
     if (matcher.find()) {
 
       String firstValue = matcher.group(0);
@@ -146,20 +145,20 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
     }
   }
 
-  private boolean itVersionReturn(ParserRuleContext ctx) {
+  private boolean itVersionReturn(BSLParserRuleContext ctx) {
 
-    ParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
+    BSLParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
     if (returnState != null) {
       return skipStatement(returnState, BSLParser.RULE_function);
     }
     return false;
   }
 
-  private boolean skipStatement(ParserRuleContext ctx, int ruleStatement) {
+  private boolean skipStatement(BSLParserRuleContext ctx, int ruleStatement) {
 
-    ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
+    BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
     if (parent != null) {
-      Matcher matcher = searchWordsExclusion.matcher(parent.getText());
+      var matcher = searchWordsExclusion.matcher(parent.getText());
       return matcher.find();
     }
     return false;
