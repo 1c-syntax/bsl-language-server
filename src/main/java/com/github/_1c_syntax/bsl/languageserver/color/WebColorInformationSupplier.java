@@ -73,10 +73,9 @@ public class WebColorInformationSupplier implements ColorInformationSupplier {
     double red = (double) webColor.getRed() / MAX_COLOR_COMPONENT_VALUE;
     double green = (double) webColor.getGreen() / MAX_COLOR_COMPONENT_VALUE;
     double blue = (double) webColor.getBlue() / MAX_COLOR_COMPONENT_VALUE;
-    double alpha = (double) DEFAULT_ALPHA_CHANNEL / MAX_COLOR_COMPONENT_VALUE;
 
     var range = Ranges.create(ctx);
-    var color = new Color(red, green, blue, alpha);
+    var color = new Color(red, green, blue, DEFAULT_ALPHA_CHANNEL);
 
     return new ColorInformation(range, color);
   }

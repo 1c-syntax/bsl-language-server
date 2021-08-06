@@ -97,10 +97,9 @@ public class ConstructorColorInformationSupplier implements ColorInformationSupp
     double red = getColorValue(callParams, redPosition);
     double green = getColorValue(callParams, greenPosition);
     double blue = getColorValue(callParams, bluePosition);
-    double alpha = (double) DEFAULT_ALPHA_CHANNEL / MAX_COLOR_COMPONENT_VALUE;
 
     var range = Ranges.create(ctx);
-    var color = new Color(red, green, blue, alpha);
+    var color = new Color(red, green, blue, DEFAULT_ALPHA_CHANNEL);
 
     return new ColorInformation(range, color);
   }

@@ -29,9 +29,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class BSLColor {
   /**
-   * Альфа-канал цвета по умолчанию как значение из диапазона [0...255].
+   * Альфа-канал цвета по умолчанию как значение из диапазона [0...1].
    */
-  public static final int DEFAULT_ALPHA_CHANNEL = 255;
+  public static final double DEFAULT_ALPHA_CHANNEL = 1.0;
+
   /**
    * Максимальное значение компонента цвета (диапазон [0...255]).
    */
