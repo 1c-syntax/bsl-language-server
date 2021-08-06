@@ -5,6 +5,7 @@ com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.codelenses
+com.github._1c_syntax.bsl.languageserver.color
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
