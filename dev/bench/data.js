@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1628059140809,
+  "lastUpdate": 1628245062216,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -11873,6 +11873,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8509120894437915",
             "extra": "mean: 96.52318890889485 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a4f592fe61671f662553f52deb17083e968c367a",
+          "message": "Merge pull request #1736 from 1c-syntax/feature/document-color",
+          "timestamp": "2021-08-06T13:07:13+03:00",
+          "tree_id": "ec589effd6d1dfe09f262168ab50a527b6663209",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a4f592fe61671f662553f52deb17083e968c367a"
+        },
+        "date": 1628245058566,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 100.6774652004242,
+            "unit": "sec",
+            "range": "stddev: 9.023649987279576",
+            "extra": "mean: 100.6774652004242 sec\nrounds: 3"
           }
         ]
       }
