@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Value
@@ -206,6 +207,9 @@ public class SarifReport {
       "at every specified location.")
     List<Location> locations;
 
+    @JsonPropertyDescription("A set of locations relevant to this result.")
+    List<Location> relatedLocations;
+
     public Result(FileInfo fileInfo, Diagnostic diagnostic) {
       var uri = fileInfo.getPath().toUri().toString();
 
@@ -213,7 +217,17 @@ public class SarifReport {
       ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
       level = severityToLevel.get(diagnostic.getSeverity());
       analysisTarget = new ArtifactLocation(uri);
-      locations = List.of(new Location(uri, diagnostic.getRange()));
+      locations = List.of(new Location(diagnostic.getMessage(), uri, diagnostic.getRange()));
+      relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
+        .stream()
+        .flatMap(Collection::stream)
+        .skip(1)
+        .map(relatedInformation -> new Location(
+          relatedInformation.getMessage(),
+          relatedInformation.getLocation().getUri(),
+          relatedInformation.getLocation().getRange()
+        ))
+        .collect(Collectors.toList());
     }
   }
 
@@ -257,14 +271,17 @@ public class SarifReport {
   @JsonClassDescription("A location within a programming artifact.")
   class Location {
 
-    // todo: message?
-
     @JsonPropertyDescription("Identifies the artifact and region.")
     PhysicalLocation physicalLocation;
 
-    public Location(String uri, Range range) {
-      physicalLocation = new PhysicalLocation(uri, range);
+    @JsonPropertyDescription("A message relevant to the location.")
+    Message message;
+
+    public Location(String message, String uri, Range range) {
+      this.message = new Message(message);
+      this.physicalLocation = new PhysicalLocation(uri, range);
     }
+
   }
 
   @Value
