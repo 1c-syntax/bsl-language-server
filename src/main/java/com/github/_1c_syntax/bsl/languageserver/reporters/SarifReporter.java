@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 
 @Component
 @RequiredArgsConstructor
@@ -39,6 +41,7 @@ import java.nio.file.Path;
 public class SarifReporter implements DiagnosticReporter {
 
   private final LanguageServerConfiguration configuration;
+  private final Collection<DiagnosticInfo> diagnosticInfos;
 
   @Override
   public String key() {
@@ -48,7 +51,7 @@ public class SarifReporter implements DiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var report = new SarifReport(analysisInfo, configuration);
+    var report = new SarifReport(analysisInfo, configuration, diagnosticInfos);
 
     var mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);

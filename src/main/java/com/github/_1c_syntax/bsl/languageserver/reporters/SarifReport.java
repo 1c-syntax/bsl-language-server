@@ -24,25 +24,30 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Value
-@AllArgsConstructor
+@RequiredArgsConstructor
 @JsonClassDescription("Static Analysis Results Format (SARIF) Version 2.1.0 JSON Schema: " +
   "a standard format for the output of static analysis tools.")
 public class SarifReport {
@@ -64,9 +69,20 @@ public class SarifReport {
   @JsonIgnore
   LanguageServerConfiguration configuration;
 
-  public SarifReport(AnalysisInfo analysisInfo, LanguageServerConfiguration configuration) {
+  @NonFinal
+  @Getter(AccessLevel.NONE)
+  @JsonIgnore
+  Collection<DiagnosticInfo> diagnosticInfos;
+
+  public SarifReport(
+    AnalysisInfo analysisInfo,
+    LanguageServerConfiguration configuration,
+    Collection<DiagnosticInfo> diagnosticInfos
+  ) {
     this.analysisInfo = analysisInfo;
     this.configuration = configuration;
+    this.diagnosticInfos = diagnosticInfos;
+
     version = "2.1.0";
     runs = List.of(new Run());
   }
@@ -124,15 +140,32 @@ public class SarifReport {
     @JsonPropertyDescription("The name of the tool component.")
     String name;
 
+    @JsonPropertyDescription("The organization or company that produced the tool component.")
+    String organization;
+
+    @JsonPropertyDescription("The absolute URI at which information about this version " +
+      "of the tool component can be found.")
+    @JsonFormat(pattern = "uri")
+    String informationUri;
+
     @JsonPropertyDescription("The language of the messages emitted into the log file during this run " +
       "(expressed as an ISO 639-1 two-letter lowercase language code) and an optional region " +
       "(expressed as an ISO 3166-1 two-letter uppercase subculture code associated with a country or region). " +
       "The casing is recommended but not required (in order for this data to conform to RFC5646).")
     String language;
 
+    @JsonPropertyDescription("An array of reportingDescriptor objects relevant to the analysis performed " +
+      "by the tool component.")
+    List<ReportingDescriptor> rules;
+
     public ToolComponent() {
       name = "BSL Language Server";
+      organization = "1c-syntax";
+      informationUri = configuration.getSiteRoot();
       language = configuration.getLanguage().getLanguageCode();
+      rules = diagnosticInfos.stream()
+        .map(ReportingDescriptor::new)
+        .collect(Collectors.toList());
     }
   }
 
@@ -249,4 +282,75 @@ public class SarifReport {
       endColumn = range.getEnd().getCharacter() + 1;
     }
   }
+
+  @Value
+  @AllArgsConstructor
+  @JsonClassDescription("Metadata that describes a specific report produced by the tool, " +
+    "as part of the analysis it provides or its runtime reporting.")
+  class ReportingDescriptor {
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("A stable, opaque identifier for the report.")
+    String id;
+
+    @JsonPropertyDescription("A report identifier that is understandable to an end user.")
+    String name;
+
+    @JsonPropertyDescription("A description of the report. Should, as far as possible, provide details sufficient " +
+      "to enable resolution of any problem indicated by the result.")
+    MultiformatMessageString fullDescription;
+
+    // todo: defaultConfiguration
+
+    @JsonPropertyDescription("A URI where the primary documentation for the report can be found.")
+    @JsonFormat(pattern = "uri")
+    String helpUri;
+
+    @JsonPropertyDescription("Key/value pairs that provide additional information about the report.")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    PropertyBag properties;
+
+    public ReportingDescriptor(DiagnosticInfo diagnosticInfo) {
+      id = diagnosticInfo.getCode().getStringValue();
+      name = diagnosticInfo.getName();
+      fullDescription = new MultiformatMessageString(diagnosticInfo);
+      helpUri = diagnosticInfo.getDiagnosticCodeDescriptionHref();
+      properties = new PropertyBag();
+
+      diagnosticInfo.getTags().forEach(tag -> properties.tags.add(tag.name()));
+    }
+  }
+
+  @Value
+  @AllArgsConstructor
+  @JsonClassDescription("A message string or message format string rendered in multiple formats.")
+  class MultiformatMessageString {
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("A plain text message string or format string.")
+    String text;
+
+    @JsonPropertyDescription("A Markdown message string or format string.")
+    String markdown;
+
+    public MultiformatMessageString(DiagnosticInfo diagnosticInfo) {
+      text = diagnosticInfo.getDescription();
+      markdown = text;
+    }
+  }
+
+  @Value
+  @AllArgsConstructor
+  @JsonClassDescription("Key/value pairs that provide additional information about the object.")
+  class PropertyBag {
+
+    @JsonPropertyDescription("A set of distinct strings that provide additional information.")
+    List<String> tags;
+
+    public PropertyBag() {
+      tags = new ArrayList<>();
+    }
+  }
+
+
 }
