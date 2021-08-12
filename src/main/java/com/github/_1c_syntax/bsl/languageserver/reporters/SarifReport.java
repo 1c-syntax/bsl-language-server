@@ -39,11 +39,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Value
@@ -52,9 +54,17 @@ import java.util.stream.Collectors;
   "a standard format for the output of static analysis tools.")
 public class SarifReport {
 
+  static Map<DiagnosticSeverity, Level> severityToLevel = Map.of(
+    DiagnosticSeverity.Error, Level.ERROR,
+    DiagnosticSeverity.Warning, Level.WARNING,
+    DiagnosticSeverity.Information, Level.NOTE,
+    DiagnosticSeverity.Hint, Level.NONE
+  );
+
   @JsonProperty(required = true)
   @JsonPropertyDescription("The SARIF format version of this log file.")
   String version;
+
   @JsonProperty(required = true)
   @JsonPropertyDescription("The set of runs contained in this log file.")
   List<Run> runs;
@@ -184,6 +194,9 @@ public class SarifReport {
 
     // todo: ruleIndex? rule?
 
+    @JsonPropertyDescription("A value specifying the severity level of the result.")
+    Level level;
+
     @JsonPropertyDescription("Identifies the artifact that the analysis tool was instructed to scan. " +
       "This need not be the same as the artifact where the result actually occurred.")
     ArtifactLocation analysisTarget;
@@ -198,9 +211,24 @@ public class SarifReport {
 
       message = new Message(diagnostic.getMessage());
       ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
+      level = severityToLevel.get(diagnostic.getSeverity());
       analysisTarget = new ArtifactLocation(uri);
       locations = List.of(new Location(uri, diagnostic.getRange()));
     }
+  }
+
+  enum Level {
+    @JsonProperty("none")
+    NONE,
+
+    @JsonProperty("note")
+    NOTE,
+
+    @JsonProperty("warning")
+    WARNING,
+
+    @JsonProperty("error")
+    ERROR
   }
 
   @Value
@@ -287,7 +315,7 @@ public class SarifReport {
   @AllArgsConstructor
   @JsonClassDescription("Metadata that describes a specific report produced by the tool, " +
     "as part of the analysis it provides or its runtime reporting.")
-  class ReportingDescriptor {
+  static class ReportingDescriptor {
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("A stable, opaque identifier for the report.")
@@ -324,7 +352,7 @@ public class SarifReport {
   @Value
   @AllArgsConstructor
   @JsonClassDescription("A message string or message format string rendered in multiple formats.")
-  class MultiformatMessageString {
+  static class MultiformatMessageString {
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("A plain text message string or format string.")
@@ -342,7 +370,7 @@ public class SarifReport {
   @Value
   @AllArgsConstructor
   @JsonClassDescription("Key/value pairs that provide additional information about the object.")
-  class PropertyBag {
+  static class PropertyBag {
 
     @JsonPropertyDescription("A set of distinct strings that provide additional information.")
     List<String> tags;
