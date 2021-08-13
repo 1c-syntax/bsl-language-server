@@ -21,12 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -37,22 +36,27 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.ServerInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Value
+/**
+ * Static Analysis Results Format (SARIF) Version 2.1.0 JSON Schema:
+ * a standard format for the output of static analysis tools.
+ */
 @RequiredArgsConstructor
-@JsonClassDescription("Static Analysis Results Format (SARIF) Version 2.1.0 JSON Schema: " +
-  "a standard format for the output of static analysis tools.")
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class SarifReport {
 
   static Map<DiagnosticSeverity, Level> severityToLevel = Map.of(
@@ -62,79 +66,110 @@ public class SarifReport {
     DiagnosticSeverity.Hint, Level.NONE
   );
 
+  /**
+   * The SARIF format version of this log file.
+   */
   @JsonProperty(required = true)
-  @JsonPropertyDescription("The SARIF format version of this log file.")
+  @Getter
   String version;
 
+  /**
+   * The set of runs contained in this log file.
+   */
   @JsonProperty(required = true)
-  @JsonPropertyDescription("The set of runs contained in this log file.")
+  @Getter
   List<Run> runs;
 
   @NonFinal
-  @Getter(AccessLevel.NONE)
   @JsonIgnore
   AnalysisInfo analysisInfo;
 
   @NonFinal
-  @Getter(AccessLevel.NONE)
   @JsonIgnore
   LanguageServerConfiguration configuration;
 
   @NonFinal
-  @Getter(AccessLevel.NONE)
   @JsonIgnore
   Collection<DiagnosticInfo> diagnosticInfos;
+
+  @NonFinal
+  @JsonIgnore
+  ServerInfo serverInfo;
 
   public SarifReport(
     AnalysisInfo analysisInfo,
     LanguageServerConfiguration configuration,
-    Collection<DiagnosticInfo> diagnosticInfos
+    Collection<DiagnosticInfo> diagnosticInfos,
+    ServerInfo serverInfo
   ) {
     this.analysisInfo = analysisInfo;
     this.configuration = configuration;
     this.diagnosticInfos = diagnosticInfos;
+    this.serverInfo = serverInfo;
 
     version = "2.1.0";
     runs = List.of(new Run());
   }
 
+  /**
+   * Describes a single run of an analysis tool, and contains the reported output of that run.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("Describes a single run of an analysis tool, and contains the reported output of that run.")
   class Run {
 
+    /**
+     * Information about the tool or tool pipeline that generated the results in this run.
+     * A run can only contain results produced by a single tool or tool pipeline.
+     * A run can aggregate results from multiple log files, as long as context around the
+     * tool run (tool command-line arguments and the like) is identical for all aggregated files.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("Information about the tool or tool pipeline that generated the results in this run. " +
-      "A run can only contain results produced by a single tool or tool pipeline. " +
-      "A run can aggregate results from multiple log files, as long as context around the tool run " +
-      "(tool command-line arguments and the like) is identical for all aggregated files.")
     Tool tool;
 
-    @JsonPropertyDescription("The set of results contained in an SARIF log. " +
-      "The results array can be omitted when a run is solely exporting rules metadata. " +
-      "It must be present (but may be empty) if a log file represents an actual scan.")
+    /**
+     * The set of results contained in an SARIF log.
+     * The results array can be omitted when a run is solely exporting rules metadata.
+     * It must be present (but may be empty) if a log file represents an actual scan.
+     */
     List<Result> results;
+
+    /**
+     * Specifies the default encoding for any artifact object that refers to a text file.
+     */
+    String defaultEncoding;
+
+    /**
+     * Specifies the default source language for any artifact object that refers to a text file
+     * that contains source code.
+     */
+    String defaultSourceLanguage;
 
     public Run() {
       tool = new Tool();
+      defaultEncoding = "UTF-8";
+      defaultSourceLanguage = "BSL";
+
       results = new ArrayList<>();
-      for (var fileInfo : analysisInfo.getFileinfos()) {
-        for (var diagnostic : fileInfo.getDiagnostics()) {
-          var result = new Result(fileInfo, diagnostic);
-          results.add(result);
-        }
-
-      }
-
+      analysisInfo.getFileinfos().forEach(fileInfo ->
+        fileInfo.getDiagnostics().stream()
+          .map(diagnostic -> new Result(fileInfo, diagnostic))
+          .collect(Collectors.toCollection(() -> results))
+      );
     }
   }
 
+  /**
+   * The analysis tool that was run.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("The analysis tool that was run.")
   class Tool {
+
+    /**
+     * The analysis tool that was run.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("The analysis tool that was run.")
     ToolComponent driver;
 
     public Tool() {
@@ -142,36 +177,53 @@ public class SarifReport {
     }
   }
 
+  /**
+   * A component, such as a plug-in or the driver, of the analysis tool that was run.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A component, such as a plug-in or the driver, of the analysis tool that was run.")
   class ToolComponent {
 
+    /**
+     * The name of the tool component.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("The name of the tool component.")
     String name;
 
-    @JsonPropertyDescription("The organization or company that produced the tool component.")
+    /**
+     * The organization or company that produced the tool component.
+     */
     String organization;
 
-    @JsonPropertyDescription("The absolute URI at which information about this version " +
-      "of the tool component can be found.")
+    /**
+     * The tool component version, in whatever format the component natively provides.
+     */
+    String version;
+
+    /**
+     * The absolute URI at which information about this version of the tool component can be found.
+     */
     @JsonFormat(pattern = "uri")
     String informationUri;
 
-    @JsonPropertyDescription("The language of the messages emitted into the log file during this run " +
-      "(expressed as an ISO 639-1 two-letter lowercase language code) and an optional region " +
-      "(expressed as an ISO 3166-1 two-letter uppercase subculture code associated with a country or region). " +
-      "The casing is recommended but not required (in order for this data to conform to RFC5646).")
-    String language;
-
-    @JsonPropertyDescription("An array of reportingDescriptor objects relevant to the analysis performed " +
-      "by the tool component.")
+    /**
+     * An array of reportingDescriptor objects relevant to the analysis performed by the tool component.
+     */
     List<ReportingDescriptor> rules;
+
+    /**
+     * The language of the messages emitted into the log file during this run
+     * (expressed as an ISO 639-1 two-letter lowercase language code) and an
+     * optional region (expressed as an ISO 3166-1 two-letter uppercase subculture
+     * code associated with a country or region). The casing is recommended but not required
+     * (in order for this data to conform to RFC5646).
+     */
+    String language;
 
     public ToolComponent() {
       name = "BSL Language Server";
       organization = "1c-syntax";
+      version = serverInfo.getVersion();
       informationUri = configuration.getSiteRoot();
       language = configuration.getLanguage().getLanguageCode();
       rules = diagnosticInfos.stream()
@@ -180,34 +232,48 @@ public class SarifReport {
     }
   }
 
+  /**
+   * A result produced by an analysis tool.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A result produced by an analysis tool.")
   class Result {
 
-    @JsonProperty(required = true)
-    @JsonPropertyDescription("A message that describes the result. " +
-      "The first sentence of the message only will be displayed when visible space is limited.")
-    Message message;
-
-    @JsonPropertyDescription("The stable, unique identifier of the rule, if any, to which this result is relevant.")
+    /**
+     * The stable, unique identifier of the rule, if any, to which this result is relevant.
+     */
     String ruleId;
 
     // todo: ruleIndex? rule?
 
-    @JsonPropertyDescription("A value specifying the severity level of the result.")
+    /**
+     * A value specifying the severity level of the result.
+     */
     Level level;
 
-    @JsonPropertyDescription("Identifies the artifact that the analysis tool was instructed to scan. " +
-      "This need not be the same as the artifact where the result actually occurred.")
+    /**
+     * A message that describes the result.
+     * The first sentence of the message only will be displayed when visible space is limited.
+     */
+    @JsonProperty(required = true)
+    Message message;
+
+    /**
+     * Identifies the artifact that the analysis tool was instructed to scan.
+     * This need not be the same as the artifact where the result actually occurred.
+     */
     ArtifactLocation analysisTarget;
 
-    @JsonPropertyDescription("The set of locations where the result was detected. " +
-      "Specify only one location unless the problem indicated by the result can only be corrected by making a change " +
-      "at every specified location.")
+    /**
+     * The set of locations where the result was detected.
+     * Specify only one location unless the problem indicated by the result can only be corrected
+     * by making a change at every specified location.
+     */
     List<Location> locations;
 
-    @JsonPropertyDescription("A set of locations relevant to this result.")
+    /**
+     * A set of locations relevant to this result.
+     */
     List<Location> relatedLocations;
 
     public Result(FileInfo fileInfo, Diagnostic diagnostic) {
@@ -231,70 +297,90 @@ public class SarifReport {
     }
   }
 
+  /**
+   * A value specifying the severity level of the result.
+   */
   enum Level {
-    @JsonProperty("none")
     NONE,
-
-    @JsonProperty("note")
     NOTE,
-
-    @JsonProperty("warning")
     WARNING,
+    ERROR;
 
-    @JsonProperty("error")
-    ERROR
+    @JsonValue
+    public String getValue() {
+      return name().toLowerCase(Locale.ENGLISH);
+    }
   }
 
+  /**
+   * Encapsulates a message intended to be read by the end user.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("Encapsulates a message intended to be read by the end user.")
   static class Message {
 
+    /**
+     * A plain text message string.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("A plain text message string.")
     String text;
+
   }
 
+  /**
+   * Specifies the location of an artifact.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("Specifies the location of an artifact.")
   static class ArtifactLocation {
 
-    @JsonPropertyDescription("A string containing a valid relative or absolute URI.")
+    /**
+     * A string containing a valid relative or absolute URI.
+     */
     @JsonFormat(pattern = "uri-reference")
     String uri;
 
   }
 
+  /**
+   * A location within a programming artifact.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A location within a programming artifact.")
   class Location {
 
-    @JsonPropertyDescription("Identifies the artifact and region.")
+    /**
+     * Identifies the artifact and region.
+     */
     PhysicalLocation physicalLocation;
 
-    @JsonPropertyDescription("A message relevant to the location.")
+    /**
+     * A message relevant to the location.
+     */
     Message message;
 
     public Location(String message, String uri, Range range) {
       this.message = new Message(message);
       this.physicalLocation = new PhysicalLocation(uri, range);
     }
-
   }
 
+  /**
+   * A physical location relevant to a result.
+   * Specifies a reference to a programming artifact together with a range of bytes or characters within that artifact.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A physical location relevant to a result. " +
-    "Specifies a reference to a programming artifact together with " +
-    "a range of bytes or characters within that artifact.")
-  class PhysicalLocation {
+  static class PhysicalLocation {
 
-    @JsonPropertyDescription("The location of the artifact.")
+    /**
+     * The location of the artifact.
+     */
     ArtifactLocation artifactLocation;
 
-    @JsonPropertyDescription("Specifies a portion of the artifact.")
+    /**
+     * Specifies a portion of the artifact.
+     */
     Region region;
 
     public PhysicalLocation(String uri, Range range) {
@@ -303,21 +389,31 @@ public class SarifReport {
     }
   }
 
+  /**
+   * A region within an artifact where a result was detected.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A region within an artifact where a result was detected.")
   static class Region {
 
-    @JsonPropertyDescription("The line number of the first character in the region.")
+    /**
+     * The line number of the first character in the region.
+     */
     int startLine;
 
-    @JsonPropertyDescription("The column number of the first character in the region.")
+    /**
+     * The column number of the first character in the region.
+     */
     int startColumn;
 
-    @JsonPropertyDescription("The line number of the last character in the region.")
+    /**
+     * The line number of the last character in the region.
+     */
     int endLine;
 
-    @JsonPropertyDescription("The column number of the character following the end of the region.")
+    /**
+     * The column number of the character following the end of the region.
+     */
     int endColumn;
 
     public Region(Range range) {
@@ -328,30 +424,42 @@ public class SarifReport {
     }
   }
 
+  /**
+   * Metadata that describes a specific report produced by the tool,
+   * as part of the analysis it provides or its runtime reporting.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("Metadata that describes a specific report produced by the tool, " +
-    "as part of the analysis it provides or its runtime reporting.")
   static class ReportingDescriptor {
 
+    /**
+     * A stable, opaque identifier for the report.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("A stable, opaque identifier for the report.")
     String id;
 
-    @JsonPropertyDescription("A report identifier that is understandable to an end user.")
+    /**
+     * A report identifier that is understandable to an end user.
+     */
     String name;
 
-    @JsonPropertyDescription("A description of the report. Should, as far as possible, provide details sufficient " +
-      "to enable resolution of any problem indicated by the result.")
+    /**
+     * A description of the report. Should, as far as possible,
+     * provide details sufficient to enable resolution of any problem indicated by the result.
+     */
     MultiformatMessageString fullDescription;
 
     // todo: defaultConfiguration
 
-    @JsonPropertyDescription("A URI where the primary documentation for the report can be found.")
+    /**
+     * A URI where the primary documentation for the report can be found.
+     */
     @JsonFormat(pattern = "uri")
     String helpUri;
 
-    @JsonPropertyDescription("Key/value pairs that provide additional information about the report.")
+    /**
+     * Key/value pairs that provide additional information about the report.
+     */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     PropertyBag properties;
 
@@ -366,16 +474,22 @@ public class SarifReport {
     }
   }
 
+  /**
+   * A message string or message format string rendered in multiple formats.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("A message string or message format string rendered in multiple formats.")
   static class MultiformatMessageString {
 
+    /**
+     * A plain text message string or format string.
+     */
     @JsonProperty(required = true)
-    @JsonPropertyDescription("A plain text message string or format string.")
     String text;
 
-    @JsonPropertyDescription("A Markdown message string or format string.")
+    /**
+     * A Markdown message string or format string.
+     */
     String markdown;
 
     public MultiformatMessageString(DiagnosticInfo diagnosticInfo) {
@@ -384,18 +498,21 @@ public class SarifReport {
     }
   }
 
+  /**
+   * Key/value pairs that provide additional information about the object.
+   */
   @Value
   @AllArgsConstructor
-  @JsonClassDescription("Key/value pairs that provide additional information about the object.")
   static class PropertyBag {
 
-    @JsonPropertyDescription("A set of distinct strings that provide additional information.")
+    /**
+     * A set of distinct strings that provide additional information.
+     */
     List<String> tags;
 
     public PropertyBag() {
       tags = new ArrayList<>();
     }
   }
-
 
 }

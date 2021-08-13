@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -42,6 +43,7 @@ public class SarifReporter implements DiagnosticReporter {
 
   private final LanguageServerConfiguration configuration;
   private final Collection<DiagnosticInfo> diagnosticInfos;
+  private final ServerInfo serverInfo;
 
   @Override
   public String key() {
@@ -51,7 +53,7 @@ public class SarifReporter implements DiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var report = new SarifReport(analysisInfo, configuration, diagnosticInfos);
+    var report = new SarifReport(analysisInfo, configuration, diagnosticInfos, serverInfo);
 
     var mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
