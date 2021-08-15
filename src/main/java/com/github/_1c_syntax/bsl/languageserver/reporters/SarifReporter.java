@@ -108,6 +108,7 @@ public class SarifReporter implements DiagnosticReporter {
 
     return new Run()
       .withTool(tool)
+      .withLanguage(configuration.getLanguage().getLanguageCode())
       .withDefaultEncoding("UTF-8")
       .withDefaultSourceLanguage("BSL")
       .withResults(results);
