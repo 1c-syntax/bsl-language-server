@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -170,7 +171,7 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
-    var uri = fileInfo.getPath().toUri().toString();
+    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
 
     var message = new Message().withText(diagnostic.getMessage());
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
