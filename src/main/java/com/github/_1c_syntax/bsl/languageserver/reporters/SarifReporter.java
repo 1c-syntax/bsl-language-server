@@ -21,25 +21,56 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.contrastsecurity.sarif.ArtifactLocation;
+import com.contrastsecurity.sarif.Location;
+import com.contrastsecurity.sarif.Message;
+import com.contrastsecurity.sarif.MultiformatMessageString;
+import com.contrastsecurity.sarif.PhysicalLocation;
+import com.contrastsecurity.sarif.PropertyBag;
+import com.contrastsecurity.sarif.Region;
+import com.contrastsecurity.sarif.ReportingDescriptor;
+import com.contrastsecurity.sarif.Result;
+import com.contrastsecurity.sarif.Run;
+import com.contrastsecurity.sarif.SarifSchema210;
+import com.contrastsecurity.sarif.Tool;
+import com.contrastsecurity.sarif.ToolComponent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class SarifReporter implements DiagnosticReporter {
+
+  private static final Map<DiagnosticSeverity, Result.Level> severityToLevel = Map.of(
+    DiagnosticSeverity.Error, Result.Level.ERROR,
+    DiagnosticSeverity.Warning, Result.Level.WARNING,
+    DiagnosticSeverity.Information, Result.Level.NOTE,
+    DiagnosticSeverity.Hint, Result.Level.NONE
+  );
 
   private final LanguageServerConfiguration configuration;
   private final Collection<DiagnosticInfo> diagnosticInfos;
@@ -53,7 +84,7 @@ public class SarifReporter implements DiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var report = new SarifReport(analysisInfo, configuration, diagnosticInfos, serverInfo);
+    var report = createReport(analysisInfo);
 
     var mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -61,5 +92,126 @@ public class SarifReporter implements DiagnosticReporter {
     var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
     mapper.writeValue(reportFile, report);
     LOGGER.info("SARIF report saved to {}", reportFile.getAbsolutePath());
+  }
+
+  private SarifSchema210 createReport(AnalysisInfo analysisInfo) {
+    var run = createRun(analysisInfo);
+
+    return new SarifSchema210()
+      .withVersion(SarifSchema210.Version._2_1_0)
+      .withRuns(List.of(run));
+  }
+
+  private Run createRun(AnalysisInfo analysisInfo) {
+    var tool = createTool();
+    var results = createResults(analysisInfo);
+
+    return new Run()
+      .withTool(tool)
+      .withDefaultEncoding("UTF-8")
+      .withDefaultSourceLanguage("BSL")
+      .withResults(results);
+  }
+
+  private Tool createTool() {
+    var name = "BSL Language Server";
+    var organization = "1c-syntax";
+    var version = serverInfo.getVersion();
+    var informationUri = URI.create(configuration.getSiteRoot());
+    var language = configuration.getLanguage().getLanguageCode();
+    var rules = diagnosticInfos.stream()
+      .map(SarifReporter::createReportingDescriptor)
+      .collect(Collectors.toSet());
+
+    var driver = new ToolComponent()
+      .withName(name)
+      .withOrganization(organization)
+      .withVersion(version)
+      .withInformationUri(informationUri)
+      .withLanguage(language)
+      .withRules(rules);
+
+    return new Tool()
+      .withDriver(driver);
+  }
+
+  private static ReportingDescriptor createReportingDescriptor(DiagnosticInfo diagnosticInfo) {
+    var id = diagnosticInfo.getCode().getStringValue();
+    var name = diagnosticInfo.getName();
+    var fullDescription = new MultiformatMessageString()
+      .withText(diagnosticInfo.getDescription())
+      .withMarkdown(diagnosticInfo.getDescription());
+    var helpUri = URI.create(diagnosticInfo.getDiagnosticCodeDescriptionHref());
+    var tags = diagnosticInfo.getTags().stream()
+      .map(Enum::name)
+      .collect(Collectors.toSet());
+
+    var properties = new PropertyBag().withTags(tags);
+
+    return new ReportingDescriptor()
+      .withId(id)
+      .withName(name)
+      .withFullDescription(fullDescription)
+      .withHelpUri(helpUri)
+      .withProperties(properties);
+  }
+
+  private static List<Result> createResults(AnalysisInfo analysisInfo) {
+    var results = new ArrayList<Result>();
+
+    analysisInfo.getFileinfos().forEach(fileInfo ->
+      fileInfo.getDiagnostics().stream()
+        .map(diagnostic -> createResult(fileInfo, diagnostic))
+        .collect(Collectors.toCollection(() -> results))
+    );
+
+    return results;
+  }
+
+  private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
+    var uri = fileInfo.getPath().toUri().toString();
+
+    var message = new Message().withText(diagnostic.getMessage());
+    var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
+    var level = severityToLevel.get(diagnostic.getSeverity());
+    var analysisTarget = new ArtifactLocation().withUri(uri);
+    var locations = List.of(createLocation(diagnostic.getMessage(), uri, diagnostic.getRange()));
+    var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
+      .stream()
+      .flatMap(Collection::stream)
+      .skip(1)
+      .map(relatedInformation -> createLocation(
+        relatedInformation.getMessage(),
+        relatedInformation.getLocation().getUri(),
+        relatedInformation.getLocation().getRange()
+      ))
+      .collect(Collectors.toSet());
+
+    return new Result()
+      .withMessage(message)
+      .withRuleId(ruleId)
+      .withLevel(level)
+      .withAnalysisTarget(analysisTarget)
+      .withLocations(locations)
+      .withRelatedLocations(relatedLocations);
+  }
+
+  private static Location createLocation(String messageString, String uri, Range range) {
+    var message = new Message().withText(messageString);
+
+    var artifactLocation = new ArtifactLocation().withUri(uri);
+    var region = new Region()
+      .withStartLine(range.getStart().getLine() + 1)
+      .withStartColumn(range.getStart().getCharacter() + 1)
+      .withEndLine(range.getEnd().getLine() + 1)
+      .withEndColumn(range.getEnd().getCharacter() + 1);
+
+    var physicalLocation = new PhysicalLocation()
+      .withArtifactLocation(artifactLocation)
+      .withRegion(region);
+
+    return new Location()
+      .withMessage(message)
+      .withPhysicalLocation(physicalLocation);
   }
 }
