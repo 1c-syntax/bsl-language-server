@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.contrastsecurity.sarif.ArtifactLocation;
+import com.contrastsecurity.sarif.ConfigurationOverride;
 import com.contrastsecurity.sarif.Invocation;
 import com.contrastsecurity.sarif.Location;
 import com.contrastsecurity.sarif.Message;
@@ -31,6 +32,7 @@ import com.contrastsecurity.sarif.PropertyBag;
 import com.contrastsecurity.sarif.Region;
 import com.contrastsecurity.sarif.ReportingConfiguration;
 import com.contrastsecurity.sarif.ReportingDescriptor;
+import com.contrastsecurity.sarif.ReportingDescriptorReference;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.Run;
 import com.contrastsecurity.sarif.SarifSchema210;
@@ -51,6 +53,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -58,9 +61,11 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -120,11 +125,29 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   private Invocation createInvocation() {
+    Set<ConfigurationOverride> ruleConfigurationOverrides = new HashSet<>();
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
+    diagnosticsOptions.getParameters().forEach((String key, Either<Boolean, Map<String, Object>> option) -> {
+      var descriptor = new ReportingDescriptorReference().withId(key);
+      var configurationOverride = new ConfigurationOverride().withDescriptor(descriptor);
+      var reportingConfiguration = new ReportingConfiguration();
+      if (option.isLeft()) {
+        reportingConfiguration.setEnabled(option.getLeft());
+      } else {
+        var parameters = new PropertyBag();
+        var diagnosticParameters = option.getRight();
+        diagnosticParameters.forEach(parameters::setAdditionalProperty);
+        reportingConfiguration.setParameters(parameters);
+      }
+      configurationOverride.withConfiguration(reportingConfiguration);
+      ruleConfigurationOverrides.add(configurationOverride);
+    });
     ArtifactLocation workingDirectory = new ArtifactLocation()
       .withUri(Absolute.uri(new File(".").toURI()).toString());
 
     // inject BSLLauncher и вытащить из него параметры командной строки.
     return new Invocation()
+      .withRuleConfigurationOverrides(ruleConfigurationOverrides)
       .withWorkingDirectory(workingDirectory)
       .withProcessId((int) ProcessHandle.current().pid())
       ;
