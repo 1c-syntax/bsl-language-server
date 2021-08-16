@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.contrastsecurity.sarif.ArtifactLocation;
+import com.contrastsecurity.sarif.Invocation;
 import com.contrastsecurity.sarif.Location;
 import com.contrastsecurity.sarif.Message;
 import com.contrastsecurity.sarif.MultiformatMessageString;
 import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.PropertyBag;
 import com.contrastsecurity.sarif.Region;
+import com.contrastsecurity.sarif.ReportingConfiguration;
 import com.contrastsecurity.sarif.ReportingDescriptor;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.Run;
@@ -105,14 +107,27 @@ public class SarifReporter implements DiagnosticReporter {
 
   private Run createRun(AnalysisInfo analysisInfo) {
     var tool = createTool();
+    var invocation = createInvocation();
     var results = createResults(analysisInfo);
 
     return new Run()
       .withTool(tool)
+      .withInvocations(List.of(invocation))
       .withLanguage(configuration.getLanguage().getLanguageCode())
       .withDefaultEncoding("UTF-8")
       .withDefaultSourceLanguage("BSL")
       .withResults(results);
+  }
+
+  private Invocation createInvocation() {
+    ArtifactLocation workingDirectory = new ArtifactLocation()
+      .withUri(Absolute.uri(new File(".").toURI()).toString());
+
+    // inject BSLLauncher и вытащить из него параметры командной строки.
+    return new Invocation()
+      .withWorkingDirectory(workingDirectory)
+      .withProcessId((int) ProcessHandle.current().pid())
+      ;
   }
 
   private Tool createTool() {
@@ -144,6 +159,17 @@ public class SarifReporter implements DiagnosticReporter {
       .withText(diagnosticInfo.getDescription())
       .withMarkdown(diagnosticInfo.getDescription());
     var helpUri = URI.create(diagnosticInfo.getDiagnosticCodeDescriptionHref());
+
+    var parameters = new PropertyBag();
+    diagnosticInfo.getParameters().forEach(parameterInfo ->
+      parameters.withAdditionalProperty(parameterInfo.getName(), parameterInfo.getDefaultValue())
+    );
+
+    var defaultConfiguration = new ReportingConfiguration()
+      .withEnabled(diagnosticInfo.isActivatedByDefault())
+      .withLevel(ReportingConfiguration.Level.fromValue(severityToLevel.get(diagnosticInfo.getLSPSeverity()).value()))
+      .withParameters(parameters);
+
     var tags = diagnosticInfo.getTags().stream()
       .map(Enum::name)
       .collect(Collectors.toSet());
@@ -155,6 +181,7 @@ public class SarifReporter implements DiagnosticReporter {
       .withName(name)
       .withFullDescription(fullDescription)
       .withHelpUri(helpUri)
+      .withDefaultConfiguration(defaultConfiguration)
       .withProperties(properties);
   }
 
