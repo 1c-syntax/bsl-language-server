@@ -71,15 +71,16 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = "" + DEFAULT_AUTHORIZED_DATES
   )
-  private Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
+  private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    String authorizedDatesString =
-      (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
-    Set<String> authD =
-      Arrays.stream(authorizedDatesString.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
-    this.authorizedDates.addAll(authD);
+    var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
+    Set<String> authD = Arrays.stream(authorizedDatesString.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
+    authorizedDates.clear();
+    authorizedDates.addAll(authD);
   }
 
   @Override
@@ -110,8 +111,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
       ParserRuleContext expression;
       if (ctx instanceof BSLParser.CallParamListContext){
         expression = ctx.getParent().getParent().getParent().getParent().getParent();
-      }
-      else {
+      } else {
         expression = ctx.getParent().getParent();
       }
       if (expression instanceof BSLParser.ExpressionContext

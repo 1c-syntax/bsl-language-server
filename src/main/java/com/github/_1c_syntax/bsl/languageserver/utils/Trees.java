@@ -126,7 +126,7 @@ public final class Trees {
     flatList.add(t);
 
     int n = t.getChildCount();
-    for (int i = 0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
       flatten(t.getChild(i), flatList);
     }
   }
@@ -150,7 +150,7 @@ public final class Trees {
     } else {
       descendants = org.antlr.v4.runtime.tree.Trees.getDescendants(parent)
         .stream()
-        .filter(node -> node instanceof BSLParserRuleContext)
+        .filter(BSLParserRuleContext.class::isInstance)
         .filter(node -> (node.equals(tnc)
           || getRuleIndex(node) == ruleindex))
         .collect(Collectors.toList());
@@ -161,11 +161,11 @@ public final class Trees {
   /**
    * Ищем предка элемента по указанному типу BSLParser
    * Пример:
-   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
+   * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
   @CheckForNull
-  public static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
-    ParserRuleContext parent = element.getParent();
+  public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
+    var parent = element.getParent();
     if (parent == null) {
       return null;
     }
@@ -224,7 +224,7 @@ public final class Trees {
       if (tokenIndex == 0) {
         return Optional.empty();
       }
-      Token token = tokens.get(tokenIndex);
+      var token = tokens.get(tokenIndex);
       if (token.getChannel() != Token.DEFAULT_CHANNEL
         || token.getType() != tokenType) {
         tokenIndex = tokenIndex - 1;
@@ -245,7 +245,7 @@ public final class Trees {
       if (tokenIndex == 0) {
         return Optional.empty();
       }
-      Token token = tokens.get(tokenIndex);
+      var token = tokens.get(tokenIndex);
       if (token.getChannel() != Token.DEFAULT_CHANNEL) {
         tokenIndex = tokenIndex - 1;
         continue;
@@ -280,7 +280,7 @@ public final class Trees {
    */
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc) {
     if (tnc.getParent() != null) {
-      return getRootParent((BSLParserRuleContext) tnc.getParent());
+      return getRootParent(tnc.getParent());
     }
 
     return tnc;
@@ -301,9 +301,9 @@ public final class Trees {
     }
 
     if (getRuleIndex(parent) == ruleindex) {
-      return (BSLParserRuleContext) parent;
+      return parent;
     } else {
-      return getRootParent((BSLParserRuleContext) parent, ruleindex);
+      return getRootParent(parent, ruleindex);
     }
   }
 
@@ -322,9 +322,9 @@ public final class Trees {
     }
 
     if (indexes.contains(getRuleIndex(parent))) {
-      return (BSLParserRuleContext) parent;
+      return parent;
     } else {
-      return getRootParent((BSLParserRuleContext) parent, indexes);
+      return getRootParent(parent, indexes);
     }
   }
 
@@ -355,7 +355,7 @@ public final class Trees {
       .filter((Tree child) ->
         child instanceof BSLParserRuleContext
           && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
-      .map(child -> (BSLParserRuleContext) child);
+      .map(BSLParserRuleContext.class::cast);
   }
 
   /**
@@ -455,7 +455,7 @@ public final class Trees {
       return;
     }
 
-    Token previousToken = tokens.get(index - 1);
+    var previousToken = tokens.get(index - 1);
 
     if (abortSearchComments(previousToken, currentToken)) {
       return;

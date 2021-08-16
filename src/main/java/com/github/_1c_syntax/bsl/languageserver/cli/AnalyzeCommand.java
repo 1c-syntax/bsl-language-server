@@ -150,13 +150,13 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     Path workspaceDir = Absolute.path(workspaceDirOption);
     if (!workspaceDir.toFile().exists()) {
-      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir.toString());
+      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir);
       return 1;
     }
 
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 

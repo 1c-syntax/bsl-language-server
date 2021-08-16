@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
@@ -97,6 +98,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDefinitionProvider(getDefinitionProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
+    capabilities.setColorProvider(getColorProvider());
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
@@ -265,5 +267,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     selectionRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
     selectionRangeRegistrationOptions.setDocumentSelector(documentSelector.asList());
     return selectionRangeRegistrationOptions;
+  }
+
+  private ColorProviderOptions getColorProvider() {
+    var colorProviderOptions = new ColorProviderOptions();
+    colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
+    colorProviderOptions.setDocumentSelector(documentSelector.asList());
+    return colorProviderOptions;
   }
 }

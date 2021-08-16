@@ -1715,6 +1715,12 @@
             ],
             "title": "Using hardcode ip addresses in code",
             "properties": {
+                "searchPopularVersionExclusion": {
+                    "description": "Pattern to exclude popular versions from search",
+                    "default": "^(1|2|3|8\\.3|11)\\.",
+                    "type": "string",
+                    "title": "Pattern to exclude popular versions from search"
+                },
                 "searchWordsExclusion": {
                     "description": "Keywords to exclude from search",
                     "default": "\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver",

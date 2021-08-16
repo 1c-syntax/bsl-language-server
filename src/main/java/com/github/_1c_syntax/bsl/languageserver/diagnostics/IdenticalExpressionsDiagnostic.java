@@ -121,10 +121,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
     if (justEqual) {
       // отбрасывает популярные деления на время и байты
-      if (isPopularQuantification(node)) {
-        return false;
-      }
-      return true;
+      return !isPopularQuantification(node);
     }
 
     if (isComplementary(node)) {
