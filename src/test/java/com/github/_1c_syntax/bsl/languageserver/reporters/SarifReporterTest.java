@@ -26,15 +26,18 @@ import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,16 +50,20 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterClass
 class SarifReporterTest {
 
   @Autowired
   private SarifReporter reporter;
   @Autowired
   private Collection<DiagnosticInfo> diagnosticInfos;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   private final File file = new File("./bsl-ls.sarif");
 
@@ -75,6 +82,10 @@ class SarifReporterTest {
   void report() throws IOException {
 
     // given
+    configuration.getDiagnosticsOptions().getParameters().put("Typo", Either.forLeft(false));
+    configuration.getDiagnosticsOptions().getParameters().put("test", Either.forLeft(true));
+    configuration.getDiagnosticsOptions().getParameters().put("some", Either.forRight(Map.of("test", 1)));
+
     Diagnostic diagnostic = new Diagnostic(
       Ranges.create(0, 1, 2, 3),
       "message",
@@ -102,6 +113,17 @@ class SarifReporterTest {
     assertThat(run.getTool().getDriver().getName()).isEqualTo("BSL Language Server");
     assertThat(run.getTool().getDriver().getRules())
       .hasSize(diagnosticInfos.size());
+
+    var invocation = run.getInvocations().get(0);
+    assertThat(invocation.getRuleConfigurationOverrides())
+      .hasSizeGreaterThan(0)
+      .anyMatch(configurationOverride -> configurationOverride.getDescriptor().getId().equals("Typo")
+        && !configurationOverride.getConfiguration().getEnabled())
+      .anyMatch(configurationOverride -> configurationOverride.getDescriptor().getId().equals("test")
+        && configurationOverride.getConfiguration().getEnabled())
+      .anyMatch(configurationOverride -> configurationOverride.getDescriptor().getId().equals("some")
+        && configurationOverride.getConfiguration().getParameters().getAdditionalProperties().get("test").equals(1))
+    ;
 
     assertThat(run.getResults())
       .hasSize(1)
