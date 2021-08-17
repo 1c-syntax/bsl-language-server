@@ -68,6 +68,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Репортер в формат SARIF.
+ *
+ * @see <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">SARIF specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
