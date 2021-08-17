@@ -8,4 +8,5 @@
 * [generic](generic.md) - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/) для SonarQube;
 * [junit](junit.md);
 * [tslint](tslint.md);
+* [sarif](sarif.md)
 * [console](console.md).
