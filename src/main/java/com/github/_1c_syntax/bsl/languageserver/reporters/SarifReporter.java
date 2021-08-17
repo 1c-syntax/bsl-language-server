@@ -103,9 +103,13 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   private SarifSchema210 createReport(AnalysisInfo analysisInfo) {
+    var schema = URI.create(
+      "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
+    );
     var run = createRun(analysisInfo);
 
     return new SarifSchema210()
+      .with$schema(schema)
       .withVersion(SarifSchema210.Version._2_1_0)
       .withRuns(List.of(run));
   }
@@ -145,8 +149,8 @@ public class SarifReporter implements DiagnosticReporter {
     ArtifactLocation workingDirectory = new ArtifactLocation()
       .withUri(Absolute.uri(new File(".").toURI()).toString());
 
-    // inject BSLLauncher и вытащить из него параметры командной строки.
     return new Invocation()
+      .withExecutionSuccessful(true)
       .withRuleConfigurationOverrides(ruleConfigurationOverrides)
       .withWorkingDirectory(workingDirectory)
       .withProcessId((int) ProcessHandle.current().pid())
