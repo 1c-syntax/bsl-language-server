@@ -4,7 +4,7 @@
 
 ## Описание
 
-Выводит результаты анализа в файл `bsl-ls.sarif` в текущей рабочей директории. Формат файла специфицирован OASIS и доступен по ссылке: https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html.
+Выводит результаты анализа в файл `bsl-ls.sarif` в текущей рабочей директории. Формат файла специфицирован OASIS и доступен по ссылке: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
 ## Пример вывода
 
