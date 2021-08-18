@@ -78,11 +78,18 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SarifReporter implements DiagnosticReporter {
 
-  private static final Map<DiagnosticSeverity, Result.Level> severityToLevel = Map.of(
+  private static final Map<DiagnosticSeverity, Result.Level> severityToResultLevel = Map.of(
     DiagnosticSeverity.Error, Result.Level.ERROR,
     DiagnosticSeverity.Warning, Result.Level.WARNING,
     DiagnosticSeverity.Information, Result.Level.NOTE,
     DiagnosticSeverity.Hint, Result.Level.NONE
+  );
+
+  private static final Map<DiagnosticSeverity, ReportingConfiguration.Level> severityToReportLevel = Map.of(
+    DiagnosticSeverity.Error, ReportingConfiguration.Level.ERROR,
+    DiagnosticSeverity.Warning, ReportingConfiguration.Level.WARNING,
+    DiagnosticSeverity.Information, ReportingConfiguration.Level.NOTE,
+    DiagnosticSeverity.Hint, ReportingConfiguration.Level.NONE
   );
 
   private final LanguageServerConfiguration configuration;
@@ -163,7 +170,7 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   private Tool createTool() {
-    var name = "BSL Language Server";
+    var name = serverInfo.getName();
     var organization = "1c-syntax";
     var version = serverInfo.getVersion();
     var informationUri = URI.create(configuration.getSiteRoot());
@@ -199,7 +206,7 @@ public class SarifReporter implements DiagnosticReporter {
 
     var defaultConfiguration = new ReportingConfiguration()
       .withEnabled(diagnosticInfo.isActivatedByDefault())
-      .withLevel(ReportingConfiguration.Level.fromValue(severityToLevel.get(diagnosticInfo.getLSPSeverity()).value()))
+      .withLevel(severityToReportLevel.get(diagnosticInfo.getLSPSeverity()))
       .withParameters(parameters);
 
     var tags = diagnosticInfo.getTags().stream()
@@ -234,7 +241,7 @@ public class SarifReporter implements DiagnosticReporter {
 
     var message = new Message().withText(diagnostic.getMessage());
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
-    var level = severityToLevel.get(diagnostic.getSeverity());
+    var level = severityToResultLevel.get(diagnostic.getSeverity());
     var analysisTarget = new ArtifactLocation().withUri(uri);
     var locations = List.of(createLocation(diagnostic.getMessage(), uri, diagnostic.getRange()));
     var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
