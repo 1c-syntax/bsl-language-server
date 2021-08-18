@@ -91,6 +91,9 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
+    // SARIF serialization
+    implementation("com.contrastsecurity", "java-sarif", "2.0")
+
     // COMPILE
 
     // stat analysis
