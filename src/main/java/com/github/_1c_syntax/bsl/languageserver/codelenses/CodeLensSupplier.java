@@ -26,6 +26,14 @@ import org.eclipse.lsp4j.CodeLens;
 
 import java.util.List;
 
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
+ * данными о доступных в документе линзах.
+ */
 public interface CodeLensSupplier {
+  /**
+   * @param documentContext Контекст документа, для которого надо рассчитать линзы.
+   * @return Список линз.
+   */
   List<CodeLens> getCodeLenses(DocumentContext documentContext);
 }
