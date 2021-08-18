@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629064744778,
+  "lastUpdate": 1629275528169,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12121,6 +12121,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.880409765709759",
             "extra": "mean: 99.56401999791463 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "c963a24884998963e998de66d8ecdee5aec49fee",
+          "message": "Fix #1739. Исправление Absolute.uri",
+          "timestamp": "2021-08-18T11:22:19+03:00",
+          "tree_id": "3394fe540b68e4aa21ea0211ea68ccba761b22da",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c963a24884998963e998de66d8ecdee5aec49fee"
+        },
+        "date": 1629275525710,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.58746266365051,
+            "unit": "sec",
+            "range": "stddev: 2.3684882436814254",
+            "extra": "mean: 93.58746266365051 sec\nrounds: 3"
           }
         ]
       }
