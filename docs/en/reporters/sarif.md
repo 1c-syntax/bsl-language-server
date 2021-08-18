@@ -1,12 +1,12 @@
 # SARIF reporter
 
-Ключ репортера - `sarif`
+Reporter option - `sarif`
 
-## Описание
+## Description
 
-Выводит результаты анализа в файл `bsl-ls.sarif` в текущей рабочей директории. Формат файла специфицирован OASIS и доступен по ссылке: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
+Output the analysis results into file `bsl-ls.sarif` in the current working directory. Формат файла специфицирован OASIS и доступен по ссылке: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
-## Пример вывода
+## Sample output
 
 ```json
 {
