@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629281336364,
+  "lastUpdate": 1629357968568,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12183,6 +12183,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.407880493198276",
             "extra": "mean: 95.24253511428833 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ffdf93bd307e64f422633cd975d113eeab58238e",
+          "message": "Merge pull request #1764 from 1c-syntax/feature/localize-code-lenses",
+          "timestamp": "2021-08-19T10:16:39+03:00",
+          "tree_id": "4011539923d3aae17614c39a23fb16f9c4463a76",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ffdf93bd307e64f422633cd975d113eeab58238e"
+        },
+        "date": 1629357964926,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.42107892036438,
+            "unit": "sec",
+            "range": "stddev: 1.0612273424413006",
+            "extra": "mean: 95.42107892036438 sec\nrounds: 3"
           }
         ]
       }
