@@ -53,7 +53,7 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("authorizedDates", "12340101, 00020101   ,,");
+    configuration.put("authorizedDates", "00010101,00010101000000,000101010000,12340101, 00020101   ,,");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();

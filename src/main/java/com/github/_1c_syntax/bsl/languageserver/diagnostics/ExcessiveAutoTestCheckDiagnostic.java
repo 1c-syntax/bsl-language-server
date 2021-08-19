@@ -58,7 +58,7 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
 
     if (expressionMatchesPattern(ctx.expression()) && codeBlockWithOnlyReturn(ctx.codeBlock())) {
-      diagnosticStorage.addDiagnostic((BSLParser.IfStatementContext) ctx.getParent());
+      diagnosticStorage.addDiagnostic(ctx.getParent());
       return ctx;
     }
 

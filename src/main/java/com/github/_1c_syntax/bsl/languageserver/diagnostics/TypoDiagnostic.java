@@ -119,7 +119,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private Set<String> getWordsToIgnore() {
-    String delimiter = ",";
+    var delimiter = ",";
     String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
       exceptions = exceptions + delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");

@@ -9,11 +9,11 @@ plugins {
     jacoco
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.1.0-m1"
-    id("io.freefair.javadoc-links") version "6.1.0-m1"
-    id("io.freefair.javadoc-utf-8") version "6.1.0-m1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0-m1"
-    id("io.freefair.maven-central.validate-poms") version "6.1.0-m1"
+    id("io.freefair.lombok") version "6.1.0"
+    id("io.freefair.javadoc-links") version "6.1.0"
+    id("io.freefair.javadoc-utf-8") version "6.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0"
+    id("io.freefair.maven-central.validate-poms") version "6.1.0"
     id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
     id("org.springframework.boot") version "2.5.3"
@@ -59,7 +59,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.19.3") {
+    api("com.github.1c-syntax", "bsl-parser", "16b8aa67b857b3685c6607f9c78c39b04117d028") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -67,8 +67,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.2")
-    api("com.github.1c-syntax", "mdclasses", "v0.9.1")
+    api("com.github.1c-syntax", "utils", "5bd46dd1b6761ef7aa990f97a62bc0a63394ec08")
+    api("com.github.1c-syntax", "mdclasses", "0.9.2")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -90,6 +90,9 @@ dependencies {
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+
+    // SARIF serialization
+    implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.1")

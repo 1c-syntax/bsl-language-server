@@ -88,7 +88,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean checkPassed(BSLParser.ProcDeclarationContext ctx) {
-    AtomicInteger orderStatement = new AtomicInteger();
+    var orderStatement = new AtomicInteger();
     return Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::getParent)
       .map(BSLParser.ProcedureContext.class::cast)
@@ -128,6 +128,6 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
-    return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
+    return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 }
