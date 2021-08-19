@@ -1,5 +1,3 @@
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
 
@@ -29,20 +27,21 @@ repositories {
 
 group = "io.github.1c-syntax"
 
-gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
-    preferTags = true
-    branch(closureOf<VersionDescription> {
-        pattern = "^(?!v[0-9]+).*"
-        versionFormat = "\${branch}-\${commit.short}\${dirty}"
-    })
-    tag(closureOf<VersionDescription> {
-        pattern = "v(?<tagVersion>[0-9].*)"
-        versionFormat = "\${tagVersion}\${dirty}"
-    })
-    commit(closureOf<VersionDescription> {
-        versionFormat = "\${commit.short}\${dirty}"
-    })
-})
+gitVersioning.apply {
+    refs {
+        considerTagsOnBranches = true
+        branch("^(?!v[0-9]+).*") {
+            version = "\${ref}-\${describe.distance}-\${commit.short}\${dirty}"
+        }
+        tag("v(?<tagVersion>[0-9].*)") {
+            version = "\${tagVersion}\${dirty}"
+        }
+    }
+
+    rev {
+        version = "\${commit.short}\${dirty}"
+    }
+}
 
 val languageToolVersion = "5.3"
 aspectj.version.set("1.9.7")
