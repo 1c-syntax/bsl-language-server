@@ -24,46 +24,27 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Сапплаер линз, показывающий когнитивную сложность методов.
+ */
 @Component
-@RequiredArgsConstructor
-public class CognitiveComplexityCodeLensSupplier implements CodeLensSupplier {
+public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
-  private final LanguageServerConfiguration configuration;
+  public CognitiveComplexityCodeLensSupplier(LanguageServerConfiguration configuration) {
+    super(configuration);
+  }
 
   @Override
-  public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
+  protected boolean supplierIsEnabled() {
+    return configuration.getCodeLensOptions().isShowCognitiveComplexity();
+  }
 
-    if (!configuration.getCodeLensOptions().isShowCognitiveComplexity()) {
-      return Collections.emptyList();
-    }
-
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData()
-      .getMethodsComplexity();
-
-    List<CodeLens> codeLenses = new ArrayList<>(methodsComplexity.size());
-
-    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
-      String title = String.format("Cognitive complexity is %d", complexity);
-      Command command = new Command(title, "");
-      CodeLens codeLens = new CodeLens(
-        methodSymbol.getSubNameRange(),
-        command,
-        null
-      );
-
-      codeLenses.add(codeLens);
-    });
-
-    return codeLenses;
+  @Override
+  protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
+    return documentContext.getCognitiveComplexityData().getMethodsComplexity();
   }
 }
