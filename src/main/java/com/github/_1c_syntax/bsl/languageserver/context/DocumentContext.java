@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
@@ -34,11 +35,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
@@ -46,8 +48,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.antlr.v4.runtime.tree.Tree;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -65,7 +65,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -87,6 +86,8 @@ public class DocumentContext {
   private ServerContext context;
   @Setter(onMethod = @__({@Autowired}))
   private DiagnosticComputer diagnosticComputer;
+  @Setter(onMethod = @__({@Autowired}))
+  private LanguageServerConfiguration configuration;
 
   private FileType fileType;
   private BSLTokenizer tokenizer;
@@ -180,6 +181,25 @@ public class DocumentContext {
     }
 
     return sb.toString();
+  }
+
+  public Locale getScriptVariantLocale() {
+    var mdConfiguration = getServerContext().getConfiguration();
+
+    String languageTag;
+    if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
+      languageTag = configuration.getLanguage().getLanguageCode();
+    } else {
+      var scriptVariant = mdConfiguration.getScriptVariant();
+      if (scriptVariant == ScriptVariant.ENGLISH) {
+        languageTag = "en";
+      } else if (scriptVariant == ScriptVariant.RUSSIAN) {
+        languageTag = "ru";
+      } else {
+        throw new IllegalArgumentException("Unknown scriptVariant " + scriptVariant);
+      }
+    }
+    return Locale.forLanguageTag(languageTag);
   }
 
   public MetricStorage getMetrics() {

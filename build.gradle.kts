@@ -9,14 +9,14 @@ plugins {
     jacoco
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.1.0-m1"
-    id("io.freefair.javadoc-links") version "6.1.0-m1"
-    id("io.freefair.javadoc-utf-8") version "6.1.0-m1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0-m1"
-    id("io.freefair.maven-central.validate-poms") version "6.1.0-m1"
+    id("io.freefair.lombok") version "6.1.0"
+    id("io.freefair.javadoc-links") version "6.1.0"
+    id("io.freefair.javadoc-utf-8") version "6.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0"
+    id("io.freefair.maven-central.validate-poms") version "6.1.0"
     id("me.qoomon.git-versioning") version "4.3.0"
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("org.springframework.boot") version "2.5.3"
+    id("org.springframework.boot") version "2.5.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "d5920b5c1052ff1406a04132a24be5765e41c42e"
     id("ru.vyarus.pom") version "2.2.0"
@@ -59,7 +59,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.19.3") {
+    api("com.github.1c-syntax", "bsl-parser", "16b8aa67b857b3685c6607f9c78c39b04117d028") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -67,8 +67,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.2")
-    api("com.github.1c-syntax", "mdclasses", "v0.9.1")
+    api("com.github.1c-syntax", "utils", "0.3.3")
+    api("com.github.1c-syntax", "mdclasses", "0.9.2")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -93,6 +93,9 @@ dependencies {
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.1")
+
+    // SARIF serialization
+    implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // COMPILE
 

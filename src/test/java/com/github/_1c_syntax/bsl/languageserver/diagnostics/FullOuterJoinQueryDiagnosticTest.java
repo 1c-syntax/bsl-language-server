@@ -40,7 +40,7 @@ class FullOuterJoinQueryDiagnosticTest extends AbstractDiagnosticTest<FullOuterJ
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(10, 32, 10, 38);
+      .hasRange(10, 32, 10, 57);
 
   }
 }

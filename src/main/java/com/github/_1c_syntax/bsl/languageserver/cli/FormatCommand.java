@@ -101,7 +101,7 @@ public class FormatCommand implements Callable<Integer> {
 
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 
