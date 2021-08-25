@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,7 +41,9 @@ import org.eclipse.lsp4j.Range;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,83 +67,65 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     errorRanges.clear();
-    preprocessorRanges.clear();
-
-    // получим все блоки препроцессора в файле
-    List<ParseTree> preprocessors = new ArrayList<>(Trees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor));
-
-    if (preprocessors.isEmpty()) {
-      return super.visitFile(ctx);
-    }
-
-    Deque<ParseTree> previousNodes = new ArrayDeque<>();
-    for (ParseTree node : preprocessors) {
-
-      // если это начало блока, просто закинем его в стэк
-      if (((BSLParser.PreprocessorContext) node).preproc_if() != null) {
-        previousNodes.push(node);
-      } else if ((((BSLParser.PreprocessorContext) node).preproc_else() != null
-        || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
-
-        // для веток условия сначала фиксируем блок который уже прошли
-        // затем новую ноду добавим
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-        previousNodes.push(node);
-
-      } else {
-        // в конце условия просто зафиксим прошедший блок
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-      }
-    }
-
-    // сделано для поиска с конца, т.к. у нас есть вложенность, т.е. в большой вложен маленький
-    if (preprocessorRanges.size() > 1) {
-      Collections.reverse(preprocessorRanges);
-    }
-
     return super.visitFile(ctx);
   }
 
-  private void savePreprocessorRange(Deque<ParseTree> nodes, BSLParser.PreprocessorContext node) {
-    if (!nodes.isEmpty()) {
-      BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
-      preprocessorRanges.add(
-        Ranges.create(
-          previous.getStop().getLine(),
-          previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
-          node.getStart().getLine(),
-          node.getStart().getCharPositionInLine() - 1));
+  @Override
+  public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
+    findUnreachableCode(ctx.codeBlock());
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    findUnreachableCode(ctx.codeBlock());
+    return ctx;
+  }
+
+  private void findUnreachableCode(BSLParser.CodeBlockContext codeBlock) {
+    var builder = new CfgBuildingParseTreeVisitor();
+
+    if (codeBlock == null) {
+      return;
+    }
+
+    var graph = builder.buildGraph(codeBlock);
+    var brokenCodeBlocks = new HashSet<BSLParser.CodeBlockContext>();
+
+    var deadBlocks = graph.vertexSet()
+      .stream()
+      .sequential()
+      .filter(vertex -> vertex != graph.getEntryPoint())
+      .filter(vertex -> isDeadCodeVertex(graph, vertex))
+      .flatMap(optional -> optional.getAst().stream())
+      .sorted(Comparator.comparingInt(bslParserRuleContext -> bslParserRuleContext.getStart().getLine()))
+      .collect(Collectors.toList());
+
+    for (var astNode : deadBlocks) {
+      // оптимизация, если в методе нет повторов мертвого кода
+      if (deadBlocks.size() > 1) {
+        var owningCodeBlock = Trees.getAncestorByRuleIndex(astNode, BSLParser.RULE_codeBlock);
+        if (owningCodeBlock != null && brokenCodeBlocks.contains(owningCodeBlock)) {
+          continue;
+        }
+
+        if (owningCodeBlock != null) {
+          brokenCodeBlocks.add((BSLParser.CodeBlockContext) owningCodeBlock);
+        }
+      }
+
+      diagnosticStorage.addDiagnostic(astNode);
+
     }
   }
 
-  @Override
-  public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
-    findAndAddDiagnostic(ctx);
-    return super.visitContinueStatement(ctx);
-  }
+  private boolean isDeadCodeVertex(ControlFlowGraph graph, CfgVertex vertex) {
+    var incoming = graph.incomingEdgesOf(vertex);
+    if (incoming.isEmpty()) {
+      return true;
+    }
 
-  @Override
-  public ParseTree visitReturnStatement(BSLParser.ReturnStatementContext ctx) {
-    findAndAddDiagnostic(ctx);
-    return super.visitReturnStatement(ctx);
-  }
-
-  @Override
-  public ParseTree visitGotoStatement(BSLParser.GotoStatementContext ctx) {
-    findAndAddDiagnostic(ctx);
-    return super.visitGotoStatement(ctx);
-  }
-
-  @Override
-  public ParseTree visitRaiseStatement(BSLParser.RaiseStatementContext ctx) {
-    findAndAddDiagnostic(ctx);
-    return super.visitRaiseStatement(ctx);
-  }
-
-  @Override
-  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
-    findAndAddDiagnostic(ctx);
-    return super.visitBreakStatement(ctx);
+    return incoming.stream().allMatch(edge -> edge.getType() == CfgEdgeType.LOOP_ITERATION);
   }
 
   private void findAndAddDiagnostic(BSLParserRuleContext ctx) {
