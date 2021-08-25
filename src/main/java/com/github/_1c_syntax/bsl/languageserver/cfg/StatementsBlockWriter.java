@@ -98,11 +98,11 @@ class StatementsBlockWriter {
     return blocks.size();
   }
 
-  public void enterBlock() {
-    enterBlock(new JumpInformationRecord());
+  public StatementsBlockRecord enterBlock() {
+    return enterBlock(new JumpInformationRecord());
   }
 
-  public void enterBlock(JumpInformationRecord newJumpStates) {
+  public StatementsBlockRecord enterBlock(JumpInformationRecord newJumpStates) {
     var current = getCurrentBlock();
 
     if (current != null) {
@@ -126,6 +126,7 @@ class StatementsBlockWriter {
 
     var block = new StatementsBlockRecord(newJumpStates);
     blocks.push(block);
+    return block;
   }
 
   public StatementsBlockRecord leaveBlock() {

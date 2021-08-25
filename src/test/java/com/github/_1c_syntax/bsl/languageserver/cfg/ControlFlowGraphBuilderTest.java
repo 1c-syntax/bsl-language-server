@@ -85,7 +85,7 @@ class ControlFlowGraphBuilderTest {
 
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
-    assertThat(walker.availableRoutes().size()).isEqualTo(0);
+    assertThat(walker.availableRoutes().size()).isZero();
 
     var exit = walker.getCurrentNode();
     walker.walkTo(branch);
@@ -197,7 +197,7 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext();
     assertThat(walker.isOnBranch()).isTrue();
     assertThat(walker.getCurrentNode()).isInstanceOf(WhileLoopVertex.class);
-    var loopStart = (WhileLoopVertex)walker.getCurrentNode();
+    var loopStart = (WhileLoopVertex) walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("В=1");
@@ -245,7 +245,7 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext();
     var condition = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-
+    walker.walkNext();
     assertThat(walker.getCurrentNode()).isEqualTo(firstLoopStart);
     walker.walkTo(condition);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
@@ -270,7 +270,7 @@ class ControlFlowGraphBuilderTest {
       .filter(x -> x.getType() == CfgEdgeType.DIRECT)
       .findFirst();
 
-    assertThat(edgeOfBreak.isPresent()).isTrue();
+    assertThat(edgeOfBreak).isPresent();
     walker.walkTo(secondLoopStart);
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).contains(edgeOfBreak.get())).isTrue();
@@ -333,7 +333,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
     assertThat(textOfCurrentNode(walker)).isEqualTo("В=4");
     walker.walkNext();
-    assertThat(walker.availableRoutes()).hasSize(0);
+    assertThat(walker.availableRoutes()).isEmpty();
   }
 
   @Test
@@ -380,6 +380,68 @@ class ControlFlowGraphBuilderTest {
 
     assertThat(list).isEmpty();
     assertThat(graph.vertexSet()).hasSize(18);
+  }
+
+  @Test
+  void preprocessorSingleIfBranching() {
+    var code = "А = 1;\n" +
+      "#Если Сервер Тогда\n" +
+      "   Б = 2;\n" +
+      "#КонецЕсли\n" +
+      "В = 3;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1");
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=2");
+    walker.walkNext();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3");
+    var lastStatement = walker.getCurrentNode();
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+  }
+
+  @Test
+  void preprocessorIfWithElseBranching() {
+    var code = "А = 1;\n" +
+      "#Если Сервер Тогда\n" +
+      "   Б = 2;\n" +
+      "#Иначе\n" +
+      "   Б = 3;" +
+      "#КонецЕсли\n" +
+      "В = 3;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1");
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=2");
+    walker.walkNext();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3");
+    var lastStatement = walker.getCurrentNode();
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=3");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
   }
 
   @SneakyThrows

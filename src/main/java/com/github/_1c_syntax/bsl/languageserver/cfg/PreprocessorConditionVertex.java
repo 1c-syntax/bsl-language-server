@@ -7,14 +7,14 @@ import lombok.EqualsAndHashCode;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
-public class PreprocessorConditionVertex extends CfgVertex {
+public class PreprocessorConditionVertex extends BranchingVertex {
   private final BSLParserRuleContext astNode;
 
-  public PreprocessorConditionVertex(BSLParser.Preproc_ifContext ifClause) {
+  PreprocessorConditionVertex(BSLParser.Preproc_ifContext ifClause) {
     astNode = ifClause;
   }
 
-  public PreprocessorConditionVertex(BSLParser.Preproc_elsifContext elsIfClause) {
+  PreprocessorConditionVertex(BSLParser.Preproc_elsifContext elsIfClause) {
     astNode = elsIfClause;
   }
 

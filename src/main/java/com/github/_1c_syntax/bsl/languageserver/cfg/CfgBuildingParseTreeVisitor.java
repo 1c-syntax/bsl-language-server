@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -330,6 +331,96 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.exceptionHandler);
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
+
+    if (!isStatementLevelPreproc(ctx))
+      return super.visitPreproc_if(ctx);
+
+    var node = new PreprocessorConditionVertex(ctx);
+    graph.addVertex(node);
+    connectGraphTail(blocks.getCurrentBlock(), node);
+
+    var mainIf = blocks.enterBlock();
+    var body = blocks.enterBlock(); // тело идущего следом блока
+
+    graph.addVertex(body.begin());
+    graph.addEdge(node, body.begin(), CfgEdgeType.TRUE_BRANCH);
+
+    body.getBuildParts().push(node);
+
+    mainIf.getBuildParts().push(body.begin());
+
+    return super.visitPreproc_if(ctx);
+  }
+
+  @Override
+  public ParseTree visitPreproc_else(BSLParser.Preproc_elseContext ctx) {
+
+    // По грамматике это может быть оторванный препроцессор, без начала
+    var condition = popPreprocCondition();
+    if (condition == null) {
+      return super.visitPreproc_else(ctx);
+    }
+
+    var previousBody = blocks.leaveBlock();
+    blocks.getCurrentBlock().getBuildParts().push(previousBody.end());
+
+    var elseBody = blocks.enterBlock();
+    graph.addVertex(elseBody.begin());
+    graph.addEdge(condition, elseBody.begin(), CfgEdgeType.FALSE_BRANCH);
+
+    elseBody.getBuildParts().push(condition); // маркер состояния обработки препроцессора
+
+    return ctx;
+
+  }
+
+  @Override
+  public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+
+    // проверка маркера
+    var condition = popPreprocCondition();
+    if (condition == null) {
+      return super.visitPreproc_endif(ctx);
+    }
+
+    var previousBody = blocks.leaveBlock();
+    var mainIf = blocks.leaveBlock();
+    mainIf.getBuildParts().push(previousBody.end());
+
+    var upperBlock = blocks.getCurrentBlock();
+    upperBlock.split();
+    graph.addVertex(upperBlock.end());
+
+    // если блоки альтернатив были, то у условия будет уже 2 выхода
+    if (graph.outgoingEdgesOf(condition).size() < 2) {
+      graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
+    }
+
+    // присоединяем все прямые выходы из тел условий
+    while (!mainIf.getBuildParts().isEmpty()) {
+      var blockTail = mainIf.getBuildParts().pop();
+      graph.addVertex(blockTail);
+      graph.addEdge(blockTail, upperBlock.end());
+    }
+
+    return ctx;
+  }
+
+  private boolean isStatementLevelPreproc(BSLParserRuleContext ctx) {
+    return ctx.getParent().getParent().getRuleIndex() == BSLParser.RULE_statement;
+  }
+
+  private PreprocessorConditionVertex popPreprocCondition() {
+    var node = blocks.getCurrentBlock().getBuildParts().peek();
+    if (node instanceof PreprocessorConditionVertex) {
+      blocks.getCurrentBlock().getBuildParts().pop();
+      return (PreprocessorConditionVertex) node;
+    }
+    return null;
   }
 
   private void makeJump(CfgVertex jumpTarget) {
