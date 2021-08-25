@@ -444,6 +444,62 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
   }
 
+  @Test
+  void preprocessorIfWithElseIfBranching() {
+    var code = "А = 1;\n" +
+      "#Если Сервер Тогда\n" +
+      "   Б = 2;\n" +
+      "#ИначеЕсли ВебКлиент Тогда\n" +
+      "   Б = 3;\n" +
+      "#ИначеЕсли МобильныйКлиент Тогда\n" +
+      "   Б = 4;\n" +
+      "#Иначе\n" +
+      "   Б = 5;" +
+      "#КонецЕсли\n" +
+      "В = 3;";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1");
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=2");
+    walker.walkNext();
+    assertThat(textOfCurrentNode(walker)).isEqualTo("В=3");
+    var lastStatement = walker.getCurrentNode();
+
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    ifNode = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=3");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+
+    assertThat(walker.isOnBranch()).isTrue();
+    ifNode = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=4");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Б=5");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 

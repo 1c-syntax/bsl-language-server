@@ -379,6 +379,31 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   @Override
+  public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
+    // По грамматике это может быть оторванный препроцессор, без начала
+    var condition = popPreprocCondition();
+    if (condition == null) {
+      return super.visitPreproc_elsif(ctx);
+    }
+
+    var newCondition = new PreprocessorConditionVertex(ctx);
+    graph.addVertex(newCondition);
+    graph.addEdge(condition, newCondition, CfgEdgeType.FALSE_BRANCH);
+
+    var previousBody = blocks.leaveBlock();
+    blocks.getCurrentBlock().getBuildParts().push(previousBody.end());
+
+    var body = blocks.enterBlock();
+    graph.addVertex(body.begin());
+    graph.addEdge(newCondition, body.begin(), CfgEdgeType.TRUE_BRANCH);
+
+    body.getBuildParts().push(newCondition);
+
+    return ctx;
+
+  }
+
+  @Override
   public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
 
     // проверка маркера
