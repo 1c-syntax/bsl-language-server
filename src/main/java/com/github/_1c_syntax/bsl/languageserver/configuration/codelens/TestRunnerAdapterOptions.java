@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2022
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,32 +23,25 @@ package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.apache.commons.lang3.SystemUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
- */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CodeLensOptions {
+public class TestRunnerAdapterOptions {
 
-  /**
-   * Параметры сапплаеров линз.
-   */
-  @JsonDeserialize(using = ParametersDeserializer.class)
-  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
+  private String executable = "1testrunner";
+  private String executableWin = "1testrunner.bat";
+  private String getTestsArguments = "-show %s";
+  private String getTestsResultPattern = "^[^<]*<([^>]+)>.*";
+  private String runTestArguments = "-run %s %s";
+  private String runAllTestsArguments = "-run %s";
 
-  @JsonProperty("testRunner")
-  private TestRunnerAdapterOptions testRunnerAdapterOptions = new TestRunnerAdapterOptions();
+  public String getExecutableForCurrentOS() {
+    return SystemUtils.IS_OS_WINDOWS ? executableWin : executable;
+  }
 }

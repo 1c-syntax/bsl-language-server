@@ -571,6 +571,49 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/codeLensParameters"
+                },
+                "testRunner": {
+                    "$id": "#/properties/codeLens/testRunner",
+                    "type": "object",
+                    "title": "Test runner configuration to use for 'Run test' code lenses.",
+                    "properties": {
+                        "executable": {
+                            "$id": "#/properties/codeLens/testRunner/executable",
+                            "type": "string",
+                            "title": "Path to test runner executable.",
+                            "default": "1testrunner"
+                        },
+                        "executableWin": {
+                            "$id": "#/properties/codeLens/testRunner/executableWin",
+                            "type": "string",
+                            "title": "Path to test runner executable on Windows systems.",
+                            "default": "1testrunner.bat"
+                        },
+                        "getTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to get test method names. %s will be replaced with path to current file.",
+                            "default": "-show %s"
+                        },
+                        "getTestsResultPattern": {
+                            "$id": "#/properties/codeLens/testRunner/resultPattern",
+                            "type": "string",
+                            "title": "Regular expression to parse test runner output for method names.",
+                            "default": "^[^<]*<([^>]+)>.*"
+                        },
+                        "runTestArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runTestArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run test method. %s will be replaced with path to current file, %m will be replaced with test method name.",
+                            "default": "-run %s %s"
+                        },
+                        "runAllTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runAllTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run all tests in current file. %s will be replaced with path to current file.",
+                            "default": "-run %s"
+                        }
+                    }
                 }
             }
         },
