@@ -19,28 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.CodeLens;
+import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import lombok.experimental.UtilityClass;
 
-import java.util.List;
+@UtilityClass
+public class CodeLensDataDeserializer {
 
-/**
- * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
- * данными о доступных в документе линзах.
- */
-public interface CodeLensSupplier {
-  /**
-   * @param documentContext Контекст документа, для которого надо рассчитать линзы.
-   * @return Список линз.
-   */
-  List<CodeLens> getCodeLenses(DocumentContext documentContext);
-
-  String getId();
-
-  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
-    return unresolved;
+  public static CodeLensData deserialize(JsonElement json) {
+    return new Gson().fromJson(json, CodeLensData.class);
   }
-  
 }

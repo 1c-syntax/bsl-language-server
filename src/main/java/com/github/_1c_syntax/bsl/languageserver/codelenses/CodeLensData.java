@@ -21,26 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.CodeLens;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 
-import java.util.List;
+import java.net.URI;
+import java.util.Collections;
+import java.util.Map;
 
-/**
- * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
- * данными о доступных в документе линзах.
- */
-public interface CodeLensSupplier {
-  /**
-   * @param documentContext Контекст документа, для которого надо рассчитать линзы.
-   * @return Список линз.
-   */
-  List<CodeLens> getCodeLenses(DocumentContext documentContext);
+@Value
+@AllArgsConstructor
+public class CodeLensData {
+  String uri;
+  String id;
+  Map<String, Object> properties;
 
-  String getId();
-
-  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
-    return unresolved;
+  public CodeLensData(URI uri, String id) {
+    this(uri.toString(), id, Collections.emptyMap());
   }
-  
+
+  public CodeLensData(URI uri, String id, Map<String, Object> properties) {
+    this(uri.toString(), id, properties);
+  }
 }

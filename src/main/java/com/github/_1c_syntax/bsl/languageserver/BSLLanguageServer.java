@@ -220,7 +220,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static CodeLensOptions getCodeLensProvider() {
     var codeLensOptions = new CodeLensOptions();
-    codeLensOptions.setResolveProvider(Boolean.FALSE);
+    codeLensOptions.setResolveProvider(Boolean.TRUE);
     codeLensOptions.setWorkDoneProgress(Boolean.FALSE);
     return codeLensOptions;
   }

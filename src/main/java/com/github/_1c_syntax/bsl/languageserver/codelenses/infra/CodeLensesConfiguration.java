@@ -19,28 +19,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.codelenses.infra;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.CodeLens;
+import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-/**
- * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
- * данными о доступных в документе линзах.
- */
-public interface CodeLensSupplier {
-  /**
-   * @param documentContext Контекст документа, для которого надо рассчитать линзы.
-   * @return Список линз.
-   */
-  List<CodeLens> getCodeLenses(DocumentContext documentContext);
+@Configuration
+public class CodeLensesConfiguration {
 
-  String getId();
-
-  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
-    return unresolved;
+  @Bean
+  public Map<String, CodeLensSupplier> codeLensResolvers(Collection<CodeLensSupplier> codeLensSuppliers) {
+    return codeLensSuppliers.stream().collect(Collectors.toMap(CodeLensSupplier::getId, Function.identity()));
   }
-  
 }

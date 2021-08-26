@@ -29,10 +29,10 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Базовый класс для реализации линз, показывающих сложность методов в документе.
@@ -52,23 +52,23 @@ public abstract class AbstractMethodComplexityCodeLensSupplier implements CodeLe
       return Collections.emptyList();
     }
 
-    Map<MethodSymbol, Integer> methodsComplexity = getMethodsComplexity(documentContext);
+    return documentContext.getSymbolTree().getMethods().stream()
+      .map(methodSymbol -> toCodeLens(documentContext, methodSymbol))
+      .collect(Collectors.toList());
+  }
 
-    List<CodeLens> codeLenses = new ArrayList<>(methodsComplexity.size());
-
-    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
+  @Override
+  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
+    var methodName = (String) data.getProperties().get("methodName");
+    documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
+      int complexity = getMethodsComplexity(documentContext).get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var command = new Command(title, "");
-      var codeLens = new CodeLens(
-        methodSymbol.getSubNameRange(),
-        command,
-        null
-      );
 
-      codeLenses.add(codeLens);
+      unresolved.setCommand(command);
     });
 
-    return codeLenses;
+    return unresolved;
   }
 
   /**
@@ -81,4 +81,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier implements CodeLe
    * @return Данные о сложности методов.
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
+
+  private CodeLens toCodeLens(DocumentContext documentContext, MethodSymbol methodSymbol) {
+    var data = new CodeLensData(documentContext.getUri(), getId(), Map.of("methodName", methodSymbol.getName()));
+
+    var codeLens = new CodeLens(methodSymbol.getSubNameRange());
+    codeLens.setData(data);
+
+    return codeLens;
+  }
 }

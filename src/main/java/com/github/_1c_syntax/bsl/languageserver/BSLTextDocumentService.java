@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -42,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.google.gson.JsonElement;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
@@ -168,12 +170,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
+  }
+
+  @Override
+  public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
+    var data = CodeLensDataDeserializer.deserialize((JsonElement) unresolved.getData());
+    var documentContext = context.getDocument(data.getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    return CompletableFuture.supplyAsync(() -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data));
   }
 
   @Override
