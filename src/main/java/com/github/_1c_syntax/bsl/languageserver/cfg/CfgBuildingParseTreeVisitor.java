@@ -36,6 +36,17 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   private ControlFlowGraph graph;
   private Map<String, LabelVertex> jumpLabels;
 
+  private boolean produceLoopIterationsEnabled = true;
+  private boolean producePreprocessorConditionsEnabled = true;
+
+  public void produceLoopIterations(boolean enable) {
+    produceLoopIterationsEnabled = enable;
+  }
+
+  public void producePreprocessorConditions(boolean enable) {
+    producePreprocessorConditionsEnabled = enable;
+  }
+
   public ControlFlowGraph buildGraph(BSLParser.CodeBlockContext block) {
 
     blocks = new StatementsBlockWriter();
@@ -336,6 +347,10 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
 
+    if(!producePreprocessorConditionsEnabled) {
+      return ctx;
+    }
+
     if (!isStatementLevelPreproc(ctx))
       return super.visitPreproc_if(ctx);
 
@@ -359,6 +374,10 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_else(BSLParser.Preproc_elseContext ctx) {
 
+    if(!producePreprocessorConditionsEnabled) {
+      return ctx;
+    }
+
     // По грамматике это может быть оторванный препроцессор, без начала
     var condition = popPreprocCondition();
     if (condition == null) {
@@ -380,6 +399,11 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
+
+    if(!producePreprocessorConditionsEnabled) {
+      return ctx;
+    }
+
     // По грамматике это может быть оторванный препроцессор, без начала
     var condition = popPreprocCondition();
     if (condition == null) {
@@ -405,6 +429,10 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   @Override
   public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+
+    if(!producePreprocessorConditionsEnabled) {
+      return ctx;
+    }
 
     // проверка маркера
     var condition = popPreprocCondition();
@@ -473,7 +501,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
     graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
-    graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
+    if(produceLoopIterationsEnabled) {
+      graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
+    }
   }
 
   private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {
