@@ -59,7 +59,7 @@ public class Reference {
   /**
    * Признак указания на обновление значения переменной.
    */
-  boolean updating;
+  boolean definition;
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
@@ -79,8 +79,8 @@ public class Reference {
     return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), false);
   }
 
-  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, boolean updating) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), updating);
+  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, boolean definition) {
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), definition);
   }
 
 }

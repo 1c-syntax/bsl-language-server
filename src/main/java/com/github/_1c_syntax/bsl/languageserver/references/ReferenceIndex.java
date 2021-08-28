@@ -175,7 +175,7 @@ public class ReferenceIndex {
    * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
    * @param variableName Имя переменной, к которой происходит обращение.
    * @param range        Диапазон, в котором происходит обращение к символу.
-   * @param updating     Признак обновления значения переменной.
+   * @param definition     Признак обновления значения переменной.
    */
   public void addVariableUsage(URI uri,
                                String mdoRef,
@@ -183,7 +183,7 @@ public class ReferenceIndex {
                                String methodName,
                                String variableName,
                                Range range,
-                               boolean updating) {
+                               boolean definition) {
     String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
     String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH);
 
@@ -198,7 +198,7 @@ public class ReferenceIndex {
     var location = new Location(uri, range);
 
     var symbolOccurrence = SymbolOccurrence.builder()
-      .occurrenceType(updating ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
+      .occurrenceType(definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
       .symbol(symbol)
       .location(location)
       .build();
@@ -217,7 +217,7 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
-        return new Reference(from, symbol, uri, range, symbolOccurrence.isUpdating());
+        return new Reference(from, symbol, uri, range, symbolOccurrence.getOccurrenceType() == OccurrenceType.DEFINITION);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }
