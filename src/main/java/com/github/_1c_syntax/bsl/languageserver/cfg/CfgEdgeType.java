@@ -26,6 +26,5 @@ public enum CfgEdgeType {
   TRUE_BRANCH,
   FALSE_BRANCH,
   LOOP_ITERATION,
-  // возможно не нужно. (быстрый переход за линейный блок, без учета ветвления внутри него)
-  TRAVERSAL_FAST_FORWARD
+  ADJACENT_CODE
 }

@@ -234,6 +234,7 @@ class ControlFlowGraphBuilderTest {
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
+    builder.determineAdjacentDeadCode(true);
     var graph = builder.buildGraph(parseTree);
 
     var walker = new ControlFlowGraphWalker(graph);
@@ -255,7 +256,7 @@ class ControlFlowGraphBuilderTest {
     var secondLoopStart = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("Б=1");
-    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).size()).isEqualTo(1);
+    assertThat(graph.outDegreeOf(walker.getCurrentNode())).isEqualTo(2);
     walker.walkNext();
     assertThat(textOfCurrentNode(walker)).isEqualTo("Прервано=Истина");
 

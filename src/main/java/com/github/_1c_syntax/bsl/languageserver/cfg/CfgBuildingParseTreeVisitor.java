@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   private boolean produceLoopIterationsEnabled = true;
   private boolean producePreprocessorConditionsEnabled = true;
+  private boolean adjacentDeadCodeEnabled = false;
 
   public void produceLoopIterations(boolean enable) {
     produceLoopIterationsEnabled = enable;
@@ -45,6 +47,10 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   public void producePreprocessorConditions(boolean enable) {
     producePreprocessorConditionsEnabled = enable;
+  }
+
+  public void determineAdjacentDeadCode(boolean enabled) {
+    adjacentDeadCodeEnabled = enabled;
   }
 
   public ControlFlowGraph buildGraph(BSLParser.CodeBlockContext block) {
@@ -142,7 +148,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     while (!currentLevelBlock.getBuildParts().isEmpty()) {
       var blockTail = currentLevelBlock.getBuildParts().pop();
-      if (graph.incomingEdgesOf(blockTail).isEmpty() && blockTail instanceof BasicBlockVertex) {
+      if (hasNoSignificantEdges(blockTail) && blockTail instanceof BasicBlockVertex) {
         // это мертвый код. Он может быть пустым блоком
         // тогда он не нужен сам по себе
         var basicBlock = (BasicBlockVertex) blockTail;
@@ -153,6 +159,11 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     return ctx;
+  }
+
+  private boolean hasNoSignificantEdges(CfgVertex blockTail) {
+    var edges = graph.incomingEdgesOf(blockTail);
+    return edges.isEmpty() || (adjacentDeadCodeEnabled && edges.stream().allMatch(x -> x.getType() == CfgEdgeType.ADJACENT_CODE));
   }
 
   @Override
@@ -245,11 +256,13 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var labelVertex = createOrGetKnownLabel(name);
 
     var block = blocks.getCurrentBlock();
+    var currentTail = blocks.getCurrentBlock().end();
     connectGraphTail(block, labelVertex);
 
     // создадим новый end, в который будут помещаться все будущие строки
     block.split();
     graph.addVertex(block.end());
+    connectAdjacentCode(currentTail);
 
     return ctx;
   }
@@ -277,24 +290,30 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
     blocks.addStatement(ctx);
+    var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.loopContinue);
+    connectAdjacentCode(currentTail);
     return ctx;
   }
 
   @Override
   public ParseTree visitReturnStatement(BSLParser.ReturnStatementContext ctx) {
     blocks.addStatement(ctx);
+    var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.methodReturn);
+    connectAdjacentCode(currentTail);
     return ctx;
   }
 
   @Override
   public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
     blocks.addStatement(ctx);
+    var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.loopBreak);
+    connectAdjacentCode(currentTail);
     return ctx;
   }
 
@@ -347,7 +366,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
 
-    if(!producePreprocessorConditionsEnabled) {
+    if (!producePreprocessorConditionsEnabled) {
       return ctx;
     }
 
@@ -374,7 +393,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_else(BSLParser.Preproc_elseContext ctx) {
 
-    if(!producePreprocessorConditionsEnabled) {
+    if (!producePreprocessorConditionsEnabled) {
       return ctx;
     }
 
@@ -400,7 +419,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
 
-    if(!producePreprocessorConditionsEnabled) {
+    if (!producePreprocessorConditionsEnabled) {
       return ctx;
     }
 
@@ -430,7 +449,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
 
-    if(!producePreprocessorConditionsEnabled) {
+    if (!producePreprocessorConditionsEnabled) {
       return ctx;
     }
 
@@ -456,6 +475,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     // присоединяем все прямые выходы из тел условий
     while (!mainIf.getBuildParts().isEmpty()) {
       var blockTail = mainIf.getBuildParts().pop();
+      if (hasNoSignificantEdges(blockTail) && blockTail instanceof BasicBlockVertex) {
+        // это мертвый код. Он может быть пустым блоком
+        // тогда он не нужен сам по себе
+        var basicBlock = (BasicBlockVertex) blockTail;
+        if (basicBlock.statements().isEmpty()) {
+          graph.removeVertex(basicBlock);
+          continue;
+        }
+      }
       graph.addVertex(blockTail);
       graph.addEdge(blockTail, upperBlock.end());
     }
@@ -474,6 +502,13 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return (PreprocessorConditionVertex) node;
     }
     return null;
+  }
+
+  private void connectAdjacentCode(CfgVertex currentTail) {
+    if (adjacentDeadCodeEnabled) {
+      var newTail = blocks.getCurrentBlock().end();
+      graph.addEdge(currentTail, newTail, CfgEdgeType.ADJACENT_CODE);
+    }
   }
 
   private void makeJump(CfgVertex jumpTarget) {
@@ -501,7 +536,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
     graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
-    if(produceLoopIterationsEnabled) {
+    if (produceLoopIterationsEnabled) {
       graph.addEdge(body.end(), loopStart, CfgEdgeType.LOOP_ITERATION);
     }
   }
@@ -518,6 +553,11 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // перевести все связи на новую вершину
       var incoming = graph.incomingEdgesOf(currentTail);
       for (var edge : incoming) {
+        // ребра смежности не переключаем, т.к. текущий блок удаляется
+        if (edge.getType() == CfgEdgeType.ADJACENT_CODE) {
+          continue;
+        }
+
         var source = graph.getEdgeSource(edge);
         graph.addEdge(source, vertex, edge.getType());
       }
@@ -532,7 +572,17 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   private void removeOrphanedNodes() {
     var orphans = graph.vertexSet().stream()
-      .filter(x -> graph.edgesOf(x).isEmpty() && !(x instanceof ExitVertex))
+      .filter(vertex -> !(vertex instanceof ExitVertex))
+      .filter(vertex -> {
+        var edges = new ArrayList<>(graph.edgesOf(vertex));
+
+        return edges.isEmpty() ||
+          adjacentDeadCodeEnabled &&
+            edges.size() == 1
+            && edges.get(0).getType() == CfgEdgeType.ADJACENT_CODE
+            && graph.getEdgeTarget(edges.get(0)) == vertex;
+
+      })
       .collect(Collectors.toList());
 
     // в одном стриме бывает ConcurrentModificationException
