@@ -358,8 +358,10 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitRaiseStatement(BSLParser.RaiseStatementContext ctx) {
     blocks.addStatement(ctx);
+    var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.exceptionHandler);
+    connectAdjacentCode(currentTail);
     return ctx;
   }
 
