@@ -4,6 +4,30 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                },
+                "ignoreMissingElseOnExit": {
+                    "description": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
         "AssignAliasFieldsInQuery": {
             "description": "Assigning aliases to selected fields in a query",
             "default": true,
