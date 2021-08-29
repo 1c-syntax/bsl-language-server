@@ -91,6 +91,9 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
+    // graphs
+    implementation("org.jgrapht", "jgrapht-core", "1.5.1")
+
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
