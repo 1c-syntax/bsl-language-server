@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1629451795592,
+  "lastUpdate": 1630235508107,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12276,6 +12276,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5805421540392002",
             "extra": "mean: 92.63117869695027 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ff1ac97f8e79bf555acedc0e05908120a6e73a09",
+          "message": "Merge pull request #1725 from EvilBeaver/feature/cfg\n\nControlFlowGraph и диагностика с примером",
+          "timestamp": "2021-08-29T14:02:02+03:00",
+          "tree_id": "e15b4e2f86a03f5148f816edab1946ef55c3b626",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ff1ac97f8e79bf555acedc0e05908120a6e73a09"
+        },
+        "date": 1630235502619,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 98.12929646174113,
+            "unit": "sec",
+            "range": "stddev: 3.2082232539043405",
+            "extra": "mean: 98.12929646174113 sec\nrounds: 3"
           }
         ]
       }
