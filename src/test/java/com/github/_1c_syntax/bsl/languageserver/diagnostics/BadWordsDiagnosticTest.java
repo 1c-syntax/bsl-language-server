@@ -1,15 +1,15 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.*;
 
-class badWordsDiagnosticTest extends AbstractDiagnosticTest<badWordsDiagnostic>{
-  badWordsDiagnosticTest() {
-    super(badWordsDiagnostic.class);
+class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
+  BadWordsDiagnosticTest() {
+    super(BadWordsDiagnostic.class);
   }
 
   @Test
