@@ -93,6 +93,7 @@ dependencies {
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
+    implementation("junit:junit:4.13.1")
 
     // COMPILE
 

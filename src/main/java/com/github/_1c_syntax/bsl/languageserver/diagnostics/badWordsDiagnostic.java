@@ -6,7 +6,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
-  tag = {
+  tags = {
     DiagnosticTag.DESIGN
   }
 )
