@@ -1,9 +1,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
-import com.github._1c_syntax.bsl.parser.*;
 import com.github._1c_syntax.utils.*;
-import org.antlr.v4.runtime.tree.*;
 
 import java.util.regex.*;
 
@@ -15,7 +13,7 @@ import java.util.regex.*;
     DiagnosticTag.DESIGN
   }
 )
-public class BadWordsDiagnostic extends AbstractVisitorDiagnostic {
+public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   private static final String BAD_WORDS_DEFAULT = "";
 
@@ -26,12 +24,16 @@ public class BadWordsDiagnostic extends AbstractVisitorDiagnostic {
   private String badWords = BAD_WORDS_DEFAULT;
 
   @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx){
-    Pattern pattern = CaseInsensitivePattern.compile(badWords);
-    Matcher matcher = pattern.matcher(ctx.getText());
-    while (matcher.find()) {
-      diagnosticStorage.addDiagnostic(ctx);
+  protected void check() {
+    
+    Pattern pattern = CaseInsensitivePattern.compile("^[^/+]" + badWords + ".*" );
+    String[] moduleLines = documentContext.getContent().split("\n");
+
+    for (int i=0; i<moduleLines.length; i++ ) {
+      Matcher matcher = pattern.matcher(moduleLines[i]);
+      while (matcher.find()) {
+        diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
+      }
     }
-    return super.visitStatement(ctx);
   }
 }
