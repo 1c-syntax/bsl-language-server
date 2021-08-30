@@ -14,12 +14,18 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
   @Test
   void test() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("badWords", "лотус|шмотус");
+    diagnosticInstance.configure(configuration);
+
     List<Diagnostic> diagnostics = getDiagnostics(); // Получение диагностик
 
-    assertThat(diagnostics).hasSize(3); // Проверка количества
+    assertThat(diagnostics).hasSize(4); // Проверка количества
     assertThat(diagnostics, true)
-      .hasRange(4, 0, 4, 9)  // Проверка конкретного случая
-      .hasRange(3, 6, 3, 7)  // Проверка конкретного случая
-      .hasRange(3, 6, 3, 7); // Проверка конкретного случая
+      .hasRange(3, 0, 6, 41)
+      .hasRange(3, 0, 6, 41)
+      .hasRange(3, 0, 6, 41)
+      .hasRange(9, 0, 9, 55);
   }
 }

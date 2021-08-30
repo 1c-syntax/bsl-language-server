@@ -17,11 +17,18 @@ import java.util.regex.*;
 )
 public class BadWordsDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final String BAD_WORDS_DEFAULT = "";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = BAD_WORDS_DEFAULT
+  )
+  private String badWords = BAD_WORDS_DEFAULT;
+
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx){
-    Pattern pattern = CaseInsensitivePattern.compile("лотус|шмотус");
+    Pattern pattern = CaseInsensitivePattern.compile(badWords);
     Matcher matcher = pattern.matcher(ctx.getText());
-
     while (matcher.find()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
