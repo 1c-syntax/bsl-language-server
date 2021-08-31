@@ -26,11 +26,15 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
     
-    Pattern pattern = CaseInsensitivePattern.compile("^[^/+]" + badWords + ".*" );
+    Pattern pattern = CaseInsensitivePattern.compile(badWords);
+    Pattern comment = Pattern.compile("//.*$");
+
     String[] moduleLines = documentContext.getContent().split("\n");
 
     for (int i=0; i<moduleLines.length; i++ ) {
-      Matcher matcher = pattern.matcher(moduleLines[i]);
+      String moduleLine = comment.matcher(moduleLines[i]).replaceAll("");
+
+      Matcher matcher = pattern.matcher(moduleLine);
       while (matcher.find()) {
         diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
       }

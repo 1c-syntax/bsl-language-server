@@ -23,9 +23,9 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
     assertThat(diagnostics).hasSize(4); // Проверка количества
     assertThat(diagnostics, true)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(9, 0, 9, 55);
+      .hasRange(4, 4, 4, 9)
+      .hasRange(6, 24, 6, 29)
+      .hasRange(6, 34, 6, 39)
+      .hasRange(9, 4, 9, 10);
   }
 }
