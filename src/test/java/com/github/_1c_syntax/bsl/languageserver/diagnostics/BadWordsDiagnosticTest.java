@@ -21,11 +21,13 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
     List<Diagnostic> diagnostics = getDiagnostics(); // Получение диагностик
 
-    assertThat(diagnostics).hasSize(4); // Проверка количества
+    assertThat(diagnostics).hasSize(6); // Проверка количества
     assertThat(diagnostics, true)
+      .hasRange(0, 42, 0, 47)
+      .hasRange(0, 48, 0, 54)
       .hasRange(4, 4, 4, 9)
       .hasRange(6, 24, 6, 29)
       .hasRange(6, 34, 6, 39)
-      .hasRange(9, 4, 9, 10);
+      .hasRange(8, 4, 8, 10);
   }
 }
