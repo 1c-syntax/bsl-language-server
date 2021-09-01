@@ -152,6 +152,7 @@ Total: **157**
  [UnreachableCode](UnreachableCode.md) | Unreachable Code | Yes | Minor | Error | `design`<br>`suspicious` 
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Unsafe SafeMode method call | Yes | Blocker | Error | `deprecated`<br>`error` 
  [UnusedLocalMethod](UnusedLocalMethod.md) | Unused local method | Yes | Major | Code smell | `standard`<br>`suspicious`<br>`unused` 
+ [UnusedLocalVariable](UnusedLocalVariable.md) | Unused local variable | Yes | Major | Code smell | `brainoverload`<br>`badpractice` 
  [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design`<br>`unused` 
  [UsageWriteLogEvent](UsageWriteLogEvent.md) | Incorrect use of the method | Yes | Info | Code smell | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` 

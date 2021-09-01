@@ -152,6 +152,7 @@
  [UnreachableCode](UnreachableCode.md) | Недостижимый код | Да | Незначительный | Ошибка | `design`<br>`suspicious` 
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Небезопасное использование функции БезопасныйРежим() | Да | Блокирующий | Ошибка | `deprecated`<br>`error` 
  [UnusedLocalMethod](UnusedLocalMethod.md) | Неиспользуемый локальный метод | Да | Важный | Дефект кода | `standard`<br>`suspicious`<br>`unused` 
+ [UnusedLocalVariable](UnusedLocalVariable.md) | Неиспользуемая локальная переменная | Да | Важный | Дефект кода | `brainoverload`<br>`badpractice` 
  [UnusedParameters](UnusedParameters.md) | Неиспользуемый параметр | Да | Важный | Дефект кода | `design`<br>`unused` 
  [UsageWriteLogEvent](UsageWriteLogEvent.md) | Неверное использование метода "ЗаписьЖурналаРегистрации" | Да | Информационный | Дефект кода | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Бесполезный перебор коллекции | Да | Критичный | Ошибка | `clumsy` 

@@ -404,6 +404,9 @@
                 "UnusedLocalMethod": {
                     "$ref": "parameters-schema.json#/definitions/UnusedLocalMethod"
                 },
+                "UnusedLocalVariable": {
+                    "$ref": "parameters-schema.json#/definitions/UnusedLocalVariable"
+                },
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
                 },
