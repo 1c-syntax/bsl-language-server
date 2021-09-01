@@ -21,10 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
-import com.github._1c_syntax.utils.*;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 
-import java.util.regex.*;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,13 +52,26 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   )
   private String badWords = BAD_WORDS_DEFAULT;
 
+  private static Pattern createPattern(String words) {
+    return CaseInsensitivePattern.compile(words);
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    DiagnosticHelper.configureDiagnostic(this, configuration);
+    this.badWords = (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT);
+  }
+
   @Override
   protected void check() {
-    
-    Pattern pattern = CaseInsensitivePattern.compile(badWords);
-    String[] moduleLines = documentContext.getContent().split("\n");
 
-    for (int i=0; i<moduleLines.length; i++ ) {
+    if (badWords.trim().length() == 0) {
+      return;
+    }
+
+    String[] moduleLines = documentContext.getContentList();
+    Pattern pattern = createPattern(badWords);
+    for (int i = 0; i < moduleLines.length; i++) {
       Matcher matcher = pattern.matcher(moduleLines[i]);
       while (matcher.find()) {
         diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
