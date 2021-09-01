@@ -50,7 +50,7 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = BAD_WORDS_DEFAULT
   )
-  private String badWords = BAD_WORDS_DEFAULT;
+  private Pattern badWords = createPattern(BAD_WORDS_DEFAULT);
 
   private static Pattern createPattern(String words) {
     return CaseInsensitivePattern.compile(words);
@@ -58,21 +58,21 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    DiagnosticHelper.configureDiagnostic(this, configuration);
-    this.badWords = (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT);
+    this.badWords = createPattern(
+      (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT));
   }
 
   @Override
   protected void check() {
 
-    if (badWords.trim().length() == 0) {
+    if (badWords.pattern().trim().length() == 0) {
       return;
     }
 
     String[] moduleLines = documentContext.getContentList();
-    Pattern pattern = createPattern(badWords);
+
     for (int i = 0; i < moduleLines.length; i++) {
-      Matcher matcher = pattern.matcher(moduleLines[i]);
+      Matcher matcher = badWords.matcher(moduleLines[i]);
       while (matcher.find()) {
         diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
       }

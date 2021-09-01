@@ -8,17 +8,18 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **143**
+Общее количество: **144**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
 * Ошибка: **44**
-* Дефект кода: **91**
+* Дефект кода: **92**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Назначение псевдонимов выбранным полям в запросе | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Запрещенные слова | Да | Важный | Дефект кода | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` 

@@ -8,17 +8,18 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **143**
+Total: **144**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **44**
-* Code smell: **91**
+* Code smell: **92**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Prohibited words | Yes | Major | Code smell | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
