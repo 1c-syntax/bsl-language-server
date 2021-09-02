@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.*;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
   BadWordsDiagnosticTest() {
