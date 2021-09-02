@@ -39,13 +39,14 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
-      .hasRange(6, 29, 6, 62)
-      .hasRange(19, 30, 19, 63)
-      .hasRange(25, 30, 25, 63)
+      .hasRange(6, 29, 62)
+      .hasRange(19, 30, 63)
+      .hasRange(25, 30, 63)
       .hasRange(45, 29, 62)
       .hasRange(49, 30, 63)
+      .hasRange(68, 30, 58)
     ;
 
   }
