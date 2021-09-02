@@ -11,7 +11,7 @@ This article contains rules of diagnostics usage, creation and information about
     - [Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics test class](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
     - [Diagnostics test](#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-    - [Test of configuration method for parametrized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
+    - [Test of configuration method for parameterized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
     - [Quick fixes test **(Work in progress)**](#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
   - [Diagnostics test resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
@@ -37,7 +37,7 @@ To create necessary files in right places, should run command `gradlew newDiagno
 
 Diagnostics is implemented by adding a java class to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/main/java` directory.
 
-In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _ (if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
+In the body of the file, you need to specify the package to which the class and the import block are added _(when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _(if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
 
 Each diagnostic must have a `@DiagnosticMetadata`, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
@@ -300,7 +300,7 @@ Test method example
     }
 ```
 
-### Test of configuration method for parametrized diagnostics
+### Test of configuration method for parameterized diagnostics
 
 Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.  
 Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом `getDefaultDiagnosticConfiguration()`, используя информацию текущего объекта диагностики `diagnosticInstance.getInfo()`. Полученный результат представляет собой соответствие, в котором, методом `put`, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом `configure()` текущего объекта диагностики `diagnosticInstance`.
