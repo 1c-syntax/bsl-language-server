@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
@@ -57,7 +59,7 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
         sourceDefinedSymbol,
         uri,
         sourceDefinedSymbol.getSelectionRange(),
-        false)
+        OccurrenceType.REFERENCE)
       )
       .findFirst();
   }

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 
@@ -64,7 +65,7 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
     documentContext.getSymbolTree().getVariables().stream()
       .filter(v -> CHECKING_VARIABLE_KINDS.contains(v.getKind()))
       .filter(v -> !v.isExport())
-      .filter(v -> referenceIndex.getReferencesTo(v).stream().filter(ref -> !ref.isDefinition()).findFirst().isEmpty())
+      .filter(v -> referenceIndex.getReferencesTo(v).stream().filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty())
       .forEach(v -> diagnosticStorage.addDiagnostic(v.getRange(), info.getMessage(v.getName())));
   }
 }

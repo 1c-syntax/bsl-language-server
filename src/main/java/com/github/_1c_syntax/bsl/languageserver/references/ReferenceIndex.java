@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.Location;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
@@ -155,7 +156,7 @@ public class ReferenceIndex {
       .build();
 
     var location = new Location(uri, range);
-
+    
     var symbolOccurrence = SymbolOccurrence.builder()
       .occurrenceType(OccurrenceType.REFERENCE)
       .symbol(symbol)
@@ -217,7 +218,7 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
-        return new Reference(from, symbol, uri, range, symbolOccurrence.getOccurrenceType() == OccurrenceType.DEFINITION);
+        return new Reference(from, symbol, uri, range, symbolOccurrence.getOccurrenceType());
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }

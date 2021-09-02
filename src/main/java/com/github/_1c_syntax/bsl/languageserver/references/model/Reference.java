@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
@@ -59,7 +59,7 @@ public class Reference {
   /**
    * Признак указания на обновление значения переменной.
    */
-  boolean definition;
+  OccurrenceType occurrenceType;
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
@@ -76,11 +76,11 @@ public class Reference {
   }
 
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), false);
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), OccurrenceType.REFERENCE);
   }
 
-  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, boolean definition) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), definition);
+  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, OccurrenceType occurrenceType) {
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), occurrenceType);
   }
 
 }

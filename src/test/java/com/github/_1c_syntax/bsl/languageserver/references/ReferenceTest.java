@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
@@ -49,7 +51,7 @@ class ReferenceTest {
       methodSymbol,
       FAKE_DOCUMENT_URI,
       selectionRange,
-      false
+      OccurrenceType.REFERENCE
     );
 
     // then
@@ -71,7 +73,7 @@ class ReferenceTest {
       methodSymbol,
       FAKE_DOCUMENT_URI,
       selectionRange,
-      false
+      OccurrenceType.REFERENCE
     );
 
     // when
@@ -96,7 +98,7 @@ class ReferenceTest {
       methodSymbol,
       FAKE_DOCUMENT_URI,
       selectionRange,
-      false
+      OccurrenceType.REFERENCE
     );
     var location = reference.toLocation();
 
