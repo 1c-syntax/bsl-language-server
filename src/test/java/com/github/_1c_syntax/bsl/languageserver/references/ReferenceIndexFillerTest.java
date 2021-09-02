@@ -91,8 +91,8 @@ class ReferenceIndexFillerTest {
       .isEqualTo("ТретийМетод");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::isDefinition)
-      .isEqualTo(false);
+      .extracting(Reference::getOccurrenceType)
+      .isEqualTo(OccurrenceType.REFERENCE);
 
     var scopeMethod = documentContext
       .getSymbolTree()
