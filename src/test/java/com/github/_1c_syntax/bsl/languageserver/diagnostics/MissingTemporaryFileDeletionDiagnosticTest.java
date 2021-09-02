@@ -46,7 +46,7 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
       .hasRange(25, 30, 63)
       .hasRange(45, 29, 62)
       .hasRange(49, 30, 63)
-      .hasRange(68, 30, 58)
+      .hasRange(64, 30, 58)
     ;
 
   }
@@ -61,7 +61,7 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put(
@@ -71,11 +71,12 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(6, 29, 6, 62)
       .hasRange(25, 30, 25, 63)
       .hasRange(49, 30, 63)
+      .hasRange(64, 30, 58)
     ;
   }
 
@@ -90,7 +91,7 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     var diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics).hasSize(11);
     assertThat(diagnostics, true)
       .hasRange(6, 29, 62)
       .hasRange(9, 30, 63)
@@ -101,6 +102,8 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
       .hasRange(34, 16, 38)
       .hasRange(45, 29, 62)
       .hasRange(49, 30, 63)
+      .hasRange(60, 29, 57)
+      .hasRange(64, 30, 58)
     ;
   }
 }
