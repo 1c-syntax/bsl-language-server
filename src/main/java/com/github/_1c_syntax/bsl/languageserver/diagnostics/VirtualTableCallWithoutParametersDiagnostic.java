@@ -31,7 +31,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 5,
   tags = {
     DiagnosticTag.SQL,
