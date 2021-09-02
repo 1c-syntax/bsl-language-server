@@ -82,8 +82,10 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   private Range rangeOfError(String moduleText, Matcher matcher) {
 
     String textBefore = moduleText.substring(0, matcher.start());
+
+    int lineNum = StringUtils.countMatches(textBefore, "\n");
     int shift = textBefore.lastIndexOf("\n") + 1;
 
-    return Ranges.create(StringUtils.countMatches(textBefore, "\n"), matcher.start() - shift, matcher.end() - shift);
+    return Ranges.create(lineNum, matcher.start() - shift, matcher.end() - shift);
   }
 }
