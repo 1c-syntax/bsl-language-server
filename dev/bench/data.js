@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1630565092125,
+  "lastUpdate": 1630566562165,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12369,6 +12369,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9108854531814375",
             "extra": "mean: 99.72570363680522 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "e174cee3b152cafda9e65e27cc3fe14299bb6c39",
+          "message": "Fix #1759. Добавлена обработка некорректных циклов",
+          "timestamp": "2021-09-02T09:59:01+03:00",
+          "tree_id": "d8ffd79f85cc660d925cc299e22585439a7fac9b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e174cee3b152cafda9e65e27cc3fe14299bb6c39"
+        },
+        "date": 1630566556475,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 99.1964852809906,
+            "unit": "sec",
+            "range": "stddev: 3.333825353744719",
+            "extra": "mean: 99.1964852809906 sec\nrounds: 3"
           }
         ]
       }
