@@ -201,7 +201,11 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       var root = (BSLParser.ComplexIdentifierContext) parent.getParent();
       modifier = root.modifier();
-      prefix = root.IDENTIFIER().getText();
+
+      var terminalNode = root.IDENTIFIER();
+      if (terminalNode != null) {
+        prefix = terminalNode.getText();
+      }
 
     } else {
       // остальные к методам не относятся
