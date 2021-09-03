@@ -16,22 +16,22 @@ It is important to remember that
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-1. The number of values passed after the template string is not equal (less or more) to the maximum number from a string like %N inside the template string
-  - `StrTemplate("Name (version %1)");`
-  - `StrTemplate("%1 (version%2)", Name);`
+Вариант 1 - количество переданных после шаблонной строки значений не равно (меньше или больше) максимальному номеру из строки вида %N внутри шаблонной строки
 
-2. no values are passed at all, except for a formatted string due to the large number of parentheses inside a simple expression with `NStr` and `StrTemplate` Example:
-- `StrTemplate(NStr("ru = 'Name (version %1)'", Version()));`
-  - here the parenthesis is erroneously not closed for `NStr`
-  - as a result, the expression after evaluating `NStr` becomes empty.
+  - `СтрШаблон("Наименование (версия %1)"); // не передан необходимый параметр для %1`
+  - `СтрШаблон("%1 (версия %2)", Наименование); // не передан необходимый параметр для %2`
 
-It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
+Вариант 2 - не передается вообще никаких значений, кроме форматированной строки из-за большого количества скобок внутри несложного выражения с `НСтр` и `СтрШаблон`:
 
-Right:
-  - `StrTemplate(NStr ("ru = 'Name (version %1)'"), Version());`
+  - `СтрШаблон(НСтр("ru='Наименование (версия %1)'", Версия()));`
 
-3. An example of passing digits immediately after a template value
-  - `StrTemplate("Name %(1)2"), Name);`
+Здесь ошибочно не закрыта скобка для `НСтр`. В итоге выражение после вычисления `НСтр` становится пустым. Выявить подобную ошибку чтением кода довольно сложно из-за наличия скобок. И можно поймать только в рантайме, получив исключение.
+
+Правильный вариант
+  - `СтрШаблон(НСтр("ru='Наименование (версия %1)'"), Версия());`
+
+Вариант 3 - правильный пример передачи цифр сразу после шаблонного значения
+  - `СтрШаблон("Наименование %(1)2"), Наименование); // если передать значение "МояСтрока", то результат будет "МояСтрока2"`
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -41,7 +41,7 @@ Right:
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard: Localization Requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [Требования по локализации - Стандарт](https://its.1c.ru/db/v8std/content/763/hdoc)
 
 ## Snippets
 
