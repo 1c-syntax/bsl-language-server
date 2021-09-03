@@ -98,7 +98,7 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
-Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
+Diagnostic may provide so-called `quick fixes`. In order to provide quick fixes the diagnostic class must implement `QuickFixProvider` interface. See this [article](DiagnosticQuickFix.md) on adding a `quick fix` to diagnostic.
 
 Examples
 
