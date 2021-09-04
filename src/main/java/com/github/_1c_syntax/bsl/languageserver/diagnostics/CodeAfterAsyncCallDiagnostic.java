@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
+
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.CRITICAL,
@@ -73,8 +75,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
       "|НАЧАТЬЗАПРОСРАЗРЕШЕНИЯПОЛЬЗОВАТЕЛЯ|BEGINREQUESTINGUSERPERMISSION|НАЧАТЬЗАПУСКПРИЛОЖЕНИЯ|BEGINRUNNINGAPPLICATION");
 
   private Optional<BSLParser.CodeBlockContext> subCodeBlockContext = Optional.empty();
-  public static final int RULE_STATEMENT = BSLParser.RULE_statement;
-  public static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_STATEMENT, BSLParser.RULE_subCodeBlock);
+  public static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, BSLParser.RULE_subCodeBlock);
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -95,7 +96,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
       String methodName = ctx.methodName().getText();
       if (ASYNC_METHODS.matcher(methodName).matches()) {
 
-        final var statement = (BSLParser.StatementContext)Trees.getAncestorByRuleIndex(ctx, RULE_STATEMENT);
+        final var statement = (BSLParser.StatementContext)Trees.getAncestorByRuleIndex(ctx, RULE_statement);
         if (statement != null && checkNextBlocks(statement)){
           diagnosticStorage.addDiagnostic(ctx,
             info.getMessage(methodName));
@@ -118,7 +119,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
       return true;
     }
     final var rootStatement = Trees.getRootParent(codeBlock, ROOT_INDEXES);
-    if (rootStatement != null && rootStatement.getRuleIndex() == RULE_STATEMENT){
+    if (rootStatement != null && rootStatement.getRuleIndex() == RULE_statement){
       return checkNextBlocks((BSLParser.StatementContext)rootStatement);
     }
     return false;
