@@ -68,6 +68,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeAfterAsyncCall": {
+            "description": "Lines of code after the asynchronous method is called",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lines of code after the asynchronous method is called",
+            "$id": "#/definitions/CodeAfterAsyncCall"
+        },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
             "default": true,

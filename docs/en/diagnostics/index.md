@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **144**
+Total: **145**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **44**
-* Code smell: **92**
+* Code smell: **93**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -23,6 +23,7 @@ Total: **144**
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
+ [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | Lines of code after the asynchronous method is called | No | Critical | Code smell | `standard`<br>`badpractice`<br>`suspicious` 
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` 
