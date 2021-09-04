@@ -156,7 +156,6 @@ public class ReferenceIndex {
       .build();
 
     var location = new Location(uri, range);
-    
     var symbolOccurrence = SymbolOccurrence.builder()
       .occurrenceType(OccurrenceType.REFERENCE)
       .symbol(symbol)
