@@ -59,23 +59,26 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
 )
 public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern ASYNC_METHODS = CaseInsensitivePattern.compile(
-    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ОТКРЫТЬФОРМУ|OPENFORM|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE|ПОКАЗАТЬПРЕДУПРЕЖДЕНИЕ|SHOWMESSAGEBOX" +
-      "|ПОКАЗАТЬВВОДДАТЫ|SHOWINPUTDATE|ПОКАЗАТЬВВОДЗНАЧЕНИЯ|SHOWINPUTVALUE|ПОКАЗАТЬВВОДСТРОКИ|SHOWINPUTSTRING" +
-      "|ПОКАЗАТЬВВОДЧИСЛА|SHOWINPUTNUMBER|НАЧАТЬУСТАНОВКУВНЕШНЕЙКОМПОНЕНТЫ|BEGININSTALLADDIN" +
+    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ОТКРЫТЬФОРМУ|OPENFORM|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
+      "|ПОКАЗАТЬПРЕДУПРЕЖДЕНИЕ|SHOWMESSAGEBOX|ПОКАЗАТЬВВОДДАТЫ|SHOWINPUTDATE|ПОКАЗАТЬВВОДЗНАЧЕНИЯ|SHOWINPUTVALUE" +
+      "|ПОКАЗАТЬВВОДСТРОКИ|SHOWINPUTSTRING|ПОКАЗАТЬВВОДЧИСЛА|SHOWINPUTNUMBER" +
+      "|НАЧАТЬУСТАНОВКУВНЕШНЕЙКОМПОНЕНТЫ|BEGININSTALLADDIN" +
       "|НАЧАТЬУСТАНОВКУРАСШИРЕНИЯРАБОТЫСФАЙЛАМИ|BEGININSTALLFILESYSTEMEXTENSION" +
       "|НАЧАТЬУСТАНОВКУРАСШИРЕНИЯРАБОТЫСКРИПТОГРАФИЕЙ|BEGININSTALLCRYPTOEXTENSION" +
       "|НАЧАТЬПОДКЛЮЧЕНИЕРАСШИРЕНИЯРАБОТЫСКРИПТОГРАФИЕЙ|BEGINATTACHINGCRYPTOEXTENSION" +
       "|НАЧАТЬПОДКЛЮЧЕНИЕРАСШИРЕНИЯРАБОТЫСФАЙЛАМИ|BEGINATTACHINGFILESYSTEMEXTENSION" +
       "|НАЧАТЬПОМЕЩЕНИЕФАЙЛА|BEGINPUTFILE|НАЧАТЬКОПИРОВАНИЕФАЙЛА|BEGINCOPYINGFILE" +
-      "|НАЧАТЬПЕРЕМЕЩЕНИЕФАЙЛА|BEGINMOVINGFILE|НАЧАТЬПОИСКФАЙЛОВ|BEGINFINDINGFILES|НАЧАТЬУДАЛЕНИЕФАЙЛОВ|BEGINDELETINGFILES" +
+      "|НАЧАТЬПЕРЕМЕЩЕНИЕФАЙЛА|BEGINMOVINGFILE|НАЧАТЬПОИСКФАЙЛОВ|BEGINFINDINGFILES" +
+      "|НАЧАТЬУДАЛЕНИЕФАЙЛОВ|BEGINDELETINGFILES" +
       "|НАЧАТЬСОЗДАНИЕКАТАЛОГА|BEGINCREATINGDIRECTORY|НАЧАТЬПОЛУЧЕНИЕКАТАЛОГАВРЕМЕННЫХФАЙЛОВ|BEGINGETTINGTEMPFILESDIR" +
       "|НАЧАТЬПОЛУЧЕНИЕКАТАЛОГАДОКУМЕНТОВ|BEGINGETTINGDOCUMENTSDIR" +
       "|НАЧАТЬПОЛУЧЕНИЕРАБОЧЕГОКАТАЛОГАДАННЫХПОЛЬЗОВАТЕЛЯ|BEGINGETTINGUSERDATAWORKDIR" +
       "|НАЧАТЬПОЛУЧЕНИЕФАЙЛОВ|BEGINGETTINGFILES|НАЧАТЬПОМЕЩЕНИЕФАЙЛОВ|BEGINPUTTINGFILES" +
-      "|НАЧАТЬЗАПРОСРАЗРЕШЕНИЯПОЛЬЗОВАТЕЛЯ|BEGINREQUESTINGUSERPERMISSION|НАЧАТЬЗАПУСКПРИЛОЖЕНИЯ|BEGINRUNNINGAPPLICATION");
+      "|НАЧАТЬЗАПРОСРАЗРЕШЕНИЯПОЛЬЗОВАТЕЛЯ|BEGINREQUESTINGUSERPERMISSION" +
+      "|НАЧАТЬЗАПУСКПРИЛОЖЕНИЯ|BEGINRUNNINGAPPLICATION");
 
+  private static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, BSLParser.RULE_subCodeBlock);
   private Optional<BSLParser.CodeBlockContext> subCodeBlockContext = Optional.empty();
-  public static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, BSLParser.RULE_subCodeBlock);
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -106,7 +109,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitGlobalMethodCall(ctx);
   }
 
-  private boolean checkNextBlocks(BSLParser.StatementContext statement) {
+  private static boolean checkNextBlocks(BSLParser.StatementContext statement) {
     final var codeBlock = (BSLParser.CodeBlockContext)Trees.getAncestorByRuleIndex(statement, BSLParser.RULE_codeBlock);
     if (codeBlock == null || codeBlock.statement().isEmpty()){
       return false;
@@ -118,6 +121,10 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     if (haveCodeAfter) {
       return true;
     }
+    return checkParentBlock(codeBlock);
+  }
+
+  private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {
     final var rootStatement = Trees.getRootParent(codeBlock, ROOT_INDEXES);
     if (rootStatement != null && rootStatement.getRuleIndex() == RULE_statement){
       return checkNextBlocks((BSLParser.StatementContext)rootStatement);
