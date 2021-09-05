@@ -1,4 +1,4 @@
-# Missing handler for http service (MissingHttpServiceHandler)
+# Missing handler for http service (WrongHttpServiceHandler)
 
 |  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                      Tags                       |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
@@ -38,12 +38,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:MissingHttpServiceHandler-off
-// BSLLS:MissingHttpServiceHandler-on
+// BSLLS:WrongHttpServiceHandler-off
+// BSLLS:WrongHttpServiceHandler-on
 ```
 
 ### Parameter for config
 
 ```json
-"MissingHttpServiceHandler": false
+"WrongHttpServiceHandler": false
 ```

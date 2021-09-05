@@ -978,16 +978,6 @@
             "title": "Event subscription handler missing",
             "$id": "#/definitions/MissingEventSubscriptionHandler"
         },
-        "MissingHttpServiceHandler": {
-            "description": "Missing handler for http service",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missing handler for http service",
-            "$id": "#/definitions/MissingHttpServiceHandler"
-        },
         "MissingParameterDescription": {
             "description": "Method parameters description are missing",
             "default": true,
@@ -1862,6 +1852,16 @@
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
+        "WrongHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/WrongHttpServiceHandler"
+        },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
             "default": true,
@@ -1881,6 +1881,16 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
+        "WrongWebServiceHandler": {
+            "description": "Wrong handler for web service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong handler for web service",
+            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",

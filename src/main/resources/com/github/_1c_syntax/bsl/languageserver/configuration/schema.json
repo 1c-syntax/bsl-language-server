@@ -251,9 +251,6 @@
                 "MissingEventSubscriptionHandler": {
                     "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
                 },
-                "MissingHttpServiceHandler": {
-                    "$ref": "parameters-schema.json#/definitions/MissingHttpServiceHandler"
-                },
                 "MissingParameterDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingParameterDescription"
                 },
@@ -449,11 +446,17 @@
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
+                "WrongHttpServiceHandler": {
+                    "$ref": "parameters-schema.json#/definitions/WrongHttpServiceHandler"
+                },
                 "WrongUseFunctionProceedWithCall": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
+                },
+                "WrongWebServiceHandler": {
+                    "$ref": "parameters-schema.json#/definitions/WrongWebServiceHandler"
                 },
                 "YoLetterUsage": {
                     "$ref": "parameters-schema.json#/definitions/YoLetterUsage"

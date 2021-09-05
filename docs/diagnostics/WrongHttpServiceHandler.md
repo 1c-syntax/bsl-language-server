@@ -1,4 +1,4 @@
-# Неверно задан обработчик метода http-сервиса (MissingHttpServiceHandler)
+# Неверно задан обработчик метода http-сервиса (WrongHttpServiceHandler)
 
 |   Тип    |    Поддерживаются<br>языки    |   Важность    |    Включена<br>по умолчанию    |    Время на<br>исправление (мин)    |                      Теги                       |
 |:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------:|
@@ -38,12 +38,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:MissingHttpServiceHandler-off
-// BSLLS:MissingHttpServiceHandler-on
+// BSLLS:WrongHttpServiceHandler-off
+// BSLLS:WrongHttpServiceHandler-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"MissingHttpServiceHandler": false
+"WrongHttpServiceHandler": false
 ```

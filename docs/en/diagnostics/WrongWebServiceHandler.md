@@ -1,4 +1,4 @@
-# Missing handler for web service (MissingHandlerForWebServices)
+# Wrong handler for web service (WrongWebServiceHandler)
 
 |  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                      Tags                       |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
@@ -38,12 +38,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:MissingHandlerForWebServices-off
-// BSLLS:MissingHandlerForWebServices-on
+// BSLLS:WrongWebServiceHandler-off
+// BSLLS:WrongWebServiceHandler-on
 ```
 
 ### Parameter for config
 
 ```json
-"MissingHandlerForWebServices": false
+"WrongWebServiceHandler": false
 ```

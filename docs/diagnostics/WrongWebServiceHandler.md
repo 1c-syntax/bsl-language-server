@@ -1,4 +1,4 @@
-# Неверно задан обработчик операции web-сервиса (MissingHandlerForWebServices)
+# Неверно задан обработчик операции web-сервиса (WrongWebServiceHandler)
 
 |   Тип    |    Поддерживаются<br>языки    |   Важность    |    Включена<br>по умолчанию    |    Время на<br>исправление (мин)    |                      Теги                       |
 |:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------:|
@@ -38,12 +38,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:MissingHandlerForWebServices-off
-// BSLLS:MissingHandlerForWebServices-on
+// BSLLS:WrongWebServiceHandler-off
+// BSLLS:WrongWebServiceHandler-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"MissingHandlerForWebServices": false
+"WrongWebServiceHandler": false
 ```

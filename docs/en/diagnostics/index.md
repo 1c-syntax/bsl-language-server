@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **145**
+Total: **146**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **45**
+* Error: **46**
 * Code smell: **92**
 
 
@@ -94,7 +94,6 @@ Total: **145**
  [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 
  [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Event subscription handler missing | Yes | Blocker | Error | `error` 
- [MissingHttpServiceHandler](MissingHttpServiceHandler.md) | Missing handler for http service | Yes | Blocker | Error | `design`<br>`suspicious`<br>`error` 
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
@@ -160,6 +159,8 @@ Total: **145**
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Major | Error | `sql`<br>`standard`<br>`performance` 
+ [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Missing handler for http service | Yes | Blocker | Error | `design`<br>`suspicious`<br>`error` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
+ [WrongWebServiceHandler](WrongWebServiceHandler.md) | Wrong handler for web service | Yes | Blocker | Error | `design`<br>`suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 
