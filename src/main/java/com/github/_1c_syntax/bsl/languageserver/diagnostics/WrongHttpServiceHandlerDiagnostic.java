@@ -48,7 +48,7 @@ import org.eclipse.lsp4j.Range;
   }
 
 )
-public class MissingHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
+public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
 
   /**
    * Рендж на который будут повешены замечания

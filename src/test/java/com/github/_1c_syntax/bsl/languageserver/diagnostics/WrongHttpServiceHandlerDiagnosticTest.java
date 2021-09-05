@@ -35,9 +35,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class MissingHttpServiceHandlerDiagnosticTest extends AbstractDiagnosticTest<MissingHttpServiceHandlerDiagnostic> {
-  MissingHttpServiceHandlerDiagnosticTest() {
-    super(MissingHttpServiceHandlerDiagnostic.class);
+class WrongHttpServiceHandlerDiagnosticTest extends AbstractDiagnosticTest<WrongHttpServiceHandlerDiagnostic> {
+  WrongHttpServiceHandlerDiagnosticTest() {
+    super(WrongHttpServiceHandlerDiagnostic.class);
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";

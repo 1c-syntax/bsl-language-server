@@ -29,6 +29,8 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* [Руководство разработчика 8.3.20 - Механизмы интернет-сервисов](https://its.1c.ru/db/v8320doc#bookmark:dev:TI000000783)
+* [Web-сервисы и HTTP-сервисы - Методические рекомендации по конфигурированию от 1С](https://its.1c.ru/db/metod8dev/browse/13/-1/1989/2565/2567/2590)
 
 ## Snippets
 
