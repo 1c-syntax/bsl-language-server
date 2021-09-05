@@ -251,6 +251,9 @@
                 "MissingEventSubscriptionHandler": {
                     "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
                 },
+                "MissingHttpServiceHandler": {
+                    "$ref": "parameters-schema.json#/definitions/MissingHttpServiceHandler"
+                },
                 "MissingParameterDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingParameterDescription"
                 },

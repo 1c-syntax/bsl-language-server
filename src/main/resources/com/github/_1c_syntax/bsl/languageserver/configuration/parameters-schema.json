@@ -978,6 +978,16 @@
             "title": "Event subscription handler missing",
             "$id": "#/definitions/MissingEventSubscriptionHandler"
         },
+        "MissingHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/MissingHttpServiceHandler"
+        },
         "MissingParameterDescription": {
             "description": "Method parameters description are missing",
             "default": true,

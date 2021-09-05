@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,14 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.MDHttpService;
 import com.github._1c_syntax.mdclasses.mdo.children.HTTPServiceMethod;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Range;
-
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -49,12 +44,11 @@ import java.util.stream.Collectors;
   },
   scope = DiagnosticScope.BSL,
   modules = {
-    // todo переделать, когда появится привязка к объектам метаданных
-    ModuleType.SessionModule
+    ModuleType.HTTPServiceModule
   }
 
 )
-public class MissingHttpServiceHadlerDiagnostic extends AbstractDiagnostic {
+public class MissingHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
 
   /**
    * Рендж на который будут повешены замечания
@@ -64,6 +58,9 @@ public class MissingHttpServiceHadlerDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
+
+    //todo может ли не быть модуля http-сервиса? тогда непонятно, на какой модуль вешать замечания
+
     Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
       .ifPresent(range -> diagnosticRange = range);
 
@@ -71,23 +68,17 @@ public class MissingHttpServiceHadlerDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
-      return;
+    try {
+      documentContext.getMdObject()
+        .filter(MDHttpService.class::isInstance)
+        .map(MDHttpService.class::cast)
+        .ifPresent(this::checkService);
+    } finally {
+      diagnosticRange = null;
     }
-
-    final var httpServices = configuration.getChildren().stream()
-      .filter(mdo -> mdo.getType() == MDOType.HTTP_SERVICE)
-      .map(abstractMDObjectBase -> (MDHttpService) abstractMDObjectBase).collect(Collectors.toList());
-    httpServices
-      .forEach(this::checkService);
   }
 
   private void checkService(MDHttpService mdHttpService) {
-    if (mdHttpService.getModules().isEmpty()) {
-      //addDiagnostic("missingModule", method, handlerParts[1]);//todo может ли не быть модуля http-сервиса?
-      return;
-    }
 
     mdHttpService.getUrlTemplates().stream()
       .flatMap(httpServiceURLTemplate -> httpServiceURLTemplate.getHttpServiceMethods().stream())
@@ -98,27 +89,22 @@ public class MissingHttpServiceHadlerDiagnostic extends AbstractDiagnostic {
           addMissingHandlerDiagnostic(serviceName);
           return;
         }
-        checkMethod(mdHttpService, serviceName, service.getHandler());
+        checkMethod(serviceName, service.getHandler());
       });
-
   }
 
-  private void checkMethod(MDHttpService mdHttpService, String serviceName, String handlerName) {
-    documentContext.getServerContext()
-      .getDocument(mdHttpService.getMdoReference().getMdoRef(), ModuleType.HTTPServiceModule)
-      .ifPresent((DocumentContext commonModuleContext) -> {
-        final var foundMethod = commonModuleContext.getSymbolTree().getMethods().stream()
-          .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(handlerName))
-          .findFirst();
-        foundMethod.ifPresentOrElse(
-          methodSymbol -> checkMethodParams(serviceName, handlerName, methodSymbol),
-          () -> addDefaultDiagnostic(serviceName, handlerName));
-      });
+  private void checkMethod(String serviceName, String handlerName) {
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol1 -> methodSymbol1.getName().equalsIgnoreCase(handlerName))
+      .findFirst()
+      .ifPresentOrElse(
+        methodSymbol -> checkMethodParams(serviceName, handlerName, methodSymbol),
+        () -> addDefaultDiagnostic(serviceName, handlerName));
   }
 
   private void checkMethodParams(String serviceName, String handlerName, MethodSymbol methodSymbol) {
     if (methodSymbol.getParameters().size() != 1) {
-      addIncorrectHandlerDiagnostic(serviceName, handlerName);
+      addIncorrectHandlerDiagnostic(methodSymbol.getSubNameRange(), serviceName, handlerName);
     }
   }
 
@@ -132,8 +118,8 @@ public class MissingHttpServiceHadlerDiagnostic extends AbstractDiagnostic {
       info.getResourceString("missingHandler", serviceName));
   }
 
-  private void addIncorrectHandlerDiagnostic(String serviceName, String handlerName) {
-    diagnosticStorage.addDiagnostic(diagnosticRange,
+  private void addIncorrectHandlerDiagnostic(Range range, String serviceName, String handlerName) {
+    diagnosticStorage.addDiagnostic(range,
       info.getResourceString("incorrectHandler", handlerName, serviceName));
   }
 }
