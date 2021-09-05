@@ -48,10 +48,7 @@ import org.eclipse.lsp4j.Range;
 
 )
 public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
-  /**
-   * Рендж на который будут повешены замечания
-   * Костыль, но пока так
-   */
+
   private Range diagnosticRange;
 
   @Override
@@ -60,11 +57,11 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
     //todo может ли не быть модуля web-сервиса? тогда непонятно, на какой модуль вешать замечания
 
     Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
+      .ifPresent(this::processModuleWithRange);
+  }
 
-    if (diagnosticRange == null) {
-      return;
-    }
+  private void processModuleWithRange(Range range) {
+    diagnosticRange = range;
 
     try {
       documentContext.getMdObject()
