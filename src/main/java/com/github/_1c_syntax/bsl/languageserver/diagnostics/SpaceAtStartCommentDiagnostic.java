@@ -103,7 +103,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
-      String currentText = documentContext.getText(range);
+      String currentText = documentContext.getContent(range);
 
       TextEdit textEdit = new TextEdit(
         range,

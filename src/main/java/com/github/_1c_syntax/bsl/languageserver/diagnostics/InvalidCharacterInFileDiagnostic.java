@@ -120,7 +120,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
-          ILLEGAL_SPACE_PATTERN.matcher(documentContext.getText(range)).replaceAll(" "));
+          ILLEGAL_SPACE_PATTERN.matcher(documentContext.getContent(range)).replaceAll(" "));
 
         textEdits.add(textEdit);
       });
@@ -130,7 +130,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
-          ILLEGAL_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
+          ILLEGAL_PATTERN.matcher(documentContext.getContent(range)).replaceAll("-"));
 
         textEdits.add(textEdit);
       });

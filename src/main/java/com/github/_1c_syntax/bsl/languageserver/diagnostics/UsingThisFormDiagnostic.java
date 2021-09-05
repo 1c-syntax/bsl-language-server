@@ -162,7 +162,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
     Range range = diagnostic.getRange();
-    String currentText = documentContext.getText(range);
+    String currentText = documentContext.getContent(range);
 
     if (ONLY_RU_PATTERN.matcher(currentText).matches()) {
       return new TextEdit(range, THIS_OBJECT);

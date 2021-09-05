@@ -217,6 +217,18 @@ class DocumentContextTest {
   }
 
   @Test
+  void testContentListWithStandaloneCR() {
+    // given
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextBrokenLineFeeds.bsl");
+
+    // when
+    var contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(3);
+  }
+
+  @Test
   void testEOF() {
     // given
     DocumentContext documentContext = getDocumentContext();

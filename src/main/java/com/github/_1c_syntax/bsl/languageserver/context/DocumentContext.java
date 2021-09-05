@@ -47,6 +47,7 @@ import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -58,6 +59,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -153,7 +156,10 @@ public class DocumentContext {
       .collect(Collectors.toList());
   }
 
-  public String getText(Range range) {
+  public String getContent(Range range) {
+
+    // todo rewrite to LineNumberReader
+
     Position start = range.getStart();
     Position end = range.getEnd();
 
@@ -181,6 +187,25 @@ public class DocumentContext {
     }
 
     return sb.toString();
+  }
+
+  @SneakyThrows
+  public String getContent(int offset, int length) {
+    var lineNumberReader = new LineNumberReader(new StringReader(getContent()));
+    var cbuf = new char[length];
+
+    var read = lineNumberReader.read(cbuf, offset, length);
+
+    if (read != length) {
+      throw new IllegalStateException(String.format(
+        "Can't read %d chars form content with offset %d. Content has length of %d",
+        length,
+        offset,
+        getContent().length()
+      ));
+    }
+
+    return String.valueOf(cbuf);
   }
 
   public Locale getScriptVariantLocale() {

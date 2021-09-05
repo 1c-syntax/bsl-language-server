@@ -129,14 +129,14 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
         range.getStart().getLine(),
         range.getStart().getCharacter());
 
-      Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
+      Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getContent(startLineRange));
       String indent = "";
       if (matcher.find()) {
         indent = matcher.group(1);
       }
 
       TextEdit textEdit = new TextEdit(
-        range, "\n" + indent + documentContext.getText(range)
+        range, "\n" + indent + documentContext.getContent(range)
       );
       textEdits.add(textEdit);
     });

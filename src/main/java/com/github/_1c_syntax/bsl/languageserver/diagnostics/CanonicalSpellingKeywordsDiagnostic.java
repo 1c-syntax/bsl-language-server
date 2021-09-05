@@ -289,7 +289,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
-      String originalText = documentContext.getText(range);
+      String originalText = documentContext.getContent(range);
       String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
 
       if (canonicalText != null) {

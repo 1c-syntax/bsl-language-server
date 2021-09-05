@@ -68,7 +68,7 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
 
   private String getRelatedMessage(BSLParser.ReturnStatementContext context) {
     if (context.getChildCount() > 1) {
-      return leftSubStr(documentContext.getText(Ranges.create(context)));
+      return leftSubStr(documentContext.getContent(Ranges.create(context)));
     } else {
       return "+1";
     }

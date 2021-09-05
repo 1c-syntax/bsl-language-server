@@ -84,7 +84,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
         endChar = start.getCharacter() - 1;
       }
       Range startRange = Ranges.create(startLine, startChar, endLine, endChar);
-      final String startText = documentContext.getText(startRange);
+      final String startText = documentContext.getContent(startRange);
 
       final Position end = range.getEnd();
       startLine = end.getLine();
@@ -93,7 +93,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
       endChar = max(contentList[endLine].length() - 1, 0);
 
       Range endRange = Ranges.create(startLine, startChar, endLine, endChar);
-      final String endText = documentContext.getText(endRange);
+      final String endText = documentContext.getContent(endRange);
 
       // TODO: does not work for several textedits changing content length (missed semicolon ie.)
       String content = startText + newText + endText;
