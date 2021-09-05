@@ -25,6 +25,32 @@
 				</Properties>
 				<ChildObjects/>
 			</Operation>
+			<Operation uuid="bc09d837-aee6-40ee-8940-3a81dddf477c">
+				<Properties>
+					<Name>ОперацияБезОбработчика</Name>
+					<Synonym/>
+					<Comment/>
+					<XDTOReturningValueType>xs:string</XDTOReturningValueType>
+					<Nillable>false</Nillable>
+					<Transactioned>false</Transactioned>
+					<ProcedureName/>
+					<DataLockControlMode>Managed</DataLockControlMode>
+				</Properties>
+				<ChildObjects/>
+			</Operation>
+			<Operation uuid="bc19d837-aee6-40ee-8940-3a81dddf477c">
+				<Properties>
+					<Name>ОперацияСНесуществующимОбработчиком</Name>
+					<Synonym/>
+					<Comment/>
+					<XDTOReturningValueType>xs:string</XDTOReturningValueType>
+					<Nillable>false</Nillable>
+					<Transactioned>false</Transactioned>
+					<ProcedureName>НесуществующийОбработчик1</ProcedureName>
+					<DataLockControlMode>Managed</DataLockControlMode>
+				</Properties>
+				<ChildObjects/>
+			</Operation>
 		</ChildObjects>
 	</WebService>
 </MetaDataObject>
