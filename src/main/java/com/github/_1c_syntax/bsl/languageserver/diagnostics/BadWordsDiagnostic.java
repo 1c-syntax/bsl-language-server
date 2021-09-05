@@ -71,7 +71,7 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    String moduleText = documentContext.getContent();
+    String moduleText = String.join("\n", documentContext.getContentList());
     Matcher matcher = badWords.matcher(moduleText);
 
     while (matcher.find()) {
