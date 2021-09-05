@@ -56,8 +56,12 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     "(стршаблон|strtemplate)"
   );
 
-  // https://regex101.com/r/9segNm/1
-  private static final Pattern paramsPattern = Pattern.compile("(?<!%)%(?:(10|[1-9])(?!\\d)|\\((10|[1-9])\\)\\d)");
+  // https://regex101.com/r/9segNm/3
+  private static final Pattern paramsPattern = Pattern.compile("(?<!%)%(?:(10|[1-9])(?!\\d)|\\((10|[1-9])\\))");
+  // https://regex101.com/r/s4y7Nz/2
+  private static final Pattern wrongNumbersPattern = Pattern.compile(
+    "(?<!%)%(?:(1[1-9]\\d*|[2-9]\\d+|0|10\\d+)(?!\\d)|\\((1[1-9]\\d*|[2-9]\\d+|0|10\\d+)\\))");
+  private static final String TWO_PERCENT_PATTERN = "%%";
 
   private static final Pattern nstrPattern = CaseInsensitivePattern.compile(
     "(нстр|nstr)"
@@ -75,15 +79,11 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (!super.checkGlobalMethodCall(ctx)) {
-      return false;
-    }
-
-    if (paramsAreDifferent(ctx)) {
+    if (super.checkGlobalMethodCall(ctx) && paramsAreDifferent(ctx)) {
       diagnosticStorage.addDiagnostic(ctx);
     }
-
     return false;
+
   }
 
   private static boolean paramsAreDifferent(BSLParser.GlobalMethodCallContext ctx) {
@@ -93,19 +93,29 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       return false;
     }
     int usedParamsCount = params.size() - 1;
-    boolean haveParams = usedParamsCount > 0;
 
-    final String templateString = getTemplateString(params.get(0));
+    var templateString = getTemplateString(params.get(0));
     if (templateString == null) {
       return false;
     }
+    final var isWrongCall = checkTemplateString(templateString, usedParamsCount);
+    if (!isWrongCall) {
+      return false;
+    }
+    var str = templateString.replace(TWO_PERCENT_PATTERN, "");
+    return checkTemplateString(str, usedParamsCount);
+  }
+
+  private static boolean checkTemplateString(String templateString, int usedParamsCount) {
+    boolean haveParams = usedParamsCount > 0;
 
     var matcher = paramsPattern.matcher(templateString);
     boolean matches = matcher.find();
 
-    return matches && !haveParams
-      || !matches && haveParams
-      || matches && variousParams(usedParamsCount, matcher);
+    return (matches && !haveParams)
+      || (!matches && haveParams)
+      || (matches && variousParams(usedParamsCount, matcher))
+      || wrongNumbersPattern.matcher(templateString).find();
   }
 
   @Nullable
@@ -187,14 +197,14 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   }
 
   @Nullable
-  private static BSLParserRuleContext getPreviousNode(BSLParserRuleContext node, int rule_statement) {
+  private static BSLParserRuleContext getPreviousNode(BSLParserRuleContext node, int ruleStatement) {
 
     final var children = node.getParent().children;
     final var pos = children.indexOf(node);
     if (pos > 0) {
       for (int i = pos - 1; i >= 0; i--) {
         final var prev = (BSLParserRuleContext) children.get(i);
-        if (prev.getRuleIndex() == rule_statement) {
+        if (prev.getRuleIndex() == ruleStatement) {
           return prev;
         }
       }
@@ -224,7 +234,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .filter(globalMethodCallContext -> nstrPattern.matcher(globalMethodCallContext.methodName().getText()).matches())
       .map(BSLParser.GlobalMethodCallContext::doCall)
       .map(BSLParser.DoCallContext::callParamList)
-      .filter(callParamListContext -> callParamListContext.callParam().size() >= 1)
+      .filter(callParamListContext -> !callParamListContext.callParam().isEmpty())
       .map(callParamContexts -> callParamContexts.callParam(0));
 
     return getString(nstrCallParamCtx);
@@ -239,7 +249,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       if (group == null) {
         group = matcher.group(2);
       }
-      final int index = Integer.parseInt(group);
+      var index = Integer.parseInt(group);
       if (index > usedParamsCount) {
         return true;
       }
