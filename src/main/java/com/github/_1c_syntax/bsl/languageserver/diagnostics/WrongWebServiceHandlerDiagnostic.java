@@ -34,10 +34,9 @@ import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.BLOCKER,
+  severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 10,
   tags = {
-    DiagnosticTag.DESIGN,
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.ERROR
   },
@@ -90,9 +89,7 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkMethod(String serviceName, String operationName, String handlerName) {
-    if (documentContext.getSymbolTree().getMethods().stream()
-      .noneMatch(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(handlerName))) {
-
+    if (documentContext.getSymbolTree().getMethodSymbol(handlerName).isEmpty()) {
       addDefaultDiagnostic(serviceName, operationName, handlerName);
     }
   }
