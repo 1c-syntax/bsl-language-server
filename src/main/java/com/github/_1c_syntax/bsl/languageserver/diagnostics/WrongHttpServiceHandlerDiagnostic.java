@@ -102,17 +102,20 @@ public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
   }
 
   private void addDefaultDiagnostic(String serviceName, String handlerName) {
-    diagnosticStorage.addDiagnostic(diagnosticRange,
+    diagnosticStorage.addDiagnostic(
+      diagnosticRange,
       info.getMessage(handlerName, serviceName));
   }
 
   private void addMissingHandlerDiagnostic(String serviceName) {
-    diagnosticStorage.addDiagnostic(diagnosticRange,
+    diagnosticStorage.addDiagnostic(
+      diagnosticRange,
       info.getResourceString("missingHandler", serviceName));
   }
 
   private void addIncorrectHandlerDiagnostic(Range range, String serviceName, String handlerName) {
-    diagnosticStorage.addDiagnostic(range,
+    diagnosticStorage.addDiagnostic(
+      range,
       info.getResourceString("incorrectHandler", handlerName, serviceName));
   }
 }

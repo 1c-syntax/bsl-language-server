@@ -95,12 +95,14 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
   }
 
   private void addDefaultDiagnostic(String serviceName, String operationName, String handlerName) {
-    diagnosticStorage.addDiagnostic(diagnosticRange,
+    diagnosticStorage.addDiagnostic(
+      diagnosticRange,
       info.getMessage(handlerName, operationName, serviceName));
   }
 
   private void addMissingHandlerDiagnostic(String serviceName, String operationName) {
-    diagnosticStorage.addDiagnostic(diagnosticRange,
+    diagnosticStorage.addDiagnostic(
+      diagnosticRange,
       info.getResourceString("missingHandler", operationName, serviceName));
   }
 
