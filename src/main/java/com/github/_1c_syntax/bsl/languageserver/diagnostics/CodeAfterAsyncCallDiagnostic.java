@@ -112,11 +112,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     if (codeBlock == null || codeBlock.statement().isEmpty()){
       return false;
     }
-    final var asyncLine = statement.getStop().getLine();
-    final var haveCodeAfter = codeBlock.statement().stream()
-      .anyMatch(statementContext -> statementContext != statement &&
-        statementContext.getStart().getLine() > asyncLine);
-    if (haveCodeAfter) {
+    if (Trees.getNextNode(codeBlock, statement, RULE_statement) != null){
       return true;
     }
     return checkParentBlock(codeBlock);
