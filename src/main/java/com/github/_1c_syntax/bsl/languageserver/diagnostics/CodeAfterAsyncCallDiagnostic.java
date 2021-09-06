@@ -41,11 +41,9 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
   tags = {
-    DiagnosticTag.STANDARD,
-    DiagnosticTag.BADPRACTICE,
     DiagnosticTag.SUSPICIOUS
   },
   activatedByDefault = false,
