@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1630859580740,
+  "lastUpdate": 1630947007720,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12648,6 +12648,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6776544642280478",
             "extra": "mean: 74.29442413647969 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a7edcd571e10408f37a2ebc153ec4e9af44d922c",
+          "message": "Merge pull request #1794 from artbear/StrTemplate\n\nIncorrectUseOfStrTemplate (СтрШаблон) - исправление FP и FN",
+          "timestamp": "2021-09-06T19:42:25+03:00",
+          "tree_id": "908affb79da5539019229ccefbda61b73a9397a8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a7edcd571e10408f37a2ebc153ec4e9af44d922c"
+        },
+        "date": 1630947004325,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.35783473650615,
+            "unit": "sec",
+            "range": "stddev: 4.355801865396811",
+            "extra": "mean: 73.35783473650615 sec\nrounds: 3"
           }
         ]
       }
