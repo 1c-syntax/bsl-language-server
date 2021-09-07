@@ -40,10 +40,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.Collection;
@@ -67,7 +64,6 @@ public class ReferenceIndex {
    * @param symbol Символ, для которого необходимо осуществить поиск ссылок.
    * @return Список ссылок на символ.
    */
-  @Transactional
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
@@ -114,7 +110,7 @@ public class ReferenceIndex {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .map(this::buildReference)
       .flatMap(Optional::stream)
-      .toList();
+      .collect(Collectors.toList());
   }
 
   /**
@@ -149,7 +145,6 @@ public class ReferenceIndex {
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
-  @Retryable(DataIntegrityViolationException.class)
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
