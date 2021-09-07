@@ -19,27 +19,37 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Position;
-import org.springframework.stereotype.Component;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
+import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.util.Optional;
 
-/**
- * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
- */
-@Component
-@RequiredArgsConstructor
-public class ReferenceIndexReferenceFinder implements ReferenceFinder {
+@Value
+@AllArgsConstructor
+@Builder
+public class Location {
 
-  private final ReferenceIndex referenceIndex;
+  URI uri;
+  int startLine;
+  int startCharacter;
+  int endLine;
+  int endCharacter;
 
-  @Override
-  public Optional<Reference> findReference(URI uri, Position position) {
-    return referenceIndex.getReference(uri, position);
+  public Location(URI uri, Range range) {
+    this.uri = uri;
+    startLine = range.getStart().getLine();
+    startCharacter = range.getStart().getCharacter();
+    endLine = range.getEnd().getLine();
+    endCharacter = range.getEnd().getCharacter();
   }
+
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
 }

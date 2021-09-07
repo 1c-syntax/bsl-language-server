@@ -19,27 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Position;
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 
-import java.net.URI;
-import java.util.Optional;
-
-/**
- * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
- */
-@Component
-@RequiredArgsConstructor
-public class ReferenceIndexReferenceFinder implements ReferenceFinder {
-
-  private final ReferenceIndex referenceIndex;
-
-  @Override
-  public Optional<Reference> findReference(URI uri, Position position) {
-    return referenceIndex.getReference(uri, position);
-  }
+@Value
+@AllArgsConstructor
+@Builder
+public class SymbolOccurrence {
+  OccurrenceType occurrenceType;
+  Symbol symbol;
+  Location location;
 }

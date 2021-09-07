@@ -19,27 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Optional;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
-/**
- * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
- */
 @Component
-@RequiredArgsConstructor
-public class ReferenceIndexReferenceFinder implements ReferenceFinder {
+public class LocationRepository {
+  private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
 
-  private final ReferenceIndex referenceIndex;
+  public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
+    return locations.getOrDefault(uri, Collections.emptySet()).stream();
+  }
 
-  @Override
-  public Optional<Reference> findReference(URI uri, Position position) {
-    return referenceIndex.getReference(uri, position);
+  public void updateLocation(SymbolOccurrence symbolOccurrence) {
+    locations.computeIfAbsent(symbolOccurrence.getLocation().getUri(), uri -> ConcurrentHashMap.newKeySet())
+      .add(symbolOccurrence);
+  }
+
+  public void delete(URI uri) {
+    locations.remove(uri);
   }
 }

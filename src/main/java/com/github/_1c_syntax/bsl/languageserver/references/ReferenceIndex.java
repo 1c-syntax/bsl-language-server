@@ -26,16 +26,17 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.references.model.Location;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
-import org.apache.commons.collections4.MultiMapUtils;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
@@ -43,11 +44,8 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,23 +55,8 @@ public class ReferenceIndex {
 
   private final ServerContext serverContext;
 
-  /**
-   * Хранит информацию о том, какие symbolName (ключ MultiValuedMap) каких mdoRef каких moduleType (ключ MultiKey)
-   * были вызваны из списка Location (URI + Range).
-   */
-  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> referencesTo = new HashMap<>();
-
-  /**
-   * Хранит информацию о том, какие symbolName с mdoRef с moduleType (ключ MultiKey) в каких URI были вызваны
-   * и в каких Range, расположены вызовы
-   */
-  private final Map<URI, MultiValuedMap<MultiKey<String>, Range>> referencesFrom = new HashMap<>();
-
-  /**
-   * Хранит информацию о том, в каких Range каких URI были вызваны
-   * какие symbolName каких mdoRef с каким moduleType (ключ MultiKey)
-   */
-  private final Map<URI, Map<Range, MultiKey<String>>> referencesRanges = new HashMap<>();
+  private final LocationRepository locationRepository;
+  private final SymbolOccurrenceRepository symbolOccurrenceRepository;
 
   /**
    * Получить ссылки на символ.
@@ -84,12 +67,20 @@ public class ReferenceIndex {
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
-    var key = getKey(mdoRef, moduleType);
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
-    return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
+    // this#toSymbol
+    var symbolDto = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName("")
+      .symbolKind(symbol.getSymbolKind())
+      .symbolName(symbolName)
+      .build();
+
+    return symbolOccurrenceRepository.getAllBySymbol(symbolDto)
       .stream()
-      .map(location -> getReference(URI.create(location.getUri()), location.getRange()))
+      .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -102,18 +93,10 @@ public class ReferenceIndex {
    * @return данные ссылки.
    */
   public Optional<Reference> getReference(URI uri, Position position) {
-    return referencesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
-      .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.getLocation().getRange(), position))
       .findAny()
-      .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
-  }
-
-  public Optional<Reference> getReference(URI uri, Range range) {
-    return Optional.ofNullable(referencesRanges.getOrDefault(uri, Collections.emptyMap()).get(range))
-      .map(ref -> buildReference(uri, range.getStart(), ref, range))
-      .stream()
-      .flatMap(Optional::stream)
-      .findFirst();
+      .flatMap(this::buildReference);
   }
 
   /**
@@ -123,8 +106,9 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(URI uri) {
-    return referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).entries().stream()
-      .map(entry -> buildReference(uri, entry.getValue().getStart(), entry.getKey(), entry.getValue()))
+
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -146,18 +130,10 @@ public class ReferenceIndex {
    *
    * @param uri URI документа.
    */
-  @Synchronized
   public void clearReferences(URI uri) {
-    String stringUri = uri.toString();
-
-    referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
-      var key = new MultiKey<>(multikey.getKey(0), multikey.getKey(1));
-      Collection<Location> locations = referencesTo.get(key).values();
-      locations.removeIf(location -> location.getUri().equals(stringUri));
-    });
-
-    referencesFrom.remove(uri);
-    referencesRanges.remove(uri);
+    var symbolOccurrences = locationRepository.getSymbolOccurrencesByLocationUri(uri);
+    symbolOccurrenceRepository.deleteAll(symbolOccurrences.collect(Collectors.toSet()));
+    locationRepository.delete(uri);
   }
 
   /**
@@ -169,38 +145,49 @@ public class ReferenceIndex {
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
-  @Synchronized
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
-    Location location = new Location(uri.toString(), range);
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName("")
+      .symbolKind(SymbolKind.Method)
+      .symbolName(symbolNameCanonical)
+      .build();
 
-    MultiKey<String> key = getKey(mdoRef, moduleType);
-    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, symbolNameCanonical);
+    var location = new Location(uri, range);
 
-    referencesTo.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(symbolNameCanonical, location);
-    referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
-    referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
+    var symbolOccurrence = SymbolOccurrence.builder()
+      .occurrenceType(OccurrenceType.REFERENCE)
+      .symbol(symbol)
+      .location(location)
+      .build();
+
+    symbolOccurrenceRepository.save(symbolOccurrence);
+    locationRepository.updateLocation(symbolOccurrence);
   }
 
   private Optional<Reference> buildReference(
-    URI uri,
-    Position position,
-    MultiKey<String> multikey,
-    Range selectionRange
+    SymbolOccurrence symbolOccurrence
   ) {
-    return getSourceDefinedSymbol(multikey)
+
+    var uri = symbolOccurrence.getLocation().getUri();
+    var range = symbolOccurrence.getLocation().getRange();
+    var occurrenceType = symbolOccurrence.getOccurrenceType();
+
+    return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
       .map((SourceDefinedSymbol symbol) -> {
-        SourceDefinedSymbol from = getFromSymbol(uri, position);
-        return new Reference(from, symbol, uri, selectionRange);
+        SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
+        return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }
 
-  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
-    String mdoRef = multikey.getKey(0);
-    ModuleType moduleType = ModuleType.valueOf(multikey.getKey(1));
-    String symbolName = multikey.getKey(2);
+  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {
+    String mdoRef = symbolEntity.getMdoRef();
+    ModuleType moduleType = symbolEntity.getModuleType();
+    String symbolName = symbolEntity.getSymbolName();
 
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
@@ -209,7 +196,11 @@ public class ReferenceIndex {
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
-  private SourceDefinedSymbol getFromSymbol(URI uri, Position position) {
+  private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
+
+    var uri = symbolOccurrence.getLocation().getUri();
+    var position = symbolOccurrence.getLocation().getRange().getStart();
+
     Optional<SymbolTree> symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree);
     return symbolTree
@@ -221,14 +212,6 @@ public class ReferenceIndex {
       .findFirst()
       .or(() -> symbolTree.map(SymbolTree::getModule))
       .orElseThrow();
-  }
-
-  private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
-    return new MultiKey<>(mdoRef, moduleType.toString());
-  }
-
-  private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String symbolName) {
-    return new MultiKey<>(mdoRef, moduleType.toString(), symbolName);
   }
 
   private static boolean isReferenceAccessible(Reference reference) {
