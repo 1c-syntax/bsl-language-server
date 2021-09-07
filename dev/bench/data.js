@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631044125635,
+  "lastUpdate": 1631045856820,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12710,6 +12710,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.5981481756998157",
             "extra": "mean: 75.42284035682678 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "bbcdb2b07ecf2cbab2dfd673b07f2e9b9ca6ffb0",
+          "message": "Fix #1795. NPE",
+          "timestamp": "2021-09-07T23:08:35+03:00",
+          "tree_id": "039644a92e896cb172f82d6b8c0b9abf57464f44",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bbcdb2b07ecf2cbab2dfd673b07f2e9b9ca6ffb0"
+        },
+        "date": 1631045853656,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.92064086596172,
+            "unit": "sec",
+            "range": "stddev: 1.7274868669017192",
+            "extra": "mean: 72.92064086596172 sec\nrounds: 3"
           }
         ]
       }
