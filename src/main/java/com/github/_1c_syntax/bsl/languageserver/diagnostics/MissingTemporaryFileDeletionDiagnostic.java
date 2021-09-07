@@ -32,8 +32,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -187,20 +189,26 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   }
 
   private static String getFullMethodName(BSLParser.AccessCallContext ctx) {
-    var parent = (BSLParserRuleContext) ctx.getParent();
+    var parent = ctx.getParent();
     var prefix = "";
-    List<? extends BSLParser.ModifierContext> modifier;
+    List<? extends BSLParser.ModifierContext> modifiers;
 
     if (parent instanceof BSLParser.CallStatementContext) {
 
-      modifier = ((BSLParser.CallStatementContext) parent).modifier();
-      prefix = ((BSLParser.CallStatementContext) parent).IDENTIFIER().getText();
+      var callStatement = (BSLParser.CallStatementContext) parent;
+
+      modifiers = Optional.ofNullable(callStatement.modifier()).orElseGet(Collections::emptyList);
+      if (callStatement.globalMethodCall() != null) {
+        prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
+      } else {
+        prefix = callStatement.IDENTIFIER().getText();
+      }
 
     } else if (parent instanceof BSLParser.ModifierContext
       && parent.getParent() instanceof BSLParser.ComplexIdentifierContext) {
 
       var root = (BSLParser.ComplexIdentifierContext) parent.getParent();
-      modifier = root.modifier();
+      modifiers = root.modifier();
 
       var terminalNode = root.IDENTIFIER();
       if (terminalNode != null) {
@@ -213,9 +221,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     }
 
     return prefix
-      + modifier.stream()
+      + modifiers.stream()
       .takeWhile(element -> element != parent)
-      .map(BSLParserRuleContext::getText)
+      .map(ParseTree::getText)
       .collect(Collectors.joining())
       + "." + ctx.methodCall().methodName().IDENTIFIER().getText();
   }
