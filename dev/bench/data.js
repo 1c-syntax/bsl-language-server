@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631045856820,
+  "lastUpdate": 1631046319880,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -12741,6 +12741,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7274868669017192",
             "extra": "mean: 72.92064086596172 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "7001455067a182e4fb85795ea437ca43d92d5f5e",
+          "message": "#1795 Убрал лишнее оборачивание non-null коллекции",
+          "timestamp": "2021-09-07T23:16:23+03:00",
+          "tree_id": "c167975d523d95f6002c6fda8db1b8b0b701877a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7001455067a182e4fb85795ea437ca43d92d5f5e"
+        },
+        "date": 1631046316680,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.87078634897868,
+            "unit": "sec",
+            "range": "stddev: 1.6170396555414983",
+            "extra": "mean: 74.87078634897868 sec\nrounds: 3"
           }
         ]
       }
