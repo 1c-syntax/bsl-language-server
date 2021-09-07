@@ -32,10 +32,8 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -197,7 +195,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       var callStatement = (BSLParser.CallStatementContext) parent;
 
-      modifiers = Optional.ofNullable(callStatement.modifier()).orElseGet(Collections::emptyList);
+      modifiers =callStatement.modifier();
       if (callStatement.globalMethodCall() != null) {
         prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
       } else {
