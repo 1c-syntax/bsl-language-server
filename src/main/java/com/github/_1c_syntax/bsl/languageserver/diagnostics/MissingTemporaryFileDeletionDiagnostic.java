@@ -194,7 +194,11 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     if (parent instanceof BSLParser.CallStatementContext) {
 
       modifier = ((BSLParser.CallStatementContext) parent).modifier();
-      prefix = ((BSLParser.CallStatementContext) parent).IDENTIFIER().getText();
+
+      var terminalNode = ((BSLParser.CallStatementContext) parent).IDENTIFIER();
+      if (terminalNode != null) {
+        prefix = terminalNode.getText();
+      }
 
     } else if (parent instanceof BSLParser.ModifierContext
       && parent.getParent() instanceof BSLParser.ComplexIdentifierContext) {
