@@ -19,12 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.stereotype.Component;
 
-@Configuration
-@EnableRetry
-public class RetryConfiguration {
+import java.net.URI;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
+@Component
+public class LocationRepository {
+  private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
+
+  public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
+    return locations.getOrDefault(uri, Collections.emptySet()).stream();
+  }
+
+  public void updateLocation(SymbolOccurrence symbolOccurrence) {
+    locations.computeIfAbsent(symbolOccurrence.getLocation().getUri(), uri -> ConcurrentHashMap.newKeySet())
+      .add(symbolOccurrence);
+  }
+
+  public void delete(URI uri) {
+    locations.remove(uri);
+  }
 }

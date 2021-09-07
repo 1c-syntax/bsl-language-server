@@ -22,45 +22,34 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 import java.net.URI;
 
-@Embeddable
-@Table(indexes = @Index(columnList = "uri"))
-@Getter
-@Setter
-@NoArgsConstructor
+@Value
+@AllArgsConstructor
+@Builder
 public class Location {
 
-  @Convert(converter = URIAttributeConverter.class)
-  @Column(columnDefinition = "LONGVARCHAR")
-  private URI uri;
+  URI uri;
+  int startLine;
+  int startCharacter;
+  int endLine;
+  int endCharacter;
 
-  private int startLine;
-  private int startCharacter;
-  private int endLine;
-  private int endCharacter;
-
-  @Transient
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
-  }
-
-  public void setRange(Range range) {
+  public Location(URI uri, Range range) {
+    this.uri = uri;
     startLine = range.getStart().getLine();
     startCharacter = range.getStart().getCharacter();
     endLine = range.getEnd().getLine();
     endCharacter = range.getEnd().getCharacter();
+  }
+
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
   }
 
 }

@@ -21,19 +21,34 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.util.Streamable;
+import org.springframework.stereotype.Component;
 
-import java.net.URI;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface SymbolOccurrenceRepository extends JpaRepository<SymbolOccurrence, Long> {
+@Component
+public class SymbolOccurrenceRepository {
 
-  @Modifying
-  @Query("delete from SymbolOccurrence where location.uri=:uri")
-  void deleteAllByLocationUri(URI uri);
+  private final Set<SymbolOccurrence> occurrences = ConcurrentHashMap.newKeySet();
+  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
 
-  Streamable<SymbolOccurrence> getAllByLocationUri(URI uri);
+  public void save(SymbolOccurrence symbolOccurrence) {
+    occurrences.add(symbolOccurrence);
+    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
+      .add(symbolOccurrence);
+  }
+
+  public Set<SymbolOccurrence> getAllBySymbol(Symbol symbol) {
+    return occurrencesToSymbols.getOrDefault(symbol, Collections.emptySet());
+  }
+
+  public void deleteAll(Set<SymbolOccurrence> symbolOccurrences) {
+    occurrences.removeAll(symbolOccurrences);
+    symbolOccurrences.forEach(symbolOccurrence ->
+      occurrencesToSymbols.get(symbolOccurrence.getSymbol()).remove(symbolOccurrence)
+    );
+  }
 
 }

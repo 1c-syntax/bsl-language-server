@@ -27,10 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.Location;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
-import com.github._1c_syntax.bsl.languageserver.references.model.SymbolRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -38,10 +39,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.Collection;
@@ -56,7 +54,7 @@ public class ReferenceIndex {
 
   private final ServerContext serverContext;
 
-  private final SymbolRepository symbolRepository;
+  private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
 
   /**
@@ -65,16 +63,22 @@ public class ReferenceIndex {
    * @param symbol Символ, для которого необходимо осуществить поиск ссылок.
    * @return Список ссылок на символ.
    */
-  @Transactional
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
-    return symbolRepository.findByMdoRefAndModuleTypeAndSymbolName(mdoRef, moduleType, symbolName)
-      .map(Symbol::getOccurrences)
+    // this#toSymbol
+    var symbolDto = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName("")
+      .symbolKind(SymbolKind.Method)
+      .symbolName(symbolName)
+      .build();
+
+    return symbolOccurrenceRepository.getAllBySymbol(symbolDto)
       .stream()
-      .flatMap(Collection::stream)
       .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
@@ -88,9 +92,8 @@ public class ReferenceIndex {
    * @return данные ссылки.
    */
   public Optional<Reference> getReference(URI uri, Position position) {
-    return symbolOccurrenceRepository.getAllByLocationUri(uri)
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.getLocation().getRange(), position))
-      .get()
       .findAny()
       .flatMap(this::buildReference);
   }
@@ -103,10 +106,10 @@ public class ReferenceIndex {
    */
   public List<Reference> getReferencesFrom(URI uri) {
 
-    return symbolOccurrenceRepository.getAllByLocationUri(uri)
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .map(this::buildReference)
       .flatMap(Optional::stream)
-      .toList();
+      .collect(Collectors.toList());
   }
 
   /**
@@ -126,10 +129,10 @@ public class ReferenceIndex {
    *
    * @param uri URI документа.
    */
-  @Transactional
   public void clearReferences(URI uri) {
-    symbolOccurrenceRepository.deleteAllByLocationUri(uri);
-    // todo: clear removed symbols from symbolRepository?
+    var symbolOccurrences = locationRepository.getSymbolOccurrencesByLocationUri(uri);
+    symbolOccurrenceRepository.deleteAll(symbolOccurrences.collect(Collectors.toSet()));
+    locationRepository.delete(uri);
   }
 
   /**
@@ -141,32 +144,27 @@ public class ReferenceIndex {
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
-  @Retryable(DataIntegrityViolationException.class)
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
-    var symbol = symbolRepository.findByMdoRefAndModuleTypeAndSymbolName(mdoRef, moduleType, symbolNameCanonical)
-      .orElseGet(() -> {
-        var newSymbol = new Symbol();
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName("")
+      .symbolKind(SymbolKind.Method)
+      .symbolName(symbolNameCanonical)
+      .build();
 
-        newSymbol.setMdoRef(mdoRef);
-        newSymbol.setModuleType(moduleType);
-        newSymbol.setScopeName("");
-        newSymbol.setSymbolKind(SymbolKind.Method);
-        newSymbol.setSymbolName(symbolNameCanonical);
+    var location = new Location(uri, range);
 
-        return symbolRepository.save(newSymbol);
-      });
-
-    var location = new Location();
-    location.setUri(uri);
-    location.setRange(range);
-
-    var symbolOccurrence = new SymbolOccurrence();
-    symbolOccurrence.setSymbol(symbol);
-    symbolOccurrence.setLocation(location);
+    var symbolOccurrence = SymbolOccurrence.builder()
+      .occurrenceType(OccurrenceType.REFERENCE)
+      .symbol(symbol)
+      .location(location)
+      .build();
 
     symbolOccurrenceRepository.save(symbolOccurrence);
+    locationRepository.updateLocation(symbolOccurrence);
   }
 
   private Optional<Reference> buildReference(

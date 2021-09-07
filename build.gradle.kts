@@ -53,8 +53,6 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("org.springframework.boot:spring-boot-starter-data-jpa")
-    api("org.springframework.retry:spring-retry")
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
@@ -71,9 +69,6 @@ dependencies {
     }
     api("com.github.1c-syntax", "utils", "0.3.2")
     api("com.github.1c-syntax", "mdclasses", "0.9.2")
-
-    // in-memory db
-    api("com.h2database", "h2", "1.4.200")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)

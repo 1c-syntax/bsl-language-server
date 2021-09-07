@@ -22,41 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import java.util.List;
-
-@Entity
-@Table(
-  uniqueConstraints = @UniqueConstraint(
-    columnNames = {"mdoRef", "moduleType", "scopeName", "symbolKind", "symbolName"}
-  )
-)
-@Getter
-@Setter
-@NoArgsConstructor
+@Value
+@AllArgsConstructor
+@Builder
 public class Symbol {
 
-  @Id
-  @GeneratedValue
-  private Long id;
-
-  private String mdoRef;
-  private ModuleType moduleType;
-  private String scopeName;
-  private SymbolKind symbolKind;
-  private String symbolName;
-
-  @OneToMany(mappedBy = "symbol")
-  private List<SymbolOccurrence> occurrences;
+  String mdoRef;
+  ModuleType moduleType;
+  String scopeName;
+  SymbolKind symbolKind;
+  String symbolName;
 
 }
