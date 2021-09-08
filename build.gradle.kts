@@ -30,11 +30,11 @@ group = "io.github.1c-syntax"
 gitVersioning.apply {
     refs {
         considerTagsOnBranches = true
-        branch("^(?!v[0-9]+).*") {
-            version = "\${ref}-\${commit.short}\${dirty}"
-        }
         tag("v(?<tagVersion>[0-9].*)") {
-            version = "\${tagVersion}\${dirty}"
+            version = "\${ref.tagVersion}\${dirty}"
+        }
+        branch(".+") {
+            version = "\${ref}-\${commit.short}\${dirty}"
         }
     }
 
