@@ -21,32 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
+@Value
+@AllArgsConstructor
+@Builder
 public class SymbolOccurrence {
-
-  @Id
-  @GeneratedValue
-  private Long id;
-
-  private OccurrenceType occurrenceType;
-
-  @ManyToOne(fetch = FetchType.EAGER)
-  private Symbol symbol;
-
-  @Embedded
-  private Location location;
+  OccurrenceType occurrenceType;
+  Symbol symbol;
+  Location location;
 }
