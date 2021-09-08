@@ -43,7 +43,7 @@ gitVersioning.apply {
     }
 }
 
-val languageToolVersion = "5.3"
+val languageToolVersion = "5.4"
 aspectj.version.set("1.9.7")
 
 dependencies {
