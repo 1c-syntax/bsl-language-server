@@ -4,7 +4,7 @@
 |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------------------------:|
 | `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           |       `standard`<br>`badpractice`<br>`design`       |
 
-## Parameters 
+## Parameters
 
 
 |         Name          |   Type   |             Description             |      Default value       |

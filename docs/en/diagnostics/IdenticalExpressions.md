@@ -4,7 +4,7 @@
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           | `suspicious` |
 
-## Parameters 
+## Parameters
 
 
 |       Name        |   Type   |                                                                                       Description                                                                                        | Default value |
