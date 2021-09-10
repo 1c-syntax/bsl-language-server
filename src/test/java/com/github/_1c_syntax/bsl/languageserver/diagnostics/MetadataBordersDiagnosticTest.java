@@ -7,9 +7,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class metadataBordersDiagnosticTest extends AbstractDiagnosticTest<metadataBordersDiagnostic> {
-  metadataBordersDiagnosticTest() {
-    super(metadataBordersDiagnostic.class);
+class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBordersDiagnostic> {
+  MetadataBordersDiagnosticTest() {
+    super(MetadataBordersDiagnostic.class);
   }
 
   @Test
