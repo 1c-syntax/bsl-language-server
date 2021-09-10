@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -40,7 +40,7 @@ class FullOuterJoinQueryDiagnosticTest extends AbstractDiagnosticTest<FullOuterJ
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(10, 32, 10, 38);
+      .hasRange(10, 32, 10, 57);
 
   }
 }

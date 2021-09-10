@@ -11,10 +11,7 @@
 			</Synonym>
 			<Comment/>
 			<Source>
-				<v8:Type>cfg:CatalogObject.Склады</v8:Type>
-				<v8:Type>cfg:CatalogObject.Сотрудники</v8:Type>
-				<v8:Type>cfg:CatalogObject.Подразделения</v8:Type>
-				<v8:Type>cfg:CatalogObject.Должности</v8:Type>
+				<v8:Type>cfg:CatalogObject.Справочник1</v8:Type>
 			</Source>
 			<Event>OnSetNewCode</Event>
 			<Handler>CommonModule.ПервыйОбщийМодуль.ПодпискаНаСобытиеПриУстановкеНовогоКода</Handler>

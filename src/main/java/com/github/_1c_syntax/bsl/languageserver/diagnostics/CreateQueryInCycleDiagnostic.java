@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -142,7 +143,10 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     return null;
   }
 
-  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
+  private static String getComplexPathName(
+    BSLParser.ComplexIdentifierContext ci,
+    @CheckForNull BSLParser.ModifierContext to
+  ) {
 
     return ci.modifier().stream()
       .takeWhile(e -> !e.equals(to))
@@ -195,7 +199,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitAssignment(ctx);
     }
     String variableName = ctx.lValue().getText();
-    VariableDefinition currentVariable = new VariableDefinition(variableName);
+    var currentVariable = new VariableDefinition(variableName);
     currentVariable.addDeclaration(ctx.lValue());
 
     if (firstMember.complexIdentifier() != null) {
@@ -222,7 +226,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
+  private void visitDescendantCodeBlock(@CheckForNull BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
@@ -241,13 +245,13 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
     String variableName = null;
     BSLParserRuleContext errorContext = null;
-    BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
+    BSLParserRuleContext parent = ctx.getParent();
     if (parent instanceof BSLParser.CallStatementContext) {
       errorContext = parent;
       variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
     } else if (parent instanceof BSLParser.ModifierContext) {
       BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
-      errorContext = (BSLParserRuleContext) callModifier.getParent();
+      errorContext = callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
@@ -365,7 +369,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return flowType == CodeFlowType.CYCLE;
     }
 
-    public Optional<VariableDefinition> getVariableByName(String variableName) {
+    public Optional<VariableDefinition> getVariableByName(@CheckForNull String variableName) {
       return Optional.ofNullable(current().variables.get(variableName));
     }
 
@@ -378,9 +382,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     public void enterScope(String name) {
-      Scope newScope = new Scope(name);
+      var newScope = new Scope(name);
       if (!this.isEmpty()) {
-        Scope prevScope = this.peek();
+        var prevScope = this.peek();
         newScope.variables.putAll(prevScope.variables);
       }
       this.push(newScope);

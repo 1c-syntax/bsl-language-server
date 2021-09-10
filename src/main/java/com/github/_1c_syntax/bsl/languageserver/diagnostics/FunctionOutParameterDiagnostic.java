@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -56,7 +56,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParameterDefinition> parameters = documentContext
       .getSymbolTree()
-      .getMethodSymbol((BSLParserRuleContext) ctx.getParent())
+      .getMethodSymbol(ctx.getParent())
       .stream()
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
@@ -73,7 +73,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       .collect(
         Collectors.toMap(
           ParseTree::getText,
-          node -> (BSLParserRuleContext) node,
+          BSLParserRuleContext.class::cast,
           (existing, replacement) -> existing,
           CaseInsensitiveMap::new)
       );

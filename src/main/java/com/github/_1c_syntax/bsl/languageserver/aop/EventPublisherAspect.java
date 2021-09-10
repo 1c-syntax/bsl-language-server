@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,11 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -69,6 +72,15 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
     publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
+  }
+
+  @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")
+  public void languageServerInitialize(JoinPoint joinPoint, InitializeParams initializeParams) {
+    var event = new LanguageServerInitializeRequestReceivedEvent(
+      (LanguageServer) joinPoint.getThis(),
+      initializeParams
+    );
+    publishEvent(event);
   }
 
   private void publishEvent(ApplicationEvent event) {

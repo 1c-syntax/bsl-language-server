@@ -1,8 +1,8 @@
 # Method parameters description are missing (MissingParameterDescription)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`badpractice` |
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -11,11 +11,6 @@
 			</Synonym>
 			<Comment/>
 			<Source>
-				<v8:Type>cfg:CatalogObject.Фотографии</v8:Type>
-				<v8:Type>cfg:CatalogObject.Телефоны</v8:Type>
-				<v8:Type>cfg:CatalogObject.Банки</v8:Type>
-				<v8:Type>cfg:CatalogObject.Пункты</v8:Type>
-				<v8:Type>cfg:CatalogObject.Маяки</v8:Type>
 				<v8:TypeSet>cfg:DocumentObject</v8:TypeSet>
 			</Source>
 			<Event>OnWrite</Event>

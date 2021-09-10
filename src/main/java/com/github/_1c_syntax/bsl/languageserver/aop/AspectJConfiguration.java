@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.aop.measures.ConditionalOnMeasur
 import org.aspectj.lang.Aspects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * Конфигурация фреймворка AspectJ.
@@ -38,6 +39,7 @@ public class AspectJConfiguration {
    * @return Основной аспект подсистемы событий.
    */
   @Bean
+  @Lazy(false)
   public EventPublisherAspect eventPublisherAspect() {
     return Aspects.aspectOf(EventPublisherAspect.class);
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -48,18 +48,20 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     super(CachedPublicDiagnostic.class);
   }
 
-  private CommonModule module;
+  private MDCommonModule module;
   private DocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_MODULE_CONTENT = "src/test/resources/diagnostics/CachedPublicDiagnostic.bsl";
+  private static final String PATH_TO_MODULE_EMPTY_CONTENT = "src/test/resources/diagnostics/CachedPublicDiagnosticEmpty.bsl";
 
 
   @Test
   void test() {
 
-    getDocumentContextFromFile();
+    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    getDocumentContextFromFile(testFile);
 
     // given
     when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_REQUEST);
@@ -80,7 +82,8 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testSession() {
 
-    getDocumentContextFromFile();
+    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    getDocumentContextFromFile(testFile);
 
     // given
     when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_SESSION);
@@ -102,7 +105,8 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testNegative() {
 
-    getDocumentContextFromFile();
+    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    getDocumentContextFromFile(testFile);
 
     // given
     when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DONT_USE);
@@ -117,14 +121,30 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
 
   }
 
+  @Test
+  void testEmpty() {
+
+    Path testFile = Paths.get(PATH_TO_MODULE_EMPTY_CONTENT).toAbsolutePath();
+    getDocumentContextFromFile(testFile);
+
+    // given
+    when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_SESSION);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).isEmpty();
+
+  }
 
   @SneakyThrows
-  void getDocumentContextFromFile() {
+  void getDocumentContextFromFile(Path testFile) {
 
     Path path = Absolute.path(PATH_TO_METADATA);
     Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
-
 
     initServerContext(path);
     var configuration = context.getConfiguration();
@@ -135,7 +155,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     ));
 
 
-    module = spy((CommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
+    module = spy((MDCommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
 
   }
 }

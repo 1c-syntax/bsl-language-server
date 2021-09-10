@@ -1,8 +1,8 @@
 # Using 'LIKE' in query (UsingLikeInQuery)
 
-|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |              Tags              |
+|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------:|
-| `Error` | `BSL` | `Важный` |             `No`              |          `10`           | `sql`<br>`unpredictable` |
+| `Error` | `BSL` | `Major`  |             `No`              |          `10`           |    `sql`<br>`unpredictable`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

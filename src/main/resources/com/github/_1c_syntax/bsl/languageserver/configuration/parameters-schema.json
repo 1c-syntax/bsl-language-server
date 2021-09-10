@@ -4,6 +4,40 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                },
+                "ignoreMissingElseOnExit": {
+                    "description": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
+        "AssignAliasFieldsInQuery": {
+            "description": "Assigning aliases to selected fields in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assigning aliases to selected fields in a query",
+            "$id": "#/definitions/AssignAliasFieldsInQuery"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -632,6 +666,14 @@
                 "object"
             ],
             "title": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
+            "properties": {
+                "popularDivisors": {
+                    "description": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation",
+                    "default": "60, 1024",
+                    "type": "string",
+                    "title": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation"
+                }
+            },
             "$id": "#/definitions/IdenticalExpressions"
         },
         "IfConditionComplexity": {
@@ -681,6 +723,42 @@
             ],
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
+        },
+        "IncorrectLineBreak": {
+            "description": "Incorrect expression line break",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect expression line break",
+            "properties": {
+                "checkFirstSymbol": {
+                    "description": "Check beginning of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check beginning of line for invalid characters"
+                },
+                "checkLastSymbol": {
+                    "description": "Check end of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check end of line for invalid characters"
+                },
+                "listOfIncorrectLastSymbol": {
+                    "description": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)",
+                    "default": "\u0418\u041b\u0418|\u0418|OR|AND|\\+|-|/|%|\\*",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)"
+                },
+                "listOfIncorrectFirstSymbol": {
+                    "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
+                    "default": "\\)|;|,|\\);",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
+                }
+            },
+            "$id": "#/definitions/IncorrectLineBreak"
         },
         "IncorrectUseLikeInQuery": {
             "description": "Incorrect use of 'LIKE'",
@@ -756,6 +834,12 @@
                     "default": "\u0427\u0442\u0435\u043d\u0438\u0435XML, \u0427\u0442\u0435\u043d\u0438\u0435JSON, \u0417\u0430\u043f\u0438\u0441\u044cXML, \u0417\u0430\u043f\u0438\u0441\u044cJSON, Com\u041e\u0431\u044a\u0435\u043a\u0442, \u0424\u0430\u0431\u0440\u0438\u043a\u0430XDTO, \u041e\u0431\u044a\u0435\u043a\u0442XDTO, \u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435FTP, HTTP\u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435, HTTP\u0417\u0430\u043f\u0440\u043e\u0441, HTTP\u0421\u0435\u0440\u0432\u0438\u0441\u041e\u0442\u0432\u0435\u0442, SMS\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435, WS\u041f\u0440\u043e\u043a\u0441\u0438",
                     "type": "string",
                     "title": "A list of exclusion words, specified as a comma-separated string"
+                },
+                "allowTrailingPartsInAnotherLanguage": {
+                    "description": "Allow a name to start or end with a word in another language",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow a name to start or end with a word in another language"
                 }
             },
             "$id": "#/definitions/LatinAndCyrillicSymbolInWord"
@@ -1328,6 +1412,24 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "SetPermissionsForNewObjects": {
+            "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "properties": {
+                "namesFullAccessRole": {
+                    "description": "Name of the role with full rights",
+                    "default": "FullAccess,\u041f\u043e\u043b\u043d\u044b\u0435\u041f\u0440\u0430\u0432\u0430",
+                    "type": "string",
+                    "title": "Name of the role with full rights"
+                }
+            },
+            "$id": "#/definitions/SetPermissionsForNewObjects"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
@@ -1613,6 +1715,12 @@
             ],
             "title": "Using hardcode ip addresses in code",
             "properties": {
+                "searchPopularVersionExclusion": {
+                    "description": "Pattern to exclude popular versions from search",
+                    "default": "^(1|2|3|8\\.3|11)\\.",
+                    "type": "string",
+                    "title": "Pattern to exclude popular versions from search"
+                },
                 "searchWordsExclusion": {
                     "description": "Keywords to exclude from search",
                     "default": "\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver",

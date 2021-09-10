@@ -28,7 +28,7 @@ jobs:
 
         steps:
             - name: Checkout source
-              uses: actions/checkout@v2             
+              uses: actions/checkout@v2.3.4             
             - name: Set up JDK
               uses: actions/setup-java@v2
               with:
@@ -90,7 +90,7 @@ jobs:
                     start()
               shell: python
             - name: Upload artifact
-              uses: actions/upload-artifact@v2.2.3
+              uses: actions/upload-artifact@v2.2.4
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}

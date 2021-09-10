@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,11 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
-import com.github._1c_syntax.mdclasses.metadata.additional.MDOType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.utils.MDOUtils;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -52,7 +52,7 @@ public class MdoRefBuilder {
 
   public static String getMdoRef(DocumentContext documentContext) {
     return documentContext.getMdObject()
-      .map(MDObjectBase::getMdoReference)
+      .map(AbstractMDObjectBase::getMdoReference)
       .map(MDOReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
   }
@@ -91,7 +91,7 @@ public class MdoRefBuilder {
     return documentContext.getServerContext()
       .getConfiguration()
       .getCommonModule(commonModuleName)
-      .map(CommonModule::getMdoReference)
+      .map(MDCommonModule::getMdoReference)
       .map(MDOReference::getMdoRef);
   }
 
