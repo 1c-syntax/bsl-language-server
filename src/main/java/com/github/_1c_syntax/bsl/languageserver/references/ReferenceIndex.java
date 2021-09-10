@@ -117,6 +117,21 @@ public class ReferenceIndex {
   }
 
   /**
+   * Поиск ссылок на символы в документе.
+   *
+   * @param uri URI документа, в котором нужно найти ссылки на другие символы.
+   * @return Список ссылок на символы.
+   */
+  public List<Reference> getReferencesFrom(URI uri, SymbolKind kind) {
+
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .filter(s -> s.getSymbol().getSymbolKind() == kind)
+      .map(this::buildReference)
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
+  }
+
+  /**
    * Поиск ссылок на символы в символе.
    *
    * @param symbol Символ, в котором нужно найти ссылки на другие символы.
