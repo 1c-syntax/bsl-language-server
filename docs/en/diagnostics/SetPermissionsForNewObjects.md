@@ -1,26 +1,25 @@
-# The check box «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
+# Флажок «Устанавливать права для новых объектов» должен быть установлен только у роли ПолныеПрава (SetPermissionsForNewObjects)
 
-|      Type       | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                         |
+|      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                        Tags                         |
 |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------------------------:|
-| `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           |       `standard`<br>`badpractice`<br>`design`       |
+| `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           | `standard`<br>`badpractice`<br>`design` |
 
 ## Parameters
 
 
-|         Name          |   Type   |             Description             |      Default value       |
-|:---------------------:|:--------:|:-----------------------------------:|:------------------------:|
-| `namesFullAccessRole` | `String` | `Name of the role with full rights` | `FullAccess,ПолныеПрава` |
+|         Name          |   Type   |              Description              |      Default value       |
+|:---------------------:|:--------:|:-------------------------------------:|:------------------------:|
+| `namesFullAccessRole` | `String` | `Наименование роли с полными правами` | `FullAccess,ПолныеПрава` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-When adding a new role, the "Set permissions for new objects" attribute may be set incorrectly, which will lead to the accumulation of rights in this role for all objects added after it and excessive rights for users with this role.
-
-## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+При добавлении новой роли может быть ошибочно установлен атрибут "Устанавливать права для новых объектов", что приведет к накоплению в этой роли прав на все добавленные после неё объекты и избыточные права у пользователей с этой ролью.
 
 ## Sources
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-* Standard: [Set permissions for new objects and feilds objects (RU)](https://its.1c.ru/db/v8std/content/532/hdoc)
+## Snippets
+
+* Источник: [Стандарт: Установка прав для новых объектов и полей объектов](https://its.1c.ru/db/v8std/content/532/hdoc)
 
 ## Snippets
 
