@@ -1,6 +1,6 @@
 # GetForm method call (GetFormMethod)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |  Tags   |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------:|
 | `Error` | `BSL` | `Major`  |             `Yes`             |          `15`           | `error` |
 
