@@ -1,4 +1,2 @@
-before_install:
-   - source ~/.sdkman/bin/sdkman-init.sh
-   - sdk install java 16.0.0.hs-adpt
-   - sdk use java 16.0.0.hs-adpt
+jdk:
+  - openjdk11
