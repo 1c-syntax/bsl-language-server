@@ -1,8 +1,8 @@
 # Missed postfix "Client" (CommonModuleNameClient)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                            Tags                            |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
+| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `5`           | `standard`<br>`badpractice`<br>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
