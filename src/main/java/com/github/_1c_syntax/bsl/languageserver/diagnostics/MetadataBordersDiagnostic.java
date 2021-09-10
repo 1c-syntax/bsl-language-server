@@ -15,6 +15,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
   }
 
 )
-public class metadataBordersDiagnostic extends AbstractVisitorDiagnostic {
+public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
 }
