@@ -52,8 +52,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   public void check() {
     var uri = documentContext.getUri();
 
-    referenceIndex.getReferencesFrom(uri).stream()
-      .filter(reference -> reference.getSymbol().getSymbolKind() == SymbolKind.Method)
+    referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
       .filter(reference -> reference.getSymbol().isDeprecated())
       .filter(reference -> !reference.getFrom().isDeprecated())
       .forEach((Reference reference) -> {
