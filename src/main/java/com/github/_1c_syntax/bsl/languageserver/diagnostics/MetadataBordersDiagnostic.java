@@ -1,10 +1,13 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
+import com.github._1c_syntax.bsl.parser.*;
+import com.github._1c_syntax.utils.*;
+import com.google.protobuf.*;
+import org.antlr.v4.runtime.tree.*;
+
+import java.util.*;
+import java.util.regex.*;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -17,4 +20,25 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 )
 public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Map<String, String> METADATA_BORDERS_DEFAULT = new HashMap<>();
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ""
+  )
+  private Map<String, String> metadataBordersParameters = METADATA_BORDERS_DEFAULT;
+
+  @Override
+  public ParseTree visitStatement(BSLParser.StatementContext ctx){
+
+    for (Map.Entry<String, String> entry: metadataBordersParameters.entrySet()) {
+
+      Pattern pattern = CaseInsensitivePattern.compile(entry.getKey());
+      Matcher matcher = pattern.matcher(ctx.getText());
+      while (matcher.find()) {
+        diagnosticStorage.addDiagnostic(ctx);
+      }
+    }
+    return super.visitStatement(ctx);
+  }
 }
