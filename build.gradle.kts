@@ -243,16 +243,16 @@ signing {
 
 publishing {
     repositories {
-        val sonatypeUsername: String? by project
-        val sonatypePassword: String? by project
         maven {
             name = "sonatype"
-            val repoUrl = if (isSnapshot)
-                "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = if (isSnapshot)
+                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
             else
-                "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 
-            url = uri(repoUrl)
+            val sonatypeUsername: String? by project
+            val sonatypePassword: String? by project
+
             credentials {
                 username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
                 password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
