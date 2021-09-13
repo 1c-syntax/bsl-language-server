@@ -1,3 +1,4 @@
+import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
 
@@ -5,6 +6,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
     id("io.freefair.lombok") version "6.1.0"
@@ -42,6 +44,8 @@ gitVersioning.apply {
         version = "\${commit.short}\${dirty}"
     }
 }
+
+val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.4"
 aspectj.version.set("1.9.7")
@@ -228,11 +232,41 @@ artifacts {
     archives(tasks["javadocJar"])
 }
 
+signing {
+    val signingInMemoryKey: String? by project      // env.ORG_GRADLE_PROJECT_signingInMemoryKey
+    val signingInMemoryPassword: String? by project // env.ORG_GRADLE_PROJECT_signingInMemoryPassword
+    if (signingInMemoryKey != null) {
+        useInMemoryPgpKeys(signingInMemoryKey, signingInMemoryPassword)
+        sign(publishing.publications)
+    }
+}
+
 publishing {
+    repositories {
+        maven {
+            name = "sonatype"
+            url = if (isSnapshot)
+                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            else
+                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+
+            val sonatypeUsername: String? by project
+            val sonatypePassword: String? by project
+
+            credentials {
+                username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
+                password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["bootJar"])
+
+            if (isSnapshot && project.hasProperty("simplifyVersion")) {
+                version = findProperty("git.ref.slug") as String + "-SNAPSHOT"
+            }
 
             pom {
                 description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
