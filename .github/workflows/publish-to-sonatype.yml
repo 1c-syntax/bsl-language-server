@@ -1,0 +1,28 @@
+name: Publish to Sonatype
+
+on:
+  release:
+    types: [published, edited]
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 16
+          distribution: 'adopt'
+      - name: Publish to Sonatype
+        run: ./gradlew publishMavenPublicationToSonatypeRepository -PsimplifyVersion
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
