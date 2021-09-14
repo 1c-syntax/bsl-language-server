@@ -72,7 +72,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.3")
-    api("com.github.1c-syntax", "mdclasses", "c13ad9eb7057cfa7dd88ccedafab0b93c3200c5b")
+    api("com.github.1c-syntax", "mdclasses", "d45c4aaa3cc1cf3e4bae5e6583aa507a29f38e86")
     api("com.github.1c-syntax", "bsl-common-library", "develop-SNAPSHOT")
 
     // JLanguageTool
