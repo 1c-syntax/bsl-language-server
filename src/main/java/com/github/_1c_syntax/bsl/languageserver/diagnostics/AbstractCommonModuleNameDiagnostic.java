@@ -23,15 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
@@ -51,36 +50,36 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     }
 
     documentContext.getMdObject()
-      .filter(MDCommonModule.class::isInstance)
-      .map(MDCommonModule.class::cast)
+      .filter(CommonModule.class::isInstance)
+      .map(CommonModule.class::cast)
       .filter(this::flagsCheck)
-      .map(AbstractMDObjectBase::getName)
+      .map(MDObject::getName)
       .map(pattern::matcher)
       .filter(this::matchCheck)
       .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(range.get()));
   }
 
-  protected abstract boolean flagsCheck(MDCommonModule commonModule);
+  protected abstract boolean flagsCheck(CommonModule commonModule);
 
   protected boolean matchCheck(Matcher matcher) {
     return !matcher.find();
   }
 
-  protected boolean isClientServer(MDCommonModule commonModule) {
+  protected boolean isClientServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected boolean isClient(MDCommonModule commonModule) {
+  protected boolean isClient(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && !commonModule.isServer()
       && !commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected boolean isServerCall(MDCommonModule commonModule) {
+  protected boolean isServerCall(CommonModule commonModule) {
     return commonModule.isServerCall()
       && commonModule.isServer()
       && !commonModule.isExternalConnection()
@@ -88,7 +87,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       && !commonModule.isClientManagedApplication();
   }
 
-  protected boolean isServer(MDCommonModule commonModule) {
+  protected boolean isServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
@@ -96,12 +95,12 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       && !commonModule.isClientManagedApplication();
   }
 
-  private boolean isClientApplication(MDCommonModule commonModule) {
+  private boolean isClientApplication(CommonModule commonModule) {
     return isClientOrdinaryAppIfNeed(commonModule)
       && commonModule.isClientManagedApplication();
   }
 
-  private boolean isClientOrdinaryAppIfNeed(MDCommonModule commonModule) {
+  private boolean isClientOrdinaryAppIfNeed(CommonModule commonModule) {
     return commonModule.isClientOrdinaryApplication()
       || !serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport();
   }

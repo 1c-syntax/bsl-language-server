@@ -27,10 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
-import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -76,7 +75,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     ModuleType moduleType = documentContext.getModuleType();
     FileType fileType = documentContext.getFileType();
 
-    ScriptVariant regionsLanguage = getRegionsLanguage(documentContext, fileType);
+    var regionsLanguage = getRegionsLanguage(documentContext, fileType);
     Set<String> neededStandardRegions;
 
     if (fileType == FileType.BSL) {
@@ -100,14 +99,14 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     String result = neededStandardRegions.stream()
       .map(s -> String.format(regionFormat, s))
       .collect(Collectors.joining("\n"));
-    TextEdit textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
+    var textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
 
-    WorkspaceEdit edit = new WorkspaceEdit();
+    var edit = new WorkspaceEdit();
     Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(),
       Collections.singletonList(textEdit));
     edit.setChanges(changes);
 
-    CodeAction codeAction = new CodeAction("Generate missing regions");
+    var codeAction = new CodeAction("Generate missing regions");
     codeAction.setDiagnostics(new ArrayList<>());
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
@@ -117,7 +116,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
   private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
 
     ScriptVariant regionsLanguage;
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
+    var configuration = documentContext.getServerContext().getConfiguration();
     if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
       regionsLanguage = getScriptVariantFromConfigLanguage();
     } else {

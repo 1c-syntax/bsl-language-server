@@ -28,8 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -98,7 +99,9 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     // если использование модальных окон разрешено (без предупреждение) 
     // и не установлен флаг игнорирования использования модальных окон, то
     // ничего не диагностируется
-    if (!forceModalityMode && configuration.getModalityUseMode() == UseMode.USE) {
+    if (!forceModalityMode
+      && configuration instanceof Configuration
+      && ((Configuration) configuration).getModalityUseMode() == UseMode.USE) {
       return ctx;
     }
 

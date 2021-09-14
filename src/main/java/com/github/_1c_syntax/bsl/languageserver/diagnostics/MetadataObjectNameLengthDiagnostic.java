@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
@@ -63,7 +63,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
 
     documentContext
       .getMdObject()
-      .map(AbstractMDObjectBase::getName)
+      .map(MDObject::getName)
       .filter(this::checkName)
       .ifPresent(name -> diagnosticStorage.addDiagnostic(
         range.get(),

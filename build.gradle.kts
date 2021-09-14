@@ -24,6 +24,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven(url = "https://jitpack.io")
 }
 
@@ -71,7 +72,8 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.3")
-    api("com.github.1c-syntax", "mdclasses", "0.9.2")
+    api("com.github.1c-syntax", "mdclasses", "c13ad9eb7057cfa7dd88ccedafab0b93c3200c5b")
+    api("com.github.1c-syntax", "bsl-common-library", "develop-SNAPSHOT")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)

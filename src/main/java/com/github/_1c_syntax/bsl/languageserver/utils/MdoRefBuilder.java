@@ -22,12 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.mdo.MDObject;
+import com.github._1c_syntax.bsl.mdo.support.MdoReference;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.utils.MDOUtils;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -52,8 +51,8 @@ public class MdoRefBuilder {
 
   public static String getMdoRef(DocumentContext documentContext) {
     return documentContext.getMdObject()
-      .map(AbstractMDObjectBase::getMdoReference)
-      .map(MDOReference::getMdoRef)
+      .map(MDObject::getMdoReference)
+      .map(MdoReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
   }
 
@@ -88,11 +87,8 @@ public class MdoRefBuilder {
   }
 
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
-    return documentContext.getServerContext()
-      .getConfiguration()
-      .getCommonModule(commonModuleName)
-      .map(MDCommonModule::getMdoReference)
-      .map(MDOReference::getMdoRef);
+    return MDHelper.getCommonModule(documentContext, commonModuleName)
+      .map(module -> module.getMdoReference().getMdoRef());
   }
 
   private String getMdoRef(MDOType mdoType, String identifier) {

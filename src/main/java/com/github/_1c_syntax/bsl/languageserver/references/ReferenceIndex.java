@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import org.apache.commons.collections4.MultiMapUtils;
@@ -148,7 +148,7 @@ public class ReferenceIndex {
    */
   @Synchronized
   public void clearReferences(URI uri) {
-    String stringUri = uri.toString();
+    var stringUri = uri.toString();
 
     referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
       var key = new MultiKey<>(multikey.getKey(0), multikey.getKey(1));
@@ -164,7 +164,8 @@ public class ReferenceIndex {
    * Добавить вызов метода в индекс.
    *
    * @param uri        URI документа, откуда произошел вызов.
-   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение
+   *                   (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
@@ -173,7 +174,7 @@ public class ReferenceIndex {
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
-    Location location = new Location(uri.toString(), range);
+    var location = new Location(uri.toString(), range);
 
     MultiKey<String> key = getKey(mdoRef, moduleType);
     MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, symbolNameCanonical);
@@ -199,7 +200,7 @@ public class ReferenceIndex {
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
     String mdoRef = multikey.getKey(0);
-    ModuleType moduleType = ModuleType.valueOf(multikey.getKey(1));
+    var moduleType = ModuleType.valueOf(multikey.getKey(1));
     String symbolName = multikey.getKey(2);
 
     return serverContext.getDocument(mdoRef, moduleType)

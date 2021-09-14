@@ -31,10 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.support_configuration.SupportVariant;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -44,7 +43,6 @@ import org.springframework.context.annotation.Scope;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,7 +60,7 @@ public abstract class DiagnosticsConfiguration {
 
     Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
-    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
       FileType fileType = documentContext.getFileType();
@@ -104,17 +102,14 @@ public abstract class DiagnosticsConfiguration {
       return true;
     }
 
-    Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
-    var moduleSupportVariant = supportVariants.values().stream()
-      .min(Comparator.naturalOrder())
-      .orElse(SupportVariant.NONE);
+    var supportVariant = documentContext.getSupportVariant();
 
-    if (moduleSupportVariant == SupportVariant.NONE) {
+    if (supportVariant == SupportVariant.NONE) {
       return true;
     }
 
     if (configuredSkipSupport == SkipSupport.WITH_SUPPORT_LOCKED) {
-      return moduleSupportVariant != SupportVariant.NOT_EDITABLE;
+      return supportVariant != SupportVariant.NOT_EDITABLE;
     }
 
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
@@ -176,7 +171,7 @@ public abstract class DiagnosticsConfiguration {
       return true;
     }
 
-    boolean contain = false;
+    var contain = false;
     for (ModuleType module : diagnosticModules) {
       if (module == moduletype) {
         contain = true;

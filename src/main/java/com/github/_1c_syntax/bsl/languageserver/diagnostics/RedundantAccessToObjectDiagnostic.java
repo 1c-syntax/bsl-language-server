@@ -28,9 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
@@ -65,8 +66,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   private static final boolean CHECK_FORM_MODULE = true;
   private static final boolean CHECK_RECORD_SET_MODULE = true;
 
-  private boolean needCheckName = false;
-  private boolean skipLValue = false;
+  private boolean needCheckName;
+  private boolean skipLValue;
   private Pattern namePatternWithDot;
 
   @DiagnosticParameter(
@@ -91,7 +92,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     var typeModule = documentContext.getModuleType();
     if (typeModule == ModuleType.CommonModule || typeModule == ModuleType.ManagerModule) {
-      documentContext.getMdObject().ifPresent(mdObjectBase -> {
+      documentContext.getMdObject().ifPresent((MDObject mdObjectBase) -> {
         needCheckName = true;
         skipLValue = true;
         namePatternWithDot = CaseInsensitivePattern.compile(
@@ -128,7 +129,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     var identifier = ctx.IDENTIFIER();
     var modifiers = ctx.modifier();
 
-    if (identifier == null || modifiers.size() == 0) {
+    if (identifier == null || modifiers.isEmpty()) {
       return ctx;
     }
 
@@ -194,7 +195,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   private static boolean notHasAccessIndex(BSLParser.AcceptorContext acceptor) {
     var modifiers = acceptor.modifier();
     return modifiers == null
-      || modifiers.size() == 0
+      || modifiers.isEmpty()
       || modifiers.get(0) == null
       || modifiers.get(0).accessIndex() == null;
   }

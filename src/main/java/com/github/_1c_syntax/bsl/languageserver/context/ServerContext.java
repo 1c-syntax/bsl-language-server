@@ -22,8 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.mdclasses.MDClass;
+import com.github._1c_syntax.bsl.mdclasses.MDClasses;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @RequiredArgsConstructor
 public abstract class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
-  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<MDClass> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   @Setter
   private Path configurationRoot;
@@ -83,7 +84,7 @@ public abstract class ServerContext {
     contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
-      DocumentContext documentContext = getDocument(file.toURI());
+      var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
         documentContext.clearSecondaryData();
@@ -123,7 +124,7 @@ public abstract class ServerContext {
   public DocumentContext addDocument(URI uri, String content, int version) {
     contextLock.readLock().lock();
 
-    DocumentContext documentContext = getDocument(uri);
+    var documentContext = getDocument(uri);
     if (documentContext == null) {
       documentContext = createDocumentContext(uri, content, version);
     } else {
@@ -143,7 +144,7 @@ public abstract class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
     removeDocumentMdoRefByUri(absoluteURI);
     documents.remove(absoluteURI);
   }
@@ -155,7 +156,7 @@ public abstract class ServerContext {
     configurationMetadata.clear();
   }
 
-  public Configuration getConfiguration() {
+  public MDClass getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
@@ -164,14 +165,14 @@ public abstract class ServerContext {
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file, int version) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    var content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     return createDocumentContext(file.toURI(), content, version);
   }
 
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = lookupDocumentContext(absoluteURI);
+    var documentContext = lookupDocumentContext(absoluteURI);
     documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);
@@ -182,18 +183,18 @@ public abstract class ServerContext {
     return documentContext;
   }
 
-  private Configuration computeConfigurationMetadata() {
+  private MDClass computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return Configuration.create();
+      return MDClasses.createConfiguration();
     }
 
-    Configuration configuration;
-    ForkJoinPool customThreadPool = new ForkJoinPool();
+    MDClass configuration;
+    var customThreadPool = new ForkJoinPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).fork().join();
+      configuration = customThreadPool.submit(() -> MDClasses.createConfiguration(configurationRoot)).fork().join();
     } catch (RuntimeException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
-      configuration = Configuration.create();
+      configuration = MDClasses.createConfiguration();
     }
 
     return configuration;

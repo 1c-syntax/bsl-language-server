@@ -30,23 +30,20 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.support_configuration.SupportVariant;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 @SpringBootTest
@@ -143,71 +140,58 @@ class DiagnosticsTest {
 
     // given
     documentContext = spy(TestUtils.getDocumentContext("А = 0"));
-    var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .isNotEmpty();
-
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .isNotEmpty();
-
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .isNotEmpty();
-
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
   }

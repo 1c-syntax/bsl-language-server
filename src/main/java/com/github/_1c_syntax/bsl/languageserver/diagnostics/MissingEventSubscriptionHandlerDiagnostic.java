@@ -21,17 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.MDHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.mdclasses.ConfigurationTree;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.EventSubscription;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 import java.util.regex.Pattern;
@@ -51,12 +53,17 @@ import java.util.regex.Pattern;
 )
 public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnostic {
 
+  private static final Pattern SPLIT_PATTERN = Pattern.compile("\\.");
+
+  /**
+   * количество частей правильного имени метода
+   */
+  private static final int COUNT_PARTS_NAME = 3;
   /**
    * Рендж на который будут повешены замечания
    * Костыль, но пока так
    */
   private Range diagnosticRange;
-  private static final Pattern SPLIT_PATTERN = Pattern.compile("\\.");
 
   @Override
   protected void check() {
@@ -70,35 +77,34 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
     }
 
     var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY
+      || !(configuration instanceof ConfigurationTree)) {
       return;
     }
 
     // для анализа выбираются все имеющиеся подписки на события
-    configuration.getChildren().stream()
-      .filter(mdo -> mdo.getType() == MDOType.EVENT_SUBSCRIPTION)
-      .map(mdo -> (MDEventSubscription) mdo)
-      .forEach((MDEventSubscription eventSubs) -> {
+    ((ConfigurationTree) configuration).getEventSubscriptions()
+      .forEach((EventSubscription eventSubs) -> {
         // проверка на пустой обработчик
         if (eventSubs.getHandler().isEmpty()) {
           addDiagnostic(eventSubs);
           return;
         }
 
-        var handlerParts = SPLIT_PATTERN.split(eventSubs.getHandler());
+        var handlerParts = SPLIT_PATTERN.split(eventSubs.getHandler().getMethodPath());
 
         // правильный обработчик состоит из трех частей:
         //  - CommonModule - тип объекта, всегда постоянный: общий модуль
         //  - Имя - имя модуля
         //  - ИмяМетода - имя метода в модуле
 
-        if (handlerParts.length != 3) {
-          addDiagnostic("incorrectHandler", eventSubs, eventSubs.getHandler());
+        if (handlerParts.length != COUNT_PARTS_NAME) {
+          addDiagnostic("incorrectHandler", eventSubs, eventSubs.getHandler().getMethodPath());
           return;
         }
 
         // проверка на существование модуля
-        var module = configuration.getCommonModule(handlerParts[1]);
+        var module = MDHelper.getCommonModule(documentContext, handlerParts[1]);
         if (module.isEmpty()) {
           addDiagnostic("missingModule", eventSubs, handlerParts[1]);
           return;
@@ -111,14 +117,14 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
         }
 
         // проверка на наличие метода и его экспортности
-        checkMethod(eventSubs, handlerParts[2], commonModule);
+        checkMethod(eventSubs, handlerParts[COUNT_PARTS_NAME - 1], commonModule);
       });
   }
 
-  private void checkMethod(MDEventSubscription eventSubs, String methodName, MDCommonModule commonModule) {
+  private void checkMethod(EventSubscription eventSubs, String methodName, CommonModule commonModule) {
     documentContext.getServerContext()
       .getDocument(commonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
-      .ifPresent(commonModuleContext -> {
+      .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
           .findFirst();
@@ -132,12 +138,12 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
       });
   }
 
-  private void addDiagnostic(String messageString, MDEventSubscription eventSubs, String text) {
+  private void addDiagnostic(String messageString, EventSubscription eventSubs, String text) {
     diagnosticStorage.addDiagnostic(diagnosticRange,
       info.getResourceString(messageString, text, eventSubs.getName()));
   }
 
-  private void addDiagnostic(MDEventSubscription eventSubs) {
+  private void addDiagnostic(EventSubscription eventSubs) {
     diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(eventSubs.getName()));
   }
 }

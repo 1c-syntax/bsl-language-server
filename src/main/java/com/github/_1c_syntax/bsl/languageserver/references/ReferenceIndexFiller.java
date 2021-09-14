@@ -23,22 +23,22 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.utils.MDHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -120,14 +120,12 @@ public class ReferenceIndexFiller {
     private void checkCall(String mdoRef, Token methodName) {
 
       String methodNameText = methodName.getText();
-      Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
-      for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
-        ModuleType moduleType = e.getKey();
-        if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
-          continue;
+      MDHelper.getModules(documentContext, mdoRef).forEach((Module module) -> {
+        var moduleType = module.getModuleType();
+        if (DEFAULT_MODULE_TYPES.contains(moduleType)) {
+          addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
         }
-        addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
-      }
+      });
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {

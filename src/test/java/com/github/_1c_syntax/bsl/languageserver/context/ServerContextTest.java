@@ -22,10 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,7 @@ class ServerContextTest {
 
     Path path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
 
@@ -69,7 +70,8 @@ class ServerContextTest {
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    ModuleType type = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
+    ModuleType type = ((ModuleOwner) configurationMetadata).getModuleByUri(Absolute.uri(file.toURI()))
+      .get().getModuleType();
     assertThat(type).isEqualTo(ModuleType.CommonModule);
 
   }
@@ -111,10 +113,10 @@ class ServerContextTest {
     Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
 
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = (Configuration) serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
-    assertThat(configurationMetadata.getModulesByType()).isEmpty();
+    assertThat(configurationMetadata.getModules()).isEmpty();
   }
 
   @Test

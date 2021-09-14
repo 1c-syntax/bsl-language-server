@@ -33,16 +33,16 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeCompu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.MDObject;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.support_configuration.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +62,6 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -100,8 +99,7 @@ public class DocumentContext {
 
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
-    = new Lazy<>(this::computeSupportVariants, computeLock);
+  private final Lazy<SupportVariant> supportVariant = new Lazy<>(this::computeSupportVariant, computeLock);
   private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
@@ -166,8 +164,8 @@ public class DocumentContext {
       throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
-    String startString = contentListUnboxed[start.getLine()];
-    StringBuilder sb = new StringBuilder();
+    var startString = contentListUnboxed[start.getLine()];
+    var sb = new StringBuilder();
 
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
@@ -233,12 +231,12 @@ public class DocumentContext {
     return moduleType.getOrCompute();
   }
 
-  public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
-    return supportVariants.getOrCompute();
+  public SupportVariant getSupportVariant() {
+    return supportVariant.getOrCompute();
   }
 
-  public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+  public Optional<MDObject> getMdObject() {
+    return getServerContext().getConfiguration().findChild(getUri());
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -327,11 +325,19 @@ public class DocumentContext {
 
 
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleType(uri);
+    var module = ((ModuleOwner) context.getConfiguration()).getModuleByUri(uri);
+    if (module.isPresent()) {
+      return module.get().getModuleType();
+    }
+    return ModuleType.UNKNOWN;
   }
 
-  private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
-    return context.getConfiguration().getModuleSupport(uri);
+  private SupportVariant computeSupportVariant() {
+    var module = ((ModuleOwner) context.getConfiguration()).getModuleByUri(uri);
+    if (module.isPresent()) {
+      return module.get().getSupportVariant();
+    }
+    return SupportVariant.NONE;
   }
 
   private ComplexityData computeCognitiveComplexity() {
@@ -345,7 +351,7 @@ public class DocumentContext {
   }
 
   private MetricStorage computeMetrics() {
-    MetricStorage metricsTemp = new MetricStorage();
+    var metricsTemp = new MetricStorage();
     final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));

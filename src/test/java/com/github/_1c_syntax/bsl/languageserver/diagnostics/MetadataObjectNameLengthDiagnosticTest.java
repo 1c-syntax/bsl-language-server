@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
-  private AbstractMDObjectBase module;
+  private MDObject module;
   private DocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {
@@ -152,7 +152,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
     documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
-    module = spy(Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
+    module = spy((MDObject) Objects.requireNonNull(context).getConfiguration().findChild(documentContext.getUri()).get());
   }
 
   static Stream<Arguments> contentProvider() {

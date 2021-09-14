@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 
 @DirtiesContext
 class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameClientServerDiagnostic> {
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
 
   CommonModuleNameClientServerDiagnosticTest() {
@@ -178,7 +178,7 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
     ));
 
 
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
 
   }
 }

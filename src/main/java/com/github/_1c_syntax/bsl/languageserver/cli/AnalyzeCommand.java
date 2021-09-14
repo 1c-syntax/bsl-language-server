@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,22 +147,22 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   public Integer call() {
 
-    Path workspaceDir = Absolute.path(workspaceDirOption);
+    var workspaceDir = Absolute.path(workspaceDirOption);
     if (!workspaceDir.toFile().exists()) {
       LOGGER.error("Workspace dir `{}` is not exists", workspaceDir);
       return 1;
     }
 
-    Path srcDir = Absolute.path(srcDirOption);
+    var srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
       LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 
-    File configurationFile = new File(configurationOption);
+    var configurationFile = new File(configurationOption);
     configuration.update(configurationFile);
 
-    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
@@ -191,7 +190,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
-    Path outputDir = Absolute.path(outputDirOption);
+    var outputDir = Absolute.path(outputDirOption);
     aggregator.report(analysisInfo, outputDir);
     return 0;
   }
@@ -208,13 +207,13 @@ public class AnalyzeCommand implements Callable<Integer> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent, 1);
+    var documentContext = context.addDocument(file.toURI(), textDocumentContent, 1);
 
-    Path filePath = srcDir.relativize(Absolute.path(file));
+    var filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
-    String mdoRef = "";
-    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
+    var mdoRef = "";
+    Optional<MDObject> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
       mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     }

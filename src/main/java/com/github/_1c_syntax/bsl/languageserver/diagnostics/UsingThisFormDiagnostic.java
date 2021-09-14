@@ -32,14 +32,13 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
@@ -161,7 +160,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
-    Range range = diagnostic.getRange();
+    var range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 
     if (ONLY_RU_PATTERN.matcher(currentText).matches()) {

@@ -28,8 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
@@ -65,15 +65,16 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
 
   private void checkProperties(Range range) {
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (!configuration.isUseManagedFormInOrdinaryApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
-    }
+    var configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration instanceof Configuration) {
+      if (!((Configuration) configuration).isUseManagedFormInOrdinaryApplication()) {
+        diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
+      }
 
-    if (configuration.isUseOrdinaryFormInManagedApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("ordinaryFormInManagedApp"));
+      if (((Configuration) configuration).isUseOrdinaryFormInManagedApplication()) {
+        diagnosticStorage.addDiagnostic(range, info.getResourceString("ordinaryFormInManagedApp"));
+      }
     }
-
   }
 
 }

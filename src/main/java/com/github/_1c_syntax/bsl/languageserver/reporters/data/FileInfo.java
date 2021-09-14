@@ -24,13 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.reporters.data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,11 +45,11 @@ public class FileInfo {
   MetricStorage metrics;
 
   public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
-    URI uri = documentContext.getUri();
+    var uri = documentContext.getUri();
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
-    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
+    Optional<MDObject> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
       mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     } else {

@@ -28,8 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -128,7 +129,8 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
     var configuration = documentContext.getServerContext().getConfiguration();
     // если использование синхронных вызовов разрешено (без предупреждение), то
     // ничего не диагностируется
-    if (configuration.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
+    if (configuration instanceof Configuration
+      && ((Configuration) configuration).getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
       return ctx;
     }
 

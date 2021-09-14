@@ -24,7 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -117,7 +118,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
-    var configuration = spy(context.getConfiguration());
+    var configuration = spy((Configuration) context.getConfiguration());
     when(configuration.getModalityUseMode()).thenReturn(useMode);
     when(context.getConfiguration()).thenReturn(configuration);
 
