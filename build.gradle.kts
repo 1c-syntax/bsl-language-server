@@ -192,7 +192,10 @@ tasks.processResources {
 tasks.javadoc {
     options {
         this as StandardJavadocDocletOptions
-        links("https://1c-syntax.github.io/mdclasses/dev/javadoc")
+        links(
+            "https://1c-syntax.github.io/mdclasses/dev/javadoc",
+            "https://www.antlr.org/api/Java"
+        )
     }
 }
 
