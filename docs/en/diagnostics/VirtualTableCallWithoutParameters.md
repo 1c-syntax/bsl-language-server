@@ -2,7 +2,7 @@
 
 |  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Error` | `BSL` | `Важный` |             `Yes`             |           `5`           | `sql`<br>`standard`<br>`performance` |
+| `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           | `sql`<br>`standard`<br>`performance` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
