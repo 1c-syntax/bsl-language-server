@@ -1,64 +1,63 @@
-# Все возможные пути выполнения функции должны содержать оператор Возврат (AllFunctionPathMustHaveReturn)
+# All execution paths of a function must have a Return statement (AllFunctionPathMustHaveReturn)
 
-|      Тип      | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) |                             Теги                             |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------------:|
-| `Дефект кода` |      `BSL`<br>`OS`      | `Важный` |              `Да`              |                 `1`                 | `unpredictable`<br>`badpractice`<br>`suspicious` |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                             Tags                             |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------------:|
+| `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `1`           | `unpredictable`<br>`badpractice`<br>`suspicious` |
 
-## Параметры
+## Parameters
 
 
-|            Имя             |   Тип    |                                                                        Описание                                                                        | Значение<br>по умолчанию |
-|:--------------------------:|:--------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------:|
-| `loopsExecutedAtLeastOnce` | `Булево` |                                                `Считать, что циклы выполняются, как минимум, один раз.`                                                |             `true`             |
-| `ignoreMissingElseOnExit`  | `Булево` | `Игнорировать блоки Если-ИначеЕсли, которые не имеют ветки Иначе. Отключите, если нужно детектировать выход из метода по ложному условию в ИначеЕсли.` |            `false`             |
+|            Name            |   Type    |                                                     Description                                                     | Default value |
+|:--------------------------:|:---------:|:-------------------------------------------------------------------------------------------------------------------:|:-------------:|
+| `loopsExecutedAtLeastOnce` | `Boolean` |                                      `Assume loops are executed at least once`                                      |    `true`     |
+| `ignoreMissingElseOnExit`  | `Boolean` | `Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False.` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
-Каждая функция в языке 1С имеет в самом конце неявный оператор "Возврат Неопределено". Если управление доходит до конца функции, то функция возвращает неопределено.
+## Description
+Functions should not have an implicit return. All returned values must be shown excplicitly.
 
 Как правило, это не является штатным функционированием, программист должен явно описать все возвращаемые значения функции. Однако, довольно легко пропустить ситуацию, при которой управление дойдет до строки КонецФункции и вернется непредусмотренное значение Неопределено.
 
 Данная диагностика проверяет, что все возможные пути выполнения функции имеют явный оператор Возврат и функция не возвращает непредвиденных значений.
 
-## Примеры
+## Examples
 
-### Неправильно
+### Incorrect
 
 ```bsl
-// если ставка заполнена, но не НДС10 и не НДС10 - вернется Неопределено
-// это может быть, как запланированное поведение, 
-// так и ошибка проверки прочих вариантов.
-Функция ОпределитьСтавкуНДС(Знач Ставка)
-    Если Ставка = Перечисления.СтавкиНДС.НДС20 Тогда
-        Возврат 20;
-    ИначеЕсли Ставка = Перечисления.СтавкиНДС.НДС10 Тогда
-        Возврат 10;
-    ИначеЕсли Не ЗначениеЗаполнено(Ставка) Тогда
-        Возврат Константы.СтавкаНДСПоУмолчанию.Получить();
-    КонецЕсли;
+// if the rate is full, but not Tax10 not Tax10 - returns Undefined
+// this could be error or planned behavior
+Function DefineTaxRate(Val Rate)
+    If Rate = Enums.TaxRates.Tax20 Then
+        Return 20;
+    ElsIf Rate = Enums.TaxRates.Tax10 Then
+        Return 10;
+    ElsIf Not ValueIsFilled(Rate) Then
+        Return Constants.DefaultTaxRate.Get();
+    EndIf;
 
-    // здесь будет неявный возврат Неопределено
-КонецФункции
+    // implicit return Undefined
+EndFunction
 ```
 
-### Правильно
+### Correct
 
 ```
-// явно указать намерение вернуть результат в конце функции.
-Функция ОпределитьСтавкуНДС(Знач Ставка)
-    Если Ставка = Перечисления.СтавкиНДС.НДС20 Тогда
-        Возврат 20;
-    ИначеЕсли Ставка = Перечисления.СтавкиНДС.НДС10 Тогда
-        Возврат 10;
-    ИначеЕсли Не ЗначениеЗаполнено(Ставка) Тогда
-        Возврат Константы.СтавкаНДСПоУмолчанию.Получить();
-    КонецЕсли;
+// explicitly specify the intention to return the result in the end of the function.
+Function DefineTaxRate(Val Rate)
+    If Rate = Enums.TaxRates.Tax20 Then
+        Return 20;
+    ElsIf Rate = Enums.TaxRates.Tax10 Then
+        Return 10;
+    ElsIf Not ValueIsFilled(Rate) Then
+        Return Constants.DefaultTaxRate.Get();
+    EndIf;
 
-    // Явно декларируем намерение вернуть Неопределено
-    Возврат Неопределено;
-КонецФункции
+    // explicit return
+    Return Undefined;
+EndFunction
 ```
 
-### Еще пример ошибочного кода:
+### Another example of incorrect code:
 
 ```bsl
 Функция СуммаСкидки(Знач КорзинаЗаказа)
@@ -73,17 +72,17 @@
 КонецФункции
 ```
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:AllFunctionPathMustHaveReturn-off
 // BSLLS:AllFunctionPathMustHaveReturn-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
 "AllFunctionPathMustHaveReturn": {
