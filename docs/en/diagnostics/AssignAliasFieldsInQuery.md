@@ -8,18 +8,18 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Рекомендуется указывать и необязательные конструкции запроса, прежде всего - явно назначать псевдонимы полям, в целях повышения наглядности текста запроса и "устойчивости" использующего его кода. Например, если в алгоритме используется запрос с полем, объявленным как
+It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it. For example, if the algorithm uses a query with a field declared as
 
 ```bsl
 CashBox.Currency
 ```
-при изменении имени реквизита нужно будет также изменить и код, осуществляющий обращение по имени свойства Валюта к выборке из результата запроса. If the field is declared as
+when changing the name of the attribute, you will also need to change the code that calls the selection from the query result by the name of the Currency property. If the field is declared as
 ```bsl
 CashBox.Currency As Currency
 ```
 then changing the attribute name will only change the request text.
 
-Особенно внимательно следует относиться к автоматически присваиваемым псевдонимам для полей – реквизитов других полей, типа "... Касса.Валюта.Наименование...". В приведенном выше примере поле получит автоматический псевдоним ВалютаНаименование, а не Наименование.
+You should be especially careful about automatically assigned aliases for fields - attributes of other fields, such as "... CashBox.Currency.Name...". In the above example, the field will be automatically getting aliased CurrencyName, but not Name.
 
 Be sure to include the AS keyword before the alias of the source field.
 
