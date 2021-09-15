@@ -37,7 +37,7 @@ correct
 SendMessage("en = 'Hi!'");
 ```
 
-## Sources
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
