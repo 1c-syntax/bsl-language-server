@@ -78,7 +78,7 @@ SORT BY
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Parameter for config
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:SelectTopWithoutOrderBy-off
