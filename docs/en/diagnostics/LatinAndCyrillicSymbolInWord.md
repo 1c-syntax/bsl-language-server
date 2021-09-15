@@ -18,8 +18,8 @@
 Do not use identifiers consisting of characters from different languages, вecause it makes it difficult to use them further, forcing to switch the layout.  
 Also, the diagnostics detects the erroneous use of characters from another language, when it was used unintentionally. For exaple: `o`, `c`, `B`, `p` and etc.
 
-Для снижения "шума" на именах состоящих из нескольких слов, начинающихся либо заканчивающихся на слово на другом языке, в диагностику добавлен параметр, включенный по умолчанию.  
-Если параметр включен, то **НЕ** считаются ошибочными имена вида `ZebraДрайвер`, `КодHTTP`, `SMSШлюз` и подобные им.
+To reduce "noise" in the names consisting of several words beginning or ending in the word in another language, in the diagnostics option has been added that is included by default.  
+If the parameter is enabled, then **NOT** are considered erroneous names like `ZebraDriver`, `CodeHTTP`, `SMSGateway`and the like.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
