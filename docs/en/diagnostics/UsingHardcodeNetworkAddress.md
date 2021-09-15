@@ -7,17 +7,17 @@
 ## Parameters
 
 
-|              Name               |   Type   |                                  Description                                  |                                  Default value                                  |
-|:-------------------------------:|:--------:|:-----------------------------------------------------------------------------:|:-------------------------------------------------------------------------------:|
-|     `searchWordsExclusion`      | `String` |                       `Keywords to exclude from search`                       | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` |
-| `searchPopularVersionExclusion` | `String` | `Регулярное выражение для исключения популярных версий при поиске IP адресов` |                             `^(1|2|3|8\.3|11)\.`                              |
+|              Name               |   Type   |                                  Description                                   |                                  Default value                                  |
+|:-------------------------------:|:--------:|:------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------:|
+|     `searchWordsExclusion`      | `String` |                       `Keywords to exclude from search`                        | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` |
+| `searchPopularVersionExclusion` | `String` | `Pattern to exclude popular versions from search when looking up IP addresses` |                             `^(1|2|3|8\.3|11)\.`                              |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It's forbidden to store in code:
 
-* Сетевые адреса (ip6, ip4)
+* Network addresses (ip6, ip4)
 
 There are several ways to properly store such information:
 
