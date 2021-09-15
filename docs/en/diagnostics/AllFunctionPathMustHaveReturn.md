@@ -15,9 +15,9 @@
 ## Description
 Functions should not have an implicit return. All returned values must be shown excplicitly.
 
-Как правило, это не является штатным функционированием, программист должен явно описать все возвращаемые значения функции. Однако, довольно легко пропустить ситуацию, при которой управление дойдет до строки КонецФункции и вернется непредусмотренное значение Неопределено.
+As a rule, this is not a normal operation; the programmer must explicitly describe all return values of the function. However, it is quite easy to overlook a situation in which control reaches the EndFunction line and returns an unexpected Undefined value.
 
-Данная диагностика проверяет, что все возможные пути выполнения функции имеют явный оператор Возврат и функция не возвращает непредвиденных значений.
+This diagnostics checks that all possible paths of the function execution have an explicit Return statement and the function does not return unexpected values.
 
 ## Examples
 
@@ -60,16 +60,16 @@ EndFunction
 ### Another example of incorrect code:
 
 ```bsl
-Функция СуммаСкидки(Знач КорзинаЗаказа)
-    Если КорзинаЗаказа.Строки.Количество() > 10 Тогда
-        Возврат Скидки.СкидкаНаКрупнуюКорзину(КорзинаЗаказа);
-    ИначеЕсли КорзинаЗаказа.ЕстьКартаЛояльности Тогда
-        // функция возвращает непредусмотренное значение Неопределено
-        Скидки.СкидкаПоКартеЛояльности(КорзинаЗаказа);
-    Иначе 
-        Возврат 0;
-    КонецЕсли;
-КонецФункции
+Function DiscountAmount(Val OrderBasket)
+    If OrderBasket.Rows.Count() > 10 Then
+        Return Discounts.DiscountOnBigBasket(OrderBasket);
+    ElsIf OrderBasket.IsCustomerCard Then
+        // function returns an unintended value is Undefined
+        Discounts.DiscountByCustomerCard(OrderBasket);
+    Else 
+        Return 0;
+    EndIf;
+EndFunction
 ```
 
 ## Snippets
