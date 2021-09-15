@@ -1,4 +1,4 @@
-# Назначение псевдонимов выбранным полям в запросе (AssignAliasFieldsInQuery)
+# Assigning aliases to selected fields in a query (AssignAliasFieldsInQuery)
 
 |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
@@ -13,66 +13,66 @@
 ```bsl
 CashBox.Currency
 ```
-при изменении имени реквизита нужно будет также изменить и код, осуществляющий обращение по имени свойства Валюта к выборке из результата запроса. Если же поле будет объявлено как
+при изменении имени реквизита нужно будет также изменить и код, осуществляющий обращение по имени свойства Валюта к выборке из результата запроса. If the field is declared as
 ```bsl
 CashBox.Currency As Currency
 ```
-то изменение имени реквизита приведет только к изменению текста запроса.
+then changing the attribute name will only change the request text.
 
 Особенно внимательно следует относиться к автоматически присваиваемым псевдонимам для полей – реквизитов других полей, типа "... Касса.Валюта.Наименование...". В приведенном выше примере поле получит автоматический псевдоним ВалютаНаименование, а не Наименование.
 
-Следует обязательно указывать ключевое слово КАК перед псевдонимом поля источника.
+Be sure to include the AS keyword before the alias of the source field.
 
-Псевдонимы таблиц и полей из вторичных запросов из "ОБЪЕДИНИТЬ" диагностикой не проверяются.
+The aliases of tables and fields from secondary queries from "UNION" are not checked by the diagnostics.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
  ```bsl   
-    Запрос = Новый Запрос;
-    Запрос.Текст =
-    "ВЫБРАТЬ
-    |   Валюты.Ссылка, // Неправильно
-    |   Валюты.Ссылка КАК ПсевдонимПоляСсылка, // Правильно
-    |   Валюты.Код Код // Неправильно
-    |ИЗ
-    |   Справочник.Валюты КАК Валюты // Игнорируется
-    |
-    |ОБЪЕДИНИТЬ ВСЕ
-    |
-    |ВЫБРАТЬ
-    |   Валюты.Ссылка, // Игнорируется
-    |   Валюты.Ссылка, // Игнорируется
-    |   Валюты.Код // Игнорируется
-    |ИЗ
-    |   Справочник.Валюты КАК Валюты // Игнорируется
-    |;
-    |
-    |////////////////////////////////////////////////////////////////////////////////
-    |ВЫБРАТЬ
-    |   Валюты.Ссылка, // Неправильно
-    |   Валюты.Ссылка КАК ПсевдонимПоляСсылка, // Правильно
-    |   Валюты.Код Код // Неправильно
-    |ИЗ
-    |   Справочник.Валюты КАК Валюты // Игнорируется
-    |
-    |ОБЪЕДИНИТЬ ВСЕ
-    |
-    |ВЫБРАТЬ
-    |   Валюты.Ссылка, // Игнорируется
-    |   Валюты.Ссылка, // Игнорируется
-    |   Валюты.Код // Игнорируется
-    |ИЗ
-    |   Справочник.Валюты КАК Валюты"; // Игнорируется
+    Query = New Query;
+Query.Text =
+"SELECT
+|   Currencies.Ref, // Incorrectly
+|   Currencies.Ref AS AliasFieldsRef, // Correctly
+|   Currencies.Code Code // Incorrectly
+|FROM
+|   Catalog.Currencies AS Currencies // Ignored
+|
+|UNION ALL
+|
+|SELECT
+|   Currencies.Ref, // Ignored
+|   Currencies.Ref, // Ignored
+|   Currencies.Code // Ignored
+|FROM
+|   Catalog.Currencies AS Currencies // Ignored
+|;
+|
+|////////////////////////////////////////////////////////////////////////////////
+|SELECT
+|   Currencies.Ref, // Incorrectly
+|   Currencies.Ref AS AliasFieldsRef, // Correctly
+|   Currencies.Code Code // Incorrectly
+|FROM
+|   Catalog.Currencies AS Currencies // Ignored
+|
+|UNION ALL
+|
+|SELECT
+|   Currencies.Ref, // Ignored
+|   Currencies.Ref, // Ignored
+|   Currencies.Code // Ignored
+|FROM
+|   Catalog.Currencies AS Currencies"; // Ignored
 
-    Запрос1 = Новый Запрос;
-    Запрос1.Текст =
-    "ВЫБРАТЬ
-    |   ВложенныйЗапрос.Ссылка КАК Ссылка // Правильно
-    |ИЗ
-    |   (ВЫБРАТЬ
-    |       Валюты.Ссылка // Неправильно
-    |   ИЗ
-    |       Справочник.Валюты КАК Валюты) КАК ВложенныйЗапрос"; // Игнорируется 
+Query1 = New Query;
+Query1.Text =
+"SELECT
+|   NestedRequest.Ref AS Ref // Correctly
+|FROM
+|   (SELECT
+|       Currencies.Ref // Incorrectly
+|   FROM
+|       Catalog.Currencies AS Currencies) AS NestedRequest"; // Ignored 
   ```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
