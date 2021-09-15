@@ -5,7 +5,7 @@
 | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           | `brainoverload`<br>`suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostics description
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 A common module must have at least one export method and region "Public" or "Internal".
