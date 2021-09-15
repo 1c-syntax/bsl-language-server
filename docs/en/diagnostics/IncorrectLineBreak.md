@@ -7,12 +7,12 @@
 ## Parameters
 
 
-|             Name             |   Type    |                                                         Description                                                          |         Default value         |
-|:----------------------------:|:---------:|:----------------------------------------------------------------------------------------------------------------------------:|:-----------------------------:|
-|      `checkFirstSymbol`      | `Boolean` |                                      `Проверять начало строки на некорректные символы`                                       |            `true`             |
-| `listOfIncorrectFirstSymbol` | `String`  |   `Символы через вертикальную черту, с которых не должна начинаться строка (специальные символы должны быть экранированы)`   |        `\)|;|,|\);`         |
-|      `checkLastSymbol`       | `Boolean` |                                       `Проверять конец строки на некорректные символы`                                       |            `true`             |
-| `listOfIncorrectLastSymbol`  | `String`  | `Символы через вертикальную черту, на которые не должна заканчиваться строка (специальные символы должны быть экранированы)` | `ИЛИ|И|OR|AND|\+|-|/|%|\*` |
+|             Name             |   Type    |                                               Description                                               |         Default value         |
+|:----------------------------:|:---------:|:-------------------------------------------------------------------------------------------------------:|:-----------------------------:|
+|      `checkFirstSymbol`      | `Boolean` |                            `Check beginning of line for invalid characters`                             |            `true`             |
+| `listOfIncorrectFirstSymbol` | `String`  | `Vertical bar-separated characters that should not start the line (special characters must be escaped)` |        `\)|;|,|\);`         |
+|      `checkLastSymbol`       | `Boolean` |                               `Check end of line for invalid characters`                                |            `true`             |
+| `listOfIncorrectLastSymbol`  | `String`  | `Vertical bar-separated characters that must not end in the line (special characters must be escaped)`  | `ИЛИ|И|OR|AND|\+|-|/|%|\*` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
