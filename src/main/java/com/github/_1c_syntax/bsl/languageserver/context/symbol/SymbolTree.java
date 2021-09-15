@@ -58,6 +58,12 @@ public class SymbolTree {
   List<MethodSymbol> methods = createMethods();
 
   /**
+   * Список переменных документа
+   */
+  @Getter(lazy = true)
+  List<VariableSymbol> variables = createVariables();
+
+  /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
    */
   public List<SourceDefinedSymbol> getChildren() {
@@ -138,13 +144,6 @@ public class SymbolTree {
   }
 
   /**
-   * @return плоский список всех переменных документа.
-   */
-  public List<VariableSymbol> getVariables() {
-    return getChildrenFlat(VariableSymbol.class);
-  }
-
-  /**
    * Попытка поиска символа переменной по узлу дерева разбора.
    * <p>
    * Implementation note Поиск осуществляется по месту определения переменной (declaration).
@@ -202,6 +201,10 @@ public class SymbolTree {
 
   private List<MethodSymbol> createMethods() {
     return getChildrenFlat(MethodSymbol.class);
+  }
+
+  private List<VariableSymbol> createVariables() {
+    return getChildrenFlat(VariableSymbol.class);
   }
 
   private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
