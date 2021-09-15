@@ -10,7 +10,7 @@
 |                 Name                  |   Type    |                            Description                             |                                                                             Default value                                                                              |
 |:-------------------------------------:|:---------:|:------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |            `excludeWords`             | `String`  | `A list of exclusion words, specified as a comma-separated string` | `ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси` |
-| `allowTrailingPartsInAnotherLanguage` | `Boolean` | `Разрешить начинать или заканчивать имя со слова на другом языке`  |                                                                                 `true`                                                                                 |
+| `allowTrailingPartsInAnotherLanguage` | `Boolean` |   `Allow a name to start or end with a word in another language`   |                                                                                 `true`                                                                                 |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
