@@ -4,7 +4,7 @@ Reporter option - `sarif`
 
 ## Description
 
-Output the analysis results into file `bsl-ls.sarif` in the current working directory. OASIS file format is specified and available here: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
+Output the analysis results into file `bsl-ls.sarif` in the current working directory. File format is specified by OASIS and available here: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
 ## Sample output
 
