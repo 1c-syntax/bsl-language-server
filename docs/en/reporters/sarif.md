@@ -21,10 +21,10 @@ Output the analysis results into file `bsl-ls.sarif` in the current working dire
         "informationUri" : "https://1c-syntax.github.io/bsl-language-server",
         "rules" : [ {
           "id" : "MissingSpace",
-          "name" : "Пропущены пробелы слева или справа от операторов",
+          "name" : "Missing spaces to the left or right of operators",
           "fullDescription" : {
-            "text" : "# Пропущены пробелы слева или справа от операторов",
-            "markdown" : "# Пропущены пробелы слева или справа от операторов"
+            "text" : "# Missing spaces to the left or right of operators",
+            "markdown" : "# Missing spaces to the left or right of operators"
           },
           "defaultConfiguration" : {
             "level" : "none",
@@ -41,7 +41,7 @@ Output the analysis results into file `bsl-ls.sarif` in the current working dire
             "tags" : [ "BADPRACTICE" ]
           }
         } ],
-        "language" : "ru"
+        "language" : "en"
       }
     },
     "invocations" : [ {
