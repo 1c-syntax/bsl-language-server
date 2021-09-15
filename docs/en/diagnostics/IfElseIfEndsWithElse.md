@@ -7,35 +7,35 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Правило применяется всякий раз, когда условный оператор **Если Тогда ИначеЕсли** содержит одну или несколько конструкций **ИначеЕсли**. За последней конструкцией **ИначеЕсли** должна следовать конструкция **Иначе**.
+The rule is applied whenever the conditional operator **If Then ElseIf** contains one or more blocks **ElseIf **. After block **ElseIf** must be followed by block **Else**.
 
-Требование к заключительной конструкции **Иначе** - это защитное программирование. Такие конструкции устойчивы к возможным изменениям и не маскируют возможные ошибки.
+The requirement to the final block**Else** - it protective programming. Such constructions are resistant to possible changes and do not mask possible errors.
 
-Конструкция **Иначе** должна либо принимать соответствующие меры, либо содержать подходящий комментарий относительно того, почему не предпринимается никаких действий.
+The construct **Else** must either take appropriate action or contain a suitable comment as to why no action is being taken.
 
 
 ## Examples
 
-Неправильно:
+Incorrect:
 
 ```bsl
-Если ТипЗнч(ВходящийПараметр) = Тип("Структура") Тогда
-    Результат = ЗаполнитьПоСтруктуре(ВходящийПараметр);
-ИначеЕсли ТипЗнч(ВходящийПараметр) = Тип("Документ.Ссылка.ВажныйДокумент") Тогда
-    Результат = ЗаполнитьПоДокументу(ВходящийПараметр);
-КонецЕсли;
+If TypeOf(InputParameter) = Type("Structure") Then
+    Result = FillByStructure(InputParameter);
+ElsIf TypeOf(InputParameter) = Type("Document.Ref.MajorDocument") Then
+    Result = FillByDocument(InputParameter);
+EndIf;
 ```
 
-Правильно:
+Correct:
 
 ```bsl
-Если ТипЗнч(ВходящийПараметр) = Тип("Структура") Тогда
-    Результат = ЗаполнитьПоСтруктуре(ВходящийПараметр);
-ИначеЕсли ТипЗнч(ВходящийПараметр) = Тип("Документ.Ссылка.ВажныйДокумент") Тогда
-    Результат = ЗаполнитьПоДокументу(ВходящийПараметр);
-Иначе
-    ВызватьИсключение "Передан параметр неверного типа";
-КонецЕсли;
+If TypeOf(InputParameter) = Type("Structure") Then
+    Result = FillByStructure(InputParameter);
+ElsIf TypeOf(InputParameter) = Type("Document.Ref.MajorDocument") Then
+    Result = FillByDocument(InputParameter);
+Else
+    Raise "Parameter of invalid type passed";
+EndIf;
 ```
 
 ## Snippets
