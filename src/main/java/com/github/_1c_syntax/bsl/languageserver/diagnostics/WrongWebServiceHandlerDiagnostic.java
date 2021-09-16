@@ -62,14 +62,13 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
   private void processModuleWithRange(Range range) {
     diagnosticRange = range;
 
-    try {
-      documentContext.getMdObject()
-        .filter(MDWebService.class::isInstance)
-        .map(MDWebService.class::cast)
-        .ifPresent(this::checkService);
-    } finally {
-      diagnosticRange = null;
-    }
+    documentContext.getMdObject()
+      .filter(MDWebService.class::isInstance)
+      .map(MDWebService.class::cast)
+      .ifPresent(this::checkService);
+
+    diagnosticRange = null;
+
   }
 
   private void checkService(MDWebService mdWebService) {

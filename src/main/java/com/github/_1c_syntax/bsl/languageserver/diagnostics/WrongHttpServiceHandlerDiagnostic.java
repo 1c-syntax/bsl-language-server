@@ -63,14 +63,12 @@ public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
   private void processModuleWithRange(Range range) {
     diagnosticRange = range;
 
-    try {
-      documentContext.getMdObject()
-        .filter(MDHttpService.class::isInstance)
-        .map(MDHttpService.class::cast)
-        .ifPresent(this::checkService);
-    } finally {
-      diagnosticRange = null;
-    }
+    documentContext.getMdObject()
+      .filter(MDHttpService.class::isInstance)
+      .map(MDHttpService.class::cast)
+      .ifPresent(this::checkService);
+
+    diagnosticRange = null;
   }
 
   private void checkService(MDHttpService mdHttpService) {
