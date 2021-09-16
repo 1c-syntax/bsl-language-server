@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631783521408,
+  "lastUpdate": 1631791063485,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13175,6 +13175,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.012733806288935",
             "extra": "mean: 79.40549341837566 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "06b9e00a64ea69b11590549630f54fa92f2b46b7",
+          "message": "Автоматический релиз в maven central",
+          "timestamp": "2021-09-16T14:09:06+03:00",
+          "tree_id": "9a1f93536beeefff29bebe9f50bf856f8804c220",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/06b9e00a64ea69b11590549630f54fa92f2b46b7"
+        },
+        "date": 1631791060788,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.78447731335957,
+            "unit": "sec",
+            "range": "stddev: 2.306151020001426",
+            "extra": "mean: 79.78447731335957 sec\nrounds: 3"
           }
         ]
       }
