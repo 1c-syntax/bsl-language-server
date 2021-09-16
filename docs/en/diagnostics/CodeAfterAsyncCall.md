@@ -16,21 +16,20 @@
 
 Incorrect code
 ```bsl
-&НаКлиенте
-Процедура Команда1(Команда)
-    ДополнительныеПараметры = Новый Структура("Результат", 10);
-    Оповещение = Новый ОписаниеОповещения("ПослеВводаКоличества", ЭтотОбъект);
-    ПоказатьВводЧисла(Оповещение, 1, "Введите количество", ДополнительныеПараметры.Результат, 2);
+&AtClient
+Procedure Command1(Command)
+	AdditionalParameters = New Structure("Result", 10);
+	Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
+	
+	Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
+EndProcedure
 
-    Сообщить("Введенное количество равно " + ДополнительныеПараметры.Результат); // неверно, т.к. всегда будет 10
-КонецПроцедуры
-
-&НаКлиенте
-Процедура ПослеВводаКоличества(Число, ДополнительныеПараметры) Экспорт
-    Если Число <> Неопределено Тогда
-         ДополнительныеПараметры.Результат = Число;
-    КонецЕсли;
-КонецПроцедуры;
+&AtClient
+Procedure AfterNumberWereInputted(Number, AdditionalParameters) Export
+	If Number <> Undefined Then
+		AdditionalParameters.Result = Number;
+	EndIf;
+EndProcedure;
 ```
 
 Correct code
