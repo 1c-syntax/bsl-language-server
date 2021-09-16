@@ -193,8 +193,9 @@ tasks.javadoc {
     options {
         this as StandardJavadocDocletOptions
         links(
+            "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://www.antlr.org/api/Java"
+            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
         )
     }
 }
