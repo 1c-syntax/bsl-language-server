@@ -1,6 +1,6 @@
 # Not recommended using of RollbackTransaction method (WrongUseOfRollbackTransactionMethod)
 
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
+|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |           `1`           | `standard` |
 

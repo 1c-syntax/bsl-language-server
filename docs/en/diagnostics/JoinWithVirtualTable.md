@@ -1,8 +1,8 @@
 # Join with virtual table (JoinWithVirtualTable)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `10`           | `sql`<br>`standard`<br>`performance` |
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `10`           |       `sql`<br>`standard`<br>`performance`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -1,8 +1,8 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
-|     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |      Tags       |
+|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
 |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `25`           | `brainoverload` |
+| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `25`           | `brainoverload` |
 
 ## Parameters
 
