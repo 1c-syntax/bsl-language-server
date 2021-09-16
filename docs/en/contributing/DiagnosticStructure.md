@@ -11,7 +11,7 @@ This article contains rules of diagnostics usage, creation and information about
     - [Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics test class](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
     - [Diagnostics test](#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-    - [Test of configuration method for parametrized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
+    - [Test of configuration method for parameterized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
     - [Quick fixes test **(Work in progress)**](#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
   - [Diagnostics test resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
@@ -19,13 +19,13 @@ This article contains rules of diagnostics usage, creation and information about
 
 ## Diagnostics structure
 
-Diagnostics consists of a set of files, which are described in detail in the sections below.   
+Diagnostics consists of a set of files, which are described in detail in the sections below.  
 The required set of files as part of the diagnostics at the time of this writing and the rules for their naming
 
-- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic.java `
-- Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key% ` + ` DiagnoscticTest.java `
-- Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
-- Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
+- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key%` + `Diagnosctic.java`
+- Diagnostics test class.                      The file name is generated according to the principle `%DiagnosticKey%` + `DiagnoscticTest.java`
+- Diagnostic resource file in Russian.    The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic_en.properties`
+- Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic_en.properties`
 - Resource file (fixture) test.                The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic.bsl`
 - Diagnostic description file in Russian.   The file name is formed according to the principle `%DiagnosticKey%` + `.md`
 - Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `.md`
@@ -37,20 +37,20 @@ To create necessary files in right places, should run command `gradlew newDiagno
 
 Diagnostics is implemented by adding a java class to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/main/java` directory.
 
-In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _ (if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
+In the body of the file, you need to specify the package to which the class and the import block are added _(when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _(if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
 
 Each diagnostic must have a `@DiagnosticMetadata`, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
-На момент написания статьи имеются следующие свойства:
+At the time of this writing, the following properties are available:
 
-- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к [статье](DiagnosticTypeAndSeverity.md).
-- Время на исправление замечания `minutesToFix` (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.
-- Набор тэгов `tag` диагностики, указывающих группы, к котором она относится. Read more about tags in the [article](DiagnosticTag.md).
-- Границы применимости `scope` (по умолчанию `ALL`, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.
-- Default diagnostic active `activatedByDefault` (default `True`). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.
-- Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. The default is `UNDEFINED`.
+- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to [article](DiagnosticTypeAndSeverity.md).
+- Time to fix issue `minutesToFix` (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.
+- A set of diagnostics tags `tag` that indicate the group to which it belongs. Read more about tags in the [article](DiagnosticTag.md).
+- Applicability limit `scope` (by default `ALL`, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.
+- Default diagnostic active `activatedByDefault` (default `True`). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.
+- Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 
-Последние два могут быть опущены.
+The last two can be omitted.
 
 Annotation example
 
@@ -68,11 +68,11 @@ Annotation example
 )
 ```
 
-Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
+Class should implement the interface `BSLDiagnostic`. If diagnostic bases on AST, that class should extends at one of classes, that implement `BSLDiagnostic` below:
 
-- для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
-- при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
-- в остальных случаях нужно использовать стратегию `визитера` и
+- for simple diagnostics (module context checking) it is worth using inheritance `AbstractVisitor` with the implementation of a single `check` method
+- if you need to analyze a visit to a node / sequence of nodes, use the `listener` strategy, you need to inherit the class from `AbstractListenerDiagnostic`
+- in other cases, you need to use the strategy `visitor` and
   - `AbstractVisitorDiagnostic` for diagnostics of 1C code
   - `AbstractSDBLVisitorDiagnostic` for diagnostics of 1C query
 
@@ -98,7 +98,7 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
-Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
+Diagnostic may provide so-called `quick fixes`. In order to provide quick fixes the diagnostic class must implement `QuickFixProvider` interface. See this [article](DiagnosticQuickFix.md) on adding a `quick fix` to diagnostic.
 
 Examples
 
@@ -122,9 +122,9 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
 ```
 
-После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в [статье](DiagnostcAddSettings.md).
+After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the [article](DiagnostcAddSettings.md).
 
-Ниже приведены отличия в реализации классов диагностик.
+Below are the differences in the implementation of diagnostic classes.
 
 ### Diagnostics class, implements BSLDiagnostic interface
 
@@ -300,7 +300,7 @@ Test method example
     }
 ```
 
-### Test of configuration method for parametrized diagnostics
+### Test of configuration method for parameterized diagnostics
 
 Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.  
 Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом `getDefaultDiagnosticConfiguration()`, используя информацию текущего объекта диагностики `diagnosticInstance.getInfo()`. Полученный результат представляет собой соответствие, в котором, методом `put`, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом `configure()` текущего объекта диагностики `diagnosticInstance`.

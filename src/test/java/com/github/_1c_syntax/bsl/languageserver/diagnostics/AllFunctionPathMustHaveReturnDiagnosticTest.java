@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -78,5 +80,46 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     assertThat(diagnostics, true)
       .hasRange(25, 8, 25, 19)
     ;
+  }
+
+  @Test
+  void testEmptyIfBodies() {
+    var sample = "Функция Тест()\n" +
+    "  Список = Новый СписокЗначений;\n" +
+    "  #Если Сервер Или ТолстыйКлиентОбычноеПриложение Или ВнешнееСоединение Тогда\n" +
+    "      Если Условие Тогда\n" +
+    "      Иначе\n" +
+    "      КонецЕсли;\n" +
+    "  #КонецЕсли\n" +
+    "  Возврат Список;\n" +
+    "КонецФункции";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+
+  }
+
+  @Test
+  void testExitByRaiseException() {
+    var sample =
+      "Функция Тест()\n" +
+      "Если Не ВебКлиент Тогда\n" +
+      "  Массив = Новый Массив;\n" +
+      "  Если Условие Тогда\n" +
+      "  Возврат Массив;\n" +
+      "  КонецЕсли;\n" +
+      "  Возврат ПустойМассив;\n" +
+      "#Иначе\n" +
+      "  ВызватьИсключение \"Упс\";\n" +
+      "#КонецЕсли\n" +
+      "КонецФункции";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+
   }
 }

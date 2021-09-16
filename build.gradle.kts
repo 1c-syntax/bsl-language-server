@@ -1,3 +1,4 @@
+import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
 
@@ -5,19 +6,21 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.1.0"
-    id("io.freefair.javadoc-links") version "6.1.0"
-    id("io.freefair.javadoc-utf-8") version "6.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.1.0"
-    id("io.freefair.maven-central.validate-poms") version "6.1.0"
+    id("io.freefair.lombok") version "6.2.0"
+    id("io.freefair.javadoc-links") version "6.2.0"
+    id("io.freefair.javadoc-utf-8") version "6.2.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.2.0"
+    id("io.freefair.maven-central.validate-poms") version "6.2.0"
     id("me.qoomon.git-versioning") version "5.1.0"
     id("com.github.ben-manes.versions") version "0.39.0"
     id("org.springframework.boot") version "2.5.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "d5920b5c1052ff1406a04132a24be5765e41c42e"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.5.0"
     id("ru.vyarus.pom") version "2.2.0"
+    id("io.codearte.nexus-staging") version "0.30.0"
 }
 
 repositories {
@@ -30,11 +33,11 @@ group = "io.github.1c-syntax"
 gitVersioning.apply {
     refs {
         considerTagsOnBranches = true
-        branch("^(?!v[0-9]+).*") {
-            version = "\${ref}-\${commit.short}\${dirty}"
-        }
         tag("v(?<tagVersion>[0-9].*)") {
-            version = "\${tagVersion}\${dirty}"
+            version = "\${ref.tagVersion}\${dirty}"
+        }
+        branch(".+") {
+            version = "\${ref}-\${commit.short}\${dirty}"
         }
     }
 
@@ -43,7 +46,9 @@ gitVersioning.apply {
     }
 }
 
-val languageToolVersion = "5.3"
+val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
+
+val languageToolVersion = "5.4"
 aspectj.version.set("1.9.7")
 
 dependencies {
@@ -58,7 +63,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "c0f9c91b119a1d4341e90a64a7aa8a4d9dc5d585") {
+    api("com.github.1c-syntax", "bsl-parser", "0.19.4") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -188,7 +193,11 @@ tasks.processResources {
 tasks.javadoc {
     options {
         this as StandardJavadocDocletOptions
-        links("https://1c-syntax.github.io/mdclasses/dev/javadoc")
+        links(
+            "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
+            "https://1c-syntax.github.io/mdclasses/dev/javadoc",
+            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
+        )
     }
 }
 
@@ -228,11 +237,41 @@ artifacts {
     archives(tasks["javadocJar"])
 }
 
+signing {
+    val signingInMemoryKey: String? by project      // env.ORG_GRADLE_PROJECT_signingInMemoryKey
+    val signingInMemoryPassword: String? by project // env.ORG_GRADLE_PROJECT_signingInMemoryPassword
+    if (signingInMemoryKey != null) {
+        useInMemoryPgpKeys(signingInMemoryKey, signingInMemoryPassword)
+        sign(publishing.publications)
+    }
+}
+
 publishing {
+    repositories {
+        maven {
+            name = "sonatype"
+            url = if (isSnapshot)
+                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            else
+                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+
+            val sonatypeUsername: String? by project
+            val sonatypePassword: String? by project
+
+            credentials {
+                username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
+                password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["bootJar"])
+
+            if (isSnapshot && project.hasProperty("simplifyVersion")) {
+                version = findProperty("git.ref.slug") as String + "-SNAPSHOT"
+            }
 
             pom {
                 description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
@@ -286,6 +325,11 @@ publishing {
             }
         }
     }
+}
+
+nexusStaging {
+    serverUrl = "https://s01.oss.sonatype.org/service/local/"
+    stagingProfileId = "15bd88b4d17915" // ./gradlew getStagingProfile
 }
 
 tasks.withType<GenerateModuleMetadata> {

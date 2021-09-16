@@ -99,6 +99,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
   private void checkAllPathsHaveReturns(BSLParser.FunctionContext ctx) {
     var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(false);
     var graph = builder.buildGraph(ctx.subCodeBlock().codeBlock());
 
     var exitNode = graph.vertexSet().stream()

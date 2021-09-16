@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **146**
+Общее количество: **145**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **46**
-* Дефект кода: **92**
+* Ошибка: **44**
+* Дефект кода: **93**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -23,6 +23,7 @@
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` 
+ [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | После вызова асинхронного метода есть строки кода | Нет | Важный | Дефект кода | `suspicious` 
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Определения методов должны размещаться перед операторами тела модуля | Да | Блокирующий | Ошибка | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Код расположен вне области | Да | Информационный | Дефект кода | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` 
@@ -159,8 +160,6 @@
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Важный | Ошибка | `sql`<br>`standard`<br>`performance` 
- [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Неверно задан обработчик метода http-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Некорректное использование функции ПродолжитьВызов() | Да | Блокирующий | Ошибка | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
- [WrongWebServiceHandler](WrongWebServiceHandler.md) | Неверно задан обработчик операции web-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 
