@@ -936,7 +936,7 @@
 </li>
 <li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics test class</a><ul>
 <li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics test</a></li>
-<li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba">Test of configuration method for parametrized diagnostics</a></li>
+<li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba">Test of configuration method for parameterized diagnostics</a></li>
 <li><a href="#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95">Quick fixes test <strong>(Work in progress)</strong></a></li>
 </ul>
 </li>
@@ -945,13 +945,13 @@
 <li><a href="#%d0%9e%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Diagnostics description</a></li>
 </ul>
 <h2 id="Diagnostics-structure">Diagnostics structure<a class="headerlink" href="#Diagnostics-structure" title="Permanent link">&para;</a></h2>
-<p>Diagnostics consists of a set of files, which are described in detail in the sections below. <br />
+<p>Diagnostics consists of a set of files, which are described in detail in the sections below.<br />
 The required set of files as part of the diagnostics at the time of this writing and the rules for their naming</p>
 <ul>
 <li>Diagnostic implementation class.                 The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic.java</code></li>
-<li>Diagnostics test class.                      The file name is generated according to the principle <code>% Diagnostic Key%</code> + <code>DiagnoscticTest.java</code></li>
-<li>Diagnostic resource file in Russian.    The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic_en.properties</code></li>
-<li>Diagnostic resource file in English. The file name is formed according to the principle <code>% Diagnostic Key%</code> + <code>Diagnosctic_en.properties</code></li>
+<li>Diagnostics test class.                      The file name is generated according to the principle <code>%DiagnosticKey%</code> + <code>DiagnoscticTest.java</code></li>
+<li>Diagnostic resource file in Russian.    The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>Diagnosctic_en.properties</code></li>
+<li>Diagnostic resource file in English. The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>Diagnosctic_en.properties</code></li>
 <li>Resource file (fixture) test.                The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>Diagnosctic.bsl</code></li>
 <li>Diagnostic description file in Russian.   The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>.md</code></li>
 <li>Diagnostic resource file in English. The file name is formed according to the principle <code>%DiagnosticKey%</code> + <code>.md</code></li>
@@ -960,18 +960,18 @@ The required set of files as part of the diagnostics at the time of this writing
 To create necessary files in right places, should run command <code>gradlew newDiagnostic --key="KeyDiagnostic"</code>, where <code>KeyDiagnostic</code> should be replaced with your own diagnostics key. Details in help <code>gradlew -q help --task newDiagnostic</code>.</p>
 <h2 id="Diagnostics-implementation-class">Diagnostics implementation class<a class="headerlink" href="#Diagnostics-implementation-class" title="Permanent link">&para;</a></h2>
 <p>Diagnostics is implemented by adding a java class to the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package in the <code>src/main/java</code> directory.</p>
-<p>In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)<em>. It is necessary to ensure that <strong>only</strong> is imported that is necessary for implementation, everything unused should be <strong>removed</strong> _ (if <a href="../EnvironmentSetting/">settings</a> are correct, then ide will do everything automatically)</em>.</p>
+<p>In the body of the file, you need to specify the package to which the class and the import block are added <em>(when using ide, the import list is updated automatically)</em>. It is necessary to ensure that <strong>only</strong> is imported that is necessary for implementation, everything unused should be <strong>removed</strong> <em>(if <a href="../EnvironmentSetting/">settings</a> are correct, then ide will do everything automatically)</em>.</p>
 <p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java">file</a>.</p>
-<p>На момент написания статьи имеются следующие свойства:</p>
+<p>At the time of this writing, the following properties are available:</p>
 <ul>
-<li>The type of diagnostics is <code>type</code> and its importance is <code>severity</code>, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к <a href="../DiagnosticTypeAndSeverity/">статье</a>.</li>
-<li>Время на исправление замечания <code>minutesToFix</code> (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.</li>
-<li>Набор тэгов <code>tag</code> диагностики, указывающих группы, к котором она относится. Read more about tags in the <a href="../DiagnosticTag/">article</a>.</li>
-<li>Границы применимости <code>scope</code> (по умолчанию <code>ALL</code>, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.</li>
-<li>Default diagnostic active <code>activatedByDefault</code> (default <code>True</code>). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.</li>
-<li>Режим совместимости <code>compatibilityMode</code>, по которому фильтруются диагностики при использовании метаданных. The default is <code>UNDEFINED</code>.</li>
+<li>The type of diagnostics is <code>type</code> and its importance is <code>severity</code>, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to <a href="../DiagnosticTypeAndSeverity/">article</a>.</li>
+<li>Time to fix issue <code>minutesToFix</code> (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.</li>
+<li>A set of diagnostics tags <code>tag</code> that indicate the group to which it belongs. Read more about tags in the <a href="../DiagnosticTag/">article</a>.</li>
+<li>Applicability limit <code>scope</code> (by default <code>ALL</code>, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.</li>
+<li>Default diagnostic active <code>activatedByDefault</code> (default <code>True</code>). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.</li>
+<li>Compatibility mode <code>compatibilityMode</code>, by which diagnostics are filtered when using metadata. The default is <code>UNDEFINED</code>.</li>
 </ul>
-<p>Последние два могут быть опущены.</p>
+<p>The last two can be omitted.</p>
 <p>Annotation example</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
   <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
@@ -985,11 +985,11 @@ To create necessary files in right places, should run command <code>gradlew newD
   <span class="p">}</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
+<p>Class should implement the interface <code>BSLDiagnostic</code>. If diagnostic bases on AST, that class should extends at one of classes, that implement <code>BSLDiagnostic</code> below:</p>
 <ul>
-<li>для простых диагностик (проверка контекста модуля) стоит использовать наследование <code>AbstractVisitor</code> с реализацией единственного метода <code>check</code></li>
-<li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наследовать класс от <code>AbstractListenerDiagnostic</code></li>
-<li>в остальных случаях нужно использовать стратегию <code>визитера</code> и</li>
+<li>for simple diagnostics (module context checking) it is worth using inheritance <code>AbstractVisitor</code> with the implementation of a single <code>check</code> method</li>
+<li>if you need to analyze a visit to a node / sequence of nodes, use the <code>listener</code> strategy, you need to inherit the class from <code>AbstractListenerDiagnostic</code></li>
+<li>in other cases, you need to use the strategy <code>visitor</code> and</li>
 <li><code>AbstractVisitorDiagnostic</code> for diagnostics of 1C code</li>
 <li><code>AbstractSDBLVisitorDiagnostic</code> for diagnostics of 1C query</li>
 </ul>
@@ -1004,7 +1004,7 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span>
 </code></pre></div>
-<p>Диагностика может предоставлять т.н. <code>быстрые исправления</code>, для чего класс диагностики должен реализовывать интерфейс <code>QuickFixProvider</code>. Подробно о добавлении <code>быстрых исправлений</code> в диагностику написано <a href="../DiagnosticQuickFix/">статье</a>.</p>
+<p>Diagnostic may provide so-called <code>quick fixes</code>. In order to provide quick fixes the diagnostic class must implement <code>QuickFixProvider</code> interface. See this <a href="../DiagnosticQuickFix/">article</a> on adding a <code>quick fix</code> to diagnostic.</p>
 <p>Examples</p>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
 </code></pre></div>
@@ -1016,8 +1016,8 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </code></pre></div>
-<p>После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в <a href="../DiagnostcAddSettings/">статье</a>.</p>
-<p>Ниже приведены отличия в реализации классов диагностик.</p>
+<p>After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the <a href="../DiagnostcAddSettings/">article</a>.</p>
+<p>Below are the differences in the implementation of diagnostic classes.</p>
 <h3 id="Diagnostics-class-implements-BSLDiagnostic-interface">Diagnostics class, implements BSLDiagnostic interface<a class="headerlink" href="#Diagnostics-class-implements-BSLDiagnostic-interface" title="Permanent link">&para;</a></h3>
 <p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечаний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
 <div class="highlight"><pre><span></span><code> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
@@ -1151,7 +1151,7 @@ To create necessary files in right places, should run command <code>gradlew newD
         <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
     <span class="p">}</span>
 </code></pre></div>
-<h3 id="Test-of-configuration-method-for-parametrized-diagnostics">Test of configuration method for parametrized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parametrized-diagnostics" title="Permanent link">&para;</a></h3>
+<h3 id="Test-of-configuration-method-for-parameterized-diagnostics">Test of configuration method for parameterized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parameterized-diagnostics" title="Permanent link">&para;</a></h3>
 <p>Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.<br />
 Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом <code>getDefaultDiagnosticConfiguration()</code>, используя информацию текущего объекта диагностики <code>diagnosticInstance.getInfo()</code>. Полученный результат представляет собой соответствие, в котором, методом <code>put</code>, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом <code>configure()</code> текущего объекта диагностики <code>diagnosticInstance</code>.</p>
 <p>Test method example</p>

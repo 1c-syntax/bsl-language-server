@@ -844,7 +844,7 @@
                 <h1 id="SARIF-reporter">SARIF reporter<a class="headerlink" href="#SARIF-reporter" title="Permanent link">&para;</a></h1>
 <p>Reporter option - <code>sarif</code></p>
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Output the analysis results into file bsl-ls.sarif in the current working directory. OASIS file format is specified and available here: <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html</a>.</p>
+<p>Output the analysis results into file <code>bsl-ls.sarif</code> in the current working directory. File format is specified by OASIS and available here: <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html</a>.</p>
 <h2 id="Sample-output">Sample output<a class="headerlink" href="#Sample-output" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;$schema&quot;</span> <span class="p">:</span> <span class="s2">&quot;https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json&quot;</span><span class="p">,</span>
@@ -858,10 +858,10 @@
         <span class="nt">&quot;informationUri&quot;</span> <span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server&quot;</span><span class="p">,</span>
         <span class="nt">&quot;rules&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="p">{</span>
           <span class="nt">&quot;id&quot;</span> <span class="p">:</span> <span class="s2">&quot;MissingSpace&quot;</span><span class="p">,</span>
-          <span class="nt">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Missing spaces to the left or right of operators `+ - * / = % &amp;lt; &amp;gt; &amp;lt;&amp;gt; &amp;lt;= &amp;gt;=`, keywords, and also to the right of `,` and `;`&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;Missing spaces to the left or right of operators&quot;</span><span class="p">,</span>
           <span class="nt">&quot;fullDescription&quot;</span> <span class="p">:</span> <span class="p">{</span>
-            <span class="nt">&quot;text&quot;</span> <span class="p">:</span> <span class="s2">&quot;# Missing spaces to the left or right of operators `+ - * / = % &amp;lt; &amp;gt; &amp;lt;&amp;gt; &amp;lt;= &amp;gt;=`, keywords, and also to the right of `,` and `;`&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;markdown&quot;</span> <span class="p">:</span> <span class="s2">&quot;# Missing spaces to the left or right of operators `+ - * / = % &amp;lt; &amp;gt; &amp;lt;&amp;gt; &amp;lt;= &amp;gt;=`, keywords, and also to the right of `,` and `;`&quot;</span>
+            <span class="nt">&quot;text&quot;</span> <span class="p">:</span> <span class="s2">&quot;# Missing spaces to the left or right of operators&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;markdown&quot;</span> <span class="p">:</span> <span class="s2">&quot;# Missing spaces to the left or right of operators&quot;</span>
           <span class="p">},</span>
           <span class="nt">&quot;defaultConfiguration&quot;</span> <span class="p">:</span> <span class="p">{</span>
             <span class="nt">&quot;level&quot;</span> <span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>

@@ -866,16 +866,24 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Syntax construct <strong>If ... Then ... ElseIf ...</strong> must end with the <strong>Else</strong> branch.</p>
+<p>The rule is applied whenever the conditional operator <strong>If Then ElseIf</strong> contains one or more blocks <strong>ElseIf </strong>. After block <strong>ElseIf</strong> must be followed by block <strong>Else</strong>.</p>
+<p>The requirement to the final block<strong>Else</strong> - it protective programming. Such constructions are resistant to possible changes and do not mask possible errors.</p>
+<p>The construct <strong>Else</strong> must either take appropriate action or contain a suitable comment as to why no action is being taken.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">;</span>
-<span class="nv">ElseIf</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">;</span>
-<span class="nv">ElseIf</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">5</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">;</span>
+<p>Incorrect:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s1">&quot;Structure&quot;</span><span class="p">)</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="nv">FillByStructure</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
+<span class="nv">ElsIf</span> <span class="nv">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s1">&quot;Document.Ref.MajorDocument&quot;</span><span class="p">)</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="nv">FillByDocument</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
+<span class="nv">EndIf</span><span class="p">;</span>
+</code></pre></div>
+<p>Correct:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s1">&quot;Structure&quot;</span><span class="p">)</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="nv">FillByStructure</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
+<span class="nv">ElsIf</span> <span class="nv">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s1">&quot;Document.Ref.MajorDocument&quot;</span><span class="p">)</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="nv">FillByDocument</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
 <span class="k">Else</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="nv">x</span><span class="p">;</span>
+    <span class="k">Raise</span> <span class="s1">&quot;Parameter of invalid type passed&quot;</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>

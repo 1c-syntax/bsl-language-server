@@ -895,6 +895,8 @@
 
 <p>Do not use identifiers consisting of characters from different languages, вecause it makes it difficult to use them further, forcing to switch the layout.<br />
 Also, the diagnostics detects the erroneous use of characters from another language, when it was used unintentionally. For exaple: <code>o</code>, <code>c</code>, <code>B</code>, <code>p</code> and etc.</p>
+<p>To reduce "noise" in the names consisting of several words beginning or ending in the word in another language, in the diagnostics option has been added that is included by default.<br />
+If the parameter is enabled, then <strong>NOT</strong> are considered erroneous names like <code>ZebraДрайвер</code>, <code>КодHTTP</code>, <code>SMSШлюз</code> and the like.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 

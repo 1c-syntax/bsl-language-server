@@ -906,9 +906,19 @@
    <span class="nb">WriteLogEvent</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;My subsystem.Action&#39;&quot;</span><span class="p">),</span> <span class="nv">EventLogLevel</span><span class="o">.</span><span class="nv">Error</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">DetailErrorDescription</span><span class="p">(</span><span class="nb">ErrorInfo</span><span class="p">()));</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
-<h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
+<h2 id="Peculiarities">Peculiarities<a class="headerlink" href="#Peculiarities" title="Permanent link">&para;</a></h2>
+<p>Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.</p>
+<p>If the applied solution uses its own method of removing/moving over the platform one, then it is worth specifying it in the diagnostic parameter, adding it after <code>|</code>. Diagnostics understands both global methods and those located in common modules or manager modules.</p>
+<p>The following is an examples of a settings</p>
 <ul>
-<li><a href="https://its.1c.ru/db/v8std#content:542:hdoc">FileSystem access from application code</a></li>
+<li>The global method <code>MyFileDeletion</code> in the <code>GlobalServer</code> module in the parameter is specified as <code>MyFileDeletion</code></li>
+<li>Method <code>MyFileDeletion</code> in the common module <code>FilesClientServer</code> in the parameter is specified as <code>FilesClientServer.MyFileDelete</code></li>
+<li>Method <code>MyFileOperations</code> in the module of the catalog manager <code>FileOperations</code> in the parameter is specified as <code>Catalogs.FileOperations.MyFileOperations</code></li>
+</ul>
+<p>and so on.</p>
+<h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:542:hdoc">File system access from application code</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

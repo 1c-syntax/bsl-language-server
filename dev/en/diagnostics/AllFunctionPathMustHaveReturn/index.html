@@ -891,15 +891,47 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Functions should not have an implicit return. All returned values must be shown excplicitly.</p>
+<p>Functions should not have an implicit return. If control reaches the EndFunction line function returns an Undefined value.</p>
+<p>As a rule, this is not a normal operation; the programmer must explicitly describe all return values of the function. However, it is quite easy to overlook a situation in which control reaches the EndFunction line and returns an unexpected Undefined value.</p>
+<p>This diagnostics checks that all possible paths of the function execution have an explicit Return statement and the function does not return unexpected values.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">CalculadeDiscount</span><span class="p">(</span><span class="nv">ShoppingCart</span><span class="p">)</span>
-    <span class="nv">If</span> <span class="nv">ShoppingCart</span><span class="o">.</span><span class="nv">Rows</span><span class="o">.</span><span class="nv">Count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="m">10</span> <span class="k">Then</span>
-        <span class="k">Return</span> <span class="nv">Discounts</span><span class="o">.</span><span class="nv">DiscountForABigCart</span><span class="p">(</span><span class="nv">ShoppingCart</span><span class="p">);</span>
-    <span class="nv">ElIf</span> <span class="nv">ShoppingCart</span><span class="o">.</span><span class="nv">HasLoyaltyCard</span> <span class="k">Then</span>
-        <span class="c c-Singleline">// Return is missed unintentionally</span>
-        <span class="c c-Singleline">// causing unexpected return of Undefined</span>
-        <span class="nv">Discounts</span><span class="o">.</span><span class="nv">DiscountByLoyaltyCard</span><span class="p">(</span><span class="nv">ShoppingCart</span><span class="p">);</span>
+<h3 id="Incorrect">Incorrect<a class="headerlink" href="#Incorrect" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// if the rate is full, but not Tax10 not Tax10 - returns Undefined</span>
+<span class="c c-Singleline">// this could be error or planned behavior.</span>
+<span class="k">Function</span> <span class="nv">DefineTaxRate</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">Rate</span><span class="p">)</span>
+    <span class="nv">If</span> <span class="nv">Rate</span> <span class="o">=</span> <span class="nb">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax20</span> <span class="k">Then</span>
+        <span class="k">Return</span> <span class="m">20</span><span class="p">;</span>
+    <span class="nv">ElsIf</span> <span class="nv">Rate</span> <span class="o">=</span> <span class="nb">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax10</span> <span class="k">Then</span>
+        <span class="k">Return</span> <span class="m">10</span><span class="p">;</span>
+    <span class="nv">ElsIf</span> <span class="nv">Not</span> <span class="nb">ValueIsFilled</span><span class="p">(</span><span class="nv">Rate</span><span class="p">)</span> <span class="k">Then</span>
+        <span class="k">Return</span> <span class="nb">Constants</span><span class="o">.</span><span class="nv">DefaultTaxRate</span><span class="o">.</span><span class="nv">Get</span><span class="p">();</span>
+    <span class="nv">EndIf</span><span class="p">;</span>
+
+    <span class="c c-Singleline">// implicit return Undefined</span>
+<span class="k">EndFunction</span>
+</code></pre></div>
+<h3 id="Correct">Correct<a class="headerlink" href="#Correct" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>// explicitly specify the intention to return the result in the end of the function.
+Function DefineTaxRate(Val Rate)
+    If Rate = Enums.TaxRates.Tax20 Then
+        Return 20;
+    ElsIf Rate = Enums.TaxRates.Tax10 Then
+        Return 10;
+    ElsIf Not ValueIsFilled(Rate) Then
+        Return Constants.DefaultTaxRate.Get();
+    EndIf;
+
+    // explicit return
+    Return Undefined;
+EndFunction
+</code></pre></div>
+<h3 id="Another-example-of-incorrect-code">Another example of incorrect code:<a class="headerlink" href="#Another-example-of-incorrect-code" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">DiscountAmount</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">OrderBasket</span><span class="p">)</span>
+    <span class="nv">If</span> <span class="nv">OrderBasket</span><span class="o">.</span><span class="nv">Rows</span><span class="o">.</span><span class="nv">Count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="m">10</span> <span class="k">Then</span>
+        <span class="k">Return</span> <span class="nv">Discounts</span><span class="o">.</span><span class="nv">DiscountOnBigBasket</span><span class="p">(</span><span class="nv">OrderBasket</span><span class="p">);</span>
+    <span class="nv">ElsIf</span> <span class="nv">OrderBasket</span><span class="o">.</span><span class="nv">IsCustomerCard</span> <span class="k">Then</span>
+        <span class="c c-Singleline">// function returns an unintended value is Undefined</span>
+        <span class="nv">Discounts</span><span class="o">.</span><span class="nv">DiscountByCustomerCard</span><span class="p">(</span><span class="nv">OrderBasket</span><span class="p">);</span>
     <span class="k">Else</span> 
         <span class="k">Return</span> <span class="m">0</span><span class="p">;</span>
     <span class="nv">EndIf</span><span class="p">;</span>

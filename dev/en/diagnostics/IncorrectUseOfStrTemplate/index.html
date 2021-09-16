@@ -874,26 +874,20 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<ol>
-<li>The number of values passed after the template string is not equal (less or more) to the maximum number from a string like %N inside the template string</li>
-<li><code>StrTemplate("Name (version %1)");</code></li>
-<li>
-<p><code>StrTemplate("%1 (version%2)", Name);</code></p>
-</li>
-<li>
-<p>no values are passed at all, except for a formatted string due to the large number of parentheses inside a simple expression with <code>NStr</code> and <code>StrTemplate</code> Example:</p>
-</li>
-<li><code>StrTemplate(NStr("ru = 'Name (version %1)'", Version()));</code></li>
-<li>here the parenthesis is erroneously not closed for <code>NStr</code></li>
-<li>as a result, the expression after evaluating <code>NStr</code> becomes empty.</li>
-</ol>
-<p>It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.</p>
-<p>Right:
-  - <code>StrTemplate(NStr ("ru = 'Name (version %1)'"), Version());</code></p>
-<ol>
-<li>An example of passing digits immediately after a template value</li>
-<li><code>StrTemplate("Name %(1)2"), Name);</code></li>
-</ol>
+<p>Option 1 - the number of values passed after the template string is not equal (less or more) to the maximum number from a string like %N inside the template string</p>
+<ul>
+<li><code>StrTemplate("Name (version %1)"); // not passed required parameter for %1</code></li>
+<li><code>StrTemplate("%1 (version %2)", Name); // not passed required parameter for %2</code></li>
+</ul>
+<p>Option 2 - no values are passed at all, except for a formatted string due to the large number of parentheses inside a simple expression with <code>NStr</code> and <code>StrTemplate</code>:</p>
+<ul>
+<li><code>StrTemplate(NStr("en='Name (version %1)'", Version()));</code></li>
+</ul>
+<p>Here mistake not closed parenthesis for <code>NStr&lt;!-- 0--&gt;. As a result, the expression after evaluating &lt;code&gt;NStr</code> becomes empty. It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.</p>
+<p>Correct option
+  - <code>StrTemplate(NStr("en='Name (version %1)'"), Version());</code></p>
+<p>Option 3 - correct example of passing digits immediately after a template value
+  - <code>StrTemplate("Name %(1)2"), Name); // if pass the value "MyString", then the result will be "MyString2"</code></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
