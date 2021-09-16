@@ -47,9 +47,8 @@ class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterA
       .hasRange(78, 12, 78, 104)
       .hasRange(93, 12, 93, 104)
       .hasRange(108, 12, 108, 104)
-      .hasRange(123, 12, 123, 104);
-
-    assertThat(diagnostics).hasSize(9);
+      .hasRange(123, 12, 123, 104)
+      .hasSize(9);
 
   }
 }
