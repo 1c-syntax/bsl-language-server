@@ -42,25 +42,25 @@ Catch
 EndTry;
 ```
 
-## Особенности работы
+## Peculiarities
 
-Диагностика определяет корректность работы с временными файлами по наличию методов удаления либо перемещения.
+Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.
 
-Если в прикладном решении используется свой метод удаления/перемещения поверх платформенного, то стоит указать его в параметре диагностики, добавив через `|`. Диагностика понимает как глобальные методы, так и расположенные в общих модулях или модулях менеджеров.
+If the applied solution uses its own method of removing/moving over the platform one, then it is worth specifying it in the diagnostic parameter, adding it after `|`. Diagnostics understands both global methods and those located in common modules or manager modules.
 
-Ниже приведены примеры настройки
+The following is an examples of a settings
 
-- Глобальный метод `МоеУдалениеФайлов` в модуле `ГлобальныйСервер` в параметре указывается как `МоеУдалениеФайлов`
-- Метод `МоеУдалениеФайлов` в общем модуле `ФайлыКлиентСервер` в параметре указывается как `ФайлыКлиентСервер.МоеУдалениеФайлов`
-- Метод `МоеУдалениеФайлов` в модуле менеджера справочника `ФайловыеОперации` в параметре указывается как `Справочники.ФайловыеОперации.МоеУдалениеФайлов`
+- The global method `MyFileDeletion` in the `GlobalServer` module in the parameter is specified as `MyFileDeletion`
+- Method `MyFileDeletion` in the common module `FilesClientServer` in the parameter is specified as `FilesClientServer.MyFileDelete`
+- Method `MyFileOperations` in the module of the catalog manager `FileOperations` in the parameter is specified as `Catalogs.FileOperations.MyFileOperations`
 
-и так далее.
+and so on.
 
-## Источники
+## Sources
 
-* [Доступ к файловой системе из кода конфигурации](https://its.1c.ru/db/v8std#content:542:hdoc)
+* [File system access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
