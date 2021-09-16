@@ -69,13 +69,13 @@
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
         "CodeAfterAsyncCall": {
-            "description": "Lines of code after the asynchronous method is called",
+            "description": "Lines of code after the asynchronous method call",
             "default": false,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Lines of code after the asynchronous method is called",
+            "title": "Lines of code after the asynchronous method call",
             "$id": "#/definitions/CodeAfterAsyncCall"
         },
         "CodeBlockBeforeSub": {
