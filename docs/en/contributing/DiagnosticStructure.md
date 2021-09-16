@@ -41,11 +41,11 @@ In the body of the file, you need to specify the package to which the class and 
 
 Each diagnostic must have a `@DiagnosticMetadata`, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
-На момент написания статьи имеются следующие свойства:
+At the time of this writing, the following properties are available:
 
-- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к [статье](DiagnosticTypeAndSeverity.md).
-- Время на исправление замечания `minutesToFix` (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.
-- Набор тэгов `tag` диагностики, указывающих группы, к котором она относится. Read more about tags in the [article](DiagnosticTag.md).
+- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to [article](DiagnosticTypeAndSeverity.md).
+- Time to fix issue `minutesToFix` (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.
+- A set of diagnostics tags `tag` that indicate the group to which it belongs. Read more about tags in the [article](DiagnosticTag.md).
 - Границы применимости `scope` (по умолчанию `ALL`, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.
 - Default diagnostic active `activatedByDefault` (default `True`). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.
 - Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. The default is `UNDEFINED`.
