@@ -159,8 +159,8 @@
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Важный | Ошибка | `sql`<br>`standard`<br>`performance` 
- [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Неверно задан обработчик метода http-сервиса | Да | Блокирующий | Ошибка | `design`<br>`suspicious`<br>`error` 
+ [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Неверно задан обработчик метода http-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Некорректное использование функции ПродолжитьВызов() | Да | Блокирующий | Ошибка | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
- [WrongWebServiceHandler](WrongWebServiceHandler.md) | Неверно задан обработчик операции web-сервиса | Да | Блокирующий | Ошибка | `design`<br>`suspicious`<br>`error` 
+ [WrongWebServiceHandler](WrongWebServiceHandler.md) | Неверно задан обработчик операции web-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 
