@@ -13,7 +13,7 @@
 | `ignoreMissingElseOnExit`  | `Boolean` | `Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False.` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-Functions should not have an implicit return. All returned values must be shown excplicitly.
+Functions should not have an implicit return. If control reaches the EndFunction line function returns an Undefined value.
 
 As a rule, this is not a normal operation; the programmer must explicitly describe all return values of the function. However, it is quite easy to overlook a situation in which control reaches the EndFunction line and returns an unexpected Undefined value.
 
@@ -25,7 +25,7 @@ This diagnostics checks that all possible paths of the function execution have a
 
 ```bsl
 // if the rate is full, but not Tax10 not Tax10 - returns Undefined
-// this could be error or planned behavior
+// this could be error or planned behavior.
 Function DefineTaxRate(Val Rate)
     If Rate = Enums.TaxRates.Tax20 Then
         Return 20;
