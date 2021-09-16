@@ -20,6 +20,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "48c96cde3669e8d63d4b2e195a93ec898430400e"
     id("ru.vyarus.pom") version "2.2.0"
+    id("io.codearte.nexus-staging") version "0.30.0"
 }
 
 repositories {
@@ -192,7 +193,11 @@ tasks.processResources {
 tasks.javadoc {
     options {
         this as StandardJavadocDocletOptions
-        links("https://1c-syntax.github.io/mdclasses/dev/javadoc")
+        links(
+            "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
+            "https://1c-syntax.github.io/mdclasses/dev/javadoc",
+            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
+        )
     }
 }
 
@@ -320,6 +325,11 @@ publishing {
             }
         }
     }
+}
+
+nexusStaging {
+    serverUrl = "https://s01.oss.sonatype.org/service/local/"
+    stagingProfileId = "15bd88b4d17915" // ./gradlew getStagingProfile
 }
 
 tasks.withType<GenerateModuleMetadata> {
