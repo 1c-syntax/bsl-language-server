@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **145**
+Общее количество: **146**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
 * Ошибка: **44**
-* Дефект кода: **93**
+* Дефект кода: **94**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -146,6 +146,7 @@
  [UnusedParameters](UnusedParameters.md) | Неиспользуемый параметр | Да | Важный | Дефект кода | `design`<br>`unused` 
  [UsageWriteLogEvent](UsageWriteLogEvent.md) | Неверное использование метода "ЗаписьЖурналаРегистрации" | Да | Информационный | Дефект кода | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Бесполезный перебор коллекции | Да | Критичный | Ошибка | `clumsy` 
+ [UselessTernaryOperator](UselessTernaryOperator.md) | Бесполезный тернарный оператор | Да | Информационный | Дефект кода | `badpractice`<br>`suspicious` 
  [UsingCancelParameter](UsingCancelParameter.md) | Работа с параметром "Отказ" | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [UsingExternalCodeTools](UsingExternalCodeTools.md) | Использование возможностей выполнения внешнего кода | Да | Критичный | Потенциальная уязвимость | `standard`<br>`design` 
  [UsingFindElementByString](UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да | Важный | Дефект кода | `standard`<br>`badpractice`<br>`performance` 

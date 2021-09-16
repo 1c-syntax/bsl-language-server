@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **145**
+Total: **146**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **44**
-* Code smell: **93**
+* Code smell: **94**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -146,6 +146,7 @@ Total: **145**
  [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design`<br>`unused` 
  [UsageWriteLogEvent](UsageWriteLogEvent.md) | Incorrect use of the method | Yes | Info | Code smell | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` 
+ [UselessTernaryOperator](UselessTernaryOperator.md) | Useless ternary operator | Yes | Info | Code smell | `badpractice`<br>`suspicious` 
  [UsingCancelParameter](UsingCancelParameter.md) | Using parameter "Cancel" | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [UsingExternalCodeTools](UsingExternalCodeTools.md) | Using external code tools | Yes | Critical | Security Hotspot | `standard`<br>`design` 
  [UsingFindElementByString](UsingFindElementByString.md) | Using FindByName and FindByCode | Yes | Major | Code smell | `standard`<br>`badpractice`<br>`performance` 
