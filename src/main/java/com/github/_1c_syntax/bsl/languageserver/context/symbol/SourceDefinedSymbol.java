@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,6 +31,7 @@ import java.util.Optional;
 /**
  * Мета-информация о логически конечной единице, созданной и описанной в исходном коде, например,
  * объявленный в коде метод, созданная область и т.д.
+ *
  * @see Symbol
  */
 public interface SourceDefinedSymbol extends Symbol {

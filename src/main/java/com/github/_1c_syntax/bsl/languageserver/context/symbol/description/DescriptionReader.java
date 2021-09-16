@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -330,7 +330,7 @@ public class DescriptionReader {
             child.subParameters.forEach(subParam -> subParameters.add(subParam.makeParameterDescription()));
           }
           var link = "";
-          if(child.isHyperlink) {
+          if (child.isHyperlink) {
             link = child.name.substring(HYPERLINK_REF_LEN);
           }
           return new TypeDescription(child.name,

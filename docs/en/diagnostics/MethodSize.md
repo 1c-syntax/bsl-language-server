@@ -1,15 +1,15 @@
 # Method size (MethodSize)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `30` | `badpractice` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `30`           | `badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `maxMethodSize` | `Integer` | ```Max method line count.``` | ```200``` 
 
+|      Name       |   Type    |       Description        | Default value |
+|:---------------:|:---------:|:------------------------:|:-------------:|
+| `maxMethodSize` | `Integer` | `Max method line count.` |     `200`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 

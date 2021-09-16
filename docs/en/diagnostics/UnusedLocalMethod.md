@@ -1,15 +1,15 @@
 # Unused local method (UnusedLocalMethod)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `1` | `standard`<br>`suspicious`<br>`unused` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                        |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           |       `standard`<br>`suspicious`<br>`unused`       |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `attachableMethodPrefixes` | `String` | ```Method prefixes (comma separated)``` | ```подключаемый_,attachable_``` 
 
+|            Name            |   Type   |             Description             |        Default value        |
+|:--------------------------:|:--------:|:-----------------------------------:|:---------------------------:|
+| `attachableMethodPrefixes` | `String` | `Method prefixes (comma separated)` | `подключаемый_,attachable_` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 

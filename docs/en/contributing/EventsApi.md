@@ -47,7 +47,7 @@ public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
 
 Для публикации событий используется аспект `EventPublisherAspect` пакета `com.github._1c_syntax.bsl.languageserver.aop`
 
-> Brief information about acpect-oriented orogramming you can find in page https://www.baeldung.com/aspectj.
+> Brief information about aspect-oriented programming you can find in page https://www.baeldung.com/aspectj.
 
 Для перехвата событий в аспекте может быть объявлен advice с перехватом вызовов методов и/или обращений к свойствам объекта. В теле advice должен быть создан объект события и опубликован через [`ApplicationEventPublisher`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEventPublisher.html).
 

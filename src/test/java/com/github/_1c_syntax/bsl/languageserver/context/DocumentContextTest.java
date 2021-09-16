@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -195,16 +195,6 @@ class DocumentContextTest {
   }
 
   @Test
-  void testComputeMetricsLocForCover() {
-
-    DocumentContext documentContext =
-      getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
-
-    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
-
-  }
-
-  @Test
   void testComputeMetricsComments() {
 
     DocumentContext documentContext =
@@ -224,6 +214,18 @@ class DocumentContextTest {
 
     // then
     assertThat(contentList).hasSize(40);
+  }
+
+  @Test
+  void testContentListWithStandaloneCR() {
+    // given
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextBrokenLineFeeds.bsl");
+
+    // when
+    var contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(3);
   }
 
   @Test

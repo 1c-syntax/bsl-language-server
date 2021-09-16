@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -51,8 +51,8 @@ public class ConfigurationFileChangeListener {
    * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
    *
    * @param configurationFile Изменившийся файл конфигурации, содержащий
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
-   * @param eventKind Тип события, произошедшего с файлом.
+   *                          {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * @param eventKind         Тип события, произошедшего с файлом.
    */
   public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {

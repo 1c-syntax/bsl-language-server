@@ -1,14 +1,14 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `1` | `brainoverload`<br>`suspicious` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |    `brainoverload`<br>`suspicious`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-A common module must have at least one export method and region "Private" or "Internal".
+A common module must have at least one export method and region "Public" or "Internal".
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->

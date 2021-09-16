@@ -1,15 +1,15 @@
 # Line Length limit (LineLength)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `1`           |    `standard`<br>`badpractice`    |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `maxLineLength` | `Integer` | ```Max length of string in characters``` | ```120``` 
 
+|      Name       |   Type    |             Description              | Default value |
+|:---------------:|:---------:|:------------------------------------:|:-------------:|
+| `maxLineLength` | `Integer` | `Max length of string in characters` |     `120`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 

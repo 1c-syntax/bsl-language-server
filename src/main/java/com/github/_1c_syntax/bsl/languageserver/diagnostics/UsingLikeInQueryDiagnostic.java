@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,7 +33,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
   tags = {
     DiagnosticTag.SQL,

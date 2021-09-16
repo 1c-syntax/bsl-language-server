@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,7 +41,6 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
     diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
       .hasRange(6, 32, 33)
       .hasRange(7, 35, 36)
@@ -57,6 +56,7 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
       .hasRange(101, 2, 3)
       .hasRange(105, 2, 3)
       .hasRange(109, 2, 3)
+      .hasSize(14)
     ;
 
   }

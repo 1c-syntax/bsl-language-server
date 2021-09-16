@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
-  private CommonModule module;
+  private MDCommonModule module;
   private DocumentContext documentContext;
 
   @Test
@@ -129,7 +129,7 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
       context
     ));
 
-    module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
 
   }
 }

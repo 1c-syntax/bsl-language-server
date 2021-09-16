@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -87,7 +87,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       return true;
     }
 
-    BSLParserRuleContext rootExpressionNode = (BSLParserRuleContext) currentRootMember.getParent();
+    BSLParserRuleContext rootExpressionNode = currentRootMember.getParent();
 
     BSLParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
@@ -102,14 +102,14 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
 
   private static boolean haveNeighboorBooleanOperator(BSLParserRuleContext currentRootMember,
                                                       BSLParserRuleContext rootExpressionNode) {
-    boolean haveNeighboorBoolOperation = false;
+    var haveNeighbourBoolOperation = false;
     int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
     if (indexOfCurrentMemberNode > 0) {
       var prev = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
       if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      haveNeighboorBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
+      haveNeighbourBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
     }
     if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
 
@@ -117,10 +117,10 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      if (!haveNeighboorBoolOperation) {
-        haveNeighboorBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
+      if (!haveNeighbourBoolOperation) {
+        haveNeighbourBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
       }
     }
-    return haveNeighboorBoolOperation;
+    return haveNeighbourBoolOperation;
   }
 }

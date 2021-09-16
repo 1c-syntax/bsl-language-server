@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,11 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.EventSubscription;
-import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.metadata.additional.MDOType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 import java.util.regex.Pattern;
@@ -77,8 +77,8 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
     // для анализа выбираются все имеющиеся подписки на события
     configuration.getChildren().stream()
       .filter(mdo -> mdo.getType() == MDOType.EVENT_SUBSCRIPTION)
-      .map(mdo -> (EventSubscription) mdo)
-      .forEach((EventSubscription eventSubs) -> {
+      .map(mdo -> (MDEventSubscription) mdo)
+      .forEach((MDEventSubscription eventSubs) -> {
         // проверка на пустой обработчик
         if (eventSubs.getHandler().isEmpty()) {
           addDiagnostic(eventSubs);
@@ -115,7 +115,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
       });
   }
 
-  private void checkMethod(EventSubscription eventSubs, String methodName, CommonModule commonModule) {
+  private void checkMethod(MDEventSubscription eventSubs, String methodName, MDCommonModule commonModule) {
     documentContext.getServerContext()
       .getDocument(commonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
       .ifPresent(commonModuleContext -> {
@@ -132,12 +132,12 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
       });
   }
 
-  private void addDiagnostic(String messageString, EventSubscription eventSubs, String text) {
+  private void addDiagnostic(String messageString, MDEventSubscription eventSubs, String text) {
     diagnosticStorage.addDiagnostic(diagnosticRange,
       info.getResourceString(messageString, text, eventSubs.getName()));
   }
 
-  private void addDiagnostic(EventSubscription eventSubs) {
+  private void addDiagnostic(MDEventSubscription eventSubs) {
     diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(eventSubs.getName()));
   }
 }

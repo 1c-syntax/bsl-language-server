@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,13 +150,13 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     Path workspaceDir = Absolute.path(workspaceDirOption);
     if (!workspaceDir.toFile().exists()) {
-      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir.toString());
+      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir);
       return 1;
     }
 
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 
@@ -214,7 +214,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
     String mdoRef = "";
-    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
       mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     }

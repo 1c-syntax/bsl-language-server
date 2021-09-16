@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -157,6 +157,6 @@ public final class DiagnosticHelper {
       stringJoiner.add(Pattern.quote(elem.trim()));
     }
 
-    return CaseInsensitivePattern.compile("(?:^" + stringJoiner.toString() + ").*");
+    return CaseInsensitivePattern.compile("(?:^" + stringJoiner + ").*");
   }
 }

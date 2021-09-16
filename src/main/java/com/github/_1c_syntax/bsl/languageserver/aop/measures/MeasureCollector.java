@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -55,7 +55,7 @@ public class MeasureCollector {
   /**
    * Выполнить операцию замера.
    *
-   * @param supplier Замеряемая операция.
+   * @param supplier    Замеряемая операция.
    * @param measureType Текстовый идентификатор замера.
    *                    Результаты замеров с совпадающим идентификатором будут просуммированы.
    * @return Результат работы замеряемой операции.

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -76,7 +76,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    threshold = (float) configuration.getOrDefault("threshold", threshold);
+    threshold = ((Number) configuration.getOrDefault("threshold", threshold)).floatValue();
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 

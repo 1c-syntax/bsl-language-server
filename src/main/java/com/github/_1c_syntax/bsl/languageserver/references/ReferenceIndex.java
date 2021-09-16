@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import org.apache.commons.collections4.MultiMapUtils;
@@ -97,7 +97,7 @@ public class ReferenceIndex {
   /**
    * Поиск символа по позиции курсора.
    *
-   * @param uri URI документа, в котором необходимо осуществить поиск.
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
    * @param position позиция курсора.
    * @return данные ссылки.
    */
@@ -163,11 +163,11 @@ public class ReferenceIndex {
   /**
    * Добавить вызов метода в индекс.
    *
-   * @param uri URI документа, откуда произошел вызов.
-   * @param mdoRef Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param uri        URI документа, откуда произошел вызов.
+   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
-   * @param range Диапазон, в котором происходит обращение к символу.
+   * @param range      Диапазон, в котором происходит обращение к символу.
    */
   @Synchronized
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {

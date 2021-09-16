@@ -1,15 +1,15 @@
 # Consecutive empty lines (ConsecutiveEmptyLines)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `badpractice` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `allowedEmptyLinesCount` | `Integer` | ```Maximum allowed consecutive empty lines``` | ```1``` 
 
+|           Name           |   Type    |                Description                | Default value |
+|:------------------------:|:---------:|:-----------------------------------------:|:-------------:|
+| `allowedEmptyLinesCount` | `Integer` | `Maximum allowed consecutive empty lines` |      `1`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

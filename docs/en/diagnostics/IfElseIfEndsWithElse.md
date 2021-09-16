@@ -1,25 +1,40 @@
 # Else...The...ElseIf... statement should end with Else branch (IfElseIfEndsWithElse)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `badpractice` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `10`           | `badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Syntax construct **If ... Then ... ElseIf ...** must end with the **Else** branch.
+The rule is applied whenever the conditional operator **If Then ElseIf** contains one or more blocks **ElseIf **. After block **ElseIf** must be followed by block **Else**.
+
+The requirement to the final block**Else** - it protective programming. Such constructions are resistant to possible changes and do not mask possible errors.
+
+The construct **Else** must either take appropriate action or contain a suitable comment as to why no action is being taken.
+
 
 ## Examples
 
+Incorrect:
+
 ```bsl
-If x % 15 = 0 Then
-    Result = "FizzBuzz";
-ElseIf x % 3 = 0 Then
-    Result = "Fizz";
-ElseIf x % 5 = 0 Then
-    Result = "Buzz";
+If TypeOf(InputParameter) = Type("Structure") Then
+    Result = FillByStructure(InputParameter);
+ElsIf TypeOf(InputParameter) = Type("Document.Ref.MajorDocument") Then
+    Result = FillByDocument(InputParameter);
+EndIf;
+```
+
+Correct:
+
+```bsl
+If TypeOf(InputParameter) = Type("Structure") Then
+    Result = FillByStructure(InputParameter);
+ElsIf TypeOf(InputParameter) = Type("Document.Ref.MajorDocument") Then
+    Result = FillByDocument(InputParameter);
 Else
-    Result = x;
+    Raise "Parameter of invalid type passed";
 EndIf;
 ```
 

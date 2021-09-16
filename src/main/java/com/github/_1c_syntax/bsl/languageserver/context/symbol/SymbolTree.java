@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -69,7 +69,7 @@ public class SymbolTree {
    * преобразованных в плоский список.
    *
    * @param clazz класс искомого символа.
-   * @param <T> тип искомого символа.
+   * @param <T>   тип искомого символа.
    * @return плоский список символов указанного типа.
    */
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
@@ -100,6 +100,7 @@ public class SymbolTree {
    * Попытка поиска символа метода по узлу дерева разбора.
    * <p>
    * Implementation note - Поиск осуществляется по месту определения метода (declaration).
+   *
    * @param ctx узел дерева разбора документа.
    * @return найденный символ метода.
    */
@@ -176,8 +177,8 @@ public class SymbolTree {
    * Поиск VariableSymbol в дереве по указанному имени (без учета регистра) и области объявления.
    *
    * @param variableName Имя переменной
-   * @param scopeSymbol Символ, внутри которого осуществляется поиск.
-   *                    Например, {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @param scopeSymbol  Символ, внутри которого осуществляется поиск.
+   *                     Например, {@link ModuleSymbol} или {@link MethodSymbol}.
    * @return VariableSymbol, если он был найден в дереве символов.
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
