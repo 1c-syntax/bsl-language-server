@@ -18,7 +18,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
     id("org.springframework.boot") version "2.5.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "48c96cde3669e8d63d4b2e195a93ec898430400e"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.5.0"
     id("ru.vyarus.pom") version "2.2.0"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
@@ -63,7 +63,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "c0f9c91b119a1d4341e90a64a7aa8a4d9dc5d585") {
+    api("com.github.1c-syntax", "bsl-parser", "0.19.4") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
