@@ -90,7 +90,6 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [Синхронные и асинхронные методы работы - Руководство разработчика Глава 4. Встроенный язык](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
-- [Длительные операции на сервере - ИТС 1С](https://its.1c.ru/db/v8std#content:642:hdoc)
 
 ## Сниппеты
 
