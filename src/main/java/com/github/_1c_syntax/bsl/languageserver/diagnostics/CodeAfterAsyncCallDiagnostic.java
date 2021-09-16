@@ -37,7 +37,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_codeBlock;
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
+import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_subCodeBlock;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -75,8 +77,27 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
       "|НАЧАТЬЗАПРОСРАЗРЕШЕНИЯПОЛЬЗОВАТЕЛЯ|BEGINREQUESTINGUSERPERMISSION" +
       "|НАЧАТЬЗАПУСКПРИЛОЖЕНИЯ|BEGINRUNNINGAPPLICATION");
 
-  private static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, BSLParser.RULE_subCodeBlock);
+  private static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, RULE_subCodeBlock);
   private Optional<BSLParser.CodeBlockContext> subCodeBlockContext = Optional.empty();
+
+  private static boolean checkNextBlocks(BSLParser.StatementContext statement) {
+    final var codeBlock = (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(statement, RULE_codeBlock);
+    if (codeBlock == null || codeBlock.statement().isEmpty()) {
+      return false;
+    }
+    if (Trees.getNextNode(codeBlock, statement, RULE_statement) != null) {
+      return true;
+    }
+    return checkParentBlock(codeBlock);
+  }
+
+  private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {
+    final var rootStatement = Trees.getRootParent(codeBlock, ROOT_INDEXES);
+    if (rootStatement != null && rootStatement.getRuleIndex() == RULE_statement) {
+      return checkNextBlocks((BSLParser.StatementContext) rootStatement);
+    }
+    return false;
+  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -94,36 +115,17 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     var nonFileCodeBlock = subCodeBlockContext.isPresent();
     if (nonFileCodeBlock) {
-      String methodName = ctx.methodName().getText();
+      var methodName = ctx.methodName().getText();
       if (ASYNC_METHODS.matcher(methodName).matches()) {
 
-        final var statement = (BSLParser.StatementContext)Trees.getAncestorByRuleIndex(ctx, RULE_statement);
-        if (statement != null && checkNextBlocks(statement)){
+        final var statement = (BSLParser.StatementContext) Trees.getAncestorByRuleIndex(ctx, RULE_statement);
+        if (statement != null && checkNextBlocks(statement)) {
           diagnosticStorage.addDiagnostic(ctx,
             info.getMessage(methodName));
         }
       }
     }
     return super.visitGlobalMethodCall(ctx);
-  }
-
-  private static boolean checkNextBlocks(BSLParser.StatementContext statement) {
-    final var codeBlock = (BSLParser.CodeBlockContext)Trees.getAncestorByRuleIndex(statement, BSLParser.RULE_codeBlock);
-    if (codeBlock == null || codeBlock.statement().isEmpty()){
-      return false;
-    }
-    if (Trees.getNextNode(codeBlock, statement, RULE_statement) != null){
-      return true;
-    }
-    return checkParentBlock(codeBlock);
-  }
-
-  private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {
-    final var rootStatement = Trees.getRootParent(codeBlock, ROOT_INDEXES);
-    if (rootStatement != null && rootStatement.getRuleIndex() == RULE_statement){
-      return checkNextBlocks((BSLParser.StatementContext)rootStatement);
-    }
-    return false;
   }
 
 }
