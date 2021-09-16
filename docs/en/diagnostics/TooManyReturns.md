@@ -1,8 +1,8 @@
 # Methods should not have too many return statements (TooManyReturns)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |      Tags       |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `No`              |          `20`           | `brainoverload` |
+| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `No`              |          `20`           | `brainoverload` |
 
 ## Parameters
 

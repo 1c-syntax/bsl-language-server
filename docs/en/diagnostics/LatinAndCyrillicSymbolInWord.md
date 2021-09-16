@@ -1,8 +1,8 @@
 # Mixing Latin and Cyrillic characters in one identifier (LatinAndCyrillicSymbolInWord)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `5`           |    `brainoverload`<br>`suspicious`    |
+| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `5`           | `brainoverload`<br>`suspicious` |
 
 ## Parameters
 
@@ -17,6 +17,9 @@
 
 Do not use identifiers consisting of characters from different languages, вecause it makes it difficult to use them further, forcing to switch the layout.  
 Also, the diagnostics detects the erroneous use of characters from another language, when it was used unintentionally. For exaple: `o`, `c`, `B`, `p` and etc.
+
+To reduce "noise" in the names consisting of several words beginning or ending in the word in another language, in the diagnostics option has been added that is included by default.  
+If the parameter is enabled, then **NOT** are considered erroneous names like `ZebraДрайвер`, `КодHTTP`, `SMSШлюз` and the like.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->

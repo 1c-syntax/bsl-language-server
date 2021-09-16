@@ -1,6 +1,6 @@
 # Metadata object names must not exceed the allowed length (MetadataObjectNameLength)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL` | `Major`  |             `Yes`             |          `10`           | `standard` |
 

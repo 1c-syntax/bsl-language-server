@@ -1,16 +1,16 @@
 # Using hardcode ip addresses in code (UsingHardcodeNetworkAddress)
 
-|      Type       |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|      Type       |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:---------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Vulnerability` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `15`           | `standard` |
+| `Vulnerability` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
 ## Parameters
 
 
-|              Name               |   Type   |                    Description                    |                                  Default value                                  |
-|:-------------------------------:|:--------:|:-------------------------------------------------:|:-------------------------------------------------------------------------------:|
-|     `searchWordsExclusion`      | `String` |         `Keywords to exclude from search`         | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` |
-| `searchPopularVersionExclusion` | `String` | `Pattern to exclude popular versions from search` |                              `^(1|2|3|8\.3|11)\.`                               |
+|              Name               |   Type   |                                  Description                                   |                                  Default value                                  |
+|:-------------------------------:|:--------:|:------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------:|
+|     `searchWordsExclusion`      | `String` |                       `Keywords to exclude from search`                        | `Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver` |
+| `searchPopularVersionExclusion` | `String` | `Pattern to exclude popular versions from search when looking up IP addresses` |                             `^(1|2|3|8\.3|11)\.`                              |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

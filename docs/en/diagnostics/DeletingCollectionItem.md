@@ -1,8 +1,8 @@
 # Deleting an item when iterating through collection using the operator "For each ... In ... Do" (DeletingCollectionItem)
 
-|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
+|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |            Tags             |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`error`    |
+| `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

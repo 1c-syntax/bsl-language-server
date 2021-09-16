@@ -4,7 +4,7 @@ Reporter option - `sarif`
 
 ## Description
 
-Output the analysis results into file bsl-ls.sarif in the current working directory. OASIS file format is specified and available here: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
+Output the analysis results into file `bsl-ls.sarif` in the current working directory. File format is specified by OASIS and available here: [https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
 ## Sample output
 
@@ -21,10 +21,10 @@ Output the analysis results into file bsl-ls.sarif in the current working direct
         "informationUri" : "https://1c-syntax.github.io/bsl-language-server",
         "rules" : [ {
           "id" : "MissingSpace",
-          "name" : "Missing spaces to the left or right of operators `+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=`, keywords, and also to the right of `,` and `;`",
+          "name" : "Missing spaces to the left or right of operators",
           "fullDescription" : {
-            "text" : "# Missing spaces to the left or right of operators `+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=`, keywords, and also to the right of `,` and `;`",
-            "markdown" : "# Missing spaces to the left or right of operators `+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=`, keywords, and also to the right of `,` and `;`"
+            "text" : "# Missing spaces to the left or right of operators",
+            "markdown" : "# Missing spaces to the left or right of operators"
           },
           "defaultConfiguration" : {
             "level" : "none",

@@ -1,6 +1,6 @@
 # Using of the deprecated method "Find" (DeprecatedFind)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `2`           | `deprecated` |
 

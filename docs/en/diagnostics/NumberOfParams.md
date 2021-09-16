@@ -1,8 +1,8 @@
 # Number of parameters in method (NumberOfParams)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                Tags                 |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `30`           |    `standard`<br>`brainoverload`    |
+| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |          `30`           | `standard`<br>`brainoverload` |
 
 ## Parameters
 

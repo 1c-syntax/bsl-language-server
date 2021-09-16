@@ -1,8 +1,8 @@
 # Partially localized text is used in the StrTemplate function (MultilingualStringUsingWithTemplate)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
+|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Tags             |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
-| `Error` | `BSL` | `Major`  |             `Yes`             |           `2`           |    `error`<br>`localize`    |
+| `Error` | `BSL` | `Major`  |             `Yes`             |           `2`           | `error`<br>`localize` |
 
 ## Parameters
 

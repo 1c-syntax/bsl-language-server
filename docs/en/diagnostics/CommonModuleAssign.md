@@ -1,8 +1,8 @@
 # CommonModuleAssign (CommonModuleAssign)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `2`           | `error` |
+| `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |           `2`           | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

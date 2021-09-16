@@ -1,8 +1,8 @@
 # Method definitions must be placed before the module body operators (CodeBlockBeforeSub)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `5`           | `error` |
+| `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |           `5`           | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
