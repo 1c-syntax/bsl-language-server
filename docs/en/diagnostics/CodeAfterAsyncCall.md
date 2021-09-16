@@ -1,4 +1,4 @@
-# После вызова асинхронного метода есть строки кода (CodeAfterAsyncCall)
+# Lines of code after the asynchronous method call (CodeAfterAsyncCall)
 
 |     Type     | Scope | Severity | Activated<br>by default | Minutes<br> to fix |     Tags     |
 |:------------:|:-----:|:--------:|:-----------------------------:|:------------------------:|:------------:|
@@ -7,9 +7,9 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-При использовании асинхронных методов разработчики иногда ошибаются, написав код таким образом, что сразу после вызова асинхронного метода следуют строки кода. В этом случае указанные строки кода выполняются немедленно, без ожидания выполнения асинхронного метода.
+When using asynchronous methods, developers may write lines of code follow immediately after calling the asynchronous method. In this case, the specified lines of code are executed immediately, without waiting for the asynchronous method to execute.
 
-Для правильного решения нужно вынести весь код, который должен быть выполнен после выполнения асинхронного действия, в экспортный метод и указать его имя в обработке оповещения, которая будет вызвана после завершения асинхронного действия. Или использовать асинхронность через обещания, например, `Ждать ПредупреждениеАсинх(Текст);`
+For the correct solution, you need to move all the code that must be executed after the asynchronous action is completed into the export method and specify its name in the notification processing that will be called after the asynchronous action completes. Or use asynchrony through promises, for example, `Wait AlertAsync(Text);`
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -51,17 +51,17 @@ Correct code
 КонецПроцедуры;
 ```
 
-В некоторых случаях выполнение кода сразу после вызова асинхронного метода вполне возможно, если не нужно ожидать результатов выполнения асинхронного действия. For example
+In some cases, executing code immediately after calling an asynchronous method is entirely possible if you do not need to wait for the results of the asynchronous action. For example
 ```bsl
 &НаКлиенте
 Процедура Команда1(Команда)
     ПоказатьПредупреждение(, "Предупреждаю", 10);
     Сообщить("начал работать код после ПоказатьПредупреждение");
     // ...
-КонецПроцедуры
+EndProcedure
 ```
 
-Также важно учесть, что асинхронный метод может вызываться в одной из веток кода и нужно анализировать последующий код до конца текущей процедуры\функции. Пример:
+It is also important to consider that an asynchronous method can be called in one of the code branches and you need to analyze the subsequent code until the end of the current procedure\function. Example:
 ```bsl
 &НаКлиенте
 Процедура Команда1(Команда)
@@ -85,7 +85,7 @@ Correct code
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-- [Синхронные и асинхронные методы работы - Руководство разработчика Глава 4. Встроенный язык](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
+- [Sync and async methods - Developers guide Chapter 4. Internal language](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
 
 ## Snippets
 
