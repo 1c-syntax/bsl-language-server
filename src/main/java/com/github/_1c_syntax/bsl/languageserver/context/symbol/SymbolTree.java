@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -181,20 +182,23 @@ public class SymbolTree {
    * @return VariableSymbol, если он был найден в дереве символов.
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
-    var scopeSymbolKind = scopeSymbol.getSymbolKind();
-
-    return getVariables().stream()
-      .filter(variableSymbol -> variableName.equalsIgnoreCase(variableSymbol.getName()))
-      .filter(variableSymbol -> variableSymbol.getRootParent(scopeSymbolKind)
-        .filter(scopeSymbol::equals)
-        .isPresent()
-      )
+    return createChildrenFlat(scopeSymbol).stream()
+      .filter(symbol -> symbol.getSymbolKind() == SymbolKind.Variable)
+      .filter(symbol -> variableName.equalsIgnoreCase(symbol.getName()))
+      .map(symbol -> (VariableSymbol)symbol)
       .findAny();
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
     List<SourceDefinedSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
+
+    return symbols;
+  }
+
+  private List<SourceDefinedSymbol> createChildrenFlat(SourceDefinedSymbol scopeSymbol) {
+    List<SourceDefinedSymbol> symbols = new ArrayList<>();
+    scopeSymbol.getChildren().forEach(child -> flatten(child, symbols));
 
     return symbols;
   }
