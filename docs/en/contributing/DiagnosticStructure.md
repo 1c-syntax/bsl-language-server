@@ -46,11 +46,11 @@ At the time of this writing, the following properties are available:
 - The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to [article](DiagnosticTypeAndSeverity.md).
 - Time to fix issue `minutesToFix` (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.
 - A set of diagnostics tags `tag` that indicate the group to which it belongs. Read more about tags in the [article](DiagnosticTag.md).
-- Границы применимости `scope` (по умолчанию `ALL`, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.
-- Default diagnostic active `activatedByDefault` (default `True`). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.
-- Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. The default is `UNDEFINED`.
+- Applicability limit `scope` (by default `ALL`, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.
+- Default diagnostic active `activatedByDefault` (default `True`). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.
+- Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 
-Последние два могут быть опущены.
+The last two can be omitted.
 
 Annotation example
 
@@ -70,9 +70,9 @@ Annotation example
 
 Class should implement the interface `BSLDiagnostic`. If diagnostic bases on AST, that class should extends at one of classes, that implement `BSLDiagnostic` below:
 
-- для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
-- при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
-- в остальных случаях нужно использовать стратегию `визитера` и
+- for simple diagnostics (module context checking) it is worth using inheritance `AbstractVisitor` with the implementation of a single `check` method
+- if you need to analyze a visit to a node / sequence of nodes, use the `listener` strategy, you need to inherit the class from `AbstractListenerDiagnostic`
+- in other cases, you need to use the strategy `visitor` and
   - `AbstractVisitorDiagnostic` for diagnostics of 1C code
   - `AbstractSDBLVisitorDiagnostic` for diagnostics of 1C query
 
@@ -122,9 +122,9 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
 ```
 
-После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в [статье](DiagnostcAddSettings.md).
+After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the [article](DiagnostcAddSettings.md).
 
-Ниже приведены отличия в реализации классов диагностик.
+Below are the differences in the implementation of diagnostic classes.
 
 ### Diagnostics class, implements BSLDiagnostic interface
 
