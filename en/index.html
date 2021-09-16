@@ -12,7 +12,7 @@
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/">
       
       <link rel="icon" href="assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
@@ -20,10 +20,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.bde7dde4.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.802231af.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.3f5d1f46.min.css">
         
       
     
@@ -42,10 +42,19 @@
     
     
       
-        
-<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-150754232-1","1c-syntax.github.io"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){var e;this.value&&(e=document.location.pathname,ga("send","pageview",e+"?q="+this.value))}),"undefined"!=typeof location$&&location$.subscribe(function(e){ga("send","pageview",e.pathname)})})</script>
-<script async src="https://www.google-analytics.com/analytics.js"></script>
-      
+  
+
+
+
+  
+  
+
+
+
+  <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-150754232-1","auto"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){var e;this.value&&(e=document.location.pathname,ga("send","pageview",e+"?q="+this.value))}),"undefined"!=typeof location$&&location$.subscribe(function(e){ga("send","pageview",e.pathname)})})</script>
+  <script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
     
     
   </head>
@@ -111,7 +120,7 @@
         
           
           
-          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo" type="radio" name="__palette" id="__palette_1">
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5z"/></svg>
@@ -120,7 +129,7 @@
         
           
           
-          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue" type="radio" name="__palette" id="__palette_2">
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
             <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/></svg>
@@ -133,7 +142,7 @@
       <div class="md-header__option">
         <div class="md-select">
           
-          <button class="md-header__button md-icon">
+          <button class="md-header__button md-icon" aria-label="Select language">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24z"/></svg>
           </button>
           <div class="md-select__inner">
@@ -165,14 +174,18 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -402,6 +415,13 @@
         <li class="md-nav__item">
   <a href="#Capabilities" class="md-nav__link">
     Capabilities
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Supported-protocol-operations" class="md-nav__link">
+    Supported protocol operations
   </a>
   
 </li>
@@ -931,7 +951,7 @@
 <li><a href="features">Features</a></li>
 <li><a href="faq/">Frequently asked questions</a></li>
 <li><a href="systemRequirements/">System requirements</a></li>
-<li><a href="#thanks">Special thanks</a></li>
+<li><a href="#thanks">Acknowledgments</a></li>
 </ul>
 <p><a id="capabilities"></a></p>
 <p>Perfomance measurement - <a href="bench/index.html">SSL 3.1</a></p>
@@ -940,26 +960,362 @@
 <li>File formatting</li>
 <li>Selected region formatting</li>
 <li>Symbol definition for current file (regions, procedures, functions, variables, defined via <code>Var</code> keyword)</li>
-<li>Folding regions definition <code>#Region</code>, <code>#If</code>, procedures and functions, code blocks</li>
+<li>Folding regions definition <code>#Region</code>, <code>#If</code>, procedures and functions, code blocks, queries</li>
 <li>Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores</li>
+<li>Tooltip on local methods and methods of common / manager modules</li>
+<li>Go to method definitions</li>
+<li>Finding places to use methods</li>
+<li>Method call hierarchy</li>
+<li>Expand selection</li>
+<li>Display color representation and convert between <code>Color and</code>WebColors`</li>
 <li>Diagnostics</li>
 <li>Quick fixes for several diagnostics</li>
 <li>Run diagnostics engine from command line</li>
 <li>Run formatter engine from command line</li>
 </ul>
+<h2 id="Supported-protocol-operations">Supported protocol operations<a class="headerlink" href="#Supported-protocol-operations" title="Permanent link">&para;</a></h2>
+<details class="workspace"><summary>Workspace</summary></details>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Supported</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>with restrictions, see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<details><summary>Text Synchronization</summary></details>
+<table>
+<thead>
+<tr>
+<th>Opertaion</th>
+<th>Supported</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen">didOpen</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange">didChange</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>textDocumentSyncKind = Full</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose">didClose</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave">didSave</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave">willSave</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil">willSaveWaitUntil</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<details class="textdocument"><summary>Textdocument</summary></details>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Supported</th>
+<th>Comment</th>
+<th>Configurable?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">publishDiagnostics</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">список диагностик</a></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md">completion</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>resolveProvider = false</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve">completionItem/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover">hover</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>contentFormat = MarkupContent</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp">signatureHelp</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_declaration">declaration</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>not applicable in 1C:Enterprise</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition">definition</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>linkSupport = true</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition">typeDefinition</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation">implementation</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>not applicable in 1C:Enterprise</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references">references</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight">documentHighlight</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol">documentSymbol</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>hierarchicalDocumentSymbolSupport = true</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">codeAction</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>codeActionKinds = ? (see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve">codeAction/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>resolveProvider = false</td>
+<td>да</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">codeLens/refresh</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">documentLink</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>Displaying hyperlinks to diagnostics documentation.<br />tooltipSupport = true<br />resolveProvider = false</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve">documentLink/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor">documentColor</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation">colorPresentation</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">formatting</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">rangeFormatting</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting">onTypeFormatting</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename">rename</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename">prepareRename</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange">foldingRange</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange">selectionRange</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy">prepareCallHierarchy</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls">callHierarchy/incomingCalls</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls">callHierarchy/outgoingCalls</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">semanticTokens</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange">linkedEditingRange</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker">moniker</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <p><a id="cli"></a></p>
 <h2 id="Run-from-command-line">Run from command line<a class="headerlink" href="#Run-from-command-line" title="Permanent link">&para;</a></h2>
 <p>jar-files run through <code>java -jar path/to/file.jar</code>.</p>
-<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --help  BSL language server Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>   -c, --configuration<span class="o">=</span>&lt;path&gt;                Path to language server configuration file   -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span> Commands:   analyze, -a, --analyze  Run analysis and get diagnostic info   format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory   version, -v, --version  Print version   lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --help
+
+BSL language server
+Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>
+  -c, --configuration<span class="o">=</span>&lt;path&gt;
+               Path to language server configuration file
+  -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span>
+Commands:
+  analyze, -a, --analyze  Run analysis and get diagnostic info
+  format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory
+  version, -v, --version  Print version
+  lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
 </code></pre></div>
 <p>Starting BSL Language Server in standard mode will run the Language Server communicating via <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. stdin and stdout are used for communication.</p>
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
 <h2 id="Run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#Run-in-analyzer-mode" title="Permanent link">&para;</a></h2>
 <p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>
-<div class="highlight"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>... Run analysis and get diagnostic info   -c, --configuration<span class="o">=</span>&lt;path&gt;                            Path to language server configuration file   -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory   -q, --silent             Silent mode   -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>   -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory   -w, --workspaceDir<span class="o">=</span>&lt;path&gt;                             Workspace directory
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+                                   <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
+Run analysis and get diagnostic info
+  -c, --configuration<span class="o">=</span>&lt;path&gt;
+                           Path to language server configuration file
+  -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory
+  -q, --silent             Silent mode
+  -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>
+  -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory
+  -w, --workspaceDir<span class="o">=</span>&lt;path&gt; 
+                           Workspace directory
 </code></pre></div>
-<p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder. To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
+<p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder. 
+To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
 <p>Command line example to run analysis:</p>
 <div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
@@ -971,7 +1327,11 @@
 <p><a id="format"></a></p>
 <h2 id="Run-in-formatter-mode">Run in formatter mode<a class="headerlink" href="#Run-in-formatter-mode" title="Permanent link">&para;</a></h2>
 <p>To run in formatter mode use parameter <code>--format</code> (short <code>-f</code>).</p>
-<div class="highlight"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span> Format files <span class="k">in</span> <span class="nb">source</span> directory   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -q, --silent          Silent mode   -s, --srcDir<span class="o">=</span>&lt;path&gt;   Source directory
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+Format files <span class="k">in</span> <span class="nb">source</span> directory
+  -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  -q, --silent          Silent mode
+  -s, --src<span class="o">=</span>&lt;path&gt;      Source directory or file
 </code></pre></div>
 <p>To set source code folder (or source file) for formatting use parameter <code>--src</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder (or file).</p>
 <p>Command line example to run formatting:</p>
@@ -989,7 +1349,7 @@
 <p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling <code>Java</code> and <code>.NET</code> applications. YourKit has offered an open source license <a href="https://www.yourkit.com">YourKit Java Profiler</a> for <code>BSL Language Server</code> to improve its performance.</p>
 <p>With <code>YourKit Java Profiler</code> we profile and improve project performance.</p>
 <hr />
-<p><a href="https://www.jetbrains.com?from=bsl-language-server"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p><a href="https://www.jetbrains.com?from=bsl-language-server"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a></p>
 <p><a href="https://www.jetbrains.com?from=bsl-language-server">JetBrains</a> is the creator of professional software for development. JetBrains has offered an open source license for his products, including <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> is one of the best tools in its class.</p>
                 
@@ -1011,7 +1371,8 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
       
-        <a href="faq/" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="faq/" class="md-footer__link md-footer__link--next" aria-label="Next: Frequently asked questions" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
@@ -1068,10 +1429,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.a1609d9a.min.js"></script>
+      <script src="assets/javascripts/bundle.756773cc.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

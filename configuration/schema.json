@@ -23,6 +23,12 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AllFunctionPathMustHaveReturn": {
+                    "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
+                },
+                "AssignAliasFieldsInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
@@ -31,6 +37,9 @@
                 },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
+                },
+                "CodeAfterAsyncCall": {
+                    "$ref": "parameters-schema.json#/definitions/CodeAfterAsyncCall"
                 },
                 "CodeBlockBeforeSub": {
                     "$ref": "parameters-schema.json#/definitions/CodeBlockBeforeSub"
@@ -337,6 +346,9 @@
                 },
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
+                },
+                "SetPermissionsForNewObjects": {
+                    "$ref": "parameters-schema.json#/definitions/SetPermissionsForNewObjects"
                 },
                 "SeveralCompilerDirectives": {
                     "$ref": "parameters-schema.json#/definitions/SeveralCompilerDirectives"
