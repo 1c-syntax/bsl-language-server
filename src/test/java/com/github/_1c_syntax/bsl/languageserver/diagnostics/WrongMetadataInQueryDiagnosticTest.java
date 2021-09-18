@@ -23,10 +23,12 @@ class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMet
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.РегистрСведений11\" внутри запроса",
-        4, 18, 51)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" внутри запроса",
+        4, 18, 55)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УдалитьИмяРегистра\" внутри запроса",
+        19, 40, 74)
 
-      .hasSize(1);
+      .hasSize(2);
 
   }
 }
