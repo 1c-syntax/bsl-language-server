@@ -46,18 +46,12 @@ import java.util.Optional;
 public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitDataSource(SDBLParser.DataSourceContext ctx) {
-    Optional.ofNullable(ctx.table())
-      .filter(this::nonMdoExists)
-      .ifPresent(table -> diagnosticStorage.addDiagnostic(table,
-        info.getMessage(table.getText())));
-
-    return super.visitDataSource(ctx);
-  }
-
-  private boolean nonMdoExists(SDBLParser.TableContext table) {
-    final var mdo = table.mdo();
-    return mdo != null && nonMdoExists(mdo.mdoType().getText(), mdo.mdoName.getText());
+  public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+    if (nonMdoExists(mdo.mdoType().getText(), mdo.mdoName.getText())){
+      diagnosticStorage.addDiagnostic(mdo,
+        info.getMessage(mdo.getText()));
+    }
+    return super.visitMdo(mdo);
   }
 
   private boolean nonMdoExists(String mdoType, String mdoName) {
