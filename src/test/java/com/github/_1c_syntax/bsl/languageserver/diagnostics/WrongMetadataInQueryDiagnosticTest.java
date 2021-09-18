@@ -9,11 +9,11 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMetadataInQueryDiagnostic> {
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+
   WrongMetadataInQueryDiagnosticTest() {
     super(WrongMetadataInQueryDiagnostic.class);
   }
-
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @Test
   void test() {
@@ -22,9 +22,9 @@ class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMet
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics);
     assertThat(diagnostics, true)
-      .hasRange(4, 18, 51)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.РегистрСведений11\" внутри запроса",
+        4, 18, 51)
 
       .hasSize(1);
 

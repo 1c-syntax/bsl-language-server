@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.BLOCKER,
+  minutesToFix = 5,
   tags = {
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.SQL
@@ -27,8 +27,9 @@ public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnosti
   @Override
   public ParseTree visitDataSource(SDBLParser.DataSourceContext ctx) {
     Optional.ofNullable(ctx.table())
-      .filter(table -> nonMdoExists(table))
-      .ifPresent(table -> diagnosticStorage.addDiagnostic(table));
+      .filter(this::nonMdoExists)
+      .ifPresent(table -> diagnosticStorage.addDiagnostic(table,
+        info.getMessage(table.getText())));
 
     return super.visitDataSource(ctx);
   }
