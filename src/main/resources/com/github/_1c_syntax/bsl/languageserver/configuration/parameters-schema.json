@@ -1862,6 +1862,16 @@
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
+        "WrongMetadataInQuery": {
+            "description": "Incorrect reference to metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect reference to metadata in the query",
+            "$id": "#/definitions/WrongMetadataInQuery"
+        },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
             "default": true,

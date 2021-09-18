@@ -1,8 +1,8 @@
-# <Diagnostic name> (WrongMetadataInQuery)
+# Incorrect reference to metadata in the query (WrongMetadataInQuery)
 
-<Metadata>
-
-## <Params>
+|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
+|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:---------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `5`           |    `suspicious`<br>`sql`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,8 +20,8 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
@@ -32,5 +32,5 @@
 ### Parameter for config
 
 ```json
-"WrongMetadataInQuery": <DiagnosticConfig>
+"WrongMetadataInQuery": false
 ```
