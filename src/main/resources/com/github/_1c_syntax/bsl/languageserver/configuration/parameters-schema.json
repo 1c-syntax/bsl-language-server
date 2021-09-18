@@ -1676,6 +1676,16 @@
             "title": "Useless collection iteration",
             "$id": "#/definitions/UseLessForEach"
         },
+        "UselessTernaryOperator": {
+            "description": "Useless ternary operator",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Useless ternary operator",
+            "$id": "#/definitions/UselessTernaryOperator"
+        },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",
             "default": true,

@@ -407,6 +407,9 @@
                 "UseLessForEach": {
                     "$ref": "parameters-schema.json#/definitions/UseLessForEach"
                 },
+                "UselessTernaryOperator": {
+                    "$ref": "parameters-schema.json#/definitions/UselessTernaryOperator"
+                },
                 "UsingCancelParameter": {
                     "$ref": "parameters-schema.json#/definitions/UsingCancelParameter"
                 },
