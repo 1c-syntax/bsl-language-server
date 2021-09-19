@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
+import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import org.eclipse.lsp4j.Range;
@@ -51,6 +52,10 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private Range diagnosticRange;
 
+  private static boolean wrongDataPath(FormItem formItem) {
+    return formItem.getDataPath().getSegment().startsWith("~");
+  }
+
   @Override
   protected void check() {
 
@@ -68,17 +73,21 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkForm(Form form) {
-    var range = documentContext.getServerContext()
+    var range = getModuleOrCommonRange(form);
+
+    form.getData().getPlainChildren().stream()
+      .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
+      .forEach(formItem -> diagnosticStorage.addDiagnostic(range,
+        info.getMessage(formItem.getName(), getMdoRef(form))));
+  }
+
+  private Range getModuleOrCommonRange(Form form) {
+    return documentContext.getServerContext()
       .getDocument(form.getMdoReference().getMdoRef(), ModuleType.FormModule)
       .flatMap(docCtx -> docCtx.getSymbolTree().getChildrenFlat().stream()
         .findFirst()
         .map(SourceDefinedSymbol::getSelectionRange))
       .orElse(diagnosticRange);
-
-    form.getData().getPlainChildren().stream()
-      .filter(formItem -> formItem.getDataPath().getSegment().startsWith("~"))
-      .forEach(formItem -> diagnosticStorage.addDiagnostic(range,
-        info.getMessage(formItem.getName(), getMdoRef(form))));
   }
 
   private String getMdoRef(Form form) {

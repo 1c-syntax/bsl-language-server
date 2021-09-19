@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -43,6 +44,7 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   public static final String ELEMENT_MESSAGE = "Не указан путь к данным у реквизита формы \"НесуществующийРеквизит\". Форма \"Справочник.Справочник1.Форма.ФормаЭлемента\".";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private DocumentContext documentContext;
+  private ServerContext serverContext;
 
   WrongDataPathForFormElementsDiagnosticTest() {
     super(WrongDataPathForFormElementsDiagnostic.class);
@@ -53,15 +55,16 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
     initServerContext(Absolute.path(PATH_TO_METADATA));
 
     documentContext = spy(getDocumentContext());
+
+    serverContext = spy(documentContext.getServerContext());
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
   }
 
   @Test
-  void test() {
+  void testNoFormModule() {
 
     when(documentContext.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
-
-    var serverContext = spy(documentContext.getServerContext());
-    when(documentContext.getServerContext()).thenReturn(serverContext);
 
     when(serverContext.getDocument(DYNAMIC_LIST_FORM_MDO_REF,
       ModuleType.FormModule)).thenReturn(Optional.of(documentContext));
