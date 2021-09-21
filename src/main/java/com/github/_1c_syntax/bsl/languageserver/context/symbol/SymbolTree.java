@@ -25,15 +25,22 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель -&gt; дети
@@ -63,6 +70,10 @@ public class SymbolTree {
    */
   @Getter(lazy = true)
   List<VariableSymbol> variables = createVariables();
+
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  Map<String, Map<SourceDefinedSymbol, VariableSymbol>> variablesByName = createVariablesByName();
+  // or add "scope" to VariableSymbol itself?
 
   /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
@@ -182,23 +193,14 @@ public class SymbolTree {
    * @return VariableSymbol, если он был найден в дереве символов.
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
-    return createChildrenFlat(scopeSymbol).stream()
-      .filter(symbol -> symbol.getSymbolKind() == SymbolKind.Variable)
-      .filter(symbol -> variableName.equalsIgnoreCase(symbol.getName()))
-      .map(symbol -> (VariableSymbol)symbol)
-      .findAny();
+    return Optional.ofNullable(
+      getVariablesByName().getOrDefault(variableName, Collections.emptyMap()).get(scopeSymbol)
+    );
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
     List<SourceDefinedSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
-
-    return symbols;
-  }
-
-  private List<SourceDefinedSymbol> createChildrenFlat(SourceDefinedSymbol scopeSymbol) {
-    List<SourceDefinedSymbol> symbols = new ArrayList<>();
-    scopeSymbol.getChildren().forEach(child -> flatten(child, symbols));
 
     return symbols;
   }
@@ -209,6 +211,22 @@ public class SymbolTree {
 
   private List<VariableSymbol> createVariables() {
     return getChildrenFlat(VariableSymbol.class);
+  }
+
+  private Map<String, Map<SourceDefinedSymbol, VariableSymbol>> createVariablesByName() {
+    return getVariables().stream()
+      .collect(
+        groupingBy(
+          VariableSymbol::getName,
+          toMap(SymbolTree::getVariableScope, Function.identity())
+        )
+      );
+  }
+
+  private static SourceDefinedSymbol getVariableScope(VariableSymbol symbol) {
+    return symbol.getRootParent(SymbolKind.Method)
+      .or(() -> symbol.getRootParent(SymbolKind.Module))
+      .orElseThrow();
   }
 
   private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
