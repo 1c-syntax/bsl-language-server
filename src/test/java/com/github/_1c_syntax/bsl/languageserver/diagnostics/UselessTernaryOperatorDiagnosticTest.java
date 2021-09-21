@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -51,4 +53,34 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .hasRange(8, 4, 8, 18);
 
   }
+
+  @Test
+  void testQuickFix() {
+
+    final DocumentContext documentContext = getDocumentContext();
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    final Diagnostic directDiagnostic = diagnostics.get(0);
+    List<CodeAction> directQuickFixes = getQuickFixes(directDiagnostic);
+    assertThat(directQuickFixes).hasSize(1);
+    final CodeAction directQuickFix = directQuickFixes.get(0);
+    assertThat(directQuickFix)
+      .of(diagnosticInstance)
+      .in(documentContext)
+      .fixes(directDiagnostic)
+      .hasChanges(1)
+      .hasNewText("Б=1");
+
+    final Diagnostic reversDiagnostic = diagnostics.get(1);
+    List<CodeAction> reversQuickFixes = getQuickFixes(reversDiagnostic);
+    assertThat(reversQuickFixes).hasSize(1);
+    final CodeAction reversQuickFix = reversQuickFixes.get(0);
+    assertThat(reversQuickFix)
+      .of(diagnosticInstance)
+      .in(documentContext)
+      .fixes(reversDiagnostic)
+      .hasChanges(1)
+      .hasNewText("NOT (Б=0)");
+  }
+
 }

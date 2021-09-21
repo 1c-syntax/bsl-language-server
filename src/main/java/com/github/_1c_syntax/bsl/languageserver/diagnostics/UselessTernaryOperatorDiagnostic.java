@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -52,32 +53,25 @@ import java.util.List;
 )
 public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
+  private static final int SKIPPED_RULE_INDEX = 0;
+
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx){
 
-    var emptyToken = 0;
     var exp = ctx.expression();
     var condition = getBooleanToken(exp.get(0));
     var trueBranch = getBooleanToken(exp.get(1));
     var falseBranch = getBooleanToken(exp.get(2));
 
-    if (condition != emptyToken) {
+    if (condition != SKIPPED_RULE_INDEX) {
       diagnosticStorage.addDiagnostic(ctx);
     } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE){
       var dgs = diagnosticStorage.addDiagnostic(ctx);
       dgs.ifPresent(diagnostic -> diagnostic.setData(exp.get(0).getText()));
     } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE){
       var dgs = diagnosticStorage.addDiagnostic(ctx);
-      if (dgs.isPresent()) {
-        if(documentContext.getServerContext().getConfiguration().getDefaultLanguage() == MDLanguage.ENGLISH) {
-          dgs.get().setData("NOT (" + exp.get(0).getText() + ")");
-        } else {
-          dgs.get().setData("НЕ (" + exp.get(0).getText() + ")");
-        }
-      }
-    } else if (trueBranch != emptyToken){
-      diagnosticStorage.addDiagnostic(ctx);
-    } else if (falseBranch != emptyToken){
+      dgs.ifPresent(diagnostic -> diagnostic.setData(getAdaptedText(exp.get(0).getText())));
+    } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX){
       diagnosticStorage.addDiagnostic(ctx);
     }
 
@@ -108,24 +102,33 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
   }
 
-  private int getBooleanToken(BSLParser.ExpressionContext expCtx){
-
-    if (expCtx.children.size() == 1){
-      var mmbCtx = (BSLParser.MemberContext) expCtx.getChild(0);
-      var parseTree = mmbCtx.getChild(0);
-      if (parseTree instanceof BSLParser.ConstValueContext){
-        var constValue = (BSLParser.ConstValueContext) parseTree;
-        var tokenTrue = constValue.getToken(BSLParser.TRUE, 0);
-        if (tokenTrue != null) {
-          return BSLParser.TRUE;
-        }
-        var tokenFalse = constValue.getToken(BSLParser.FALSE, 0);
-        if (tokenFalse != null) {
-          return BSLParser.FALSE;
-        }
-      }
+  private String getAdaptedText(String text) {
+    if(documentContext.getServerContext().getConfiguration().getDefaultLanguage() == MDLanguage.ENGLISH) {
+      return "NOT (" + text + ")";
+    } else {
+      return "НЕ (" + text + ")";
     }
-    return 0;
   }
 
+  private int getBooleanToken(BSLParser.ExpressionContext expCtx){
+
+    return Optional.of(expCtx)
+      .filter(ctx -> ctx.children.size() == 1)
+      .map(ctx -> (BSLParser.MemberContext) ctx.getChild(0))
+      .map(ctx -> ctx.getChild(0))
+      .filter(BSLParser.ConstValueContext.class::isInstance)
+      .map(BSLParser.ConstValueContext.class::cast)
+      .map(ctx -> ctx.getToken(BSLParser.TRUE, 0))
+      .map(ctx -> BSLParser.TRUE)
+      .or(() -> Optional.of(expCtx)
+          .filter(ctx -> ctx.children.size() == 1)
+          .map(ctx -> (BSLParser.MemberContext) ctx.getChild(0))
+          .map(ctx -> ctx.getChild(0))
+          .filter(BSLParser.ConstValueContext.class::isInstance)
+          .map(BSLParser.ConstValueContext.class::cast)
+          .map(ctx -> ctx.getToken(BSLParser.FALSE, 0))
+          .map(ctx -> BSLParser.FALSE)
+        )
+      .orElse(SKIPPED_RULE_INDEX);
+  }
 }
