@@ -27,12 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
@@ -41,6 +41,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -182,6 +183,7 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final Map<BSLParser.SubContext, SourceDefinedSymbol> scopeCache = new HashMap<>();
 
     @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
@@ -227,7 +229,7 @@ public class ReferenceIndexFiller {
       return super.visitComplexIdentifier(ctx);
     }
 
-    private Optional<VariableSymbol> findVariableSymbol(ParserRuleContext ctx, String variableName) {
+    private Optional<VariableSymbol> findVariableSymbol(BSLParserRuleContext ctx, String variableName) {
       var variableSymbol = documentContext.getSymbolTree()
         .getVariableSymbol(variableName, getVariableScope(ctx));
 
@@ -239,24 +241,17 @@ public class ReferenceIndexFiller {
         .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
     }
 
-    private SourceDefinedSymbol getVariableScope(ParserRuleContext ctx) {
-
-      if (ctx instanceof BSLParser.SubContext) {
-        var methodSymbol = documentContext
-          .getSymbolTree()
-          .getMethodSymbol((BSLParser.SubContext) ctx);
-
-        if (methodSymbol.isPresent()) {
-          return methodSymbol.get();
-        }
+    private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
+      var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+      if (sub == null) {
+        return documentContext.getSymbolTree().getModule();
       }
 
-      var parent = ctx.getParent();
-      if (parent != null) {
-        return getVariableScope(parent);
-      }
-
-      return documentContext.getSymbolTree().getModule();
+      return scopeCache.computeIfAbsent(sub, subContext -> documentContext
+        .getSymbolTree()
+        .getMethodSymbol(subContext)
+        .orElseThrow()
+      );
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {

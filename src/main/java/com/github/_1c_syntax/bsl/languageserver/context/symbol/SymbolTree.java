@@ -71,9 +71,9 @@ public class SymbolTree {
   @Getter(lazy = true)
   List<VariableSymbol> variables = createVariables();
 
-  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  // TODO: value = AccessLevel.PRIVATE после окончания тестирования производительности
+  @Getter(lazy = true)
   Map<String, Map<SourceDefinedSymbol, VariableSymbol>> variablesByName = createVariablesByName();
-  // or add "scope" to VariableSymbol itself?
 
   /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
