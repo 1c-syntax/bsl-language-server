@@ -61,6 +61,10 @@ public class DocumentContextLazyDataMeasurer {
       measureCollector.measureIt(sdblTokenizer::getAst, "context: queryAst");
     }
     measureCollector.measureIt(documentContext::getSymbolTree, "context: symbolTree");
+    measureCollector.measureIt(documentContext.getSymbolTree()::getChildrenFlat, "context: symbolTree - childrenFlat");
+    measureCollector.measureIt(documentContext.getSymbolTree()::getMethods, "context: symbolTree - methods");
+    measureCollector.measureIt(documentContext.getSymbolTree()::getVariables, "context: symbolTree - variables");
+    measureCollector.measureIt(documentContext.getSymbolTree()::getVariablesByName, "context: symbolTree - variablesByName");
     measureCollector.measureIt(documentContext::getDiagnosticIgnorance, "context: diagnosticIgnorance");
     measureCollector.measureIt(documentContext::getCognitiveComplexityData, "context: cognitiveComplexity");
     measureCollector.measureIt(documentContext::getCyclomaticComplexityData, "context: cyclomaticComplexity");
