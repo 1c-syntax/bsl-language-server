@@ -85,6 +85,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
   @SneakyThrows
   @AfterEach
   void deleteTmpDir() {
+    System.gc();
     FileUtils.deleteDirectory(tempDir.toFile());
   }
 

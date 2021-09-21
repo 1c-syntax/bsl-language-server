@@ -59,7 +59,7 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
         sourceDefinedSymbol,
         uri,
         sourceDefinedSymbol.getSelectionRange(),
-        OccurrenceType.REFERENCE)
+        OccurrenceType.DEFINITION)
       )
       .findFirst();
   }

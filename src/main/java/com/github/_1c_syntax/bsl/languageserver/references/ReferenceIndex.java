@@ -232,11 +232,12 @@ public class ReferenceIndex {
 
     var uri = symbolOccurrence.getLocation().getUri();
     var range = symbolOccurrence.getLocation().getRange();
+    var occurrenceType = symbolOccurrence.getOccurrenceType();
 
     return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
-        return new Reference(from, symbol, uri, range, symbolOccurrence.getOccurrenceType());
+        return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }

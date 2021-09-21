@@ -57,7 +57,7 @@ public class Reference {
   Range selectionRange;
 
   /**
-   * Признак указания на обновление значения переменной.
+   * Тип обращения к символу в ссылке.
    */
   OccurrenceType occurrenceType;
 
@@ -76,10 +76,15 @@ public class Reference {
   }
 
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), OccurrenceType.REFERENCE);
+    return of(from, symbol, location, OccurrenceType.REFERENCE);
   }
 
-  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location, OccurrenceType occurrenceType) {
+  public static Reference of(
+    SourceDefinedSymbol from,
+    Symbol symbol,
+    Location location,
+    OccurrenceType occurrenceType
+  ) {
     return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), occurrenceType);
   }
 

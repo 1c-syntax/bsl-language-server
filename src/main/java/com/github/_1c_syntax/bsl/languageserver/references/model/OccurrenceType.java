@@ -21,7 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+/**
+ * Тип обращения к символу.
+ */
 public enum OccurrenceType {
+  /**
+   * Ссылка. Например, <code>Б</code> в <code>А = Б;</code>.
+   */
   REFERENCE,
+
+  /**
+   * Определение. Например, <code>А</code> в <code>А = Б;</code>.
+   */
   DEFINITION
 }

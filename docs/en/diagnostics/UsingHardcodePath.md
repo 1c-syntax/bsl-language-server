@@ -4,7 +4,7 @@
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Error` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
-## Parameters 
+## Parameters
 
 
 |           Name            |   Type   |                   Description                    |                                       Default value                                       |
