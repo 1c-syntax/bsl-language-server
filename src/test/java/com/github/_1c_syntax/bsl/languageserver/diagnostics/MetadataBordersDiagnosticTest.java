@@ -14,13 +14,25 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   }
 
   @Test
-  void test() {
+  void testWithoutSettings() {
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(0);
   }
 
   @Test
-  void testConfigure() {
+  void testMatchesInValidModule() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"MetadataBordersDiagnostic\"}");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testMatchesInWrongModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"MetadataBordersDiagnostic\"}");
