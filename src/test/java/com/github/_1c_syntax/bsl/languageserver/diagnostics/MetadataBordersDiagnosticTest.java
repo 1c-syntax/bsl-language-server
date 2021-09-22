@@ -23,7 +23,7 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   void testMatchesInValidModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"MetadataBordersDiagnostic\"}");
+    configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"fake-uri\"}");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -40,14 +40,11 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(0, 42, 0, 47)
-      .hasRange(0, 48, 0, 54)
-      .hasRange(4, 4, 4, 9)
-      .hasRange(6, 24, 6, 29)
-      .hasRange(6, 34, 6, 39)
-      .hasRange(8, 4, 8, 10);
-
+      .hasRange(3, 0, 6, 41)
+      .hasRange(3, 0, 6, 41)
+      .hasRange(3, 0, 6, 41)
+      .hasRange(8, 0, 8, 55);
   }
 }

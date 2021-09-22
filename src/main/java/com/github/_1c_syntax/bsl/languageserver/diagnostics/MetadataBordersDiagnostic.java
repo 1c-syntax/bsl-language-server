@@ -47,13 +47,18 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
     for (Map.Entry<String, String> entry: metadataBordersParameters.entrySet()) {
 
-      if (entry.getKey().trim().length() == 0) {
+      if (entry.getKey().isBlank() || entry.getValue().isBlank()) {
         continue;
       }
 
-      Pattern pattern = CaseInsensitivePattern.compile(entry.getKey());
-      Matcher matcher = pattern.matcher(ctx.getText());
-      while (matcher.find()) {
+      Pattern patternWhat = CaseInsensitivePattern.compile(entry.getKey());
+      Matcher matcherWhat = patternWhat.matcher(ctx.getText());
+
+      Pattern patternWhere = CaseInsensitivePattern.compile(entry.getValue());
+      Matcher matcherWhere = patternWhere.matcher(this.documentContext.getUri().getPath());
+      boolean insideBorders = matcherWhere.find();
+
+      while (matcherWhat.find() && ! insideBorders) {
         diagnosticStorage.addDiagnostic(ctx);
       }
     }
