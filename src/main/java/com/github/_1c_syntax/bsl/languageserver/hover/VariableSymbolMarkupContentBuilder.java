@@ -38,7 +38,6 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<VariableSymbol> {
 
-  private static final String VARIABLE_LOCATION_KEY = "variableLocation";
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
 
@@ -95,14 +94,22 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     );
   }
 
-  private String getLocation(VariableSymbol symbol) {
+  private static String getLocation(VariableSymbol symbol) {
+    var documentContext = symbol.getOwner();
+    var startPosition = symbol.getSelectionRange().getStart();
     String mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
+
     String parentPostfix = symbol.getRootParent(SymbolKind.Method)
       .map(sourceDefinedSymbol -> "." + sourceDefinedSymbol.getName())
       .orElse("");
-
     mdoRef += parentPostfix;
-    return getResourceString(VARIABLE_LOCATION_KEY, mdoRef);
+
+    return String.format(
+      "[%s](%s#%d)",
+      mdoRef,
+      documentContext.getUri(),
+      startPosition.getLine() + 1
+    );
   }
 
   private static void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
@@ -115,9 +122,5 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
 
   private String getResourceString(String key) {
     return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
-  }
-
-  private String getResourceString(String key, Object... args) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key, args);
   }
 }
