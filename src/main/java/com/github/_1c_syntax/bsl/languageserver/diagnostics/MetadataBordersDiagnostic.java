@@ -21,7 +21,7 @@ import java.util.regex.*;
 )
 public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final String METADATA_BORDERS_DEFAULT = "{\"\":\"\"}";
+  private static final String METADATA_BORDERS_DEFAULT = "";
 
   @DiagnosticParameter(
     type = String.class,
@@ -39,8 +39,7 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    this.metadataBordersParameters = MapFromJSON(
-      (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
+    this.metadataBordersParameters = MapFromJSON( (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
   }
 
   @Override
