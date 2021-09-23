@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +58,10 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   // +1 for next line and +1 for 1..n based line numbers.
   private static final int QUERY_START_LINE_OFFSET = 2;
 
+  private static final Pattern IN_STRING = Pattern.compile("[\"|][^\"\\n]+(?:\"|$)", Pattern.MULTILINE);
+
   private final Set<Integer> queryFirstLines = new HashSet<>();
+  private final Map<Integer, Integer> commentStarts = new HashMap<>();
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -97,7 +101,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-
+    findCommentStarts();
     findQueryFirstLines();
 
     if (checkFirstSymbol){
@@ -108,23 +112,67 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     }
   }
 
+  private void findCommentStarts() {
+    documentContext.getComments().forEach(token ->
+      commentStarts.put(token.getLine() - 1, token.getCharPositionInLine())
+    );
+  }
+
   private void findQueryFirstLines() {
-    documentContext.getQueries().forEach(query -> queryFirstLines.add(query.getAst().getStart().getLine()));
+    documentContext.getQueries().forEach(query ->
+      queryFirstLines.add(query.getAst().getStart().getLine())
+    );
   }
 
   private void checkContent(Pattern pattern) {
     String[] contentList = documentContext.getContentList();
     String checkText;
 
-    for (var i = 0; i < contentList.length; i++) {
-      checkText = contentList[i];
+    for (var line = 0; line < contentList.length; line++) {
+      checkText = contentList[line];
+
+      var queryStartsAtNextLine = queryFirstLines.contains(line + QUERY_START_LINE_OFFSET);
+
+      if (queryStartsAtNextLine) {
+        continue;
+      }
 
       var matcher = pattern.matcher(checkText);
 
-      if (matcher.find() && !queryFirstLines.contains(i + QUERY_START_LINE_OFFSET)) {
-        diagnosticStorage.addDiagnostic(i, matcher.start(1), i, matcher.end(1));
+      var found = matcher.find();
+      if (!found) {
+        continue;
+      }
+
+      var start = matcher.start(1);
+      var end = matcher.end(1);
+
+      boolean inComment = isInComment(line, end);
+      if (inComment) {
+        continue;
+      }
+
+      boolean inString = isInString(checkText, start, end);
+      if (inString) {
+        continue;
+      }
+
+      diagnosticStorage.addDiagnostic(line, start, line, end);
+    }
+  }
+
+  private boolean isInComment(int line, int end) {
+    return end >= commentStarts.getOrDefault(line, Integer.MAX_VALUE);
+  }
+
+  private static boolean isInString(String checkText, int start, int end) {
+    var inStringMatcher = IN_STRING.matcher(checkText);
+    while (inStringMatcher.find()) {
+      if (inStringMatcher.start() <= start && inStringMatcher.end() >= end) {
+        return true;
       }
     }
+    return false;
   }
 
   private static Pattern getPatternSearch(String startPattern, String searchSymbols, String endPattern) {

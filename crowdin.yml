@@ -5,6 +5,8 @@ files:
     translation: /docs/%two_letters_code%/contributing/%original_file_name%
   - source: /docs/diagnostics/*.md
     translation: /docs/%two_letters_code%/diagnostics/%original_file_name%
+    ignore:
+      - /docs/diagnostics/index.md
   - source: /docs/features/**/*.md
     translation: /docs/%two_letters_code%/features/%original_file_name%
   - source: /docs/reporters/**/*.md

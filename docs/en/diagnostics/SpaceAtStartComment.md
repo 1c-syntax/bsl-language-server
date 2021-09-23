@@ -4,7 +4,7 @@
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
-## Parameters 
+## Parameters
 
 
 |         Name         |   Type   |                                        Description                                         |  Default value  |

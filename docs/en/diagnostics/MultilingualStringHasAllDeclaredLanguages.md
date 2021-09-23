@@ -4,7 +4,7 @@
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
 | `Error` | `BSL` | `Minor`  |             `Yes`             |           `2`           |    `error`<br>`localize`    |
 
-## Parameters 
+## Parameters
 
 
 |        Name         |   Type   |     Description      | Default value |
