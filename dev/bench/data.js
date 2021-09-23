@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1632404592340,
+  "lastUpdate": 1632405100367,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13392,6 +13392,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.4581349375591315",
             "extra": "mean: 77.61243343353271 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "8121884e978711d983f5c7028841e7ed4852496e",
+          "message": "Merge branch 'hotfix/v0.19.1' into develop",
+          "timestamp": "2021-09-23T16:34:05+03:00",
+          "tree_id": "b7bb9fea58d8e2fa79fc152a2bbecdedbabdab28",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8121884e978711d983f5c7028841e7ed4852496e"
+        },
+        "date": 1632405097309,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.92906800905864,
+            "unit": "sec",
+            "range": "stddev: 1.5488260281488766",
+            "extra": "mean: 76.92906800905864 sec\nrounds: 3"
           }
         ]
       }
