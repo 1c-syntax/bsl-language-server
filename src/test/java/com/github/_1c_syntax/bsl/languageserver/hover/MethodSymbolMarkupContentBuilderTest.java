@@ -73,7 +73,7 @@ class MethodSymbolMarkupContentBuilderTest {
       "Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, П2_5, Знач П3: Структура = \"\", " +
       "П4: Массив | СписокЗначений, ПДата: См. ОбщийМодуль.СуперМетод() = '20100101', ПДатаВремя = '20110101121212', " +
       "П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура\n```\n\n");
-    assertThat(blocks.get(1)).matches("Метод из file://.*/src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl\n\n");
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl#\\d+\\)\n\n");
     assertThat(blocks.get(2)).isEqualTo("Описание функции.\nМногострочное.\n\n");
     assertThat(blocks.get(3)).isEqualTo("**Параметры:**\n\n" +
       "* **П1**: `Дата` | `Число` - Описание даты/числа  \n" +
@@ -126,7 +126,7 @@ class MethodSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSize(2);
     assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
       "Процедура ТестЭкспортная() Экспорт\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из Catalog.Справочник1\n\n");
+    assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ManagerModule.bsl#\\d+\\)\n\n");
   }
 
   @Test
@@ -146,7 +146,7 @@ class MethodSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSize(3);
     assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
       "Процедура УстаревшаяПроцедура() Экспорт\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из CommonModule.ПервыйОбщийМодуль\n\n");
+    assertThat(blocks.get(1)).matches("\\[CommonModule.ПервыйОбщийМодуль]\\(.*CommonModules/.*/Ext/Module.bsl#\\d+\\)\n\n");
     assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 

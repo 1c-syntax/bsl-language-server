@@ -24,7 +24,7 @@
 - <a href="features">Features</a>
 - [Frequently asked questions](faq.md)
 - [System requirements](systemRequirements.md)
-- <a href="#thanks">Special thanks</a>
+- <a href="#thanks">Acknowledgments</a>
 
 <a id="capabilities"></a>
 
@@ -35,12 +35,80 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 - File formatting
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
-- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
+- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
 - Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
+- Tooltip on local methods and methods of common / manager modules
+- Go to method definitions
+- Finding places to use methods
+- Method call hierarchy
+- Expand selection
+- Display color representation and convert between `Color and `WebColors`
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
 - Run formatter engine from command line
+
+
+## Supported protocol operations
+
+??? workspace
+| Operation                                                     | Supported                                                    | Comment                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
+| [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions, see [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
+| [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
+| [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/cross.svg" alt="no" width="20"> |                                                              |
+| [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
+| [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
+
+??? "Text Synchronization"
+| Opertaion                                                                                                                                            | Supported                                                      | Comment                                                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [didOpen](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [didChange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | textDocumentSyncKind = Full                                  |                  |
+| [didClose](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [didSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [willSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [willSaveWaitUntil](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+
+??? textDocument
+| Operation                                                     | Supported                                                    | Comment                                                  | Configurable? |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------- |
+| [publishDiagnostics](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | tagSupport = true<br />versionSupport = true<br />[список диагностик](./diagnostics/index.md) | yes               |
+| [completion](https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md) | <img src="./assets/images/cross.svg" alt="no" width="20">    | resolveProvider = false                                      |                  |
+| [completionItem/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | contentFormat = MarkupContent                                |                  |
+| [signatureHelp](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [declaration](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_declaration) | <img src="./assets/images/cross.svg" alt="no" width="20">    | not applicable in 1C:Enterprise                                |                  |
+| [definition](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | linkSupport = true                                           |                  |
+| [typeDefinition](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [implementation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) | <img src="./assets/images/cross.svg" alt="no" width="20">    | not applicable in 1C:Enterprise                                |                  |
+| [references](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [documentHighlight](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [documentSymbol](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | hierarchicalDocumentSymbolSupport = true                     |                  |
+| [codeAction](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | codeActionKinds = ? (see [#1433](https://github.com/1c-syntax/bsl-language-server/issues/1433))<br />isPreferredSupport = true | yes               |
+| [codeAction/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [codeLens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | resolveProvider = false                                      | да               |
+| [codeLens/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [codeLens/refresh](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [documentLink](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Displaying hyperlinks to diagnostics documentation.<br />tooltipSupport = true<br />resolveProvider = false | yes               |
+| [documentLink/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [documentColor](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+| [colorPresentation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+| [formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [rangeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [rename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [prepareRename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [foldingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [selectionRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+| [prepareCallHierarchy](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [callHierarchy/incomingCalls](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [callHierarchy/outgoingCalls](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+| [semanticTokens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [linkedEditingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+| [moniker](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
 
 <a id="cli"></a>
 
@@ -49,7 +117,18 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 jar-files run through `java -jar path/to/file.jar`.
 
 ```sh
-java -jar bsl-language-server.jar --help  BSL language server Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]   -c, --configuration=<path>                Path to language server configuration file   -h, --help   Show this help message and exit Commands:   analyze, -a, --analyze  Run analysis and get diagnostic info   format, -f, --format    Format files in source directory   version, -v, --version  Print version   lsp, --lsp              LSP server mode (default)
+java -jar bsl-language-server.jar --help
+
+BSL language server
+Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]
+  -c, --configuration=<path>
+               Path to language server configuration file
+  -h, --help   Show this help message and exit
+Commands:
+  analyze, -a, --analyze  Run analysis and get diagnostic info
+  format, -f, --format    Format files in source directory
+  version, -v, --version  Print version
+  lsp, --lsp              LSP server mode (default)
 ```
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
@@ -63,10 +142,22 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 To run in analyzer mode use parameter `--analyze` (short `-a`).
 
 ```sh
-Usage: bsl-language-server analyze [-hq] [-c=<path>] [-o=<path>] [-s=<path>]                                    [-r=<keys>]... Run analysis and get diagnostic info   -c, --configuration=<path>                            Path to language server configuration file   -h, --help               Show this help message and exit   -o, --outputDir=<path>   Output report directory   -q, --silent             Silent mode   -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)   -s, --srcDir=<path>      Source directory   -w, --workspaceDir=<path>                             Workspace directory
+Usage: bsl-language-server analyze [-hq] [-c=<path>] [-o=<path>] [-s=<path>]
+                                   [-r=<keys>]...
+Run analysis and get diagnostic info
+  -c, --configuration=<path>
+                           Path to language server configuration file
+  -h, --help               Show this help message and exit
+  -o, --outputDir=<path>   Output report directory
+  -q, --silent             Silent mode
+  -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)
+  -s, --srcDir=<path>      Source directory
+  -w, --workspaceDir=<path> 
+                           Workspace directory
 ```
 
-To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder. To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
+To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder. 
+To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
 
 Command line example to run analysis:
 
@@ -87,7 +178,11 @@ java -Xmx4g -jar bsl-language-server.jar ... other parameters
 To run in formatter mode use parameter `--format` (short `-f`).
 
 ```sh
-Usage: bsl-language-server format [-hq] [-s=<path>] Format files in source directory   -h, --help            Show this help message and exit   -q, --silent          Silent mode   -s, --srcDir=<path>   Source directory
+Usage: bsl-language-server format [-hq] [-s=<path>]
+Format files in source directory
+  -h, --help            Show this help message and exit
+  -q, --silent          Silent mode
+  -s, --src=<path>      Source directory or file
 ```
 
 To set source code folder (or source file) for formatting use parameter `--src` (short `-s`) followed by the path (relative or absolute) to the source code folder (or file).
@@ -122,7 +217,7 @@ With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 
-[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com?from=bsl-language-server)  
+[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com?from=bsl-language-server)
 
 [JetBrains](https://www.jetbrains.com?from=bsl-language-server) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 

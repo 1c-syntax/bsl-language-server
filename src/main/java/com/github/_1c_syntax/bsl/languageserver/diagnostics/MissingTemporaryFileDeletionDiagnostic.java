@@ -187,21 +187,31 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   }
 
   private static String getFullMethodName(BSLParser.AccessCallContext ctx) {
-    var parent = (BSLParserRuleContext) ctx.getParent();
+    var parent = ctx.getParent();
     var prefix = "";
-    List<? extends BSLParser.ModifierContext> modifier;
+    List<? extends BSLParser.ModifierContext> modifiers;
 
     if (parent instanceof BSLParser.CallStatementContext) {
 
-      modifier = ((BSLParser.CallStatementContext) parent).modifier();
-      prefix = ((BSLParser.CallStatementContext) parent).IDENTIFIER().getText();
+      var callStatement = (BSLParser.CallStatementContext) parent;
+
+      modifiers =callStatement.modifier();
+      if (callStatement.globalMethodCall() != null) {
+        prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
+      } else {
+        prefix = callStatement.IDENTIFIER().getText();
+      }
 
     } else if (parent instanceof BSLParser.ModifierContext
       && parent.getParent() instanceof BSLParser.ComplexIdentifierContext) {
 
       var root = (BSLParser.ComplexIdentifierContext) parent.getParent();
-      modifier = root.modifier();
-      prefix = root.IDENTIFIER().getText();
+      modifiers = root.modifier();
+
+      var terminalNode = root.IDENTIFIER();
+      if (terminalNode != null) {
+        prefix = terminalNode.getText();
+      }
 
     } else {
       // остальные к методам не относятся
@@ -209,9 +219,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     }
 
     return prefix
-      + modifier.stream()
+      + modifiers.stream()
       .takeWhile(element -> element != parent)
-      .map(BSLParserRuleContext::getText)
+      .map(ParseTree::getText)
       .collect(Collectors.joining())
       + "." + ctx.methodCall().methodName().IDENTIFIER().getText();
   }

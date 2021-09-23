@@ -44,8 +44,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final String TOP_ONE_STRING = "1";
-
   // for skip queries with 'TOP 1' limitation without 'ORDER BY'
   private static final boolean SKIP_SELECT_TOP_ONE = true;
   @DiagnosticParameter(
@@ -85,7 +83,8 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
     }
 
     var topLimit = topCtx.DECIMAL().get(0).getText();
-    if (!(TOP_ONE_STRING.equals(topLimit) && (canTopOne || ctx.where().WHERE() != null))) {
+    boolean allowedTopNumber = "1".equals(topLimit) || "0".equals(topLimit);
+    if (!(allowedTopNumber && (canTopOne || ctx.where().WHERE() != null))) {
       diagnosticStorage.addDiagnostic(topCtx);
     }
   }

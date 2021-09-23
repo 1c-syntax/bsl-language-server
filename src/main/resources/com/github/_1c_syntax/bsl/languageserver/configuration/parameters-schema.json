@@ -4,6 +4,30 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                },
+                "ignoreMissingElseOnExit": {
+                    "description": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
         "AssignAliasFieldsInQuery": {
             "description": "Assigning aliases to selected fields in a query",
             "default": true,
@@ -43,6 +67,16 @@
             ],
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
+        },
+        "CodeAfterAsyncCall": {
+            "description": "Lines of code after the asynchronous method call",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lines of code after the asynchronous method call",
+            "$id": "#/definitions/CodeAfterAsyncCall"
         },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
