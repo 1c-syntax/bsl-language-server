@@ -1,9 +1,15 @@
-# <Diagnostic name> (metadataBorders)
+# Границы метаданных (MetadataBorders)
 
-<Metadata>
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------:|
+| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `error` |
 
-## <Params>
+## Parameters 
 
+
+|            Name             |   Type   |                                                                                        Description                                                                                        | Default value |
+|:---------------------------:|:--------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------:|
+| `metadataBordersParameters` | `String` | `JSON-структура для пар "регулярное выражение для операторов":"регулярное выражение для имени модуля". Например, "Регистры?Сведений.КонтактнаяИнформация:ОбщийМодуль.РаботаСКонтактами".` |      ``       |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,17 +26,19 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:metadataBorders-off
-// BSLLS:metadataBorders-on
+// BSLLS:MetadataBorders-off
+// BSLLS:MetadataBorders-on
 ```
 
 ### Parameter for config
 
 ```json
-"metadataBorders": <DiagnosticConfig>
+"MetadataBorders": {
+    "metadataBordersParameters": ""
+}
 ```
