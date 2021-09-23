@@ -112,21 +112,20 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
   private int getBooleanToken(BSLParser.ExpressionContext expCtx){
 
-    return Optional.of(expCtx)
+    var tmpCtx = Optional.of(expCtx)
       .filter(ctx -> ctx.children.size() == 1)
       .map(ctx -> (BSLParser.MemberContext) ctx.getChild(0))
       .map(ctx -> ctx.getChild(0))
       .filter(BSLParser.ConstValueContext.class::isInstance)
-      .map(BSLParser.ConstValueContext.class::cast)
-      .map(ctx -> ctx.getToken(BSLParser.TRUE, 0))
+      .map(BSLParser.ConstValueContext.class::cast);
+
+    return Optional.of(tmpCtx)
+      .filter(Optional::isPresent)
+      .map(ctx -> ctx.get().getToken(BSLParser.TRUE, 0))
       .map(ctx -> BSLParser.TRUE)
-      .or(() -> Optional.of(expCtx)
-          .filter(ctx -> ctx.children.size() == 1)
-          .map(ctx -> (BSLParser.MemberContext) ctx.getChild(0))
-          .map(ctx -> ctx.getChild(0))
-          .filter(BSLParser.ConstValueContext.class::isInstance)
-          .map(BSLParser.ConstValueContext.class::cast)
-          .map(ctx -> ctx.getToken(BSLParser.FALSE, 0))
+      .or(() -> Optional.of(tmpCtx)
+          .filter(Optional::isPresent)
+          .map(ctx -> ctx.get().getToken(BSLParser.FALSE, 0))
           .map(ctx -> BSLParser.FALSE)
         )
       .orElse(SKIPPED_RULE_INDEX);
