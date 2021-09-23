@@ -82,7 +82,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     setConfigurationRoot(params);
     CompletableFuture.runAsync(context::populateContext);
 
-    ServerCapabilities capabilities = new ServerCapabilities();
+    var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
@@ -99,7 +99,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
 
-    InitializeResult result = new InitializeResult(capabilities, serverInfo);
+    var result = new InitializeResult(capabilities, serverInfo);
 
     return CompletableFuture.completedFuture(result);
   }
@@ -160,14 +160,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
-    TextDocumentSyncOptions textDocumentSync = new TextDocumentSyncOptions();
+    var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
     textDocumentSync.setChange(TextDocumentSyncKind.Full);
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
-    SaveOptions save = new SaveOptions();
+    var save = new SaveOptions();
     save.setIncludeText(Boolean.FALSE);
 
     textDocumentSync.setSave(save);
