@@ -37,7 +37,7 @@ import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
   tags = {
     DiagnosticTag.STANDARD,

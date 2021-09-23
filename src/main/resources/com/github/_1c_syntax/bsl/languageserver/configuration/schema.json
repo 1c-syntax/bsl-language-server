@@ -23,6 +23,9 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AllFunctionPathMustHaveReturn": {
+                    "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
+                },
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
@@ -37,6 +40,9 @@
                 },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
+                },
+                "CodeAfterAsyncCall": {
+                    "$ref": "parameters-schema.json#/definitions/CodeAfterAsyncCall"
                 },
                 "CodeBlockBeforeSub": {
                     "$ref": "parameters-schema.json#/definitions/CodeBlockBeforeSub"

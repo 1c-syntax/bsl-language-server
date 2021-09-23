@@ -8,4 +8,5 @@ Used to get analysis results.
 * [generic](generic.md) - analysis results in [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/) format for SonarQube;
 * [junit](junit.md);
 * [tslint](tslint.md);
+* [sarif](sarif.md);
 * [console](console.md).

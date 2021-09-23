@@ -4,7 +4,7 @@
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
 | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`suspicious`       |
 
-## Parameters 
+## Parameters
 
 
 |        Name        |   Type    |                Description                | Default value |

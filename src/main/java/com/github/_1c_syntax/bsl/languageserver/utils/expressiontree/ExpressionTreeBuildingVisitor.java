@@ -82,6 +82,8 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
           visitOperation((BSLParser.OperationContext) child);
         } else if (child.getClass() == BSLParser.MemberContext.class) {
           visitMember((BSLParser.MemberContext) child);
+        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {
+          continue;
         } else {
           throw new IllegalStateException();
         }

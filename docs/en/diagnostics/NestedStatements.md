@@ -4,7 +4,7 @@
 |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
 | `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `30`           |    `badpractice`<br>`brainoverload`    |
 
-## Parameters 
+## Parameters
 
 
 |       Name        |   Type    |    Description     | Default value |

@@ -33,7 +33,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
   tags = {
     DiagnosticTag.SQL,

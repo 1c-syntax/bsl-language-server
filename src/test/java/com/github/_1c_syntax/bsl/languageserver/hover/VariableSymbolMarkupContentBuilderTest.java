@@ -74,7 +74,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем ИмяБезОписания\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
   }
 
@@ -97,7 +97,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСправаОднойСтрокой\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     assertThat(blocks.get(2)).matches("описание\n" +
       "\n");
@@ -123,7 +123,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСверхуДвеСтроки_Функция\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     // TODO баг - нет \n для многострочного описания переменной
     assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
@@ -150,7 +150,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
       "\n");
@@ -175,7 +175,7 @@ class VariableSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSize(2);
     assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
       "Перем ВалютаУчета\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Переменная из Catalog.Справочник1\n\n");
+    assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
   }
 
 }
