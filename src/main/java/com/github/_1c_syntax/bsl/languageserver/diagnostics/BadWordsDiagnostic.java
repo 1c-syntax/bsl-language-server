@@ -27,10 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.lsp4j.Range;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -71,21 +68,12 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    String moduleText = String.join("\n", documentContext.getContentList());
-    Matcher matcher = badWords.matcher(moduleText);
-
-    while (matcher.find()) {
-      diagnosticStorage.addDiagnostic(rangeOfError(moduleText, matcher));
+    String[] moduleLines = documentContext.getContentList();
+    for (int i = 0; i < moduleLines.length; i++) {
+      Matcher matcher = badWords.matcher(moduleLines[i]);
+      while (matcher.find()) {
+        diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
+      }
     }
-  }
-
-  private Range rangeOfError(String moduleText, Matcher matcher) {
-
-    String textBefore = moduleText.substring(0, matcher.start());
-
-    int lineNum = StringUtils.countMatches(textBefore, "\n");
-    int shift = textBefore.lastIndexOf("\n") + 1;
-
-    return Ranges.create(lineNum, matcher.start() - shift, matcher.end() - shift);
   }
 }
