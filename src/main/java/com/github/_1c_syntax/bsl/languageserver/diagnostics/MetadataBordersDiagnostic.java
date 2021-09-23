@@ -36,6 +36,7 @@ import java.util.regex.*;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1,
+  activatedByDefault = false,
   tags = {
     DiagnosticTag.ERROR
   }
