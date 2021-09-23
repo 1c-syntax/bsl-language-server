@@ -2,9 +2,9 @@
 
 |     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `error` |
+| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `No`              |           `1`           | `error` |
 
-## Parameters 
+## Parameters
 
 
 |            Name             |   Type   |                                                                    Description                                                                    | Default value |
