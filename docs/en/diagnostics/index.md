@@ -89,7 +89,7 @@ Total: **144**
  [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Using a logical "OR" in the "WHERE" section of a query | Yes | Major | Code smell | `sql`<br>`performance`<br>`standard` 
  [MagicDate](MagicDate.md) | Magic dates | Yes | Minor | Code smell | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` 
- [MetadataBorders](MetadataBorders.md) | Границы метаданных | Yes | Info | Code smell | `error` 
+ [MetadataBorders](MetadataBorders.md) | Metadata borders | Yes | Info | Code smell | `error` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 
  [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 

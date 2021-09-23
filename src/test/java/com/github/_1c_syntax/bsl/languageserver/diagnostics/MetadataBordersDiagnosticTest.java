@@ -41,10 +41,10 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   }
 
   @Test
-  void testMatchesInValidModule() {
+  void testMatchesInProperModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"fake-uri\"}");
+    configuration.put("metadataBordersParameters", "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"fake-uri\"}");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -56,16 +56,31 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   void testMatchesInWrongModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("metadataBordersParameters", "{\"лотус|шмотус\":\"MetadataBordersDiagnostic\"}");
+    configuration.put("metadataBordersParameters", "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"MetadataBordersDiagnostic\"}");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(3, 0, 6, 41)
-      .hasRange(8, 0, 8, 55);
+      .hasRange(3, 0, 6, 49)
+      .hasRange(8, 0, 8, 69)
+      .hasRange(10, 0, 10, 103);
+  }
+
+  @Test
+  void testSeveralSettings() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("metadataBordersParameters",
+      "{\"Регистры?Сведений.КонтактнаяИнформация\":\"fake-uri\"," +
+          "\"Справочники?.Контакты\":\"MetadataBordersDiagnostic\"}");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(10, 0, 10, 103);
   }
 }
