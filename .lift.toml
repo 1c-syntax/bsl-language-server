@@ -1,0 +1,4 @@
+build = "gradlew"
+arguments = [ "build" ]
+jdk11 = true
+tools = ["infer", "findsecbugs", "errorprone"]
