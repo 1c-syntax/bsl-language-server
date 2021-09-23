@@ -64,7 +64,7 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    if (badWords.pattern().trim().length() == 0) {
+    if (badWords.pattern().isBlank()) {
       return;
     }
 
