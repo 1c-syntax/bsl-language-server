@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
 import com.github._1c_syntax.bsl.parser.*;
 import com.github._1c_syntax.utils.*;
@@ -48,11 +49,13 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = ""
   )
-  private Map<String, String> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
+  private HashMap<String, String> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
 
   private static HashMap<String, String> MapFromJSON(String userSettings) {
+    ObjectMapper mapper = new ObjectMapper();
+    MapType mapType = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class);
     try {
-      return new ObjectMapper().readValue(userSettings, HashMap.class);
+      return mapper.readValue(userSettings, mapType);
     } catch (JsonProcessingException e) {
       return new HashMap<>();
     }
@@ -60,7 +63,8 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    this.metadataBordersParameters = MapFromJSON( (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
+    this.metadataBordersParameters = MapFromJSON(
+              (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
   }
 
   @Override
@@ -72,14 +76,14 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
         continue;
       }
 
-      Pattern patternWhat = CaseInsensitivePattern.compile(entry.getKey());
-      Matcher matcherWhat = patternWhat.matcher(ctx.getText());
+      Matcher matcher = CaseInsensitivePattern.compile(entry.getKey())
+                        .matcher(ctx.getText());
 
-      Pattern patternWhere = CaseInsensitivePattern.compile(entry.getValue());
-      Matcher matcherWhere = patternWhere.matcher(this.documentContext.getUri().getPath());
-      boolean insideBorders = matcherWhere.find();
+      boolean insideBorders = CaseInsensitivePattern.compile(entry.getValue())
+                              .matcher(this.documentContext.getUri().getPath())
+                              .find();
 
-      while (matcherWhat.find() && ! insideBorders) {
+      while (matcher.find() && ! insideBorders) {
         diagnosticStorage.addDiagnostic(ctx);
       }
     }
