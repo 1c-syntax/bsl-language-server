@@ -74,7 +74,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final ServerContext context;
   private final ServerInfo serverInfo;
-  private final DocumentSelector documentSelector;
   private boolean shutdownWasCalled;
 
   @Override
@@ -198,10 +197,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return documentSymbolOptions;
   }
 
-  private FoldingRangeProviderOptions getFoldingRangeProvider() {
+  private static FoldingRangeProviderOptions getFoldingRangeProvider() {
     var foldingRangeProviderOptions = new FoldingRangeProviderOptions();
     foldingRangeProviderOptions.setWorkDoneProgress(Boolean.FALSE);
-    foldingRangeProviderOptions.setDocumentSelector(documentSelector.asList());
 
     return foldingRangeProviderOptions;
   }
@@ -249,10 +247,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return referenceOptions;
   }
 
-  private CallHierarchyRegistrationOptions getCallHierarchyProvider() {
+  private static CallHierarchyRegistrationOptions getCallHierarchyProvider() {
     var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
     callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
-    callHierarchyRegistrationOptions.setDocumentSelector(documentSelector.asList());
     return callHierarchyRegistrationOptions;
   }
 
@@ -262,17 +259,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceSymbolOptions;
   }
 
-  private SelectionRangeRegistrationOptions getSelectionRangeProvider() {
+  private static SelectionRangeRegistrationOptions getSelectionRangeProvider() {
     var selectionRangeRegistrationOptions = new SelectionRangeRegistrationOptions();
     selectionRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
-    selectionRangeRegistrationOptions.setDocumentSelector(documentSelector.asList());
     return selectionRangeRegistrationOptions;
   }
 
-  private ColorProviderOptions getColorProvider() {
+  private static ColorProviderOptions getColorProvider() {
     var colorProviderOptions = new ColorProviderOptions();
     colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
-    colorProviderOptions.setDocumentSelector(documentSelector.asList());
     return colorProviderOptions;
   }
 }
