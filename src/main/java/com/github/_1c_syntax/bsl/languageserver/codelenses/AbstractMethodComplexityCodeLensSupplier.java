@@ -53,7 +53,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractC
     }
 
     return documentContext.getSymbolTree().getMethods().stream()
-      .map(methodSymbol -> toCodeLens(documentContext, methodSymbol))
+      .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }
 
@@ -82,7 +82,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractC
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
-  private CodeLens toCodeLens(DocumentContext documentContext, MethodSymbol methodSymbol) {
+  private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
     var data = new CodeLensData(documentContext.getUri(), getId(), Map.of("methodName", methodSymbol.getName()));
 
     var codeLens = new CodeLens(methodSymbol.getSubNameRange());

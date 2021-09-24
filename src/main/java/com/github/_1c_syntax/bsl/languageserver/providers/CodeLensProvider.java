@@ -47,6 +47,9 @@ public final class CodeLensProvider {
   }
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
+    // todo: надо предусмотреть, что если клиент не поддерживает асинхронный резолв,
+    //  то код ленз провайдер должен вызывать явный резолв на своей стороне
+    //  и отдавать полностью разрешенный код ленз на клиента.
     return codeLensSuppliers.stream()
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
