@@ -21,30 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.mdclasses.Configuration;
+import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<WrongDataPathForFormElementsDiagnostic> {
 
-  public static final String DYNAMIC_LIST_FORM_MDO_REF = "Catalog.Справочник1.Form.ФормаВыбора";
-  public static final String DYNAMIC_LIST_MESSAGE = "Не указан путь к данным у реквизита формы \"НесуществующийРеквизитСписка\". Форма \"Справочник.Справочник1.Форма.ФормаВыбора\".";
-  public static final String ELEMENT_FORM_MDO_REF = "Catalog.Справочник1.Form.ФормаЭлемента";
-  public static final String ELEMENT_MESSAGE = "Не указан путь к данным у реквизита формы \"НесуществующийРеквизит\". Форма \"Справочник.Справочник1.Форма.ФормаЭлемента\".";
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-  private DocumentContext documentContext;
-  private ServerContext serverContext;
+  public static final String PATH_TO_ELEMENT_MODULE_FILE = "/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl";
+  private static final String DYNAMIC_LIST_MESSAGE = "Не указан путь к данным у реквизита формы \"НесуществующийРеквизитСписка\". Форма \"Справочник.Справочник1.Форма.ФормаВыбора\".";
+  private static final String ELEMENT_MESSAGE = "Не указан путь к данным у реквизита формы \"НесуществующийРеквизит\". Форма \"Справочник.Справочник1.Форма.ФормаЭлемента\".";
 
   WrongDataPathForFormElementsDiagnosticTest() {
     super(WrongDataPathForFormElementsDiagnostic.class);
@@ -53,29 +52,24 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   @BeforeEach
   void setUp() {
     initServerContext(Absolute.path(PATH_TO_METADATA));
-
-    documentContext = spy(getDocumentContext());
-
-    serverContext = spy(documentContext.getServerContext());
-    when(documentContext.getServerContext()).thenReturn(serverContext);
-
   }
 
   @Test
   void testNoFormModule() {
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+    final var pathToManagedApplicationModuleFile = "/Ext/ManagedApplicationModule.bsl";
 
-    when(serverContext.getDocument(DYNAMIC_LIST_FORM_MDO_REF,
-      ModuleType.FormModule)).thenReturn(Optional.of(documentContext));
-    when(serverContext.getDocument(ELEMENT_FORM_MDO_REF,
-      ModuleType.FormModule)).thenReturn(Optional.of(documentContext));
+    context = spy(context);
+    final var configuration = spy(context.getConfiguration());
+    when(context.getConfiguration()).thenReturn(configuration);
 
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    fillConfigChildrenByFormsWithoutModule(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnosticListForMockedFile(pathToManagedApplicationModuleFile);
 
     assertThat(diagnostics, true)
-      .hasMessageOnRange(ELEMENT_MESSAGE, 0, 8, 14)
-      .hasMessageOnRange(DYNAMIC_LIST_MESSAGE, 0, 8, 14)
+      .hasMessageOnRange(ELEMENT_MESSAGE, 0, 0, 7)
+      .hasMessageOnRange(DYNAMIC_LIST_MESSAGE, 0, 0, 7)
       .hasSize(2);
 
   }
@@ -83,14 +77,42 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   @Test
   void testFormModule() {
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
-
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = getDiagnosticListForMockedFile(PATH_TO_ELEMENT_MODULE_FILE);
 
     assertThat(diagnostics, true)
-      .hasMessageOnRange(ELEMENT_MESSAGE, 1, 9, 27)
-      .hasMessageOnRange(DYNAMIC_LIST_MESSAGE, 3, 10, 24)
-      .hasSize(2);
+      .hasMessageOnRange(ELEMENT_MESSAGE, 0, 0, 7)
+      .hasSize(1);
 
+  }
+
+  @Test
+  void testDynamicListFormModule() {
+
+    final var pathToDynamicListModuleFile = "/Catalogs/Справочник1/Forms/ФормаВыбора/Ext/Form/Module.bsl";
+    List<Diagnostic> diagnostics = getDiagnosticListForMockedFile(pathToDynamicListModuleFile);
+
+    assertThat(diagnostics, true)
+      .hasMessageOnRange(DYNAMIC_LIST_MESSAGE, 0, 0, 7)
+      .hasSize(1);
+
+  }
+
+  private void fillConfigChildrenByFormsWithoutModule(Configuration configuration) {
+    final var childrenByMdoRefFromConfig = configuration.getChildrenByMdoRef();
+    var childrenByMdoRef = childrenByMdoRefFromConfig.entrySet().stream()
+      .filter(entry -> entry.getValue() instanceof Form)
+      .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+        ((Form) entry.getValue()).setModules(Collections.emptyList());
+        return entry.getValue();
+      }));
+    when(configuration.getChildrenByMdoRef()).thenReturn(childrenByMdoRef);
+  }
+
+  private List<Diagnostic> getDiagnosticListForMockedFile(String pathToDynamicListModuleFile) {
+    var testFile = Paths.get(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
+
+    var documentContext = context.addDocument(testFile.toUri(), getText(), 1);
+
+    return getDiagnostics(documentContext);
   }
 }

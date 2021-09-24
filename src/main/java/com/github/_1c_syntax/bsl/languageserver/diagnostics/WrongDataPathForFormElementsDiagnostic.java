@@ -21,18 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import org.eclipse.lsp4j.Range;
+
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -41,6 +44,7 @@ import org.eclipse.lsp4j.Range;
   scope = DiagnosticScope.BSL,
   modules = {
     // todo переделать, когда появится привязка к объектам метаданных
+    ModuleType.FormModule,
     ModuleType.ManagedApplicationModule
   },
   tags = {
@@ -52,42 +56,52 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private Range diagnosticRange;
 
+  @Override
+  protected void check() {
+
+    Ranges.getFirstSignificantTokenRange(documentContext.getTokensFromDefaultChannel())
+      .ifPresent(this::checkCurrentModule);
+  }
+
   private static boolean wrongDataPath(FormItem formItem) {
     return formItem.getDataPath().getSegment().startsWith("~");
   }
 
-  @Override
-  protected void check() {
-
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(this::checkAllForms);
+  private static boolean haveFormModules(Form form) {
+    return !form.getModules().isEmpty();
   }
 
-  private void checkAllForms(Range range) {
+  private void checkCurrentModule(Range range) {
     diagnosticRange = range;
 
-    documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream()
+    if (documentContext.getModuleType() == ModuleType.FormModule) {
+      checkMdoObjectStream(WrongDataPathForFormElementsDiagnostic::haveFormModules,
+        documentContext.getMdObject().stream());
+    } else {
+      checkAllFormsWithoutModules();
+    }
+  }
+
+  private void checkAllFormsWithoutModules() {
+    checkMdoObjectStream(form -> !haveFormModules(form),
+      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream());
+  }
+
+  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<AbstractMDObjectBase> stream) {
+
+    stream
       .filter(Form.class::isInstance)
       .map(Form.class::cast)
+      .filter(formFilter)
       .forEach(this::checkForm);
   }
 
   private void checkForm(Form form) {
-    var range = getModuleOrCommonRange(form);
 
     form.getData().getPlainChildren().stream()
       .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
-      .forEach(formItem -> diagnosticStorage.addDiagnostic(range,
+      .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
         info.getMessage(formItem.getName(), getMdoRef(form))));
-  }
-
-  private Range getModuleOrCommonRange(Form form) {
-    return documentContext.getServerContext()
-      .getDocument(form.getMdoReference().getMdoRef(), ModuleType.FormModule)
-      .flatMap(docCtx -> docCtx.getSymbolTree().getChildrenFlat().stream()
-        .findFirst()
-        .map(SourceDefinedSymbol::getSelectionRange))
-      .orElse(diagnosticRange);
   }
 
   private String getMdoRef(Form form) {
