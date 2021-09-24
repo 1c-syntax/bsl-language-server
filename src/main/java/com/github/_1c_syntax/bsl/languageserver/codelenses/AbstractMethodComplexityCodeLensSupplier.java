@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * Конкретный сапплаер должен иметь ресурс-бандл со свойством {@code title}, имеющим один числовой параметр {@code %d}.
  */
 @RequiredArgsConstructor
-public abstract class AbstractMethodComplexityCodeLensSupplier implements CodeLensSupplier {
+public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractCodeLensSupplier {
 
   private static final String TITLE_KEY = "title";
 

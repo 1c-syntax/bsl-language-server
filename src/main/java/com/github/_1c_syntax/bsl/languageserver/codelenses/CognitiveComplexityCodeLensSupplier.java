@@ -39,11 +39,6 @@ public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexit
   }
 
   @Override
-  public String getId() {
-    return "CognitiveComplexity";
-  }
-
-  @Override
   protected boolean supplierIsEnabled() {
     return configuration.getCodeLensOptions().isShowCognitiveComplexity();
   }
