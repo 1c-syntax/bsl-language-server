@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -49,6 +50,9 @@ class CodeLensProviderTest {
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
+    codeLenses.forEach(codeLens ->
+      codeLensProvider.resolveCodeLens(documentContext, codeLens, (CodeLensData) codeLens.getData())
+    );
 
     // then
     Map<MethodSymbol, Integer> methodsCognitiveComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();

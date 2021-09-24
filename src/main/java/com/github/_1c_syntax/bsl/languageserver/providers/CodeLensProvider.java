@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
+import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataDeserializer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public final class CodeLensProvider {
   private final List<CodeLensSupplier> codeLensSuppliers;
   private final Map<String, CodeLensSupplier> codeLensResolvers;
@@ -59,5 +58,15 @@ public final class CodeLensProvider {
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);
     return resolvedCodeLens;
+  }
+
+  public static CodeLensData extractData(CodeLens codeLens) {
+    var rawCodeLensData = codeLens.getData();
+
+    if (rawCodeLensData instanceof CodeLensData) {
+      return (CodeLensData) rawCodeLensData;
+    }
+
+    return CodeLensDataDeserializer.deserialize(rawCodeLensData);
   }
 }

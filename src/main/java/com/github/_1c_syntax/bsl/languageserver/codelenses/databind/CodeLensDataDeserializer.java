@@ -28,8 +28,11 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CodeLensDataDeserializer {
-
-  public static CodeLensData deserialize(JsonElement json) {
-    return new Gson().fromJson(json, CodeLensData.class);
+  public static CodeLensData deserialize(Object json) {
+    if (json instanceof JsonElement) {
+      return new Gson().fromJson((JsonElement) json, CodeLensData.class);
+    } else {
+      throw new IllegalArgumentException("Unknown type of codeLens.data: " + json.getClass());
+    }
   }
 }
