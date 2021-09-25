@@ -119,13 +119,11 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
       .filter(BSLParser.ConstValueContext.class::isInstance)
       .map(BSLParser.ConstValueContext.class::cast);
 
-    return Optional.of(tmpCtx)
-      .filter(Optional::isPresent)
-      .map(ctx -> ctx.get().getToken(BSLParser.TRUE, 0))
+    return tmpCtx
+      .map(ctx -> ctx.getToken(BSLParser.TRUE, 0))
       .map(ctx -> BSLParser.TRUE)
-      .or(() -> Optional.of(tmpCtx)
-          .filter(Optional::isPresent)
-          .map(ctx -> ctx.get().getToken(BSLParser.FALSE, 0))
+      .or(() -> tmpCtx
+          .map(ctx -> ctx.getToken(BSLParser.FALSE, 0))
           .map(ctx -> BSLParser.FALSE)
         )
       .orElse(SKIPPED_RULE_INDEX);
