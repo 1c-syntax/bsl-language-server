@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -54,7 +54,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
   )
-  private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
+  private final List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -66,7 +66,9 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   public void configure(Map<String, Object> configuration) {
     DiagnosticHelper.configureDiagnostic(this, configuration, "allowMagicIndexes");
 
-    String authorizedNumbersString =
+    this.authorizedNumbers.clear();
+
+    var authorizedNumbersString =
       (String) configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
     for (String s : authorizedNumbersString.split(",")) {
       this.authorizedNumbers.add(s.trim());

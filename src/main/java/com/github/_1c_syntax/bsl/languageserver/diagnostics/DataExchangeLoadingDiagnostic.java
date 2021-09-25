@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -88,7 +88,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean checkPassed(BSLParser.ProcDeclarationContext ctx) {
-    AtomicInteger orderStatement = new AtomicInteger();
+    var orderStatement = new AtomicInteger();
     return Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::getParent)
       .map(BSLParser.ProcedureContext.class::cast)
@@ -128,6 +128,6 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
-    return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
+    return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 }

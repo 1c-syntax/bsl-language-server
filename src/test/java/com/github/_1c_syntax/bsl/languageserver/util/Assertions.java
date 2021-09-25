@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,13 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.ColorInformationsAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.ColorPresentationsAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangeAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangesAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.SelectionRangesAssert;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.SelectionRange;
 
 import java.util.List;
 
@@ -52,5 +58,17 @@ public class Assertions extends org.assertj.core.api.Assertions {
 
   public static FoldingRangesAssert assertThatFoldingRanges(List<FoldingRange> actual) {
     return new FoldingRangesAssert(actual);
+  }
+
+  public static SelectionRangesAssert assertThatSelectionRanges(List<SelectionRange> actual) {
+    return new SelectionRangesAssert(actual);
+  }
+
+  public static ColorInformationsAssert assertThatColorInformations(List<ColorInformation> actual) {
+    return new ColorInformationsAssert(actual);
+  }
+
+  public static ColorPresentationsAssert assertThatColorPresentations(List<ColorPresentation> actual) {
+    return new ColorPresentationsAssert(actual);
   }
 }

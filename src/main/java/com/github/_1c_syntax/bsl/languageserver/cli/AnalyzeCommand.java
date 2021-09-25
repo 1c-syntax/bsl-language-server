@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -150,13 +150,13 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     Path workspaceDir = Absolute.path(workspaceDirOption);
     if (!workspaceDir.toFile().exists()) {
-      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir.toString());
+      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir);
       return 1;
     }
 
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 

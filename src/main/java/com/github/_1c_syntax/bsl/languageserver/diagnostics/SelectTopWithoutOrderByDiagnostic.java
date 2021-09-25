@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,8 +44,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final String TOP_ONE_STRING = "1";
-
   // for skip queries with 'TOP 1' limitation without 'ORDER BY'
   private static final boolean SKIP_SELECT_TOP_ONE = true;
   @DiagnosticParameter(
@@ -70,8 +68,11 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
   }
 
   private void checkQuery(SDBLParser.QueryContext ctx, boolean canTopOne) {
-    // top is missing
-    if (ctx.limitations().top() == null) {
+
+    SDBLParser.LimitationsContext limitations = ctx.limitations();
+
+    //limitations or top is missing
+    if (limitations == null || limitations.top() == null) {
       return;
     }
 
@@ -82,7 +83,8 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
     }
 
     var topLimit = topCtx.DECIMAL().get(0).getText();
-    if (!(TOP_ONE_STRING.equals(topLimit) && (canTopOne || ctx.where().WHERE() != null))) {
+    boolean allowedTopNumber = "1".equals(topLimit) || "0".equals(topLimit);
+    if (!(allowedTopNumber && (canTopOne || ctx.where().WHERE() != null))) {
       diagnosticStorage.addDiagnostic(topCtx);
     }
   }

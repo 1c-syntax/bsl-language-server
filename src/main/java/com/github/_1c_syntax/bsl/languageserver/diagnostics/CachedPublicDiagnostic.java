@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -63,6 +63,7 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
     documentContext.getSymbolTree().getModuleLevelRegions()
       .stream()
+      .filter(regionSymbol -> !regionSymbol.getMethods().isEmpty())
       .filter(regionSymbol -> PUBLIC.matcher(regionSymbol.getName()).find())
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }

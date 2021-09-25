@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -143,14 +143,14 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   private void findAndAddDiagnostic(BSLParserRuleContext ctx) {
 
     // если это вложенный в ранее обработанный блок, то исключим из проверки
-    Position pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    var pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     for (Range range : errorRanges) {
       if (Ranges.containsPosition(range, pos)) {
         return;
       }
     }
 
-    BSLParserRuleContext nodeParent = (BSLParserRuleContext) ctx.getParent();
+    var nodeParent = ctx.getParent();
     if (nodeParent == null) {
       return;
     }
@@ -160,7 +160,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    BSLParserRuleContext ppNodeParent = (BSLParserRuleContext) ppNode.getParent();
+    var ppNodeParent = ppNode.getParent();
     if (ppNodeParent == null) {
       return;
     }
@@ -184,7 +184,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
-        Range newRange = Ranges.create(
+        var newRange = Ranges.create(
           statements.get(statements.indexOf(ppNode) - 1).getStart(),
           endCurrentBlockNode.getStop());
         diagnosticStorage.addDiagnostic(newRange);
@@ -211,7 +211,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке
       // препроцессора, что и стейт прерывания
       for (BSLParserRuleContext statement : statements) {
-        Position posStatement = new Position(
+        var posStatement = new Position(
           statement.getStart().getLine(),
           statement.getStart().getCharPositionInLine());
         if (Ranges.containsPosition(preprocRange, posStatement)) {

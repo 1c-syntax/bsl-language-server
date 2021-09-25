@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
@@ -44,6 +45,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.SaveOptions;
+import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -95,6 +97,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
+    capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
+    capabilities.setColorProvider(getColorProvider());
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
@@ -256,5 +260,19 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var workspaceSymbolOptions = new WorkspaceSymbolOptions();
     workspaceSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
     return workspaceSymbolOptions;
+  }
+
+  private SelectionRangeRegistrationOptions getSelectionRangeProvider() {
+    var selectionRangeRegistrationOptions = new SelectionRangeRegistrationOptions();
+    selectionRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    selectionRangeRegistrationOptions.setDocumentSelector(documentSelector.asList());
+    return selectionRangeRegistrationOptions;
+  }
+
+  private ColorProviderOptions getColorProvider() {
+    var colorProviderOptions = new ColorProviderOptions();
+    colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
+    colorProviderOptions.setDocumentSelector(documentSelector.asList());
+    return colorProviderOptions;
   }
 }

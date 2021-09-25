@@ -1,8 +1,8 @@
 # Violating transaction rules for the 'CommitTransaction' method (CommitTransactionOutsideTryCatch)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `standard` 
+|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `10`           | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

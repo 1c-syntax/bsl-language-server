@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -52,11 +53,20 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
   private static final int MINIMAL_WORD_LEN = 2;
 
   /**
+   * Минимальная длина имени для анализа имен, в которых сочетание кириллицы и латиницы возможно
+   */
+  private static final int MINIMAL_WORD_LEN_TWO_LANG = 4;
+
+  /**
    * Список слов-исключений через `,`
    */
   private static final String DEFAULT_EXCLUDE_WORDS = "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, " +
     "ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси";
 
+  /**
+   * Параметр для возможности использования начала или конца слова на другом языке
+   */
+  private static final boolean DEFAULT_ALLOW_TRAILING_PARTS_IN_ANOTHER_LANG = true;
   /**
    * Паттерн для поиска кириллических символов в имени
    */
@@ -67,14 +77,27 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
    */
   private static final Pattern EN_LANG_PATTERN = CaseInsensitivePattern.compile("[a-z]");
 
+  /**
+   * Паттерн для исключения слов, которые начинаются и заканчиваются на разных языках
+   */
+  private static final Pattern RU_EN_LANG_PATTERN =
+    Pattern.compile("(?:[A-Z][A-Za-z]+[A-Za-z1-9_]*[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*)|" +
+      "(?:[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*[A-Z][A-Za-z]+[A-Za-z1-9_]*)");
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_EXCLUDE_WORDS
   )
   private Pattern excludeWords = createExcludeWordPattern(DEFAULT_EXCLUDE_WORDS);
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_ALLOW_TRAILING_PARTS_IN_ANOTHER_LANG
+  )
+  private boolean allowTrailingPartsInAnotherLanguage = DEFAULT_ALLOW_TRAILING_PARTS_IN_ANOTHER_LANG;
+
   private static Pattern createExcludeWordPattern(String words) {
-    StringJoiner stringJoiner = new StringJoiner("|");
+    var stringJoiner = new StringJoiner("|");
     for (String elem : words.split(",")) {
       stringJoiner.add(Pattern.quote(elem.trim()));
     }
@@ -84,6 +107,7 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
+    DiagnosticHelper.configureDiagnostic(this, configuration, "allowTrailingPartsInAnotherLanguage");
     this.excludeWords = createExcludeWordPattern(
       (String) configuration.getOrDefault("excludeWords", DEFAULT_EXCLUDE_WORDS));
   }
@@ -123,9 +147,17 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkTree(Stream<ParseTree> tree) {
-    tree.filter(ctx -> ctx.getText() != null && ctx.getText().length() >= MINIMAL_WORD_LEN)
+    var elements = tree.filter(ctx -> ctx.getText() != null && ctx.getText().length() >= MINIMAL_WORD_LEN)
       .filter(ctx -> !excludeWords.matcher(ctx.getText()).matches())
-      .filter(ctx -> RU_LANG_PATTERN.matcher(ctx.getText()).find() && EN_LANG_PATTERN.matcher(ctx.getText()).find())
-      .forEach(diagnosticStorage::addDiagnostic);
+      .filter(ctx -> RU_LANG_PATTERN.matcher(ctx.getText()).find() && EN_LANG_PATTERN.matcher(ctx.getText()).find());
+
+    if (allowTrailingPartsInAnotherLanguage) {
+      elements.filter(ctx ->
+        ctx.getText().length() < MINIMAL_WORD_LEN_TWO_LANG
+          || !RU_EN_LANG_PATTERN.matcher(ctx.getText()).matches()
+      ).forEach(diagnosticStorage::addDiagnostic);
+    } else {
+      elements.forEach(diagnosticStorage::addDiagnostic);
+    }
   }
 }

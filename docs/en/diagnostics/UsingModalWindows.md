@@ -1,15 +1,15 @@
 # Using modal windows (UsingModalWindows)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `15`           | `standard` |
 
 ## Parameters 
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `forceModalityMode` | `Boolean` | ```Ignore configurations modality mode``` | ```false``` 
 
+|        Name         |   Type    |              Description              | Default value |
+|:-------------------:|:---------:|:-------------------------------------:|:-------------:|
+| `forceModalityMode` | `Boolean` | `Ignore configurations modality mode` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 

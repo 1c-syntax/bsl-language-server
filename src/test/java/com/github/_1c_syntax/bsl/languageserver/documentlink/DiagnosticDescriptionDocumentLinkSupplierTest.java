@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -116,7 +116,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setUseDevSite(false);
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     var documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then
@@ -125,7 +125,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setUseDevSite(true);
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then
@@ -135,7 +135,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
     // when
     configuration.setUseDevSite(true);
     configuration.setLanguage(Language.EN);
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then
@@ -151,7 +151,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setLanguage(Language.RU);
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     var documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then
@@ -162,7 +162,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setLanguage(Language.EN);
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then
@@ -185,7 +185,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setSiteRoot("https://fake");
-    documentContext = getDocumentContext();;
+    documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
     // then

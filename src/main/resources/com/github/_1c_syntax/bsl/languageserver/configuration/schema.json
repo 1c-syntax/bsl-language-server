@@ -23,6 +23,12 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AllFunctionPathMustHaveReturn": {
+                    "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
+                },
+                "AssignAliasFieldsInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
@@ -340,6 +346,9 @@
                 },
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
+                },
+                "SetPermissionsForNewObjects": {
+                    "$ref": "parameters-schema.json#/definitions/SetPermissionsForNewObjects"
                 },
                 "SeveralCompilerDirectives": {
                     "$ref": "parameters-schema.json#/definitions/SeveralCompilerDirectives"
