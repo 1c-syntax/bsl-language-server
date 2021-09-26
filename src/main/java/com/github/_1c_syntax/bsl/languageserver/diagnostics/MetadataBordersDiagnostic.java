@@ -31,6 +31,7 @@ import org.antlr.v4.runtime.tree.*;
 
 import java.util.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -38,7 +39,7 @@ import java.util.regex.*;
   minutesToFix = 1,
   activatedByDefault = false,
   tags = {
-    DiagnosticTag.ERROR
+    DiagnosticTag.DESIGN
   }
 
 )
@@ -50,15 +51,20 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = ""
   )
-  private HashMap<String, String> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
+  private Map<Pattern, Pattern> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
 
-  private static HashMap<String, String> MapFromJSON(String userSettings) {
+  private static Map<Pattern, Pattern> MapFromJSON(String userSettings) {
     ObjectMapper mapper = new ObjectMapper();
     MapType mapType = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class);
     try {
-      return mapper.readValue(userSettings, mapType);
+      Map<String, String> stringMap = mapper.readValue(userSettings, mapType);
+      return stringMap.entrySet().stream()
+        .filter(entry -> ! entry.getKey().isBlank() && ! entry.getValue().isBlank())
+        .collect(Collectors.toMap(
+            entry -> CaseInsensitivePattern.compile(entry.getKey()),
+            entry -> CaseInsensitivePattern.compile(entry.getValue())));
     } catch (JsonProcessingException e) {
-      return new HashMap<>();
+      return Collections.emptyMap();
     }
   }
 
@@ -71,21 +77,16 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx){
 
-    for (Map.Entry<String, String> entry: metadataBordersParameters.entrySet()) {
+    for (Map.Entry<Pattern, Pattern> entry: metadataBordersParameters.entrySet()) {
 
-      if (entry.getKey().isBlank() || entry.getValue().isBlank()) {
-        continue;
-      }
+      boolean insideBorders = entry.getValue().matcher(this.documentContext.getUri().getPath()).find();
 
-      Matcher matcher = CaseInsensitivePattern.compile(entry.getKey())
-                        .matcher(ctx.getText());
+      if (! insideBorders) {
 
-      boolean insideBorders = CaseInsensitivePattern.compile(entry.getValue())
-                              .matcher(this.documentContext.getUri().getPath())
-                              .find();
-
-      while (matcher.find() && ! insideBorders) {
-        diagnosticStorage.addDiagnostic(ctx);
+        Matcher matcher = entry.getKey().matcher(ctx.getText());
+        while (matcher.find()) {
+          diagnosticStorage.addDiagnostic(ctx);
+        }
       }
     }
     return super.visitStatement(ctx);
