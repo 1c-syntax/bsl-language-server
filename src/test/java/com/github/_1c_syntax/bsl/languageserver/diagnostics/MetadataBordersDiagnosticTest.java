@@ -44,9 +44,9 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   void testMatchesInProperModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("metadataBordersParameters", "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"fake-uri\"}");
+    configuration.put("metadataBordersParameters",
+                      "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"fake-uri\"}");
     diagnosticInstance.configure(configuration);
-
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(0);
@@ -56,9 +56,9 @@ class MetadataBordersDiagnosticTest extends AbstractDiagnosticTest<MetadataBorde
   void testMatchesInWrongModule() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("metadataBordersParameters", "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"MetadataBordersDiagnostic\"}");
+    configuration.put("metadataBordersParameters",
+                      "{\"Регистры?Сведений.КонтактнаяИнформация|Справочники?.Контакты\":\"MetadataBordersDiagnostic\"}");
     diagnosticInstance.configure(configuration);
-
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
