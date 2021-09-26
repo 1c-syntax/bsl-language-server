@@ -24,13 +24,20 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
-import com.github._1c_syntax.bsl.parser.*;
-import com.github._1c_syntax.utils.*;
-import org.antlr.v4.runtime.tree.*;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
