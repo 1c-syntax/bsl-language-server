@@ -25,10 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 
+import java.beans.ConstructorProperties;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +45,8 @@ import java.util.stream.Collectors;
  * Конкретный сапплаер должен иметь ресурс-бандл со свойством {@code title}, имеющим один числовой параметр {@code %d}.
  */
 @RequiredArgsConstructor
-public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractCodeLensSupplier {
+public abstract class AbstractMethodComplexityCodeLensSupplier
+  extends AbstractCodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
 
@@ -58,8 +64,8 @@ public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractC
   }
 
   @Override
-  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
-    var methodName = (String) data.getProperties().get("methodName");
+  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
+    var methodName = data.getMethodName();
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = getMethodsComplexity(documentContext).get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
@@ -69,6 +75,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractC
     });
 
     return unresolved;
+  }
+
+  @Override
+  public Class<ComplexityCodeLensData> getCodeLensDataClass() {
+    return ComplexityCodeLensData.class;
   }
 
   /**
@@ -83,11 +94,24 @@ public abstract class AbstractMethodComplexityCodeLensSupplier extends AbstractC
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
   private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
-    var data = new CodeLensData(documentContext.getUri(), getId(), Map.of("methodName", methodSymbol.getName()));
+    var data = new ComplexityCodeLensData(documentContext.getUri(), getId(), methodSymbol.getName());
 
     var codeLens = new CodeLens(methodSymbol.getSubNameRange());
     codeLens.setData(data);
 
     return codeLens;
+  }
+
+  @Value
+  @EqualsAndHashCode(callSuper = true)
+  @ToString(callSuper = true)
+  public static class ComplexityCodeLensData extends CodeLensData {
+    String methodName;
+
+    @ConstructorProperties({"uri", "id", "methodName"})
+    public ComplexityCodeLensData(URI uri, String id, String methodName) {
+      super(uri, id);
+      this.methodName = methodName;
+    }
   }
 }

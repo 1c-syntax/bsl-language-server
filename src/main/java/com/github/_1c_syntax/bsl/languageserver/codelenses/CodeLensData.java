@@ -21,25 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github._1c_syntax.bsl.languageserver.codelenses.databind.URITypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.Map;
+
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 @Value
-@AllArgsConstructor
+@NonFinal
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
 public class CodeLensData {
-  String uri;
+  @JsonAdapter(URITypeAdapter.class)
+  URI uri;
   String id;
-  Map<String, Object> properties;
-
-  public CodeLensData(URI uri, String id) {
-    this(uri.toString(), id, Collections.emptyMap());
-  }
-
-  public CodeLensData(URI uri, String id, Map<String, Object> properties) {
-    this(uri.toString(), id, properties);
-  }
 }

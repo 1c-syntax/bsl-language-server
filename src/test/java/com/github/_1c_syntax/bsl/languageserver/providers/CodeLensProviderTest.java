@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.google.gson.Gson;
 import org.eclipse.lsp4j.CodeLens;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,4 +78,26 @@ class CodeLensProviderTest {
 
   }
 
+  @Test
+  void testExtractData() {
+
+    // given
+    String filePath = "./src/test/resources/providers/codeLens.bsl";
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+
+    // when
+    List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
+
+    var gson = new Gson();
+
+    for (CodeLens codeLens : codeLenses) {
+      var oldData = codeLens.getData();
+      var json = gson.toJsonTree(oldData);
+      codeLens.setData(json);
+
+      var newConvertedData = codeLensProvider.extractData(codeLens);
+
+      assertThat(oldData).isEqualTo(newConvertedData);
+    }
+  }
 }

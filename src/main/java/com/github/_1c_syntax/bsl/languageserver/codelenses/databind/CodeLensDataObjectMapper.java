@@ -19,28 +19,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses.infra;
+package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-@Configuration
-public class CodeLensesConfiguration {
+@Component
+public class CodeLensDataObjectMapper extends ObjectMapper {
 
-  @Bean
-  @SuppressWarnings("unchecked")
-  public Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById(
-    Collection<CodeLensSupplier<? extends CodeLensData>> codeLensSuppliers
-  ) {
-    return codeLensSuppliers.stream()
-      .map(CodeLensSupplier.class::cast)
-      .collect(Collectors.toMap(CodeLensSupplier::getId, Function.identity()));
+  public CodeLensDataObjectMapper(Map<String, CodeLensSupplier<? extends CodeLensData>> codeLensResolvers) {
+    super();
+
+    codeLensResolvers.values().stream()
+      .map(CodeLensDataObjectMapper::toNamedType)
+      .forEach(this::registerSubtypes);
+  }
+
+  private static NamedType toNamedType(CodeLensSupplier<? extends CodeLensData> codeLensSupplier) {
+    return new NamedType(codeLensSupplier.getCodeLensDataClass(), codeLensSupplier.getId());
   }
 }

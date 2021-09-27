@@ -23,8 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
-import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataDeserializer;
+import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import lombok.SneakyThrows;
 import org.eclipse.lsp4j.CodeLens;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -36,40 +37,46 @@ import java.util.stream.Collectors;
 
 @Component
 public final class CodeLensProvider {
-  private final List<CodeLensSupplier> codeLensSuppliers;
-  private final Map<String, CodeLensSupplier> codeLensResolvers;
+  private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliers;
+  private final CodeLensDataObjectMapper codeLensDataObjectMapper;
 
   public CodeLensProvider(
-    List<CodeLensSupplier> codeLensSuppliers,
-    @Qualifier("codeLensResolvers") Map<String, CodeLensSupplier> codeLensResolvers) {
+    @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliers,
+    CodeLensDataObjectMapper objectMapper
+  ) {
     this.codeLensSuppliers = codeLensSuppliers;
-    this.codeLensResolvers = codeLensResolvers;
+    this.codeLensDataObjectMapper = objectMapper;
   }
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
     // todo: надо предусмотреть, что если клиент не поддерживает асинхронный резолв,
     //  то код ленз провайдер должен вызывать явный резолв на своей стороне
     //  и отдавать полностью разрешенный код ленз на клиента.
-    return codeLensSuppliers.stream()
+    return codeLensSuppliers.values().stream()
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }
 
-  public CodeLens resolveCodeLens(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
-    var codeLensSupplier = codeLensResolvers.get(data.getId());
+  public CodeLens resolveCodeLens(
+    DocumentContext documentContext,
+    CodeLens unresolved,
+    CodeLensData data
+  ) {
+    var codeLensSupplier = codeLensSuppliers.get(data.getId());
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);
     return resolvedCodeLens;
   }
 
-  public static CodeLensData extractData(CodeLens codeLens) {
+  @SneakyThrows
+  public CodeLensData extractData(CodeLens codeLens) {
     var rawCodeLensData = codeLens.getData();
 
     if (rawCodeLensData instanceof CodeLensData) {
       return (CodeLensData) rawCodeLensData;
     }
 
-    return CodeLensDataDeserializer.deserialize(rawCodeLensData);
+    return codeLensDataObjectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
   }
 }

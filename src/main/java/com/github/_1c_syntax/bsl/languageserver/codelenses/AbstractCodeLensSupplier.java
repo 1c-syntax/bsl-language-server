@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-public abstract class AbstractCodeLensSupplier implements CodeLensSupplier {
+public abstract class AbstractCodeLensSupplier<T extends CodeLensData>
+  implements CodeLensSupplier<T> {
 
   @Override
   public String getId() {
@@ -31,5 +32,11 @@ public abstract class AbstractCodeLensSupplier implements CodeLensSupplier {
     }
 
     return simpleName;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Class<T> getCodeLensDataClass() {
+    return (Class<T>) CodeLensData.class;
   }
 }

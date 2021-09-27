@@ -21,18 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import lombok.experimental.UtilityClass;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
-@UtilityClass
-public class CodeLensDataDeserializer {
-  public static CodeLensData deserialize(Object json) {
-    if (json instanceof JsonElement) {
-      return new Gson().fromJson((JsonElement) json, CodeLensData.class);
-    } else {
-      throw new IllegalArgumentException("Unknown type of codeLens.data: " + json.getClass());
-    }
+import java.io.IOException;
+import java.net.URI;
+
+public class URITypeAdapter extends TypeAdapter<URI> {
+  @Override
+  public void write(JsonWriter out, URI uri) throws IOException {
+    out.value(uri.toString());
+  }
+
+  @Override
+  public URI read(JsonReader in) throws IOException {
+    return URI.create(in.nextString());
   }
 }

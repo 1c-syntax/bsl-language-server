@@ -30,7 +30,7 @@ import java.util.List;
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
  * данными о доступных в документе линзах.
  */
-public interface CodeLensSupplier {
+public interface CodeLensSupplier<T extends CodeLensData> {
   /**
    * @param documentContext Контекст документа, для которого надо рассчитать линзы.
    * @return Список линз.
@@ -39,7 +39,9 @@ public interface CodeLensSupplier {
 
   String getId();
 
-  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, CodeLensData data) {
+  Class<T> getCodeLensDataClass();
+
+  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, T data) {
     return unresolved;
   }
   
