@@ -49,25 +49,33 @@ import java.util.List;
 public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitLikeStatement(SDBLParser.LikeStatementContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.statement());
-    return super.visitLikeStatement(ctx);
+  public ParseTree visitLikePredicate(SDBLParser.LikePredicateContext ctx) {
+    checkRightStatement(ctx, ctx.LIKE(), ctx.expression());
+    return super.visitLikePredicate(ctx);
   }
 
   private void checkRightStatement(BSLParserRuleContext ctx,
                                    @Nullable TerminalNode like,
-                                   List<? extends BSLParserRuleContext> statements) {
+                                   List<? extends SDBLParser.ExpressionContext> expressions) {
 
-    if (like == null || statements.size() <= 1) {
+    if (like == null || expressions.size() <= 1) {
       return;
     }
 
-    var right = statements.get(1);
-    var statement = (SDBLParser.StatementContext) Trees.getNextNode(right, right, SDBLParser.RULE_statement);
-    if (statement.parameter().isEmpty()
-      && statement.multiString() == null) {
-      diagnosticStorage.addDiagnostic(ctx);
+    var right = expressions.get(1);
+    var primitive = getPrimitiveExpression(right);
+    if (primitive != null && (primitive.parameter() != null || primitive.multiString() != null)) {
+      return;
     }
 
+    diagnosticStorage.addDiagnostic(ctx);
+  }
+
+  private static SDBLParser.PrimitiveExpressionContext getPrimitiveExpression(SDBLParser.ExpressionContext ctx) {
+    var primitive = Trees.getNextNode(ctx, ctx, SDBLParser.RULE_primitiveExpression);
+    if (primitive instanceof SDBLParser.PrimitiveExpressionContext) {
+      return (SDBLParser.PrimitiveExpressionContext) primitive;
+    }
+    return null;
   }
 }

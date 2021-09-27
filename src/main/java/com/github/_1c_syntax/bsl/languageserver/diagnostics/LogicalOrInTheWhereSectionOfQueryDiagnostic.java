@@ -27,10 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -45,16 +46,22 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 )
 public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  @Override
-  public ParseTree visitBoolOperation(SDBLParser.BoolOperationContext ctx) {
+  private final Set<ParseTree> ors = new HashSet<>();
 
-    TerminalNode orNode = ctx.OR();
-    if (orNode != null) {
-      BSLParserRuleContext whereCtx = Trees.getRootParent(ctx, SDBLParser.RULE_where);
-      if (whereCtx != null) {
-        diagnosticStorage.addDiagnostic(orNode);
-      }
+  @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    ors.clear();
+    super.visitQueryPackage(ctx);
+    ors.forEach(diagnosticStorage::addDiagnostic);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+    super.visitQuery(ctx);
+    if (ctx.where != null) {
+      ors.addAll(new HashSet<>(Trees.findAllTokenNodes(ctx.where, SDBLParser.OR)));
     }
-    return super.visitBoolOperation(ctx);
+    return ctx;
   }
 }
