@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1632405100367,
+  "lastUpdate": 1632737396697,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13423,6 +13423,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5488260281488766",
             "extra": "mean: 76.92906800905864 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e499de303139790631009a6f71a2a6770d3a3ded",
+          "message": "Merge pull request #1840 from 1c-syntax/dependabot/gradle/me.qoomon.git-versioning-5.1.1",
+          "timestamp": "2021-09-27T13:01:51+03:00",
+          "tree_id": "b4414a901ea97b73dcc7facbdf98ff2e38604560",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e499de303139790631009a6f71a2a6770d3a3ded"
+        },
+        "date": 1632737393882,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.96021215120952,
+            "unit": "sec",
+            "range": "stddev: 2.0789644975430175",
+            "extra": "mean: 75.96021215120952 sec\nrounds: 3"
           }
         ]
       }
