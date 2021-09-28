@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,6 +61,8 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Map<Pattern, Pattern> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
 
+  private List<Pattern> statementPatterns = Collections.emptyList();
+
   private static Map<Pattern, Pattern> MapFromJSON(String userSettings) {
     ObjectMapper mapper = new ObjectMapper();
     MapType mapType = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class);
@@ -77,25 +80,30 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    this.metadataBordersParameters = MapFromJSON(
+    metadataBordersParameters = MapFromJSON(
               (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
+  }
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    statementPatterns = metadataBordersParameters.entrySet().stream()
+                      .filter(entry -> ! entry.getValue().matcher(this.documentContext.getUri().getPath()).find())
+                      .map(Map.Entry::getKey)
+                      .collect(Collectors.toList());
+
+    return super.visitFile(ctx);
   }
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx){
 
-    for (Map.Entry<Pattern, Pattern> entry: metadataBordersParameters.entrySet()) {
-
-      boolean insideBorders = entry.getValue().matcher(this.documentContext.getUri().getPath()).find();
-
-      if (! insideBorders) {
-
-        Matcher matcher = entry.getKey().matcher(ctx.getText());
-        while (matcher.find()) {
-          diagnosticStorage.addDiagnostic(ctx);
-        }
+    statementPatterns.forEach(pattern -> {
+      Matcher matcher = pattern.matcher(ctx.getText());
+      while (matcher.find()) {
+        diagnosticStorage.addDiagnostic(ctx);
       }
-    }
+    });
+
     return super.visitStatement(ctx);
   }
 }
