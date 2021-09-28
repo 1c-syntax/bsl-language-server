@@ -58,6 +58,5 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
       .hasRange(6, 24, 6, 29)
       .hasRange(6, 34, 6, 39)
       .hasRange(8, 4, 8, 10);
-
   }
 }
