@@ -53,6 +53,7 @@ public final class CodeLensProvider {
     //  то код ленз провайдер должен вызывать явный резолв на своей стороне
     //  и отдавать полностью разрешенный код ленз на клиента.
     return codeLensSuppliers.values().stream()
+      .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());

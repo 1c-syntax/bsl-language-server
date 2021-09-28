@@ -39,7 +39,7 @@ public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexi
   }
 
   @Override
-  protected boolean supplierIsEnabled() {
+  public boolean isApplicable(DocumentContext documentContext) {
     return configuration.getCodeLensOptions().isShowCyclomaticComplexity();
   }
 

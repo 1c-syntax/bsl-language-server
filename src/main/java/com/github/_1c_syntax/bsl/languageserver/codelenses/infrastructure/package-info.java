@@ -19,24 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+/**
+ * Spring-специфичные классы для настройки внутренней инфраструктуры
+ * пакета {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
+ */
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 
-public abstract class AbstractCodeLensSupplier<T extends CodeLensData>
-  implements CodeLensSupplier<T> {
-
-  @Override
-  public String getId() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("CodeLensSupplier")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "CodeLensSupplier".length());
-    }
-
-    return simpleName;
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public Class<T> getCodeLensDataClass() {
-    return (Class<T>) CodeLensData.class;
-  }
-}
+import javax.annotation.ParametersAreNonnullByDefault;

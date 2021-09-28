@@ -34,7 +34,6 @@ import org.eclipse.lsp4j.Command;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
  */
 @RequiredArgsConstructor
 public abstract class AbstractMethodComplexityCodeLensSupplier
-  extends AbstractCodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
+  implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
 
@@ -54,10 +53,6 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-    if (!supplierIsEnabled()) {
-      return Collections.emptyList();
-    }
-
     return documentContext.getSymbolTree().getMethods().stream()
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
@@ -81,11 +76,6 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   public Class<ComplexityCodeLensData> getCodeLensDataClass() {
     return ComplexityCodeLensData.class;
   }
-
-  /**
-   * @return Нужно ли применять конкретный сапплаер.
-   */
-  protected abstract boolean supplierIsEnabled();
 
   /**
    * @param documentContext Документ, для которого нужно рассчитать информацию о сложностях методов.

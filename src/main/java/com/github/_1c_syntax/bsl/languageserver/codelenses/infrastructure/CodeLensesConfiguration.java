@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses.infra;
+package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
@@ -31,6 +31,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Spring-конфигурация для определения бинов
+ * пакета {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
+ */
 @Configuration
 public class CodeLensesConfiguration {
 
