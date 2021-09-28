@@ -41,7 +41,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(13);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 4, 121)
       .hasRange(5, 0, 5, 122)
@@ -55,7 +55,9 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       // FIXme
       .hasRange(40, 0, 40, 140)
       .hasRange(52, 0, 52, 178)
-      .hasRange(56, 0, 162);
+      .hasRange(56, 0, 162)
+      .hasRange(60, 0, 145)
+    ;
 
   }
 
@@ -70,7 +72,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(13);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
       .hasRange(3, 0, 3, 120)
       .hasRange(4, 0, 4, 121)
@@ -85,7 +87,9 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       // FIXme
       .hasRange(40, 0, 40, 140)
       .hasRange(52, 0, 52, 178)
-      .hasRange(56, 0, 162);
+      .hasRange(56, 0, 162)
+      .hasRange(60, 0, 145)
+    ;
   }
 
   @Test
@@ -100,7 +104,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(13);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 4, 121)
       .hasRange(5, 0, 5, 122)
