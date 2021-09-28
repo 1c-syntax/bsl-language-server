@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.CheckForNull;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -71,11 +72,12 @@ public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagno
     diagnosticStorage.addDiagnostic(ctx);
   }
 
+  @CheckForNull
   private static SDBLParser.PrimitiveExpressionContext getPrimitiveExpression(SDBLParser.ExpressionContext ctx) {
-    var primitive = Trees.getNextNode(ctx, ctx, SDBLParser.RULE_primitiveExpression);
-    if (primitive instanceof SDBLParser.PrimitiveExpressionContext) {
-      return (SDBLParser.PrimitiveExpressionContext) primitive;
-    }
-    return null;
+    var primitive = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_primitiveExpression).stream()
+      .filter(SDBLParser.PrimitiveExpressionContext.class::isInstance)
+      .map(SDBLParser.PrimitiveExpressionContext.class::cast)
+      .findFirst();
+    return primitive.orElse(null);
   }
 }

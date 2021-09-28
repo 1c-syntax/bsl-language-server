@@ -44,24 +44,27 @@ import java.util.Set;
   },
   scope = DiagnosticScope.BSL
 )
-public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLListenerDiagnostic {
 
   private final Set<ParseTree> ors = new HashSet<>();
 
   @Override
-  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+  public void enterQueryPackage(SDBLParser.QueryPackageContext ctx) {
     ors.clear();
-    super.visitQueryPackage(ctx);
-    ors.forEach(diagnosticStorage::addDiagnostic);
-    return ctx;
+    super.enterQueryPackage(ctx);
   }
 
   @Override
-  public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
-    super.visitQuery(ctx);
+  public void exitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    ors.forEach(diagnosticStorage::addDiagnostic);
+    super.exitQueryPackage(ctx);
+  }
+
+  @Override
+  public void exitQuery(SDBLParser.QueryContext ctx) {
     if (ctx.where != null) {
       ors.addAll(new HashSet<>(Trees.findAllTokenNodes(ctx.where, SDBLParser.OR)));
     }
-    return ctx;
+    super.exitQuery(ctx);
   }
 }
