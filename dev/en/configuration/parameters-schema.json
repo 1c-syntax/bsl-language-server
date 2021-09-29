@@ -868,6 +868,12 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
