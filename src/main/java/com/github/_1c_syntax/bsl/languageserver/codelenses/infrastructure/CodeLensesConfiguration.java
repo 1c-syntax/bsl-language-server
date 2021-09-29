@@ -44,7 +44,7 @@ public class CodeLensesConfiguration {
     Collection<CodeLensSupplier<? extends CodeLensData>> codeLensSuppliers
   ) {
     return codeLensSuppliers.stream()
-      .map(CodeLensSupplier.class::cast)
+      .map(codeLensSupplier -> (CodeLensSupplier<CodeLensData>) codeLensSupplier)
       .collect(Collectors.toMap(CodeLensSupplier::getId, Function.identity()));
   }
 }
