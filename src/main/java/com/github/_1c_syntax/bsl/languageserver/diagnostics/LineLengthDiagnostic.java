@@ -86,8 +86,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     } else {
       var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
         .map(MethodSymbol::getDescription)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
+        .flatMap(Optional::stream)
         .map(MethodDescription::getRange)
         .collect(Collectors.toList());
 
