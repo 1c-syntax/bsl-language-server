@@ -29,9 +29,6 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
-                "BadWords": {
-                    "$ref": "parameters-schema.json#/definitions/BadWords"
-                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
