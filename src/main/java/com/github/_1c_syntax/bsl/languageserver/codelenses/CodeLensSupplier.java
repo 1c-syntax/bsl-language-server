@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 
+import java.beans.Introspector;
 import java.util.List;
 
 /**
@@ -55,6 +56,7 @@ public interface CodeLensSupplier<T extends CodeLensData> {
     String simpleName = getClass().getSimpleName();
     if (simpleName.endsWith("CodeLensSupplier")) {
       simpleName = simpleName.substring(0, simpleName.length() - "CodeLensSupplier".length());
+      simpleName = Introspector.decapitalize(simpleName);
     }
 
     return simpleName;
