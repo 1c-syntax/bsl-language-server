@@ -38,24 +38,6 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
-        "BadWords": {
-            "description": "Prohibited words",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Prohibited words",
-            "properties": {
-                "badWords": {
-                    "description": "Regular expression for prohibited words. Ex.: \"badWord1|badWord2\".",
-                    "default": "",
-                    "type": "string",
-                    "title": "Regular expression for prohibited words. Ex.: \"badWord1|badWord2\"."
-                }
-            },
-            "$id": "#/definitions/BadWords"
-        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
