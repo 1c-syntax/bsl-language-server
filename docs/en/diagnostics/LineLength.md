@@ -10,7 +10,7 @@
 |           Name           |   Type    |                  Description                   | Default value |
 |:------------------------:|:---------:|:----------------------------------------------:|:-------------:|
 |     `maxLineLength`      | `Integer` |      `Max length of string in characters`      |     `120`     |
-| `checkMethodDescription` | `Булево`  | `Анализировать длину строк в описании методов` |    `true`     |
+| `checkMethodDescription` | `Boolean` | `Анализировать длину строк в описании методов` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
