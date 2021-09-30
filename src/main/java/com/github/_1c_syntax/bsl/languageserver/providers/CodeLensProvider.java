@@ -21,19 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -41,6 +50,8 @@ import java.util.stream.Collectors;
 public class CodeLensProvider {
   private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById;
   private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
+  private final LanguageClientHolder clientHolder;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final CodeLensDataObjectMapper codeLensDataObjectMapper;
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
@@ -60,6 +71,21 @@ public class CodeLensProvider {
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);
     return resolvedCodeLens;
+  }
+
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    boolean clientSupportsRefreshCodeLenses = Optional.ofNullable(clientCapabilitiesHolder.getCapabilities())
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getCodeLens)
+      .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
+      .orElse(false);
+
+    if (!clientSupportsRefreshCodeLenses) {
+      return;
+    }
+
+    clientHolder.getClient().ifPresent(LanguageClient::refreshCodeLenses);
   }
 
   @SneakyThrows

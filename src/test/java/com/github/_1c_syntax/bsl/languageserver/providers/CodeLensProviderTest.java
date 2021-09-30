@@ -21,26 +21,49 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
+@DirtiesContext
 class CodeLensProviderTest {
 
   @Autowired
   private CodeLensProvider codeLensProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+  @Autowired
+  private LanguageClientHolder clientHolder;
 
   @Test
   void testGetCodeLens() {
@@ -79,6 +102,49 @@ class CodeLensProviderTest {
   }
 
   @Test
+  void testCodeLensRefreshesOnLanguageServerConfigurationChange() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareCodeLensRefreshSupport(true);
+
+    // when
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+
+    // then
+    verify(languageClient).refreshCodeLenses();
+  }
+
+  @Test
+  void testCodeLensDoesNotRefreshOnLanguageServerConfigurationChange_ifLanguageClientDoesNotSupportCodeLensRefresh() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareCodeLensRefreshSupport(false);
+
+    // when
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+
+    // then
+    verify(languageClient, never()).refreshCodeLenses();
+  }
+
+
+  @Test
+  void testCodeLensRefreshes_ifLanguageClientIsNotConnected() {
+    // given
+    // no connected language client
+
+    // when
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+
+    // then
+    // no RuntimeException on client method calls
+  }
+
+  @Test
   void testExtractData() {
 
     // given
@@ -100,4 +166,16 @@ class CodeLensProviderTest {
       assertThat(oldData).isEqualTo(newConvertedData);
     }
   }
+
+  private void prepareCodeLensRefreshSupport(boolean refreshSupport) {
+    var workspaceClientCapabilities = new WorkspaceClientCapabilities();
+    workspaceClientCapabilities.setCodeLens(new CodeLensWorkspaceCapabilities(refreshSupport));
+    var clientCapabilities = new ClientCapabilities(
+      workspaceClientCapabilities,
+      mock(TextDocumentClientCapabilities.class),
+      mock(Object.class)
+    );
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
+  }
+
 }
