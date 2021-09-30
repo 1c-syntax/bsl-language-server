@@ -72,6 +72,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private final DocumentSelector documentSelector;
@@ -80,6 +81,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
+    clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    
     setConfigurationRoot(params);
     CompletableFuture.runAsync(context::populateContext);
 
