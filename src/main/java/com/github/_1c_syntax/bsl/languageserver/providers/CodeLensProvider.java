@@ -25,10 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.CodeLens;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -37,25 +37,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class CodeLensProvider {
-  private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliers;
-  private ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
+  private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById;
+  private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
   private final CodeLensDataObjectMapper codeLensDataObjectMapper;
 
-  public CodeLensProvider(
-    @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliers,
-    @Qualifier("enabledCodeLensSuppliers") ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider,
-    CodeLensDataObjectMapper objectMapper
-  ) {
-    this.codeLensSuppliers = codeLensSuppliers;
-    this.enabledCodeLensSuppliersProvider = enabledCodeLensSuppliersProvider;
-    this.codeLensDataObjectMapper = objectMapper;
-  }
-
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    // todo: надо предусмотреть, что если клиент не поддерживает асинхронный резолв,
-    //  то код ленз провайдер должен вызывать явный резолв на своей стороне
-    //  и отдавать полностью разрешенный код ленз на клиента.
     return enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
@@ -68,7 +56,7 @@ public class CodeLensProvider {
     CodeLens unresolved,
     CodeLensData data
   ) {
-    var codeLensSupplier = codeLensSuppliers.get(data.getId());
+    var codeLensSupplier = codeLensSuppliersById.get(data.getId());
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);
     return resolvedCodeLens;
