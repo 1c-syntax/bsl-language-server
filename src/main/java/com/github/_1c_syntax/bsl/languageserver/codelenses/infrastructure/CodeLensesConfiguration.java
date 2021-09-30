@@ -24,14 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -68,14 +67,17 @@ public class CodeLensesConfiguration {
     LanguageServerConfiguration configuration,
     @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById
   ) {
-    List<CodeLensSupplier<CodeLensData>> suppliers = new ArrayList<>();
-    if (configuration.getCodeLensOptions().isShowCognitiveComplexity()) {
-      suppliers.add(codeLensSuppliersById.get("cognitiveComplexity"));
-    }
-    if (configuration.getCodeLensOptions().isShowCyclomaticComplexity()) {
-      suppliers.add(codeLensSuppliersById.get("cyclomaticComplexity"));
-    }
+    var parameters = configuration.getCodeLensOptions().getParameters();
+    return codeLensSuppliersById.values().stream()
+      .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
+      .collect(Collectors.toList());
+  }
 
-    return Collections.unmodifiableList(suppliers);
+  private static boolean supplierIsEnabled(
+    String supplierId,
+    Map<String, Either<Boolean, Map<String, Object>>> parameters
+  ) {
+    var supplierConfig = parameters.getOrDefault(supplierId, Either.forLeft(true));
+    return supplierConfig.isRight() || supplierConfig.getLeft();
   }
 }
