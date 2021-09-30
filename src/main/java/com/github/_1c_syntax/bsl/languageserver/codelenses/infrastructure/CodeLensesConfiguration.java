@@ -23,13 +23,21 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 /**
  * Spring-конфигурация для определения бинов
@@ -38,6 +46,12 @@ import java.util.stream.Collectors;
 @Configuration
 public class CodeLensesConfiguration {
 
+  /**
+   * Получить список сапплаеров линз в разрезе их идентификаторов.
+   *
+   * @param codeLensSuppliers Плоский список сапплаеров.
+   * @return Список сапплаеров линз в разрезе их идентификаторов.
+   */
   @Bean
   @SuppressWarnings("unchecked")
   public Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById(
@@ -46,5 +60,22 @@ public class CodeLensesConfiguration {
     return codeLensSuppliers.stream()
       .map(codeLensSupplier -> (CodeLensSupplier<CodeLensData>) codeLensSupplier)
       .collect(Collectors.toMap(CodeLensSupplier::getId, Function.identity()));
+  }
+
+  @Bean
+  @Scope(SCOPE_PROTOTYPE)
+  public List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers(
+    LanguageServerConfiguration configuration,
+    @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById
+  ) {
+    List<CodeLensSupplier<CodeLensData>> suppliers = new ArrayList<>();
+    if (configuration.getCodeLensOptions().isShowCognitiveComplexity()) {
+      suppliers.add(codeLensSuppliersById.get("cognitiveComplexity"));
+    }
+    if (configuration.getCodeLensOptions().isShowCyclomaticComplexity()) {
+      suppliers.add(codeLensSuppliersById.get("cyclomaticComplexity"));
+    }
+
+    return Collections.unmodifiableList(suppliers);
   }
 }
