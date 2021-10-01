@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",

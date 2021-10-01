@@ -994,15 +994,20 @@
 <tr>
 <td align="left"><code>codeLens</code></td>
 <td align="center"><code>JSON-Объект</code></td>
-<td align="left">Содержит настройки отображения <code>линз</code> в продвинутых кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация на блоком кода. Свойства объекта</td>
+<td align="left">Содержит настройки отображения <code>линз</code> в продвинутых кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация над блоком кода. Свойства объекта</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showCognitiveComplexity</code></td>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td align="center"><code>JSON-Объект</code></td>
+<td align="left">Коллекция настроек линз. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся идентификатором линзы<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение линзы (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек линзы.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
 <td align="center"><code>Булево</code></td>
 <td align="left">Включается отображение значения <a href="../../diagnostics/CognitiveComplexity/">когнитивной сложности</a> метода над его определением. По умолчанию параметр включен (<em>установлен в <code>true</code></em>)</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showCyclomaticComplexity</code></td>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
 <td align="center"><code>Булево</code></td>
 <td align="left">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода. По умолчанию параметр включен (<em>установлен в <code>true</code></em>)</td>
 </tr>
