@@ -40,6 +40,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,13 @@ public class CodeLensProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final CodeLensDataObjectMapper codeLensDataObjectMapper;
 
+  private List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers;
+
+  @PostConstruct
+  protected void init() {
+    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
+  }
+
   /**
    * Получение списка {@link CodeLens} в документе.
    *
@@ -69,7 +77,7 @@ public class CodeLensProvider {
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliersProvider.getObject().stream()
+    return enabledCodeLensSuppliers.stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
@@ -108,6 +116,8 @@ public class CodeLensProvider {
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
+
     boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getCodeLens)
