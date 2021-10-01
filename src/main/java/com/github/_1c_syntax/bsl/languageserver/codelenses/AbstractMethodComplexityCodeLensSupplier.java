@@ -100,7 +100,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   @Value
   @EqualsAndHashCode(callSuper = true)
   @ToString(callSuper = true)
-  public static class ComplexityCodeLensData extends CodeLensData {
+  public static class ComplexityCodeLensData extends DefaultCodeLensData {
     /**
      * Имя метода.
      */

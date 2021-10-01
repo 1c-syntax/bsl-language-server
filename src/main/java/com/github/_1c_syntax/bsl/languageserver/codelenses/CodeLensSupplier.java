@@ -90,10 +90,7 @@ public interface CodeLensSupplier<T extends CodeLensData> {
    *
    * @return Конкретный класс для хранения данных линзы.
    */
-  @SuppressWarnings("unchecked")
-  default Class<T> getCodeLensDataClass() {
-    return (Class<T>) CodeLensData.class;
-  }
+  Class<T> getCodeLensDataClass();
 
   /**
    * Выполнить операцию "разрешения" линзы.

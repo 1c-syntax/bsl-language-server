@@ -23,10 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.github._1c_syntax.bsl.languageserver.codelenses.databind.URITypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 
 import java.net.URI;
 
@@ -34,25 +30,25 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 /**
- * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
+ * Интерфейс DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
  */
-@Value
-@NonFinal
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
-public class CodeLensData {
-
+public interface CodeLensData {
   /**
    * URI документа, с которым связана линза.
+   *
+   * @return URI документа, с которым связана линза.
    */
-  @JsonAdapter(URITypeAdapter.class)
-  URI uri;
+  URI getUri();
 
   /**
    * Идентификатор линзы.
    * <p>
    * Должен совпадать с {@link CodeLensSupplier#getId()} сапплаера,
    * создающего данные линзы.
+   *
+   * @return Идентификатор линзы.
    */
-  String id;
+  String getId();
 }
