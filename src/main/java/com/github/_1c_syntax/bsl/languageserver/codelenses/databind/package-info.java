@@ -19,6 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+/**
+ * Сериализация и десериализация классов пакета
+ * {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
+ */
 @ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
 

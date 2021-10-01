@@ -78,6 +78,8 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   }
 
   /**
+   * Получить данные о сложности в разрезе символов.
+   *
    * @param documentContext Документ, для которого нужно рассчитать информацию о сложностях методов.
    * @return Данные о сложности методов.
    */
@@ -92,10 +94,16 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     return codeLens;
   }
 
+  /**
+   * DTO для хранения данных линз о сложности методов в документе.
+   */
   @Value
   @EqualsAndHashCode(callSuper = true)
   @ToString(callSuper = true)
   public static class ComplexityCodeLensData extends CodeLensData {
+    /**
+     * Имя метода.
+     */
     String methodName;
 
     @ConstructorProperties({"uri", "id", "methodName"})

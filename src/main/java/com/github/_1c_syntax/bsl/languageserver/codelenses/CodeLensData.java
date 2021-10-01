@@ -33,12 +33,26 @@ import java.net.URI;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+/**
+ * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
+ */
 @Value
 @NonFinal
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
 public class CodeLensData {
+
+  /**
+   * URI документа, с которым связана линза.
+   */
   @JsonAdapter(URITypeAdapter.class)
   URI uri;
+
+  /**
+   * Идентификатор линзы.
+   * <p>
+   * Должен совпадать с {@link CodeLensSupplier#getId()} сапплаера,
+   * создающего данные линзы.
+   */
   String id;
 }

@@ -21,15 +21,39 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.InitializeParams;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
+import java.util.Optional;
 
+/**
+ * Null-safe bridge для получения возможностей клиента, была произведена инициализация
+ * сервера запросом
+ * {@link org.eclipse.lsp4j.services.LanguageServer#initialize(InitializeParams)}.
+ */
 @Component
-@Data
+@NoArgsConstructor
+@ToString
+@EqualsAndHashCode
 public class ClientCapabilitiesHolder {
-  @CheckForNull
+
+  /**
+   * Возможности клиента.
+   */
+  @Setter
   private ClientCapabilities capabilities;
+
+  /**
+   * Получить возможности клиента, если было произведено подключение клиента к серверу.
+   *
+   * @return Заявленные возможности клиента.
+   */
+  public Optional<ClientCapabilities> getCapabilities() {
+    return Optional.ofNullable(capabilities);
+  }
 }

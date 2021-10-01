@@ -41,6 +41,10 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeLensOptions {
+
+  /**
+   * Параметры сапплаеров линз.
+   */
   @JsonDeserialize(using = ParametersDeserializer.class)
   Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 }

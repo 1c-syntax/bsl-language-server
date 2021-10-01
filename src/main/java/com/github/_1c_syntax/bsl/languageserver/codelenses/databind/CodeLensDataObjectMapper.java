@@ -29,6 +29,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * Преднастроенный экземпляр {@link ObjectMapper} для десериализации {@link CodeLensData}.
+ */
 @Component
 public class CodeLensDataObjectMapper extends ObjectMapper {
 

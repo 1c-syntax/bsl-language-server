@@ -41,7 +41,7 @@ import java.util.List;
  * <p>
  * Конкретный сапплаер может расширить состав данных, хранимые в линзе, доопределив дата-класс,
  * наследующий {@link CodeLensData}, и указав его тип в качестве типа-параметра класса.
- * 
+ *
  * @param <T> Конкретный тип для данных линзы.
  */
 public interface CodeLensSupplier<T extends CodeLensData> {
@@ -87,7 +87,7 @@ public interface CodeLensSupplier<T extends CodeLensData> {
    * <p>
    * При создании не-разрешенной линзы поле {@link CodeLens#setData(Object)}
    * должно заполняться объектом данного класса.
-   * 
+   *
    * @return Конкретный класс для хранения данных линзы.
    */
   @SuppressWarnings("unchecked")
@@ -101,8 +101,8 @@ public interface CodeLensSupplier<T extends CodeLensData> {
    * По умолчанию линза возвращается не-разрешенной.
    *
    * @param documentContext Документ, которому принадлежит линза.
-   * @param unresolved Линза, которую надо разрешить.
-   * @param data Десериализованные данные линзы.
+   * @param unresolved      Линза, которую надо разрешить.
+   * @param data            Десериализованные данные линзы.
    * @return Разрешенная линза (с заполненным полем {@link CodeLens#getCommand()})
    */
   default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, T data) {

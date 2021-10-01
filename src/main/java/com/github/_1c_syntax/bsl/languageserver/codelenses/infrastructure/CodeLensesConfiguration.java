@@ -61,6 +61,13 @@ public class CodeLensesConfiguration {
       .collect(Collectors.toMap(CodeLensSupplier::getId, Function.identity()));
   }
 
+  /**
+   * Получить список активированных в данный момент сапплаеров линз.
+   *
+   * @param configuration         Конфигурация сервера.
+   * @param codeLensSuppliersById Список сапплаеров линз в разрезе из идентификаторов.
+   * @return Список активированных в данный момент сапплаеров линз.
+   */
   @Bean
   @Scope(SCOPE_PROTOTYPE)
   public List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers(

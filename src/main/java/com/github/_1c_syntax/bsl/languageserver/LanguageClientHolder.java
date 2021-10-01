@@ -28,16 +28,32 @@ import org.springframework.stereotype.Component;
 import javax.annotation.CheckForNull;
 import java.util.Optional;
 
+/**
+ * Null-safe bridge для получения возможно подключенного LanguageClient
+ * в виде зависимости.
+ */
 @Component
 public class LanguageClientHolder implements LanguageClientAware {
 
   @CheckForNull
   private LanguageClient client;
 
+  /**
+   * Получить LanguageClient, если он был подключен.
+   *
+   * @return LanguageClient, если он был подключен.
+   */
   public Optional<LanguageClient> getClient() {
     return Optional.ofNullable(client);
   }
 
+  /**
+   * Выполнить подключение LanguageClient.
+   * <p>
+   * Метод является частью API LSP4J.
+   *
+   * @param client LanguageClient для подключения.
+   */
   @Override
   public void connect(LanguageClient client) {
     this.client = client;

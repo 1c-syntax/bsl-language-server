@@ -33,6 +33,7 @@ import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.beans.factory.ObjectProvider;
@@ -42,9 +43,16 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code textDocument/codeLens}, {@code codeLens/resolve},
+ * а так же отвечающий за отправку запроса {@code workspace/codeLens/refresh}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">CodeLens Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">CodeLens Resolve Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">CodeLens Refresh Request specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 public class CodeLensProvider {
@@ -54,6 +62,12 @@ public class CodeLensProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final CodeLensDataObjectMapper codeLensDataObjectMapper;
 
+  /**
+   * Получение списка {@link CodeLens} в документе.
+   *
+   * @param documentContext Контекст документа.
+   * @return Список линз.
+   */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
     return enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
@@ -62,6 +76,18 @@ public class CodeLensProvider {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Провести операцию разрешения линзы (заполнение свойства
+   * {@link CodeLens#setCommand(Command)}).
+   * <p>
+   * При разрешении линзы свойство {@link CodeLens#setData(Object)}
+   * очищается с целью уменьшения трафика между клиентом и сервером.
+   *
+   * @param documentContext Контекст документа.
+   * @param unresolved      Неразрешенная линза.
+   * @param data            Данные линзы.
+   * @return Разрешенная линза.
+   */
   public CodeLens resolveCodeLens(
     DocumentContext documentContext,
     CodeLens unresolved,
@@ -73,9 +99,16 @@ public class CodeLensProvider {
     return resolvedCodeLens;
   }
 
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * В случае поддержки запроса подключенным клиентом инициирует запрос {@code workspace/codeLens/refresh}.
+   *
+   * @param event Событие
+   */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    boolean clientSupportsRefreshCodeLenses = Optional.ofNullable(clientCapabilitiesHolder.getCapabilities())
+    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getCodeLens)
       .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
@@ -88,6 +121,15 @@ public class CodeLensProvider {
     clientHolder.getClient().ifPresent(LanguageClient::refreshCodeLenses);
   }
 
+  /**
+   * Извлечь данные линзы из линзы.
+   * <p>
+   * Возвращает объект данных типа, с которым был зарегистрирован
+   * сапплаер линзы (параметр-тип класса сапплаера).
+   *
+   * @param codeLens Линза, из которой необходимо извлечь данные.
+   * @return Извлеченные данные линзы.
+   */
   @SneakyThrows
   public CodeLensData extractData(CodeLens codeLens) {
     var rawCodeLensData = codeLens.getData();

@@ -28,6 +28,9 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.net.URI;
 
+/**
+ * Адаптер для (де)сериализации типа {@link URI} для библиотеки GSON.
+ */
 public class URITypeAdapter extends TypeAdapter<URI> {
   @Override
   public void write(JsonWriter out, URI uri) throws IOException {
