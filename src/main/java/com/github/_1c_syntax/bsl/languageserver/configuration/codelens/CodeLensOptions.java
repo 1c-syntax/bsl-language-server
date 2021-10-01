@@ -46,5 +46,5 @@ public class CodeLensOptions {
    * Параметры сапплаеров линз.
    */
   @JsonDeserialize(using = ParametersDeserializer.class)
-  Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
+  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 }

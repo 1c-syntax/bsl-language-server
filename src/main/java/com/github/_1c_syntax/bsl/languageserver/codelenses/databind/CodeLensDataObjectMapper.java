@@ -35,6 +35,8 @@ import java.util.List;
 @Component
 public class CodeLensDataObjectMapper extends ObjectMapper {
 
+  private static final long serialVersionUID = 8904131809077953315L;
+
   public CodeLensDataObjectMapper(List<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers) {
     super();
 

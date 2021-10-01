@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -138,10 +139,10 @@ class CodeLensProviderTest {
     // no connected language client
 
     // when
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+    var event = new LanguageServerConfigurationChangedEvent(configuration);
 
     // then
-    // no RuntimeException on client method calls
+    assertThatNoException().isThrownBy(() -> codeLensProvider.handleEvent(event));
   }
 
   @Test
