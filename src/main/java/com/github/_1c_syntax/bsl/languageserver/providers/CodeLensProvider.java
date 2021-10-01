@@ -118,7 +118,7 @@ public class CodeLensProvider {
       return;
     }
 
-    clientHolder.getClient().ifPresent(LanguageClient::refreshCodeLenses);
+    clientHolder.execIfConnected(LanguageClient::refreshCodeLenses);
   }
 
   /**

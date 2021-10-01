@@ -51,7 +51,7 @@ public final class DiagnosticProvider {
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {
-    clientHolder.getClient().ifPresent(languageClient ->
+    clientHolder.execIfConnected(languageClient ->
       languageClient.publishDiagnostics(
         new PublishDiagnosticsParams(
           documentContext.getUri().toString(),

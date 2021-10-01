@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Null-safe bridge для получения возможно подключенного LanguageClient
@@ -45,6 +46,10 @@ public class LanguageClientHolder implements LanguageClientAware {
    */
   public Optional<LanguageClient> getClient() {
     return Optional.ofNullable(client);
+  }
+
+  public void execIfConnected(Consumer<LanguageClient> consumer) {
+    getClient().ifPresent(consumer);
   }
 
   /**
