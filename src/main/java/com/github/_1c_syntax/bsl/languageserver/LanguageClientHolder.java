@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ import java.util.function.Consumer;
  * в виде зависимости.
  */
 @Component
+@NoArgsConstructor
 public class LanguageClientHolder implements LanguageClientAware {
 
   @CheckForNull

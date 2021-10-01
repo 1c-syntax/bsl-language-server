@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Преднастроенный экземпляр {@link ObjectMapper} для десериализации {@link CodeLensData}.
@@ -35,10 +35,10 @@ import java.util.Map;
 @Component
 public class CodeLensDataObjectMapper extends ObjectMapper {
 
-  public CodeLensDataObjectMapper(Map<String, CodeLensSupplier<? extends CodeLensData>> codeLensResolvers) {
+  public CodeLensDataObjectMapper(List<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers) {
     super();
 
-    codeLensResolvers.values().stream()
+    codeLensResolvers.stream()
       .map(CodeLensDataObjectMapper::toNamedType)
       .forEach(this::registerSubtypes);
   }
