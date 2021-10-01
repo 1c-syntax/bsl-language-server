@@ -19,17 +19,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.github._1c_syntax.bsl.languageserver.codelenses.databind.URITypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+
+import java.net.URI;
 
 /**
- * Spring-конфигурация для управления включением/отключением фоновых заданий.
+ * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
  */
-@Configuration
-@EnableScheduling
-@ConditionalOnProperty(prefix = "app.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class SchedulingConfiguration {
+@Value
+@NonFinal
+public class DefaultCodeLensData implements CodeLensData {
+  @JsonAdapter(URITypeAdapter.class)
+  URI uri;
+  String id;
 }

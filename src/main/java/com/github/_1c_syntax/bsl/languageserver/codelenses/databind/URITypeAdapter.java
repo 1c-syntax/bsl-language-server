@@ -19,17 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.net.URI;
 
 /**
- * Spring-конфигурация для управления включением/отключением фоновых заданий.
+ * Адаптер для (де)сериализации типа {@link URI} для библиотеки GSON.
  */
-@Configuration
-@EnableScheduling
-@ConditionalOnProperty(prefix = "app.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class SchedulingConfiguration {
+public class URITypeAdapter extends TypeAdapter<URI> {
+  @Override
+  public void write(JsonWriter out, URI uri) throws IOException {
+    out.value(uri.toString());
+  }
+
+  @Override
+  public URI read(JsonReader in) throws IOException {
+    return URI.create(in.nextString());
+  }
 }

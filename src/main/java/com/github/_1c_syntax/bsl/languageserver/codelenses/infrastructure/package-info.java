@@ -19,17 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
-
 /**
- * Spring-конфигурация для управления включением/отключением фоновых заданий.
+ * Spring-специфичные классы для настройки внутренней инфраструктуры
+ * пакета {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
  */
-@Configuration
-@EnableScheduling
-@ConditionalOnProperty(prefix = "app.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class SchedulingConfiguration {
-}
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
+
+import javax.annotation.ParametersAreNonnullByDefault;
