@@ -4,6 +4,12 @@
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
 | `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `2`           |       `standard`<br>`brainoverload`<br>`badpractice`       |
 
+## Parameters
+
+
+|      Name       |   Type    |         Description         | Default value |
+|:---------------:|:---------:|:---------------------------:|:-------------:|
+| `allowOneliner` | `Boolean` | `Allow oneliner expression` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -47,5 +53,7 @@ FileImageHRef = AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData;
 ### Parameter for config
 
 ```json
-"NestedFunctionInParameters": false
+"NestedFunctionInParameters": {
+    "allowOneliner": true
+}
 ```
