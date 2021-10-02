@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633101191364,
+  "lastUpdate": 1633169139111,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13516,6 +13516,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8033815326948615",
             "extra": "mean: 77.65342354774475 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9ac74563806e06ae39ab25c80e7969d042fe229",
+          "message": "Merge pull request #1845 from 1c-syntax/feature/NestedFunctionInParametersDiagnostic\n\nNestedFunctionInParametersDiagnostic mod",
+          "timestamp": "2021-10-02T12:57:30+03:00",
+          "tree_id": "b9109a79b255cbb0f2f9105300bfdc699c64a887",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a9ac74563806e06ae39ab25c80e7969d042fe229"
+        },
+        "date": 1633169135342,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.01253445943196,
+            "unit": "sec",
+            "range": "stddev: 2.203490253224114",
+            "extra": "mean: 77.01253445943196 sec\nrounds: 3"
           }
         ]
       }
