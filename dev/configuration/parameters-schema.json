@@ -1148,6 +1148,14 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
