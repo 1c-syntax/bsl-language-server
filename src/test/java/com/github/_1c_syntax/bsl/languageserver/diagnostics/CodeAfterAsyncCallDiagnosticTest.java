@@ -39,16 +39,24 @@ class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterA
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasRange(4, 4, 4, 96)
-      .hasRange(21, 8, 21, 100)
-      .hasRange(34, 8, 34, 100)
-      .hasRange(48, 12, 48, 104)
-      .hasRange(63, 12, 63, 104)
-      .hasRange(78, 12, 78, 104)
-      .hasRange(93, 12, 93, 104)
-      .hasRange(108, 12, 108, 104)
-      .hasRange(123, 12, 123, 104)
-      .hasSize(9);
+      .hasRange(4,  4, 96)
+      .hasRange(21, 8, 100)
+      .hasRange(34, 8, 100)
+      .hasRange(48, 12, 104)
+      .hasRange(63, 12, 104)
+      .hasRange(78, 12, 104)
+      .hasRange(93, 12, 104)
+      .hasRange(108, 12, 104)
+      .hasRange(123, 12, 104)
+      .hasRange(136, 4, 36)
+      .hasRange(145, 8, 100)
+      .hasRange(158, 12, 104)
+      .hasRange(172, 12, 104)
+      .hasRange(186, 12, 104)
+      .hasRange(200, 12, 104)
+      .hasRange(214, 12, 104)
+      .hasRange(228, 12, 104)
+      .hasSize(17);
 
   }
 }
