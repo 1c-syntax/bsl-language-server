@@ -77,7 +77,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(10)
+      .hasSize(11)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable NumberOfValuesInStructureConstructor in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable ExportVariables in file"))
@@ -121,7 +121,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(6)
+      .hasSize(8)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
@@ -158,7 +158,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(8)
+      .hasSize(10)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
