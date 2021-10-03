@@ -73,7 +73,7 @@ class VariableSymbolTest {
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isPresent())
       .hasSize(8)
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(2, 6, 32)))
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(6, 6, 32)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(6, 6, 33)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(8, 6, 33)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(19, 6, 18)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(24, 6, 18)))
