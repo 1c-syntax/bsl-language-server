@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -86,7 +87,14 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
 
-      TextEdit textEdit = new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
+      var range = Ranges.create(
+        diagnostic.getRange().getStart().getLine(),
+        diagnostic.getRange().getStart().getCharacter() + 1,
+        diagnostic.getRange().getEnd().getLine(),
+        diagnostic.getRange().getEnd().getCharacter() + 1
+
+      );
+      TextEdit textEdit = new TextEdit(range, info.getResourceString("changeFix"));
       textEdits.add(textEdit);
 
     });
