@@ -73,10 +73,6 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageServerConfiguration {
 
-  @Value(("${globalConfig.path}"))
-  @JsonIgnore
-  private String globalConfigPath;
-
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   private Language language = Language.DEFAULT_LANGUAGE;
@@ -106,9 +102,13 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile = new File(".bsl-language-server.json");
 
+  @Value(("${globalConfig.path}"))
+  @JsonIgnore
+  private String globalConfigPath;
+
   @PostConstruct
   private void init() {
-    File configuration = new File(globalConfigPath, ".bsl-language-server.json");
+    var configuration = new File(globalConfigPath, ".bsl-language-server.json");
     update(configuration);
   }
 
