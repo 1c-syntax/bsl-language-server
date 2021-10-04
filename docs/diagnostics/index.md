@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **145**
+Общее количество: **146**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
 * Ошибка: **44**
-* Дефект кода: **93**
+* Дефект кода: **94**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -91,6 +91,7 @@
  [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Использование логического "ИЛИ" в секции "ГДЕ" запроса | Да | Важный | Дефект кода | `sql`<br>`performance`<br>`standard` 
  [MagicDate](MagicDate.md) | Магические даты | Да | Незначительный | Дефект кода | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` 
+ [MetadataBorders](MetadataBorders.md) | Границы метаданных | Да | Информационный | Дефект кода | `error` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` 
  [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br>`badpractice` 

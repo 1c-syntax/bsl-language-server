@@ -930,6 +930,24 @@
             },
             "$id": "#/definitions/MagicNumber"
         },
+        "MetadataBorders": {
+            "description": "Metadata borders",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata borders",
+            "properties": {
+                "metadataBordersParameters": {
+                    "description": "JSON-structure for pairs \"regex for statements\":\"regex for module names\". Etc \"InformationRegisters?.RegisterName:CommonModules/SpecialModule\".",
+                    "default": "",
+                    "type": "string",
+                    "title": "JSON-structure for pairs \"regex for statements\":\"regex for module names\". Etc \"InformationRegisters?.RegisterName:CommonModules/SpecialModule\"."
+                }
+            },
+            "$id": "#/definitions/MetadataBorders"
+        },
         "MetadataObjectNameLength": {
             "description": "Metadata object names must not exceed the allowed length",
             "default": true,
