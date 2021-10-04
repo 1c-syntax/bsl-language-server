@@ -1,15 +1,16 @@
 # Space at the beginning of the comment (SpaceAtStartComment)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `standard` |
+| `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
 ## Parameters
 
 
-|         Name         |   Type   |                                        Description                                         |  Default value  |
-|:--------------------:|:--------:|:------------------------------------------------------------------------------------------:|:---------------:|
-| `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. List, values separated by comma` | `//@,//(c),//©` |
+|         Name          |   Type   |                                                Description                                                |  Default value  |
+|:---------------------:|:--------:|:---------------------------------------------------------------------------------------------------------:|:---------------:|
+| `commentsAnnotation`  | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` |
+| `useStrictValidation` | `Булево` |        `Использовать строгую проверку, запрещающую двойные комментарии`//// Текст комментария``         |     `true`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -35,6 +36,7 @@ Exception from the rule is _**comments-annotations**_, comments starting with sp
 
 ```json
 "SpaceAtStartComment": {
-    "commentsAnnotation": "//@,//(c),//©"
+    "commentsAnnotation": "//@,//(c),//©",
+    "useStrictValidation": true
 }
 ```
