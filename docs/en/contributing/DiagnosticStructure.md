@@ -98,6 +98,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic
+```
+
 Diagnostic may provide so-called `quick fixes`. In order to provide quick fixes the diagnostic class must implement `QuickFixProvider` interface. See this [article](DiagnosticQuickFix.md) on adding a `quick fix` to diagnostic.
 
 Examples
@@ -120,6 +124,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 
 ```java
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
+```
+
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic implements QuickFixProvider
 ```
 
 After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the [article](DiagnostcAddSettings.md).
@@ -146,18 +154,18 @@ In the class, you need to implement:
 ```java
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    // Clearing diagnostics storage
+    // Очистка хранилища диагностик
     diagnosticStorage.clearDiagnostics();
 
-    documentContext.getComments()  // Getting the collection of tokens, here comments
+    documentContext.getComments()  // Получение коллекции токенов, в примере комментариев
       .parallelStream()
-      .filter((Token t) ->         // Search for "necessary" - those that the diagnostics is aimed at detecting
+      .filter((Token t) ->         // Поиск "нужных", т.е. тех, на обнаружение которых направлена диагностика
         !goodCommentPattern.matcher(t.getText()).matches())
       .sequential()
-      .forEach((Token t) ->        // Adding errors, here for each token a separate error
+      .forEach((Token t) ->        // Добавление замечаний, в примере на каждый токен отдельное замечание
         diagnosticStorage.addDiagnostic(t));
 
-    // Return of found
+    // Возврат обнаруженных замечаний
     return diagnosticStorage.getDiagnostics();
   }
 ```
@@ -191,9 +199,9 @@ Example:
 
 ```java
   @Override
-  public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {                 // Visitor for module variables
-    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {  // Finding child nodes
-      diagnosticStorage.addDiagnostic(ctx);                                         // Adding a error to the entire site
+  public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {                 // Визитер для переменных модуля
+    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {  // Поиск нужных дочерних узлов
+      diagnosticStorage.addDiagnostic(ctx);                                         // Добавление замечания на весь узел
     }
     return ctx;
   }
@@ -273,11 +281,11 @@ Test method example
 ```java
     @Test
     void test() {
-      List<Diagnostic> diagnostics = getDiagnostics();   // getting a list of diagnostics
+      List<Diagnostic> diagnostics = getDiagnostics();   // получение списка замечаний диагностики
 
-      assertThat(diagnostics).hasSize(2);                // checking the number of errors found
+      assertThat(diagnostics).hasSize(2);                // проверка количества обнаруженных замечаний
 
-      // verification of special cases
+      // проверка частных случаев
       assertThat(diagnostics)
         .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
         .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)));
@@ -289,9 +297,9 @@ Test method example
 ```java
     @Test
     void test() {
-      List<Diagnostic> diagnostics = getDiagnostics();   // getting a list of diagnostics
+      List<Diagnostic> diagnostics = getDiagnostics();   // получение списка замечаний диагностики
 
-      assertThat(diagnostics).hasSize(2);                // checking the number of errors found
+      assertThat(diagnostics).hasSize(2);                // проверка количества обнаруженных замечаний
 
       // проверка частных случаев
       assertThat(diagnostics, true)
