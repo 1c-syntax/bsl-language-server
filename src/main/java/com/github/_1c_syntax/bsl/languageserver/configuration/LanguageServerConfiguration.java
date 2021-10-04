@@ -38,11 +38,13 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,6 +72,10 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageServerConfiguration {
+
+  @Value(("${globalConfig.path}"))
+  @JsonIgnore
+  private String globalConfigPath;
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
@@ -100,15 +106,15 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile = new File(".bsl-language-server.json");
 
+  @PostConstruct
+  private void init() {
+    File configuration = new File(globalConfigPath, ".bsl-language-server.json");
+    update(configuration);
+  }
+
   public void update(File configurationFile) {
     if (!configurationFile.exists()) {
-      // try to find in userspace
-      String userHome = System.getProperty("user.home");
-      configurationFile = new File(userHome, ".bsl-language-server.json");
-
-      if (!configurationFile.exists()) {
-        return;
-      }
+      return;
     }
 
     LanguageServerConfiguration configuration;
