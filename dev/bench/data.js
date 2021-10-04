@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633169139111,
+  "lastUpdate": 1633346082211,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13547,6 +13547,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.203490253224114",
             "extra": "mean: 77.01253445943196 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c898c0c0a75d9320b498d2900b0d66639af255fc",
+          "message": "Merge pull request #1846 from 1c-syntax/feature/modSpaceAtStartComment\n\nMOD SpaceAtStartCommentDiagnostic",
+          "timestamp": "2021-10-04T14:06:16+03:00",
+          "tree_id": "b150c4f35602d7f4264a2ba5aab44b2c81215c41",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c898c0c0a75d9320b498d2900b0d66639af255fc"
+        },
+        "date": 1633346078244,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.64129956563313,
+            "unit": "sec",
+            "range": "stddev: 7.18673369711416",
+            "extra": "mean: 81.64129956563313 sec\nrounds: 3"
           }
         ]
       }
