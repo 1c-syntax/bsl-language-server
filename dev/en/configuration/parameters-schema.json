@@ -1478,6 +1478,12 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
