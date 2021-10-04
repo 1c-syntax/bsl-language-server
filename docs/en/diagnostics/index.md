@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **145**
+Total: **146**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **44**
-* Code smell: **93**
+* Code smell: **94**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -21,6 +21,7 @@ Total: **145**
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
+ [BrokenQuery](BrokenQuery.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
  [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | Lines of code after the asynchronous method call | No | Major | Code smell | `suspicious` 
