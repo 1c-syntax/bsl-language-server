@@ -102,7 +102,13 @@ public class LanguageServerConfiguration {
 
   public void update(File configurationFile) {
     if (!configurationFile.exists()) {
-      return;
+      // try to find in userspace
+      String userHome = System.getProperty("user.home");
+      configurationFile = new File(userHome, ".bsl-language-server.json");
+
+      if (!configurationFile.exists()) {
+        return;
+      }
     }
 
     LanguageServerConfiguration configuration;
