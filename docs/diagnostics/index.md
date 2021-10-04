@@ -80,6 +80,7 @@
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` 
+ [IncorrectExportFormMethod](IncorrectExportFormMethod.md) | Неправильный экспортный метод формы | Да | Блокирующий | Ошибка | `error`<br>`unpredictable`<br>`suspicious` 
  [IncorrectLineBreak](IncorrectLineBreak.md) | Неправильный перенос выражения | Да | Информационный | Дефект кода | `standard`<br>`badpractice` 
  [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Некорректное использование 'ПОДОБНО' | Да | Важный | Ошибка | `standard`<br>`sql`<br>`unpredictable` 
  [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Неверное использование "СтрШаблон" | Да | Блокирующий | Ошибка | `brainoverload`<br>`suspicious`<br>`unpredictable` 

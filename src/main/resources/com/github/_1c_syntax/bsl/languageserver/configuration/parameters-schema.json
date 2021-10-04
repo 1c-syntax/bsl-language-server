@@ -744,6 +744,16 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectExportFormMethod": {
+            "description": "Incorrect export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect export form method",
+            "$id": "#/definitions/IncorrectExportFormMethod"
+        },
         "IncorrectLineBreak": {
             "description": "Incorrect expression line break",
             "default": true,
