@@ -21,7 +21,6 @@ Total: **146**
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
- [BrokenQuery](BrokenQuery.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
  [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | Lines of code after the asynchronous method call | No | Major | Code smell | `suspicious` 
@@ -121,6 +120,7 @@ Total: **146**
  [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 

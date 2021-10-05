@@ -48,16 +48,6 @@
             "title": "Violating transaction rules for the 'BeginTransaction' method",
             "$id": "#/definitions/BeginTransactionBeforeTryCatch"
         },
-        "BrokenQuery": {
-            "description": "Query text parsing error",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Query text parsing error",
-            "$id": "#/definitions/BrokenQuery"
-        },
         "CachedPublic": {
             "description": "Cached public methods",
             "default": true,
@@ -1357,6 +1347,16 @@
                 }
             },
             "$id": "#/definitions/PublicMethodsDescription"
+        },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
         },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",

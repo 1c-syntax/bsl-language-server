@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class BrokenQueryDiagnosticTest extends AbstractDiagnosticTest<BrokenQueryDiagnostic> {
-  BrokenQueryDiagnosticTest() {
-    super(BrokenQueryDiagnostic.class);
+class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErrorDiagnostic> {
+  QueryParseErrorDiagnosticTest() {
+    super(QueryParseErrorDiagnostic.class);
   }
 
   @Test

@@ -41,7 +41,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
   },
   scope = DiagnosticScope.BSL
 )
-public class BrokenQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class QueryParseErrorDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   // анализируем каждый запрос пакета

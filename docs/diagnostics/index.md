@@ -21,7 +21,6 @@
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | Все возможные пути выполнения функции должны содержать оператор Возврат | Да | Важный | Дефект кода | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Назначение псевдонимов выбранным полям в запросе | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` 
- [BrokenQuery](BrokenQuery.md) | Ошибка разбора текста запроса | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` 
  [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | После вызова асинхронного метода есть строки кода | Нет | Важный | Дефект кода | `suspicious` 
@@ -121,6 +120,7 @@
  [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Ошибка разбора текста запроса | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Избыточное обращение к объекту | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Использование 'ВЫБРАТЬ ПЕРВЫЕ' без 'УПОРЯДОЧИТЬ ПО' | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`suspicious` 

@@ -1,4 +1,4 @@
-# Query text parsing error (BrokenQuery)
+# Query text parsing error (QueryParseError)
 
 |     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
@@ -25,12 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:BrokenQuery-off
-// BSLLS:BrokenQuery-on
+// BSLLS:QueryParseError-off
+// BSLLS:QueryParseError-on
 ```
 
 ### Parameter for config
 
 ```json
-"BrokenQuery": false
+"QueryParseError": false
 ```
