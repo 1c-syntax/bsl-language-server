@@ -28,27 +28,21 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Range;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
-  minutesToFix = 60,
+  minutesToFix = 30,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.SQL,
@@ -63,31 +57,7 @@ import java.util.stream.Collectors;
   scope = DiagnosticScope.BSL
 )
 @RequiredArgsConstructor
-public class ForbiddenMetadataNameDiagnostic extends AbstractDiagnostic {
-
-  private static final List<ModuleType> OBJECT_MODULES = List.of(
-    ModuleType.ObjectModule,
-    ModuleType.ManagerModule,
-    ModuleType.ValueManagerModule);
-
-  private static final List<MDOType> ROOT_MDO_TYPES = List.of(
-    MDOType.ACCOUNTING_REGISTER,
-    MDOType.ACCUMULATION_REGISTER,
-    MDOType.BUSINESS_PROCESS,
-    MDOType.CALCULATION_REGISTER,
-    MDOType.CATALOG,
-    MDOType.CHART_OF_ACCOUNTS,
-    MDOType.CHART_OF_CALCULATION_TYPES,
-    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
-    MDOType.CONSTANT,
-    MDOType.DOCUMENT,
-    MDOType.DOCUMENT_JOURNAL,
-    MDOType.ENUM,
-    MDOType.EXCHANGE_PLAN,
-    MDOType.FILTER_CRITERION,
-    MDOType.INFORMATION_REGISTER,
-    MDOType.TASK
-  );
+public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic {
 
   // Запрещенные имена метаданных
   private static final String FORBIDDEN_NAMES =
@@ -159,57 +129,9 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractDiagnostic {
   private static final Pattern FORBIDDEN_NAMES_PATTERN = CaseInsensitivePattern.compile(FORBIDDEN_NAMES);
 
   private final LanguageServerConfiguration serverConfiguration;
-  private Range diagnosticRange;
 
   @Override
-  protected void check() {
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
-
-    if (diagnosticRange == null) {
-      // нет ренджа - нет и диагностик :)
-      return;
-    }
-
-    if (documentContext.getModuleType() == ModuleType.SessionModule) {
-      checkMetadataWithoutModules();
-    } else {
-      checkMetadataWithModules();
-    }
-  }
-
-  private void checkMetadataWithModules() {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
-      if (mdo instanceof AbstractMDObjectBSL) {
-        var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-          .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-          .collect(Collectors.toList());
-
-        // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-        if (modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule) {
-          checkMetadata(mdo);
-        }
-      }
-    });
-  }
-
-  /**
-   * Анализируется только те объекты метаданных, которые либо не имеют модулей вообще, либо в конкретной реализации.
-   * Замечания по таким объектам будут повешены на модуль сеанса
-   * При фильтрации есть потенциальная проблема, связанная с определением ренджа для размещения замечания:
-   * если есть модуль, но в нем нет кода, то он будет отсеян, и замечание не будет диагностировано
-   * чтож, жизнь - боль!
-   */
-  private void checkMetadataWithoutModules() {
-    documentContext.getServerContext().getConfiguration().getChildren().stream()
-      .filter(mdo -> ROOT_MDO_TYPES.contains(mdo.getType()))
-      .filter(mdo -> !(mdo instanceof AbstractMDObjectBSL)
-        || (((AbstractMDObjectBSL) mdo).getModules().stream()
-        .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
-      .forEach(this::checkMetadata);
-  }
-
-  private void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(AbstractMDObjectBase mdo) {
 
     // проверка имени метаданного
     checkName(mdo.getName(), mdo.getMdoReference());
@@ -237,7 +159,7 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractDiagnostic {
       } else {
         mdoRef = mdoReference.getMdoRef();
       }
-      diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(name, mdoRef));
+      addDiagnostic(info.getMessage(name, mdoRef));
     }
   }
 }
