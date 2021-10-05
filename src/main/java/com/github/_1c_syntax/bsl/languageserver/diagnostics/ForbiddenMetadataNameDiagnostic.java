@@ -180,13 +180,15 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractDiagnostic {
 
   private void checkMetadataWithModules() {
     documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
-      var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-        .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-        .collect(Collectors.toList());
+      if (mdo instanceof AbstractMDObjectBSL) {
+        var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
+          .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
+          .collect(Collectors.toList());
 
-      // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-      if (modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule) {
-        checkMetadata(mdo);
+        // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
+        if (modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule) {
+          checkMetadata(mdo);
+        }
       }
     });
   }
