@@ -52,13 +52,17 @@ public class ServerSideExportFormMethodDiagnostic extends AbstractDiagnostic {
   protected void check() {
     documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
       // проверка актуальна только для управляемых форм
-      if (((AbstractMDOForm) mdo).getFormType() == FormType.MANAGED) {
-        documentContext.getSymbolTree().getMethods().stream()
-          .filter(MethodSymbol::isExport)
-          .filter(methodSymbol -> methodSymbol.getCompilerDirectiveKind()
-            .orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT)
-          .forEach(methodSymbol -> diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange()));
+      if (mdo instanceof AbstractMDOForm && ((AbstractMDOForm) mdo).getFormType() != FormType.ORDINARY) {
+        checkForm();
       }
     });
+  }
+
+  private void checkForm() {
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(MethodSymbol::isExport)
+      .filter(methodSymbol -> methodSymbol.getCompilerDirectiveKind()
+        .orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT)
+      .forEach(diagnosticStorage::addDiagnostic);
   }
 }

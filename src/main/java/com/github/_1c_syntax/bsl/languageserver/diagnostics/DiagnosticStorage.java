@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -210,6 +211,15 @@ public class DiagnosticStorage {
     } else {
       throw new IllegalArgumentException("Unsupported parameter type " + tree);
     }
+  }
+
+  /**
+   * Добавляет диагностику по ссылке на метод, используя в качестве области - область имени метода
+   *
+   * @param methodSymbol ссылка на метод
+   */
+  protected void addDiagnostic(MethodSymbol methodSymbol) {
+    addDiagnostic(methodSymbol.getSubNameRange());
   }
 
   private static Diagnostic createDiagnostic(
