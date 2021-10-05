@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **146**
+Total: **147**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **44**
+* Error: **45**
 * Code smell: **94**
 
 
@@ -66,6 +66,7 @@ Total: **146**
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [ForbiddenMetadataName](ForbiddenMetadataName.md) | Metadata object has a forbidden name | Yes | Blocker | Error | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` 
