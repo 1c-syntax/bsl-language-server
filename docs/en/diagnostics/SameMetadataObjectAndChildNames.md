@@ -1,8 +1,8 @@
-# Metadata object has a forbidden name (ForbiddenMetadataName)
+# Same metadata object and child name (SameMetadataObjectAndChildNames)
 
-|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
-| `Error` | `BSL` | `Blocker` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
+|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -25,12 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:ForbiddenMetadataName-off
-// BSLLS:ForbiddenMetadataName-on
+// BSLLS:SameMetadataObjectAndChildNames-off
+// BSLLS:SameMetadataObjectAndChildNames-on
 ```
 
 ### Parameter for config
 
 ```json
-"ForbiddenMetadataName": false
+"SameMetadataObjectAndChildNames": false
 ```
