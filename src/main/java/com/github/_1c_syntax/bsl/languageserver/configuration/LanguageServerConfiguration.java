@@ -109,29 +109,11 @@ public class LanguageServerConfiguration {
   @PostConstruct
   private void init() {
     var configuration = new File(globalConfigPath, ".bsl-language-server.json");
-    update(configuration);
+    loadConfigurationFile(configuration);
   }
 
   public void update(File configurationFile) {
-    if (!configurationFile.exists()) {
-      return;
-    }
-
-    LanguageServerConfiguration configuration;
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-    try {
-      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-    } catch (IOException e) {
-      LOGGER.error("Can't deserialize configuration file", e);
-      return;
-    }
-
-    this.configurationFile = configurationFile;
-
-    copyPropertiesFrom(configuration);
+    loadConfigurationFile(configurationFile);
   }
 
   public void reset() {
@@ -188,6 +170,28 @@ public class LanguageServerConfiguration {
       configurationFile = listPath.get(0).toFile();
     }
     return configurationFile;
+  }
+
+  private void loadConfigurationFile(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
+    }
+
+    LanguageServerConfiguration configuration;
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
+    }
+
+    this.configurationFile = configurationFile;
+
+    copyPropertiesFrom(configuration);
   }
 
   @SneakyThrows
