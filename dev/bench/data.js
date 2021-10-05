@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633423653627,
+  "lastUpdate": 1633449778448,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13640,6 +13640,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0055671021891028",
             "extra": "mean: 75.40019838015239 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d7ef0dae4c9ef18f28a0759d3453da9d577a7ba",
+          "message": "Merge pull request #1850 from 1c-syntax/feature/forbiddenMetadataName",
+          "timestamp": "2021-10-05T18:43:30+03:00",
+          "tree_id": "46d8b72d48a1194248ec89af0efef0b34a13d335",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6d7ef0dae4c9ef18f28a0759d3453da9d577a7ba"
+        },
+        "date": 1633449775426,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.89730922381084,
+            "unit": "sec",
+            "range": "stddev: 0.5872112651940338",
+            "extra": "mean: 72.89730922381084 sec\nrounds: 3"
           }
         ]
       }
