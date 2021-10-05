@@ -102,7 +102,7 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile = new File(".bsl-language-server.json");
 
-  @Value(("${globalConfig.path}"))
+  @Value(("${app.globalConfig.path}"))
   @JsonIgnore
   private String globalConfigPath;
 
