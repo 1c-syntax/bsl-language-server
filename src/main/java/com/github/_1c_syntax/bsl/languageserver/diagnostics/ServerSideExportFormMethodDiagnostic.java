@@ -47,7 +47,7 @@ import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
     ModuleType.FormModule
   }
 )
-public class IncorrectExportFormMethodDiagnostic extends AbstractDiagnostic {
+public class ServerSideExportFormMethodDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
     documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {

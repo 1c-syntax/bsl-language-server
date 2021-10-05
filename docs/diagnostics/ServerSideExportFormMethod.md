@@ -1,4 +1,4 @@
-# Неправильный экспортный метод формы (IncorrectExportFormMethod)
+# Серверный экспортный метод формы (ServerSideExportFormMethod)
 
 |   Тип    |    Поддерживаются<br>языки    |   Важность    |    Включена<br>по умолчанию    |    Время на<br>исправление (мин)    |                          Теги                          |
 |:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------:|
@@ -32,12 +32,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:IncorrectExportFormMethod-off
-// BSLLS:IncorrectExportFormMethod-on
+// BSLLS:ServerSideExportFormMethod-off
+// BSLLS:ServerSideExportFormMethod-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"IncorrectExportFormMethod": false
+"ServerSideExportFormMethod": false
 ```

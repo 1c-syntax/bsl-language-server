@@ -36,9 +36,9 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class IncorrectExportFormMethodDiagnosticTest extends AbstractDiagnosticTest<IncorrectExportFormMethodDiagnostic> {
-  IncorrectExportFormMethodDiagnosticTest() {
-    super(IncorrectExportFormMethodDiagnostic.class);
+class ServerSideExportFormMethodDiagnosticTest extends AbstractDiagnosticTest<ServerSideExportFormMethodDiagnostic> {
+  ServerSideExportFormMethodDiagnosticTest() {
+    super(ServerSideExportFormMethodDiagnostic.class);
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";

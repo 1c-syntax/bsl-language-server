@@ -1,4 +1,4 @@
-# Incorrect export form method (IncorrectExportFormMethod)
+# Server-side export form method (ServerSideExportFormMethod)
 
 |  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                          Tags                          |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------:|
@@ -25,12 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:IncorrectExportFormMethod-off
-// BSLLS:IncorrectExportFormMethod-on
+// BSLLS:ServerSideExportFormMethod-off
+// BSLLS:ServerSideExportFormMethod-on
 ```
 
 ### Parameter for config
 
 ```json
-"IncorrectExportFormMethod": false
+"ServerSideExportFormMethod": false
 ```
