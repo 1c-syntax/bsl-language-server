@@ -1348,6 +1348,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
