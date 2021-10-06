@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633548175230,
+  "lastUpdate": 1633548650055,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13702,6 +13702,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.355486351191204",
             "extra": "mean: 71.8644409974416 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8a640c61fa70a757bac1649b79a857249ed1a248",
+          "message": "Merge pull request #1851 from 1c-syntax/feature/SameMetadataObjectAndChildNames",
+          "timestamp": "2021-10-06T22:20:35+03:00",
+          "tree_id": "d5f85f1b6f2fa30dcae9f13dae41d882a5195638",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8a640c61fa70a757bac1649b79a857249ed1a248"
+        },
+        "date": 1633548646227,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.52562602361043,
+            "unit": "sec",
+            "range": "stddev: 0.5122357227580508",
+            "extra": "mean: 72.52562602361043 sec\nrounds: 3"
           }
         ]
       }
