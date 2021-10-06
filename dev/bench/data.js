@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633449778448,
+  "lastUpdate": 1633548175230,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13671,6 +13671,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5872112651940338",
             "extra": "mean: 72.89730922381084 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd5ee82d4cb71f7f8933fb0b2328cf24a079e4d5",
+          "message": "Merge pull request #1852 from 1c-syntax/feature/moddMetadataObjectNameLength",
+          "timestamp": "2021-10-06T22:15:02+03:00",
+          "tree_id": "8cdfb26752411d83886018539749392b726b88f7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/dd5ee82d4cb71f7f8933fb0b2328cf24a079e4d5"
+        },
+        "date": 1633548171208,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 71.8644409974416,
+            "unit": "sec",
+            "range": "stddev: 2.355486351191204",
+            "extra": "mean: 71.8644409974416 sec\nrounds: 3"
           }
         ]
       }
