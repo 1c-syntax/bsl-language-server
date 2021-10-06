@@ -108,8 +108,14 @@ public class LanguageServerConfiguration {
 
   @PostConstruct
   private void init() {
+    if (configurationFile.exists()) {
+      loadConfigurationFile(configurationFile);
+      return;
+    }
     var configuration = new File(globalConfigPath, ".bsl-language-server.json");
-    loadConfigurationFile(configuration);
+    if (configuration.exists()) {
+      loadConfigurationFile(configuration);
+    }
   }
 
   public void update(File configurationFile) {
