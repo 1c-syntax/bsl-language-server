@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **150**
+Общее количество: **148**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **48**
-* Дефект кода: **94**
+* Ошибка: **45**
+* Дефект кода: **95**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -58,6 +58,7 @@
  [DeprecatedMethods8317](DeprecatedMethods8317.md) | Использование устаревших глобальных методов платформы 8.3.17 | Да | Информационный | Дефект кода | `deprecated` 
  [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Устаревшее использование типа "УправляемаяФорма" | Да | Информационный | Дефект кода | `standard`<br>`deprecated` 
  [DuplicateRegion](DuplicateRegion.md) | Повторяющиеся разделы модуля | Да | Информационный | Дефект кода | `standard` 
+ [DuplicateStringLiteral](DuplicateStringLiteral.md) | Повторное использование строкового литерала | Да | Незначительный | Дефект кода | `badpractice` 
  [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br>`suspicious` 
  [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` 
  [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` 
