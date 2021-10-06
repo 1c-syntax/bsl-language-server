@@ -89,7 +89,7 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      var textEdit = new TextEdit(range,(String) diagnostic.getData());
+      var textEdit = new TextEdit(range, (String) diagnostic.getData());
       textEdits.add(textEdit);
     });
 
