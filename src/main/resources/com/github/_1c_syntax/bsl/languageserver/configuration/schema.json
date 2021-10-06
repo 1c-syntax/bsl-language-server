@@ -449,6 +449,9 @@
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
+                "WrongDataPathForFormElements": {
+                    "$ref": "parameters-schema.json#/definitions/WrongDataPathForFormElements"
+                },
                 "WrongUseFunctionProceedWithCall": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
