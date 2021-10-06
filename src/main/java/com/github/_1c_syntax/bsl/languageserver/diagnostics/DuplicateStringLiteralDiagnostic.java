@@ -66,6 +66,8 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
    */
   private static final boolean CASE_SENSITIVE = false;
 
+  private static final String EMPTY_STRING = "\"\"";
+
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + ALLOWED_NUMBER_COPIES
@@ -123,6 +125,7 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
   private void checkStringLiterals(BSLParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_string).stream()
       .map(BSLParserRuleContext.class::cast)
+      .filter(literal -> !EMPTY_STRING.equals(literal.getText()))
       .collect(Collectors.groupingBy(this::getLiteralText))
       .forEach((String name, List<BSLParserRuleContext> literals) -> {
         if (literals.size() > allowedNumberCopies) {
