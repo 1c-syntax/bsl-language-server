@@ -1408,6 +1408,16 @@
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
         },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",
             "default": true,

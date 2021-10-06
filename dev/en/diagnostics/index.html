@@ -969,11 +969,11 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="Implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#Implemented-diagnostics" title="Permanent link">&para;</a></h2>
-<p>Total: <strong>147</strong></p>
+<p>Total: <strong>149</strong></p>
 <ul>
 <li>Security Hotspot: <strong>4</strong></li>
 <li>Vulnerability: <strong>4</strong></li>
-<li>Error: <strong>45</strong></li>
+<li>Error: <strong>47</strong></li>
 <li>Code smell: <strong>94</strong></li>
 </ul>
 <table>
@@ -1835,6 +1835,14 @@
 <td>Major</td>
 <td>Code smell</td>
 <td><code>sql</code><br><code>performance</code></td>
+</tr>
+<tr>
+<td><a href="SameMetadataObjectAndChildNames/">SameMetadataObjectAndChildNames</a></td>
+<td>Same metadata object and child name</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>standard</code><br><code>sql</code><br><code>design</code></td>
 </tr>
 <tr>
 <td><a href="SelectTopWithoutOrderBy/">SelectTopWithoutOrderBy</a></td>
