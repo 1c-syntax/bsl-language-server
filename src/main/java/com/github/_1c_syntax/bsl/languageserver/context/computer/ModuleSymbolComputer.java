@@ -49,11 +49,15 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
   @Override
   public ModuleSymbol compute() {
+    var firstRange = Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+      .orElseGet(() -> Ranges.create(documentContext.getAst())); // вероятность нулевая, но все же
+
     return ModuleSymbol.builder()
       .name(getName(documentContext))
       .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
+      .firstTokenRange(firstRange)
       .build();
   }
 

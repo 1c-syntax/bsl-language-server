@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -214,12 +215,12 @@ public class DiagnosticStorage {
   }
 
   /**
-   * Добавляет диагностику по ссылке на метод, используя в качестве области - область имени метода
+   * Добавляет диагностику по ссылке на символ, используя в качестве области - область символа
    *
-   * @param methodSymbol ссылка на метод
+   * @param sourceDefinedSymbol ссылка на метод
    */
-  protected void addDiagnostic(MethodSymbol methodSymbol) {
-    addDiagnostic(methodSymbol.getSubNameRange());
+  protected void addDiagnostic(SourceDefinedSymbol sourceDefinedSymbol) {
+    addDiagnostic(sourceDefinedSymbol.getSelectionRange());
   }
 
   private static Diagnostic createDiagnostic(

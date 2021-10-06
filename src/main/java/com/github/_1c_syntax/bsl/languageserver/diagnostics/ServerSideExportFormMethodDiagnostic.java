@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -47,22 +48,24 @@ import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
     ModuleType.FormModule
   }
 )
-public class ServerSideExportFormMethodDiagnostic extends AbstractDiagnostic {
+public class ServerSideExportFormMethodDiagnostic extends AbstractSymbolTreeDiagnostic {
+
   @Override
-  protected void check() {
+  public void visitModule(ModuleSymbol module) {
     documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
       // проверка актуальна только для управляемых форм
       if (mdo instanceof AbstractMDOForm && ((AbstractMDOForm) mdo).getFormType() != FormType.ORDINARY) {
-        checkForm();
+        super.visitModule(module);
       }
     });
   }
 
-  private void checkForm() {
-    documentContext.getSymbolTree().getMethods().stream()
-      .filter(MethodSymbol::isExport)
-      .filter(methodSymbol -> methodSymbol.getCompilerDirectiveKind()
-        .orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT)
-      .forEach(diagnosticStorage::addDiagnostic);
+  @Override
+  public void visitMethod(MethodSymbol method) {
+    if (method.isExport()
+      && method.getCompilerDirectiveKind()
+      .orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT) {
+      diagnosticStorage.addDiagnostic(method);
+    }
   }
 }

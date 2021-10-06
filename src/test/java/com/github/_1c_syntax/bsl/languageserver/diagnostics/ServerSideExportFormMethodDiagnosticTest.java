@@ -97,12 +97,5 @@ class ServerSideExportFormMethodDiagnosticTest extends AbstractDiagnosticTest<Se
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
-
-    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
-    when(documentContext.getMdObject()).thenReturn(Optional.of(form));
-    when(form.getFormType()).thenReturn(null);
-
-    diagnostics = diagnosticInstance.getDiagnostics(documentContext);
-    assertThat(diagnostics).isEmpty();
   }
 }

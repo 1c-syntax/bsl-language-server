@@ -55,6 +55,10 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   SymbolKind symbolKind;
   DocumentContext owner;
   Range range;
+  /**
+   * Область первого токена модуля
+   */
+  Range firstTokenRange;
 
   @Getter
   @Setter
@@ -72,7 +76,7 @@ public class ModuleSymbol implements SourceDefinedSymbol {
 
   @Override
   public Range getSelectionRange() {
-    return getRange();
+    return getFirstTokenRange();
   }
 
 }
