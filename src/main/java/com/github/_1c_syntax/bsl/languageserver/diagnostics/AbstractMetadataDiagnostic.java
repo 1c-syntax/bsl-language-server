@@ -87,11 +87,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
-
-    if (diagnosticRange == null) {
-      // нет ренджа - нет и диагностик :)
+    if (!computeDiagnosticRange()) {
       return;
     }
 
@@ -100,6 +96,14 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     } else {
       checkMetadataWithModules();
     }
+  }
+
+  protected boolean computeDiagnosticRange() {
+    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+      .ifPresent(range -> diagnosticRange = range);
+
+    // нет ренджа - нет и диагностик :)
+    return (diagnosticRange != null);
   }
 
   protected void addDiagnostic(String message) {
