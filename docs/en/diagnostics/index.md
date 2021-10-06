@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **146**
+Total: **147**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **45**
-* Code smell: **93**
+* Code smell: **94**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -66,6 +66,7 @@ Total: **146**
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [ForbiddenMetadataName](ForbiddenMetadataName.md) | Metadata object has a forbidden name | Yes | Blocker | Error | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` 
@@ -120,6 +121,7 @@ Total: **146**
  [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 

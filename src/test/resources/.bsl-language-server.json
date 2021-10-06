@@ -1,8 +1,10 @@
 {
   "language": "en",
   "codeLens": {
-    "showCognitiveComplexity": true,
-    "showCyclomaticComplexity": true
+    "parameters": {
+      "cognitiveComplexity": true,
+      "cyclomaticComplexity": true
+    }
   },
   "diagnostics": {
     "computeTrigger": "onType",

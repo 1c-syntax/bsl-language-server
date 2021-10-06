@@ -22,33 +22,38 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
-import org.eclipse.lsp4j.DocumentFilter;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.InitializeParams;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 /**
- * Информация о том, документы каких типов (языков, расширений, схем) может обрабатывать Language Server.
+ * Null-safe bridge для получения возможностей клиента, была произведена инициализация
+ * сервера запросом
+ * {@link org.eclipse.lsp4j.services.LanguageServer#initialize(InitializeParams)}.
  */
 @Component
+@NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class DocumentSelector {
-  private final List<DocumentFilter> documentFilters;
-
-  public DocumentSelector() {
-    var documentFilter = new DocumentFilter();
-    documentFilter.setLanguage("bsl");
-
-    documentFilters = List.of(documentFilter);
-  }
+public class ClientCapabilitiesHolder {
 
   /**
-   * @return Список фильтров документов.
+   * Возможности клиента.
    */
-  public List<DocumentFilter> asList() {
-    return new ArrayList<>(documentFilters);
+  @Setter
+  private ClientCapabilities capabilities;
+
+  /**
+   * Получить возможности клиента, если было произведено подключение клиента к серверу.
+   *
+   * @return Заявленные возможности клиента.
+   */
+  public Optional<ClientCapabilities> getCapabilities() {
+    return Optional.ofNullable(capabilities);
   }
 }

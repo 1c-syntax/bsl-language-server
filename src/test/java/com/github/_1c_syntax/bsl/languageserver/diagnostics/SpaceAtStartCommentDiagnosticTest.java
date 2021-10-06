@@ -44,13 +44,16 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(6, 0, 6, 20)
       .hasRange(8, 12, 8, 26)
       .hasRange(9, 16, 9, 32)
       .hasRange(20, 0, 20, 56)
-      .hasRange(22, 0, 22, 40);
+      .hasRange(22, 0, 56)
+      .hasRange(34, 0, 20)
+      .hasRange(35, 0, 19)
+    ;
   }
 
   @Test
@@ -62,13 +65,35 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(6, 0, 6, 20)
       .hasRange(8, 12, 8, 26)
       .hasRange(9, 16, 9, 32)
-      .hasRange(22, 0, 22, 40)
-      .hasRange(28, 0, 28, 81);
+      .hasRange(22, 0, 56)
+      .hasRange(28, 0, 81)
+      .hasRange(34, 0, 20)
+      .hasRange(35, 0, 19)
+    ;
+  }
+
+  @Test
+  void testConfigureStrict() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("useStrictValidation", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics, true)
+      .hasRange(6, 0, 20)
+      .hasRange(8, 12, 26)
+      .hasRange(9, 16, 32)
+      .hasRange(20, 0, 56)
+      .hasRange(35, 0, 19)
+    ;
   }
 
   @Test

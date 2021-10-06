@@ -14,8 +14,8 @@
             "title": "Concrete diagnostic parameters' configuration.\nCan be boolean for turning on/off or object.",
             "default": true
         },
-        "parameters": {
-            "$id": "#/definitions/parameters",
+        "diagnosticParameters": {
+            "$id": "#/definitions/diagnosticParameters",
             "type": "object",
             "title": "Diagnostics parameters configuration.\nKey-value object, where key is a diagnosticCode, and value is boolean or object with concrete diagnostic configuration.",
             "default": null,
@@ -462,6 +462,29 @@
                     "$ref": "parameters-schema.json#/definitions/YoLetterUsage"
                 }
             }
+        },
+        "codeLensParameters": {
+            "$id": "#/definitions/codeLensParameters",
+            "type": "object",
+            "title": "CodeLenses parameters configuration.\nKey-value object, where key is a code lens ID, and value is boolean or object with concrete code lens configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Show cognitive complexity score above method definition.",
+                    "$id": "#/definitions/codeLensParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Show cyclomatic complexity score above method definition.",
+                    "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
+                }
+            }
         }
     },
     "properties": {
@@ -486,17 +509,8 @@
             "type": "object",
             "title": "Code Lens configuration.",
             "properties": {
-                "showCognitiveComplexity": {
-                    "$id": "#/properties/showCognitiveComplexity",
-                    "type": "boolean",
-                    "title": "Show cognitive complexity score above method definition.",
-                    "default": true
-                },
-                "showCyclomaticComplexity": {
-                    "$id": "#/properties/showCyclomaticComplexity",
-                    "type": "boolean",
-                    "title": "Show cyclomatic complexity score above method definition.",
-                    "default": true
+                "parameters": {
+                    "$ref": "#/definitions/codeLensParameters"
                 }
             }
         },
@@ -519,7 +533,7 @@
             "title": "Diagnostics configuration.",
             "properties": {
                 "parameters": {
-                    "$ref": "#/definitions/parameters"
+                    "$ref": "#/definitions/diagnosticParameters"
                 },
                 "computeTrigger": {
                     "$id": "#/properties/computeTrigger",

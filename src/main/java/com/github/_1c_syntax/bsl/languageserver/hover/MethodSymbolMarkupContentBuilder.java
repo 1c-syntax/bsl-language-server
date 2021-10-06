@@ -49,7 +49,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<MethodSymbol> {
 
-  private static final String METHOD_LOCATION_KEY = "methodLocation";
   private static final String PROCEDURE_KEY = "procedure";
   private static final String FUNCTION_KEY = "function";
   private static final String EXPORT_KEY = "export";
@@ -79,7 +78,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     addSectionIfNotEmpty(markupBuilder, signature);
 
     // местоположение метода
-    String methodLocation = getMethodLocation(symbol);
+    String methodLocation = getLocation(symbol);
     addSectionIfNotEmpty(markupBuilder, methodLocation);
 
     // описание метода
@@ -195,9 +194,17 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return codeFences;
   }
 
-  private String getMethodLocation(MethodSymbol methodSymbol) {
-    String mdoRef = MdoRefBuilder.getMdoRef(methodSymbol.getOwner());
-    return getResourceString(METHOD_LOCATION_KEY, mdoRef);
+  private static String getLocation(MethodSymbol symbol) {
+    var documentContext = symbol.getOwner();
+    var startPosition = symbol.getSelectionRange().getStart();
+    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+
+    return String.format(
+      "[%s](%s#%d)",
+      mdoRef,
+      documentContext.getUri(),
+      startPosition.getLine() + 1
+    );
   }
 
   private String getSignature(MethodSymbol methodSymbol) {
@@ -269,10 +276,6 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private String getResourceString(String key) {
     return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
-  }
-
-  private String getResourceString(String key, Object... args) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key, args);
   }
 
   private static String parameterToString(ParameterDescription parameter, int level) {

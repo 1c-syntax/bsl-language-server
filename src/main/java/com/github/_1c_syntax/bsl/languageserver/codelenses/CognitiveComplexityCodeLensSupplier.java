@@ -39,11 +39,6 @@ public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexit
   }
 
   @Override
-  protected boolean supplierIsEnabled() {
-    return configuration.getCodeLensOptions().isShowCognitiveComplexity();
-  }
-
-  @Override
   protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
     return documentContext.getCognitiveComplexityData().getMethodsComplexity();
   }
