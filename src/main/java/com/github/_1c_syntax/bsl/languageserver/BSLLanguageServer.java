@@ -72,18 +72,20 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
-  private final DocumentSelector documentSelector;
   private boolean shutdownWasCalled;
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
+    clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    
     setConfigurationRoot(params);
     CompletableFuture.runAsync(context::populateContext);
 
-    ServerCapabilities capabilities = new ServerCapabilities();
+    var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
@@ -100,7 +102,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
 
-    InitializeResult result = new InitializeResult(capabilities, serverInfo);
+    var result = new InitializeResult(capabilities, serverInfo);
 
     return CompletableFuture.completedFuture(result);
   }
@@ -161,14 +163,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
-    TextDocumentSyncOptions textDocumentSync = new TextDocumentSyncOptions();
+    var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
     textDocumentSync.setChange(TextDocumentSyncKind.Full);
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
-    SaveOptions save = new SaveOptions();
+    var save = new SaveOptions();
     save.setIncludeText(Boolean.FALSE);
 
     textDocumentSync.setSave(save);
@@ -198,10 +200,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return documentSymbolOptions;
   }
 
-  private FoldingRangeProviderOptions getFoldingRangeProvider() {
+  private static FoldingRangeProviderOptions getFoldingRangeProvider() {
     var foldingRangeProviderOptions = new FoldingRangeProviderOptions();
     foldingRangeProviderOptions.setWorkDoneProgress(Boolean.FALSE);
-    foldingRangeProviderOptions.setDocumentSelector(documentSelector.asList());
 
     return foldingRangeProviderOptions;
   }
@@ -220,7 +221,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static CodeLensOptions getCodeLensProvider() {
     var codeLensOptions = new CodeLensOptions();
-    codeLensOptions.setResolveProvider(Boolean.FALSE);
+    codeLensOptions.setResolveProvider(Boolean.TRUE);
     codeLensOptions.setWorkDoneProgress(Boolean.FALSE);
     return codeLensOptions;
   }
@@ -249,10 +250,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return referenceOptions;
   }
 
-  private CallHierarchyRegistrationOptions getCallHierarchyProvider() {
+  private static CallHierarchyRegistrationOptions getCallHierarchyProvider() {
     var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
     callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
-    callHierarchyRegistrationOptions.setDocumentSelector(documentSelector.asList());
     return callHierarchyRegistrationOptions;
   }
 
@@ -262,17 +262,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceSymbolOptions;
   }
 
-  private SelectionRangeRegistrationOptions getSelectionRangeProvider() {
+  private static SelectionRangeRegistrationOptions getSelectionRangeProvider() {
     var selectionRangeRegistrationOptions = new SelectionRangeRegistrationOptions();
     selectionRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
-    selectionRangeRegistrationOptions.setDocumentSelector(documentSelector.asList());
     return selectionRangeRegistrationOptions;
   }
 
-  private ColorProviderOptions getColorProvider() {
+  private static ColorProviderOptions getColorProvider() {
     var colorProviderOptions = new ColorProviderOptions();
     colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
-    colorProviderOptions.setDocumentSelector(documentSelector.asList());
     return colorProviderOptions;
   }
 }
