@@ -185,7 +185,7 @@ public class LanguageServerConfiguration {
 
     LanguageServerConfiguration configuration;
 
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new ObjectMapper();
     mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
 
     try {
