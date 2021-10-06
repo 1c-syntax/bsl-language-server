@@ -100,19 +100,24 @@ public class LanguageServerConfiguration {
 
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)
-  private File configurationFile = new File(".bsl-language-server.json");
+  private File configurationFile;
 
-  @Value(("${app.globalConfig.path}"))
+  @Value("${app.configuration.path}")
+  @JsonIgnore
+  private String configurationFilePath;
+
+  @Value(("${app.globalConfiguration.path}"))
   @JsonIgnore
   private String globalConfigPath;
 
   @PostConstruct
   private void init() {
+    configurationFile = new File(configurationFilePath);
     if (configurationFile.exists()) {
       loadConfigurationFile(configurationFile);
       return;
     }
-    var configuration = new File(globalConfigPath, ".bsl-language-server.json");
+    var configuration = new File(globalConfigPath);
     if (configuration.exists()) {
       loadConfigurationFile(configuration);
     }
