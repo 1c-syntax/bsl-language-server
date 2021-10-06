@@ -196,16 +196,16 @@ public class DiagnosticStorage {
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
 
-    var dgs = createDiagnostic(
+    var diagnostic = createDiagnostic(
       diagnostic,
       range,
       diagnosticMessage,
       relatedInformation
     );
 
-    diagnosticList.add(dgs);
+    diagnosticList.add(diagnostic);
 
-    return Optional.of(dgs);
+    return Optional.of(diagnostic);
   }
 
   public void addDiagnostic(ParseTree tree) {
