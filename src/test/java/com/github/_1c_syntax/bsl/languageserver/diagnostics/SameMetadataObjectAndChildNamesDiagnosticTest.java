@@ -137,10 +137,10 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics)
       .hasSize(5)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.Справочник1"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.Документ1.Attribute"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.Документ1.TabularSection"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `РегистрСведений.РегистрСведений1.Dimension"))
+      .noneMatch(diagnostic -> diagnostic.getMessage().contains("имя `Справочник.Справочник1"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.Attribute"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.TabularSection"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `РегистрСведений.РегистрСведений1.Dimension"))
     ;
   }
 }
