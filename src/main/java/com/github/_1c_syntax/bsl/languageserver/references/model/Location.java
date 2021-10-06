@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -29,27 +28,22 @@ import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
 
+/**
+ * Месторасположение появления символа.
+ */
 @Value
 @AllArgsConstructor
 @Builder
 public class Location {
 
+  /**
+   * URI файла, в котором расположен символ.
+   */
   URI uri;
-  int startLine;
-  int startCharacter;
-  int endLine;
-  int endCharacter;
 
-  public Location(URI uri, Range range) {
-    this.uri = uri;
-    startLine = range.getStart().getLine();
-    startCharacter = range.getStart().getCharacter();
-    endLine = range.getEnd().getLine();
-    endCharacter = range.getEnd().getCharacter();
-  }
-
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
-  }
+  /**
+   * Диапазон, в котором расположен символ.
+   */
+  Range range;
 
 }

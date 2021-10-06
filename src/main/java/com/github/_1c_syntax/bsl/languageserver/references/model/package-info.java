@@ -19,32 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+/**
+ * DTO и хранилища данных индекса ссылок.
+ */
+@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
-
-/**
- * Обращение к символу в файле.
- */
-@Value
-@AllArgsConstructor
-@Builder
-public class SymbolOccurrence {
-
-  /**
-   * Тип обращения к символу.
-   */
-  OccurrenceType occurrenceType;
-
-  /**
-   * Символ, к которому происходит обращение.
-   */
-  Symbol symbol;
-
-  /**
-   * Месторасположение обращения к символу.
-   */
-  Location location;
-}
+import javax.annotation.ParametersAreNonnullByDefault;

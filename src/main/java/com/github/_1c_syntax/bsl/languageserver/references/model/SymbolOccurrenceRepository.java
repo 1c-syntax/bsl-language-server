@@ -28,22 +28,48 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Хранилище обращений к символам.
+ */
 @Component
 public class SymbolOccurrenceRepository {
 
+  /**
+   * Общий список обращений к символам.
+   */
   private final Set<SymbolOccurrence> occurrences = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Список обращений к символам в разрезе символов.
+   */
   private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
 
+  /**
+   * Сохранить обращение к символу в хранилище.
+   *
+   * @param symbolOccurrence Обращение к символу.
+   */
   public void save(SymbolOccurrence symbolOccurrence) {
     occurrences.add(symbolOccurrence);
     occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
   }
 
+  /**
+   * Получить все обращения к указанному символу.
+   *
+   * @param symbol Символ.
+   * @return Список обращений к символу.
+   */
   public Set<SymbolOccurrence> getAllBySymbol(Symbol symbol) {
     return occurrencesToSymbols.getOrDefault(symbol, Collections.emptySet());
   }
 
+  /**
+   * Удалить сохраненные данные по указанным обращениям к символу.
+   *
+   * @param symbolOccurrences Список обращений к символам.
+   */
   public void deleteAll(Set<SymbolOccurrence> symbolOccurrences) {
     occurrences.removeAll(symbolOccurrences);
     symbolOccurrences.forEach(symbolOccurrence ->

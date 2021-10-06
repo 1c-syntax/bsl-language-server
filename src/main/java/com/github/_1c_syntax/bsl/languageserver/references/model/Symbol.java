@@ -27,15 +27,39 @@ import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
 
+/**
+ * Облегченные данные символа для поиска без кросс-ссылок между файлами.
+ *
+ * @see com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol
+ */
 @Value
 @AllArgsConstructor
 @Builder
 public class Symbol {
 
+  /**
+   * Cсылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
+   */
   String mdoRef;
+
+  /**
+   * Тип модуля объекта метаданных, в котором расположен символ.
+   */
   ModuleType moduleType;
+
+  /**
+   * Область видимости символа.
+   */
   String scopeName;
+
+  /**
+   * Тип символа.
+   */
   SymbolKind symbolKind;
+
+  /**
+   * Имя символа.
+   */
   String symbolName;
 
 }

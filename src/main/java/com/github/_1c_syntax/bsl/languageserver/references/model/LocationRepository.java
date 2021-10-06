@@ -30,19 +30,41 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+/**
+ * Хранилище расположений обращений к символам.
+ */
 @Component
 public class LocationRepository {
+  /**
+   * Список обращений к символу, сгруппированный по URI.
+   */
   private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
 
+  /**
+   * Получить все обращения к символам в указанном URI.
+   *
+   * @param uri URI документа, в котором необходимо найти обращения к символам.
+   * @return Список найденных обращений к символам.
+   */
   public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
     return locations.getOrDefault(uri, Collections.emptySet()).stream();
   }
 
+  /**
+   * Обновить данные о расположении обращения к символу.
+   *
+   * @param symbolOccurrence Обращение к символу.
+   */
   public void updateLocation(SymbolOccurrence symbolOccurrence) {
     locations.computeIfAbsent(symbolOccurrence.getLocation().getUri(), uri -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
   }
 
+  /**
+   * Удалить сохраненные расположения обращений к символам в указанном URI.
+   *
+   * @param uri URI документа для удаления расположений.
+   */
   public void delete(URI uri) {
     locations.remove(uri);
   }
