@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633548650055,
+  "lastUpdate": 1633558115891,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13733,6 +13733,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5122357227580508",
             "extra": "mean: 72.52562602361043 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "51172529e0e6e099f098d22a43aa34bb9c475c3b",
+          "message": "Merge pull request #1831 from artbear/WrongDataPathForFormElements",
+          "timestamp": "2021-10-07T00:52:55+03:00",
+          "tree_id": "e231b457a0b20bdcc2275f848b0f9f0fb4f69e27",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/51172529e0e6e099f098d22a43aa34bb9c475c3b"
+        },
+        "date": 1633558111891,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.41230456034343,
+            "unit": "sec",
+            "range": "stddev: 3.496728862356757",
+            "extra": "mean: 74.41230456034343 sec\nrounds: 3"
           }
         ]
       }
