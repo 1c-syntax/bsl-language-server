@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **147**
+Total: **149**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **45**
+* Error: **47**
 * Code smell: **94**
 
 
@@ -124,6 +124,7 @@ Total: **147**
  [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
+ [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Same metadata object and child name | Yes | Critical | Error | `standard`<br>`sql`<br>`design` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 

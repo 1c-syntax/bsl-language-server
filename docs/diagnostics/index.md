@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **147**
+Общее количество: **149**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **45**
+* Ошибка: **47**
 * Дефект кода: **94**
 
 
@@ -124,6 +124,7 @@
  [QueryParseError](QueryParseError.md) | Ошибка разбора текста запроса | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Избыточное обращение к объекту | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
+ [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Совпадает имя объекта метаданного и его дочернего | Да | Критичный | Ошибка | `standard`<br>`sql`<br>`design` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Использование 'ВЫБРАТЬ ПЕРВЫЕ' без 'УПОРЯДОЧИТЬ ПО' | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
