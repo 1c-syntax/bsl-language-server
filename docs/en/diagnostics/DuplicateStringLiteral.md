@@ -11,6 +11,7 @@
 |:---------------------:|:---------:|:------------------------------------------:|:-------------:|
 | `allowedNumberCopies` | `Integer` | `Allowed number of copies string literals` |      `3`      |
 |     `analyzeFile`     | `Boolean` |               `Analyze file`               |    `false`    |
+|    `caseSensitive`    | `Boolean` |              `Case sensitive`              |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -41,6 +42,7 @@
 ```json
 "DuplicateStringLiteral": {
     "allowedNumberCopies": 3,
-    "analyzeFile": false
+    "analyzeFile": false,
+    "caseSensitive": false
 }
 ```

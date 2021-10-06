@@ -61,6 +61,11 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
    */
   private static final boolean ANALYZE_FILE = false;
 
+  /**
+   * Анализировать учетом регистра символов
+   */
+  private static final boolean CASE_SENSITIVE = false;
+
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + ALLOWED_NUMBER_COPIES
@@ -72,6 +77,12 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
     defaultValue = "" + ANALYZE_FILE
   )
   private boolean analyzeFile = ANALYZE_FILE;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CASE_SENSITIVE
+  )
+  private boolean caseSensitive = CASE_SENSITIVE;
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -112,7 +123,7 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
   private void checkStringLiterals(BSLParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_string).stream()
       .map(BSLParserRuleContext.class::cast)
-      .collect(Collectors.groupingBy(literal -> literal.getText().toLowerCase(Locale.ROOT)))
+      .collect(Collectors.groupingBy(this::getLiteralText))
       .forEach((String name, List<BSLParserRuleContext> literals) -> {
         if (literals.size() > allowedNumberCopies) {
           List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
@@ -128,5 +139,13 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
           diagnosticStorage.addDiagnostic(firstLiteral, info.getMessage(firstLiteral.getText()), relatedInformation);
         }
       });
+  }
+
+  private String getLiteralText(BSLParserRuleContext literal) {
+    if (caseSensitive) {
+      return literal.getText();
+    } else {
+      return literal.getText().toLowerCase(Locale.ROOT);
+    }
   }
 }

@@ -117,4 +117,25 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       )
     ;
   }
+
+  @Test
+  void testConfigureCase() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("caseSensitive", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .anyMatch(diagnostic ->
+        diagnostic.getRange().equals(Ranges.create(1, 8, 1, 17))
+          && diagnostic.getRelatedInformation().size() == 4
+          && diagnostic.getMessage()
+          .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка2\"")
+      )
+    ;
+
+  }
 }

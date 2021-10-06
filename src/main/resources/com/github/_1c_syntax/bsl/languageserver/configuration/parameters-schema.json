@@ -501,6 +501,12 @@
                     "type": "integer",
                     "title": "Allowed number of copies string literals"
                 },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
                 "analyzeFile": {
                     "description": "Analyze file",
                     "default": false,
