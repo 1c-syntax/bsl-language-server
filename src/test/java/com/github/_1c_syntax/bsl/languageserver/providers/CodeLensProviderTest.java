@@ -23,11 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
-import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -43,7 +41,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -75,30 +72,11 @@ class CodeLensProviderTest {
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
-    codeLenses.forEach(codeLens ->
-      codeLensProvider.resolveCodeLens(documentContext, codeLens, (CodeLensData) codeLens.getData())
-    );
 
     // then
-    Map<MethodSymbol, Integer> methodsCognitiveComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
-    Map<MethodSymbol, Integer> methodsCyclomaticComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity();
-
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
-    MethodSymbol secondMethod = documentContext.getSymbolTree().getMethods().get(1);
-    int cognitiveComplexityFirstMethod = methodsCognitiveComplexity.get(firstMethod);
-    int cognitiveComplexitySecondMethod = methodsCognitiveComplexity.get(secondMethod);
-    int cyclomaticComplexityFirstMethod = methodsCyclomaticComplexity.get(firstMethod);
-    int cyclomaticComplexitySecondMethod = methodsCyclomaticComplexity.get(secondMethod);
-
     assertThat(codeLenses)
-      .hasSize(4)
-      .anyMatch(codeLens -> codeLens.getRange().equals(firstMethod.getSubNameRange()))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cognitiveComplexityFirstMethod)))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cyclomaticComplexityFirstMethod)))
-      .anyMatch(codeLens -> codeLens.getRange().equals(secondMethod.getSubNameRange()))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cognitiveComplexitySecondMethod)))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cyclomaticComplexitySecondMethod)))
-    ;
+      .hasSizeGreaterThan(0)
+      .allMatch(codeLens -> codeLens.getCommand() == null);
 
   }
 
