@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **150**
+Total: **151**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **48**
-* Code smell: **94**
+* Code smell: **95**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -58,6 +58,7 @@ Total: **150**
  [DeprecatedMethods8317](DeprecatedMethods8317.md) | Using of deprecated platform 8.3.17 global methods | Yes | Info | Code smell | `deprecated` 
  [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm type | Yes | Info | Code smell | `standard`<br>`deprecated` 
  [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` 
+ [DuplicateStringLiteral](DuplicateStringLiteral.md) | Duplicate string literal | Yes | Minor | Code smell | `badpractice` 
  [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br>`suspicious` 
  [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` 
  [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` 

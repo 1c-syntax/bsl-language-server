@@ -486,6 +486,42 @@
             "title": "Duplicate regions",
             "$id": "#/definitions/DuplicateRegion"
         },
+        "DuplicateStringLiteral": {
+            "description": "Duplicate string literal",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate string literal",
+            "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
+                "allowedNumberCopies": {
+                    "description": "Allowed number of copies string literals",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Allowed number of copies string literals"
+                },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
+                "analyzeFile": {
+                    "description": "Analyze file",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Analyze file"
+                }
+            },
+            "$id": "#/definitions/DuplicateStringLiteral"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
