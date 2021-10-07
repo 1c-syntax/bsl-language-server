@@ -96,6 +96,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/BadWords/</loc>
+         <lastmod>2021-10-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/BeginTransactionBeforeTryCatch/</loc>
          <lastmod>2021-10-07</lastmod>
          <changefreq>daily</changefreq>
