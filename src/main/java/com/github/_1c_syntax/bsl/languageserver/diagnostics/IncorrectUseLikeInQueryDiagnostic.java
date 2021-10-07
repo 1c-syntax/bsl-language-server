@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.CheckForNull;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -49,25 +50,34 @@ import java.util.List;
 public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitLikeStatement(SDBLParser.LikeStatementContext ctx) {
-    checkRightStatement(ctx, ctx.LIKE(), ctx.statement());
-    return super.visitLikeStatement(ctx);
+  public ParseTree visitLikePredicate(SDBLParser.LikePredicateContext ctx) {
+    checkRightStatement(ctx, ctx.LIKE(), ctx.expression());
+    return super.visitLikePredicate(ctx);
   }
 
   private void checkRightStatement(BSLParserRuleContext ctx,
                                    @Nullable TerminalNode like,
-                                   List<? extends BSLParserRuleContext> statements) {
+                                   List<? extends SDBLParser.ExpressionContext> expressions) {
 
-    if (like == null || statements.size() <= 1) {
+    if (like == null || expressions.size() <= 1) {
       return;
     }
 
-    var right = statements.get(1);
-    var statement = (SDBLParser.StatementContext) Trees.getNextNode(right, right, SDBLParser.RULE_statement);
-    if (statement.parameter().isEmpty()
-      && statement.multiString() == null) {
-      diagnosticStorage.addDiagnostic(ctx);
+    var right = expressions.get(1);
+    var primitive = getPrimitiveExpression(right);
+    if (primitive != null && (primitive.parameter() != null || primitive.multiString() != null)) {
+      return;
     }
 
+    diagnosticStorage.addDiagnostic(ctx);
+  }
+
+  @CheckForNull
+  private static SDBLParser.PrimitiveExpressionContext getPrimitiveExpression(SDBLParser.ExpressionContext ctx) {
+    var primitive = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_primitiveExpression).stream()
+      .filter(SDBLParser.PrimitiveExpressionContext.class::isInstance)
+      .map(SDBLParser.PrimitiveExpressionContext.class::cast)
+      .findFirst();
+    return primitive.orElse(null);
   }
 }

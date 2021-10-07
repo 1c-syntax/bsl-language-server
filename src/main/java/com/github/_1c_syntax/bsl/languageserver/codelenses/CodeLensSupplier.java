@@ -23,17 +23,86 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.Command;
 
+import java.beans.Introspector;
 import java.util.List;
 
 /**
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
  * данными о доступных в документе линзах.
+ * <p>
+ * Для целей улучшения производительности шаги получения линз документа и их "разрешение"
+ * (создание объекта {@link CodeLens#setCommand(Command)}) должно проводиться в два этапа.
+ * <p>
+ * Для хранения промежуточных данных между созданием и разрешением линзы необходимо использовать
+ * поле {@link CodeLens#setData(Object)}, заполняя его объектом класса
+ * {@link CodeLensSupplier#getCodeLensDataClass()}.
+ * <p>
+ * Конкретный сапплаер может расширить состав данных, хранимые в линзе, доопределив дата-класс,
+ * наследующий {@link CodeLensData}, и указав его тип в качестве типа-параметра класса.
+ *
+ * @param <T> Конкретный тип для данных линзы.
  */
-public interface CodeLensSupplier {
+public interface CodeLensSupplier<T extends CodeLensData> {
+
   /**
-   * @param documentContext Контекст документа, для которого надо рассчитать линзы.
+   * Идентификатор сапплаера. Если линза содержит поле {@link CodeLens#getData()},
+   * идентификатор в данных линзы должен совпадать с данным идентификатором.
+   *
+   * @return Идентификатор сапплаера.
+   */
+  default String getId() {
+    String simpleName = getClass().getSimpleName();
+    if (simpleName.endsWith("CodeLensSupplier")) {
+      simpleName = simpleName.substring(0, simpleName.length() - "CodeLensSupplier".length());
+      simpleName = Introspector.decapitalize(simpleName);
+    }
+
+    return simpleName;
+  }
+
+  /**
+   * Возвращает необходимость применения сапплаера на конкретном документе.
+   *
+   * @param documentContext Документ.
+   * @return Необходимость применения.
+   */
+  default boolean isApplicable(DocumentContext documentContext) {
+    return true;
+  }
+
+  /**
+   * Получить список линз, доступных в документе.
+   * <p>
+   * Предпочтительно, чтобы линзы, возвращаемые этим методом были "не-разрешенными"
+   *
+   * @param documentContext Документ, для которого надо рассчитать линзы.
    * @return Список линз.
    */
   List<CodeLens> getCodeLenses(DocumentContext documentContext);
+
+  /**
+   * Получить класс для хранения данных линзы.
+   * <p>
+   * При создании не-разрешенной линзы поле {@link CodeLens#setData(Object)}
+   * должно заполняться объектом данного класса.
+   *
+   * @return Конкретный класс для хранения данных линзы.
+   */
+  Class<T> getCodeLensDataClass();
+
+  /**
+   * Выполнить операцию "разрешения" линзы.
+   * <p>
+   * По умолчанию линза возвращается не-разрешенной.
+   *
+   * @param documentContext Документ, которому принадлежит линза.
+   * @param unresolved      Линза, которую надо разрешить.
+   * @param data            Десериализованные данные линзы.
+   * @return Разрешенная линза (с заполненным полем {@link CodeLens#getCommand()})
+   */
+  default CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, T data) {
+    return unresolved;
+  }
 }
