@@ -73,8 +73,9 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
     if (documentContext.getModuleType() == ModuleType.CommandModule
       || documentContext.getModuleType() == ModuleType.FormModule) {
 
-      computeDiagnosticRange();
-      documentContext.getMdObject().ifPresent(this::checkMetadata);
+      if (computeDiagnosticRange()) {
+        documentContext.getMdObject().ifPresent(this::checkMetadata);
+      }
 
     } else {
       super.check();

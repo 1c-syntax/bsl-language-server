@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
@@ -62,6 +63,9 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
 
     documentContext.getServerContext().getConfiguration().getRoles().stream()
       .filter(role -> role.getRoleData().isSetForNewObjects())

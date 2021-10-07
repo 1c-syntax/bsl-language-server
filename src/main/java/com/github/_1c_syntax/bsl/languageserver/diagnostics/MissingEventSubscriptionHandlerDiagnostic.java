@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
@@ -67,6 +68,9 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
     }
 
     diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(diagnosticRange)) {
+      return;
+    }
 
     // для анализа выбираются все имеющиеся подписки на события
     configuration.getChildren().stream()

@@ -41,17 +41,6 @@ import java.util.Optional;
 @UtilityClass
 public final class Ranges {
 
-  private static final Range EMPTY = create();
-
-  /**
-   * Возвращает пустую область текста (рендж)
-   *
-   * @return Пустая область
-   */
-  public Range empty() {
-    return EMPTY;
-  }
-
   /**
    * Проверяет переданную область на пустоту
    *
@@ -59,7 +48,7 @@ public final class Ranges {
    * @return Признак пустоты
    */
   public boolean isEmpty(Range range) {
-    return empty().equals(range);
+    return create().equals(range);
   }
 
   public Range create() {
@@ -156,7 +145,7 @@ public final class Ranges {
   }
 
   /**
-   * Для совместимости метод оставлен, но будет удален в будущих версиях.
+   * @deprecated Для совместимости метод оставлен, но будет удален в будущих версиях.
    * Вместо него стоит использовать метод {@link ModuleSymbol#getSelectionRange()}
    */
   @Deprecated(since = "0.20")

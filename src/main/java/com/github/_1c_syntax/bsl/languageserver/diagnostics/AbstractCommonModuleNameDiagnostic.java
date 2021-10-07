@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -43,6 +44,9 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
     var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
 
     documentContext.getMdObject()
       .filter(MDCommonModule.class::isInstance)

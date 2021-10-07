@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
@@ -86,16 +87,18 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    computeDiagnosticRange();
-    if (documentContext.getModuleType() == ModuleType.SessionModule) {
-      checkMetadataWithoutModules();
-    } else {
-      checkMetadataWithModules();
+    if (computeDiagnosticRange()) {
+      if (documentContext.getModuleType() == ModuleType.SessionModule) {
+        checkMetadataWithoutModules();
+      } else {
+        checkMetadataWithModules();
+      }
     }
   }
 
-  protected void computeDiagnosticRange() {
+  protected boolean computeDiagnosticRange() {
     diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    return !Ranges.isEmpty(diagnosticRange);
   }
 
   protected void addDiagnostic(String message) {

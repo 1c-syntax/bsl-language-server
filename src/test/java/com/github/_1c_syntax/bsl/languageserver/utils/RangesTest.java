@@ -29,12 +29,9 @@ class RangesTest {
 
   @Test
   void testIsEmpty() {
-    var emptyRangeMethod = Ranges.empty();
     var emptyRangeCreate = Ranges.create();
 
-    assertThat(emptyRangeCreate).isEqualTo(emptyRangeMethod);
     assertThat(Ranges.isEmpty(emptyRangeCreate)).isTrue();
-    assertThat(Ranges.isEmpty(Ranges.empty())).isTrue();
     assertThat(Ranges.isEmpty(Ranges.create(1, 1, 1, 1))).isFalse();
   }
 }

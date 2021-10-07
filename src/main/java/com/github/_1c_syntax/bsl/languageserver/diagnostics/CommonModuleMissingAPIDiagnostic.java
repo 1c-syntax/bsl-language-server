@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
 import java.util.Set;
@@ -71,6 +72,11 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       return;
     }
 
+    var range = symbolTree.getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     var isModuleWithoutExportSub = moduleMethods
       .stream()
       .noneMatch(MethodSymbol::isExport);
@@ -81,7 +87,7 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       .noneMatch(REGION_NAME::contains);
 
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
-      diagnosticStorage.addDiagnostic(symbolTree.getModule().getSelectionRange());
+      diagnosticStorage.addDiagnostic(range);
     }
 
   }
