@@ -59,20 +59,20 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
     type = String.class,
     defaultValue = ""
   )
-  private Map<Pattern, Pattern> metadataBordersParameters = MapFromJSON(METADATA_BORDERS_DEFAULT);
+  private Map<Pattern, Pattern> metadataBordersParameters = mapFromJSON(METADATA_BORDERS_DEFAULT);
 
   private List<Pattern> statementPatterns = Collections.emptyList();
 
-  private static Map<Pattern, Pattern> MapFromJSON(String userSettings) {
+  private static Map<Pattern, Pattern> mapFromJSON(String userSettings) {
     ObjectMapper mapper = new ObjectMapper();
     MapType mapType = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, String.class);
     try {
       Map<String, String> stringMap = mapper.readValue(userSettings, mapType);
       return stringMap.entrySet().stream()
-        .filter(entry -> ! entry.getKey().isBlank() && ! entry.getValue().isBlank())
+        .filter(entry -> !entry.getKey().isBlank() && !entry.getValue().isBlank())
         .collect(Collectors.toMap(
-            entry -> CaseInsensitivePattern.compile(entry.getKey()),
-            entry -> CaseInsensitivePattern.compile(entry.getValue())));
+          entry -> CaseInsensitivePattern.compile(entry.getKey()),
+          entry -> CaseInsensitivePattern.compile(entry.getValue())));
     } catch (JsonProcessingException e) {
       return Collections.emptyMap();
     }
@@ -80,14 +80,14 @@ public class MetadataBordersDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    metadataBordersParameters = MapFromJSON(
+    metadataBordersParameters = mapFromJSON(
               (String) configuration.getOrDefault("metadataBordersParameters", METADATA_BORDERS_DEFAULT));
   }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     statementPatterns = metadataBordersParameters.entrySet().stream()
-                      .filter(entry -> ! entry.getValue().matcher(this.documentContext.getUri().getPath()).find())
+                      .filter(entry -> ! entry.getValue().matcher(documentContext.getUri().getPath()).find())
                       .map(Map.Entry::getKey)
                       .collect(Collectors.toList());
 
