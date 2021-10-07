@@ -168,12 +168,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
+  }
+
+  @Override
+  public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
+    var data = codeLensProvider.extractData(unresolved);
+    var documentContext = context.getDocument(data.getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    return CompletableFuture.supplyAsync(() -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data));
   }
 
   @Override

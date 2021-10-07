@@ -44,18 +44,17 @@ public class VirtualTableCallWithoutParametersDiagnostic extends AbstractSDBLVis
 
   @Override
   public ParseTree visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
-    SDBLParser.VirtualTableParametersContext vtContext = ctx.virtualTableParameters();
+    var vtContext = ctx.virtualTableParameters;
     if (vtContext == null) {
       diagnosticStorage.addDiagnostic(ctx);
     } else {
-      var vtParamsStream = vtContext.virtualTableParameter().stream();
+      var vtParamsStream = vtContext.stream();
       // пропускаю первый параметр, как правило, это указание периода
-      if (vtContext.virtualTableParameter().size() > 1) {
+      if (vtContext.size() > 1) {
         vtParamsStream = vtParamsStream.skip(1);
       }
-      if (vtParamsStream
-        .allMatch(vtParamCtx -> vtParamCtx.getTokens().isEmpty())) {
 
+      if (vtParamsStream.allMatch(vtParamCtx -> vtParamCtx.getTokens().isEmpty())) {
         diagnosticStorage.addDiagnostic(ctx);
       }
     }

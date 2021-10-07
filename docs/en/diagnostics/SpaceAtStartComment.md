@@ -7,9 +7,10 @@
 ## Parameters
 
 
-|         Name         |   Type   |                                        Description                                         |  Default value  |
-|:--------------------:|:--------:|:------------------------------------------------------------------------------------------:|:---------------:|
-| `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. List, values separated by comma` | `//@,//(c),//©` |
+|         Name          |   Type    |                                        Description                                         |  Default value  |
+|:---------------------:|:---------:|:------------------------------------------------------------------------------------------:|:---------------:|
+| `commentsAnnotation`  | `String`  | `Skip comments-annotations staring with given substrings. List, values separated by comma` | `//@,//(c),//©` |
+| `useStrictValidation` | `Boolean` |               `Use strict validation against double comments `//// Comment``               |     `true`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -35,6 +36,7 @@ Exception from the rule is _**comments-annotations**_, comments starting with sp
 
 ```json
 "SpaceAtStartComment": {
-    "commentsAnnotation": "//@,//(c),//©"
+    "commentsAnnotation": "//@,//(c),//©",
+    "useStrictValidation": true
 }
 ```

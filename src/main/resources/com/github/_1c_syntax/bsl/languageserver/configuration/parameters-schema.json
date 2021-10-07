@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",
@@ -574,6 +574,16 @@
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
         },
+        "ForbiddenMetadataName": {
+            "description": "Metadata object has a forbidden name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object has a forbidden name",
+            "$id": "#/definitions/ForbiddenMetadataName"
+        },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
             "default": true,
@@ -868,6 +878,12 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -1142,6 +1158,14 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
@@ -1334,6 +1358,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
@@ -1373,6 +1407,16 @@
             ],
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
+        },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
         },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",
@@ -1422,6 +1466,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
         "SetPermissionsForNewObjects": {
             "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "default": true,
@@ -1464,6 +1518,12 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -1861,6 +1921,16 @@
             ],
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
+        },
+        "WrongDataPathForFormElements": {
+            "description": "Form fields do not have a data path",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Form fields do not have a data path",
+            "$id": "#/definitions/WrongDataPathForFormElements"
         },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",

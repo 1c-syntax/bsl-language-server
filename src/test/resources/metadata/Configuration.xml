@@ -201,6 +201,7 @@
 			<CommandGroup>ГруппаКоманд1</CommandGroup>
 			<Catalog>Справочник1</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
+			<Document>Документ1</Document>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

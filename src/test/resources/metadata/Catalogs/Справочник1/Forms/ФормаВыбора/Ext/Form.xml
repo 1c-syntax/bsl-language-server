@@ -119,6 +119,12 @@
 					<ContextMenu name="Реквизит3КонтекстноеМеню" id="41"/>
 					<ExtendedTooltip name="Реквизит3РасширеннаяПодсказка" id="42"/>
 				</CheckBoxField>
+				<CheckBoxField name="НесуществующийРеквизитСписка" id="40">
+					<DataPath>~Список.НесуществующийРеквизит</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
+					<ContextMenu name="НесуществующийРеквизитСпискаКонтекстноеМеню" id="41"/>
+					<ExtendedTooltip name="НесуществующийРеквизитСпискаРасширеннаяПодсказка" id="42"/>
+				</CheckBoxField>
 			</ChildItems>
 		</Table>
 	</ChildItems>
