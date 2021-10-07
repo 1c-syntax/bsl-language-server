@@ -55,9 +55,8 @@ class ModuleSymbolComputerTest {
     assertThat(moduleSymbol.getOwner()).isEqualTo(documentContext);
     assertThat(moduleSymbol.getSymbolKind()).isEqualTo(SymbolKind.Module);
     assertThat(moduleSymbol.getName()).isEqualTo(documentContext.getUri().toString());
-    assertThat(moduleSymbol.getFirstTokenRange()).isEqualTo(Ranges.create(0, 0, 0, 9));
-    assertThat(moduleSymbol.getFirstTokenRange()).isEqualTo(moduleSymbol.getSelectionRange());
-    assertThat(Ranges.containsRange(moduleSymbol.getRange(), moduleSymbol.getFirstTokenRange())).isTrue();
+    assertThat(moduleSymbol.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 0, 9));
+    assertThat(Ranges.containsRange(moduleSymbol.getRange(), moduleSymbol.getSelectionRange())).isTrue();
   }
 
   @Test

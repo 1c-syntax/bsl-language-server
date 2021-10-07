@@ -58,7 +58,7 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   /**
    * Область первого токена модуля
    */
-  Range firstTokenRange;
+  Range selectionRange;
 
   @Getter
   @Setter
@@ -72,11 +72,6 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitModule(this);
-  }
-
-  @Override
-  public Range getSelectionRange() {
-    return getFirstTokenRange();
   }
 
 }

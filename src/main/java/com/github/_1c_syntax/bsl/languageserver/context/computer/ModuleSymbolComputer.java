@@ -57,13 +57,13 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
       .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
-      .firstTokenRange(firstRange)
+      .selectionRange(firstRange)
       .build();
   }
 
   private static String getName(DocumentContext documentContext) {
     String name = MdoRefBuilder.getMdoRef(documentContext);
-    ModuleType moduleType = documentContext.getModuleType();
+    var moduleType = documentContext.getModuleType();
     if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
       name += "." + moduleType.name();
     }
