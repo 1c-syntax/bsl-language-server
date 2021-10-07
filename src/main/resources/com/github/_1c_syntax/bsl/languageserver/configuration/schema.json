@@ -474,14 +474,33 @@
             "properties": {
                 "cognitiveComplexity": {
                     "default": true,
-                    "type": "boolean",
+                    "type": [
+                      "boolean",
+                      "object"
+                    ],
                     "title": "Show cognitive complexity score above method definition.",
+                    "properties": {
+                      "complexityThreshold": {
+                        "description": "Complexity threshold to show the lens",
+                        "default": -1,
+                        "type": "integer",
+                        "title": "Complexity threshold to show the lens"
+                      }
+                    },
                     "$id": "#/definitions/codeLensParameters/cognitiveComplexity"
                 },
                 "cyclomaticComplexity": {
                     "default": true,
                     "type": "boolean",
                     "title": "Show cyclomatic complexity score above method definition.",
+                    "properties": {
+                      "complexityThreshold": {
+                        "description": "Complexity threshold to show the lens",
+                        "default": -1,
+                        "type": "integer",
+                        "title": "Complexity threshold to show the lens"
+                      }
+                    },
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
