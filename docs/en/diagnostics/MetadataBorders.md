@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|            Name             |   Type   |                                 Description                                 | Default value |
-|:---------------------------:|:--------:|:---------------------------------------------------------------------------:|:-------------:|
-| `metadataBordersParameters` | `String` | `JSON-structure for pairs "regex for statements":"regex for module names".` |      ``       |
+|            Name             |   Type   |                     Description                     | Default value |
+|:---------------------------:|:--------:|:---------------------------------------------------:|:-------------:|
+| `metadataBordersParameters` | `String` | `{"regex for statements":"regex for module names"}` |      ``       |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

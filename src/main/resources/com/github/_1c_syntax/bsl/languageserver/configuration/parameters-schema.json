@@ -926,7 +926,7 @@
         },
         "MetadataBorders": {
             "description": "Metadata borders",
-            "default": true,
+            "default": false,
             "type": [
                 "boolean",
                 "object"
@@ -934,10 +934,10 @@
             "title": "Metadata borders",
             "properties": {
                 "metadataBordersParameters": {
-                    "description": "JSON-structure for pairs \"regex for statements\":\"regex for module names\". Etc \"InformationRegisters?.RegisterName:CommonModules/SpecialModule\".",
+                    "description": "{\"regex for statements\":\"regex for module names\"}",
                     "default": "",
                     "type": "string",
-                    "title": "JSON-structure for pairs \"regex for statements\":\"regex for module names\". Etc \"InformationRegisters?.RegisterName:CommonModules/SpecialModule\"."
+                    "title": "{\"regex for statements\":\"regex for module names\"}"
                 }
             },
             "$id": "#/definitions/MetadataBorders"
