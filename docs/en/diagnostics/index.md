@@ -20,6 +20,7 @@ Total: **151**
 | --- | --- | :-: | --- | --- | --- |
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Prohibited words | Yes | Major | Code smell | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
