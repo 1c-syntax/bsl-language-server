@@ -74,7 +74,7 @@ class FormatProviderTest {
 
     formattedFileContent = joiner.toString();
 
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
@@ -99,7 +99,7 @@ class FormatProviderTest {
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
     String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
@@ -124,7 +124,7 @@ class FormatProviderTest {
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = "Возврат-1>-2";
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );

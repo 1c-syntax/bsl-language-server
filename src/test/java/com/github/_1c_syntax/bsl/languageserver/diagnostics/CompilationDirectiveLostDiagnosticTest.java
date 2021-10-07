@@ -37,7 +37,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   @Test
   void testFormModule() {
 
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);

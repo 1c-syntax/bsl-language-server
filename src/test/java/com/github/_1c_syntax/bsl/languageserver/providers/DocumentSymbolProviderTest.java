@@ -46,7 +46,7 @@ class DocumentSymbolProviderTest {
   @Test
   void testDocumentSymbol() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
 

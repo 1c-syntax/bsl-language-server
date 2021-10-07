@@ -71,7 +71,7 @@ class CodeLensProviderTest {
 
     // given
     String filePath = "./src/test/resources/providers/codeLens.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
@@ -150,7 +150,7 @@ class CodeLensProviderTest {
 
     // given
     String filePath = "./src/test/resources/providers/codeLens.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);

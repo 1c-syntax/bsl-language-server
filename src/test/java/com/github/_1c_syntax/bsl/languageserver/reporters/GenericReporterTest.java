@@ -104,7 +104,7 @@ class GenericReporterTest {
       secondInfo.getCode().getStringValue()
     ));
 
-    DocumentContext documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext("");
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
     diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 

@@ -83,7 +83,7 @@ public abstract class ServerContext {
     contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
-      DocumentContext documentContext = getDocument(file.toURI());
+      var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
         documentContext.clearSecondaryData();
@@ -123,7 +123,7 @@ public abstract class ServerContext {
   public DocumentContext addDocument(URI uri, String content, int version) {
     contextLock.readLock().lock();
 
-    DocumentContext documentContext = getDocument(uri);
+    var documentContext = getDocument(uri);
     if (documentContext == null) {
       documentContext = createDocumentContext(uri, content, version);
     } else {
@@ -171,7 +171,7 @@ public abstract class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = lookupDocumentContext(absoluteURI);
+    var documentContext = lookupDocumentContext(absoluteURI);
     documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);

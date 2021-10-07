@@ -51,7 +51,7 @@ class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<Dep
   void testQuickFix() {
 
 
-    final DocumentContext documentContext = getDocumentContext();
+    final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic ruDiagnostic = diagnostics.get(0);
 

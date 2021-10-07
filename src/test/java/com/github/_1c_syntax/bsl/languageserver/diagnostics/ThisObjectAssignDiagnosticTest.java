@@ -37,7 +37,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test832() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 
@@ -49,7 +49,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test833() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);
@@ -61,7 +61,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test836() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);

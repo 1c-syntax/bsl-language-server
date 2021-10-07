@@ -58,7 +58,7 @@ class MethodSymbolMarkupContentBuilderTest {
   @Test
   void testContentFromDirectFile() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     // when
