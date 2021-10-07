@@ -491,7 +491,10 @@
                 },
                 "cyclomaticComplexity": {
                     "default": true,
-                    "type": "boolean",
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
                     "title": "Show cyclomatic complexity score above method definition.",
                     "properties": {
                       "complexityThreshold": {
