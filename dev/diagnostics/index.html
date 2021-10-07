@@ -969,12 +969,12 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>150</strong></p>
+<p>Общее количество: <strong>151</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>4</strong></li>
 <li>Уязвимость: <strong>4</strong></li>
 <li>Ошибка: <strong>48</strong></li>
-<li>Дефект кода: <strong>94</strong></li>
+<li>Дефект кода: <strong>95</strong></li>
 </ul>
 <table>
 <thead>
@@ -1307,6 +1307,14 @@
 <td>Информационный</td>
 <td>Дефект кода</td>
 <td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="DuplicateStringLiteral/">DuplicateStringLiteral</a></td>
+<td>Повторное использование строкового литерала</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="EmptyCodeBlock/">EmptyCodeBlock</a></td>

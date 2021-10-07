@@ -286,6 +286,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DuplicateStringLiteral/</loc>
+         <lastmod>2021-10-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/EmptyCodeBlock/</loc>
          <lastmod>2021-10-07</lastmod>
          <changefreq>daily</changefreq>
