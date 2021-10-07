@@ -87,23 +87,18 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    if (!computeDiagnosticRange()) {
-      return;
-    }
-
-    if (documentContext.getModuleType() == ModuleType.SessionModule) {
-      checkMetadataWithoutModules();
-    } else {
-      checkMetadataWithModules();
+    if (computeDiagnosticRange()) {
+      if (documentContext.getModuleType() == ModuleType.SessionModule) {
+        checkMetadataWithoutModules();
+      } else {
+        checkMetadataWithModules();
+      }
     }
   }
 
   protected boolean computeDiagnosticRange() {
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
-
-    // нет ренджа - нет и диагностик :)
-    return (diagnosticRange != null);
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    return !Ranges.isEmpty(diagnosticRange);
   }
 
   protected void addDiagnostic(String message) {

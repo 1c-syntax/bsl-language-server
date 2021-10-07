@@ -59,8 +59,10 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokensFromDefaultChannel())
-      .ifPresent(this::checkCurrentModule);
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (!Ranges.isEmpty(range)) {
+      checkCurrentModule(range);
+    }
   }
 
   private static boolean wrongDataPath(FormItem formItem) {

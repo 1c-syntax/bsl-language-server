@@ -50,7 +50,7 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   @Override
   public ModuleSymbol compute() {
     var firstRange = Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .orElseGet(() -> Ranges.create(documentContext.getAst())); // вероятность нулевая, но все же
+      .orElseGet(Ranges::create); // используем нулевую область
 
     return ModuleSymbol.builder()
       .name(getName(documentContext))

@@ -195,6 +195,11 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
+
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     diagnosticList.add(createDiagnostic(
       diagnostic,
       range,
@@ -230,7 +235,7 @@ public class DiagnosticStorage {
   ) {
     var info = bslDiagnostic.getInfo();
 
-    Diagnostic diagnostic = new Diagnostic(
+    var diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
       info.getLSPSeverity(),
