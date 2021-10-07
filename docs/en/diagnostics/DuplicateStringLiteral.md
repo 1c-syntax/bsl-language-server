@@ -7,11 +7,12 @@
 ## Parameters
 
 
-|         Name          |   Type    |                Description                 | Default value |
-|:---------------------:|:---------:|:------------------------------------------:|:-------------:|
-| `allowedNumberCopies` | `Integer` | `Allowed number of copies string literals` |      `3`      |
-|     `analyzeFile`     | `Boolean` |               `Analyze file`               |    `false`    |
-|    `caseSensitive`    | `Boolean` |              `Case sensitive`              |    `false`    |
+|         Name          |   Type    |                  Description                  | Default value |
+|:---------------------:|:---------:|:---------------------------------------------:|:-------------:|
+| `allowedNumberCopies` | `Integer` |  `Allowed number of copies string literals`   |      `2`      |
+|     `analyzeFile`     | `Boolean` |                `Analyze file`                 |    `false`    |
+|    `caseSensitive`    | `Boolean` |               `Case sensitive`                |    `false`    |
+|    `minTextLength`    | `Integer` | `Minimum length of a string literal (quoted)` |      `5`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -41,8 +42,9 @@
 
 ```json
 "DuplicateStringLiteral": {
-    "allowedNumberCopies": 3,
+    "allowedNumberCopies": 2,
     "analyzeFile": false,
-    "caseSensitive": false
+    "caseSensitive": false,
+    "minTextLength": 5
 }
 ```

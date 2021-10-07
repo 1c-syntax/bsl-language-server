@@ -84,7 +84,6 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("analyzeFile", true);
-    configuration.put("allowedNumberCopies", 2);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -134,6 +133,50 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
           && diagnostic.getRelatedInformation().size() == 4
           && diagnostic.getMessage()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка2\"")
+      )
+    ;
+
+  }
+
+  @Test
+  void testConfigureAllowedNumberCopies() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("allowedNumberCopies", 5);
+    configuration.put("analyzeFile", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .anyMatch(diagnostic ->
+        diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
+          && diagnostic.getRelatedInformation().size() == 6
+          && diagnostic.getMessage()
+          .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
+      )
+    ;
+  }
+
+  @Test
+  void testConfigureMinTextLength() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("minTextLength", 10);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .anyMatch(diagnostic ->
+        diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
+          && diagnostic.getRelatedInformation().size() == 4
+          && diagnostic.getMessage()
+          .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
+          && diagnostic.getRelatedInformation().get(3).getMessage()
+          .equals("\"СтрОкА22\"")
       )
     ;
 

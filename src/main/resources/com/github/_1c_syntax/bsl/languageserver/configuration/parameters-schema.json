@@ -495,9 +495,15 @@
             ],
             "title": "Duplicate string literal",
             "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
                 "allowedNumberCopies": {
                     "description": "Allowed number of copies string literals",
-                    "default": 3,
+                    "default": 2,
                     "type": "integer",
                     "title": "Allowed number of copies string literals"
                 },

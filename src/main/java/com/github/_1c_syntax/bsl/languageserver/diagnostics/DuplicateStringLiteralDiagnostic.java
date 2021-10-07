@@ -34,11 +34,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.lang.Math.max;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -54,7 +55,7 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
   /**
    * Разрешенное количество повторов по умолчанию
    */
-  private static final int ALLOWED_NUMBER_COPIES = 3;
+  private static final int ALLOWED_NUMBER_COPIES = 2;
 
   /**
    * Анализировать весь файл целиком
@@ -66,7 +67,10 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
    */
   private static final boolean CASE_SENSITIVE = false;
 
-  private static final String EMPTY_STRING = "\"\"";
+  /**
+   * Минимальная длина анализируемого литерала (с кавычками)
+   */
+  private static final int MIN_TEXT_LENGTH = 5;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -86,6 +90,12 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
   )
   private boolean caseSensitive = CASE_SENSITIVE;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MIN_TEXT_LENGTH
+  )
+  private int minTextLength = MIN_TEXT_LENGTH;
+
   @Override
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
@@ -93,6 +103,10 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
     if (allowedNumberCopies < 1) {
       allowedNumberCopies = ALLOWED_NUMBER_COPIES;
     }
+
+    // нет смысла анализировать строки длиной менее значения в константе
+    minTextLength = max(minTextLength, MIN_TEXT_LENGTH);
+
   }
 
   @Override
@@ -117,6 +131,12 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
     return ctx;
   }
 
+  @Override
+  public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
+    checkStringLiterals(ctx);
+    return ctx;
+  }
+
   /**
    * Анализирует литералы блока
    *
@@ -125,18 +145,16 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
   private void checkStringLiterals(BSLParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_string).stream()
       .map(BSLParserRuleContext.class::cast)
-      .filter(literal -> !EMPTY_STRING.equals(literal.getText()))
+      .filter(this::checkLiteral)
       .collect(Collectors.groupingBy(this::getLiteralText))
       .forEach((String name, List<BSLParserRuleContext> literals) -> {
         if (literals.size() > allowedNumberCopies) {
-          List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-          literals.stream()
+          List<DiagnosticRelatedInformation> relatedInformation = literals.stream()
             .map(literal -> RelatedInformation.create(
               documentContext.getUri(),
               Ranges.create(literal),
               literal.getText()
-            ))
-            .collect(Collectors.toCollection(() -> relatedInformation));
+            )).collect(Collectors.toList());
 
           var firstLiteral = literals.get(0);
           diagnosticStorage.addDiagnostic(firstLiteral, info.getMessage(firstLiteral.getText()), relatedInformation);
@@ -150,5 +168,15 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
     } else {
       return literal.getText().toLowerCase(Locale.ROOT);
     }
+  }
+
+  /**
+   * Проверяет необходимость анализа литерала, т.к. некоторые пропускаются
+   *
+   * @param literal Строковый литерал
+   * @return Необходимо анализировать
+   */
+  private boolean checkLiteral(BSLParserRuleContext literal) {
+    return literal.getText().length() >= minTextLength;
   }
 }
