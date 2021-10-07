@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
@@ -59,8 +58,8 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokensFromDefaultChannel())
-      .ifPresent(this::checkCurrentModule);
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    checkCurrentModule(range);
   }
 
   private static boolean wrongDataPath(FormItem formItem) {

@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.MDRole;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
@@ -62,27 +61,25 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void check() {
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
 
-    var tokens = documentContext.getTokens();
-
-    Ranges.getFirstSignificantTokenRange(tokens).ifPresent(range ->
-      documentContext.getServerContext().getConfiguration().getRoles().stream()
-        .filter(role -> role.getRoleData().isSetForNewObjects())
-        .map(MDRole::getName)
-        .filter(Predicate.not(namesFullAccessRole::contains))
-        .map(info::getMessage)
-        .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage))
-    );
+    documentContext.getServerContext().getConfiguration().getRoles().stream()
+      .filter(role -> role.getRoleData().isSetForNewObjects())
+      .map(MDRole::getName)
+      .filter(Predicate.not(namesFullAccessRole::contains))
+      .map(info::getMessage)
+      .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage)
+      );
   }
 
   @Override
-  public void configure(Map<String, Object> configuration){
+  public void configure(Map<String, Object> configuration) {
     var namesFullAccessRoleString = (String) configuration
       .getOrDefault("namesFullAccessRole", NAMES_FULL_ACCESS_ROLE);
     this.namesFullAccessRole = getSetFromString(namesFullAccessRoleString);
   }
 
-  private static Set<String> getSetFromString(String inputParam){
+  private static Set<String> getSetFromString(String inputParam) {
     return Set.of(inputParam.split(","));
   }
 
