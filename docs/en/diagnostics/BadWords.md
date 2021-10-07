@@ -7,14 +7,20 @@
 ## Parameters
 
 
-|    Name    |   Type   |                             Description                              | Default value |
-|:----------:|:--------:|:--------------------------------------------------------------------:|:-------------:|
-| `badWords` | `String` | `Regular expression for prohibited words. Ex.: "badWord1|badWord2".` |      ``       |
+|    Name    |   Type   |                Description                 | Default value |
+|:----------:|:--------:|:------------------------------------------:|:-------------:|
+| `badWords` | `String` | `Regular expression for prohibited words.` |      ``       |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 Software modules should not contain prohibited words.
+The list of forbidden words is set by a regular expression.
+The search is case-insensitive.
 
-For example: "cunt|dick|fuck".
+**For example:**
+
+"singularity|avada kedavra|Donald"
+
+"transcenden(tal|ce)"
 
 ## Snippets
 

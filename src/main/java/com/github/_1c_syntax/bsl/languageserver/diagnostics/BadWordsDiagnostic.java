@@ -50,15 +50,11 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = BAD_WORDS_DEFAULT
   )
-  private Pattern badWords = createPattern(BAD_WORDS_DEFAULT);
+  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);
 
-  private static Pattern createPattern(String words) {
-    return CaseInsensitivePattern.compile(words);
-  }
-
-  @Override
+    @Override
   public void configure(Map<String, Object> configuration) {
-    this.badWords = createPattern(
+    this.badWords = CaseInsensitivePattern.compile(
       (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT));
   }
 
