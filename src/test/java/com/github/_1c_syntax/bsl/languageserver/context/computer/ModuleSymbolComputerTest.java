@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -54,6 +55,8 @@ class ModuleSymbolComputerTest {
     assertThat(moduleSymbol.getOwner()).isEqualTo(documentContext);
     assertThat(moduleSymbol.getSymbolKind()).isEqualTo(SymbolKind.Module);
     assertThat(moduleSymbol.getName()).isEqualTo(documentContext.getUri().toString());
+    assertThat(moduleSymbol.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 0, 9));
+    assertThat(Ranges.containsRange(moduleSymbol.getRange(), moduleSymbol.getSelectionRange())).isTrue();
   }
 
   @Test

@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **149**
+Total: **150**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **47**
+* Error: **48**
 * Code smell: **94**
 
 
@@ -129,6 +129,7 @@ Total: **149**
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [ServerSideExportFormMethod](ServerSideExportFormMethod.md) | Server-side export form method | Yes | Blocker | Error | `error`<br>`unpredictable`<br>`suspicious` 
  [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | The check box «Set permissions for new objects» should only be selected for the FullAccess role | Yes | Critical | Vulnerability | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 

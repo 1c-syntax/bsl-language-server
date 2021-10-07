@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **149**
+Общее количество: **150**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **47**
+* Ошибка: **48**
 * Дефект кода: **94**
 
 
@@ -129,6 +129,7 @@
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
+ [ServerSideExportFormMethod](ServerSideExportFormMethod.md) | Серверный экспортный метод формы | Да | Блокирующий | Ошибка | `error`<br>`unpredictable`<br>`suspicious` 
  [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | Флажок «Устанавливать права для новых объектов» должен быть установлен только у роли ПолныеПрава | Да | Критичный | Уязвимость | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | Критичный | Ошибка | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` 
