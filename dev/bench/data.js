@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633598581221,
+  "lastUpdate": 1633599058454,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13888,6 +13888,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3306057032045966",
             "extra": "mean: 73.63487299283345 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "41572553+Golovanoff@users.noreply.github.com",
+            "name": "Golovanoff",
+            "username": "Golovanoff"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "caf5c1d2f38b584fc547538f27dae5af7423560a",
+          "message": "Диагностика поиска запрещенных слов (#1836)",
+          "timestamp": "2021-10-07T12:06:57+03:00",
+          "tree_id": "ba2383d440dbf3bfcce8d79bf5d233b2ea584920",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/caf5c1d2f38b584fc547538f27dae5af7423560a"
+        },
+        "date": 1633599055534,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.18245458602905,
+            "unit": "sec",
+            "range": "stddev: 1.3209712650521008",
+            "extra": "mean: 76.18245458602905 sec\nrounds: 3"
           }
         ]
       }
