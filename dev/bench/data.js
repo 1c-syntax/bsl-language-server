@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633588275129,
+  "lastUpdate": 1633598101427,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13826,6 +13826,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8082618817493286",
             "extra": "mean: 73.56123693784077 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d7bf106fd53b2cb6660d26446da1439b5e2f3c6f",
+          "message": "Merge pull request #1854 from theshadowco/feature/dublicateLiteral",
+          "timestamp": "2021-10-07T12:02:15+03:00",
+          "tree_id": "f7bebb76c39d5b4de1e4dbf68f26e035e2788daf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d7bf106fd53b2cb6660d26446da1439b5e2f3c6f"
+        },
+        "date": 1633598094633,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.64234534899394,
+            "unit": "sec",
+            "range": "stddev: 0.5847839180028775",
+            "extra": "mean: 72.64234534899394 sec\nrounds: 3"
           }
         ]
       }
