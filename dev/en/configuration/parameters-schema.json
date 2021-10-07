@@ -1466,6 +1466,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
         "SetPermissionsForNewObjects": {
             "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "default": true,

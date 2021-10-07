@@ -969,11 +969,11 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>149</strong></p>
+<p>Общее количество: <strong>150</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>4</strong></li>
 <li>Уязвимость: <strong>4</strong></li>
-<li>Ошибка: <strong>47</strong></li>
+<li>Ошибка: <strong>48</strong></li>
 <li>Дефект кода: <strong>94</strong></li>
 </ul>
 <table>
@@ -1875,6 +1875,14 @@
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="ServerSideExportFormMethod/">ServerSideExportFormMethod</a></td>
+<td>Серверный экспортный метод формы</td>
+<td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
+<td><code>error</code><br><code>unpredictable</code><br><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="SetPermissionsForNewObjects/">SetPermissionsForNewObjects</a></td>
