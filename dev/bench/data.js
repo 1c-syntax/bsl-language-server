@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633558592127,
+  "lastUpdate": 1633588275129,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -13795,6 +13795,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.18324171042015305",
             "extra": "mean: 74.27092432975769 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6f289540e21a09388fc8ff5bf2dcd4b7b858e47",
+          "message": "Merge pull request #1849 from 1c-syntax/feature/ExportMethodInForm\n\nНовая диагностика - Серверный экспортный метод формы",
+          "timestamp": "2021-10-07T09:23:18+03:00",
+          "tree_id": "0819ffa59d966c66aafa0834d177180f185fbe30",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f6f289540e21a09388fc8ff5bf2dcd4b7b858e47"
+        },
+        "date": 1633588265824,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.56123693784077,
+            "unit": "sec",
+            "range": "stddev: 1.8082618817493286",
+            "extra": "mean: 73.56123693784077 sec\nrounds: 3"
           }
         ]
       }
