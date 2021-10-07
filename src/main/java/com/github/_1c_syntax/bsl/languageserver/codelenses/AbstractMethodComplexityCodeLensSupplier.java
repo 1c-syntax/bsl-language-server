@@ -56,8 +56,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
     var complexityThreshold = getComplexityThreshold();
+    var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> getMethodsComplexity(documentContext).get(methodSymbol) >= complexityThreshold)
+      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }
@@ -65,8 +66,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
     var methodName = data.getMethodName();
+    var methodsComplexity = getMethodsComplexity(documentContext);
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
-      int complexity = getMethodsComplexity(documentContext).get(methodSymbol);
+      int complexity = methodsComplexity.get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var command = new Command(title, "");
 
