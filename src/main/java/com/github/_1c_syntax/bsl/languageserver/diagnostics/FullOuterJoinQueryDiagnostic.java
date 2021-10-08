@@ -45,8 +45,8 @@ public class FullOuterJoinQueryDiagnostic extends AbstractSDBLVisitorDiagnostic 
 
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    if (ctx.FULL_JOIN() != null) {
-      diagnosticStorage.addDiagnostic(ctx.FULL_JOIN());
+    if (ctx.FULL() != null && ctx.JOIN() != null) {
+      diagnosticStorage.addDiagnostic(ctx.FULL(), ctx.JOIN());
     }
 
     return super.visitJoinPart(ctx);
