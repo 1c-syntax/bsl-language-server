@@ -38,6 +38,24 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -1968,6 +1986,16 @@
             "title": "Form fields do not have a data path",
             "$id": "#/definitions/WrongDataPathForFormElements"
         },
+        "WrongHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/WrongHttpServiceHandler"
+        },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
             "default": true,
@@ -1987,6 +2015,16 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
+        "WrongWebServiceHandler": {
+            "description": "Wrong handler for web service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong handler for web service",
+            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",
