@@ -47,7 +47,7 @@ public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnosti
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
-    if (nonMdoExists(mdo.mdoType().getText(), mdo.mdoName.getText())) {
+    if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,
         info.getMessage(mdo.getText()));
     }
