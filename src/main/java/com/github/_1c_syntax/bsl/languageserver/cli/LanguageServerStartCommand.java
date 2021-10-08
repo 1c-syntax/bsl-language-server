@@ -76,8 +76,10 @@ public class LanguageServerStartCommand implements Callable<Integer> {
 
   public Integer call() {
 
-    File configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
+    var configurationFile = new File(configurationOption);
+    if (configurationFile.exists()) {
+      configuration.update(configurationFile);
+    }
 
     var languageClient = launcher.getRemoteProxy();
 
