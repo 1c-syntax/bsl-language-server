@@ -831,6 +831,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/WrongMetadataInQuery/</loc>
+         <lastmod>2021-10-08</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/WrongUseFunctionProceedWithCall/</loc>
          <lastmod>2021-10-08</lastmod>
          <changefreq>daily</changefreq>
