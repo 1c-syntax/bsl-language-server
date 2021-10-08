@@ -154,8 +154,8 @@ class LanguageServerConfigurationTest {
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     // then
-    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
-    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+    assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
+    assertThat(codeLensOptions.getParameters()).containsEntry("cyclomaticComplexity", Either.forLeft(false));
 
     assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
 

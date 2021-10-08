@@ -26,9 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.eclipse.lsp4j.Range;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,8 +43,8 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    Optional<Range> range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
-    if (range.isEmpty()) {
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
       return;
     }
 
@@ -57,7 +55,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .map(AbstractMDObjectBase::getName)
       .map(pattern::matcher)
       .filter(this::matchCheck)
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(range.get()));
+      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(range));
   }
 
   protected abstract boolean flagsCheck(MDCommonModule commonModule);

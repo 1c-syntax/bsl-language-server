@@ -8,18 +8,19 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **147**
+Total: **151**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **46**
-* Code smell: **93**
+* Error: **48**
+* Code smell: **95**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Prohibited words | Yes | Major | Code smell | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
@@ -58,6 +59,7 @@ Total: **147**
  [DeprecatedMethods8317](DeprecatedMethods8317.md) | Using of deprecated platform 8.3.17 global methods | Yes | Info | Code smell | `deprecated` 
  [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm type | Yes | Info | Code smell | `standard`<br>`deprecated` 
  [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` 
+ [DuplicateStringLiteral](DuplicateStringLiteral.md) | Duplicate string literal | Yes | Minor | Code smell | `badpractice` 
  [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br>`suspicious` 
  [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` 
  [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` 
@@ -66,6 +68,7 @@ Total: **147**
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [ForbiddenMetadataName](ForbiddenMetadataName.md) | Metadata object has a forbidden name | Yes | Blocker | Error | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` 
@@ -120,12 +123,15 @@ Total: **147**
  [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
+ [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Same metadata object and child name | Yes | Critical | Error | `standard`<br>`sql`<br>`design` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [ServerSideExportFormMethod](ServerSideExportFormMethod.md) | Server-side export form method | Yes | Blocker | Error | `error`<br>`unpredictable`<br>`suspicious` 
  [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | The check box «Set permissions for new objects» should only be selected for the FullAccess role | Yes | Critical | Vulnerability | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 
@@ -160,8 +166,7 @@ Total: **147**
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Major | Error | `sql`<br>`standard`<br>`performance` 
- [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Missing handler for http service | Yes | Critical | Error | `suspicious`<br>`error` 
+ [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | Form fields do not have a data path | Yes | Critical | Error | `unpredictable` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
- [WrongWebServiceHandler](WrongWebServiceHandler.md) | Wrong handler for web service | Yes | Critical | Error | `suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 

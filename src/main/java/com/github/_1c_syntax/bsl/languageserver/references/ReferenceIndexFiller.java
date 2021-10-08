@@ -57,7 +57,7 @@ public class ReferenceIndexFiller {
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
-    DocumentContext documentContext = event.getSource();
+    var documentContext = event.getSource();
     fill(documentContext);
   }
 

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -194,6 +195,11 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
+
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     diagnosticList.add(createDiagnostic(
       diagnostic,
       range,
@@ -212,6 +218,15 @@ public class DiagnosticStorage {
     }
   }
 
+  /**
+   * Добавляет диагностику по ссылке на символ, используя в качестве области - область символа
+   *
+   * @param sourceDefinedSymbol ссылка на метод
+   */
+  protected void addDiagnostic(SourceDefinedSymbol sourceDefinedSymbol) {
+    addDiagnostic(sourceDefinedSymbol.getSelectionRange());
+  }
+
   private static Diagnostic createDiagnostic(
     BSLDiagnostic bslDiagnostic,
     Range range,
@@ -220,7 +235,7 @@ public class DiagnosticStorage {
   ) {
     var info = bslDiagnostic.getInfo();
 
-    Diagnostic diagnostic = new Diagnostic(
+    var diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
       info.getLSPSeverity(),

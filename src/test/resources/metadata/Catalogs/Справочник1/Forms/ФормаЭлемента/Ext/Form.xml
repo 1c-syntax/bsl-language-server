@@ -19,6 +19,12 @@
 			<ContextMenu name="НаименованиеКонтекстноеМеню" id="5"/>
 			<ExtendedTooltip name="НаименованиеРасширеннаяПодсказка" id="6"/>
 		</InputField>
+		<InputField name="НесуществующийРеквизит" id="4">
+			<DataPath>~Объект.НесуществующийРеквизит</DataPath>
+			<EditMode>EnterOnInput</EditMode>
+			<ContextMenu name="НесуществующийРеквизитКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="НесуществующийРеквизитРасширеннаяПодсказка" id="6"/>
+		</InputField>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">

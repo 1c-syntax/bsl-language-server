@@ -72,6 +72,11 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       return;
     }
 
+    var range = symbolTree.getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     var isModuleWithoutExportSub = moduleMethods
       .stream()
       .noneMatch(MethodSymbol::isExport);
@@ -82,8 +87,7 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       .noneMatch(REGION_NAME::contains);
 
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
-      Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-        .ifPresent(diagnosticStorage::addDiagnostic);
+      diagnosticStorage.addDiagnostic(range);
     }
 
   }
