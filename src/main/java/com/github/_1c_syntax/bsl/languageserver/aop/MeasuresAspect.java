@@ -58,7 +58,7 @@ public class MeasuresAspect {
       return jp.proceed();
     }
     var diagnostic = (BSLDiagnostic) jp.getThis();
-    String diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
+    var diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
     return measureCollector.measureIt(jp::proceed, "diagnostic: " + diagnosticCode);
   }
 

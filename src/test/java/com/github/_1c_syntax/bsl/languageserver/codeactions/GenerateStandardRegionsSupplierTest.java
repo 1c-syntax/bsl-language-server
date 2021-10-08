@@ -49,7 +49,7 @@ class GenerateStandardRegionsSupplierTest {
 
     // given
     String filePath = "./src/test/resources/suppliers/generateRegion.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

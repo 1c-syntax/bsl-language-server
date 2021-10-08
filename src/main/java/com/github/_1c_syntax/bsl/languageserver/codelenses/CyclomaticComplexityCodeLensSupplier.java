@@ -39,11 +39,6 @@ public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexi
   }
 
   @Override
-  protected boolean supplierIsEnabled() {
-    return configuration.getCodeLensOptions().isShowCyclomaticComplexity();
-  }
-
-  @Override
   protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
     return documentContext.getCyclomaticComplexityData().getMethodsComplexity();
   }

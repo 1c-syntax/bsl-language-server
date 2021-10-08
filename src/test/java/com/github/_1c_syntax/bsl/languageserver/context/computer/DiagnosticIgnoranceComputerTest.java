@@ -41,7 +41,7 @@ class DiagnosticIgnoranceComputerTest {
 
     // given
     String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
-    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
+    final var documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 

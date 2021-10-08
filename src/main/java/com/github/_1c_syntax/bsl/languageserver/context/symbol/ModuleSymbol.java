@@ -55,6 +55,10 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   SymbolKind symbolKind;
   DocumentContext owner;
   Range range;
+  /**
+   * Область первого токена модуля
+   */
+  Range selectionRange;
 
   @Getter
   @Setter
@@ -68,11 +72,6 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitModule(this);
-  }
-
-  @Override
-  public Range getSelectionRange() {
-    return getRange();
   }
 
 }
