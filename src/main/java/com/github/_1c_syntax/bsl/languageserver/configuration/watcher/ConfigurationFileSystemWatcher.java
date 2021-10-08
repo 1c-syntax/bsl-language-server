@@ -93,7 +93,8 @@ public class ConfigurationFileSystemWatcher {
       }
 
       var file = new File(registeredPath.toFile(), context.toFile().getName());
-      if (isConfigurationFile(file) && file.lastModified() != lastModified) {
+      if (isConfigurationFile(file)
+        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
         lastModified = file.lastModified();
         listener.onChange(file, watchEvent.kind());
       }
