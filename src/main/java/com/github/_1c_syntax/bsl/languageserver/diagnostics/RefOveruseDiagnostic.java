@@ -124,10 +124,20 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     String penultimateIdentifierName = penultimateChild.getText();
 
     if (REF_PATTERN.matcher(penultimateIdentifierName).matches()
+      && !penultimateIdentifierParentIsTabularSection(ctx)
       || (REF_PATTERN.matcher(lastIdentifierName).matches()
       && !tableNames.contains(penultimateIdentifierName))) {
       diagnosticStorage.addDiagnostic(ctx);
     }
+  }
+
+  private boolean penultimateIdentifierParentIsTabularSection(SDBLParser.ColumnContext ctx) {
+    var penultimateChildTable = ctx.getChild(0);
+    var penultimateChildTableName = penultimateChildTable.getText();
+
+    return this.dataSourceCollection.stream()
+      .filter(dataSource -> dataSource.getChild(0).getChildCount() > 2)
+      .anyMatch(dataSource -> dataSource.getChild(1).getChild(1).getText().matches(penultimateChildTableName));
   }
 
   private static String getTableNameOrAlias(ParseTree dataSource) {
