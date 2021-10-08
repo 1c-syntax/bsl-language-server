@@ -1,4 +1,4 @@
-# Incorrect reference to metadata in the query (WrongMetadataInQuery)
+# Using non-existent metadata in the query (WrongMetadataInQuery)
 
 |  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:---------------------------:|
