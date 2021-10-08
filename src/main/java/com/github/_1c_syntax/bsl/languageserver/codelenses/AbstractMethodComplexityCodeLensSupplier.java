@@ -31,6 +31,7 @@ import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -48,12 +49,16 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
+  private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   protected final LanguageServerConfiguration configuration;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
+    var complexityThreshold = getComplexityThreshold();
+    var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }
@@ -61,8 +66,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
     var methodName = data.getMethodName();
+    var methodsComplexity = getMethodsComplexity(documentContext);
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
-      int complexity = getMethodsComplexity(documentContext).get(methodSymbol);
+      int complexity = methodsComplexity.get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var command = new Command(title, "");
 
@@ -84,6 +90,15 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    * @return Данные о сложности методов.
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
+
+  private int getComplexityThreshold() {
+    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    if (parameters.isLeft()) {
+      return DEFAULT_COMPLEXITY_THRESHOLD;
+    } else {
+      return (int) parameters.getRight().getOrDefault("complexityThreshold", DEFAULT_COMPLEXITY_THRESHOLD);
+    }
+  }
 
   private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
     var data = new ComplexityCodeLensData(documentContext.getUri(), getId(), methodSymbol.getName());
