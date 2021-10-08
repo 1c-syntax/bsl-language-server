@@ -49,7 +49,7 @@ class HoverProviderTest {
     HoverParams params = new HoverParams();
     params.setPosition(new Position(0, 0));
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     // when
     Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
@@ -61,7 +61,7 @@ class HoverProviderTest {
   @Test
   void testSourceDefinedMethod() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     HoverParams params = new HoverParams();
     params.setPosition(new Position(3, 10));
@@ -80,7 +80,7 @@ class HoverProviderTest {
   @Test
   void testSourceDefinedVariable() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     HoverParams params = new HoverParams();
     params.setPosition(new Position(6, 15));

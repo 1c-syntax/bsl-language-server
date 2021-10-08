@@ -92,7 +92,7 @@ class JUnitReporterTest {
       "test3"
     ));
 
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       ""
     );

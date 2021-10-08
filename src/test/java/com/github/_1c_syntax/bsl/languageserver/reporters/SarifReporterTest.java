@@ -94,7 +94,7 @@ class SarifReporterTest {
       "test"
     );
 
-    DocumentContext documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext("");
     String sourceDir = ".";
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);

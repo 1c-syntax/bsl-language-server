@@ -306,7 +306,7 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
   @Test
   void testQuickFix() {
 
-    final DocumentContext documentContext = getDocumentContext();
+    final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic firstDiagnostic = diagnostics.get(0);
 

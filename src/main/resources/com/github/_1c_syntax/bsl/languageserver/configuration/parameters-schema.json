@@ -38,6 +38,24 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -1967,6 +1985,16 @@
             ],
             "title": "Form fields do not have a data path",
             "$id": "#/definitions/WrongDataPathForFormElements"
+        },
+        "WrongMetadataInQuery": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/WrongMetadataInQuery"
         },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",

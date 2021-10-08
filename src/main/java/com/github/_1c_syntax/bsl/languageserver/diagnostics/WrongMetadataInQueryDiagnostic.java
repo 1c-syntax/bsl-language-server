@@ -22,34 +22,49 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Map;
+import java.util.Optional;
+
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.BLOCKER,
   minutesToFix = 5,
   tags = {
-    DiagnosticTag.STANDARD,
-    DiagnosticTag.SQL,
-    DiagnosticTag.PERFORMANCE
-  },
-  scope = DiagnosticScope.BSL
-)
-public class UnionAllDiagnostic extends AbstractSDBLVisitorDiagnostic {
-
-  @Override
-  public ParseTree visitUnion(SDBLParser.UnionContext ctx) {
-    if (ctx.UNION() != null && ctx.ALL() != null) {
-      return super.visitUnion(ctx);
-    }
-
-    diagnosticStorage.addDiagnostic(ctx.UNION());
-    return super.visitUnion(ctx);
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.SQL
   }
 
+)
+public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+
+  @Override
+  public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+    if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
+      diagnosticStorage.addDiagnostic(mdo,
+        info.getMessage(mdo.getText()));
+    }
+    return super.visitMdo(mdo);
+  }
+
+  private boolean nonMdoExists(String mdoType, String mdoName) {
+    return getMdo(mdoType, mdoName).isEmpty();
+  }
+
+  private Optional<AbstractMDObjectBase> getMdo(String mdoTypeName, String mdoName) {
+    return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
+      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().entrySet().stream()
+        .filter(entry -> entry.getKey().getType().equals(mdoType)
+          && mdoName.equals(entry.getValue().getName()))
+        .map(Map.Entry::getValue)
+        .findFirst()
+    );
+  }
 }

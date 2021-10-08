@@ -63,7 +63,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUse() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
   }
@@ -71,7 +71,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUseWithForce() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("forceModalityMode", true);

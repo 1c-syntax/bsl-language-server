@@ -42,7 +42,7 @@ class FoldingRangeProviderTest {
   @Test
   void testFoldingRange() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
@@ -81,7 +81,7 @@ class FoldingRangeProviderTest {
   @Test
   void testFoldingRangeParseError() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     assertThat(foldingRanges).isEmpty();
