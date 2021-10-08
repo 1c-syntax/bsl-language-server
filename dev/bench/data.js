@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633714798294,
+  "lastUpdate": 1633715755711,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14043,6 +14043,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4487557025895537",
             "extra": "mean: 73.05761965115865 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9a4cefe791c27020cda0006f9b3a45340962f1f7",
+          "message": "Merge pull request #1857 from 1c-syntax/feature/complexity-lenses-threshold",
+          "timestamp": "2021-10-08T20:26:23+03:00",
+          "tree_id": "53a59320e1b474190d44b7d16c3cd76e3f11db75",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9a4cefe791c27020cda0006f9b3a45340962f1f7"
+        },
+        "date": 1633715752825,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.68597586949666,
+            "unit": "sec",
+            "range": "stddev: 2.3337757113719624",
+            "extra": "mean: 75.68597586949666 sec\nrounds: 3"
           }
         ]
       }
