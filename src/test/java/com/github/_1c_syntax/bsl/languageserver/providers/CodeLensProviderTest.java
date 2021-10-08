@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -67,8 +66,8 @@ class CodeLensProviderTest {
   void testGetCodeLens() {
 
     // given
-    String filePath = "./src/test/resources/providers/codeLens.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var filePath = "./src/test/resources/providers/codeLens.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
@@ -127,8 +126,8 @@ class CodeLensProviderTest {
   void testExtractData() {
 
     // given
-    String filePath = "./src/test/resources/providers/codeLens.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var filePath = "./src/test/resources/providers/codeLens.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
