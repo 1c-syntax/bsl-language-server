@@ -48,7 +48,7 @@ class DocumentContextTest {
   @Test
   void testRebuild() throws IOException {
 
-    DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
     assertThat(documentContext.getTokens()).hasSize(39);
 
     File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
@@ -60,7 +60,7 @@ class DocumentContextTest {
   @Test
   void testClearASTData() throws IllegalAccessException {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     documentContext.clearSecondaryData();
@@ -73,7 +73,7 @@ class DocumentContextTest {
   @Test
   void testMethodCompute() {
 
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(3);
 
@@ -81,7 +81,7 @@ class DocumentContextTest {
 
   @Test
   void testMethodParametersComputesCorrectly() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     assertThat(documentContext.getSymbolTree().getMethods())
       .filteredOn(methodSymbol -> methodSymbol.getName().equals("ФункцияСПараметрами"))
       .flatExtracting(MethodSymbol::getParameters)
@@ -113,7 +113,7 @@ class DocumentContextTest {
   @Test
   void testMethodComputeParseError() throws IOException {
 
-    DocumentContext documentContext =
+    var documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
 
     assertThat(documentContext.getSymbolTree().getMethods().isEmpty()).isTrue();
@@ -122,7 +122,7 @@ class DocumentContextTest {
 
   @Test
   void testGetRegionsFlatComputesAllLevels() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     assertThat(documentContext.getSymbolTree().getModuleLevelRegions()).hasSize(2);
     assertThat(documentContext.getSymbolTree().getRegionsFlat()).hasSize(6);
@@ -131,7 +131,7 @@ class DocumentContextTest {
   @Test
   void testRegionsAdjustingCompute() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
@@ -143,7 +143,7 @@ class DocumentContextTest {
   @Test
   void testMethodsAdjustingCompute() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
@@ -197,7 +197,7 @@ class DocumentContextTest {
   @Test
   void testComputeMetricsComments() {
 
-    DocumentContext documentContext =
+    var documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");
 
     assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
@@ -207,7 +207,7 @@ class DocumentContextTest {
   @Test
   void testContentList() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     String[] contentList = documentContext.getContentList();
@@ -217,9 +217,21 @@ class DocumentContextTest {
   }
 
   @Test
+  void testContentListWithStandaloneCR() {
+    // given
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextBrokenLineFeeds.bsl");
+
+    // when
+    var contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(3);
+  }
+
+  @Test
   void testEOF() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     // when
     List<Token> tokens = documentContext.getTokens();
     Token lastToken = tokens.get(tokens.size() - 1);

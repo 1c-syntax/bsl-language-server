@@ -4,3 +4,4 @@
 *.md eol=lf
 *.json eol=lf
 *.bat eol=crlf
+src/test/resources/context/DocumentContextBrokenLineFeeds.bsl binary

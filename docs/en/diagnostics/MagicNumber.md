@@ -4,7 +4,7 @@
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
 | `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `1`           | `badpractice` |
 
-## Parameters 
+## Parameters
 
 
 |        Name         |   Type    |                     Description                      | Default value |

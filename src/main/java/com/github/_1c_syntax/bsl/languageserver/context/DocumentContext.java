@@ -65,6 +65,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -74,6 +75,8 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class DocumentContext {
+
+  private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
 
   private final URI uri;
 
@@ -315,7 +318,7 @@ public class DocumentContext {
   }
 
   private String[] computeContentList() {
-    return getContent().split("\n", -1);
+    return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
   }
 
   private SymbolTree computeSymbolTree() {

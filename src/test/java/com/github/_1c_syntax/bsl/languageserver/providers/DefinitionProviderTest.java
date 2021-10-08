@@ -59,7 +59,7 @@ class DefinitionProviderTest {
 
   @Test
   void testEmptyDefinition() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     var params = new DefinitionParams();
     params.setPosition(new Position(1, 0));
@@ -73,7 +73,7 @@ class DefinitionProviderTest {
 
   @Test
   void testDefinitionOfLocalMethod() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     var params = new DefinitionParams();
@@ -95,7 +95,7 @@ class DefinitionProviderTest {
 
   @Test
   void testDefinitionOfCommonModule() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = managerModule.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 

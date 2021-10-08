@@ -8,21 +8,23 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **144**
+Общее количество: **151**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **44**
-* Дефект кода: **92**
+* Ошибка: **48**
+* Дефект кода: **95**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | Все возможные пути выполнения функции должны содержать оператор Возврат | Да | Важный | Дефект кода | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Назначение псевдонимов выбранным полям в запросе | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Запрещенные слова | Да | Важный | Дефект кода | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` 
+ [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | После вызова асинхронного метода есть строки кода | Нет | Важный | Дефект кода | `suspicious` 
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Определения методов должны размещаться перед операторами тела модуля | Да | Блокирующий | Ошибка | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Код расположен вне области | Да | Информационный | Дефект кода | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` 
@@ -57,6 +59,7 @@
  [DeprecatedMethods8317](DeprecatedMethods8317.md) | Использование устаревших глобальных методов платформы 8.3.17 | Да | Информационный | Дефект кода | `deprecated` 
  [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Устаревшее использование типа "УправляемаяФорма" | Да | Информационный | Дефект кода | `standard`<br>`deprecated` 
  [DuplicateRegion](DuplicateRegion.md) | Повторяющиеся разделы модуля | Да | Информационный | Дефект кода | `standard` 
+ [DuplicateStringLiteral](DuplicateStringLiteral.md) | Повторное использование строкового литерала | Да | Незначительный | Дефект кода | `badpractice` 
  [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br>`suspicious` 
  [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` 
  [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` 
@@ -65,6 +68,7 @@
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Выполнение произвольного кода в общем модуле на сервере | Да | Критичный | Потенциальная уязвимость | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
+ [ForbiddenMetadataName](ForbiddenMetadataName.md) | Объекту метаданных присвоено запрещенное имя | Да | Блокирующий | Ошибка | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` 
@@ -119,12 +123,15 @@
  [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Ошибка разбора текста запроса | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Избыточное обращение к объекту | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
+ [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Совпадает имя объекта метаданного и его дочернего | Да | Критичный | Ошибка | `standard`<br>`sql`<br>`design` 
  [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Использование 'ВЫБРАТЬ ПЕРВЫЕ' без 'УПОРЯДОЧИТЬ ПО' | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
+ [ServerSideExportFormMethod](ServerSideExportFormMethod.md) | Серверный экспортный метод формы | Да | Блокирующий | Ошибка | `error`<br>`unpredictable`<br>`suspicious` 
  [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | Флажок «Устанавливать права для новых объектов» должен быть установлен только у роли ПолныеПрава | Да | Критичный | Уязвимость | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | Критичный | Ошибка | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` 
@@ -159,6 +166,7 @@
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Важный | Ошибка | `sql`<br>`standard`<br>`performance` 
+ [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | У полей формы не указан путь к данным | Да | Критичный | Ошибка | `unpredictable` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Некорректное использование функции ПродолжитьВызов() | Да | Блокирующий | Ошибка | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 

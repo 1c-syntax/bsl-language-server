@@ -47,7 +47,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testFindCalledMethod() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     referenceIndexFiller.fill(documentContext);
 
     // when
@@ -69,7 +69,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testRebuildClearReferences() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
 
     // when

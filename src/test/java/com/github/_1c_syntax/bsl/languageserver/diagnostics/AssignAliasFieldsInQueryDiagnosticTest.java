@@ -38,12 +38,13 @@ class AssignAliasFieldsInQueryDiagnosticTest extends AbstractDiagnosticTest<Assi
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(3, 3, 3, 16)
       .hasRange(5, 3, 5, 17)
       .hasRange(21, 3, 21, 16)
       .hasRange(23, 3, 23, 17)
-      .hasRange(42, 4, 42, 17);
+      .hasRange(42, 4, 42, 17)
+      .hasSize(5)
+    ;
   }
 }

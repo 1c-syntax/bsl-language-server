@@ -84,12 +84,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    var documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -102,12 +102,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);

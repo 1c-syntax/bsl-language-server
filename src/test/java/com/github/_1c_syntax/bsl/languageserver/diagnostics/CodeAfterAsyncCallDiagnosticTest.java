@@ -19,36 +19,36 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.eclipse.lsp4j.DocumentFilter;
-import org.springframework.stereotype.Component;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Информация о том, документы каких типов (языков, расширений, схем) может обрабатывать Language Server.
- */
-@Component
-@ToString
-@EqualsAndHashCode
-public class DocumentSelector {
-  private final List<DocumentFilter> documentFilters;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-  public DocumentSelector() {
-    var documentFilter = new DocumentFilter();
-    documentFilter.setLanguage("bsl");
-
-    documentFilters = List.of(documentFilter);
+class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterAsyncCallDiagnostic> {
+  CodeAfterAsyncCallDiagnosticTest() {
+    super(CodeAfterAsyncCallDiagnostic.class);
   }
 
-  /**
-   * @return Список фильтров документов.
-   */
-  public List<DocumentFilter> asList() {
-    return new ArrayList<>(documentFilters);
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasRange(4, 4, 4, 96)
+      .hasRange(21, 8, 21, 100)
+      .hasRange(34, 8, 34, 100)
+      .hasRange(48, 12, 48, 104)
+      .hasRange(63, 12, 63, 104)
+      .hasRange(78, 12, 78, 104)
+      .hasRange(93, 12, 93, 104)
+      .hasRange(108, 12, 108, 104)
+      .hasRange(123, 12, 123, 104)
+      .hasSize(9);
+
   }
 }

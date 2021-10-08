@@ -65,7 +65,7 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
 
   @Test
   void runQuickFixTest() {
-    final DocumentContext documentContext = getDocumentContext();
+    final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic firstDiagnostic = diagnostics.get(0);
 

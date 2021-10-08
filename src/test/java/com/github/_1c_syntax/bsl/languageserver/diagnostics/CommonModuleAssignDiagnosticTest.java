@@ -54,7 +54,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
     initServerContext(path);
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

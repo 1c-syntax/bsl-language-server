@@ -4,12 +4,13 @@
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `1`           |    `standard`<br>`badpractice`    |
 
-## Parameters 
+## Parameters
 
 
-|      Name       |   Type    |             Description              | Default value |
-|:---------------:|:---------:|:------------------------------------:|:-------------:|
-| `maxLineLength` | `Integer` | `Max length of string in characters` |     `120`     |
+|           Name           |   Type    |                   Description                    | Default value |
+|:------------------------:|:---------:|:------------------------------------------------:|:-------------:|
+|     `maxLineLength`      | `Integer` |       `Max length of string in characters`       |     `120`     |
+| `checkMethodDescription` | `Boolean` | `Check length of strings in method descriptions` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -33,6 +34,7 @@ If the line length is grater than 120 characters you should you line break. It i
 
 ```json
 "LineLength": {
-    "maxLineLength": 120
+    "maxLineLength": 120,
+    "checkMethodDescription": true
 }
 ```
