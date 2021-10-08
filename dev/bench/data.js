@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633715755711,
+  "lastUpdate": 1633716237504,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14074,6 +14074,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3337757113719624",
             "extra": "mean: 75.68597586949666 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f903c840be4e794eb166cea1c48f3f4444a9468",
+          "message": "Merge pull request #1746 from 1c-syntax/feature/in-memory-db-references",
+          "timestamp": "2021-10-08T20:26:51+03:00",
+          "tree_id": "bccf845e626cf84f377560b801836f3b5c979329",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7f903c840be4e794eb166cea1c48f3f4444a9468"
+        },
+        "date": 1633716234530,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.0526819229126,
+            "unit": "sec",
+            "range": "stddev: 1.5192779036513326",
+            "extra": "mean: 75.0526819229126 sec\nrounds: 3"
           }
         ]
       }
