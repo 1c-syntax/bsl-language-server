@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParser.BuiltInFunctionsContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser.ColumnContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser.DataSourceContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser.IsNullPredicateContext;
@@ -41,7 +42,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -68,17 +68,22 @@ import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_searchCondition;
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SDBLParser.RULE_selectedField, RULE_expression);
+  private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
+  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, RULE_expression);
 
-  private static final Set<Integer> WHERE_STATEMENTS = Set.of(RULE_searchCondition, RULE_expression);
+  private static final Integer WHERE_ROOT = RULE_searchCondition;
+  private static final Set<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, RULE_expression);
 
-  private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, RULE_expression);
+  private static final Integer JOIN_ROOT = SDBLParser.RULE_joinPart;
+  private static final Set<Integer> JOIN_STATEMENTS = Set.of(JOIN_ROOT, RULE_expression);
+
+  public static final Set<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(RULE_searchCondition, RULE_query);
 
   public static final int IS_NOT_NULL_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_WITH_PARENS_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_IS_NULL_EXPR_MEMBER_COUNT = 2;
 
-  private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
+  private List<BSLParserRuleContext> nodesForIssues = Collections.emptyList();
 
   @Override
   public ParseTree visitJoinPart(JoinPartContext joinPartCtx) {
@@ -100,7 +105,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     return super.visitJoinPart(joinPartCtx);
   }
 
-  private Stream<String> joinedTables(JoinPartContext joinPartCtx) {
+  private static Stream<String> joinedTables(JoinPartContext joinPartCtx) {
     return Optional.of(joinPartCtx)
       .stream().flatMap(joinPartContext -> joinedDataSourceContext(joinPartContext).stream())
       .filter(Objects::nonNull)
@@ -110,23 +115,26 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .map(BSLParserRuleContext::getText);
   }
 
-  private List<DataSourceContext> joinedDataSourceContext(JoinPartContext joinPartContext) {
-    if (joinPartContext.LEFT_JOIN() != null) {
-      return Collections.singletonList(joinPartContext.dataSource());
-    } else if (joinPartContext.RIGHT_JOIN() != null) {
-      return Collections.singletonList(((DataSourceContext) joinPartContext.getParent()));
-    } else if (joinPartContext.FULL_JOIN() != null) {
-      return Arrays.asList(((DataSourceContext) joinPartContext.getParent()),
-        joinPartContext.dataSource());
+  private static List<DataSourceContext> joinedDataSourceContext(JoinPartContext joinPartCtx) {
+    final List<DataSourceContext> result;
+    if (joinPartCtx.LEFT_JOIN() != null) {
+      result = Collections.singletonList(joinPartCtx.dataSource());
+    } else if (joinPartCtx.RIGHT_JOIN() != null) {
+      result = Collections.singletonList(((DataSourceContext) joinPartCtx.getParent()));
+    } else if (joinPartCtx.FULL_JOIN() != null) {
+      result = Arrays.asList(((DataSourceContext) joinPartCtx.getParent()),
+        joinPartCtx.dataSource());
+    } else {
+      result = Collections.emptyList();
     }
-    return Collections.emptyList();
+    return result;
   }
 
   private void checkQuery(String joinedTableName, JoinPartContext joinPartCtx) {
     Optional.ofNullable(Trees.getRootParent(joinPartCtx, RULE_query))
       .map(QueryContext.class::cast)
       .filter(ctx -> !haveExprNotIsNullInsideWhere(ctx.where))
-      .ifPresent(queryCtx -> {
+      .ifPresent((QueryContext queryCtx) -> {
         checkSelect(joinedTableName, queryCtx.columns);
         checkWhere(joinedTableName, queryCtx.where);
 
@@ -134,20 +142,20 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       });
   }
 
-  private boolean haveExprNotIsNullInsideWhere(@Nullable SDBLParser.SearchConditionsContext whereCtx) {
+  private static boolean haveExprNotIsNullInsideWhere(@Nullable SDBLParser.SearchConditionsContext whereCtx) {
     return Optional.ofNullable(whereCtx)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_isNullPredicate).stream())
-      .map(whereMember -> (IsNullPredicateContext) whereMember)
+      .map(IsNullPredicateContext.class::cast)
       .anyMatch(isNullPredicateCtx ->
-        haveFirstIsThenNotThenNullInsideWhereMember(isNullPredicateCtx)
-          || haveExprNotIsNullInsideWhereMember(isNullPredicateCtx));
+        haveFirstIsThenNotThenNull(isNullPredicateCtx)
+          || haveExprNotIsNullInsideWhere(isNullPredicateCtx));
   }
 
-  private boolean haveFirstIsThenNotThenNullInsideWhereMember(IsNullPredicateContext whereMember) {
-    return whereMember.getChildCount() == IS_NOT_NULL_EXPR_MEMBERS_COUNT;
+  private static boolean haveFirstIsThenNotThenNull(IsNullPredicateContext isNullPredicateContext) {
+    return isNullPredicateContext.getChildCount() == IS_NOT_NULL_EXPR_MEMBERS_COUNT;
   }
 
-  private boolean haveExprNotIsNullInsideWhereMember(IsNullPredicateContext isNullPredicateCtx) {
+  private static boolean haveExprNotIsNullInsideWhere(IsNullPredicateContext isNullPredicateCtx) {
     final var parent = (SearchConditionContext) isNullPredicateCtx.getParent();
     if (parent.getChildCount() == NOT_IS_NULL_EXPR_MEMBER_COUNT && isTerminalNodeNOT(parent.getChild(0))) {
       return true;
@@ -155,12 +163,12 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     return haveExprNotWithParens(parent);
   }
 
-  private boolean isTerminalNodeNOT(ParseTree node) {
+  private static boolean isTerminalNodeNOT(ParseTree node) {
     return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == SDBLParser.NOT;
   }
 
-  private boolean haveExprNotWithParens(SearchConditionContext ctx) {
-    final var rootCtx = Trees.getRootParent(ctx, List.of(RULE_searchCondition, RULE_query));// todo в константы
+  private static boolean haveExprNotWithParens(SearchConditionContext ctx) {
+    final var rootCtx = Trees.getRootParent(ctx, RULES_OF_PARENT_FOR_SEARCH_CONDITION);
     if (rootCtx == null || rootCtx.getRuleIndex() == RULE_query) {
       return false;
     }
@@ -168,54 +176,48 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkSelect(String tableName, SDBLParser.SelectedFieldsContext columns) {
-    checkStatements(tableName, columns, SELECT_STATEMENTS);
+    checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT);
   }
 
-  private void checkStatements(
-    String tableName, BSLParserRuleContext expression,
-    Set<Integer> statements) {
+  private void checkStatements(String tableName, BSLParserRuleContext expression, Set<Integer> statements,
+                               Integer rootForStatement) {
 
-    isTableFieldExpr(tableName, expression, statements)
-      .forEach(nodesForIssues::add);
-  }
-
-  private Stream<ColumnContext> isTableFieldExpr(
-    String tableName, BSLParserRuleContext expression,
-    Set<Integer> statements) {
-
-    return Optional.of(expression)
+    nodesForIssues = Optional.of(expression)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column).stream())
       .filter(Objects::nonNull)
       .filter(ColumnContext.class::isInstance)
       .map(ColumnContext.class::cast)
-      .filter(columnContext -> checkColumn(tableName, columnContext, statements));
+      .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement))
+      .collect(Collectors.toList());
   }
 
-  private boolean checkColumn(String tableName, ColumnContext columnCtx,
-                              Set<Integer> statements) {
+  private static boolean checkColumn(String tableName, ColumnContext columnCtx,
+                              Set<Integer> statements, Integer rootForStatement) {
     return Optional.of(columnCtx)
       .filter(columnContext -> columnContext.mdoName != null)
       .filter(columnContext -> columnContext.mdoName.getText().equalsIgnoreCase(tableName))
-      .filter(columnContext -> !haveIsNullInside(columnContext, statements))
+      .filter(columnContext -> !haveIsNullInside(columnContext, statements, rootForStatement))
       .isPresent();
   }
 
-  private boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements) {
+  private static boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements, Integer rootForStatement) {
     var selectStatement = Trees.getRootParent(ctx, statements);
-    if (selectStatement == null || selectStatement.getChildCount() == 0) {
+//    if (selectStatement == null || selectStatement.getChildCount() == 0 ) {
+    if (selectStatement == null || selectStatement.getChildCount() == 0 || rootForStatement == selectStatement.getRuleIndex()) {
       return false;
     }
     if (haveIsNullExpression(ctx)) {
       return true;
     }
-    return haveIsNullInside(selectStatement.getParent(), statements);
+    return haveIsNullInside(selectStatement, statements, rootForStatement);
+//    return haveIsNullInside(selectStatement.getParent(), statements, rootForStatement);
   }
 
-  private boolean haveIsNullExpression(BSLParserRuleContext ctx) {
+  private static boolean haveIsNullExpression(BSLParserRuleContext ctx) {
     return Optional.of(ctx)
-      .filter(SDBLParser.BuiltInFunctionsContext.class::isInstance)
-      .map(SDBLParser.BuiltInFunctionsContext.class::cast)
-      .map(SDBLParser.BuiltInFunctionsContext::ISNULL)
+      .filter(BuiltInFunctionsContext.class::isInstance)
+      .map(BuiltInFunctionsContext.class::cast)
+      .map(BuiltInFunctionsContext::ISNULL)
       .filter(Objects::nonNull)
       .isPresent();
   }
@@ -224,7 +226,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     Optional.ofNullable(where)
       .stream().flatMap(searchConditionsContext -> searchConditionsContext.condidions.stream())
       .forEach(searchConditionContext -> checkStatements(tableName, searchConditionContext,
-        WHERE_STATEMENTS));
+        WHERE_STATEMENTS, WHERE_ROOT));
   }
 
   private void checkAllJoins(String tableName, JoinPartContext currentJoinPart) {
@@ -233,8 +235,8 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .stream().flatMap(ctx -> ((DataSourceContext) ctx).joinPart().stream())
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
       .map(JoinPartContext::searchConditions)
-      .forEach(joinExpressionContext -> checkStatements(tableName, joinExpressionContext,
-        JOIN_STATEMENTS));
+      .forEach(searchConditionsContext -> checkStatements(tableName, searchConditionsContext,
+        JOIN_STATEMENTS, JOIN_ROOT));
   }
 
   private List<DiagnosticRelatedInformation> getRelatedInformation(JoinPartContext self) {
