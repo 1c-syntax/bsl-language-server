@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -98,8 +99,10 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     checkContent(
       diagnostics.get(8),
       Ranges.create(194, 5, 195, 50),
-      Ranges.create(192, 13, 192, 32)
-      );
+      Arrays.asList(
+        Ranges.create(192, 13, 32),
+        Ranges.create(196, 9, 30)
+      ));
 
     assertThat(diagnostics).hasSize(9);
 
@@ -127,5 +130,126 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
       var relatedLocationRange = relatedLocationRanges.get(i);
       Assertions.assertThat(relatedInformation.getLocation().getRange()).isEqualTo(relatedLocationRange);
     }
+  }
+
+  @Test
+  void testWithIsNotNullInsideExpression() {
+    var sample =
+      "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
+        "    \"ВЫБРАТЬ Сотрудники4.Ссылка // не ошибка\n" +
+        "    |ИЗ Справочник.Склады КАК Склады\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
+        "    |ПО Склады.Кладовщик = Сотрудники4.Ссылка\n" +
+        "    |ГДЕ Сотрудники4.Флаг ЕСТЬ НЕ NULL   //не ошибка\n" +
+        "    |\";\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testWithNotIsNullInsideExpression() {
+    var sample =
+      "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
+        "    \"ВЫБРАТЬ Сотрудники4.Ссылка // не ошибка\n" +
+        "    |ИЗ Справочник.Склады КАК Склады\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
+        "    |ПО Склады.Кладовщик = Сотрудники4.Ссылка\n" +
+        "    |ГДЕ НЕ Сотрудники4.Флаг ЕСТЬ NULL   //не ошибка\n" +
+        "    |\";\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testWithNotIsNullInPairsInsideExpression() {
+    var sample =
+      "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
+        "    \"ВЫБРАТЬ Сотрудники.Ссылка // не ошибка\n" +
+        "    |ИЗ Справочник.Склады КАК Склады\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники\n" +
+        "    |ПО Склады.Кладовщик = Сотрудники.Ссылка\n" +
+        "    |ГДЕ (НЕ (Сотрудники.Флаг ЕСТЬ NULL))   //не ошибка\n" +
+        "    |\"; ";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testWithIsNullInsideExpression() {
+    var sample =
+      "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
+        "    \"ВЫБРАТЬ Сотрудники4.Ссылка // ошибка\n" +
+        "    |ИЗ Справочник.Склады КАК Склады\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
+        "    |ПО Склады.Кладовщик = Сотрудники4.Ссылка\n" +
+        "    |ГДЕ Сотрудники4.Флаг ЕСТЬ NULL   //не ошибка\n" +
+        "    |\";\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+
+  }
+
+  @Test
+  void tesEqualTableNamesInUnion() {
+    var sample =
+      "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+        "    \"ВЫБРАТЬ\n" +
+        "    |\tКонтрагенты11.Ссылка КАК Ссылка  //не ошибка \n" +
+        "    |ПОМЕСТИТЬ ВТ\n" +
+        "    |ИЗ\n" +
+        "    |\tТаблица КАК Контрагенты11\n" +
+        "    |\n" +
+        "    |ОБЪЕДИНИТЬ ВСЕ\n" +
+        "    |\n" +
+        "    |ВЫБРАТЬ\n" +
+        "    |   Таблица11.Ссылка КАК Ссылка,\n" +
+        "    |   Контрагенты11.Ссылка КАК Ссылка1    //<-- ошибка \n" +
+        "    |ИЗ\n" +
+        "    |\tСправочник.Склады КАК Таблица11\n" +
+        "    |   ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Контрагенты11\n" +
+        "    |   ПО Таблица11.Ссылка = Контрагенты11.Ссылка\n" +
+        "    |\";\n";
+//        "    |\n" +
+//        "    |ОБЪЕДИНИТЬ ВСЕ\n" +
+//        "    |\n" +
+//        "    |ВЫБРАТЬ\n" +
+//        "    |   Таблица11.Ссылка КАК Ссылка,\n" +
+//        "    |   Контрагенты11.Ссылка КАК Ссылка1    //не ошибка\n" +
+//        "    |ИЗ\n" +
+//        "    |\tСправочник.Склады КАК Таблица11\n" +
+//        "    |   ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Контрагенты11\n" +
+//        "    |   ПО Таблица11.Ссылка = Контрагенты11.Ссылка\n" +
+//        "    |ГДЕ (НЕ (Контрагенты11.Реквизит ЕСТЬ NULL)) // TODO Контрагенты11.Реквизит ЕСТЬ НЕ NULL\n" +
+//        "    |\";\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+
   }
 }

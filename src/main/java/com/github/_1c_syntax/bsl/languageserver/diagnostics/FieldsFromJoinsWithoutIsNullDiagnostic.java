@@ -30,10 +30,12 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParser.QueryContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +45,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_expression;
+import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_query;
+import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_searchCondition;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -57,22 +63,14 @@ import java.util.stream.Stream;
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final Set<Integer> RULE_QUERIES = Set.of(SDBLParser.RULE_query,
-    SDBLParser.RULE_temporaryTableMainQuery, SDBLParser.RULE_temporaryTableQuery);
+  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SDBLParser.RULE_selectedField, RULE_expression);
 
-  private static final Set<Integer> SELECT_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_selectedField, SDBLParser.RULE_temporaryTableSelectedField);
-  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SDBLParser.RULE_selectedField,
-    SDBLParser.RULE_temporaryTableSelectedField, SDBLParser.RULE_statement);
-//    SDBLParser.RULE_temporaryTableSelectedField, SDBLParser.RULE_selectStatement);
+  private static final Set<Integer> WHERE_STATEMENTS = Set.of(RULE_searchCondition, RULE_expression);
 
-  private static final Set<Integer> WHERE_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_where);
-  private static final Set<Integer> WHERE_STATEMENTS = Set.of(SDBLParser.RULE_where, SDBLParser.RULE_statement);
-//  private static final Set<Integer> WHERE_STATEMENTS = Set.of(SDBLParser.RULE_where, SDBLParser.RULE_whereStatement);
-  private static final Set<Integer> JOIN_STATEMENTS_ROOT = Set.of(SDBLParser.RULE_joinPart);
-  private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, SDBLParser.RULE_statement);
-//  private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, SDBLParser.RULE_joinStatement);
+  private static final Set<Integer> JOIN_STATEMENTS = Set.of(SDBLParser.RULE_joinPart, RULE_expression);
+
   public static final int IS_NOT_NULL_EXPR_MEMBERS_COUNT = 4;
-  public static final int IS_NULL_EXPR_MEMBERS_COUNT = IS_NOT_NULL_EXPR_MEMBERS_COUNT - 1;
+  public static final int NOT_WITH_PARENS_EXPR_MEMBERS_COUNT = 4;
 
   private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
 
@@ -119,178 +117,112 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkQuery(String joinedTableName, SDBLParser.JoinPartContext joinPartCtx) {
-    Optional.ofNullable(Trees.getRootParent(joinPartCtx, RULE_QUERIES))
-      .filter(ctx -> !haveExprNotIsNullInsideWhere(ctx, joinedTableName))
+    Optional.ofNullable(Trees.getRootParent(joinPartCtx, RULE_query))
+      .map(QueryContext.class::cast)
+      .filter(ctx -> !haveExprNotIsNullInsideWhere(ctx.where))
       .ifPresent(queryCtx -> {
-        checkSelect(joinedTableName, queryCtx);
-        checkWhere(joinedTableName, queryCtx);
+        checkSelect(joinedTableName, queryCtx.columns);
+        checkWhere(joinedTableName, queryCtx.where);
 
         checkAllJoins(joinedTableName, joinPartCtx);
       });
   }
 
-  private boolean haveExprNotIsNullInsideWhere(BSLParserRuleContext queryCtx, String joinedTableName) {
-    return Trees.getFirstChild(queryCtx, SDBLParser.RULE_where)
-      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_member).stream())
-//      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_whereMember).stream())
-      .map(whereMember -> (BSLParserRuleContext) whereMember)
-      .anyMatch(whereMember -> {
-        final var a = haveFirstIsThenNotThenNullInsideWhereMember(whereMember, joinedTableName);
-        final var b = haveExprNotIsNullInsideWhereMember(whereMember, joinedTableName);
-//        final var d = haveFirstIsThenNullInsideWhereMember(whereMember, joinedTableName);
-//        var c = (a || b) && !d;
-        var c = a || b;
-        return c;
+  private boolean haveExprNotIsNullInsideWhere(@Nullable SDBLParser.SearchConditionsContext whereCtx) {
+    return Optional.ofNullable(whereCtx)
+      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_isNullPredicate).stream())
+      .map(whereMember -> (SDBLParser.IsNullPredicateContext) whereMember)
+      .anyMatch(isNullPredicateCtx -> {
+        final var a = haveFirstIsThenNotThenNullInsideWhereMember(isNullPredicateCtx);
+        final var b = haveExprNotIsNullInsideWhereMember(isNullPredicateCtx);
+        return a || b;
         }
       );
   }
 
-  private boolean haveFirstIsThenNotThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-//    if (whereMember.getChildCount() != IS_NOT_NULL_EXPR_MEMBERS_COUNT) {
-    final var isNullStatement = Trees.getFirstChild(whereMember, SDBLParser.RULE_isnullStatement);
-    if (!isNullStatement.isPresent() || isNullStatement.filter(ctx -> ctx.getChildCount() == IS_NOT_NULL_EXPR_MEMBERS_COUNT).isEmpty()) {
-      return false;
-    }
-//    final var childIS = whereMember.getChild(1);
-//    final var childNOT = whereMember.getChild(2);
-//    final var childNULL = whereMember.getChild(3);
-//
-//    final var matched = isTerminalNode(childIS, SDBLParser.IS) &&
-//      isTerminalNode(childNOT, SDBLParser.NOT) &&
-//      isTerminalNode(childNULL, SDBLParser.NULL);
-//    if (!matched) {
-//      return false;
-//    }
-
-    return IsTableFieldExprInsideWhereMember(whereMember, joinedTableName);
-  }
-
-  private boolean IsTableFieldExprInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-    return isTableFieldExpr(joinedTableName, (BSLParserRuleContext) whereMember.getChild(0),
-      SDBLParser.RULE_statement, WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT)
-//      SDBLParser.RULE_whereStatement, WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT)
-      .findAny().isPresent();
+  private boolean haveFirstIsThenNotThenNullInsideWhereMember(SDBLParser.IsNullPredicateContext whereMember) {
+    return whereMember.getChildCount() == IS_NOT_NULL_EXPR_MEMBERS_COUNT;
   }
 
   private Stream<SDBLParser.ColumnContext> isTableFieldExpr(
-    String tableName, BSLParserRuleContext expression, Integer parentStatementIndex,
-    Set<Integer> statements, Set<Integer> statementsRoot) {
+    String tableName, BSLParserRuleContext expression,
+    Set<Integer> statements) {
 
     return Optional.of(expression)
-      .filter(expr -> !haveFirstIsThenNullInsideWhereExpression(expr, tableName))
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column).stream())
-//      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_expression).stream())
-////      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, parentStatementIndex).stream())
-//      .flatMap(parseTree -> Trees.getFirstChild(parseTree, SDBLParser.RULE_statement).stream())
-//      .filter(statementContext -> statementContext.getRuleIndex() != SDBLParser.ISNULL)
-//      .flatMap(column -> Trees.getFirstChild(column, SDBLParser.RULE_column).stream())
       .filter(Objects::nonNull)
       .filter(ctx -> ctx instanceof SDBLParser.ColumnContext)
       .map(SDBLParser.ColumnContext.class::cast)
-      .filter(columnContext -> checkColumn(tableName, columnContext, statements, statementsRoot));
+      .filter(columnContext -> checkColumn(tableName, columnContext, statements));
   }
 
-  private boolean haveFirstIsThenNullInsideWhereExpression(BSLParserRuleContext expression, String tableName) {
-    return Trees.findAllRuleNodes(expression, SDBLParser.RULE_member).stream()
-//    return Trees.findAllRuleNodes(expression, SDBLParser.RULE_whereMember).stream()
-      .anyMatch(ctx -> haveFirstIsThenNullInsideWhereMember((BSLParserRuleContext) ctx, tableName));
-  }
-
-  private boolean haveFirstIsThenNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-//    return Trees.getFirstChild(whereMember, SDBLParser.RULE_isnullStatement)
-//      .filter(isNullCtx -> isNullCtx.getChildCount() != IS_NOT_NULL_EXPR_MEMBERS_COUNT)
-//      .isPresent();
-    final var isNullStatement = Trees.getFirstChild(whereMember, SDBLParser.RULE_isnullStatement);
-    if (!isNullStatement.isPresent() || isNullStatement.filter(ctx -> ctx.getChildCount() == IS_NULL_EXPR_MEMBERS_COUNT).isEmpty()) {
-      return false;
-    }
-    final var haveExprNot = isNullStatement.flatMap(ctx -> Trees.getFirstChild(ctx, SDBLParser.RULE_statement))
-        .flatMap(ctx1 -> Trees.getFirstChild(ctx1, SDBLParser.RULE_unaryModifier))
-        .filter(ctx2 -> isTerminalNode(ctx2, SDBLParser.NOT))
-      .isPresent();
-    if (haveExprNot){
-      return false;
-    }
-
-      //    if (whereMember.getChildCount() != IS_NULL_EXPR_MEMBERS_COUNT) {
-//      return false;
-//    }
-//    final var childIS = whereMember.getChild(1);
-//    final var childNULL = whereMember.getChild(2);
-//
-//    final var matched = isTerminalNode(childIS, SDBLParser.IS) &&
-//      isTerminalNode(childNULL, SDBLParser.NULL);
-//    if (!matched) {
-//      return false;
-//    }
-      ; return IsTableFieldExprInsideWhereMember(whereMember, joinedTableName);
-  }
-
-  private boolean isTerminalNode(ParseTree node, int nodeType) {
-    return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == nodeType;
+  private boolean isTerminalNodeNOT(ParseTree node) {
+    return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == SDBLParser.NOT;
   }
 
   private boolean checkColumn(String tableName, SDBLParser.ColumnContext columnCtx,
-                              Set<Integer> statements, Set<Integer> statementsRoot) {
+                              Set<Integer> statements) {
     return Optional.of(columnCtx)
-      .filter(columnContext -> columnContext.tableName.getText().equalsIgnoreCase(tableName))
-      .filter(columnContext -> !haveIsNullInside(columnContext, statements, statementsRoot))
+      .filter(columnContext -> columnContext.mdoName != null)
+      .filter(columnContext -> columnContext.mdoName.getText().equalsIgnoreCase(tableName))
+      .filter(columnContext -> !haveIsNullInside(columnContext, statements))
       .isPresent();
   }
 
-  private boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements, Set<Integer> rootParentIndex) {
+  private boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements) {
     var selectStatement = Trees.getRootParent(ctx, statements);
-    if (selectStatement == null || rootParentIndex.contains(selectStatement.getRuleIndex()) || selectStatement.getChildCount() == 0) {
+    if (selectStatement == null || selectStatement.getChildCount() == 0 ) {
       return false;
     }
-    final var child = selectStatement.getChild(0);
-    if (isTerminalNode(child, SDBLParser.ISNULL)) {
+    if (haveIsNullExpression(ctx)){
       return true;
     }
-    return haveIsNullInside(selectStatement.getParent(), statements, rootParentIndex);
+    return haveIsNullInside(selectStatement.getParent(), statements);
   }
 
-  private boolean haveExprNotIsNullInsideWhereMember(BSLParserRuleContext whereMember, String joinedTableName) {
-//    if (haveFirstIsThenNullInsideWhereMember(whereMember, joinedTableName)){ // TODO без этого падает тест Тест13_Есть_NULL_ЛевоеСоединение
-//      return false;
-//    }
-    if (Trees.getFirstChild(whereMember, SDBLParser.RULE_statement)
-//    if (Trees.getFirstChild(whereMember, SDBLParser.RULE_whereStatement)
-      .filter(ctx -> ctx.getChildCount() == 0 || !isTerminalNode(ctx.getChild(0), SDBLParser.NOT)
-        || Trees.getFirstChild(ctx, SDBLParser.RULE_unaryModifier)
-        .filter(ctx1 -> isTerminalNode(ctx1.getChild(0), SDBLParser.NOT))
-        .isEmpty()
-      )
-      .isPresent()) {
+  private boolean haveIsNullExpression(BSLParserRuleContext ctx) {
+    return Optional.of(ctx)
+      .filter(bslParserRuleContext -> bslParserRuleContext instanceof SDBLParser.BuiltInFunctionsContext)
+      .map(SDBLParser.BuiltInFunctionsContext.class::cast)
+      .map(SDBLParser.BuiltInFunctionsContext::ISNULL)
+      .filter(Objects::nonNull)
+      .isPresent();
+  }
+
+  private boolean haveExprNotIsNullInsideWhereMember(SDBLParser.IsNullPredicateContext isNullPredicateCtx) {
+    final var parent = (SDBLParser.SearchConditionContext) isNullPredicateCtx.getParent();
+    if (parent.getChildCount() == 2 && isTerminalNodeNOT(parent.getChild(0))){
+      return true;
+    }
+    return haveExprNotWithParens(parent);
+
+  }
+
+  private boolean haveExprNotWithParens(SDBLParser.SearchConditionContext ctx) {
+    final var rootCtx = Trees.getRootParent(ctx, List.of(RULE_searchCondition, RULE_query));// todo в константы
+    if (rootCtx == null || rootCtx.getRuleIndex() == RULE_query){
       return false;
     }
-    return haveFirstIsThenNullInsideWhereExpression(whereMember, joinedTableName);
+    return rootCtx.getChildCount() == NOT_WITH_PARENS_EXPR_MEMBERS_COUNT && isTerminalNodeNOT(rootCtx.getChild(0));
   }
 
-  private void checkSelect(String tableName, BSLParserRuleContext query) {
-    Trees.getFirstChild(query, SDBLParser.RULE_selectedFields, SDBLParser.RULE_temporaryTableSelectedFields)
-      .ifPresent(ctx -> checkStatements(tableName, ctx, SDBLParser.RULE_statement,
-//      .ifPresent(ctx -> checkStatements(tableName, ctx, SDBLParser.RULE_selectStatement,
-        SELECT_STATEMENTS, SELECT_STATEMENTS_ROOT));
+  private void checkSelect(String tableName, SDBLParser.SelectedFieldsContext columns) {
+    checkStatements(tableName, columns, SELECT_STATEMENTS);
   }
 
   private void checkStatements(
-    String tableName, BSLParserRuleContext expression, Integer parentStatementIndex,
-    Set<Integer> statements, Set<Integer> statementsRoot) {
+    String tableName, BSLParserRuleContext expression,
+    Set<Integer> statements) {
 
-    isTableFieldExpr(tableName, expression, parentStatementIndex, statements, statementsRoot)
+    isTableFieldExpr(tableName, expression, statements)
       .forEach(nodesForIssues::add);
   }
 
-  private void checkWhere(String tableName, BSLParserRuleContext query) {
-    Trees.getFirstChild(query, SDBLParser.RULE_where)
-      .filter(bslParserRuleContext -> bslParserRuleContext.getChildCount() > 0)
-      .map(SDBLParser.WhereContext.class::cast)
-      .map(SDBLParser.WhereContext::expression)
-//      .map(SDBLParser.WhereContext::whereExpression)
-      .ifPresent(exprCtx -> checkStatements(tableName, exprCtx, SDBLParser.RULE_statement,
-//      .ifPresent(exprCtx -> checkStatements(tableName, exprCtx, SDBLParser.RULE_whereStatement,
-        WHERE_STATEMENTS, WHERE_STATEMENTS_ROOT));
+  private void checkWhere(String tableName, @Nullable SDBLParser.SearchConditionsContext where) {
+      Optional.ofNullable(where)
+        .stream().flatMap(searchConditionsContext -> searchConditionsContext.condidions.stream())
+        .forEach(searchConditionContext -> checkStatements(tableName, searchConditionContext,
+          WHERE_STATEMENTS));
   }
 
   private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
@@ -298,11 +230,9 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(ctx -> ctx instanceof SDBLParser.DataSourceContext)
       .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext) ctx).joinPart().stream())
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
-      .map(SDBLParser.JoinPartContext::expression)
-//      .map(SDBLParser.JoinPartContext::joinExpression)
-      .forEach(joinExpressionContext -> checkStatements(tableName, joinExpressionContext, SDBLParser.RULE_statement,
-//      .forEach(joinExpressionContext -> checkStatements(tableName, joinExpressionContext, SDBLParser.RULE_joinStatement,
-        JOIN_STATEMENTS, JOIN_STATEMENTS_ROOT));
+      .map(SDBLParser.JoinPartContext::searchConditions)
+      .forEach(joinExpressionContext -> checkStatements(tableName, joinExpressionContext,
+        JOIN_STATEMENTS));
   }
 
   private List<DiagnosticRelatedInformation> getRelatedInformation(SDBLParser.JoinPartContext self) {
