@@ -1,8 +1,8 @@
 # Missing temporary storage data deletion after using (MissingTempStorageDeletion)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `3` | `standard`<br>`performance`<br>`badpractice` 
+|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
+|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `3`           |       `standard`<br>`performance`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

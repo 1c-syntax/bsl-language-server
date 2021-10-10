@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **153**
+Total: **154**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **49**
-* Code smell: **96**
+* Code smell: **97**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -101,6 +101,7 @@ Total: **153**
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
+ [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Missing temporary storage data deletion after using | Yes | Critical | Code smell | `standard`<br>`performance`<br>`badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 
  [MultilineStringInQuery](MultilineStringInQuery.md) | Multi-line literal in query | Yes | Critical | Error | `badpractice`<br>`suspicious`<br>`unpredictable` 
