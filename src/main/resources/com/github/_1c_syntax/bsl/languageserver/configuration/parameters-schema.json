@@ -629,13 +629,13 @@
             "$id": "#/definitions/ExtraCommas"
         },
         "FieldsFromJoinsWithoutIsNull": {
-            "description": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "description": "No NULL checks for fields from joined tables",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "title": "No NULL checks for fields from joined tables",
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
         },
         "ForbiddenMetadataName": {

@@ -1,4 +1,4 @@
-# Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL (FieldsFromJoinsWithoutIsNull)
+# No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
 
 |  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
 |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
