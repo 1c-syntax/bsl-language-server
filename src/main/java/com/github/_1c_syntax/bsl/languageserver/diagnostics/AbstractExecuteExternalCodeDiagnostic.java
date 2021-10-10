@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLKeywords;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 abstract class AbstractExecuteExternalCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern EVAL_METHOD_NAME = CaseInsensitivePattern.compile(
-    String.format("^(%s|%s)$", Keywords.EVAL_EN, Keywords.EVAL_RU));
+    String.format("^(%s|%s)$", BSLKeywords.EVAL_EN, BSLKeywords.EVAL_RU));
 
   @Override
   public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {

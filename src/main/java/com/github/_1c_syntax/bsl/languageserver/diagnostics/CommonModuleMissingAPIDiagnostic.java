@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLKeywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
@@ -54,10 +54,10 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
 
   private static Set<String> makeRegionsAPI() {
     Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    result.add(Keywords.PUBLIC_REGION_RU);
-    result.add(Keywords.PUBLIC_REGION_EN);
-    result.add(Keywords.INTERNAL_REGION_RU);
-    result.add(Keywords.INTERNAL_REGION_EN);
+    result.add(BSLKeywords.PUBLIC_REGION_RU);
+    result.add(BSLKeywords.PUBLIC_REGION_EN);
+    result.add(BSLKeywords.INTERNAL_REGION_RU);
+    result.add(BSLKeywords.INTERNAL_REGION_EN);
 
     return result;
   }

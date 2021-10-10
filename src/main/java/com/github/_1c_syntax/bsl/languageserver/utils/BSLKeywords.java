@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-public final class Keywords {
+public final class BSLKeywords {
   public static final String THEN_RU = "Тогда";
   public static final String THEN_UP_RU = "ТОГДА";
   public static final String THEN_EN = "Then";
@@ -274,7 +274,7 @@ public final class Keywords {
     "ОбработчикиСобытийЭлементовТаблицыФормы";
   public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN = "FormTableItemsEventHandlers";
 
-  private Keywords() {
+  private BSLKeywords() {
     // static utils
   }
 }
