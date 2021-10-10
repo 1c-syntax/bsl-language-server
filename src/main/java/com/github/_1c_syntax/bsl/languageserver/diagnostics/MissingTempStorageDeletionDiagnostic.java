@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.Nullable;
@@ -45,7 +44,8 @@ import java.util.regex.Pattern;
     DiagnosticTag.STANDARD,
     DiagnosticTag.PERFORMANCE,
     DiagnosticTag.BADPRACTICE
-  }
+  },
+  activatedByDefault = false
 )
 public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiagnostic {
 
@@ -56,8 +56,13 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     "удалитьизвременногохранилища|deletefromtempstorage"
   );
 
-  private @Nullable BSLParser.SubContext currentSub;
-  private @Nullable Lazy<List<? extends BSLParser.StatementContext> > statements;
+  private @Nullable
+  BSLParser.SubContext currentSub;
+  private List<? extends BSLParser.StatementContext> subStatements = Collections.emptyList();
+
+  private @Nullable
+  BSLParser.FileCodeBlockContext fileCodeBlock;
+  private List<? extends BSLParser.StatementContext> fileCodeBlockStatements = Collections.emptyList();
 
   public MissingTempStorageDeletionDiagnostic() {
     super(GET_FROM_TEMP_STORAGE_PATTERN);
@@ -70,16 +75,21 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    currentSub = null;
-    statements = null;
 
-    return super.visitFile(ctx);
+    final var result = super.visitFile(ctx);
+
+    currentSub = null;
+    fileCodeBlock = null;
+    subStatements.clear();
+    fileCodeBlockStatements.clear();
+
+    return result;
   }
 
   @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    fileCodeBlock = ctx;
     currentSub = null;
-    statements = null;
 
     return super.visitFileCodeBlock(ctx);
   }
@@ -87,7 +97,8 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     currentSub = ctx;
-    statements = null;
+    fileCodeBlock = null;
+    subStatements.clear();
 
     return super.visitSub(ctx);
   }
@@ -98,26 +109,42 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     return false;
   }
 
-  private void check(BSLParser.GlobalMethodCallContext ctx){
+  private void check(BSLParser.GlobalMethodCallContext ctx) {
 
-    // вне процедур нет смысла проверять получение из временного хранилища, т.к. такой код не имеет смысла
+    final var isInsideSub = currentSub != null;
+    final var isInsideFileCodeBlock = fileCodeBlock != null;
 
-    if (!super.checkGlobalMethodCall(ctx) || currentSub == null){
+    if (!super.checkGlobalMethodCall(ctx) || (!isInsideSub && !isInsideFileCodeBlock)) {
       return;
     }
     // чтобы не перевычислять, если в большом методе несколько вызовов ПолучитьИзВременногоХранилища
-    if (statements == null){
-      statements = new Lazy<>(this::calcSubStatements);
-    }
+    final var statements = getStatements(isInsideSub, isInsideFileCodeBlock);
     final var sourceCallContext = ctx.doCall();
 
     final var line = ctx.getStop().getLine();
-    final var haveRightCall = statements.getOrCompute().stream()
+    if (statements.stream()
       .filter(statement -> greaterOrEqual(statement, line))
-      .anyMatch(statement -> haveDeleteFromTempStorageCall(statement, sourceCallContext));
-    if (!haveRightCall){
+      .noneMatch(statement -> haveDeleteFromTempStorageCall(statement, sourceCallContext))) {
+
       diagnosticStorage.addDiagnostic(ctx);
     }
+  }
+
+  private List<? extends BSLParser.StatementContext> getStatements(boolean isInsideSub, boolean isInsideFileCodeBlock) {
+    if (isInsideSub) {
+      if (subStatements.isEmpty()) {
+        subStatements = calcSubStatements();
+      }
+      return subStatements;
+    }
+    if (isInsideFileCodeBlock) {
+      if (fileCodeBlockStatements.isEmpty()) {
+        fileCodeBlockStatements = calcFileCodeBlockStatements();
+      }
+      return fileCodeBlockStatements;
+    }
+
+    throw new IllegalStateException();
   }
 
   private List<? extends BSLParser.StatementContext> calcSubStatements() {
@@ -126,7 +153,7 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     }
     final BSLParser.SubCodeBlockContext subCodeBlock;
     BSLParser.ProcedureContext method = currentSub.procedure();
-    if (method == null){
+    if (method == null) {
       subCodeBlock = currentSub.function().subCodeBlock();
     } else {
       subCodeBlock = method.subCodeBlock();
@@ -134,15 +161,23 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     return subCodeBlock.codeBlock().statement();
   }
 
-  private boolean greaterOrEqual(BSLParser.StatementContext statement, int line) {
+  private List<? extends BSLParser.StatementContext> calcFileCodeBlockStatements() {
+    if (fileCodeBlock == null) {
+      return Collections.emptyList();
+    }
+    return fileCodeBlock.codeBlock().statement();
+  }
+
+  private static boolean greaterOrEqual(BSLParser.StatementContext statement, int line) {
     return statement.getStart().getLine() > line;
   }
 
-  private boolean haveDeleteFromTempStorageCall(BSLParser.StatementContext statement, BSLParser.DoCallContext sourceCallContext) {
+  private static boolean haveDeleteFromTempStorageCall(BSLParser.StatementContext statement,
+                                                       BSLParser.DoCallContext sourceCallCtx) {
     return Trees.findAllRuleNodes(statement, BSLParser.RULE_globalMethodCall).stream()
       .map(parseTree -> (BSLParser.GlobalMethodCallContext) parseTree)
       .filter(globalMethodCall -> DELETE_FROM_TEMP_STORAGE_PATTERN.matcher(globalMethodCall.methodName().getText())
         .matches())
-      .anyMatch(globalMethodCall -> DiagnosticHelper.equalNodes(sourceCallContext, globalMethodCall.doCall()));
+      .anyMatch(globalMethodCall -> DiagnosticHelper.equalNodes(sourceCallCtx, globalMethodCall.doCall()));
   }
 }
