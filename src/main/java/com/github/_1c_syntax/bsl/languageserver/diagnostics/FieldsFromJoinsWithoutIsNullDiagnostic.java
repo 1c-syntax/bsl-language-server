@@ -119,11 +119,11 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
 
   private static List<DataSourceContext> joinedDataSourceContext(JoinPartContext joinPartCtx) {
     final List<DataSourceContext> result;
-    if (joinPartCtx.LEFT_JOIN() != null) {
+    if (joinPartCtx.LEFT() != null) {
       result = Collections.singletonList(joinPartCtx.dataSource());
-    } else if (joinPartCtx.RIGHT_JOIN() != null) {
+    } else if (joinPartCtx.RIGHT() != null) {
       result = Collections.singletonList(((DataSourceContext) joinPartCtx.getParent()));
-    } else if (joinPartCtx.FULL_JOIN() != null) {
+    } else if (joinPartCtx.FULL() != null) {
       result = Arrays.asList(((DataSourceContext) joinPartCtx.getParent()),
         joinPartCtx.dataSource());
     } else {
