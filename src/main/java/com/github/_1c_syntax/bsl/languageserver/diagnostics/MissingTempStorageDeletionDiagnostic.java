@@ -32,8 +32,8 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -58,11 +58,11 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
 
   private @Nullable
   BSLParser.SubContext currentSub;
-  private List<? extends BSLParser.StatementContext> subStatements = Collections.emptyList();
+  private Collection<? extends ParseTree> subStatements = Collections.emptyList();
 
   private @Nullable
   BSLParser.FileCodeBlockContext fileCodeBlock;
-  private List<? extends BSLParser.StatementContext> fileCodeBlockStatements = Collections.emptyList();
+  private Collection<? extends ParseTree> fileCodeBlockStatements = Collections.emptyList();
 
   public MissingTempStorageDeletionDiagnostic() {
     super(GET_FROM_TEMP_STORAGE_PATTERN);
@@ -123,6 +123,8 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
 
     final var line = ctx.getStop().getLine();
     if (statements.stream()
+      .filter(BSLParser.StatementContext.class::isInstance)
+      .map( BSLParser.StatementContext.class::cast)
       .filter(statement -> greaterOrEqual(statement, line))
       .noneMatch(statement -> haveDeleteFromTempStorageCall(statement, sourceCallContext))) {
 
@@ -130,7 +132,7 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     }
   }
 
-  private List<? extends BSLParser.StatementContext> getStatements(boolean isInsideSub, boolean isInsideFileCodeBlock) {
+  private Collection<? extends ParseTree> getStatements(boolean isInsideSub, boolean isInsideFileCodeBlock) {
     if (isInsideSub) {
       if (subStatements.isEmpty()) {
         subStatements = calcSubStatements();
@@ -147,7 +149,7 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     throw new IllegalStateException();
   }
 
-  private List<? extends BSLParser.StatementContext> calcSubStatements() {
+  private Collection<? extends ParseTree> calcSubStatements() {
     if (currentSub == null) {
       return Collections.emptyList();
     }
@@ -158,14 +160,14 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     } else {
       subCodeBlock = method.subCodeBlock();
     }
-    return subCodeBlock.codeBlock().statement();
+    return Trees.findAllRuleNodes(subCodeBlock.codeBlock(), BSLParser.RULE_statement);
   }
 
-  private List<? extends BSLParser.StatementContext> calcFileCodeBlockStatements() {
+  private Collection<? extends ParseTree> calcFileCodeBlockStatements() {
     if (fileCodeBlock == null) {
       return Collections.emptyList();
     }
-    return fileCodeBlock.codeBlock().statement();
+    return Trees.findAllRuleNodes(fileCodeBlock.codeBlock(), BSLParser.RULE_statement);
   }
 
   private static boolean greaterOrEqual(BSLParser.StatementContext statement, int line) {
