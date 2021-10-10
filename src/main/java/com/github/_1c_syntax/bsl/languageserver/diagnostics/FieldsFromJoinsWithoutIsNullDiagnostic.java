@@ -177,13 +177,13 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   private void checkStatements(String tableName, BSLParserRuleContext expression, Collection<Integer> statements,
                                Integer rootForStatement) {
 
-    nodesForIssues.addAll(Optional.of(expression)
-      .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column).stream())
+    final var wrongNodes = Trees.findAllRuleNodes(expression, SDBLParser.RULE_column).stream()
       .filter(Objects::nonNull)
       .filter(ColumnContext.class::isInstance)
       .map(ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement))
-      .collect(Collectors.toList()));
+      .collect(Collectors.toList());
+    nodesForIssues.addAll(wrongNodes);
   }
 
   private static boolean checkColumn(String tableName, ColumnContext columnCtx,
