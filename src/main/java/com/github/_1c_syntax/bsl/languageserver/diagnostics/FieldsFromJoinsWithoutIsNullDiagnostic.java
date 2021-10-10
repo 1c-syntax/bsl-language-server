@@ -81,7 +81,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
 
   public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(RULE_searchCondition, RULE_query);
 
-  public static final int IS_NOT_NULL_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_WITH_PARENS_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_IS_NULL_EXPR_MEMBER_COUNT = 2;
 
@@ -90,19 +89,13 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   @Override
   public ParseTree visitJoinPart(JoinPartContext joinPartCtx) {
 
-    try {
-      joinedTables(joinPartCtx)
-        .forEach(tableName -> checkQuery(tableName, joinPartCtx));
+    joinedTables(joinPartCtx)
+      .forEach(tableName -> checkQuery(tableName, joinPartCtx));
 
-      if (!nodesForIssues.isEmpty()) {
-        diagnosticStorage.addDiagnostic(joinPartCtx, getRelatedInformation(joinPartCtx));
-      }
-
-    } catch (Exception e) {
+    if (!nodesForIssues.isEmpty()) {
+      diagnosticStorage.addDiagnostic(joinPartCtx, getRelatedInformation(joinPartCtx));
       nodesForIssues.clear();
-      throw e;
     }
-    nodesForIssues.clear();
 
     return super.visitJoinPart(joinPartCtx);
   }
@@ -154,12 +147,12 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private static boolean haveFirstIsThenNotThenNull(IsNullPredicateContext isNullPredicateContext) {
-    return isNullPredicateContext.getChildCount() == IS_NOT_NULL_EXPR_MEMBERS_COUNT;
+    return isNullPredicateContext.NOT() != null;
   }
 
   private static boolean haveExprNotIsNullInsideWhere(IsNullPredicateContext isNullPredicateCtx) {
     final var parent = (SearchConditionContext) isNullPredicateCtx.getParent();
-    if (parent.getChildCount() == NOT_IS_NULL_EXPR_MEMBER_COUNT && isTerminalNodeNOT(parent.getChild(0))) {
+    if (parent.getChildCount() == NOT_IS_NULL_EXPR_MEMBER_COUNT && parent.NOT() != null) {
       return true;
     }
     return haveExprNotWithParens(parent);
