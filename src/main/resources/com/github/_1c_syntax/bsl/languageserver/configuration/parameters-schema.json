@@ -628,6 +628,16 @@
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
         },
+        "FieldsFromJoinsWithoutIsNull": {
+            "description": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL",
+            "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
+        },
         "ForbiddenMetadataName": {
             "description": "Metadata object has a forbidden name",
             "default": true,

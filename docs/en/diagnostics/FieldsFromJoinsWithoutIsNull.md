@@ -1,8 +1,8 @@
 # Inaccurate use of fields from tables of left/right connections, without checking for NULL or casting to NULL (FieldsFromJoinsWithoutIsNull)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `2` | `sql`<br>`suspicious`<br>`unpredictable` 
+|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
+|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `2`           |       `sql`<br>`suspicious`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
