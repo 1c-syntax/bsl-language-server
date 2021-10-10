@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -48,13 +48,17 @@ public class ModuleSymbol implements SourceDefinedSymbol {
    * Имя символа.
    * <p>
    * Если у документа есть валидный mdoRef, то содержит его и (при необходимости) квалификатор в виде типа модуля
-   * ({@link com.github._1c_syntax.mdclasses.metadata.additional.ModuleType}).
+   * ({@link com.github._1c_syntax.mdclasses.mdo.support.ModuleType}).
    * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
    */
   String name;
   SymbolKind symbolKind;
   DocumentContext owner;
   Range range;
+  /**
+   * Область первого токена модуля
+   */
+  Range selectionRange;
 
   @Getter
   @Setter
@@ -68,11 +72,6 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitModule(this);
-  }
-
-  @Override
-  public Range getSelectionRange() {
-    return getRange();
   }
 
 }

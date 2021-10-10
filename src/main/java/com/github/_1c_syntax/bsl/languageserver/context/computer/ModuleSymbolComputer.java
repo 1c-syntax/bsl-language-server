@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.EnumSet;
@@ -49,17 +49,21 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
   @Override
   public ModuleSymbol compute() {
+    var firstRange = Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+      .orElseGet(Ranges::create); // используем нулевую область
+
     return ModuleSymbol.builder()
       .name(getName(documentContext))
       .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
+      .selectionRange(firstRange)
       .build();
   }
 
   private static String getName(DocumentContext documentContext) {
     String name = MdoRefBuilder.getMdoRef(documentContext);
-    ModuleType moduleType = documentContext.getModuleType();
+    var moduleType = documentContext.getModuleType();
     if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
       name += "." + moduleType.name();
     }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnMeasuresEnabled
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentContextLazyDataMeasurer {
 
   private final MeasureCollector measureCollector;
@@ -50,6 +52,8 @@ public class DocumentContextLazyDataMeasurer {
   @SneakyThrows
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
+
+    LOGGER.debug("Take measurements for {}", documentContext.getUri());
 
     measureCollector.measureIt(documentContext::getAst, "context: ast");
     measureCollector.measureIt(documentContext::getQueries, "context: queries");

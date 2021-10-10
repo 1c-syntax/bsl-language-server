@@ -1,45 +1,41 @@
 # IsInRole global method call (IsInRoleMethod)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `5` | `error` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
 To check access rights in the code, use the AccessRight method.
 
-When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method. If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call.
+When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method.
 
-If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.
-
+If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call. If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.
 ## Examples
-
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
+Wrong:
+```bsl
+If RolesAvailable("AddingChangingCountriesWorld") Then...
+If RolesAvailable("ViewPopularCountriesReport") Then ...
 ```
-Incorrect: If IsInRole("AddChangeWorldCountries") Then ... If IsInRole("ViewPopularCountriesReport") Then ...
+Correct:
+```bsl
+If AccessRight("Edit", Metadata.Catalogs.WorldCountries) Then ...
+If AccessRight("View", Metadata.Reports.PopularCountries) Then ...
 ```
-
+Wrong:
+```bsl
+If RolesAvailable("Treasurer") Then...
 ```
-Correct example: If AccessRight("Edit", Metadata.Catalogs.WorldCountries) Then ... If AccessRight("View", Metadata.Reports.PopularCountries) Then ...
+Сorrect:
+```bsl
+If IsInRole("Treasurer") OR PrivilegedMode() Then ...
 ```
-
-```
-Incorrect: If IsInRole("Paymaster") Then ...
-```
-
-```
-Correct example: If IsInRole("Paymaster") OR PrivilegedMode() Then ...
-```
-
 ## Sources
-
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-- [Standard: Checking access rights](https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights)
+* Standard: [Checking access rights](https://its.1c.ru/db/v8std#content:737:hdoc)
 
 ## Snippets
 

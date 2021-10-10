@@ -22,6 +22,7 @@
 Например, событие изменения `com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration` располагается в пакете `com.github._1c_syntax.bsl.languageserver.configuration.events` и называется `LanguageServerConfigurationChangedEvent`.
 
 В классе события рекомендуется:
+
 * объявлять конструктор, принимающий в себя "источник" события - объект, на котором сработало данное событие, и вызывающий `super`-конструктор;
 * переопределять метод `getSource`, возвращая `source`, приведенный к типу источника.
 

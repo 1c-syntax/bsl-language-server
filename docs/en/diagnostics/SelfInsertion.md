@@ -1,8 +1,8 @@
 # Insert a collection into itself (SelfInsertion)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `standard`<br>`unpredictable`<br>`performance` 
+|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `10`           |       `standard`<br>`unpredictable`<br>`performance`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

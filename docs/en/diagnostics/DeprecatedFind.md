@@ -1,8 +1,8 @@
 # Using of the deprecated method "Find" (DeprecatedFind)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Minor` | `Yes` | `2` | `deprecated` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
+| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `2`           | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,8 +17,10 @@ Incorrect:
 
 If Find(Employee.Name, "Boris") > 0 Then
 
-EndIf;
+EndIf; 
+
 ```
+
 
 Correct:
 
@@ -26,7 +28,8 @@ Correct:
 
 If StrFind(Employee.Name, "Boris") > 0 Then
 
-EndIf;
+EndIf; 
+
 ```
 
 ## Snippets

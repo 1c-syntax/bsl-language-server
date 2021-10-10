@@ -1,8 +1,8 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `15` | `standard` 
+|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `15`           | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -24,7 +24,7 @@ Procedure WriteDataToIB()
         CommitTransaction();
     Raise
         RollbackTransaction();
-        ... // additional operations to process the exception
+        ... // additional steps to handle the exception
     EndTry;
 
 EndProcedure
@@ -34,7 +34,7 @@ EndProcedure
 
 ```bsl
 Procedure WriteDataToIB()
- 
+
     StartTransaction();
     WriteDocument();
 
@@ -48,15 +48,16 @@ Procedure WriteDocument()
         CommitTransaction();
     Raise
         RollbackTransaction();
-        ... // additional operations to process the exception
+        ... // additional steps to handle the exception
     EndTry;
 
 EndProcedure
+
 ```
 
 ## Reference
 
-- [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
+* [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
 
 ## Snippets
 

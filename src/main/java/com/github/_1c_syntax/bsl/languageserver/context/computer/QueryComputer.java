@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,9 +37,6 @@ import java.util.regex.Pattern;
 
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
-  private final DocumentContext documentContext;
-  private final List<SDBLTokenizer> queries = new ArrayList<>();
-
   /**
    * Ключевые слова для поиска потенциально запросных строк
    */
@@ -66,6 +63,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
     "^\\s*(\")");
 
+  private final DocumentContext documentContext;
+  private final List<SDBLTokenizer> queries = new ArrayList<>();
+
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
   }
@@ -85,18 +85,18 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       return ctx;
     }
 
-    int startLine = 0;
+    var startLine = 0;
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
       startEmptyLines = "\n".repeat(startLine - 1);
     }
 
-    boolean isQuery = false;
+    var isQuery = false;
 
     // конкатенация строк в одну
     int prevTokenLine = -1;
-    String partString = "";
+    var partString = "";
     var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
 
@@ -109,7 +109,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
-        String newString = getString(startLine, token);
+        var newString = getString(startLine, token);
         partString = newString.substring(partString.length());
       } else {
         partString = getString(startLine, token);

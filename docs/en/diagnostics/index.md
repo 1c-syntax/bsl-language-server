@@ -8,19 +8,23 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **133**
+Total: **153**
 
 * Security Hotspot: **4**
-* Vulnerability: **3**
-* Error: **39**
-* Code smell: **87**
+* Vulnerability: **4**
+* Error: **49**
+* Code smell: **96**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
+ [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
+ [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
+ [BadWords](BadWords.md) | Prohibited words | No | Major | Code smell | `design` 
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
+ [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | Lines of code after the asynchronous method call | No | Major | Code smell | `suspicious` 
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` 
@@ -29,6 +33,7 @@ Total: **133**
  [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` 
  [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` 
  [CommonModuleInvalidType](CommonModuleInvalidType.md) | Common module invalid type | Yes | Major | Error | `standard`<br>`unpredictable`<br>`design` 
+ [CommonModuleMissingAPI](CommonModuleMissingAPI.md) | Common module should have a programming interface | Yes | Major | Code smell | `brainoverload`<br>`suspicious` 
  [CommonModuleNameCached](CommonModuleNameCached.md) | Missed postfix "Cached" | Yes | Major | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClient](CommonModuleNameClient.md) | Missed postfix "Client" | Yes | Minor | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Missed postfix "ClientServer" | Yes | Major | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
@@ -40,6 +45,7 @@ Total: **133**
  [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br>`unpredictable` 
  [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br>`standard`<br>`unpredictable` 
  [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Consecutive empty lines | Yes | Info | Code smell | `badpractice` 
+ [CrazyMultilineString](CrazyMultilineString.md) | Crazy multiline literals | Yes | Major | Code smell | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [CreateQueryInCycle](CreateQueryInCycle.md) | Execution query on cycle | Yes | Critical | Error | `performance` 
  [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` 
  [DataExchangeLoading](DataExchangeLoading.md) | There is no check for the attribute DataExchange.Load in the object's event handler | Yes | Critical | Error | `standard`<br>`badpractice`<br>`unpredictable` 
@@ -53,6 +59,7 @@ Total: **133**
  [DeprecatedMethods8317](DeprecatedMethods8317.md) | Using of deprecated platform 8.3.17 global methods | Yes | Info | Code smell | `deprecated` 
  [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm type | Yes | Info | Code smell | `standard`<br>`deprecated` 
  [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` 
+ [DuplicateStringLiteral](DuplicateStringLiteral.md) | Duplicate string literal | Yes | Minor | Code smell | `badpractice` 
  [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br>`suspicious` 
  [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` 
  [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` 
@@ -61,6 +68,7 @@ Total: **133**
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [ForbiddenMetadataName](ForbiddenMetadataName.md) | Metadata object has a forbidden name | Yes | Blocker | Error | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` 
@@ -74,6 +82,9 @@ Total: **133**
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` 
+ [IncorrectLineBreak](IncorrectLineBreak.md) | Incorrect expression line break | Yes | Info | Code smell | `standard`<br>`badpractice` 
+ [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Incorrect use of 'LIKE' | Yes | Major | Error | `standard`<br>`sql`<br>`unpredictable` 
+ [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Incorrect use of "StrTemplate" | Yes | Blocker | Error | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | IsInRole global method call | Yes | Major | Code smell | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Join with sub queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
@@ -90,9 +101,9 @@ Total: **133**
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
- [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Missing temporary storage data deletion after using | Yes | Critical | Code smell | `standard`<br>`performance`<br>`badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 
+ [MultilineStringInQuery](MultilineStringInQuery.md) | Multi-line literal in query | Yes | Critical | Error | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | There is a localized text for all languages declared in the configuration | Yes | Minor | Error | `error`<br>`localize` 
  [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Partially localized text is used in the StrTemplate function | Yes | Major | Error | `error`<br>`localize` 
  [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | Minor | Code smell | `badpractice`<br>`brainoverload` 
@@ -112,11 +123,16 @@ Total: **133**
  [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
+ [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
+ [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Same metadata object and child name | Yes | Critical | Error | `standard`<br>`sql`<br>`design` 
+ [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [ServerSideExportFormMethod](ServerSideExportFormMethod.md) | Server-side export form method | Yes | Blocker | Error | `error`<br>`unpredictable`<br>`suspicious` 
+ [SetPermissionsForNewObjects](SetPermissionsForNewObjects.md) | The check box «Set permissions for new objects» should only be selected for the FullAccess role | Yes | Critical | Vulnerability | `standard`<br>`badpractice`<br>`design` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 
  [StyleElementConstructors](StyleElementConstructors.md) | Style element constructor | Yes | Minor | Error | `standard`<br>`badpractice` 
@@ -143,11 +159,15 @@ Total: **133**
  [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Using hardcode ip addresses in code | Yes | Critical | Vulnerability | `standard` 
  [UsingHardcodePath](UsingHardcodePath.md) | Using hardcode file paths in code | Yes | Critical | Error | `standard` 
  [UsingHardcodeSecretInformation](UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes | Critical | Vulnerability | `standard` 
+ [UsingLikeInQuery](UsingLikeInQuery.md) | Using 'LIKE' in query | No | Major | Error | `sql`<br>`unpredictable` 
  [UsingModalWindows](UsingModalWindows.md) | Using modal windows | Yes | Major | Code smell | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Using unavailable in Unix objects | Yes | Critical | Error | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
- [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Critical | Error | `sql`<br>`standard`<br>`performance` 
+ [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Major | Error | `sql`<br>`standard`<br>`performance` 
+ [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | Form fields do not have a data path | Yes | Critical | Error | `unpredictable` 
+ [WrongMetadataInQuery](WrongMetadataInQuery.md) | Using non-existent metadata in the query | Yes | Blocker | Error | `suspicious`<br>`sql` 
+ [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 

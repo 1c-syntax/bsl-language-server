@@ -2,8 +2,60 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                },
+                "ignoreMissingElseOnExit": {
+                    "description": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
+        "AssignAliasFieldsInQuery": {
+            "description": "Assigning aliases to selected fields in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assigning aliases to selected fields in a query",
+            "$id": "#/definitions/AssignAliasFieldsInQuery"
+        },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -33,6 +85,16 @@
             ],
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
+        },
+        "CodeAfterAsyncCall": {
+            "description": "Lines of code after the asynchronous method call",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lines of code after the asynchronous method call",
+            "$id": "#/definitions/CodeAfterAsyncCall"
         },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
@@ -143,6 +205,16 @@
             ],
             "title": "Common module invalid type",
             "$id": "#/definitions/CommonModuleInvalidType"
+        },
+        "CommonModuleMissingAPI": {
+            "description": "Common module should have a programming interface",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module should have a programming interface",
+            "$id": "#/definitions/CommonModuleMissingAPI"
         },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
@@ -269,6 +341,16 @@
                 }
             },
             "$id": "#/definitions/ConsecutiveEmptyLines"
+        },
+        "CrazyMultilineString": {
+            "description": "Crazy multiline literals",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Crazy multiline literals",
+            "$id": "#/definitions/CrazyMultilineString"
         },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
@@ -422,6 +504,42 @@
             "title": "Duplicate regions",
             "$id": "#/definitions/DuplicateRegion"
         },
+        "DuplicateStringLiteral": {
+            "description": "Duplicate string literal",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate string literal",
+            "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
+                "allowedNumberCopies": {
+                    "description": "Allowed number of copies string literals",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Allowed number of copies string literals"
+                },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
+                "analyzeFile": {
+                    "description": "Analyze file",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Analyze file"
+                }
+            },
+            "$id": "#/definitions/DuplicateStringLiteral"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
@@ -509,6 +627,16 @@
             ],
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
+        },
+        "ForbiddenMetadataName": {
+            "description": "Metadata object has a forbidden name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object has a forbidden name",
+            "$id": "#/definitions/ForbiddenMetadataName"
         },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
@@ -612,6 +740,14 @@
                 "object"
             ],
             "title": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
+            "properties": {
+                "popularDivisors": {
+                    "description": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation",
+                    "default": "60, 1024",
+                    "type": "string",
+                    "title": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation"
+                }
+            },
             "$id": "#/definitions/IdenticalExpressions"
         },
         "IfConditionComplexity": {
@@ -661,6 +797,62 @@
             ],
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
+        },
+        "IncorrectLineBreak": {
+            "description": "Incorrect expression line break",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect expression line break",
+            "properties": {
+                "checkFirstSymbol": {
+                    "description": "Check beginning of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check beginning of line for invalid characters"
+                },
+                "checkLastSymbol": {
+                    "description": "Check end of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check end of line for invalid characters"
+                },
+                "listOfIncorrectLastSymbol": {
+                    "description": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)",
+                    "default": "\u0418\u041b\u0418|\u0418|OR|AND|\\+|-|/|%|\\*",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)"
+                },
+                "listOfIncorrectFirstSymbol": {
+                    "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
+                    "default": "\\)|;|,|\\);",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
+                }
+            },
+            "$id": "#/definitions/IncorrectLineBreak"
+        },
+        "IncorrectUseLikeInQuery": {
+            "description": "Incorrect use of 'LIKE'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of 'LIKE'",
+            "$id": "#/definitions/IncorrectUseLikeInQuery"
+        },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
         },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
@@ -716,6 +908,12 @@
                     "default": "\u0427\u0442\u0435\u043d\u0438\u0435XML, \u0427\u0442\u0435\u043d\u0438\u0435JSON, \u0417\u0430\u043f\u0438\u0441\u044cXML, \u0417\u0430\u043f\u0438\u0441\u044cJSON, Com\u041e\u0431\u044a\u0435\u043a\u0442, \u0424\u0430\u0431\u0440\u0438\u043a\u0430XDTO, \u041e\u0431\u044a\u0435\u043a\u0442XDTO, \u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435FTP, HTTP\u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435, HTTP\u0417\u0430\u043f\u0440\u043e\u0441, HTTP\u0421\u0435\u0440\u0432\u0438\u0441\u041e\u0442\u0432\u0435\u0442, SMS\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435, WS\u041f\u0440\u043e\u043a\u0441\u0438",
                     "type": "string",
                     "title": "A list of exclusion words, specified as a comma-separated string"
+                },
+                "allowTrailingPartsInAnotherLanguage": {
+                    "description": "Allow a name to start or end with a word in another language",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow a name to start or end with a word in another language"
                 }
             },
             "$id": "#/definitions/LatinAndCyrillicSymbolInWord"
@@ -734,6 +932,12 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -954,6 +1158,16 @@
             "title": "All variables declarations must have a description",
             "$id": "#/definitions/MissingVariablesDescription"
         },
+        "MultilineStringInQuery": {
+            "description": "Multi-line literal in query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Multi-line literal in query",
+            "$id": "#/definitions/MultilineStringInQuery"
+        },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
             "default": true,
@@ -1008,6 +1222,14 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
@@ -1200,6 +1422,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
@@ -1240,6 +1472,34 @@
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
         },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
+        "SelectTopWithoutOrderBy": {
+            "description": "Using 'SELECT TOP' without 'ORDER BY'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'SELECT TOP' without 'ORDER BY'",
+            "properties": {
+                "skipSelectTopOne": {
+                    "description": "Skip 'SELECT TOP 1' if there is 'WHERE'",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Skip 'SELECT TOP 1' if there is 'WHERE'"
+                }
+            },
+            "$id": "#/definitions/SelectTopWithoutOrderBy"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": true,
@@ -1270,6 +1530,34 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
+        "SetPermissionsForNewObjects": {
+            "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "properties": {
+                "namesFullAccessRole": {
+                    "description": "Name of the role with full rights",
+                    "default": "FullAccess,\u041f\u043e\u043b\u043d\u044b\u0435\u041f\u0440\u0430\u0432\u0430",
+                    "type": "string",
+                    "title": "Name of the role with full rights"
+                }
+            },
+            "$id": "#/definitions/SetPermissionsForNewObjects"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
@@ -1294,6 +1582,12 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -1466,6 +1760,14 @@
                 "object"
             ],
             "title": "Unused local method",
+            "properties": {
+                "attachableMethodPrefixes": {
+                    "description": "Method prefixes (comma separated)",
+                    "default": "\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0430\u0435\u043c\u044b\u0439_,attachable_",
+                    "type": "string",
+                    "title": "Method prefixes (comma separated)"
+                }
+            },
             "$id": "#/definitions/UnusedLocalMethod"
         },
         "UnusedParameters": {
@@ -1547,6 +1849,12 @@
             ],
             "title": "Using hardcode ip addresses in code",
             "properties": {
+                "searchPopularVersionExclusion": {
+                    "description": "Pattern to exclude popular versions from search",
+                    "default": "^(1|2|3|8\\.3|11)\\.",
+                    "type": "string",
+                    "title": "Pattern to exclude popular versions from search"
+                },
                 "searchWordsExclusion": {
                     "description": "Keywords to exclude from search",
                     "default": "\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver",
@@ -1591,6 +1899,16 @@
                 }
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"
+        },
+        "UsingLikeInQuery": {
+            "description": "Using 'LIKE' in query",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'LIKE' in query",
+            "$id": "#/definitions/UsingLikeInQuery"
         },
         "UsingModalWindows": {
             "description": "Using modal windows",
@@ -1667,6 +1985,36 @@
             ],
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
+        },
+        "WrongDataPathForFormElements": {
+            "description": "Form fields do not have a data path",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Form fields do not have a data path",
+            "$id": "#/definitions/WrongDataPathForFormElements"
+        },
+        "WrongMetadataInQuery": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/WrongMetadataInQuery"
+        },
+        "WrongUseFunctionProceedWithCall": {
+            "description": "Wrong use of ProceedWithCall function",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong use of ProceedWithCall function",
+            "$id": "#/definitions/WrongUseFunctionProceedWithCall"
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",

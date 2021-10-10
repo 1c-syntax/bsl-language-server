@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
+import org.eclipse.lsp4j.services.LanguageServer;
 
 /**
  * Сборник общих Pointcut для AOP-слоя.
@@ -37,6 +38,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver..*)")
   public void isBSLLanguageServerScope() {
+    // no-op
   }
 
   /**
@@ -44,6 +46,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration)")
   public void isLanguageServerConfiguration() {
+    // no-op
   }
 
   /**
@@ -51,6 +54,15 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.DocumentContext)")
   public void isDocumentContext() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к реализации {@link LanguageServer}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.LanguageServer+)")
+  public void isLanguageServer() {
+    // no-op
   }
 
   /**
@@ -58,6 +70,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
   public void isServerContext() {
+    // no-op
   }
 
   /**
@@ -65,6 +78,7 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic+)")
   public void isBSLDiagnostic() {
+    // no-op
   }
 
   /**
@@ -72,6 +86,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* rebuild(..))")
   public void isRebuildCall() {
+    // no-op
   }
 
   /**
@@ -79,6 +94,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* update(..))")
   public void isUpdateCall() {
+    // no-op
   }
 
   /**
@@ -86,6 +102,7 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* reset(..))")
   public void isResetCall() {
+    // no-op
   }
 
   /**
@@ -93,5 +110,14 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* getDiagnostics(..))")
   public void isGetDiagnosticsCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода initialize.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
+  public void isInitializeCall() {
+    // no-op
   }
 }

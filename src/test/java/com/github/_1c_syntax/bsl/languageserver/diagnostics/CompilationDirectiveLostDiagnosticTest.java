@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,7 +37,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   @Test
   void testFormModule() {
 
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);

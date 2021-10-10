@@ -1,8 +1,8 @@
 # Export methods in command and general command modules (CommandModuleExportMethods)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
+| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           |    `standard`<br>`clumsy`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -11,7 +11,7 @@ You should not place export methods in command and General command modules. You 
 
 ## Sources
 
-- [Source(RU)](https://its.1c.ru/db/v8std/content/544/hdoc)
+* [Source (RU)](https://its.1c.ru/db/v8std/content/544/hdoc)
 
 ## Snippets
 

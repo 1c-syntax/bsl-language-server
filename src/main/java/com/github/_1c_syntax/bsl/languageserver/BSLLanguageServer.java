@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,17 +26,31 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.ColorProviderOptions;
+import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
+import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
+import org.eclipse.lsp4j.DocumentSymbolOptions;
+import org.eclipse.lsp4j.FoldingRangeProviderOptions;
+import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.SaveOptions;
+import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.WorkspaceSymbolOptions;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -47,6 +61,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -57,6 +72,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private boolean shutdownWasCalled;
@@ -64,21 +80,29 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
+    clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    
     setConfigurationRoot(params);
     CompletableFuture.runAsync(context::populateContext);
 
-    ServerCapabilities capabilities = new ServerCapabilities();
+    var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
-    capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
-    capabilities.setDocumentFormattingProvider(Boolean.TRUE);
-    capabilities.setFoldingRangeProvider(Boolean.TRUE);
-    capabilities.setDocumentSymbolProvider(Boolean.TRUE);
-    capabilities.setCodeActionProvider(Boolean.TRUE);
-    capabilities.setCodeLensProvider(new CodeLensOptions());
-    capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
-    capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
+    capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
+    capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
+    capabilities.setFoldingRangeProvider(getFoldingRangeProvider());
+    capabilities.setDocumentSymbolProvider(getDocumentSymbolProvider());
+    capabilities.setCodeActionProvider(getCodeActionProvider());
+    capabilities.setCodeLensProvider(getCodeLensProvider());
+    capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
+    capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
+    capabilities.setHoverProvider(getHoverProvider());
+    capabilities.setReferencesProvider(getReferencesProvider());
+    capabilities.setDefinitionProvider(getDefinitionProvider());
+    capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
+    capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
+    capabilities.setColorProvider(getColorProvider());
 
-    InitializeResult result = new InitializeResult(capabilities, serverInfo);
+    var result = new InitializeResult(capabilities, serverInfo);
 
     return CompletableFuture.completedFuture(result);
   }
@@ -139,18 +163,114 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
-    TextDocumentSyncOptions textDocumentSync = new TextDocumentSyncOptions();
+    var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
     textDocumentSync.setChange(TextDocumentSyncKind.Full);
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
-    SaveOptions save = new SaveOptions();
+    var save = new SaveOptions();
     save.setIncludeText(Boolean.FALSE);
 
     textDocumentSync.setSave(save);
 
     return textDocumentSync;
+  }
+
+  private static CodeActionOptions getCodeActionProvider() {
+    var codeActionOptions = new CodeActionOptions();
+    codeActionOptions.setWorkDoneProgress(Boolean.FALSE);
+    codeActionOptions.setResolveProvider(Boolean.FALSE);
+
+    var codeActionKinds = List.of(
+      CodeActionKind.QuickFix,
+      CodeActionKind.Refactor
+    );
+
+    codeActionOptions.setCodeActionKinds(codeActionKinds);
+
+    return codeActionOptions;
+  }
+
+  private static DocumentSymbolOptions getDocumentSymbolProvider() {
+    var documentSymbolOptions = new DocumentSymbolOptions();
+    documentSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
+    documentSymbolOptions.setLabel(DocumentSymbolProvider.LABEL);
+    return documentSymbolOptions;
+  }
+
+  private static FoldingRangeProviderOptions getFoldingRangeProvider() {
+    var foldingRangeProviderOptions = new FoldingRangeProviderOptions();
+    foldingRangeProviderOptions.setWorkDoneProgress(Boolean.FALSE);
+
+    return foldingRangeProviderOptions;
+  }
+
+  private static DocumentFormattingOptions getDocumentFormattingProvider() {
+    var documentFormattingOptions = new DocumentFormattingOptions();
+    documentFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentFormattingOptions;
+  }
+
+  private static DocumentRangeFormattingOptions getDocumentRangeFormattingProvider() {
+    var documentRangeFormattingOptions = new DocumentRangeFormattingOptions();
+    documentRangeFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentRangeFormattingOptions;
+  }
+
+  private static CodeLensOptions getCodeLensProvider() {
+    var codeLensOptions = new CodeLensOptions();
+    codeLensOptions.setResolveProvider(Boolean.TRUE);
+    codeLensOptions.setWorkDoneProgress(Boolean.FALSE);
+    return codeLensOptions;
+  }
+
+  private static DocumentLinkOptions getDocumentLinkProvider() {
+    var documentLinkOptions = new DocumentLinkOptions();
+    documentLinkOptions.setResolveProvider(Boolean.FALSE);
+    return documentLinkOptions;
+  }
+
+  private static HoverOptions getHoverProvider() {
+    var hoverOptions = new HoverOptions();
+    hoverOptions.setWorkDoneProgress(Boolean.FALSE);
+    return hoverOptions;
+  }
+
+  private static DefinitionOptions getDefinitionProvider() {
+    var definitionOptions = new DefinitionOptions();
+    definitionOptions.setWorkDoneProgress(Boolean.FALSE);
+    return definitionOptions;
+  }
+
+  private static ReferenceOptions getReferencesProvider() {
+    var referenceOptions = new ReferenceOptions();
+    referenceOptions.setWorkDoneProgress(Boolean.FALSE);
+    return referenceOptions;
+  }
+
+  private static CallHierarchyRegistrationOptions getCallHierarchyProvider() {
+    var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
+    callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return callHierarchyRegistrationOptions;
+  }
+
+  private static WorkspaceSymbolOptions getWorkspaceProvider() {
+    var workspaceSymbolOptions = new WorkspaceSymbolOptions();
+    workspaceSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
+    return workspaceSymbolOptions;
+  }
+
+  private static SelectionRangeRegistrationOptions getSelectionRangeProvider() {
+    var selectionRangeRegistrationOptions = new SelectionRangeRegistrationOptions();
+    selectionRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return selectionRangeRegistrationOptions;
+  }
+
+  private static ColorProviderOptions getColorProvider() {
+    var colorProviderOptions = new ColorProviderOptions();
+    colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
+    return colorProviderOptions;
   }
 }

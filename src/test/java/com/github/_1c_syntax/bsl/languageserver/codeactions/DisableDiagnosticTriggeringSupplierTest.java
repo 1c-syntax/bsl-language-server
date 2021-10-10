@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -60,7 +60,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActions() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -94,7 +94,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsOneLine() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -133,7 +133,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsRegion() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -172,7 +172,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsEmptyFile() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
 
@@ -196,7 +196,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testNoBslLsDiagnostic() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
 

@@ -1,8 +1,10 @@
 {
   "language": "en",
   "codeLens": {
-    "showCognitiveComplexity": true,
-    "showCyclomaticComplexity": true
+    "parameters": {
+      "cognitiveComplexity": true,
+      "cyclomaticComplexity": true
+    }
   },
   "diagnostics": {
     "computeTrigger": "onType",
@@ -16,9 +18,7 @@
       "MethodSize": false
     }
   },
-  "documentLink": {
-    "useDevSite": true
-  },
+  "useDevSite": true,
   "traceLog": "build/.trace.log",
   "configurationRoot": "src/test/resources/metadata"
 }

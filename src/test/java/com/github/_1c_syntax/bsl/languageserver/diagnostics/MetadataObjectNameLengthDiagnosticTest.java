@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,7 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -34,10 +35,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -50,7 +53,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
-  private MDObjectBase module;
+  private AbstractMDObjectBase module;
   private DocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {
@@ -111,7 +114,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
   @ParameterizedTest
   @ValueSource(strings = {
-    "Catalogs/Справочник1/Ext/ObjectModule.bsl",
+    "Catalogs/Справочник1/Ext/ManagerModule.bsl",
     "Catalogs/Справочник1/Forms/ФормаВыбора/Ext/Form/Module.bsl",
     "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
   })
@@ -146,9 +149,44 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     assertThat(diagnostics).isEmpty();
   }
 
+  @Test
+  void testWithoutModules() {
+
+    initServerContext(PATH_TO_METADATA);
+
+    documentContext = spy(getDocumentContext());
+
+    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List.of("CommandGroup.ГруппаКоманд1",
+      "EventSubscription.ВерсионированиеПриЗаписи",
+      "Role.ПолныеПрава").forEach((String mdoName) -> {
+
+      var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
+        .filter(mdo -> mdo.getMdoReference().getMdoRef().equalsIgnoreCase(mdoName))
+        .findFirst()
+        .get());
+
+      // given
+      when(mdObjectBase.getName()).thenReturn(LONG_NAME);
+      children.add(mdObjectBase);
+    });
+
+    var configuration = spy(context.getConfiguration());
+    when(configuration.getChildren()).thenReturn(children);
+    var context = spy(documentContext.getServerContext());
+    when(context.getConfiguration()).thenReturn(configuration);
+    when(documentContext.getServerContext()).thenReturn(context);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // then
+    assertThat(diagnostics).hasSize(3);
+  }
+
   @SneakyThrows
   void getDocumentContextFromFile(String modulePath, String content) {
-
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
     documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));

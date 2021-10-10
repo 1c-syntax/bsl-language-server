@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,10 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.eclipse.lsp4j.Position;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -40,13 +39,12 @@ public class ReferenceResolver {
   /**
    * Список конкретных поисковых движков.
    */
-  @Setter(onMethod = @__({@Autowired}))
-  private List<ReferenceFinder> finders;
+  private final List<ReferenceFinder> finders;
 
   /**
    * Поиск символа по позиции курсора.
    *
-   * @param uri URI документа, в котором необходимо осуществить поиск.
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
    * @param position позиция курсора.
    * @return данные ссылки.
    */

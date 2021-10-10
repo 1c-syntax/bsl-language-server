@@ -1,21 +1,20 @@
 # Unused parameter (UnusedParameters)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `OS` | `Major` | `Yes` | `5` | `design`<br>`unused` 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags            |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------:|
+| `Code smell` | `OS`  | `Major`  |             `Yes`             |           `5`           |    `design`<br>`unused`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-
 Methods shouldn't contain unused parameters.
 
 ## Examples
 
 ```bsl
 Function AddTwoNumbers(Val FirstValue, Val SecondValue, Val UnusedParameter)
-    
+
     Return FirstValue + SecondValue;
-    
+
 EndFunction
 ```
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -105,7 +105,7 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotNull();
 
-    assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
+    assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
   }
@@ -154,8 +154,8 @@ class LanguageServerConfigurationTest {
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     // then
-    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
-    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+    assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
+    assertThat(codeLensOptions.getParameters()).containsEntry("cyclomaticComplexity", Either.forLeft(false));
 
     assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
 

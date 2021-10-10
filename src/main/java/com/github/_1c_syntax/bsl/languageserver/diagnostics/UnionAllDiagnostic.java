@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,7 +44,7 @@ public class UnionAllDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitUnion(SDBLParser.UnionContext ctx) {
-    if (ctx.ALL() != null) {
+    if (ctx.UNION() != null && ctx.ALL() != null) {
       return super.visitUnion(ctx);
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,35 +102,9 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return Optional.empty();
     }
 
-    String commentsText = comments.stream().map(Token::getText).reduce("", String::concat);
+    return Optional.of(new VariableDescription(comments, trailingComments));
 
-    var trailingDescription = trailingComments
-      .map(trailingComment -> VariableDescription.builder()
-        .description(trailingComment.getText())
-        .range(Ranges.create(trailingComment))
-        .build()
-      );
-
-    var description =
-      VariableDescription.builder()
-        .description(commentsText)
-        .range(getRangeForDescription(comments))
-        .trailingDescription(trailingDescription)
-        .build();
-
-    return Optional.of(description);
   }
 
-  private static Range getRangeForDescription(List<Token> tokens) {
-
-    if (tokens.isEmpty()) {
-      return null;
-    }
-
-    Token firstElement = tokens.get(0);
-    Token lastElement = tokens.get(tokens.size() - 1);
-
-    return Ranges.create(firstElement, lastElement);
-  }
 
 }

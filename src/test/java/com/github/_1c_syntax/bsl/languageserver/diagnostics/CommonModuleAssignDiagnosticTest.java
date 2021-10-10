@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -54,7 +54,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
     initServerContext(path);
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

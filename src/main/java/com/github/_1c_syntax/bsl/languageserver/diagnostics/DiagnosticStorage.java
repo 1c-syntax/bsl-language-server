@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticCodeDescription;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
@@ -193,6 +195,11 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
+
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     diagnosticList.add(createDiagnostic(
       diagnostic,
       range,
@@ -202,7 +209,7 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if(tree instanceof BSLParserRuleContext) {
+    if (tree instanceof BSLParserRuleContext) {
       addDiagnostic((BSLParserRuleContext) tree);
     } else if (tree instanceof TerminalNode) {
       addDiagnostic((TerminalNode) tree);
@@ -211,25 +218,40 @@ public class DiagnosticStorage {
     }
   }
 
+  /**
+   * Добавляет диагностику по ссылке на символ, используя в качестве области - область символа
+   *
+   * @param sourceDefinedSymbol ссылка на метод
+   */
+  protected void addDiagnostic(SourceDefinedSymbol sourceDefinedSymbol) {
+    addDiagnostic(sourceDefinedSymbol.getSelectionRange());
+  }
+
   private static Diagnostic createDiagnostic(
     BSLDiagnostic bslDiagnostic,
     Range range,
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
-    Diagnostic diagnostic = new Diagnostic(
+    var info = bslDiagnostic.getInfo();
+
+    var diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getInfo().getLSPSeverity(),
+      info.getLSPSeverity(),
       SOURCE
     );
 
-    diagnostic.setCode(bslDiagnostic.getInfo().getCode());
-    diagnostic.setTags(bslDiagnostic.getInfo().getLSPTags());
+    diagnostic.setCode(info.getCode());
+    diagnostic.setTags(info.getLSPTags());
+
+    var codeDescription = new DiagnosticCodeDescription(info.getDiagnosticCodeDescriptionHref());
+    diagnostic.setCodeDescription(codeDescription);
 
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);
     }
     return diagnostic;
   }
+
 }

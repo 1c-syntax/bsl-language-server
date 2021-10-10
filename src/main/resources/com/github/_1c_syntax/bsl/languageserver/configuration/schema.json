@@ -14,8 +14,8 @@
             "title": "Concrete diagnostic parameters' configuration.\nCan be boolean for turning on/off or object.",
             "default": true
         },
-        "parameters": {
-            "$id": "#/definitions/parameters",
+        "diagnosticParameters": {
+            "$id": "#/definitions/diagnosticParameters",
             "type": "object",
             "title": "Diagnostics parameters configuration.\nKey-value object, where key is a diagnosticCode, and value is boolean or object with concrete diagnostic configuration.",
             "default": null,
@@ -23,6 +23,12 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AllFunctionPathMustHaveReturn": {
+                    "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
+                },
+                "AssignAliasFieldsInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
@@ -31,6 +37,9 @@
                 },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
+                },
+                "CodeAfterAsyncCall": {
+                    "$ref": "parameters-schema.json#/definitions/CodeAfterAsyncCall"
                 },
                 "CodeBlockBeforeSub": {
                     "$ref": "parameters-schema.json#/definitions/CodeBlockBeforeSub"
@@ -55,6 +64,9 @@
                 },
                 "CommonModuleInvalidType": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
+                },
+                "CommonModuleMissingAPI": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleMissingAPI"
                 },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
@@ -88,6 +100,9 @@
                 },
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
+                },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
                 },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
@@ -191,6 +206,15 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectLineBreak": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectLineBreak"
+                },
+                "IncorrectUseLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
+                },
+                "IncorrectUseOfStrTemplate": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
@@ -247,6 +271,9 @@
                 },
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
+                },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
@@ -311,6 +338,9 @@
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
+                "SelectTopWithoutOrderBy": {
+                    "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
+                },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
                 },
@@ -319,6 +349,9 @@
                 },
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
+                },
+                "SetPermissionsForNewObjects": {
+                    "$ref": "parameters-schema.json#/definitions/SetPermissionsForNewObjects"
                 },
                 "SeveralCompilerDirectives": {
                     "$ref": "parameters-schema.json#/definitions/SeveralCompilerDirectives"
@@ -398,6 +431,9 @@
                 "UsingHardcodeSecretInformation": {
                     "$ref": "parameters-schema.json#/definitions/UsingHardcodeSecretInformation"
                 },
+                "UsingLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/UsingLikeInQuery"
+                },
                 "UsingModalWindows": {
                     "$ref": "parameters-schema.json#/definitions/UsingModalWindows"
                 },
@@ -416,11 +452,62 @@
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
+                "WrongDataPathForFormElements": {
+                    "$ref": "parameters-schema.json#/definitions/WrongDataPathForFormElements"
+                },
+                "WrongUseFunctionProceedWithCall": {
+                    "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
+                },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
                 },
                 "YoLetterUsage": {
                     "$ref": "parameters-schema.json#/definitions/YoLetterUsage"
+                }
+            }
+        },
+        "codeLensParameters": {
+            "$id": "#/definitions/codeLensParameters",
+            "type": "object",
+            "title": "CodeLenses parameters configuration.\nKey-value object, where key is a code lens ID, and value is boolean or object with concrete code lens configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": [
+                      "boolean",
+                      "object"
+                    ],
+                    "title": "Show cognitive complexity score above method definition.",
+                    "properties": {
+                      "complexityThreshold": {
+                        "description": "Complexity threshold to show the lens",
+                        "default": -1,
+                        "type": "integer",
+                        "title": "Complexity threshold to show the lens"
+                      }
+                    },
+                    "$id": "#/definitions/codeLensParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cyclomatic complexity score above method definition.",
+                    "properties": {
+                      "complexityThreshold": {
+                        "description": "Complexity threshold to show the lens",
+                        "default": -1,
+                        "type": "integer",
+                        "title": "Complexity threshold to show the lens"
+                      }
+                    },
+                    "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
         }
@@ -446,19 +533,9 @@
             "$id": "#/properties/codeLens",
             "type": "object",
             "title": "Code Lens configuration.",
-            "default": null,
             "properties": {
-                "showCognitiveComplexity": {
-                    "$id": "#/properties/showCognitiveComplexity",
-                    "type": "boolean",
-                    "title": "Show cognitive complexity score above method definition.",
-                    "default": true
-                },
-                "showCyclomaticComplexity": {
-                    "$id": "#/properties/showCyclomaticComplexity",
-                    "type": "boolean",
-                    "title": "Show cyclomatic complexity score above method definition.",
-                    "default": true
+                "parameters": {
+                    "$ref": "#/definitions/codeLensParameters"
                 }
             }
         },
@@ -466,19 +543,12 @@
             "$id": "#/properties/documentLink",
             "type": "object",
             "title": "Document link configuration.",
-            "default": null,
             "properties": {
-                "useDevSite": {
-                    "$id": "#/properties/useDevSite",
+                "showDiagnosticDescription": {
+                    "$id": "#/properties/showDiagnosticDescription",
                     "type": "boolean",
-                    "title": "Use develop version of site for documentation links.",
+                    "title": "Show additional links to diagnostics documentation.",
                     "default": false
-                },
-                "siteRoot": {
-                    "$id": "#/properties/siteRoot",
-                    "type": "string",
-                    "title": "Root URL for documentation links.",
-                    "default": "https://1c-syntax.github.io/bsl-language-server"
                 }
             }
         },
@@ -486,10 +556,9 @@
             "$id": "#/properties/diagnostics",
             "type": "object",
             "title": "Diagnostics configuration.",
-            "default": null,
             "properties": {
                 "parameters": {
-                    "$ref": "#/definitions/parameters"
+                    "$ref": "#/definitions/diagnosticParameters"
                 },
                 "computeTrigger": {
                     "$id": "#/properties/computeTrigger",
@@ -576,6 +645,18 @@
                     ]
                 }
             }
+        },
+        "useDevSite": {
+            "$id": "#/properties/useDevSite",
+            "type": "boolean",
+            "title": "Use develop version of site for documentation links.",
+            "default": false
+        },
+        "siteRoot": {
+            "$id": "#/properties/siteRoot",
+            "type": "string",
+            "title": "Root URL for documentation links.",
+            "default": "https://1c-syntax.github.io/bsl-language-server"
         },
         "traceLog": {
             "$id": "#/properties/traceLog",

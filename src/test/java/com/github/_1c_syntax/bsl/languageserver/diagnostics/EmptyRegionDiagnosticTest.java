@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
   @Test
   void testQuickFix() {
 
-    final DocumentContext documentContext = getDocumentContext();
+    final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic externalRegionDiagnostic = diagnostics.get(2);
     final Diagnostic internalRegionDiagnostic = diagnostics.get(1);

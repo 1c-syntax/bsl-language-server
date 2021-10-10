@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.spy;
@@ -37,7 +37,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test832() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 
@@ -49,7 +49,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test833() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);
@@ -61,7 +61,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test836() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
+    var documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);

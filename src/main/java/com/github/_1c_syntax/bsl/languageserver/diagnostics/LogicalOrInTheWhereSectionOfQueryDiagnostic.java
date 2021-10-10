@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,10 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -43,18 +44,27 @@ import org.antlr.v4.runtime.tree.TerminalNode;
   },
   scope = DiagnosticScope.BSL
 )
-public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLListenerDiagnostic {
+
+  private final Set<ParseTree> ors = new HashSet<>();
 
   @Override
-  public ParseTree visitBoolOperation(SDBLParser.BoolOperationContext ctx) {
+  public void enterQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    ors.clear();
+    super.enterQueryPackage(ctx);
+  }
 
-    TerminalNode orNode = ctx.OR();
-    if (orNode != null) {
-      BSLParserRuleContext whereCtx = Trees.getRootParent(ctx, SDBLParser.RULE_where);
-      if (whereCtx != null) {
-        diagnosticStorage.addDiagnostic(orNode);
-      }
+  @Override
+  public void exitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    ors.forEach(diagnosticStorage::addDiagnostic);
+    super.exitQueryPackage(ctx);
+  }
+
+  @Override
+  public void exitQuery(SDBLParser.QueryContext ctx) {
+    if (ctx.where != null) {
+      ors.addAll(new HashSet<>(Trees.findAllTokenNodes(ctx.where, SDBLParser.OR)));
     }
-    return super.visitBoolOperation(ctx);
+    super.exitQuery(ctx);
   }
 }

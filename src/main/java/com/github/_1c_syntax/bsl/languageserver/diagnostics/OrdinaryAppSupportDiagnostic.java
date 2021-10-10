@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,8 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
@@ -58,14 +57,15 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(this::checkProperties);
-
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (!Ranges.isEmpty(range)) {
+      checkProperties(range);
+    }
   }
 
   private void checkProperties(Range range) {
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
+    var configuration = documentContext.getServerContext().getConfiguration();
     if (!configuration.isUseManagedFormInOrdinaryApplication()) {
       diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
     }

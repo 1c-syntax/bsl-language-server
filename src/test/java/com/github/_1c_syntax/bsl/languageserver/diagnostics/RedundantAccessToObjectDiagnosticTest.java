@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -72,7 +72,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(75, 4, 75, 21);
+      .hasRange(78, 4, 78, 21);
   }
 
   @SneakyThrows

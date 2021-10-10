@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,11 +38,13 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -87,6 +89,9 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
+  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+  private boolean useDevSite;
+
   @Nullable
   private File traceLog;
 
@@ -95,34 +100,37 @@ public class LanguageServerConfiguration {
 
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)
-  private File configurationFile = new File(".bsl-language-server.json");
+  private File configurationFile;
+
+  @Value("${app.configuration.path}")
+  @JsonIgnore
+  private String configurationFilePath;
+
+  @Value(("${app.globalConfiguration.path}"))
+  @JsonIgnore
+  private String globalConfigPath;
+
+  @PostConstruct
+  private void init() {
+    configurationFile = new File(configurationFilePath);
+    if (configurationFile.exists()) {
+      loadConfigurationFile(configurationFile);
+      return;
+    }
+    var configuration = new File(globalConfigPath);
+    if (configuration.exists()) {
+      loadConfigurationFile(configuration);
+    }
+  }
 
   public void update(File configurationFile) {
-    if (!configurationFile.exists()) {
-      return;
-    }
-
-    LanguageServerConfiguration configuration;
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-    try {
-      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-    } catch (IOException e) {
-      LOGGER.error("Can't deserialize configuration file", e);
-      return;
-    }
-
-    this.configurationFile = configurationFile;
-
-    copyPropertiesFrom(configuration);
+    loadConfigurationFile(configurationFile);
   }
 
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
   }
-  
+
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
@@ -173,6 +181,28 @@ public class LanguageServerConfiguration {
       configurationFile = listPath.get(0).toFile();
     }
     return configurationFile;
+  }
+
+  private void loadConfigurationFile(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
+    }
+
+    LanguageServerConfiguration configuration;
+
+    var mapper = new ObjectMapper();
+    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
+    }
+
+    this.configurationFile = configurationFile;
+
+    copyPropertiesFrom(configuration);
   }
 
   @SneakyThrows

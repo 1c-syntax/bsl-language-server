@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,7 +41,7 @@ class DiagnosticIgnoranceComputerTest {
 
     // given
     String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
-    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
+    final var documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 

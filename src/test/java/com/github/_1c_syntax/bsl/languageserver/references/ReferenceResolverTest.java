@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,8 +90,7 @@ class ReferenceResolverTest {
       ReferenceFinder zeroLineReferenceFinder,
       ReferenceFinder firstLineReferenceFinder
     ) {
-      var referenceResolver = new ReferenceResolver();
-      referenceResolver.setFinders(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
+      var referenceResolver = new ReferenceResolver(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
       return referenceResolver;
     }
 

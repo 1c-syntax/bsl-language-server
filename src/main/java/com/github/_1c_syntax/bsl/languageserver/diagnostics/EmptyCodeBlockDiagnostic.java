@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,7 +33,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
-import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,7 +73,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
+      var rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
         Ranges.containsRange(
           rangeCodeBlock,
@@ -86,7 +85,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     int lineOfStop = ctx.getStop().getLine();
 
     List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
-      .filter(node -> node instanceof TerminalNode)
+      .filter(TerminalNode.class::isInstance)
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
       .collect(Collectors.toList());
 

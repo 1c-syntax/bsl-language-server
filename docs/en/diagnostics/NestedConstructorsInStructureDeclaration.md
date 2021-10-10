@@ -1,8 +1,8 @@
 # Nested constructors with parameters in structure declaration (NestedConstructorsInStructureDeclaration)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `10` | `badpractice`<br>`brainoverload` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `10`           |    `badpractice`<br>`brainoverload`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -11,31 +11,29 @@ It is not recommended to use constructors of other objects in the structure cons
 
 ## Examples
 
-Incorrect:
+Incorrect
 
 ```bsl
-НоменклатураСервер.ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции(
-  Объект.Товары,
-  Новый Структура(
-  "ЗаполнитьПризнакХарактеристикиИспользуются,
-  |ЗаполнитьПризнакТипНоменклатуры, ЗаполнитьПризнакВариантОформленияПродажи",
-   Новый Структура("Номенклатура", "ХарактеристикиИспользуются"),
-   Новый Структура("Номенклатура", "ТипНоменклатуры"),
-   Новый Структура("Номенклатура", "ВариантОформленияПродажи")
+GoodsServer.MakeGoods(
+  Object.Products,
+  New Structure(
+  "CharacteristicsUsed,
+  |Type, Variant",
+   New Structure("Good", "CharacteristicsUsed"),
+   New Structure("Good", "Type"),
+   New Structure("Good", "Variant")
   )
  );
 ```
 
-Correct:
+Correct
 
 ```bsl
-ПараметрыЗаполненияРеквизитов = Новый Структура;
-ПараметрыЗаполненияРеквизитов.Вставить("ЗаполнитьПризнакХарактеристикиИспользуются",
-                                                          Новый Структура("Номенклатура", "ХарактеристикиИспользуются"));
-ПараметрыЗаполненияРеквизитов.Вставить("ЗаполнитьПризнакТипНоменклатуры",
-                                                          Новый Структура("Номенклатура", "ТипНоменклатуры"));
-НоменклатураСервер.ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции(Объект.Товары,
-                                                          ПараметрыЗаполненияРеквизитов);
+Parameters = New Structure;
+Parameters.Вставить("CharacteristicsUsed", New Structure("Good", "CharacteristicsUsed"));
+Parameters.Вставить("Type",                New Structure("Good", "Type"));
+Parameters.Вставить("Variant",             New Structure("Good", "Variant"));
+GoodsServer.MakeGoods(Object.Products,     Parameters);
 ```
 
 ## Snippets

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -38,12 +37,6 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
 
   TypoDiagnosticTest() {
     super(TypoDiagnostic.class);
-  }
-
-  @BeforeEach
-  void resetJLanguageToolPool() {
-    var lang = diagnosticInstance.getInfo().getResourceString("diagnosticLanguage");
-    diagnosticInstance.acquireLanguageTool(lang).getLanguageTool("Ы");
   }
 
   @Test

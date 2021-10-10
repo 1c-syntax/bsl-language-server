@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -40,12 +40,12 @@ class JoinWithSubQueryDiagnosticTest extends AbstractDiagnosticTest<JoinWithSubQ
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(3, 84, 162)
-      .hasRange(12, 5, 83)
-      .hasRange(22, 5, 83)
-      .hasRange(31, 9, 87)
-      .hasRange(33, 5, 83)
-      .hasRange(48, 7, 85)
-      .hasRange(67, 7, 68, 31);
+      .hasRange(3, 85, 161)
+      .hasRange(12, 6, 82)
+      .hasRange(22, 6, 82)
+      .hasRange(31, 10, 86)
+      .hasRange(33, 6, 82)
+      .hasRange(48, 8, 84)
+      .hasRange(67, 8, 68, 30);
   }
 }

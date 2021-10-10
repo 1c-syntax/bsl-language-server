@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,11 +30,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -84,10 +84,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     }
   }
 
-  private static String getVariableName(BSLParser.StatementContext statement) {
-    String variableName = "";
+  private static String getVariableName(@CheckForNull BSLParser.StatementContext statement) {
+    var variableName = "";
     if (statement != null && statement.assignment() != null) {
-      BSLParser.LValueContext lValueContext = statement.assignment().lValue();
+      var lValueContext = statement.assignment().lValue();
       if (lValueContext != null) {
         variableName = lValueContext.getStart().getText();
       }
@@ -96,7 +96,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   }
 
   private boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
-    BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
+    var typeNameContext = newExpression.typeName();
     if (typeNameContext == null) {
       return false;
     }
@@ -124,7 +124,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   }
 
   private boolean checkTimeoutIntoParamList(BSLParser.NewExpressionContext newExpression, AtomicBoolean isContact) {
-    BSLParser.DoCallContext doCallContext = newExpression.doCall();
+    var doCallContext = newExpression.doCall();
     if (doCallContext == null) {
       return true;
     }
@@ -145,10 +145,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       return true;
     }
 
-    boolean needContinue = true;
+    var needContinue = true;
     BSLParser.ExpressionContext expression = listParams.get(numberTimeout).expression();
     if (expression != null && !expression.member().isEmpty()) {
-      BSLParser.MemberContext memberContext = expression.member(0);
+      var memberContext = expression.member(0);
       if (isNumberOrVariable(memberContext)) {
         needContinue = false;
         isContact.set(false);
@@ -159,15 +159,14 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   }
 
   private static void checkNextStatement(
-    Collection<ParseTree> listNextStatements,
+    Collection<BSLParser.StatementContext> listNextStatements,
     String variableName,
     AtomicBoolean isContact
   ) {
-    listNextStatements.forEach((ParseTree element) -> {
-      BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
+    listNextStatements.forEach((BSLParser.StatementContext localStatement) -> {
       String thisVariableName = getVariableName(localStatement);
       if (thisVariableName.equalsIgnoreCase(variableName)
-        && isTimeoutModifer(localStatement)
+        && isTimeoutModifier(localStatement)
         && isNumberOrVariable(localStatement.assignment().expression().member(0))) {
 
         isContact.set(false);
@@ -176,9 +175,9 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     });
   }
 
-  private static boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
+  private static boolean isTimeoutModifier(BSLParser.StatementContext localStatement) {
 
-    BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
+    var assignmentContext = localStatement.assignment();
     if (assignmentContext == null) {
       return false;
     }
@@ -204,33 +203,35 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
-    Collection<ParseTree> list = Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
-    list.forEach((ParseTree e) -> {
-      AtomicBoolean isContact = new AtomicBoolean(true);
-      BSLParser.NewExpressionContext newExpression = (BSLParser.NewExpressionContext) e;
-      if (isSpecificTypeName(newExpression)) {
-        if (checkTimeoutIntoParamList(newExpression, isContact)) {
-          BSLParser.StatementContext statementContext = (BSLParser.StatementContext)
-            Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
-          String variableName = getVariableName(statementContext);
-          int filterLine = newExpression.getStart().getLine();
-          Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
-            .stream()
-            .filter(node -> ((BSLParser.StatementContext) node).getStart().getLine() > filterLine)
-            .collect(Collectors.toList());
-          checkNextStatement(listNextStatements, variableName, isContact);
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression).stream()
+      .map(BSLParser.NewExpressionContext.class::cast)
+      .forEach((BSLParser.NewExpressionContext newExpression) -> {
+        var isContact = new AtomicBoolean(true);
+        if (isSpecificTypeName(newExpression)) {
+          if (checkTimeoutIntoParamList(newExpression, isContact)) {
+            var statementContext = (BSLParser.StatementContext)
+              Trees.getAncestorByRuleIndex(newExpression, BSLParser.RULE_statement);
+            String variableName = getVariableName(statementContext);
+            int filterLine = newExpression.getStart().getLine();
+            Collection<BSLParser.StatementContext> listNextStatements =
+              Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+                .stream()
+                .map(node -> (BSLParser.StatementContext) node)
+                .filter(node -> node.getStart().getLine() > filterLine)
+                .collect(Collectors.toList());
+            checkNextStatement(listNextStatements, variableName, isContact);
+          }
+          if (isContact.get()) {
+            diagnosticStorage.addDiagnostic(newExpression, info.getMessage());
+          }
         }
-        if (isContact.get()) {
-          diagnosticStorage.addDiagnostic(newExpression, info.getMessage());
-        }
-      }
-    });
+      });
     return ctx;
   }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    CompatibilityMode diagnosticCompatibility = documentContext
+    var diagnosticCompatibility = documentContext
       .getServerContext()
       .getConfiguration()
       .getCompatibilityMode();

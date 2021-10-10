@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,7 +46,7 @@ class DocumentSymbolProviderTest {
   @Test
   void testDocumentSymbol() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
 

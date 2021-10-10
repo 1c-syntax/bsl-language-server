@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -101,7 +101,7 @@ public class FormatCommand implements Callable<Integer> {
 
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      LOGGER.error("Source dir `{}` is not exists", srcDir);
       return 1;
     }
 
@@ -137,7 +137,7 @@ public class FormatCommand implements Callable<Integer> {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final URI uri = file.toURI();
 
-    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
+    var documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();

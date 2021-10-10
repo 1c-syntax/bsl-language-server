@@ -1,14 +1,13 @@
 # One statement per line (OneStatementPerLine)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `2` | `standard`<br>`design` 
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `2`           |    `standard`<br>`design`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Code should follow principles "one statement per line". Several statements are acceptable in case of same-type assignment operators.
-For example:
+Module texts are formatted according to the "one statement in one line" principle. Several statements are acceptable in case of same-type assignment operators. For example:
 
 `StartIndex = 0; Index = 0; Result = 0;`
 

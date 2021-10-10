@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -42,7 +42,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements SourceDefinedSymbol {
+public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;

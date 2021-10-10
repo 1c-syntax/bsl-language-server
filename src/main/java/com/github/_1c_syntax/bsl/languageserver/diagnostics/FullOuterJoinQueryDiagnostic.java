@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -46,8 +45,8 @@ public class FullOuterJoinQueryDiagnostic extends AbstractSDBLVisitorDiagnostic 
 
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    if (ctx.FULL() != null) {
-      diagnosticStorage.addDiagnostic(ctx.FULL());
+    if (ctx.FULL() != null && ctx.JOIN() != null) {
+      diagnosticStorage.addDiagnostic(ctx.FULL(), ctx.JOIN());
     }
 
     return super.visitJoinPart(ctx);

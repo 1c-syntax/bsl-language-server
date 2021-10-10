@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,7 +34,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -135,34 +134,51 @@ public final class FormatProvider {
     FormattingOptions options
   ) {
 
-    if (tokens.isEmpty()) {
+    String newText = getNewText(tokens, range, startCharacter, options);
+
+    if (newText.isEmpty()) {
       return Collections.emptyList();
+    }
+
+    var edit = new TextEdit(range, newText);
+
+    return List.of(edit);
+
+  }
+
+  public static String getNewText(
+    List<Token> tokens,
+    Range range,
+    int startCharacter,
+    FormattingOptions options
+  ) {
+
+    if (tokens.isEmpty()) {
+      return "";
     }
 
     List<Token> filteredTokens = filteredTokens(tokens);
     if (filteredTokens.isEmpty()) {
-      return Collections.emptyList();
+      return "";
     }
-
-    List<TextEdit> edits = new ArrayList<>();
 
     int tabSize = options.getTabSize();
     boolean insertSpaces = options.isInsertSpaces();
 
-    StringBuilder newTextBuilder = new StringBuilder();
+    var newTextBuilder = new StringBuilder();
 
-    Token firstToken = filteredTokens.get(0);
+    var firstToken = filteredTokens.get(0);
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
     int additionalIndentLevel = -1;
-    boolean inMethodDefinition = false;
-    boolean insideOperator = false;
-    boolean parameterDeclarationMode = false;
+    var inMethodDefinition = false;
+    var insideOperator = false;
+    var parameterDeclarationMode = false;
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
-    boolean previousIsUnary = false;
+    var previousIsUnary = false;
 
     for (Token token : filteredTokens) {
       int tokenType = token.getType();
@@ -200,7 +216,7 @@ public final class FormatProvider {
 
       // Add indentation before token lines
       if (needNewLine) {
-        String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
+        var currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine - 1));
       }
 
@@ -220,7 +236,7 @@ public final class FormatProvider {
       if (token.equals(firstToken)) {
         newTextBuilder.append(StringUtils.repeat(indentation, currentIndentLevel));
       } else if (needNewLine) {
-        String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
+        var currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append("\n");
         newTextBuilder.append(currentIndentation);
       } else if (needAddSpace(tokenType, previousTokenType, previousIsUnary)) {
@@ -230,7 +246,7 @@ public final class FormatProvider {
       }
 
       String addedText = token.getText();
-      if (tokenType == BSLLexer.LINE_COMMENT || tokenType == BSLLexer.PREPROC_LINE_COMMENT) {
+      if (tokenType == BSLLexer.LINE_COMMENT) {
         addedText = addedText.trim();
       }
       newTextBuilder.append(addedText);
@@ -261,27 +277,23 @@ public final class FormatProvider {
       previousTokenType = tokenType;
     }
 
-    Token lastToken = tokens.get(tokens.size() - 1);
+    var lastToken = tokens.get(tokens.size() - 1);
     if (lastToken.getText().endsWith("\n") || lastToken.getText().endsWith("\r")) {
       newTextBuilder.append("\n");
 
       if (range.getEnd().getCharacter() != 0) {
-        String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
+        var currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append(currentIndentation);
       }
     }
 
-    TextEdit edit = new TextEdit(range, newTextBuilder.toString());
-    edits.add(edit);
-
-    return edits;
+    return newTextBuilder.toString();
   }
 
   private static List<Token> filteredTokens(List<Token> tokens) {
     return tokens.stream()
       .filter(token -> token.getChannel() == Token.DEFAULT_CHANNEL
-        || token.getType() == BSLLexer.LINE_COMMENT
-        || token.getType() == BSLLexer.PREPROC_LINE_COMMENT)
+        || token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
   }
 

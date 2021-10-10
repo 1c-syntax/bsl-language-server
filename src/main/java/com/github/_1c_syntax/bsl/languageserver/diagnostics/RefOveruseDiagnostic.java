@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2021
+ * Copyright (c) 2018-2021
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -60,22 +60,19 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
 
-    if (columnsCollection.isEmpty()) {
+    if (columnsCollection.isEmpty()
+      || dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
       return ctx;
     }
 
-    if (dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
+    if (dataSourceCollection.isEmpty()) {
+      performSimpleCheck(columnsCollection);
       return ctx;
     }
 
     var tableNames = dataSourceCollection.stream()
       .map(RefOveruseDiagnostic::getTableNameOrAlias)
       .collect(Collectors.toSet());
-
-    if (dataSourceCollection.isEmpty()) {
-      performSimpleCheck(columnsCollection);
-      return ctx;
-    }
 
     columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
     return ctx;
@@ -102,24 +99,33 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return;
     }
 
-    var lastChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 1));
-    var penultimateChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 3));
+    // children:
+    //
+    // Контрагент.Ссылка.ЮрФизЛицо
+    //     ^     ^   ^  ^    ^
+    //     0     1   2  3    4
+    //
+    // Контрагент.ЮрФизЛицо
+    //     ^     ^    ^
+    //     0     1    2
 
-    if (lastChild != penultimateChild
-      && lastChild instanceof SDBLParser.IdentifierContext
-      && penultimateChild instanceof SDBLParser.IdentifierContext) {
+    final int childCount = ctx.children.size();
 
-      performCheck(ctx, (SDBLParser.IdentifierContext) lastChild,
-        (SDBLParser.IdentifierContext) penultimateChild, tableNames);
+    if (childCount < 3) {
+      return;
     }
 
-  }
+    var lastChild = ctx.getChild(childCount - 1);
+    // dots are also children of ColumnContext,
+    // that is why -3 must be an index of penultimate identifier
+    var penultimateChild = ctx.getChild(childCount - 3);
 
-  private void performCheck(SDBLParser.ColumnContext ctx, SDBLParser.IdentifierContext lastChild,
-                            SDBLParser.IdentifierContext penultimateChild, Set<String> tableNames) {
+    String lastIdentifierName = lastChild.getText();
+    String penultimateIdentifierName = penultimateChild.getText();
 
-    if (!tableNames.contains(penultimateChild.getText()) &&
-      REF_PATTERN.matcher(lastChild.getText()).matches()) {
+    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()
+      || (REF_PATTERN.matcher(lastIdentifierName).matches()
+      && !tableNames.contains(penultimateIdentifierName))) {
       diagnosticStorage.addDiagnostic(ctx);
     }
   }
@@ -140,5 +146,4 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .flatMap(child -> Trees.getFirstChild(child, SDBLParser.RULE_identifier))
       .map(BSLParserRuleContext::getText);
   }
-
 }
