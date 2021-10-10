@@ -19,27 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Position;
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
+import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.util.Optional;
 
 /**
- * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
+ * Месторасположение появления символа.
  */
-@Component
-@RequiredArgsConstructor
-public class ReferenceIndexReferenceFinder implements ReferenceFinder {
+@Value
+@AllArgsConstructor
+@Builder
+public class Location {
 
-  private final ReferenceIndex referenceIndex;
+  /**
+   * URI файла, в котором расположен символ.
+   */
+  URI uri;
 
-  @Override
-  public Optional<Reference> findReference(URI uri, Position position) {
-    return referenceIndex.getReference(uri, position);
-  }
+  /**
+   * Диапазон, в котором расположен символ.
+   */
+  Range range;
+
 }
