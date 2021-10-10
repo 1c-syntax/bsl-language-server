@@ -1986,15 +1986,15 @@
             "title": "Form fields do not have a data path",
             "$id": "#/definitions/WrongDataPathForFormElements"
         },
-        "WrongHttpServiceHandler": {
-            "description": "Missing handler for http service",
+        "WrongMetadataInQuery": {
+            "description": "Using non-existent metadata in the query",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing handler for http service",
-            "$id": "#/definitions/WrongHttpServiceHandler"
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/WrongMetadataInQuery"
         },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
@@ -2015,16 +2015,6 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
-        },
-        "WrongWebServiceHandler": {
-            "description": "Wrong handler for web service",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Wrong handler for web service",
-            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",
