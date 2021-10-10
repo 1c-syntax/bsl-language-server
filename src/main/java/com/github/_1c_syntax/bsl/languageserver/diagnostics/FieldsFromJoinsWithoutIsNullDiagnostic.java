@@ -42,7 +42,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +53,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_expression;
+import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_builtInFunctions;
 import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_query;
 import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_searchCondition;
 
@@ -69,21 +71,21 @@ import static com.github._1c_syntax.bsl.parser.SDBLParser.RULE_searchCondition;
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
-  private static final Set<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, RULE_expression);
+  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, RULE_builtInFunctions);
 
   private static final Integer WHERE_ROOT = RULE_searchCondition;
-  private static final Set<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, RULE_expression);
+  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, RULE_builtInFunctions);
 
   private static final Integer JOIN_ROOT = SDBLParser.RULE_joinPart;
-  private static final Set<Integer> JOIN_STATEMENTS = Set.of(JOIN_ROOT, RULE_expression);
+  private static final Collection<Integer> JOIN_STATEMENTS = Set.of(JOIN_ROOT, RULE_builtInFunctions);
 
-  public static final Set<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(RULE_searchCondition, RULE_query);
+  public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(RULE_searchCondition, RULE_query);
 
   public static final int IS_NOT_NULL_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_WITH_PARENS_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_IS_NULL_EXPR_MEMBER_COUNT = 2;
 
-  private List<BSLParserRuleContext> nodesForIssues = Collections.emptyList();
+  private final List<BSLParserRuleContext> nodesForIssues = new ArrayList<>();
 
   @Override
   public ParseTree visitJoinPart(JoinPartContext joinPartCtx) {
@@ -179,38 +181,36 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT);
   }
 
-  private void checkStatements(String tableName, BSLParserRuleContext expression, Set<Integer> statements,
+  private void checkStatements(String tableName, BSLParserRuleContext expression, Collection<Integer> statements,
                                Integer rootForStatement) {
 
-    nodesForIssues = Optional.of(expression)
+    Optional.of(expression)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column).stream())
       .filter(Objects::nonNull)
       .filter(ColumnContext.class::isInstance)
       .map(ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement))
-      .collect(Collectors.toList());
+      .forEach(nodesForIssues::add); // //NOSONAR пропустим срабатывания - collect(Collectors.toList())
   }
 
   private static boolean checkColumn(String tableName, ColumnContext columnCtx,
-                              Set<Integer> statements, Integer rootForStatement) {
+                                     Collection<Integer> statements, Integer rootForStatement) {
     return Optional.of(columnCtx)
       .filter(columnContext -> columnContext.mdoName != null)
       .filter(columnContext -> columnContext.mdoName.getText().equalsIgnoreCase(tableName))
-      .filter(columnContext -> !haveIsNullInside(columnContext, statements, rootForStatement))
+      .filter(columnContext -> !haveIsNullInsideExprForColumn(columnContext, statements, rootForStatement))
       .isPresent();
   }
 
-  private static boolean haveIsNullInside(BSLParserRuleContext ctx, Set<Integer> statements, Integer rootForStatement) {
+  private static boolean haveIsNullInsideExprForColumn(BSLParserRuleContext ctx, Collection<Integer> statements,
+                                                       Integer rootForStatement) {
     var selectStatement = Trees.getRootParent(ctx, statements);
-//    if (selectStatement == null || selectStatement.getChildCount() == 0 ) {
-    if (selectStatement == null || selectStatement.getChildCount() == 0 || rootForStatement == selectStatement.getRuleIndex()) {
+    if (selectStatement == null || selectStatement.getChildCount() == 0
+      || rootForStatement == selectStatement.getRuleIndex()) {
       return false;
     }
-    if (haveIsNullExpression(ctx)) {
-      return true;
-    }
-    return haveIsNullInside(selectStatement, statements, rootForStatement);
-//    return haveIsNullInside(selectStatement.getParent(), statements, rootForStatement);
+    return haveIsNullExpression(selectStatement)
+      || haveIsNullInsideExprForColumn(selectStatement, statements, rootForStatement);
   }
 
   private static boolean haveIsNullExpression(BSLParserRuleContext ctx) {

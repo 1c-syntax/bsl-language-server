@@ -45,6 +45,8 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    assertThat(diagnostics).hasSize(9);
+
     checkContent(
       diagnostics.get(0),
       Ranges.create(6, 5, 7, 44),
@@ -67,7 +69,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
       diagnostics.get(3),
       Ranges.create(45, 5, 46, 45),
       Ranges.create(47, 9, 47, 25)
-      );
+    );
 
     checkContent(
       diagnostics.get(4),
@@ -79,7 +81,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
       diagnostics.get(5),
       Ranges.create(84, 5, 85, 46),
       Ranges.create(87, 8, 87, 26)
-      );
+    );
 
     checkContent(
       diagnostics.get(6),
@@ -88,13 +90,13 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
         Ranges.create(99, 5, 99, 19),
         Ranges.create(98, 13, 98, 31),
         Ranges.create(100, 5, 100, 28))
-      );
+    );
 
     checkContent(
       diagnostics.get(7),
       Ranges.create(154, 8, 155, 50),
       Ranges.create(151, 8, 151, 28)
-      );
+    );
 
     checkContent(
       diagnostics.get(8),
@@ -103,8 +105,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
         Ranges.create(192, 13, 32),
         Ranges.create(196, 9, 30)
       ));
-
-    assertThat(diagnostics).hasSize(9);
 
   }
 
@@ -137,7 +137,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
-//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
         "    \"ВЫБРАТЬ Сотрудники4.Ссылка // не ошибка\n" +
         "    |ИЗ Справочник.Склады КАК Склады\n" +
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
@@ -148,8 +147,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(0);
-
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
@@ -157,7 +155,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
-//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
         "    \"ВЫБРАТЬ Сотрудники4.Ссылка // не ошибка\n" +
         "    |ИЗ Справочник.Склады КАК Склады\n" +
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
@@ -168,8 +165,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(0);
-
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
@@ -177,7 +173,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
-//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
         "    \"ВЫБРАТЬ Сотрудники.Ссылка // не ошибка\n" +
         "    |ИЗ Справочник.Склады КАК Склады\n" +
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники\n" +
@@ -188,8 +183,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(0);
-
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
@@ -197,7 +191,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
-//        "    \"ВЫБРАТЬ 1 КАК Поле1\n" +
         "    \"ВЫБРАТЬ Сотрудники4.Ссылка // ошибка\n" +
         "    |ИЗ Справочник.Склады КАК Склады\n" +
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники4\n" +
@@ -209,7 +202,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);
-
   }
 
   @Test
@@ -233,23 +225,10 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
         "    |   ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Контрагенты11\n" +
         "    |   ПО Таблица11.Ссылка = Контрагенты11.Ссылка\n" +
         "    |\";\n";
-//        "    |\n" +
-//        "    |ОБЪЕДИНИТЬ ВСЕ\n" +
-//        "    |\n" +
-//        "    |ВЫБРАТЬ\n" +
-//        "    |   Таблица11.Ссылка КАК Ссылка,\n" +
-//        "    |   Контрагенты11.Ссылка КАК Ссылка1    //не ошибка\n" +
-//        "    |ИЗ\n" +
-//        "    |\tСправочник.Склады КАК Таблица11\n" +
-//        "    |   ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Контрагенты КАК Контрагенты11\n" +
-//        "    |   ПО Таблица11.Ссылка = Контрагенты11.Ссылка\n" +
-//        "    |ГДЕ (НЕ (Контрагенты11.Реквизит ЕСТЬ NULL)) // TODO Контрагенты11.Реквизит ЕСТЬ НЕ NULL\n" +
-//        "    |\";\n";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);
-
   }
 }
