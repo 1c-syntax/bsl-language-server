@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1633716717252,
+  "lastUpdate": 1633947072596,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14136,6 +14136,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.48296439807151",
             "extra": "mean: 77.20671804745992 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dc8da0c8ccb91c9b6474250d67d5ce8a278bb5c1",
+          "message": "Merge pull request #1865 from 1c-syntax/feature/modCompilationDirectiveLostDiagnostic",
+          "timestamp": "2021-10-11T13:03:18+03:00",
+          "tree_id": "0d3599c828731d018e334fd58fc757e6cfc683c5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/dc8da0c8ccb91c9b6474250d67d5ce8a278bb5c1"
+        },
+        "date": 1633947068851,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.96331763267517,
+            "unit": "sec",
+            "range": "stddev: 2.2165572547653225",
+            "extra": "mean: 73.96331763267517 sec\nrounds: 3"
           }
         ]
       }
