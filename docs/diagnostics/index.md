@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **154**
+Общее количество: **156**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **4**
-* Ошибка: **49**
-* Дефект кода: **97**
+* Ошибка: **52**
+* Дефект кода: **96**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -68,6 +68,7 @@
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Выполнение произвольного кода в общем модуле на сервере | Да | Критичный | Потенциальная уязвимость | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
+ [FieldsFromJoinsWithoutIsNull](FieldsFromJoinsWithoutIsNull.md) | Отсутствие проверки на NULL для полей из присоединяемых таблиц | Да | Критичный | Ошибка | `sql`<br>`suspicious`<br>`unpredictable` 
  [ForbiddenMetadataName](ForbiddenMetadataName.md) | Объекту метаданных присвоено запрещенное имя | Да | Блокирующий | Ошибка | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
@@ -101,7 +102,6 @@
  [MissingParameterDescription](MissingParameterDescription.md) | Отсутствует описание параметров метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Отсутствует описание возвращаемого значения функции | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
- [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Отсутствует удаление данных из временного хранилища после использования | Нет | Критичный | Дефект кода | `standard`<br>`performance`<br>`badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` 
  [MultilineStringInQuery](MultilineStringInQuery.md) | Многострочный литерал в запросе | Да | Критичный | Ошибка | `badpractice`<br>`suspicious`<br>`unpredictable` 
@@ -168,7 +168,9 @@
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Важный | Ошибка | `sql`<br>`standard`<br>`performance` 
  [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | У полей формы не указан путь к данным | Да | Критичный | Ошибка | `unpredictable` 
+ [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Неверно задан обработчик метода http-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [WrongMetadataInQuery](WrongMetadataInQuery.md) | Обращение к несуществующим метаданным в запросе | Да | Блокирующий | Ошибка | `suspicious`<br>`sql` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Некорректное использование функции ПродолжитьВызов() | Да | Блокирующий | Ошибка | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
+ [WrongWebServiceHandler](WrongWebServiceHandler.md) | Неверно задан обработчик операции web-сервиса | Да | Критичный | Ошибка | `suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 
