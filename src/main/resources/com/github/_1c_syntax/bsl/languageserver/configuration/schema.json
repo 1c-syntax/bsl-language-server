@@ -475,17 +475,17 @@
                 "cognitiveComplexity": {
                     "default": true,
                     "type": [
-                      "boolean",
-                      "object"
+                        "boolean",
+                        "object"
                     ],
                     "title": "Show cognitive complexity score above method definition.",
                     "properties": {
-                      "complexityThreshold": {
-                        "description": "Complexity threshold to show the lens",
-                        "default": -1,
-                        "type": "integer",
-                        "title": "Complexity threshold to show the lens"
-                      }
+                        "complexityThreshold": {
+                            "description": "Complexity threshold to show the lens",
+                            "default": -1,
+                            "type": "integer",
+                            "title": "Complexity threshold to show the lens"
+                        }
                     },
                     "$id": "#/definitions/codeLensParameters/cognitiveComplexity"
                 },
@@ -497,12 +497,12 @@
                     ],
                     "title": "Show cyclomatic complexity score above method definition.",
                     "properties": {
-                      "complexityThreshold": {
-                        "description": "Complexity threshold to show the lens",
-                        "default": -1,
-                        "type": "integer",
-                        "title": "Complexity threshold to show the lens"
-                      }
+                        "complexityThreshold": {
+                            "description": "Complexity threshold to show the lens",
+                            "default": -1,
+                            "type": "integer",
+                            "title": "Complexity threshold to show the lens"
+                        }
                     },
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
