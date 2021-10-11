@@ -1122,7 +1122,7 @@
         },
         "MissingTempStorageDeletion": {
             "description": "Missing temporary storage data deletion after using",
-            "default": true,
+            "default": false,
             "type": [
                 "boolean",
                 "object"

@@ -101,7 +101,7 @@ Total: **154**
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
- [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Missing temporary storage data deletion after using | Yes | Critical | Code smell | `standard`<br>`performance`<br>`badpractice` 
+ [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Missing temporary storage data deletion after using | No | Critical | Code smell | `standard`<br>`performance`<br>`badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 
  [MultilineStringInQuery](MultilineStringInQuery.md) | Multi-line literal in query | Yes | Critical | Error | `badpractice`<br>`suspicious`<br>`unpredictable` 

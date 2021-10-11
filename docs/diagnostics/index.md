@@ -101,7 +101,7 @@
  [MissingParameterDescription](MissingParameterDescription.md) | Отсутствует описание параметров метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Отсутствует описание возвращаемого значения функции | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
- [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Отсутствует удаление данных из временного хранилища после использования | Да | Критичный | Дефект кода | `standard`<br>`performance`<br>`badpractice` 
+ [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Отсутствует удаление данных из временного хранилища после использования | Нет | Критичный | Дефект кода | `standard`<br>`performance`<br>`badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` 
  [MultilineStringInQuery](MultilineStringInQuery.md) | Многострочный литерал в запросе | Да | Критичный | Ошибка | `badpractice`<br>`suspicious`<br>`unpredictable` 
