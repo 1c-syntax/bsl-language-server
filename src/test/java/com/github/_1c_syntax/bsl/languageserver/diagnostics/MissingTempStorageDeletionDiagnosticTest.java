@@ -98,6 +98,38 @@ class MissingTempStorageDeletionDiagnosticTest extends AbstractDiagnosticTest<Mi
 
   }
 
+  @Test
+  void testFileBlockBeforeSubForTester() {
+
+    var diagnostics = getDiagnosticList(
+      "Данные = ПолучитьИзВременногоХранилища( тут.Адрес );\n" +
+        "Данные.Записать ( \"c:\\mydata.txt\" );\n" +
+        "&НаСервере\n" +
+        "Процедура Обработать ()\n" +
+        "КонецПроцедуры");
+
+    assertThat(diagnostics, true)
+      .hasRange(0, 9, 51)
+      .hasSize(1)
+    ;
+
+  }
+
+  @Test
+  void testTryFileBlockBeforeSubForTesterWithoutError() {
+
+    var diagnostics = getDiagnosticList(
+      "Данные = ПолучитьИзВременногоХранилища( тут.Адрес );\n" +
+        "Данные.Записать ( \"c:\\mydata.txt\" );\n" +
+        "УдалитьИзВременногоХранилища( тут.Адрес );\n" +
+        "&НаСервере\n" +
+        "Процедура Обработать ()\n" +
+        "КонецПроцедуры");
+
+    assertThat(diagnostics).isEmpty();
+
+  }
+
   private List<Diagnostic> getDiagnosticList(String s) {
 
     var documentContext = TestUtils.getDocumentContext(s);
