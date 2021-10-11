@@ -21,13 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
+import com.github._1c_syntax.mdclasses.mdo.support.FormType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<CompilationDirectiveLostDiagnostic> {
   CompilationDirectiveLostDiagnosticTest() {
@@ -35,7 +41,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   }
 
   @Test
-  void testFormModule() {
+  void test() {
 
     var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
@@ -44,6 +50,26 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
     assertThat(diagnostics, true)
       .hasRange(9, 8, 9, 16);
 
+  }
+
+  @Test
+  void testOriginalFormModule() {
+    final var PATH_TO_METADATA = "src/test/resources/metadata";
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var form = spy((AbstractMDOForm) context.getConfiguration().getChildren().stream()
+      .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
+      .findFirst()
+      .get());
+
+
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    when(form.getFormType()).thenReturn(FormType.ORDINARY);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(form));
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
   }
 
 }

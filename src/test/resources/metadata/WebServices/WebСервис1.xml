@@ -25,6 +25,76 @@
 				</Properties>
 				<ChildObjects/>
 			</Operation>
+			<Operation uuid="bc09d837-aee6-40ee-8940-3a81dddf477c">
+				<Properties>
+					<Name>ОперацияБезОбработчика</Name>
+					<Synonym/>
+					<Comment/>
+					<XDTOReturningValueType>xs:string</XDTOReturningValueType>
+					<Nillable>false</Nillable>
+					<Transactioned>false</Transactioned>
+					<ProcedureName/>
+					<DataLockControlMode>Managed</DataLockControlMode>
+				</Properties>
+				<ChildObjects/>
+			</Operation>
+			<Operation uuid="bc19d837-aee6-40ee-8940-3a81dddf477c">
+				<Properties>
+					<Name>ОперацияСНесуществующимОбработчиком</Name>
+					<Synonym/>
+					<Comment/>
+					<XDTOReturningValueType>xs:string</XDTOReturningValueType>
+					<Nillable>false</Nillable>
+					<Transactioned>false</Transactioned>
+					<ProcedureName>НесуществующийОбработчик1</ProcedureName>
+					<DataLockControlMode>Managed</DataLockControlMode>
+				</Properties>
+				<ChildObjects/>
+			</Operation>
+			<Operation uuid="bc99d837-aee6-40ee-8940-3a81dddf487c">
+				<Properties>
+					<Name>Операция_НеверноеКоличествоПараметров</Name>
+					<Synonym/>
+					<Comment/>
+					<XDTOReturningValueType>xs:string</XDTOReturningValueType>
+					<Nillable>false</Nillable>
+					<Transactioned>false</Transactioned>
+					<ProcedureName>Обработчик_НеверноеКоличествоПараметров</ProcedureName>
+					<DataLockControlMode>Managed</DataLockControlMode>
+				</Properties>
+				<ChildObjects>
+					<Parameter uuid="6f41a242-7b68-4655-8caf-52b4cc934fce">
+						<Properties>
+							<Name>MobileDeviceID</Name>
+							<Synonym>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Mobile device ID</v8:content>
+								</v8:item>
+							</Synonym>
+							<Comment/>
+							<XDTOValueType>xs:string</XDTOValueType>
+							<Nillable>false</Nillable>
+							<TransferDirection>In</TransferDirection>
+						</Properties>
+					</Parameter>
+					<Parameter uuid="c9568435-b19e-4450-8103-6b89b7fec731">
+						<Properties>
+							<Name>MessageExchange</Name>
+							<Synonym>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Message exchange</v8:content>
+								</v8:item>
+							</Synonym>
+							<Comment/>
+							<XDTOValueType xmlns:d8p1="http://www.1c.ru/CustomerOrders/Exchange">d8p1:MessageExchange</XDTOValueType>
+							<Nillable>false</Nillable>
+							<TransferDirection>In</TransferDirection>
+						</Properties>
+					</Parameter>
+				</ChildObjects>
+			</Operation>
 		</ChildObjects>
 	</WebService>
 </MetaDataObject>

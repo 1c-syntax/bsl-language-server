@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **153**
+Total: **156**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
-* Error: **49**
+* Error: **52**
 * Code smell: **96**
 
 
@@ -68,6 +68,7 @@ Total: **153**
  [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br>`standard` 
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [FieldsFromJoinsWithoutIsNull](FieldsFromJoinsWithoutIsNull.md) | No NULL checks for fields from joined tables | Yes | Critical | Error | `sql`<br>`suspicious`<br>`unpredictable` 
  [ForbiddenMetadataName](ForbiddenMetadataName.md) | Metadata object has a forbidden name | Yes | Blocker | Error | `standard`<br>`sql`<br>`design` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
  [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
@@ -167,7 +168,9 @@ Total: **153**
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Major | Error | `sql`<br>`standard`<br>`performance` 
  [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | Form fields do not have a data path | Yes | Critical | Error | `unpredictable` 
+ [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Missing handler for http service | Yes | Critical | Error | `suspicious`<br>`error` 
  [WrongMetadataInQuery](WrongMetadataInQuery.md) | Using non-existent metadata in the query | Yes | Blocker | Error | `suspicious`<br>`sql` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
+ [WrongWebServiceHandler](WrongWebServiceHandler.md) | Wrong handler for web service | Yes | Critical | Error | `suspicious`<br>`error` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 

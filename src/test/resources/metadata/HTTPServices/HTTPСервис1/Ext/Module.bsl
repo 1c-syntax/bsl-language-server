@@ -7,7 +7,19 @@
 #КонецОбласти
 
 #Region EventHandlers
-// Enter code here.
+
+Функция URLTemplate1POST(Запрос)
+
+	Возврат Неопределено;
+
+КонецФункции
+
+Функция URLTemplate_НеверныеОбработчики_POST(Запрос, НеверныйПараметр)
+
+	Возврат Неопределено;
+
+КонецФункции
+
 #EndRegion
 
 #Region Private
