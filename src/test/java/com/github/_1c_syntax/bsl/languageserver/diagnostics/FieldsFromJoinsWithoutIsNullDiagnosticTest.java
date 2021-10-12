@@ -185,7 +185,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   @Test
-  void testWithIsNullInsideWhere() {
+  void testWithIsNullOperatorInsideWhere() {
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
@@ -203,7 +203,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   @Test
-  void testWithIsNullInsideWhereButNonTableFieldRequest() {
+  void testWithIsNullOperatorInsideWhereButNonTableFieldRequest() {
     var sample =
       "Процедура Тест15_в_ГДЕ_Есть_NULL_НоНетОбращенийКПолямТаблицы()\n" +
         "\n" +
@@ -214,6 +214,27 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники15\n" +
         "    |ПО Склады15.Кладовщик = Сотрудники15.Ссылка\n" +
         "    |ГДЕ Сотрудники15.Реквизит ЕСТЬ NULL // не ошибка\n" +
+        "    |\";\n" +
+        "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testWithIsNullOperatorInsideSelect() {
+    var sample =
+        "    Запрос.Текст =\n" +
+        "    \"ВЫБРАТЬ \n" +
+        "    |  ВЫБОР КОГДА Сотрудники15.Реквизит ЕСТЬ NULL ТОГДА Истина // не ошибка\n" +
+        "    |    КОГДА НЕ Сотрудники15.Реквизит ЕСТЬ NULL ТОГДА Истина // не ошибка\n" +
+        "    |КОГДА Сотрудники15.Реквизит ЕСТЬ НЕ NULL ТОГДА Истина // не ошибка\n" +
+        "    |    ИНАЧЕ Ложь КОНЕЦ КАК Поле1\n" +
+        "    |ИЗ Справочник.Склады КАК Склады15\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники15\n" +
+        "    |ПО Склады15.Кладовщик = Сотрудники15.Ссылка\n" +
         "    |\";\n" +
         "КонецПроцедуры";
 
