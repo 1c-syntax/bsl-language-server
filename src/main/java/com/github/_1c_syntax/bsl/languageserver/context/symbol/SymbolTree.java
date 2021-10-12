@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -194,7 +195,7 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
     return Optional.ofNullable(
-      getVariablesByName().getOrDefault(variableName, Collections.emptyMap()).get(scopeSymbol)
+      getVariablesByName().getOrDefault(variableName.toLowerCase(Locale.ENGLISH), Collections.emptyMap()).get(scopeSymbol)
     );
   }
 
@@ -217,16 +218,10 @@ public class SymbolTree {
     return getVariables().stream()
       .collect(
         groupingBy(
-          VariableSymbol::getName,
-          toMap(SymbolTree::getVariableScope, Function.identity())
+          variableSymbol -> variableSymbol.getName().toLowerCase(Locale.ENGLISH),
+          toMap(VariableSymbol::getScope, Function.identity())
         )
       );
-  }
-
-  private static SourceDefinedSymbol getVariableScope(VariableSymbol symbol) {
-    return symbol.getRootParent(SymbolKind.Method)
-      .or(() -> symbol.getRootParent(SymbolKind.Module))
-      .orElseThrow();
   }
 
   private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {

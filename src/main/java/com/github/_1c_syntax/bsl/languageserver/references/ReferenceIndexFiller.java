@@ -34,6 +34,8 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
@@ -243,7 +245,7 @@ public class ReferenceIndexFiller {
 
     private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
       var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
-      if (sub == null) {
+      if (sub == null || isErrorNode(sub)) {
         return documentContext.getSymbolTree().getModule();
       }
 
@@ -252,6 +254,26 @@ public class ReferenceIndexFiller {
         .getMethodSymbol(subContext)
         .orElseThrow()
       );
+    }
+
+    private boolean isErrorNode(BSLParser.SubContext ctx) {
+      TerminalNode startNode = null;
+      TerminalNode stopNode = null;
+
+      if(ctx.procedure() != null) {
+        BSLParser.ProcDeclarationContext declaration = ctx.procedure().procDeclaration();
+        startNode = declaration.PROCEDURE_KEYWORD();
+        stopNode = ctx.procedure().ENDPROCEDURE_KEYWORD();
+      } else if (ctx.function() != null) {
+        BSLParser.FuncDeclarationContext declaration = ctx.function().funcDeclaration();
+        startNode = declaration.FUNCTION_KEYWORD();
+        stopNode = ctx.function().ENDFUNCTION_KEYWORD();
+      }
+
+      return startNode == null
+        || startNode instanceof ErrorNode
+        || stopNode == null
+        || stopNode instanceof ErrorNode;
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {

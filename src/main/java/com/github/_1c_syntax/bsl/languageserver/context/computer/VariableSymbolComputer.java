@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -33,10 +36,12 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,11 +49,19 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private final DocumentContext documentContext;
   private final Set<VariableSymbol> variables = new HashSet<>();
+
+  private final ModuleSymbol module;
+  private final List<MethodSymbol> methods;
   private final List<String> currentMethodParameters = new ArrayList<>();
   private final List<String> currentMethodVariables = new ArrayList<>();
 
-  public VariableSymbolComputer(DocumentContext documentContext) {
+  private SourceDefinedSymbol currentMethod;
+
+  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<MethodSymbol> methods) {
     this.documentContext = documentContext;
+    this.module = module;
+    this.methods = methods;
+    this.currentMethod = module;
   }
 
   @Override
@@ -60,27 +73,45 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-    var symbol = createVariableSymbol(ctx, ctx.var_name(), ctx.EXPORT_KEYWORD() != null, VariableKind.MODULE);
+    var symbol = VariableSymbol.builder()
+      .name(ctx.var_name().getText())
+      .owner(documentContext)
+      .range(Ranges.create(ctx))
+      .variableNameRange(Ranges.create(ctx.var_name()))
+      .export(ctx.EXPORT_KEYWORD() != null)
+      .kind(VariableKind.MODULE)
+      .description(createDescription(ctx))
+      .scope(module)
+      .build();
     variables.add(symbol);
-
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
-    var symbol = createVariableSymbol(ctx, ctx.var_name(), false, VariableKind.LOCAL);
-    variables.add(symbol);
-    currentMethodParameters.add(ctx.var_name().getText());
-
     return ctx;
   }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
+    this.currentMethod = getVariableScope(ctx);
     ParseTree tree = super.visitSub(ctx);
     currentMethodVariables.clear();
     currentMethodParameters.clear();
+    this.currentMethod = module;
     return tree;
+  }
+
+  @Override
+  public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
+    var symbol = VariableSymbol.builder()
+      .name(ctx.var_name().getText())
+      .owner(documentContext)
+      .range(Ranges.create(ctx))
+      .variableNameRange(Ranges.create(ctx.var_name()))
+      .export(false)
+      .kind(VariableKind.LOCAL)
+      .description(createDescription(ctx))
+      .scope(getVariableScope(ctx))
+      .build();
+    variables.add(symbol);
+    currentMethodParameters.add(ctx.var_name().getText().toLowerCase(Locale.ENGLISH));
+    return ctx;
   }
 
   @Override
@@ -90,7 +121,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     variables.add(createVariableSymbol(ctx, ctx.IDENTIFIER()));
-    currentMethodParameters.add(ctx.IDENTIFIER().getText());
+    currentMethodParameters.add(ctx.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH));
     return ctx;
   }
 
@@ -98,15 +129,15 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
     if (
       ctx.getChildCount() > 1
-        || currentMethodParameters.contains(ctx.getText())
-        || currentMethodVariables.contains(ctx.getText())
+        || currentMethodParameters.contains(ctx.getText().toLowerCase(Locale.ENGLISH))
+        || currentMethodVariables.contains(ctx.getText().toLowerCase(Locale.ENGLISH))
         || registeredGlobal(ctx.getText())
     ) {
       return ctx;
     }
 
     variables.add(createVariableSymbol(ctx));
-    currentMethodVariables.add(ctx.getText());
+    currentMethodVariables.add(ctx.getText().toLowerCase(Locale.ENGLISH));
     return ctx;
   }
 
@@ -116,21 +147,28 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .anyMatch(v -> v.getName().equalsIgnoreCase(variableName));
   }
 
-  private VariableSymbol createVariableSymbol(
-    BSLParserRuleContext ctx,
-    BSLParser.Var_nameContext varName,
-    boolean export,
-    VariableKind kind
-  ) {
-    return VariableSymbol.builder()
-      .name(varName.getText())
-      .owner(documentContext)
-      .range(Ranges.create(ctx))
-      .variableNameRange(Ranges.create(varName))
-      .export(export)
-      .kind(kind)
-      .description(createDescription(ctx))
-      .build();
+  private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
+    var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+    return getVariableScope(sub);
+  }
+
+  private SourceDefinedSymbol getVariableScope(BSLParser.SubContext ctx) {
+      BSLParserRuleContext subNameNode;
+      if (Trees.nodeContainsErrors(ctx)) {
+        return module;
+      } else if (ctx.function() != null) {
+        subNameNode = ctx.function().funcDeclaration().subName();
+      } else {
+        subNameNode = ctx.procedure().procDeclaration().subName();
+      }
+
+      Range subNameRange = Ranges.create(subNameNode);
+
+      return methods.stream()
+        .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange))
+        .map(methodSymbol -> (SourceDefinedSymbol) methodSymbol)
+        .findAny()
+        .orElse(module);
   }
 
   private VariableSymbol createVariableSymbol(BSLParserRuleContext ctx) {
@@ -142,19 +180,21 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .export(false)
       .kind(VariableKind.DYNAMIC)
       .description(Optional.empty())
+      .scope(currentMethod)
       .build();
   }
 
   private VariableSymbol createVariableSymbol(BSLParserRuleContext ctx,
                                               TerminalNode paramName) {
     return VariableSymbol.builder()
-      .name(paramName.getText())
+      .name(ctx.getText())
       .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(paramName))
       .export(false)
       .kind(VariableKind.PARAMETER)
       .description(Optional.empty())
+      .scope(currentMethod)
       .build();
   }
 
