@@ -62,7 +62,7 @@ class MeasuresSubsystemTest {
 
     // when
     serverContext.populateContext();
-    var documentContext = TestUtils.getDocumentContext("Запрос = Новый Запрос(\"ВЫБРАТЬ 1\");");
+    var documentContext = TestUtils.getDocumentContext("Запрос = Новый Запрос(\"ВЫБРАТЬ 1 как а\");");
     documentContext.getDiagnostics();
 
     // then

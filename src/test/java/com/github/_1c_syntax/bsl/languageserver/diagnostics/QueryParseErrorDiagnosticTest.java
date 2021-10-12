@@ -40,7 +40,7 @@ class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErr
 
     assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(5, 1, 6, 26)
+      .hasRange(5, 1, 6, 30)
       .hasRange(9, 1, 10, 59)
       .hasRange(14, 1, 19, 11)
       .hasRange(27, 1, 28, 3)
