@@ -41,15 +41,20 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
    * Ключевые слова для поиска потенциально запросных строк
    */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
-    "(?:[\\s\";]|^)(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
+    "(?:^|[\"\\|;][\\s\\|]*)\\s*" +
+      "(?:(?:(?:select|выбрать)[\\s\\|]+[\\w\\W]+[\\s\\|]+" +
+      "(?:как|as|из|from|где|where|соединение|join|объединить|union" +
+      "|сгруппировать|group|упорядочить|order|итоги|totals)(?:\\s|$))" +
+      "|" +
+      "(?:(?:уничтожить|drop)[\\s\\|]*.+))");
 
   private static final Pattern NON_QUERIES_START = CaseInsensitivePattern.compile(
-    "(?:^\\s*(?:(?:\\|)|(?:\"\")))");
+    "(?:^\\s*(?:\\||\"\"|\\/{2,}))");
 
   /**
    * Минимальная строка для анализа
    */
-  private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
+  private static final int MINIMAL_QUERY_STRING_LENGTH = 12;
 
   /**
    * Поиск сдвоенных кавычек
@@ -98,6 +103,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     int prevTokenLine = -1;
     var partString = "";
     var strings = new StringJoiner("\n");
+    var stringsBuff = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
@@ -116,9 +122,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       }
 
       // проверяем подстроку на вероятность запроса
-      if (!isQuery) {
-        isQuery = QUERIES_ROOT_KEY.matcher(partString).find()
-          && !NON_QUERIES_START.matcher(partString).find();
+      if (!isQuery && !NON_QUERIES_START.matcher(partString).find()) {
+        stringsBuff.add(partString);
+        isQuery = QUERIES_ROOT_KEY.matcher(stringsBuff.toString()).find();
       }
 
       startLine = token.getLine();
