@@ -82,12 +82,13 @@ public final class Ranges {
   public Range create(Token startToken, Token endToken) {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
-    int endLine = endToken.getLine() - 1;
+    var tokenToCalculateEnd = endToken == null ? startToken : endToken;
+    int endLine = tokenToCalculateEnd.getLine() - 1;
     int endChar;
-    if (endToken.getType() == Token.EOF) {
-      endChar = endToken.getCharPositionInLine();
+    if (tokenToCalculateEnd.getType() == Token.EOF) {
+      endChar = tokenToCalculateEnd.getCharPositionInLine();
     } else {
-      endChar = endToken.getCharPositionInLine() + endToken.getText().length();
+      endChar = tokenToCalculateEnd.getCharPositionInLine() + tokenToCalculateEnd.getText().length();
     }
 
     return create(startLine, startChar, endLine, endChar);
