@@ -266,6 +266,9 @@
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
                 },
+                "MissingTempStorageDeletion": {
+                    "$ref": "parameters-schema.json#/definitions/MissingTempStorageDeletion"
+                },
                 "MissingTemporaryFileDeletion": {
                     "$ref": "parameters-schema.json#/definitions/MissingTemporaryFileDeletion"
                 },
