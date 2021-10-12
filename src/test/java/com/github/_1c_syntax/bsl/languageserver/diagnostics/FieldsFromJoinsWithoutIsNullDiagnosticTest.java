@@ -100,11 +100,9 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
 
     checkContent(
       diagnostics.get(8),
-      Ranges.create(194, 5, 195, 50),
-      Arrays.asList(
-        Ranges.create(192, 13, 32),
-        Ranges.create(196, 9, 30)
-      ));
+      Ranges.create(177, 5, 178, 50),
+      Ranges.create(175, 13, 32)
+    );
 
   }
 
@@ -187,7 +185,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   @Test
-  void testWithIsNullInsideExpression() {
+  void testWithIsNullInsideWhere() {
     var sample =
       "    Запрос = Новый Запрос;\n" +
         "    Запрос.Текст =\n" +
@@ -202,6 +200,27 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void testWithIsNullInsideWhereButNonTableFieldRequest() {
+    var sample =
+      "Процедура Тест15_в_ГДЕ_Есть_NULL_НоНетОбращенийКПолямТаблицы()\n" +
+        "\n" +
+        "    Запрос = Новый Запрос;\n" +
+        "    Запрос.Текст =\n" +
+        "    \"ВЫБРАТЬ Истина\n" +
+        "    |ИЗ Справочник.Склады КАК Склады15\n" +
+        "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники15\n" +
+        "    |ПО Склады15.Кладовщик = Сотрудники15.Ссылка\n" +
+        "    |ГДЕ Сотрудники15.Реквизит ЕСТЬ NULL // не ошибка\n" +
+        "    |\";\n" +
+        "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
