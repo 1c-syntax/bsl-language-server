@@ -38,7 +38,7 @@
 #КонецОбласти
 ```
 
-Таблица соответствия английских имён (полный список в [исходном коде](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+Таблица соответствия английских имён (полный список в [исходном коде](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/BSLKeywords.java#L255)):
 | русск.  | англ. |
 | ------------- | ------------- |
 | ПрограммныйИнтерфейс  | Public  |

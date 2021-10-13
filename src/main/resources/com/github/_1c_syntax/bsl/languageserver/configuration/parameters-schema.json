@@ -86,6 +86,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CanonicalSpellingKeywordsInQuery": {
+            "description": "Checking the canonical spelling of keywords in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Checking the canonical spelling of keywords in a query",
+            "$id": "#/definitions/CanonicalSpellingKeywordsInQuery"
+        },
         "CodeAfterAsyncCall": {
             "description": "Lines of code after the asynchronous method call",
             "default": false,

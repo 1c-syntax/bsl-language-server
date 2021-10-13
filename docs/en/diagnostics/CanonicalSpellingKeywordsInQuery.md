@@ -1,17 +1,17 @@
-# <Diagnostic name> (CanonicalSpellingKeywordsInQueryDiagnostic)
+# Checking the canonical spelling of keywords in a query (CanonicalSpellingKeywordsInQuery)
 
-<Metadata>
-
-## <Params>
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-## Примеры
+## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-## Источники
+## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
@@ -19,18 +19,18 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
+## Snippets
 
-### Экранирование кода
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CanonicalSpellingKeywordsInQueryDiagnostic-off
-// BSLLS:CanonicalSpellingKeywordsInQueryDiagnostic-on
+// BSLLS:CanonicalSpellingKeywordsInQuery-off
+// BSLLS:CanonicalSpellingKeywordsInQuery-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
-"CanonicalSpellingKeywordsInQueryDiagnostic": <DiagnosticConfig>
+"CanonicalSpellingKeywordsInQuery": false
 ```

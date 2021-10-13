@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -48,7 +49,8 @@ import java.util.stream.Collectors;
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  scope = DiagnosticScope.BSL
 
 )
 public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider {
@@ -80,23 +82,18 @@ public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisi
     result.put(SDBLParser.INTO, List.of(SDBLKeywords.INTO_RU, SDBLKeywords.INTO_EN));
     result.put(SDBLParser.IS, List.of(SDBLKeywords.IS_RU, SDBLKeywords.IS_EN));
     result.put(SDBLParser.ISNULL, List.of(SDBLKeywords.ISNULL_RU, SDBLKeywords.ISNULL_EN));
-
-    // сгенерировано автоматически
-
     result.put(SDBLParser.LIKE, List.of(SDBLKeywords.LIKE_RU, SDBLKeywords.LIKE_EN));
     result.put(SDBLParser.NOT, List.of(SDBLKeywords.NOT_RU, SDBLKeywords.NOT_EN));
     result.put(SDBLParser.NULL, List.of(SDBLKeywords.NULL_RU, SDBLKeywords.NULL_EN));
     result.put(SDBLParser.OF, List.of(SDBLKeywords.OF_EN)); // нет на кириллице
     result.put(SDBLParser.OR, List.of(SDBLKeywords.OR_RU, SDBLKeywords.OR_EN));
     result.put(SDBLParser.OVERALL, List.of(SDBLKeywords.OVERALL_RU, SDBLKeywords.OVERALL_EN));
-
     result.put(SDBLParser.THEN, List.of(SDBLKeywords.THEN_RU, SDBLKeywords.THEN_EN));
     result.put(SDBLParser.TOP, List.of(SDBLKeywords.TOP_RU, SDBLKeywords.TOP_EN));
     result.put(SDBLParser.TOTALS, List.of(SDBLKeywords.TOTALS_RU, SDBLKeywords.TOTALS_EN));
     result.put(SDBLParser.TRUE, List.of(SDBLKeywords.TRUE_RU, SDBLKeywords.TRUE_EN));
     result.put(SDBLParser.UNDEFINED, List.of(SDBLKeywords.UNDEFINED_RU, SDBLKeywords.UNDEFINED_EN));
     result.put(SDBLParser.WHEN, List.of(SDBLKeywords.WHEN_RU, SDBLKeywords.WHEN_EN));
-
     result.put(SDBLParser.WHERE, List.of(SDBLKeywords.WHERE_RU, SDBLKeywords.WHERE_EN));
     result.put(SDBLParser.AVG, List.of(SDBLKeywords.AVG_RU, SDBLKeywords.AVG_EN));
     result.put(SDBLParser.BEGINOFPERIOD, List.of(SDBLKeywords.BEGINOFPERIOD_RU, SDBLKeywords.BEGINOFPERIOD_EN));
@@ -104,14 +101,11 @@ public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisi
     result.put(SDBLParser.COUNT, List.of(SDBLKeywords.COUNT_RU, SDBLKeywords.COUNT_EN));
     result.put(SDBLParser.DATE, List.of(SDBLKeywords.DATE_RU, SDBLKeywords.DATE_EN));
     result.put(SDBLParser.DATEADD, List.of(SDBLKeywords.DATEADD_RU, SDBLKeywords.DATEADD_EN));
-
     result.put(SDBLParser.DATEDIFF, List.of(SDBLKeywords.DATEDIFF_RU, SDBLKeywords.DATEDIFF_EN));
     result.put(SDBLParser.DATETIME, List.of(SDBLKeywords.DATETIME_RU, SDBLKeywords.DATETIME_EN));
     result.put(SDBLParser.DAY, List.of(SDBLKeywords.DAY_RU, SDBLKeywords.DAY_EN));
     result.put(SDBLParser.DAYOFYEAR, List.of(SDBLKeywords.DAYOFYEAR_RU, SDBLKeywords.DAYOFYEAR_EN));
     result.put(SDBLParser.EMPTYTABLE, List.of(SDBLKeywords.EMPTYTABLE_RU, SDBLKeywords.EMPTYTABLE_EN));
-    result.put(SDBLParser.EMPTYREF, List.of(SDBLKeywords.EMPTYREF_RU, SDBLKeywords.EMPTYREF_EN)); //todo: не уверен
-
     result.put(SDBLParser.ENDOFPERIOD, List.of(SDBLKeywords.ENDOFPERIOD_RU, SDBLKeywords.ENDOFPERIOD_EN));
     result.put(SDBLParser.HALFYEAR, List.of(SDBLKeywords.HALFYEAR_RU, SDBLKeywords.HALFYEAR_EN));
     result.put(SDBLParser.HOUR, List.of(SDBLKeywords.HOUR_RU, SDBLKeywords.HOUR_EN));
@@ -119,21 +113,17 @@ public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisi
     result.put(SDBLParser.MIN, List.of(SDBLKeywords.MIN_RU, SDBLKeywords.MIN_EN));
     result.put(SDBLParser.MINUTE, List.of(SDBLKeywords.MINUTE_RU, SDBLKeywords.MINUTE_EN));
     result.put(SDBLParser.MONTH, List.of(SDBLKeywords.MONTH_RU, SDBLKeywords.MONTH_EN));
-
     result.put(SDBLParser.NUMBER, List.of(SDBLKeywords.NUMBER_RU, SDBLKeywords.NUMBER_EN));
     result.put(SDBLParser.QUARTER, List.of(SDBLKeywords.QUARTER_RU, SDBLKeywords.QUARTER_EN));
     result.put(SDBLParser.ONLY, List.of(SDBLKeywords.ONLY_RU, SDBLKeywords.ONLY_EN));
     result.put(SDBLParser.PERIODS, List.of(SDBLKeywords.PERIODS_RU, SDBLKeywords.PERIODS_EN));
     result.put(SDBLParser.REFS, List.of(SDBLKeywords.REFS_RU, SDBLKeywords.REFS_EN));
     result.put(SDBLParser.PRESENTATION, List.of(SDBLKeywords.PRESENTATION_RU, SDBLKeywords.PRESENTATION_EN));
-
     result.put(SDBLParser.RECORDAUTONUMBER, List.of(SDBLKeywords.RECORDAUTONUMBER_RU, SDBLKeywords.RECORDAUTONUMBER_EN));
-
     result.put(SDBLParser.REFPRESENTATION, List.of(SDBLKeywords.REFPRESENTATION_RU, SDBLKeywords.REFPRESENTATION_EN));
     result.put(SDBLParser.SECOND, List.of(SDBLKeywords.SECOND_RU, SDBLKeywords.SECOND_EN));
     result.put(SDBLParser.STRING, List.of(SDBLKeywords.STRING_RU, SDBLKeywords.STRING_EN));
     result.put(SDBLParser.SUBSTRING, List.of(SDBLKeywords.SUBSTRING_RU, SDBLKeywords.SUBSTRING_EN));
-
     result.put(SDBLParser.SUM, List.of(SDBLKeywords.SUM_RU, SDBLKeywords.SUM_EN));
     result.put(SDBLParser.TENDAYS, List.of(SDBLKeywords.TENDAYS_RU, SDBLKeywords.TENDAYS_EN));
     result.put(SDBLParser.TYPE, List.of(SDBLKeywords.TYPE_RU, SDBLKeywords.TYPE_EN));
@@ -141,19 +131,16 @@ public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisi
     result.put(SDBLParser.VALUETYPE, List.of(SDBLKeywords.VALUETYPE_RU, SDBLKeywords.VALUETYPE_EN));
     result.put(SDBLParser.WEEK, List.of(SDBLKeywords.WEEK_RU, SDBLKeywords.WEEK_EN));
     result.put(SDBLParser.WEEKDAY, List.of(SDBLKeywords.WEEKDAY_RU, SDBLKeywords.WEEKDAY_EN));
-
     result.put(SDBLParser.YEAR, List.of(SDBLKeywords.YEAR_RU, SDBLKeywords.YEAR_EN));
-
     result.put(SDBLParser.INDEX, List.of(SDBLKeywords.INDEX_RU, SDBLKeywords.INDEX_EN));
     result.put(SDBLParser.GROUP, List.of(SDBLKeywords.GROUP_RU, SDBLKeywords.GROUP_EN));
     result.put(SDBLParser.ORDER, List.of(SDBLKeywords.ORDER_RU, SDBLKeywords.ORDER_EN));
     result.put(SDBLParser.GROUPEDBY, List.of(SDBLKeywords.GROUPEDBY_RU, SDBLKeywords.GROUPEDBY_EN));
     result.put(SDBLParser.GROUPING, List.of(SDBLKeywords.GROUPING_RU, SDBLKeywords.GROUPING_EN));
-    result.put(SDBLParser.BY_EN, List.of(SDBLKeywords.ON_EN, SDBLKeywords.ON_EN)); // todo : Странное
-    result.put(SDBLParser.PO_RU, List.of(SDBLKeywords.ON_RU, SDBLKeywords.ON_RU)); // todo : странное
-    result.put(SDBLParser.ON_EN, List.of(SDBLKeywords.ON_EN, SDBLKeywords.ON_EN));
+    result.put(SDBLParser.BY_EN, List.of(SDBLKeywords.ON_EN)); // Странное
+    result.put(SDBLParser.PO_RU, List.of(SDBLKeywords.ON_RU)); // Cтранное
+    result.put(SDBLParser.ON_EN, List.of(SDBLKeywords.ON_EN));
     result.put(SDBLParser.SET, List.of(SDBLKeywords.SET_RU, SDBLKeywords.SET_EN));
-
     result.put(SDBLParser.RIGHT, List.of(SDBLKeywords.RIGHT_RU, SDBLKeywords.RIGHT_EN));
     result.put(SDBLParser.LEFT, List.of(SDBLKeywords.LEFT_RU, SDBLKeywords.LEFT_EN));
     result.put(SDBLParser.INNER, List.of(SDBLKeywords.INNER_RU, SDBLKeywords.INNER_EN));
@@ -161,13 +148,11 @@ public class CanonicalSpellingKeywordsInQueryDiagnostic extends AbstractSDBLVisi
     result.put(SDBLParser.JOIN, List.of(SDBLKeywords.JOIN_RU, SDBLKeywords.JOIN_EN));
     result.put(SDBLParser.OUTER, List.of(SDBLKeywords.OUTER_RU, SDBLKeywords.OUTER_EN));
     result.put(SDBLParser.FOR, List.of(SDBLKeywords.FOR_RU, SDBLKeywords.FOR_EN));
-
     result.put(SDBLParser.UPDATE, List.of(SDBLKeywords.UPDATE_RU, SDBLKeywords.UPDATE_EN));
     result.put(SDBLParser.ALL, List.of(SDBLKeywords.ALL_RU, SDBLKeywords.ALL_EN));
     result.put(SDBLParser.UNION, List.of(SDBLKeywords.UNION_RU, SDBLKeywords.UNION_EN));
     result.put(SDBLParser.HIERARCHY_FOR_IN, List.of(SDBLKeywords.IN_HIERARCHY_RU, SDBLKeywords.HIERARCHY_EN));
     result.put(SDBLParser.IN, List.of(SDBLKeywords.IN_RU, SDBLKeywords.IN_EN));
-
 
     return result;
 

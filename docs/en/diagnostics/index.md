@@ -1,4 +1,4 @@
-# Diagnostics
+﻿# Diagnostics
 
 Used for code analysis to meet coding standards and search for possible errors.
 
@@ -24,6 +24,7 @@ Total: **157**
  [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` 
  [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br>`design` 
  [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` 
+ [CanonicalSpellingKeywordsInQuery](CanonicalSpellingKeywordsInQuery.md) | Checking the canonical spelling of keywords in a query | Yes | Info | Code smell | `standard` 
  [CodeAfterAsyncCall](CodeAfterAsyncCall.md) | Lines of code after the asynchronous method call | No | Major | Code smell | `suspicious` 
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` 
