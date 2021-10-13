@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1634073566856,
+  "lastUpdate": 1634101535232,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14322,6 +14322,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6502095333376526",
             "extra": "mean: 75.06783413887024 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f82ae0821df67aad46403d447d66f85816cecf5b",
+          "message": "Merge pull request #1874 from 1c-syntax/fix/create-range-from-null-end\n\nИсправление падения на расчете рэнжа для имени области",
+          "timestamp": "2021-10-13T07:57:40+03:00",
+          "tree_id": "e24cd059228b7dd273b272759563b2f83b405ca1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f82ae0821df67aad46403d447d66f85816cecf5b"
+        },
+        "date": 1634101531159,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.58042724927266,
+            "unit": "sec",
+            "range": "stddev: 1.690177116195691",
+            "extra": "mean: 73.58042724927266 sec\nrounds: 3"
           }
         ]
       }
