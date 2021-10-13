@@ -41,19 +41,19 @@ import org.eclipse.lsp4j.Range;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
-  private final Set<VariableSymbol> variables = new HashSet<>();
-
   private final ModuleSymbol module;
   private final List<MethodSymbol> methods;
-  private final List<String> currentMethodParameters = new ArrayList<>();
-  private final List<String> currentMethodVariables = new ArrayList<>();
+  private final Set<VariableSymbol> variables = new HashSet<>();
+  private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
 
@@ -67,6 +67,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   @Override
   public List<VariableSymbol> compute() {
     variables.clear();
+    moduleVariables.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(variables);
   }
@@ -84,6 +85,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .scope(module)
       .build();
     variables.add(symbol);
+    moduleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
     return ctx;
   }
 
@@ -92,7 +94,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     this.currentMethod = getVariableScope(ctx);
     ParseTree tree = super.visitSub(ctx);
     currentMethodVariables.clear();
-    currentMethodParameters.clear();
     this.currentMethod = module;
     return tree;
   }
@@ -110,7 +111,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .scope(getVariableScope(ctx))
       .build();
     variables.add(symbol);
-    currentMethodParameters.add(ctx.var_name().getText().toLowerCase(Locale.ENGLISH));
+    currentMethodVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
     return ctx;
   }
 
@@ -121,7 +122,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     variables.add(createVariableSymbol(ctx, ctx.IDENTIFIER()));
-    currentMethodParameters.add(ctx.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH));
+    currentMethodVariables.put(ctx.IDENTIFIER().getText(), ctx.IDENTIFIER().getText());
     return ctx;
   }
 
@@ -129,22 +130,15 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
     if (
       ctx.getChildCount() > 1
-        || currentMethodParameters.contains(ctx.getText().toLowerCase(Locale.ENGLISH))
-        || currentMethodVariables.contains(ctx.getText().toLowerCase(Locale.ENGLISH))
-        || registeredGlobal(ctx.getText())
+      || currentMethodVariables.containsKey(ctx.getText())
+      || moduleVariables.containsKey(ctx.getText())
     ) {
       return ctx;
     }
 
     variables.add(createVariableSymbol(ctx));
-    currentMethodVariables.add(ctx.getText().toLowerCase(Locale.ENGLISH));
+    currentMethodVariables.put(ctx.getText(), ctx.getText());
     return ctx;
-  }
-
-  private boolean registeredGlobal(String variableName) {
-    return variables.stream()
-      .filter(v -> v.getKind() == VariableKind.MODULE || v.getKind() == VariableKind.GLOBAL)
-      .anyMatch(v -> v.getName().equalsIgnoreCase(variableName));
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
