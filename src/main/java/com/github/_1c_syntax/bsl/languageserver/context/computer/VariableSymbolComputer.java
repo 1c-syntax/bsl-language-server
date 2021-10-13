@@ -141,7 +141,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     return ctx;
   }
 
-  private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
+  private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
     var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
     return getVariableScope(sub);
   }
