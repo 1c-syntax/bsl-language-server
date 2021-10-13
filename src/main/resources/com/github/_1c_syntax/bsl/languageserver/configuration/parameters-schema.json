@@ -1130,6 +1130,16 @@
             },
             "$id": "#/definitions/MissingSpace"
         },
+        "MissingTempStorageDeletion": {
+            "description": "Missing temporary storage data deletion after using",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing temporary storage data deletion after using",
+            "$id": "#/definitions/MissingTempStorageDeletion"
+        },
         "MissingTemporaryFileDeletion": {
             "description": "Missing temporary file deletion after using",
             "default": true,

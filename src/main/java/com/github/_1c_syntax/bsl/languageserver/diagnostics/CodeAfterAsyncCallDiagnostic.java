@@ -59,7 +59,7 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_subCodeBlock;
 )
 public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern ASYNC_METHODS = CaseInsensitivePattern.compile(
-    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ОТКРЫТЬФОРМУ|OPENFORM|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
+    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
       "|ПОКАЗАТЬПРЕДУПРЕЖДЕНИЕ|SHOWMESSAGEBOX|ПОКАЗАТЬВВОДДАТЫ|SHOWINPUTDATE|ПОКАЗАТЬВВОДЗНАЧЕНИЯ|SHOWINPUTVALUE" +
       "|ПОКАЗАТЬВВОДСТРОКИ|SHOWINPUTSTRING|ПОКАЗАТЬВВОДЧИСЛА|SHOWINPUTNUMBER" +
       "|НАЧАТЬУСТАНОВКУВНЕШНЕЙКОМПОНЕНТЫ|BEGININSTALLADDIN" +
