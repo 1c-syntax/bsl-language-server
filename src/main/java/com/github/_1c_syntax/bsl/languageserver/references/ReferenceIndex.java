@@ -69,6 +69,7 @@ public class ReferenceIndex {
     var moduleType = symbol.getOwner().getModuleType();
     var scopeName = symbol.getRootParent(SymbolKind.Method)
       .map(SourceDefinedSymbol::getName)
+      .map(name -> name.toLowerCase(Locale.ENGLISH))
       .orElse("");
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
@@ -76,7 +77,7 @@ public class ReferenceIndex {
     var symbolDto = Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
-      .scopeName(scopeName.toLowerCase(Locale.ENGLISH))
+      .scopeName(scopeName)
       .symbolKind(symbol.getSymbolKind())
       .symbolName(symbolName)
       .build();
