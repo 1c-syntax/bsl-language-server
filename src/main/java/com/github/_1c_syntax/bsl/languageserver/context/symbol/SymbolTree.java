@@ -25,18 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -195,7 +193,7 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
     return Optional.ofNullable(
-      getVariablesByName().getOrDefault(variableName.toLowerCase(Locale.ENGLISH), Collections.emptyMap()).get(scopeSymbol)
+      getVariablesByName().getOrDefault(variableName, Collections.emptyMap()).get(scopeSymbol)
     );
   }
 
@@ -218,7 +216,8 @@ public class SymbolTree {
     return getVariables().stream()
       .collect(
         groupingBy(
-          variableSymbol -> variableSymbol.getName().toLowerCase(Locale.ENGLISH),
+          VariableSymbol::getName,
+          () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER),
           toMap(VariableSymbol::getScope, Function.identity())
         )
       );
