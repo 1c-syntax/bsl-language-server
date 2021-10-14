@@ -54,10 +54,13 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern PATTERN_DETAIL_ERROR_DESCRIPTION = CaseInsensitivePattern.compile(
     "подробноепредставлениеошибки|detailerrordescription"
   );
+  private static final Pattern PATTERN_BRIEF_ERROR_DESCRIPTION = CaseInsensitivePattern.compile(
+    "краткоепредставлениеошибки|brieferrordescription"
+  );
   private static final Pattern PATTERN_ERROR_INFO = CaseInsensitivePattern.compile(
     "информацияобошибке|errorinfo"
   );
-  private static final Pattern PATTERN_BRIEF_ERROR_DESCRIPTION = CaseInsensitivePattern.compile(
+  private static final Pattern PATTERN_SIMPLE_ERROR_DESCRIPTION = CaseInsensitivePattern.compile(
     "описаниеошибки|errordescription"
   );
   private static final Pattern PATTERN_EVENT_LOG_LEVEL = CaseInsensitivePattern.compile(
@@ -179,7 +182,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       if (isErrorDescriptionCallCorrect(assignmentGlobalCalls)) {
         return true;
       }
-      if (hasBriefErrorDescription(assignmentGlobalCalls)) {
+      if (hasSimpleErrorDescription(assignmentGlobalCalls) || hasBriefErrorDescription(assignmentGlobalCalls)) {
         return false;
       }
     }
@@ -205,6 +208,12 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     return Trees.findAllRuleNodes(globalCallCtx, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .anyMatch(ctx -> isAppropriateName(ctx, PATTERN_ERROR_INFO));
+  }
+
+  private static boolean hasSimpleErrorDescription(Collection<ParseTree> globalCalls) {
+    return globalCalls.stream()
+      .filter(ctx -> ctx instanceof BSLParser.GlobalMethodCallContext)
+      .anyMatch(ctx -> isAppropriateName((BSLParser.GlobalMethodCallContext) ctx, PATTERN_SIMPLE_ERROR_DESCRIPTION));
   }
 
   private static boolean hasBriefErrorDescription(Collection<ParseTree> globalCalls) {
@@ -235,10 +244,10 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isValidVarAssignment(
-    BSLParser.ComplexIdentifierContext var,
+    BSLParser.ComplexIdentifierContext identifierContext,
     BSLParser.CodeBlockContext codeBlock
   ) {
-    String varName = var.getText();
+    String varName = identifierContext.getText();
     return getAssignment(varName, codeBlock)
       .map(BSLParser.AssignmentContext::expression)
       .map(expression -> isValidExpression(codeBlock, expression, false))

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +39,6 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(3, 4, 39)
       .hasRange(4, 4, 73)
@@ -50,7 +50,32 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(31, 6, 32, 35)
       .hasRange(38, 6, 39, 37)
       .hasRange(45, 6, 46, 21)
+      .hasRange(45, 6, 46, 21)
+      .hasRange(183, 6, 185,56)
+      .hasRange(197, 6, 199,22)
+      .hasRange(212, 6, 214,22)
+      .hasSize(13)
     ;
 
+  }
+
+  @Test
+  void testBriefDescriptionWithoutFullDesc() {
+    var sample =
+      "  Попытка\n" +
+      "      // клиентский код, приводящий к вызову исключения\n" +
+      "      СоздатьФайлНаДиске();\n" +
+      "  Исключение\n" +
+      "      //ТекстСообщения = КраткоеПредставлениеОшибки(ИнформацияОбОшибке());\n" +
+      "      ПоказатьПредупреждение(,НСтр(\"ru = 'Операция не может быть выполнена по причине:'\") + Символы.ПС + ТекстСообщения);\n" +
+      "      ЗаписьЖурналаРегистрации(НСтр(\"ru = 'Выполнение операции'\"),\n" +
+      "       УровеньЖурналаРегистрации.Ошибка,,,\n" +
+      "       КраткоеПредставлениеОшибки(ИнформацияОбОшибке()));\n" +
+      "  КонецПопытки;\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
   }
 }
