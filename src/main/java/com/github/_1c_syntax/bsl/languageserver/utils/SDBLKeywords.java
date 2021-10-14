@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class SDBLKeywords {
 
 
@@ -106,7 +109,7 @@ public class SDBLKeywords {
   public static final String ELSE_RU = "ИНАЧЕ";
   public static final String ELSE_EN = "ELSE";
 
-  public static final String TRUE_RU = "Истина";
+  public static final String TRUE_RU = "ИСТИНА";
   public static final String TRUE_EN = "TRUE";
 
   public static final String AS_RU = "КАК";
@@ -130,7 +133,7 @@ public class SDBLKeywords {
   public static final String LEFT_RU = "ЛЕВОЕ";
   public static final String LEFT_EN = "LEFT";
 
-  public static final String FALSE_RU = "Ложь";
+  public static final String FALSE_RU = "ЛОЖЬ";
   public static final String FALSE_EN = "FALSE";
 
   public static final String MAX_RU = "МАКСИМУМ";
