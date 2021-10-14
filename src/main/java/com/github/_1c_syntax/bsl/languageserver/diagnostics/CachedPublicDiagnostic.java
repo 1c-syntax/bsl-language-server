@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLKeywords;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
 public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern PUBLIC = CaseInsensitivePattern.compile(
-    String.format("^(%s|%s)$", Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN));
+    String.format("^(%s|%s)$", BSLKeywords.PUBLIC_REGION_RU, BSLKeywords.PUBLIC_REGION_EN));
 
   @Override
   protected void check() {

@@ -48,7 +48,7 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-### Preprocessor instrutions
+### Preprocessor instructions
 
 | RU                                 | EN                             |
 | ---------------------------------- | ------------------------------ |

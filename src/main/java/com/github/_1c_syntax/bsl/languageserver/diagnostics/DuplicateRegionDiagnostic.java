@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLKeywords;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -53,26 +53,26 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
   private final Map<String, String> regionNames = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   public DuplicateRegionDiagnostic() {
-    regionNames.put(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
-    regionNames.put(Keywords.PUBLIC_REGION_EN, Keywords.PUBLIC_REGION_EN);
-    regionNames.put(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);
-    regionNames.put(Keywords.INTERNAL_REGION_EN, Keywords.INTERNAL_REGION_EN);
-    regionNames.put(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
-    regionNames.put(Keywords.PRIVATE_REGION_EN, Keywords.PRIVATE_REGION_EN);
-    regionNames.put(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.EVENT_HANDLERS_REGION_EN, Keywords.EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_EN, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.VARIABLES_REGION_RU, Keywords.VARIABLES_REGION_EN);
-    regionNames.put(Keywords.VARIABLES_REGION_EN, Keywords.VARIABLES_REGION_EN);
-    regionNames.put(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
-    regionNames.put(Keywords.INITIALIZE_REGION_EN, Keywords.INITIALIZE_REGION_EN);
+    regionNames.put(BSLKeywords.PUBLIC_REGION_RU, BSLKeywords.PUBLIC_REGION_EN);
+    regionNames.put(BSLKeywords.PUBLIC_REGION_EN, BSLKeywords.PUBLIC_REGION_EN);
+    regionNames.put(BSLKeywords.INTERNAL_REGION_RU, BSLKeywords.INTERNAL_REGION_EN);
+    regionNames.put(BSLKeywords.INTERNAL_REGION_EN, BSLKeywords.INTERNAL_REGION_EN);
+    regionNames.put(BSLKeywords.PRIVATE_REGION_RU, BSLKeywords.PRIVATE_REGION_EN);
+    regionNames.put(BSLKeywords.PRIVATE_REGION_EN, BSLKeywords.PRIVATE_REGION_EN);
+    regionNames.put(BSLKeywords.EVENT_HANDLERS_REGION_RU, BSLKeywords.EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.EVENT_HANDLERS_REGION_EN, BSLKeywords.EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_EVENT_HANDLERS_REGION_RU, BSLKeywords.FORM_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_EVENT_HANDLERS_REGION_EN, BSLKeywords.FORM_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
+      BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN,
+      BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN, BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(BSLKeywords.VARIABLES_REGION_RU, BSLKeywords.VARIABLES_REGION_EN);
+    regionNames.put(BSLKeywords.VARIABLES_REGION_EN, BSLKeywords.VARIABLES_REGION_EN);
+    regionNames.put(BSLKeywords.INITIALIZE_REGION_RU, BSLKeywords.INITIALIZE_REGION_EN);
+    regionNames.put(BSLKeywords.INITIALIZE_REGION_EN, BSLKeywords.INITIALIZE_REGION_EN);
   }
 
   @Override

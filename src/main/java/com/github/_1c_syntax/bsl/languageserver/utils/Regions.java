@@ -39,38 +39,38 @@ import java.util.regex.Pattern;
 public class Regions {
 
   private final Pattern PUBLIC_REGION_NAME =
-    createPattern(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
+    createPattern(BSLKeywords.PUBLIC_REGION_RU, BSLKeywords.PUBLIC_REGION_EN);
 
   private final Pattern INTERNAL_REGION_NAME =
-    createPattern(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);
+    createPattern(BSLKeywords.INTERNAL_REGION_RU, BSLKeywords.INTERNAL_REGION_EN);
 
   private final Pattern PRIVATE_REGION_NAME =
-    createPattern(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
+    createPattern(BSLKeywords.PRIVATE_REGION_RU, BSLKeywords.PRIVATE_REGION_EN);
 
   private final Pattern EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
+    createPattern(BSLKeywords.EVENT_HANDLERS_REGION_RU, BSLKeywords.EVENT_HANDLERS_REGION_EN);
 
   private final Pattern FORM_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
+    createPattern(BSLKeywords.FORM_EVENT_HANDLERS_REGION_RU, BSLKeywords.FORM_EVENT_HANDLERS_REGION_EN);
 
   private final Pattern FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+    createPattern(BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
+      BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
 
   private final Pattern FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU,
-      Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN,
+    createPattern(BSLKeywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU,
+      BSLKeywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN,
       "^(?:%s|%s)[\\wа-яёЁ]*$");
 
   private final Pattern FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+    createPattern(BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
 
   private final Pattern VARIABLES_REGION_NAME =
-    createPattern(Keywords.VARIABLES_REGION_RU,
-      Keywords.VARIABLES_REGION_EN);
+    createPattern(BSLKeywords.VARIABLES_REGION_RU,
+      BSLKeywords.VARIABLES_REGION_EN);
 
   private final Pattern INITIALIZE_REGION_NAME =
-    createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
+    createPattern(BSLKeywords.INITIALIZE_REGION_RU, BSLKeywords.INITIALIZE_REGION_EN);
 
   /**
    * Метод возвращает паттерны регулярных выражений
@@ -147,17 +147,17 @@ public class Regions {
     Set<String> regionsName = new LinkedHashSet<>();
 
     if (configurationLanguage == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.VARIABLES_REGION_EN);
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.INTERNAL_REGION_EN);
-      regionsName.add(Keywords.PRIVATE_REGION_EN);
+      regionsName.add(BSLKeywords.VARIABLES_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.INTERNAL_REGION_EN);
+      regionsName.add(BSLKeywords.PRIVATE_REGION_EN);
       return regionsName;
     }
 
-    regionsName.add(Keywords.VARIABLES_REGION_RU);
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.INTERNAL_REGION_RU);
-    regionsName.add(Keywords.PRIVATE_REGION_RU);
+    regionsName.add(BSLKeywords.VARIABLES_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.INTERNAL_REGION_RU);
+    regionsName.add(BSLKeywords.PRIVATE_REGION_RU);
     return regionsName;
   }
 
@@ -211,7 +211,7 @@ public class Regions {
     }
 
     // у всех типов модулей есть такая область
-    regionsName.add(language == ScriptVariant.ENGLISH ? Keywords.PRIVATE_REGION_EN : Keywords.PRIVATE_REGION_RU);
+    regionsName.add(language == ScriptVariant.ENGLISH ? BSLKeywords.PRIVATE_REGION_EN : BSLKeywords.PRIVATE_REGION_RU);
 
     return regionsName;
   }
@@ -219,107 +219,107 @@ public class Regions {
   private static void addManagerModuleRegionsNames(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.INTERNAL_REGION_EN);
       return;
     }
 
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.INTERNAL_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.INTERNAL_REGION_RU);
   }
 
   private static void addExternalConnectionRegionsNames(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_EN);
       return;
     }
 
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_RU);
   }
 
   private static void addCommandAndSessionModulesRegionsNames(Set<String> regionsName, ScriptVariant language) {
-    regionsName.add(language == ScriptVariant.ENGLISH ? Keywords.EVENT_HANDLERS_REGION_EN
-      : Keywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(language == ScriptVariant.ENGLISH ? BSLKeywords.EVENT_HANDLERS_REGION_EN
+      : BSLKeywords.EVENT_HANDLERS_REGION_RU);
   }
 
   private static void addApplicationModulesRegionsNames(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.VARIABLES_REGION_EN);
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.VARIABLES_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_EN);
       return;
     }
 
-    regionsName.add(Keywords.VARIABLES_REGION_RU);
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.VARIABLES_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_RU);
   }
 
   private static void addCommonModuleRegionNames(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.INTERNAL_REGION_EN);
       return;
     }
 
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.INTERNAL_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.INTERNAL_REGION_RU);
   }
 
   private static void addValueManageRegionsName(Set<String> regionsName, ScriptVariant language) {
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.VARIABLES_REGION_EN);
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      regionsName.add(BSLKeywords.VARIABLES_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.INTERNAL_REGION_EN);
       return;
     }
-    regionsName.add(Keywords.VARIABLES_REGION_RU);
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.INTERNAL_REGION_RU);
+    regionsName.add(BSLKeywords.VARIABLES_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.INTERNAL_REGION_RU);
   }
 
   private static void addObjectAndRecordSetRegionsName(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.VARIABLES_REGION_EN);
-      regionsName.add(Keywords.PUBLIC_REGION_EN);
-      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.INTERNAL_REGION_EN);
-      regionsName.add(Keywords.INITIALIZE_REGION_EN);
+      regionsName.add(BSLKeywords.VARIABLES_REGION_EN);
+      regionsName.add(BSLKeywords.PUBLIC_REGION_EN);
+      regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.INTERNAL_REGION_EN);
+      regionsName.add(BSLKeywords.INITIALIZE_REGION_EN);
       return;
     }
-    regionsName.add(Keywords.VARIABLES_REGION_RU);
-    regionsName.add(Keywords.PUBLIC_REGION_RU);
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.INTERNAL_REGION_RU);
-    regionsName.add(Keywords.INITIALIZE_REGION_RU);
+    regionsName.add(BSLKeywords.VARIABLES_REGION_RU);
+    regionsName.add(BSLKeywords.PUBLIC_REGION_RU);
+    regionsName.add(BSLKeywords.EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.INTERNAL_REGION_RU);
+    regionsName.add(BSLKeywords.INITIALIZE_REGION_RU);
   }
 
   private static void addFormModuleRegionsNames(Set<String> regionsName, ScriptVariant language) {
     if (language == ScriptVariant.ENGLISH) {
-      regionsName.add(Keywords.VARIABLES_REGION_EN);
-      regionsName.add(Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN);
-      regionsName.add(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-      regionsName.add(Keywords.INITIALIZE_REGION_EN);
+      regionsName.add(BSLKeywords.VARIABLES_REGION_EN);
+      regionsName.add(BSLKeywords.FORM_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN);
+      regionsName.add(BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(BSLKeywords.INITIALIZE_REGION_EN);
       return;
     }
-    regionsName.add(Keywords.VARIABLES_REGION_RU);
-    regionsName.add(Keywords.FORM_EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU);
-    regionsName.add(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU);
-    regionsName.add(Keywords.INITIALIZE_REGION_RU);
+    regionsName.add(BSLKeywords.VARIABLES_REGION_RU);
+    regionsName.add(BSLKeywords.FORM_EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU);
+    regionsName.add(BSLKeywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU);
+    regionsName.add(BSLKeywords.INITIALIZE_REGION_RU);
   }
 
 

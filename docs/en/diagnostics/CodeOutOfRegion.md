@@ -38,7 +38,7 @@ Correct:
 #EndRegion
 ```
 
-Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/BSLKeywords.java#L255)):
 | RU                                      | EN                           |
 | --------------------------------------- | ---------------------------- |
 | ПрограммныйИнтерфейс                    | Public                       |
