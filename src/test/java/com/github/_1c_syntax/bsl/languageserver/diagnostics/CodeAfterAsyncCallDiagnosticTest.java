@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -39,16 +40,94 @@ class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterA
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasRange(4, 4, 4, 96)
-      .hasRange(21, 8, 21, 100)
-      .hasRange(34, 8, 34, 100)
-      .hasRange(48, 12, 48, 104)
-      .hasRange(63, 12, 63, 104)
-      .hasRange(78, 12, 78, 104)
-      .hasRange(93, 12, 93, 104)
-      .hasRange(108, 12, 108, 104)
-      .hasRange(123, 12, 123, 104)
-      .hasSize(9);
+      .hasRange(4, 4, 96)
+      .hasRange(21, 8, 100)
+      .hasRange(34, 8, 100)
+      .hasRange(48, 12, 104)
+      .hasRange(63, 12, 104)
+      .hasRange(78, 12, 104)
+      .hasRange(93, 12, 104)
+      .hasRange(108, 12, 104)
+      .hasRange(123, 12, 104)
+      .hasRange(270, 12, 104)
+      .hasSize(10);
 
+  }
+
+  @Test
+  void testAsyncCallBeforeMethodExit() {
+    var sample =
+      "&НаКлиенте\n" +
+      "Процедура БезОшибок1(Команда)\n" +
+      "    ПоказатьВводЧисла(Оповещение, 1); // не ошибка\n" +
+      "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testReturnAdterAsyncCall() {
+    var sample =
+      "&НаКлиенте\n" +
+        "Процедура ВозвратПослеАсинхрона(Команда)\n" +
+        "    Если Условие Тогда\n" +
+        "        ДополнительныеПараметры = Новый Структура(\"Результат\", 10);\n" +
+        "        Оповещение = Новый ОписаниеОповещения(\"ПослеВводаКоличества1\", ЭтотОбъект);\n" +
+        "        ПоказатьВводЧисла(Оповещение, 1, \"Введите количество\", ДополнительныеПараметры.Результат, 2);\n" +
+        "        Возврат;\n" +
+        "    КонецЕсли;\n" +
+        "    КодВКонцеМетода(); // не ошибка\n" +
+        "КонецПроцедуры\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testBreakAfterAsyncCall() {
+    var sample =
+      "&НаКлиенте\n" +
+        "Процедура ПрерватьПослеАсинхронаИКодПослеЦикла(Команда)\n" +
+        "    Если Условие Тогда\n" +
+        "        Для Каждого Элемент Из Коллекция Цикл\n" +
+        "            ДополнительныеПараметры = Новый Структура(\"Результат\", 10);\n" +
+        "            Оповещение = Новый ОписаниеОповещения(\"ПослеВводаКоличества1\", ЭтотОбъект);\n" +
+        "            ПоказатьВводЧисла(Оповещение, 1, \"Введите количество\", ДополнительныеПараметры.Результат, 2);\n" +
+        "            Прервать; // не ошибка\n" +
+        "        КонецЦикла;\n" +
+        "    КонецЕсли;\n" +
+        "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testBreakAfterAsyncCallAndCodeAfterLoop() {
+    var sample =
+      "&НаКлиенте\n" +
+        "Процедура ПрерватьПослеАсинхронаИКодПослеЦикла(Команда)\n" +
+        "    Если Условие Тогда\n" +
+        "        Для Каждого Элемент Из Коллекция Цикл\n" +
+        "            ДополнительныеПараметры = Новый Структура(\"Результат\", 10);\n" +
+        "            Оповещение = Новый ОписаниеОповещения(\"ПослеВводаКоличества1\", ЭтотОбъект);\n" +
+        "            ПоказатьВводЧисла(Оповещение, 1, \"Введите количество\", ДополнительныеПараметры.Результат, 2);\n" +
+        "            Прервать; // не ошибка\n" +
+        "        КонецЦикла;\n" +
+        "    КонецЕсли;\n" +
+        "    КодПослеЦикла(); // ошибка\n" +
+        "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
   }
 }

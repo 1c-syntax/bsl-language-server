@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_codeBlock;
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
@@ -85,10 +86,24 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     if (codeBlock == null || codeBlock.statement().isEmpty()) {
       return false;
     }
-    if (Trees.getNextNode(codeBlock, statement, RULE_statement) != null) {
-      return true;
+    final var asyncLine = statement.getStop().getLine();
+    final var statements = codeBlock.statement().stream()
+      .filter(statementContext -> statementContext != statement &&
+        statementContext.getStart().getLine() > asyncLine)
+      .collect(Collectors.toList());
+    final var compoundCtx = statements.stream()
+      .findFirst()
+      .map(BSLParser.StatementContext::compoundStatement);
+    final var returnAfterAsync = compoundCtx
+      .map(BSLParser.CompoundStatementContext::returnStatement)
+      .isPresent();
+    if (returnAfterAsync){
+      return false;
     }
-    return checkParentBlock(codeBlock);
+    final var breakAfterAsync = compoundCtx
+      .map(BSLParser.CompoundStatementContext::breakStatement)
+      .isPresent();
+    return (!breakAfterAsync && !statements.isEmpty()) || checkParentBlock(codeBlock);
   }
 
   private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {
