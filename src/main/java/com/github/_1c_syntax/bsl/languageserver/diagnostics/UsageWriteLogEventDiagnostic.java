@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -79,34 +80,50 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitGlobalMethodCall(ctx);
     }
 
+    checkParams(ctx);
+
+    return super.visitGlobalMethodCall(ctx);
+  }
+
+  private void checkParams(BSLParser.GlobalMethodCallContext ctx) {
     final var callParams = ctx.doCall().callParamList().callParam();
+    if (!checkFirstParams(ctx, callParams)){
+      return;
+    }
+
+    if (isInsideExceptBlock(ctx)) {
+
+      final var logLevelCtx = callParams.get(1);
+      if (!hasErrorLogLevel(logLevelCtx)) {
+        fireIssue(ctx, "noErrorLogLevelInsideExceptBlock");
+        return;
+      }
+
+      final var commentCtx = callParams.get(4);
+      if (!isCommentCorrect(commentCtx)) {
+        fireIssue(ctx, "noDetailErrorDescription");
+      }
+    }
+  }
+
+  private boolean checkFirstParams(BSLParser.GlobalMethodCallContext ctx, List<? extends BSLParser.CallParamContext> callParams) {
     if (callParams.size() < WRITE_LOG_EVENT_METHOD_PARAMS_COUNT) {
       fireIssue(ctx, "wrongNumberMessage");
-      return super.visitGlobalMethodCall(ctx);
+      return false;
     }
 
     final BSLParser.CallParamContext secondParamCtx = callParams.get(1);
     if (secondParamCtx.getChildCount() == 0) {
       fireIssue(ctx, "noSecondParameter");
-      return super.visitGlobalMethodCall(ctx);
+      return false;
     }
 
     final BSLParser.CallParamContext commentCtx = callParams.get(4);
     if (commentCtx.getChildCount() == 0) {
       fireIssue(ctx, "noComment");
-      return super.visitGlobalMethodCall(ctx);
+      return false;
     }
-
-    if (!hasErrorLogLevel(secondParamCtx) && isInsideExceptBlock(ctx)) {
-      fireIssue(ctx, "noErrorLogLevelInsideExceptBlock");
-      return super.visitGlobalMethodCall(ctx);
-    }
-
-    if (!isCommentCorrect(commentCtx)) {
-      fireIssue(ctx, "noDetailErrorDescription");
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+    return true;
   }
 
   private static boolean checkMethodName(BSLParser.GlobalMethodCallContext ctx) {
@@ -232,15 +249,14 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
                                            boolean checkPrevAssignment) {
     if (!isInsideExceptBlock(codeBlock) && ctx.constValue() != null) {
       return true;
-    } else {
-      if (checkPrevAssignment) {
-        final var complexIdentifier = ctx.complexIdentifier();
-        if (complexIdentifier != null) {
-          return isValidVarAssignment(complexIdentifier, codeBlock);
-        }
-      }
-      return false;
     }
+    if (checkPrevAssignment) {
+      final var complexIdentifier = ctx.complexIdentifier();
+      if (complexIdentifier != null) {
+        return isValidVarAssignment(complexIdentifier, codeBlock);
+      }
+    }
+    return false;
   }
 
   private static boolean isValidVarAssignment(

@@ -78,4 +78,50 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
 
     assertThat(diagnostics).hasSize(1);
   }
+
+  @Test
+  void testSimpleWriteLogEventWithoutFullDesc() {
+    var sample =
+      "Процедура ОбычнаяЗаписьВЖР(Знач ИмяСобытия, Знач ОписаниеОшибки, Знач Ответ, Знач СсылкаНаДанные = Неопределено) Экспорт\n" +
+      " ТекстЗаписи = ТекстОтвета(ОписаниеОшибки, Ответ);\n" +
+      "   ЗаписьЖурналаРегистрации(\n" +
+      "   ИмяСобытия,\n" +
+      "   УровеньЖурналаРегистрации.Ошибка,\n" +
+      "   ,\n" +
+      "   СсылкаНаДанные,\n" +
+      "   ТекстЗаписи); // не ошибка\n" +
+      "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testHardLogEventInsideException() {
+    var sample =
+      "Процедура СложныйМетодСИспользованиемПодробногоПредставленияВнутриИсключения(Знач ИмяСобытия, Знач ОписаниеОшибки, Знач Ответ, Знач СсылкаНаДанные = Неопределено) Экспорт\n" +
+        "\t\tПопытка\n" +
+        "\t\t\tБлокировка.Заблокировать();\n" +
+        "\t\tИсключение\n" +
+        "            ТекстСообщения = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(\n" +
+        "                НСтр(\"ru = 'Не удалось обработать график работы по причине:\n" +
+        "                      |%2'\"), \n" +
+        "                ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));\n" +
+        "        \n" +
+        "            ЗаписьЖурналаРегистрации(\n" +
+        "                ИмяСобытия,\n" +
+        "                УровеньЖурналаРегистрации.Ошибка,\n" +
+        "                ,\n" +
+        "                СсылкаНаДанные,\n" +
+        "                ТекстСообщения); // ошибка\n" +
+        "\t\tКонецПопытки;\n" +
+        "КонецПроцедуры\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
 }
