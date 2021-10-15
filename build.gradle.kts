@@ -206,7 +206,7 @@ license {
     header(rootProject.file("license/HEADER.txt"))
     newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
-    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
+    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
     exclude("**/*.properties")
     exclude("**/*.xml")
@@ -295,7 +295,7 @@ publishing {
                     }
                     developer {
                         id.set("nixel2007")
-                        name.set("Nikita Gryzlov")
+                        name.set("Nikita Fedkin")
                         email.set("nixel2007@gmail.com")
                         url.set("https://github.com/nixel2007")
                         organization.set("1c-syntax")
