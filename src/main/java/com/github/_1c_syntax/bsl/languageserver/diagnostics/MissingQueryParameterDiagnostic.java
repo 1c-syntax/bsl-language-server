@@ -64,8 +64,6 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     "Запрос|Query");
   private static final Pattern QUERY_TEXT_PATTERN = CaseInsensitivePattern.compile(
     "Текст|Text");
-  //  private static final Pattern EXECUTE_PATTERN = CaseInsensitivePattern.compile(
-//    "Выполнить|Execute");
   private static final Pattern SET_PARAMETER_PATTERN = CaseInsensitivePattern.compile(
     "УстановитьПараметр|SetParameter");
   public static final int SET_PARAMETER_PARAMS_COUNT = 2;
@@ -180,7 +178,8 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
         .collect(Collectors.toList());
       allParams.removeAll(usedParams);
     }
-    allParams.forEach(diagnosticStorage::addDiagnostic);
+    allParams.forEach(node -> diagnosticStorage.addDiagnostic(node,
+      info.getMessage(node.PARAMETER_IDENTIFIER().getText())));
   }
 
   private static List<BSLParser.CallStatementContext> getCallStatements(CodeBlockContext codeBlock) {

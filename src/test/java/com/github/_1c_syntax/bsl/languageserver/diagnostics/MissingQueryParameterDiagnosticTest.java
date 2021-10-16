@@ -40,8 +40,8 @@ class MissingQueryParameterDiagnosticTest extends AbstractDiagnosticTest<Missing
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasRange(7, 34, 43)
-      .hasRange(35, 34, 43)
+      .hasMessageOnRange("Добавьте установку параметра запроса \"Параметр1\"", 7, 34, 44)
+      .hasMessageOnRange("Добавьте установку параметра запроса \"Параметр3\"", 35, 34, 44)
       .hasSize(2)
     ;
 
