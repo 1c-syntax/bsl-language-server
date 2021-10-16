@@ -40,24 +40,25 @@ class MissingQueryParameterDiagnosticTest extends AbstractDiagnosticTest<Missing
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasSize(1)
       .hasRange(7, 34, 43)
-      ;
+      .hasRange(35, 34, 43)
+      .hasSize(2)
+    ;
 
   }
 
   @Test
-  void testWithIsNullOperatorInsideWhere() {
+  void testNewQuery() {
     var sample =
-      "\tЗапрос1 = Новый Запрос(\n" +
-        "\t\t\"ВЫБРАТЬ\n" +
-        "\t\t|\tСправочник1.Ссылка КАК Ссылка\n" +
-        "\t\t|ИЗ\n" +
-        "\t\t|\tСправочник.Справочник1 КАК Справочник1\n" +
-        "\t\t|ГДЕ\n" +
-        "\t\t|\tСправочник1.Ссылка = &Параметр\");\n" +
+      "  Запрос1 = Новый Запрос(\n" +
+        "    \"ВЫБРАТЬ\n" +
+        "    |  Справочник1.Ссылка КАК Ссылка\n" +
+        "    |ИЗ\n" +
+        "    |  Справочник.Справочник1 КАК Справочник1\n" +
+        "    |ГДЕ\n" +
+        "    |  Справочник1.Ссылка = &Параметр\");\n" +
         "\n" +
-        "\tРезультатЗапроса = Запрос1.Выполнить();\n";
+        "  РезультатЗапроса = Запрос1.Выполнить();\n";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
@@ -66,17 +67,35 @@ class MissingQueryParameterDiagnosticTest extends AbstractDiagnosticTest<Missing
   }
 
   @Test
-  void testWithIsNullOperatorInsideWhereNoError() {
+  void testNewQueryNoError() {
     var sample =
-      "\tЗапрос1 = Новый Запрос(\n" +
-        "\t\t\"ВЫБРАТЬ\n" +
-        "\t\t|\tСправочник1.Ссылка КАК Ссылка\n" +
-        "\t\t|ИЗ\n" +
-        "\t\t|\tСправочник.Справочник1 КАК Справочник1\n" +
-        "\t\t|ГДЕ\n" +
-        "\t\t|\tСправочник1.Ссылка = &Параметр\");\n" +
+      "  Запрос1 = Новый Запрос(\n" +
+        "    \"ВЫБРАТЬ\n" +
+        "    |  Справочник1.Ссылка КАК Ссылка\n" +
+        "    |ИЗ\n" +
+        "    |  Справочник.Справочник1 КАК Справочник1\n" +
+        "    |ГДЕ\n" +
+        "    |  Справочник1.Ссылка = &Параметр\");\n" +
         "Запрос1.УстановитьПараметр(\"Параметр\", Ссылка);\n" +
-        "\tРезультатЗапроса = Запрос1.Выполнить();\n";
+        "  РезультатЗапроса = Запрос1.Выполнить();\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testQueryTextNoError() {
+    var sample =
+      "    Запрос4 = Новый Запрос;\n" +
+      "    Запрос4.Текст = \"ВЫБРАТЬ\n" +
+      "        |    Справочник1.Ссылка КАК Ссылка\n" +
+      "        |ИЗ\n" +
+      "        |    Справочник.Справочник1 КАК Справочник1\n" +
+      "        |ГДЕ\n" +
+      "        |    Справочник1.Ссылка = &Параметр\"; // нет ошибки\n" +
+      "    Запрос4.УстановитьПараметр(\"Параметр\", Ссылка);\n";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);

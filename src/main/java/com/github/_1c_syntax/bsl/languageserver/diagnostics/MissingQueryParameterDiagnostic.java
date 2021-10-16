@@ -37,11 +37,14 @@ import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,13 +64,15 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     "Запрос|Query");
   private static final Pattern QUERY_TEXT_PATTERN = CaseInsensitivePattern.compile(
     "Текст|Text");
-//  private static final Pattern EXECUTE_PATTERN = CaseInsensitivePattern.compile(
+  //  private static final Pattern EXECUTE_PATTERN = CaseInsensitivePattern.compile(
 //    "Выполнить|Execute");
   private static final Pattern SET_PARAMETER_PATTERN = CaseInsensitivePattern.compile(
     "УстановитьПараметр|SetParameter");
   public static final int SET_PARAMETER_PARAMS_COUNT = 2;
 
   private Collection<CodeBlockContext> codeBlocks = Collections.emptyList();
+  private final Map<CodeBlockContext, List<BSLParser.AssignmentContext>> codeBlockAssignments = new HashMap<>();
+  private final Map<CodeBlockContext, List<BSLParser.CallStatementContext>> codeBlockCallStatements = new HashMap<>();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext file) {
@@ -83,10 +88,20 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       queriesWithParams.forEach(query -> visitQuery(query.getLeft(), query.getRight()));
 
       codeBlocks.clear();
+      codeBlockAssignments.clear();
+      codeBlockCallStatements.clear();
 
     }
 
     return super.visitFile(file);
+  }
+
+  private static List<Pair<ParameterContext, String>> getParams(QueryPackageContext queryPackage) {
+    return Trees.findAllRuleNodes(queryPackage, SDBLParser.RULE_parameter).stream()
+      .filter(ParameterContext.class::isInstance)
+      .map(ParameterContext.class::cast)
+      .map(ctx -> Pair.of(ctx, "\"" + ctx.name.getText() + "\""))
+      .collect(Collectors.toList());
   }
 
   private Collection<CodeBlockContext> getCodeBlocks() {
@@ -96,14 +111,9 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     fileCodeBlock.ifPresent(blocks::add);
     final var fileCodeBlockBeforeSub =
       Optional.ofNullable(ast.fileCodeBlockBeforeSub())
-      .map(BSLParser.FileCodeBlockBeforeSubContext::codeBlock);
+        .map(BSLParser.FileCodeBlockBeforeSubContext::codeBlock);
     fileCodeBlockBeforeSub.ifPresent(blocks::add);
     return blocks;
-  }
-
-  private void visitQuery(QueryPackageContext queryPackage, List<ParameterContext> params) {
-    final var codeBlockByQuery = getCodeBlockByQuery(queryPackage);
-    codeBlockByQuery.ifPresent(block -> checkQueriesInsideBlock(block, queryPackage, params));
   }
 
   private static Collection<CodeBlockContext> getSubBlocks(BSLParser.FileContext ast) {
@@ -119,11 +129,9 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     }).collect(Collectors.toList());
   }
 
-  private static List<ParameterContext> getParams(QueryPackageContext queryPackage) {
-    return Trees.findAllRuleNodes(queryPackage, SDBLParser.RULE_parameter).stream()
-      .filter(ParameterContext.class::isInstance)
-      .map(ParameterContext.class::cast)
-      .collect(Collectors.toList());
+  private void visitQuery(QueryPackageContext queryPackage, List<Pair<ParameterContext, String>> params) {
+    final var codeBlockByQuery = getCodeBlockByQuery(queryPackage);
+    codeBlockByQuery.ifPresent(block -> checkQueriesInsideBlock(block, queryPackage, params));
   }
 
   private Optional<CodeBlockContext> getCodeBlockByQuery(QueryPackageContext key) {
@@ -133,34 +141,46 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void checkQueriesInsideBlock(CodeBlockContext codeBlock, QueryPackageContext queryPackage,
-                                       List<ParameterContext> params) {
-    // todo вычислять единожды сразу с отбором Новый Запрос или ХХХ.Текст
-    final var assignments = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment);
+                                       List<Pair<ParameterContext, String>> params) {
+
+    final var assignments = codeBlockAssignments.computeIfAbsent(codeBlock,
+      MissingQueryParameterDiagnostic::getAllAssignmentInsideBlock);
 
     final var range = Ranges.create(queryPackage);
     assignments.stream()
-      .filter(BSLParser.AssignmentContext.class::isInstance)
-      .map(BSLParser.AssignmentContext.class::cast)
       .filter(assignment -> Ranges.containsRange(Ranges.create(assignment.expression()), range))
       .forEach(assignment -> checkAssignment(codeBlock, queryPackage, params, assignment));
   }
 
-  private void checkAssignment(CodeBlockContext codeBlock, QueryPackageContext queryPackage,
-                               List<ParameterContext> params, BSLParser.AssignmentContext assignment) {
+  private static List<BSLParser.AssignmentContext> getAllAssignmentInsideBlock(CodeBlockContext codeBlock) {
+    return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment).stream()
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .map(BSLParser.AssignmentContext.class::cast)
+      .collect(Collectors.toList());
+  }
 
-    var callStatements = getCallStatements(codeBlock);    // todo вычислять единожды
+  private void checkAssignment(CodeBlockContext codeBlock, QueryPackageContext queryPackage,
+                               List<Pair<ParameterContext, String>> params, BSLParser.AssignmentContext assignment) {
+
+    final var callStatements = codeBlockCallStatements.computeIfAbsent(codeBlock,
+      MissingQueryParameterDiagnostic::getCallStatements);
+
+    final var allParams = params.stream()
+      .map(Pair::getLeft)
+      .collect(Collectors.toList());
+
     if (!callStatements.isEmpty()) {
 
       final var queryRange = Ranges.create(queryPackage);
       final var queryVarName = computeQueryVarName(assignment);
       final var usedParams = callStatements.stream()
         .filter(callStatement -> Ranges.containsRange(Ranges.create(assignment.expression()), queryRange))
-        .map(callStatementContext -> validateSetParameterCallForName(callStatementContext, queryVarName, params))
+        .map(callStatementContext -> computeSetParameterByQueryVarName(callStatementContext, queryVarName, params))
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
-      params.removeAll(usedParams);
+      allParams.removeAll(usedParams);
     }
-    params.forEach(diagnosticStorage::addDiagnostic);
+    allParams.forEach(diagnosticStorage::addDiagnostic);
   }
 
   private static List<BSLParser.CallStatementContext> getCallStatements(CodeBlockContext codeBlock) {
@@ -184,7 +204,7 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     if (isNewQueryExpr(assignment)) {
       return assignment.lValue().getText();
     }
-    return computeObjectQueryFromLValue(assignment.lValue());
+    return computeQueryVarNameFromLValue(assignment.lValue());
   }
 
   private static boolean isNewQueryExpr(BSLParser.AssignmentContext assignment) {
@@ -194,29 +214,38 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       .anyMatch(ctx -> QUERY_PATTERN.matcher(ctx.typeName().getText()).matches());
   }
 
-  private static String computeObjectQueryFromLValue(BSLParser.LValueContext lValue) {
-    if (lValue.acceptor() == null) {
+  private static String computeQueryVarNameFromLValue(BSLParser.LValueContext lValue) {
+    final var identifier = lValue.IDENTIFIER();
+    final var acceptor = lValue.acceptor();
+    if (acceptor == null || identifier == null) {
       return lValue.getText();
     }
-    return Optional.of(lValue.acceptor())
+    return Optional.of(acceptor)
       .map(BSLParser.AcceptorContext::accessProperty)
       .map(BSLParser.AccessPropertyContext::IDENTIFIER)
       .map(ParseTree::getText)
       .filter(s -> QUERY_TEXT_PATTERN.matcher(s).matches())
+      .map(s -> identifier.getText())
       .orElse("");
   }
 
-  private static Optional<ParameterContext> validateSetParameterCallForName(BSLParser.CallStatementContext callStatementContext,
-                                                                     String queryVarName, List<ParameterContext> params) {
+  private static Optional<ParameterContext> computeSetParameterByQueryVarName(BSLParser.CallStatementContext callStatementContext,
+                                                                              String queryVarName, List<Pair<ParameterContext, String>> params) {
     final var ctx = Optional.of(callStatementContext);
-    final var used = ctx
+    final var isCorrectQueryVarNameInCall = ctx
       .map(BSLParser.CallStatementContext::IDENTIFIER)
       .map(ParseTree::getText)
       .filter(queryVarName::equalsIgnoreCase)
       .isPresent();
-    if (!used) {
+    if (!isCorrectQueryVarNameInCall) {
       return Optional.empty();
     }
+    return computeSetParameter(ctx, params);
+  }
+
+  @NotNull
+  private static Optional<ParameterContext> computeSetParameter(Optional<BSLParser.CallStatementContext> ctx,
+                                                                List<Pair<ParameterContext, String>> params) {
     return ctx.map(BSLParser.CallStatementContext::accessCall)
       .map(BSLParser.AccessCallContext::methodCall)
       .map(BSLParser.MethodCallContext::doCall)
@@ -230,6 +259,12 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       .map(memberContexts -> memberContexts.get(0))
       .map(BSLParser.MemberContext::constValue)
       .map(BSLParserRuleContext::getText)
-      .flatMap(s -> params.stream().filter(param -> ("\"" + param.name.getText() + "\"").equalsIgnoreCase(s)).findFirst());
+      .flatMap(firstValueForSetParameterMethod -> computeSetParameterByName(params, firstValueForSetParameterMethod));
+  }
+
+  private static Optional<ParameterContext> computeSetParameterByName(List<Pair<ParameterContext, String>> params,
+                                                                      String firstValueForSetParameterMethod) {
+    return params.stream().filter(param -> param.getRight().equalsIgnoreCase(firstValueForSetParameterMethod))
+      .map(Pair::getLeft).findFirst();
   }
 }
