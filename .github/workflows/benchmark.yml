@@ -26,7 +26,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout project
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup JDK
         uses: actions/setup-java@v2
