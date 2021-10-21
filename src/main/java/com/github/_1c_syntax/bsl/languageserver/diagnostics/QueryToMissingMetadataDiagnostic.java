@@ -68,7 +68,7 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
   private Optional<AbstractMDObjectBase> getMdo(String mdoTypeName, String mdoName) {
     return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
       documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().entrySet().stream()
-        .filter(entry -> entry.getKey().getType().equals(mdoType)
+        .filter(entry -> entry.getKey().getType() == mdoType
           && mdoName.equals(entry.getValue().getName()))
         .map(Map.Entry::getValue)
         .findFirst()
