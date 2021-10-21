@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -54,9 +53,9 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     assertThat(diagnostics, true)
-      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" внутри запроса",
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" в запросе",
         4, 18, 55)
-      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УдалитьИмяРегистра\" внутри запроса",
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УдалитьИмяРегистра\" в запросе",
         19, 40, 74)
 
       .hasSize(2);
