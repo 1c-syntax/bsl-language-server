@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -48,11 +49,17 @@ import java.util.Optional;
 public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
 
-    if (documentContext.getMdObject().isEmpty()) {
-      return super.visitMdo(mdo);
+    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
+      return ctx;
     }
+
+    return super.visitQueryPackage(ctx);
+  }
+
+  @Override
+  public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
 
     if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,

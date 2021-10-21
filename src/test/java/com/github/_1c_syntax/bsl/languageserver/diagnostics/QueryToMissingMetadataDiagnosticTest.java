@@ -26,11 +26,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryToMissingMetadataDiagnostic> {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -41,16 +38,9 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
 
   @Test
   void test() {
-
     initServerContext(Absolute.path(PATH_TO_METADATA));
-    var documentContext = spy(getDocumentContext());
-    var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
-      .filter(mdo -> mdo.getMdoReference().getMdoRefRu().equalsIgnoreCase("Справочник.Справочник1"))
-      .findFirst()
-      .get());
 
-    when(documentContext.getMdObject()).thenReturn(Optional.of(mdObjectBase));
-    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" в запросе",
@@ -65,6 +55,7 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
   @Test
   void testSingleFile() {
 
+    initServerContext(Absolute.path(""));
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
