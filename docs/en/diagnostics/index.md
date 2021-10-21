@@ -126,6 +126,7 @@ Total: **157**
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
  [QueryParseError](QueryParseError.md) | Query text parsing error | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
+ [QueryToMissingMetadata](QueryToMissingMetadata.md) | Using non-existent metadata in the query | Yes | Blocker | Error | `suspicious`<br>`sql` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
  [SameMetadataObjectAndChildNames](SameMetadataObjectAndChildNames.md) | Same metadata object and child name | Yes | Critical | Error | `standard`<br>`sql`<br>`design` 
@@ -170,7 +171,6 @@ Total: **157**
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Major | Error | `sql`<br>`standard`<br>`performance` 
  [WrongDataPathForFormElements](WrongDataPathForFormElements.md) | Form fields do not have a data path | Yes | Critical | Error | `unpredictable` 
  [WrongHttpServiceHandler](WrongHttpServiceHandler.md) | Missing handler for http service | Yes | Critical | Error | `suspicious`<br>`error` 
- [WrongMetadataInQuery](WrongMetadataInQuery.md) | Using non-existent metadata in the query | Yes | Blocker | Error | `suspicious`<br>`sql` 
  [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
  [WrongWebServiceHandler](WrongWebServiceHandler.md) | Wrong handler for web service | Yes | Critical | Error | `suspicious`<br>`error` 
