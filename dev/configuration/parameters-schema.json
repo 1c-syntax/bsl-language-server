@@ -1442,6 +1442,16 @@
             "title": "Query text parsing error",
             "$id": "#/definitions/QueryParseError"
         },
+        "QueryToMissingMetadata": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/QueryToMissingMetadata"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
@@ -2015,16 +2025,6 @@
             ],
             "title": "Missing handler for http service",
             "$id": "#/definitions/WrongHttpServiceHandler"
-        },
-        "WrongMetadataInQuery": {
-            "description": "Using non-existent metadata in the query",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using non-existent metadata in the query",
-            "$id": "#/definitions/WrongMetadataInQuery"
         },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",

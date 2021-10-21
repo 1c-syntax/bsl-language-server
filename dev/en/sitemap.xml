@@ -626,6 +626,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/QueryToMissingMetadata/</loc>
+         <lastmod>2021-10-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/RedundantAccessToObject/</loc>
          <lastmod>2021-10-21</lastmod>
          <changefreq>daily</changefreq>
@@ -842,11 +847,6 @@
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/WrongHttpServiceHandler/</loc>
-         <lastmod>2021-10-21</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/WrongMetadataInQuery/</loc>
          <lastmod>2021-10-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
