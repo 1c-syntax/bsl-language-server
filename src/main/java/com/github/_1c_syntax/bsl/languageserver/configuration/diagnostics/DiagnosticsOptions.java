@@ -45,6 +45,7 @@ public class DiagnosticsOptions {
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
   private boolean ordinaryAppSupport = true;
+  private String[] subsystemsFilter = new String[]{};
 
   @JsonDeserialize(using = ParametersDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();

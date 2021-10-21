@@ -31,9 +31,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Diagn
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
+import com.github._1c_syntax.mdclasses.mdo.support.FormType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
+import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,12 +46,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -282,6 +289,33 @@ class DiagnosticsTest {
       .contains(TernaryOperatorUsageDiagnostic.class)
       .contains(EmptyRegionDiagnostic.class)
     ;
+  }
+
+  @Test
+  void testDiagnosticSubsystemsCheck() {
+
+    var PATH_TO_METADATA = "src/test/resources/metadata";
+    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
+    context.populateContext();
+
+    var form = spy((AbstractMDOForm) context.getConfiguration().getChildren().stream()
+      .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
+      .findFirst()
+      .get());
+
+
+    var documentContext = spy(TestUtils.getDocumentContext("Сообщить()", context));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    when(form.getFormType()).thenReturn(FormType.ORDINARY);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(form));
+
+    // when
+    configuration.getDiagnosticsOptions().setSubsystemsFilter(new String[]{"One"});
+
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .contains(TooManyReturnsDiagnostic.class);
   }
 
 }

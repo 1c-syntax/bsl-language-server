@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDO;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
@@ -42,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -92,6 +94,26 @@ public abstract class DiagnosticsConfiguration {
     DocumentContext documentContext,
     DiagnosticsOptions diagnosticsOptions
   ) {
+    return checkSupport(documentContext, diagnosticsOptions)
+      && !filterSubsystems(documentContext, diagnosticsOptions);
+  }
+
+  private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
+    var mdoObject = documentContext.getMdObject();
+
+    if (mdoObject.isEmpty()) {
+      return true;
+    }
+
+    var subSystemsName = diagnosticsOptions.getSubsystemsFilter();
+
+    return mdoObject.get().getIncludedSubsystems().stream()
+      .flatMap(mdSubsystem -> mdSubsystem.getIncludedSubsystems().stream())
+      .map(AbstractMDO::getName)
+      .anyMatch(mdoSystemName -> Arrays.stream(subSystemsName).anyMatch(mdoSystemName::equalsIgnoreCase));
+  }
+
+  private static boolean checkSupport(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
     var configuredMode = diagnosticsOptions.getMode();
 
     if (configuredMode == Mode.OFF) {
