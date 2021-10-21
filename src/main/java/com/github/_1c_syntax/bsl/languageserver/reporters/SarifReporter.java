@@ -116,7 +116,7 @@ public class SarifReporter implements DiagnosticReporter {
 
   private SarifSchema210 createReport(AnalysisInfo analysisInfo) {
     var schema = URI.create(
-      "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
+      "https://json.schemastore.org/sarif-2.1.0.json"
     );
     var run = createRun(analysisInfo);
 
