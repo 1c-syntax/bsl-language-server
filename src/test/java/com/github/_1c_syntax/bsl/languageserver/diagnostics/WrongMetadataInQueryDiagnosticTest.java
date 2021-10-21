@@ -21,13 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMetadataInQueryDiagnostic> {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -40,8 +44,14 @@ class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMet
   void test() {
 
     initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
+      .filter(mdo -> mdo.getMdoReference().getMdoRefRu().equalsIgnoreCase("Справочник.Справочник1"))
+      .findFirst()
+      .get());
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    when(documentContext.getMdObject()).thenReturn(Optional.of(mdObjectBase));
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     assertThat(diagnostics, true)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" внутри запроса",
@@ -50,6 +60,16 @@ class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMet
         19, 40, 74)
 
       .hasSize(2);
+
+  }
+
+  @Test
+  void testSingleFile() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasSize(0);
 
   }
 }

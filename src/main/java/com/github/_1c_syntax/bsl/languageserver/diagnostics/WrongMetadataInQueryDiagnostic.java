@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -36,6 +37,7 @@ import java.util.Optional;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
+  scope = DiagnosticScope.BSL,
   minutesToFix = 5,
   tags = {
     DiagnosticTag.SUSPICIOUS,
@@ -47,6 +49,10 @@ public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnosti
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+    if (documentContext.getMdObject().isEmpty()) {
+      return super.visitMdo(mdo);
+    }
+
     if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,
         info.getMessage(mdo.getText()));
