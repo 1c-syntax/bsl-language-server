@@ -33,11 +33,11 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class WrongMetadataInQueryDiagnosticTest extends AbstractDiagnosticTest<WrongMetadataInQueryDiagnostic> {
+class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryToMissingMetadataDiagnostic> {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
-  WrongMetadataInQueryDiagnosticTest() {
-    super(WrongMetadataInQueryDiagnostic.class);
+  QueryToMissingMetadataDiagnosticTest() {
+    super(QueryToMissingMetadataDiagnostic.class);
   }
 
   @Test

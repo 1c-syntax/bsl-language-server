@@ -45,10 +45,11 @@ import java.util.Optional;
   }
 
 )
-public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+
     if (documentContext.getMdObject().isEmpty()) {
       return super.visitMdo(mdo);
     }
