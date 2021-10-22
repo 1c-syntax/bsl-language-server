@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,7 +61,7 @@ public final class MethodSymbolComputer
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
   private final DocumentContext documentContext;
-  private final List<MethodSymbol> methods = new ArrayList<>();
+  private final Set<MethodSymbol> methods = new HashSet<>();
 
   public MethodSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
