@@ -33,7 +33,9 @@ import org.eclipse.lsp4j.Range;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
@@ -42,7 +44,7 @@ public final class RegionSymbolComputer
   private final DocumentContext documentContext;
   private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack =
     new ArrayDeque<>();
-  private final List<RegionSymbol> regions = new ArrayList<>();
+  private final Set<RegionSymbol> regions = new HashSet<>();
 
   public RegionSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

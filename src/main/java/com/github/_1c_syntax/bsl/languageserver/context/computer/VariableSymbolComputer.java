@@ -34,13 +34,15 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
-  private final List<VariableSymbol> variables = new ArrayList<>();
+  private final Set<VariableSymbol> variables = new HashSet<>();
 
   public VariableSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
