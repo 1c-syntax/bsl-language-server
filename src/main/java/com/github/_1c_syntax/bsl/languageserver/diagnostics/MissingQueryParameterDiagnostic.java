@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CodeBlockContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
@@ -35,9 +36,10 @@ import com.github._1c_syntax.bsl.parser.SDBLParser.ParameterContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser.QueryPackageContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -69,8 +72,31 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
   public static final int SET_PARAMETER_PARAMS_COUNT = 2;
 
   private Collection<CodeBlockContext> codeBlocks = Collections.emptyList();
-  private final Map<CodeBlockContext, List<BSLParser.AssignmentContext>> codeBlockAssignments = new HashMap<>();
+  private final Map<CodeBlockContext, List<AssignmentContext>> codeBlockAssignments = new HashMap<>();
   private final Map<CodeBlockContext, List<BSLParser.CallStatementContext>> codeBlockCallStatements = new HashMap<>();
+
+  enum QueryVarKind {
+    NEW_QUERY,
+    QUERY_TEXT,
+    EMPTY,
+    VAR
+  }
+
+  @AllArgsConstructor
+  @Getter
+  private static class QueryTextSetupData {
+    private QueryVarKind kind;
+    private String varName;
+    private AssignmentContext assignment;
+    private Optional<BSLParser.CallParamListContext> newQueryExpr;
+
+    boolean isQueryObject(){
+      return kind == QueryVarKind.NEW_QUERY || kind == QueryVarKind.QUERY_TEXT;
+    }
+    boolean isVar(){
+      return kind == QueryVarKind.VAR;
+    }
+  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext file) {
@@ -145,23 +171,62 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       MissingQueryParameterDiagnostic::getAllAssignmentInsideBlock);
 
     final var range = Ranges.create(queryPackage);
-    assignments.stream()
-      .filter(assignment -> Ranges.containsRange(Ranges.create(assignment.expression()), range))
-      .forEach(assignment -> checkAssignment(codeBlock, queryPackage, params, assignment));
+    final var queryAssignments = assignments.stream()
+      .map(MissingQueryParameterDiagnostic::computeQueryVarData)
+      .filter(queryTextSetupData -> queryTextSetupData.getKind() != QueryVarKind.EMPTY)
+      .collect(Collectors.toList());
+
+    final var queryObjectTextAssignments = queryAssignments.stream()
+      .filter(QueryTextSetupData::isQueryObject)
+      .collect(Collectors.toList());
+    final var excludedAssignments = queryObjectTextAssignments.stream()
+      .map(queryTextSetupData -> queryTextSetupData.assignment)
+      .collect(Collectors.toList());
+
+    final var queryTextAssignments = queryAssignments.stream()
+      .filter(QueryTextSetupData::isVar)
+      .flatMap(queryTextSetupData -> getQueryTextAssignment(assignments, excludedAssignments,
+        queryTextSetupData.getAssignment(), queryTextSetupData.getVarName())
+        .stream())
+      .collect(Collectors.toList());
+
+    queryTextAssignments.addAll(queryObjectTextAssignments.stream()
+      .filter(queryTextSetupData -> Ranges.containsRange(Ranges.create(queryTextSetupData.getAssignment().expression()), range))
+      .collect(Collectors.toList())
+    );
+
+    queryTextAssignments
+      .forEach(queryTextAssignment -> checkAssignment(codeBlock, params, queryTextAssignment));
   }
 
-  private static List<BSLParser.AssignmentContext> getAllAssignmentInsideBlock(CodeBlockContext codeBlock) {
+  private Optional<QueryTextSetupData> getQueryTextAssignment(List<AssignmentContext> assignments,
+                                                              List<AssignmentContext> excludeAssignments,
+                                                              AssignmentContext varAssign, String varName) {
+    return assignments.stream()
+      .filter(assignment -> assignment.expression().getStop().getLine() > varAssign.getStop().getLine())
+      //.filter(assignment -> !excludeAssignments.contains(assignment))
+      .map(MissingQueryParameterDiagnostic::computeQueryVarData)
+      .filter(QueryTextSetupData::isQueryObject)
+      .filter(queryTextSetupData -> queryTextSetupData.getNewQueryExpr()
+        .filter(callParamListContext -> callParamListContext.getText().equalsIgnoreCase(varName))
+        .isPresent())
+      .findFirst()
+      ;
+  }
+
+  private static List<AssignmentContext> getAllAssignmentInsideBlock(CodeBlockContext codeBlock) {
     return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment).stream()
-      .filter(BSLParser.AssignmentContext.class::isInstance)
-      .map(BSLParser.AssignmentContext.class::cast)
+      .filter(AssignmentContext.class::isInstance)
+      .map(AssignmentContext.class::cast)
       .collect(Collectors.toList());
   }
 
-  private void checkAssignment(CodeBlockContext codeBlock, QueryPackageContext queryPackage,
-                               List<Pair<ParameterContext, String>> params, BSLParser.AssignmentContext assignment) {
+  private void checkAssignment(CodeBlockContext codeBlock,
+                               List<Pair<ParameterContext, String>> params,
+                               QueryTextSetupData queryTextAssignment) {
 
     final var callStatements = codeBlockCallStatements.computeIfAbsent(codeBlock,
-      MissingQueryParameterDiagnostic::getCallStatements);
+      MissingQueryParameterDiagnostic::getIsSetParameterCallStatements);
 
     final var allParams = params.stream()
       .map(Pair::getLeft)
@@ -169,10 +234,8 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     if (!callStatements.isEmpty()) {
 
-      final var queryRange = Ranges.create(queryPackage);
-      final var queryVarName = computeQueryVarName(assignment);
+      final var queryVarName = queryTextAssignment.getVarName();
       final var usedParams = callStatements.stream()
-        .filter(callStatement -> Ranges.containsRange(Ranges.create(assignment.expression()), queryRange))
         .map(callStatementContext -> computeSetParameterByQueryVarName(callStatementContext, queryVarName, params))
         .flatMap(Optional::stream)
         .collect(Collectors.toList());
@@ -182,7 +245,7 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       info.getMessage(node.PARAMETER_IDENTIFIER().getText())));
   }
 
-  private static List<BSLParser.CallStatementContext> getCallStatements(CodeBlockContext codeBlock) {
+  private static List<BSLParser.CallStatementContext> getIsSetParameterCallStatements(CodeBlockContext codeBlock) {
     return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_callStatement).stream()
       .filter(BSLParser.CallStatementContext.class::isInstance)
       .map(BSLParser.CallStatementContext.class::cast)
@@ -199,25 +262,32 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private static String computeQueryVarName(BSLParser.AssignmentContext assignment) {
-    if (isNewQueryExpr(assignment)) {
-      return assignment.lValue().getText();
+  private static QueryTextSetupData computeQueryVarData(AssignmentContext assignment) {
+    final var newQueryExpr = isNewQueryExpr(assignment);
+    if (newQueryExpr.isPresent()) {
+      return new QueryTextSetupData(QueryVarKind.NEW_QUERY, assignment.lValue().getText(), assignment, newQueryExpr);
     }
-    return computeQueryVarNameFromLValue(assignment.lValue());
+    final var pair = computeQueryVarNameFromLValue(assignment.lValue());
+    return new QueryTextSetupData(pair.getRight(), pair.getLeft(), assignment, Optional.empty());
   }
 
-  private static boolean isNewQueryExpr(BSLParser.AssignmentContext assignment) {
+  private static Optional<BSLParser.CallParamListContext> isNewQueryExpr(AssignmentContext assignment) {
     return Trees.findAllRuleNodes(assignment, BSLParser.RULE_newExpression).stream()
       .filter(BSLParser.NewExpressionContext.class::isInstance)
       .map(BSLParser.NewExpressionContext.class::cast)
-      .anyMatch(ctx -> QUERY_PATTERN.matcher(ctx.typeName().getText()).matches());
+      .filter(ctx -> QUERY_PATTERN.matcher(ctx.typeName().getText()).matches())
+      .map(BSLParser.NewExpressionContext::doCall)
+      .filter(Objects::nonNull)
+      .map(BSLParser.DoCallContext::callParamList)
+      .filter(Objects::nonNull)
+      .findFirst();
   }
 
-  private static String computeQueryVarNameFromLValue(BSLParser.LValueContext lValue) {
+  private static Pair<String, QueryVarKind> computeQueryVarNameFromLValue(BSLParser.LValueContext lValue) {
     final var identifier = lValue.IDENTIFIER();
     final var acceptor = lValue.acceptor();
     if (acceptor == null || identifier == null) {
-      return lValue.getText();
+      return Pair.of(lValue.getText(), QueryVarKind.VAR);
     }
     return Optional.of(acceptor)
       .map(BSLParser.AcceptorContext::accessProperty)
@@ -225,7 +295,8 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       .map(ParseTree::getText)
       .filter(s -> QUERY_TEXT_PATTERN.matcher(s).matches())
       .map(s -> identifier.getText())
-      .orElse("");
+      .map(s -> Pair.of(s, QueryVarKind.QUERY_TEXT))
+      .orElse(Pair.of("", QueryVarKind.EMPTY));
   }
 
   private static Optional<ParameterContext> computeSetParameterByQueryVarName(BSLParser.CallStatementContext callStatementContext,
@@ -242,7 +313,6 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
     return computeSetParameter(ctx, params);
   }
 
-  @NotNull
   private static Optional<ParameterContext> computeSetParameter(Optional<BSLParser.CallStatementContext> ctx,
                                                                 List<Pair<ParameterContext, String>> params) {
     return ctx.map(BSLParser.CallStatementContext::accessCall)
