@@ -172,4 +172,60 @@ class MissingQueryParameterDiagnosticTest extends AbstractDiagnosticTest<Missing
 
     assertThat(diagnostics).hasSize(1);
   }
+
+  @Test
+  void testSetParamBeforeQueryText() {
+    var sample =
+      "Процедура Восьмой_СначалаНовыйЗапросДалееУстановкаПараметраЗатемТекстЗапросаСПовторениемПараметра(Ссылка)\n" +
+        "    Запрос = Новый Запрос;\n" +
+        "    Запрос.УстановитьПараметр(\"Параметр\", Ссылка);\n" +
+        "    Запрос.Текст = \"ВЫБРАТЬ\n" +
+        "        |    Справочник1.Ссылка КАК Ссылка\n" +
+        "        |ИЗ\n" +
+        "        |    Справочник.Справочник1 КАК Справочник1\n" +
+        "        |ГДЕ\n" +
+        "        |    Справочник1.Ссылка = &Параметр\n" +
+        "         |\"; // нет ошибки\n" +
+//        "    //РезультатЗапроса = Запрос7.Выполнить();\n" +
+        "КонецПроцедуры\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testSetParamBeforeQueryTextWithFewParams() {
+    var sample =
+      "Процедура Девятый_СначалаНовыйЗапросДалееУстановкаПараметраЗатемТекстЗапросаСПовторениемПараметра(Ссылка)\n" +
+        "\n" +
+        "    Запрос = Новый Запрос;\n" +
+        "    Запрос.УстановитьПараметр(\"Параметр\", Ссылка);\n" +
+        "    Запрос.Текст = \"ВЫБРАТЬ\n" +
+        "        |    Справочник1.Ссылка КАК Ссылка\n" +
+        "        |ИЗ\n" +
+        "        |    Справочник.Справочник1 КАК Справочник1\n" +
+        "        |ГДЕ\n" +
+        "        |    Справочник1.Ссылка = &Параметр\n" +
+        "        |\n" +
+        "        |ОБЪЕДИНИТЬ ВСЕ\n" +
+        "        |\n" +
+        "        |ВЫБРАТЬ\n" +
+        "         |    Справочник1.Ссылка КАК Ссылка\n" +
+        "         |ИЗ\n" +
+        "         |    Справочник.Справочник1 КАК Справочник1\n" +
+        "         |ГДЕ\n" +
+        "         |    Справочник1.Ссылка = &Параметр\n" +
+        "         |\"; // нет ошибки\n" +
+        "\n" +
+//        "    //РезультатЗапроса = Запрос7.Выполнить();\n" +
+        "\n" +
+        "КонецПроцедуры\n";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
 }
