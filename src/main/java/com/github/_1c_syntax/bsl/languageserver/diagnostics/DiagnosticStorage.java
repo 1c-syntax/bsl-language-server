@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -34,7 +35,6 @@ import org.eclipse.lsp4j.Range;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -57,155 +57,155 @@ public class DiagnosticStorage {
     diagnosticList.clear();
   }
 
-  protected Optional<Diagnostic> addDiagnostic(BSLParserRuleContext node) {
+  protected void addDiagnostic(BSLParserRuleContext node) {
     if (node.exception != null) {
-      return Optional.empty();
+      return;
     }
 
-    return addDiagnostic(
+    addDiagnostic(
       Ranges.create(node)
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
     if (node.exception != null) {
-      return Optional.empty();
+      return;
     }
 
-    return addDiagnostic(
+    addDiagnostic(
       Ranges.create(node),
       diagnosticMessage
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
-    return addDiagnostic(
+  protected void addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
+    addDiagnostic(
       Ranges.create(startLine, startChar, endLine, endChar)
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(Range range) {
-    return addDiagnostic(
+  protected void addDiagnostic(Range range) {
+    addDiagnostic(
       range,
       diagnostic.getInfo().getMessage()
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(Range range, String diagnosticMessage) {
-    return addDiagnostic(
+  protected void addDiagnostic(Range range, String diagnosticMessage) {
+    addDiagnostic(
       range,
       diagnosticMessage,
       null
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(Token token) {
-    return addDiagnostic(
+  protected void addDiagnostic(Token token) {
+    addDiagnostic(
       Ranges.create(token)
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(Token startToken, Token endToken) {
-    return addDiagnostic(
+  protected void addDiagnostic(Token startToken, Token endToken) {
+    addDiagnostic(
       Ranges.create(startToken, endToken)
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(Token token, String diagnosticMessage) {
-    return addDiagnostic(
+  protected void addDiagnostic(Token token, String diagnosticMessage) {
+    addDiagnostic(
       Ranges.create(token),
       diagnosticMessage
     );
   }
 
-  protected Optional<Diagnostic> addDiagnostic(TerminalNode terminalNode) {
-    return addDiagnostic(terminalNode.getSymbol());
+  protected void addDiagnostic(TerminalNode terminalNode) {
+    addDiagnostic(terminalNode.getSymbol());
   }
 
-  protected Optional<Diagnostic> addDiagnostic(TerminalNode terminalNode, String diagnosticMessage) {
-    return addDiagnostic(terminalNode.getSymbol(), diagnosticMessage);
+  protected void addDiagnostic(TerminalNode terminalNode, String diagnosticMessage) {
+    addDiagnostic(terminalNode.getSymbol(), diagnosticMessage);
   }
 
-  protected Optional<Diagnostic> addDiagnostic(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
-    return addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
+  protected void addDiagnostic(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
+    addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
-  protected Optional<Diagnostic> addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
+  protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
     if (node.exception != null) {
-      return Optional.empty();
+      return;
     }
 
-    return addDiagnostic(
+    addDiagnostic(
       node,
       diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
 
-  public Optional<Diagnostic> addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
-    return addDiagnostic(
+  public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
+    addDiagnostic(
       token,
       diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
 
-  public Optional<Diagnostic> addDiagnostic(
+  public void addDiagnostic(
     BSLParserRuleContext node,
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
 
     if (node.exception != null) {
-      return Optional.empty();
+      return;
     }
 
-    return addDiagnostic(
+    addDiagnostic(
       Ranges.create(node),
       diagnosticMessage,
       relatedInformation
     );
   }
 
-  public Optional<Diagnostic> addDiagnostic(
+  public void addDiagnostic(
     Token token,
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
-    return addDiagnostic(
+    addDiagnostic(
       Ranges.create(token),
       diagnosticMessage,
       relatedInformation
     );
   }
 
-  public Optional<Diagnostic> addDiagnostic(
+  public void addDiagnostic(
     Range range,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
-    return addDiagnostic(
+    addDiagnostic(
       range,
       diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
 
-  public Optional<Diagnostic> addDiagnostic(
+  public void addDiagnostic(
     Range range,
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
 
-    var diagnostic = createDiagnostic(
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
+    diagnosticList.add(createDiagnostic(
       diagnostic,
       range,
       diagnosticMessage,
       relatedInformation
-    );
-
-    diagnosticList.add(diagnostic);
-
-    return Optional.of(diagnostic);
+    ));
   }
 
   public void addDiagnostic(ParseTree tree) {
@@ -218,6 +218,15 @@ public class DiagnosticStorage {
     }
   }
 
+  /**
+   * Добавляет диагностику по ссылке на символ, используя в качестве области - область символа
+   *
+   * @param sourceDefinedSymbol ссылка на метод
+   */
+  protected void addDiagnostic(SourceDefinedSymbol sourceDefinedSymbol) {
+    addDiagnostic(sourceDefinedSymbol.getSelectionRange());
+  }
+
   private static Diagnostic createDiagnostic(
     BSLDiagnostic bslDiagnostic,
     Range range,
@@ -226,7 +235,7 @@ public class DiagnosticStorage {
   ) {
     var info = bslDiagnostic.getInfo();
 
-    Diagnostic diagnostic = new Diagnostic(
+    var diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
       info.getLSPSeverity(),

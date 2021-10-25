@@ -14,9 +14,9 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "6.2.0"
     id("io.freefair.aspectj.post-compile-weaving") version "6.2.0"
     id("io.freefair.maven-central.validate-poms") version "6.2.0"
-    id("me.qoomon.git-versioning") version "5.1.0"
+    id("me.qoomon.git-versioning") version "5.1.1"
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("org.springframework.boot") version "2.5.4"
+    id("org.springframework.boot") version "2.5.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.5.0"
     id("ru.vyarus.pom") version "2.2.0"
@@ -24,6 +24,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
 }
@@ -63,7 +64,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.19.4") {
+    api("com.github.1c-syntax", "bsl-parser", "dcefcd09d5") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -71,7 +72,7 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.3")
+    api("com.github.1c-syntax", "utils", "0.3.4")
     api("com.github.1c-syntax", "mdclasses", "0.9.2")
 
     // JLanguageTool

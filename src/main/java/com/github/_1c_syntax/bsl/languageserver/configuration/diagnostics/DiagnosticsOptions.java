@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind.ParametersDeserializer;
+import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

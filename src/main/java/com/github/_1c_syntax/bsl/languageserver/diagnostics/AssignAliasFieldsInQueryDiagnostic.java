@@ -51,7 +51,11 @@ public class AssignAliasFieldsInQueryDiagnostic extends AbstractSDBLVisitorDiagn
     }
 
     ctx.selectedFields().selectedField().stream()
-      .filter(sf -> sf.alias() == null || sf.alias().identifier() == null || sf.alias().AS() == null)
+      .filter(sf -> sf.asteriskField() == null) // для * алиаса не ждем
+      .filter(sf -> sf.alias() == null
+        || sf.alias().identifier() == null
+        || sf.alias().AS() == null
+      )
       .forEach(sf -> diagnosticStorage.addDiagnostic(sf, info.getMessage(sf.getText())));
 
     return super.visitQuery(ctx);

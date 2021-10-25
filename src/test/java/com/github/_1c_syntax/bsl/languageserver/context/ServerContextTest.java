@@ -81,7 +81,7 @@ class ServerContextTest {
     serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
-    DocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
+    var documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
     assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()

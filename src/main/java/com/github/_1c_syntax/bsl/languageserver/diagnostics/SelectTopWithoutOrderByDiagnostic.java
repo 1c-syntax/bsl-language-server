@@ -31,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.Nullable;
+
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -60,31 +62,36 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
       ctx.union().forEach(unionCtx -> checkQuery(unionCtx.query(), false));
     } else {
       // missing order by
-      if (!Trees.nodeContains(ctx.getParent(), SDBLParser.RULE_orders)) {
+      if (!Trees.nodeContains(ctx.getParent(), SDBLParser.RULE_orderBy)) {
         checkQuery(ctx.query(), skipSelectTopOne);
       }
     }
     return super.visitSubquery(ctx);
   }
 
-  private void checkQuery(SDBLParser.QueryContext ctx, boolean canTopOne) {
+  private void checkQuery(@Nullable SDBLParser.QueryContext ctx, boolean canTopOne) {
+
+    if (ctx == null) {
+      // для битых запросов, чтобы не ронять
+      return;
+    }
 
     SDBLParser.LimitationsContext limitations = ctx.limitations();
 
-    //limitations or top is missing
+    // limitations or top is missing
     if (limitations == null || limitations.top() == null) {
       return;
     }
 
     var topCtx = ctx.limitations().top();
-    if (topCtx.DECIMAL().isEmpty()) {
+    if (topCtx.DECIMAL() == null) {
       // why? it's error!
       return;
     }
 
-    var topLimit = topCtx.DECIMAL().get(0).getText();
+    var topLimit = topCtx.DECIMAL().getText();
     boolean allowedTopNumber = "1".equals(topLimit) || "0".equals(topLimit);
-    if (!(allowedTopNumber && (canTopOne || ctx.where().WHERE() != null))) {
+    if (!(allowedTopNumber && (canTopOne || ctx.where != null))) {
       diagnosticStorage.addDiagnostic(topCtx);
     }
   }

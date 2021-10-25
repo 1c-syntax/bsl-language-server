@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",
@@ -37,6 +37,24 @@
             ],
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
+        },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
         },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
@@ -486,6 +504,42 @@
             "title": "Duplicate regions",
             "$id": "#/definitions/DuplicateRegion"
         },
+        "DuplicateStringLiteral": {
+            "description": "Duplicate string literal",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate string literal",
+            "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
+                "allowedNumberCopies": {
+                    "description": "Allowed number of copies string literals",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Allowed number of copies string literals"
+                },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
+                "analyzeFile": {
+                    "description": "Analyze file",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Analyze file"
+                }
+            },
+            "$id": "#/definitions/DuplicateStringLiteral"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
@@ -573,6 +627,26 @@
             ],
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
+        },
+        "FieldsFromJoinsWithoutIsNull": {
+            "description": "No NULL checks for fields from joined tables",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "No NULL checks for fields from joined tables",
+            "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
+        },
+        "ForbiddenMetadataName": {
+            "description": "Metadata object has a forbidden name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object has a forbidden name",
+            "$id": "#/definitions/ForbiddenMetadataName"
         },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
@@ -868,6 +942,12 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -1050,6 +1130,16 @@
             },
             "$id": "#/definitions/MissingSpace"
         },
+        "MissingTempStorageDeletion": {
+            "description": "Missing temporary storage data deletion after using",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing temporary storage data deletion after using",
+            "$id": "#/definitions/MissingTempStorageDeletion"
+        },
         "MissingTemporaryFileDeletion": {
             "description": "Missing temporary file deletion after using",
             "default": true,
@@ -1142,6 +1232,14 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
@@ -1334,6 +1432,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
@@ -1373,6 +1481,16 @@
             ],
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
+        },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
         },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",
@@ -1422,6 +1540,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
         "SetPermissionsForNewObjects": {
             "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "default": true,
@@ -1464,6 +1592,12 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -1872,6 +2006,36 @@
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
+        "WrongDataPathForFormElements": {
+            "description": "Form fields do not have a data path",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Form fields do not have a data path",
+            "$id": "#/definitions/WrongDataPathForFormElements"
+        },
+        "WrongHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/WrongHttpServiceHandler"
+        },
+        "WrongMetadataInQuery": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/WrongMetadataInQuery"
+        },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
             "default": true,
@@ -1891,6 +2055,16 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
+        "WrongWebServiceHandler": {
+            "description": "Wrong handler for web service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong handler for web service",
+            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",

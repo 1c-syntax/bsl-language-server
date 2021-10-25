@@ -236,7 +236,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(16, 1, 22)
+      .hasRange(20, 1, 22)
     ;
   }
 

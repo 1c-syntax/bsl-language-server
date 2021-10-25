@@ -40,12 +40,12 @@ class JoinWithSubQueryDiagnosticTest extends AbstractDiagnosticTest<JoinWithSubQ
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(3, 84, 162)
-      .hasRange(12, 5, 83)
-      .hasRange(22, 5, 83)
-      .hasRange(31, 9, 87)
-      .hasRange(33, 5, 83)
-      .hasRange(48, 7, 85)
-      .hasRange(67, 7, 68, 31);
+      .hasRange(3, 85, 161)
+      .hasRange(12, 6, 82)
+      .hasRange(22, 6, 82)
+      .hasRange(31, 10, 86)
+      .hasRange(33, 6, 82)
+      .hasRange(48, 8, 84)
+      .hasRange(67, 8, 68, 30);
   }
 }

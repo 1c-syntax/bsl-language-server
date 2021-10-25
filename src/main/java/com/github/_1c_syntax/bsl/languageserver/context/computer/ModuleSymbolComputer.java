@@ -49,17 +49,21 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
   @Override
   public ModuleSymbol compute() {
+    var firstRange = Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+      .orElseGet(Ranges::create); // используем нулевую область
+
     return ModuleSymbol.builder()
       .name(getName(documentContext))
       .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
+      .selectionRange(firstRange)
       .build();
   }
 
   private static String getName(DocumentContext documentContext) {
     String name = MdoRefBuilder.getMdoRef(documentContext);
-    ModuleType moduleType = documentContext.getModuleType();
+    var moduleType = documentContext.getModuleType();
     if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
       name += "." + moduleType.name();
     }

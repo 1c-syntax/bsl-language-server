@@ -3,6 +3,8 @@
 BSL Language Server provides the ability to change the settings using a configuration file in json format.  
 The created file must be specified using the key `--configuration` *(or `-c`)* when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation *(this is usually the root of a project or workspace)*.
 
+If there is no configuration file, an attempt will be made to find the file ".bsl-language-server.json" in "%HOMEPATH%"
+
 ## Settings
 
 | Name                                           |     Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |

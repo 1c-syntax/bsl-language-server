@@ -66,6 +66,15 @@ class ConfigurationFileSystemWatcherTest {
       assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
     });
 
+    // when
+    FileUtils.delete(file);
+
+    await().atMost(10, SECONDS).untilAsserted(() -> {
+      // when
+      watcher.watch();
+      // then
+      assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
+    });
   }
 
 }

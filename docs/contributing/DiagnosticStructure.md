@@ -98,6 +98,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic
+```
+
 Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
 
 Примеры
@@ -120,6 +124,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 
 ```java
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
+```
+
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic implements QuickFixProvider
 ```
 
 После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в [статье](DiagnostcAddSettings.md).

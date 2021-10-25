@@ -25,14 +25,19 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.beans.ConstructorProperties;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Базовый класс для реализации линз, показывающих сложность методов в документе.
@@ -40,45 +45,86 @@ import java.util.Map;
  * Конкретный сапплаер должен иметь ресурс-бандл со свойством {@code title}, имеющим один числовой параметр {@code %d}.
  */
 @RequiredArgsConstructor
-public abstract class AbstractMethodComplexityCodeLensSupplier implements CodeLensSupplier {
+public abstract class AbstractMethodComplexityCodeLensSupplier
+  implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
+  private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   protected final LanguageServerConfiguration configuration;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-    if (!supplierIsEnabled()) {
-      return Collections.emptyList();
-    }
+    var complexityThreshold = getComplexityThreshold();
+    var methodsComplexity = getMethodsComplexity(documentContext);
+    return documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
+      .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
+      .collect(Collectors.toList());
+  }
 
-    Map<MethodSymbol, Integer> methodsComplexity = getMethodsComplexity(documentContext);
-
-    List<CodeLens> codeLenses = new ArrayList<>(methodsComplexity.size());
-
-    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
+  @Override
+  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
+    var methodName = data.getMethodName();
+    var methodsComplexity = getMethodsComplexity(documentContext);
+    documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
+      int complexity = methodsComplexity.get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var command = new Command(title, "");
-      var codeLens = new CodeLens(
-        methodSymbol.getSubNameRange(),
-        command,
-        null
-      );
 
-      codeLenses.add(codeLens);
+      unresolved.setCommand(command);
     });
 
-    return codeLenses;
+    return unresolved;
+  }
+
+  @Override
+  public Class<ComplexityCodeLensData> getCodeLensDataClass() {
+    return ComplexityCodeLensData.class;
   }
 
   /**
-   * @return Нужно ли применять конкретный сапплаер.
-   */
-  protected abstract boolean supplierIsEnabled();
-
-  /**
+   * Получить данные о сложности в разрезе символов.
+   *
    * @param documentContext Документ, для которого нужно рассчитать информацию о сложностях методов.
    * @return Данные о сложности методов.
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
+
+  private int getComplexityThreshold() {
+    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    if (parameters.isLeft()) {
+      return DEFAULT_COMPLEXITY_THRESHOLD;
+    } else {
+      return (int) parameters.getRight().getOrDefault("complexityThreshold", DEFAULT_COMPLEXITY_THRESHOLD);
+    }
+  }
+
+  private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
+    var data = new ComplexityCodeLensData(documentContext.getUri(), getId(), methodSymbol.getName());
+
+    var codeLens = new CodeLens(methodSymbol.getSubNameRange());
+    codeLens.setData(data);
+
+    return codeLens;
+  }
+
+  /**
+   * DTO для хранения данных линз о сложности методов в документе.
+   */
+  @Value
+  @EqualsAndHashCode(callSuper = true)
+  @ToString(callSuper = true)
+  public static class ComplexityCodeLensData extends DefaultCodeLensData {
+    /**
+     * Имя метода.
+     */
+    String methodName;
+
+    @ConstructorProperties({"uri", "id", "methodName"})
+    public ComplexityCodeLensData(URI uri, String id, String methodName) {
+      super(uri, id);
+      this.methodName = methodName;
+    }
+  }
 }

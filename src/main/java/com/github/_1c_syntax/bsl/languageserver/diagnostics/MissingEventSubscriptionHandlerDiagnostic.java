@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -61,23 +62,20 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
   @Override
   protected void check() {
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
-
-    if (diagnosticRange == null) {
-      // нет ренджа - нет и диагностик :)
+    var configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
 
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(diagnosticRange)) {
       return;
     }
 
     // для анализа выбираются все имеющиеся подписки на события
     configuration.getChildren().stream()
       .filter(mdo -> mdo.getType() == MDOType.EVENT_SUBSCRIPTION)
-      .map(mdo -> (MDEventSubscription) mdo)
+      .map(MDEventSubscription.class::cast)
       .forEach((MDEventSubscription eventSubs) -> {
         // проверка на пустой обработчик
         if (eventSubs.getHandler().isEmpty()) {
@@ -118,7 +116,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
   private void checkMethod(MDEventSubscription eventSubs, String methodName, MDCommonModule commonModule) {
     documentContext.getServerContext()
       .getDocument(commonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
-      .ifPresent(commonModuleContext -> {
+      .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
           .findFirst();

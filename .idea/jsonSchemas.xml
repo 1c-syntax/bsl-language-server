@@ -3,15 +3,22 @@
   <component name="JsonSchemaMappingsProjectConfiguration">
     <state>
       <map>
-        <entry key="schema">
+        <entry key="bsl-language-server">
           <value>
             <SchemaInfo>
-              <option name="name" value="schema" />
+              <option name="name" value="bsl-language-server" />
               <option name="relativePathToSchema" value="src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
               <option name="patterns">
                 <list>
                   <Item>
+                    <option name="path" value="src/test/resources/.bsl-language-server-only-en-param.json" />
+                  </Item>
+                  <Item>
                     <option name="path" value="src/test/resources/.bsl-language-server.json" />
+                  </Item>
+                  <Item>
+                    <option name="path" value="src/test/resources/.partial-bsl-language-server.json" />
                   </Item>
                 </list>
               </option>

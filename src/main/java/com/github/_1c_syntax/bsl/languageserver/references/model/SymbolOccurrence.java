@@ -19,36 +19,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.eclipse.lsp4j.DocumentFilter;
-import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 
 /**
- * Информация о том, документы каких типов (языков, расширений, схем) может обрабатывать Language Server.
+ * Обращение к символу в файле.
  */
-@Component
-@ToString
-@EqualsAndHashCode
-public class DocumentSelector {
-  private final List<DocumentFilter> documentFilters;
-
-  public DocumentSelector() {
-    var documentFilter = new DocumentFilter();
-    documentFilter.setLanguage("bsl");
-
-    documentFilters = List.of(documentFilter);
-  }
+@Value
+@AllArgsConstructor
+@Builder
+public class SymbolOccurrence {
 
   /**
-   * @return Список фильтров документов.
+   * Тип обращения к символу.
    */
-  public List<DocumentFilter> asList() {
-    return new ArrayList<>(documentFilters);
-  }
+  OccurrenceType occurrenceType;
+
+  /**
+   * Символ, к которому происходит обращение.
+   */
+  Symbol symbol;
+
+  /**
+   * Месторасположение обращения к символу.
+   */
+  Location location;
 }
