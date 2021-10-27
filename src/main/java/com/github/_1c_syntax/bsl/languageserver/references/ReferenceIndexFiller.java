@@ -187,6 +187,19 @@ public class ReferenceIndexFiller {
     private final DocumentContext documentContext;
     private final Map<BSLParser.SubContext, SourceDefinedSymbol> scopeCache = new HashMap<>();
 
+    private BSLParser.SubContext currentSub;
+
+    @Override
+    public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
+      if (!isErrorNode(ctx)) {
+        currentSub = ctx;
+      }
+
+      BSLParserRuleContext result = super.visitSub(ctx);
+      currentSub = null;
+      return result;
+    }
+
     @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       if (ctx.IDENTIFIER() == null) {
@@ -244,12 +257,11 @@ public class ReferenceIndexFiller {
     }
 
     private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
-      var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
-      if (sub == null || isErrorNode(sub)) {
+      if (currentSub == null) {
         return documentContext.getSymbolTree().getModule();
       }
 
-      return scopeCache.computeIfAbsent(sub, subContext -> documentContext
+      return scopeCache.computeIfAbsent(currentSub, subContext -> documentContext
         .getSymbolTree()
         .getMethodSymbol(subContext)
         .orElseThrow()
