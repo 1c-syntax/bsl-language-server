@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -185,18 +184,21 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final Map<BSLParser.SubContext, SourceDefinedSymbol> scopeCache = new HashMap<>();
-
-    private BSLParser.SubContext currentSub;
+    private SourceDefinedSymbol currentScope;
 
     @Override
     public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
+      currentScope = documentContext.getSymbolTree().getModule();
+
       if (!isErrorNode(ctx)) {
-        currentSub = ctx;
+        documentContext
+          .getSymbolTree()
+          .getMethodSymbol(ctx)
+          .ifPresent(scope -> currentScope = scope);
       }
 
       BSLParserRuleContext result = super.visitSub(ctx);
-      currentSub = null;
+      currentScope = documentContext.getSymbolTree().getModule();
       return result;
     }
 
@@ -206,7 +208,7 @@ public class ReferenceIndexFiller {
         return super.visitLValue(ctx);
       }
 
-      findVariableSymbol(ctx, ctx.IDENTIFIER().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
@@ -227,7 +229,7 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
-      findVariableSymbol(ctx, variableName)
+      findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
       return super.visitCallStatement(ctx);
     }
@@ -239,14 +241,14 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
-      findVariableSymbol(ctx, variableName)
+      findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
       return super.visitComplexIdentifier(ctx);
     }
 
-    private Optional<VariableSymbol> findVariableSymbol(BSLParserRuleContext ctx, String variableName) {
+    private Optional<VariableSymbol> findVariableSymbol(String variableName) {
       var variableSymbol = documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, getVariableScope(ctx));
+        .getVariableSymbol(variableName, currentScope);
 
       if (variableSymbol.isPresent()) {
         return variableSymbol;
@@ -254,18 +256,6 @@ public class ReferenceIndexFiller {
 
       return documentContext.getSymbolTree()
         .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
-    }
-
-    private SourceDefinedSymbol getVariableScope(BSLParserRuleContext ctx) {
-      if (currentSub == null) {
-        return documentContext.getSymbolTree().getModule();
-      }
-
-      return scopeCache.computeIfAbsent(currentSub, subContext -> documentContext
-        .getSymbolTree()
-        .getMethodSymbol(subContext)
-        .orElseThrow()
-      );
     }
 
     private boolean isErrorNode(BSLParser.SubContext ctx) {

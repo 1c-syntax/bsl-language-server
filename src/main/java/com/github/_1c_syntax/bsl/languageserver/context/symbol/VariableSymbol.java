@@ -40,13 +40,14 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent", "description"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
 
   /**
    * Имя переменной.
    */
+  @EqualsAndHashCode.Include
   String name;
 
   /**
@@ -63,10 +64,12 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   /**
    * Файл в котором располагается переменная.
    */
+  @EqualsAndHashCode.Include
   DocumentContext owner;
 
   Range range;
 
+  @EqualsAndHashCode.Include
   Range variableNameRange;
 
   @Getter

@@ -41,16 +41,19 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent", "description", "parameters", "annotations", "compilerDirectiveKind"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+  @EqualsAndHashCode.Include
   String name;
 
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
 
+  @EqualsAndHashCode.Include
   DocumentContext owner;
   Range range;
+  @EqualsAndHashCode.Include
   Range subNameRange;
 
   @Getter
