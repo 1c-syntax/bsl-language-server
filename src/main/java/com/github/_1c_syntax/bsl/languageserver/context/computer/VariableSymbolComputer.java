@@ -39,6 +39,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +124,18 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return ctx;
     }
 
-    variables.add(createVariableSymbol(ctx, ctx.IDENTIFIER()));
+    var variable = VariableSymbol.builder()
+      .name(ctx.IDENTIFIER().getText())
+      .scope(currentMethod)
+      .owner(documentContext)
+      .range(Ranges.create(ctx))
+      .variableNameRange(Ranges.create(ctx.IDENTIFIER()))
+      .export(false)
+      .kind(VariableKind.PARAMETER)
+      .description(Optional.empty())
+      .build();
+    variables.add(variable);
+
     currentMethodVariables.put(ctx.IDENTIFIER().getText(), ctx.IDENTIFIER().getText());
     return ctx;
   }
@@ -136,7 +150,18 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return ctx;
     }
 
-    variables.add(createVariableSymbol(ctx));
+    var variable = VariableSymbol.builder()
+      .name(ctx.getText())
+      .owner(documentContext)
+      .range(Ranges.create(ctx))
+      .variableNameRange(Ranges.create(ctx))
+      .export(false)
+      .kind(VariableKind.DYNAMIC)
+      .scope(currentMethod)
+      .description(createDescription(ctx))
+      .build();
+    variables.add(variable);
+
     currentMethodVariables.put(ctx.getText(), ctx.getText());
     return ctx;
   }
@@ -169,31 +194,16 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
         .orElse(module);
   }
 
-  private VariableSymbol createVariableSymbol(BSLParserRuleContext ctx) {
-    return VariableSymbol.builder()
-      .name(ctx.getText())
-      .owner(documentContext)
-      .range(Ranges.create(ctx))
-      .variableNameRange(Ranges.create(ctx))
-      .export(false)
-      .kind(VariableKind.DYNAMIC)
-      .description(Optional.empty())
-      .scope(currentMethod)
-      .build();
-  }
+  private Optional<VariableDescription> createDescription(BSLParser.LValueContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.getStop());
 
-  private VariableSymbol createVariableSymbol(BSLParserRuleContext ctx,
-                                              TerminalNode paramName) {
-    return VariableSymbol.builder()
-      .name(ctx.getText())
-      .owner(documentContext)
-      .range(Ranges.create(ctx))
-      .variableNameRange(Ranges.create(paramName))
-      .export(false)
-      .kind(VariableKind.PARAMETER)
-      .description(Optional.empty())
-      .scope(currentMethod)
-      .build();
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      new VariableDescription(Collections.emptyList(), trailingComments)
+    );
   }
 
   private Optional<VariableDescription> createDescription(BSLParserRuleContext ctx) {

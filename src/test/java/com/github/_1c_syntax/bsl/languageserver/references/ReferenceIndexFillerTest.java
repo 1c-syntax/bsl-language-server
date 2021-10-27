@@ -100,7 +100,7 @@ class ReferenceIndexFillerTest {
       .getMethodSymbol("ТретийМетод");
     assertThat(scopeMethod).isPresent();
     var references = referenceIndex.getReferencesFrom(scopeMethod.get());
-    assertThat(references).hasSize(10);
+    assertThat(references).hasSize(11);
 
     var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
     var usage = referenceIndex.getReferencesTo(targetVariable);
