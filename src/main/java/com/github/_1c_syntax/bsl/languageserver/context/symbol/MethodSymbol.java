@@ -41,7 +41,7 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(exclude = {"children", "parent", "description", "parameters", "annotations", "compilerDirectiveKind"})
 @ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;

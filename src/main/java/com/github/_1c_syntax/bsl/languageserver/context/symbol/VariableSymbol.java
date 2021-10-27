@@ -40,7 +40,7 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(exclude = {"children", "parent", "description"})
 @ToString(exclude = {"children", "parent"})
 public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
 
