@@ -100,7 +100,13 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private void checkForm(Form form) {
 
-    form.getData().getPlainChildren().stream()
+    var formData = form.getData();
+    if (formData == null) {
+      return;
+    }
+
+    formData.getPlainChildren()
+      .stream()
       .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
       .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
         info.getMessage(formItem.getName(), getMdoRef(form))));
