@@ -29,14 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
-import com.github._1c_syntax.mdclasses.mdo.children.form.FormData;
 import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import org.eclipse.lsp4j.Range;
 
-import java.util.Collection;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -103,10 +100,13 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private void checkForm(Form form) {
 
-    Optional.ofNullable(form.getData())
-      .map(FormData::getPlainChildren)
+    var formData = form.getData();
+    if (formData == null) {
+      return;
+    }
+
+    formData.getPlainChildren()
       .stream()
-      .flatMap(Collection::stream)
       .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
       .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
         info.getMessage(formItem.getName(), getMdoRef(form))));
