@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1635939668567,
+  "lastUpdate": 1635947989021,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14694,6 +14694,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.0945188220207425",
             "extra": "mean: 75.19536757469177 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e6da12a6eff3fdeeaa067475eeb9c941c182d449",
+          "message": "Merge pull request #1902 from 1c-syntax/fix/RedundantAccessToObjectCached",
+          "timestamp": "2021-11-03T16:43:57+03:00",
+          "tree_id": "e3853b3a03084ee80ac8af3868ed6d28b05832a3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e6da12a6eff3fdeeaa067475eeb9c941c182d449"
+        },
+        "date": 1635947986023,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.79784282048543,
+            "unit": "sec",
+            "range": "stddev: 1.7955049122504407",
+            "extra": "mean: 73.79784282048543 sec\nrounds: 3"
           }
         ]
       }
