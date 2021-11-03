@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
@@ -43,7 +44,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@CleanupContextBeforeClassAndAfterClass
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<RedundantAccessToObjectDiagnostic> {
   RedundantAccessToObjectDiagnosticTest() {
     super(RedundantAccessToObjectDiagnostic.class);
