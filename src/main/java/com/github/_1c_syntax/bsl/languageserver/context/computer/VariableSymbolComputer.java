@@ -35,12 +35,9 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -48,12 +45,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
   private final ModuleSymbol module;
-  private final List<MethodSymbol> methods;
+  private final Map<Range, SourceDefinedSymbol> methods;
   private final Set<VariableSymbol> variables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -63,7 +64,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<MethodSymbol> methods) {
     this.documentContext = documentContext;
     this.module = module;
-    this.methods = methods;
+    this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));
     this.currentMethod = module;
   }
 
@@ -185,13 +186,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
         subNameNode = ctx.procedure().procDeclaration().subName();
       }
 
-      Range subNameRange = Ranges.create(subNameNode);
-
-      return methods.stream()
-        .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange))
-        .map(methodSymbol -> (SourceDefinedSymbol) methodSymbol)
-        .findAny()
-        .orElse(module);
+      return methods.getOrDefault(Ranges.create(subNameNode), module);
   }
 
   private Optional<VariableDescription> createDescription(BSLParser.LValueContext ctx) {

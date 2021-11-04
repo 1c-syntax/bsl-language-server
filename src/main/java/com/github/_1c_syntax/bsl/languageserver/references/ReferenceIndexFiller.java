@@ -42,7 +42,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
