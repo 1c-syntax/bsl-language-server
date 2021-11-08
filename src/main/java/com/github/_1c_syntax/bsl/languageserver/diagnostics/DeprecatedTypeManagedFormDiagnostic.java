@@ -87,14 +87,7 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
 
-      var range = Ranges.create(
-        diagnostic.getRange().getStart().getLine(),
-        diagnostic.getRange().getStart().getCharacter() + 1,
-        diagnostic.getRange().getEnd().getLine(),
-        diagnostic.getRange().getEnd().getCharacter() + 1
-
-      );
-      TextEdit textEdit = new TextEdit(range, info.getResourceString("changeFix"));
+      TextEdit textEdit = new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
       textEdits.add(textEdit);
 
     });
