@@ -58,7 +58,7 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.6.1")
+    api("info.picocli:picocli-spring-boot-starter:4.6.2")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
