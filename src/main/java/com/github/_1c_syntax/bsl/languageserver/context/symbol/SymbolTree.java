@@ -65,7 +65,7 @@ public class SymbolTree {
   List<MethodSymbol> methods = createMethods();
 
   /**
-   * Список переменных документа
+   * Плоский список всех переменных документа
    */
   @Getter(lazy = true)
   List<VariableSymbol> variables = createVariables();
