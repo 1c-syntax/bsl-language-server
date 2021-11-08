@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -189,7 +190,7 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
 
-      if (!isErrorNode(ctx)) {
+      if (!Trees.nodeContainsErrors(ctx)) {
         documentContext
           .getSymbolTree()
           .getMethodSymbol(ctx)
@@ -255,26 +256,6 @@ public class ReferenceIndexFiller {
 
       return documentContext.getSymbolTree()
         .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
-    }
-
-    private boolean isErrorNode(BSLParser.SubContext ctx) {
-      TerminalNode startNode = null;
-      TerminalNode stopNode = null;
-
-      if(ctx.procedure() != null) {
-        BSLParser.ProcDeclarationContext declaration = ctx.procedure().procDeclaration();
-        startNode = declaration.PROCEDURE_KEYWORD();
-        stopNode = ctx.procedure().ENDPROCEDURE_KEYWORD();
-      } else if (ctx.function() != null) {
-        BSLParser.FuncDeclarationContext declaration = ctx.function().funcDeclaration();
-        startNode = declaration.FUNCTION_KEYWORD();
-        stopNode = ctx.function().ENDFUNCTION_KEYWORD();
-      }
-
-      return startNode == null
-        || startNode instanceof ErrorNode
-        || stopNode == null
-        || stopNode instanceof ErrorNode;
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {
