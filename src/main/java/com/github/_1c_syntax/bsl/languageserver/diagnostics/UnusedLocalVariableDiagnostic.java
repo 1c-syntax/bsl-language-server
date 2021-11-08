@@ -63,9 +63,9 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     documentContext.getSymbolTree().getVariables().stream()
-      .filter(v -> CHECKING_VARIABLE_KINDS.contains(v.getKind()))
-      .filter(v -> !v.isExport())
-      .filter(v -> referenceIndex.getReferencesTo(v).stream().filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty())
-      .forEach(v -> diagnosticStorage.addDiagnostic(v.getRange(), info.getMessage(v.getName())));
+      .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
+      .filter(variable -> !variable.isExport())
+      .filter(variable -> referenceIndex.getReferencesTo(variable).stream().filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty())
+      .forEach(variable -> diagnosticStorage.addDiagnostic(variable.getSelectionRange(), info.getMessage(variable.getName())));
   }
 }
