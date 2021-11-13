@@ -10,7 +10,7 @@ plugins {
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
     id("io.freefair.lombok") version "6.3.0"
-    id("io.freefair.javadoc-links") version "6.2.0"
+    id("io.freefair.javadoc-links") version "6.3.0"
     id("io.freefair.javadoc-utf-8") version "6.3.0"
     id("io.freefair.aspectj.post-compile-weaving") version "6.3.0"
     id("io.freefair.maven-central.validate-poms") version "6.3.0"
@@ -49,7 +49,7 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "5.4"
+val languageToolVersion = "5.5"
 
 dependencies {
 
@@ -57,7 +57,7 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.6.1")
+    api("info.picocli:picocli-spring-boot-starter:4.6.2")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
@@ -115,7 +115,7 @@ dependencies {
 
     // test utils
     testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
-    testImplementation("org.awaitility", "awaitility", "4.1.0")
+    testImplementation("org.awaitility", "awaitility", "4.1.1")
 }
 
 java {
