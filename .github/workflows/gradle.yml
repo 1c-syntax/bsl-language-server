@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java_version: ['11', '16']
+        java_version: ['11', '17']
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v2.4.0
@@ -16,7 +16,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: ${{ matrix.java_version }}
-        distribution: 'adopt'
+        distribution: 'temurin'
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
     - name: Archive test results

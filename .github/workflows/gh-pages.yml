@@ -22,8 +22,8 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v2
       with:
-        java-version: 16
-        distribution: 'adopt'
+        java-version: 17
+        distribution: 'temurin'
 
     - name: Build javadoc
       run: ./gradlew --no-daemon javadoc
