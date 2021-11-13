@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1636793954060,
+  "lastUpdate": 1636794998910,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -14818,6 +14818,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8144737992386701",
             "extra": "mean: 73.65833894411723 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c8450d948329c3b0e2916b5075b1082a80d0cb09",
+          "message": "Merge pull request #1906 from 1c-syntax/dependabot/gradle/io.freefair.aspectj.post-compile-weaving-6.3.0",
+          "timestamp": "2021-11-13T11:48:53+03:00",
+          "tree_id": "9ebfdd6f5f2c1305679b30fc5f80e005c33027e1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c8450d948329c3b0e2916b5075b1082a80d0cb09"
+        },
+        "date": 1636794995927,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.78179335594177,
+            "unit": "sec",
+            "range": "stddev: 2.1541370614791338",
+            "extra": "mean: 76.78179335594177 sec\nrounds: 3"
           }
         ]
       }
