@@ -50,7 +50,6 @@ gitVersioning.apply {
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.4"
-aspectj.version.set("1.9.7")
 
 dependencies {
 
@@ -81,7 +80,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", aspectj.version.get())
+    implementation("org.aspectj", "aspectjrt", "1.9.7")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
