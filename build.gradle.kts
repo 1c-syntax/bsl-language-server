@@ -12,7 +12,7 @@ plugins {
     id("io.freefair.lombok") version "6.3.0"
     id("io.freefair.javadoc-links") version "6.2.0"
     id("io.freefair.javadoc-utf-8") version "6.3.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.2.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.3.0"
     id("io.freefair.maven-central.validate-poms") version "6.3.0"
     id("me.qoomon.git-versioning") version "5.1.1"
     id("com.github.ben-manes.versions") version "0.39.0"
@@ -50,7 +50,6 @@ gitVersioning.apply {
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.4"
-aspectj.version.set("1.9.7")
 
 dependencies {
 
@@ -81,7 +80,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", aspectj.version.get())
+    implementation("org.aspectj", "aspectjrt", "1.9.7")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
