@@ -67,12 +67,15 @@ public class ReferenceIndex {
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
-    var scopeName = symbol.getRootParent(SymbolKind.Method)
-      .map(SourceDefinedSymbol::getName)
-      .map(name -> name.toLowerCase(Locale.ENGLISH))
-      .orElse("");
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
+    String scopeName = "";
 
+    if (symbol.getSymbolKind() == SymbolKind.Variable) {
+      scopeName = symbol.getRootParent(SymbolKind.Method)
+        .map(SourceDefinedSymbol::getName)
+        .map(name -> name.toLowerCase(Locale.ENGLISH))
+        .orElse("");
+    }
 
     var symbolDto = Symbol.builder()
       .mdoRef(mdoRef)
