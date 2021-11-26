@@ -86,6 +86,7 @@ public abstract class ServerContext {
       var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
+        documentContext.freezeComputedData();
         documentContext.clearSecondaryData();
       }
     });
@@ -128,6 +129,7 @@ public abstract class ServerContext {
       documentContext = createDocumentContext(uri, content, version);
     } else {
       documentContext.rebuild(content, version);
+      documentContext.unfreezeComputedData();
     }
 
     contextLock.readLock().unlock();
