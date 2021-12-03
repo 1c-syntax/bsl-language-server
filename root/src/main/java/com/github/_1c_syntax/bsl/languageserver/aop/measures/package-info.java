@@ -22,7 +22,8 @@
 /**
  * Выполнение замеров производительности.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotationForParameters(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotationForParameters;
+import edu.umd.cs.findbugs.annotations.NonNull;

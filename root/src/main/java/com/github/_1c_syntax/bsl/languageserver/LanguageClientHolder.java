@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.Optional;
 import java.util.function.Consumer;
 

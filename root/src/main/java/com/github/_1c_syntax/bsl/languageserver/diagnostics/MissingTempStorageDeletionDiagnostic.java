@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser.SubContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;

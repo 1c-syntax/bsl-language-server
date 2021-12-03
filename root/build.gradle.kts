@@ -8,6 +8,24 @@ plugins {
     id("io.spring.dependency-management")
     id("com.github.1c-syntax.bslls-dev-tools")
     id("ru.vyarus.pom")
+    id("de.jjohannes.extra-java-module-info")
+}
+
+extraJavaModuleInfo {
+    failOnMissingModuleInfo.set(false)
+    automaticModule("org.eclipse.lsp4j-0.12.0.jar", "org.eclipse.lsp4j")
+    automaticModule("bsl-parser-b0858f1e02.jar", "v8.bsl.parser")
+    automaticModule("mdclasses-0.9.2.jar", "v8.bsl.mdclasses")
+    automaticModule("antlr4-runtime-4.9.0.jar", "antlr4.runtime")
+    automaticModule("org.eclipse.lsp4j.jsonrpc-0.12.0.jar", "org.eclipse.lsp4j.jsonrpc")
+    automaticModule("utils-0.3.4.jar", "v8.bsl.utils")
+    automaticModule("commons-beanutils-1.9.4.jar", "commons.beanutils")
+    automaticModule("progressbar-0.9.2.jar", "progressbar")
+    automaticModule("java-sarif-2.0.jar", "java.sarif")
+}
+
+tasks.compileJava {
+    options.compilerArgs.addAll(listOf("--add-reads", "bsl.language.server=ALL-UNNAMED"))
 }
 
 group = "io.github.1c-syntax"
@@ -28,7 +46,9 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.2")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0") {
+        exclude("com.google.code.findbugs", "jsr305")
+    }
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "b0858f1e02") {
@@ -72,7 +92,10 @@ dependencies {
     // COMPILE
 
     // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.5.0") {
+        exclude("com.google.code.findbugs", "jsr305")
+    }
+
 
     // TEST
 

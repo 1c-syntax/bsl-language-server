@@ -26,6 +26,7 @@ import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -35,7 +36,6 @@ import org.eclipse.lsp4j.TextDocumentItem;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;

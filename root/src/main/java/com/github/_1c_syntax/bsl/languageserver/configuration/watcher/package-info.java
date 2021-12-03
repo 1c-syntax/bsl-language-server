@@ -23,7 +23,9 @@
  * В пакете содержатся классы, относящиеся к отслеживанию факта изменения (удаление, создание, редактирование) файла
  * конфигурации ({@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}).
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotationForParameters(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotationForParameters;
+import edu.umd.cs.findbugs.annotations.NonNull;
+

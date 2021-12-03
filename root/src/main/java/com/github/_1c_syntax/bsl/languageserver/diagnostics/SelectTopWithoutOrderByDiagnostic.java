@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,

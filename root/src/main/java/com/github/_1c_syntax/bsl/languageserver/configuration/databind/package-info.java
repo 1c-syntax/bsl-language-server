@@ -23,7 +23,9 @@
  * Сериализация и десериализация верхнеуровневых или общих частей
  * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotationForParameters(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotationForParameters;
+import edu.umd.cs.findbugs.annotations.NonNull;
+

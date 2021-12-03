@@ -29,12 +29,12 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;

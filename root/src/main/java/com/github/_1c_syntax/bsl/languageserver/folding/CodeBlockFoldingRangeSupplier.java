@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import lombok.Getter;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -31,7 +32,6 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
 

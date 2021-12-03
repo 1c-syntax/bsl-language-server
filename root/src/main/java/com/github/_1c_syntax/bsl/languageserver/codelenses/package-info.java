@@ -23,7 +23,9 @@
  * Пакет предназначен для реализации различных видов линз ("code lenses"),
  * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotationForParameters(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotationForParameters;
+import edu.umd.cs.findbugs.annotations.NonNull;
+

@@ -23,7 +23,9 @@
  * Пакет предназначен для реализации различных видов сворачивания ("folding"),
  * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotationForParameters(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.folding;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotationForParameters;
+import edu.umd.cs.findbugs.annotations.NonNull;
+

@@ -24,12 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;

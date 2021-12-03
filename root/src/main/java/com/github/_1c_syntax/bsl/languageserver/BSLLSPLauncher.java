@@ -26,8 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
@@ -141,7 +141,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
 
   }
 
-  @NotNull
+  @NonNull
   private static String[] addDefaultCommand(String[] args) {
     List<String> tmpList = new ArrayList<>(Arrays.asList(args));
     tmpList.add(0, DEFAULT_COMMAND);
