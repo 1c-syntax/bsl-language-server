@@ -1,5 +1,5 @@
 # Руководство контрибьютора / Contributor's Guide
 
-[English version](docs/en/contributing/index.md)
+[English version](root/docs/en/contributing/index.md)
 
-[Версия на русском](docs/contributing/index.md)
+[Версия на русском](root/docs/contributing/index.md)

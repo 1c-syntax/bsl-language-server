@@ -7,3 +7,4 @@ pluginManagement {
         mavenLocal()
     }
 }
+include("root")

@@ -18,7 +18,7 @@
 
 Сайт проекта (develop) - https://1c-syntax.github.io/bsl-language-server/dev
 
-Исходники документации - [GitHub](docs/index.md)
+Исходники документации - [GitHub](root/docs/index.md)
 
 ---
 
@@ -28,4 +28,4 @@ Project site - https://1c-syntax.github.io/bsl-language-server/en
 
 Project site (develop) - https://1c-syntax.github.io/bsl-language-server/dev/en
 
-Documentation sources - [GitHub](docs/en/index.md)
+Documentation sources - [GitHub](root/docs/en/index.md)
