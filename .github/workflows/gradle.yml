@@ -21,7 +21,7 @@ jobs:
       run: ./gradlew check --stacktrace
     - name: Archive test results
       if: failure()
-      uses: actions/upload-artifact@v2.3.0
+      uses: actions/upload-artifact@v2.3.1
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test
