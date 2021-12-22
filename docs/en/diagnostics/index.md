@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **157**
+Total: **158**
 
 * Security Hotspot: **4**
 * Vulnerability: **4**
 * Error: **52**
-* Code smell: **97**
+* Code smell: **98**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -100,6 +100,7 @@ Total: **157**
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 
  [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Event subscription handler missing | Yes | Blocker | Error | `error` 
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [MissingQueryParameter](MissingQueryParameter.md) | Все параметры запроса инициализированы | Yes | Info | Code smell | `suspicious` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
  [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Missing temporary storage data deletion after using | No | Critical | Code smell | `standard`<br>`performance`<br>`badpractice` 
