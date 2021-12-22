@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638451329088,
+  "lastUpdate": 1640169000069,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15097,6 +15097,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.597922936321473",
             "extra": "mean: 252.66971548398337 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5ee7466c3833855fdfab6e407a72e561ce1e3262",
+          "message": "Merge pull request #1931 from 1c-syntax/dependabot/gradle/org.springframework.boot-2.6.2",
+          "timestamp": "2021-12-22T13:25:42+03:00",
+          "tree_id": "58a89bb7a69401a142c9d5d34f99b7429919b289",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5ee7466c3833855fdfab6e407a72e561ce1e3262"
+        },
+        "date": 1640168998340,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 35.541582107543945,
+            "unit": "sec",
+            "range": "stddev: 0.3631267560217403",
+            "extra": "mean: 35.541582107543945 sec\nrounds: 3"
           }
         ]
       }
