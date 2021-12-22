@@ -186,11 +186,11 @@ public class MissingQueryParameterDiagnostic extends AbstractVisitorDiagnostic {
       .collect(Collectors.toList());
 
     final var queryRange = Ranges.create(queryPackage);
-    queryTextAssignments.addAll(queryObjectTextAssignments.stream()
+    final var defaultQueryTextAssignments = queryObjectTextAssignments.stream()
       .filter(queryTextSetupData -> Ranges.containsRange(Ranges.create(queryTextSetupData.getRightExpr()), queryRange))
-      .collect(Collectors.toList())
-    );
+      .collect(Collectors.toList());
 
+    queryTextAssignments.addAll(defaultQueryTextAssignments);
     return queryTextAssignments;
   }
 

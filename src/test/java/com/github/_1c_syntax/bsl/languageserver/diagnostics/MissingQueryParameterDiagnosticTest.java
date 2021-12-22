@@ -228,4 +228,21 @@ class MissingQueryParameterDiagnosticTest extends AbstractDiagnosticTest<Missing
 
     assertThat(diagnostics).isEmpty();
   }
+
+  @Test
+  void testStrReplaceForQueryText() {
+    var sample =
+      "Процедура Десятый_СначалаНовыйЗапросДалееУстановкаПараметраЗатемТекстЗапросаСПовторениемПараметра(Ссылка)\n" +
+        "\n" +
+        "    ТекстЗапроса = \"ВЫБРАТЬ * ИЗ &ИмяТаблицы ГДЕ ЛОЖЬ\"; // не ошибка\n" +
+        "    ТекстЗапроса = СтрЗаменить(ТекстЗапроса, \"&ИмяТаблицы\", ИсточникДанных);\n" +
+        "    Запрос = Новый Запрос(ТекстЗапроса);\n" +
+//        "    //РезультатЗапроса = Запрос7.Выполнить();\n" +
+        "КонецПроцедуры";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
 }
