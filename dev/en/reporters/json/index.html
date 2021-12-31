@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/reporters/json/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.0.1">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.3">
     
     
       
@@ -19,10 +19,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.816931ca.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.edf004c2.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.9204c3b2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.e6a45f82.min.css">
         
       
     
@@ -38,21 +38,9 @@
     
       <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
-    <script>function __md_scope(e,t,_){return new URL(_||(t===localStorage?"../..":"../.."),location).pathname+"."+e}function __md_get(e,t=localStorage,_){return JSON.parse(t.getItem(__md_scope(e,t,_)))}function __md_set(e,t,_=localStorage,o){try{_.setItem(__md_scope(e,_,o),JSON.stringify(t))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
-  
-
-
-
-  
-  
-
-
-
-  <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-150754232-1","auto"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){var e;this.value&&(e=document.location.pathname,ga("send","pageview",e+"?q="+this.value))}),"undefined"!=typeof location$&&location$.subscribe(function(e){ga("send","pageview",e.pathname)})})</script>
-  <script async src="https://www.google-analytics.com/analytics.js"></script>
-
 
     
     
@@ -1011,66 +999,66 @@
 </li>
 </ul>
 <h2 id="Sample-output">Sample output<a class="headerlink" href="#Sample-output" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-    <span class="nt">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-01-21 01:29:27&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;fileinfos&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///tmp/src/Module.bsl&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;mdoRef&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="p">{</span>
-                    <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="nt">&quot;character&quot;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
-                            <span class="nt">&quot;line&quot;</span><span class="p">:</span> <span class="mi">43</span>
-                        <span class="p">},</span>
-                        <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="nt">&quot;character&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-                            <span class="nt">&quot;line&quot;</span><span class="p">:</span> <span class="mi">43</span>
-                        <span class="p">}</span>
-                    <span class="p">},</span>
-                    <span class="nt">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;Error&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;FunctionShouldHaveReturnDiagnostic&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;bsl-language-server&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Function should have \&quot;Return\&quot;&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;tags&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
-                    <span class="nt">&quot;relatedInformation&quot;</span><span class="p">:</span> <span class="kc">null</span>
-                <span class="p">}</span>
-            <span class="p">],</span>
-            <span class="nt">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="nt">&quot;procedures&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="nt">&quot;functions&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="nt">&quot;lines&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-                <span class="nt">&quot;ncloc&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
-                <span class="nt">&quot;comments&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="nt">&quot;statements&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
-                <span class="nt">&quot;nclocData&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="mi">1</span><span class="p">,</span>
-                    <span class="mi">2</span><span class="p">,</span>
-                    <span class="mi">3</span><span class="p">,</span>
-                    <span class="mi">4</span><span class="p">,</span>
-                    <span class="mi">5</span><span class="p">,</span>
-                    <span class="mi">6</span><span class="p">,</span>
-                    <span class="mi">7</span><span class="p">,</span>
-                    <span class="mi">8</span><span class="p">,</span>
-                    <span class="mi">10</span>
-                <span class="p">],</span>
-                <span class="nt">&quot;covlocData&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="mi">2</span><span class="p">,</span>
-                    <span class="mi">3</span><span class="p">,</span>
-                    <span class="mi">4</span><span class="p">,</span>
-                    <span class="mi">5</span><span class="p">,</span>
-                    <span class="mi">6</span><span class="p">,</span>
-                    <span class="mi">7</span><span class="p">,</span>
-                    <span class="mi">8</span>
-                <span class="p">],</span>
-                <span class="nt">&quot;cognitiveComplexity&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
-                <span class="nt">&quot;cyclomaticComplexity&quot;</span><span class="p">:</span> <span class="mi">17</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;sourceDir&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///tmp/src&quot;</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2019-01-21 01:29:27&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;fileinfos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///tmp/src/Module.bsl&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;mdoRef&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                </span><span class="p">{</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;range&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                            </span><span class="nt">&quot;character&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"></span>
+<span class="w">                            </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">43</span><span class="w"></span>
+<span class="w">                        </span><span class="p">},</span><span class="w"></span>
+<span class="w">                        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                            </span><span class="nt">&quot;character&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"></span>
+<span class="w">                            </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">43</span><span class="w"></span>
+<span class="w">                        </span><span class="p">}</span><span class="w"></span>
+<span class="w">                    </span><span class="p">},</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Error&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FunctionShouldHaveReturnDiagnostic&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bsl-language-server&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Function should have \&quot;Return\&quot;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;relatedInformation&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"></span>
+<span class="w">                </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="p">],</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;metrics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;procedures&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;functions&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;lines&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;ncloc&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;comments&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;statements&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;nclocData&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">2</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">3</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">4</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">5</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">6</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">7</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">8</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">10</span><span class="w"></span>
+<span class="w">                </span><span class="p">],</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;covlocData&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">2</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">3</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">4</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">5</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">6</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">7</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="mi">8</span><span class="w"></span>
+<span class="w">                </span><span class="p">],</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;cognitiveComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;cyclomaticComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">],</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;sourceDir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///tmp/src&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </code></pre></div>
 
               
@@ -1159,10 +1147,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.01824240.min.js"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.0bbba5b5.min.js"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a87c2adc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e1a181d9.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

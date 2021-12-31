@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1640943484885,
+  "lastUpdate": 1640169000069,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15128,37 +15128,6 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.3631267560217403",
             "extra": "mean: 35.541582107543945 sec\nrounds: 3"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "nixel2007@gmail.com",
-            "name": "Nikita Fedkin",
-            "username": "nixel2007"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "0fee4c2d8720034d1c0e9c8506517ff21644d188",
-          "message": "Merge pull request #1937 from 1c-syntax/feature/DiagnosticCompatibilityMode\n\nДобавил значения для 19-21 версий",
-          "timestamp": "2021-12-31T12:34:11+03:00",
-          "tree_id": "ba88e88eb37812855df51453c5d35b41b7c7452b",
-          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0fee4c2d8720034d1c0e9c8506517ff21644d188"
-        },
-        "date": 1640943483090,
-        "tool": "pytest",
-        "benches": [
-          {
-            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
-            "value": 35.08662215868632,
-            "unit": "sec",
-            "range": "stddev: 0.8551473284316677",
-            "extra": "mean: 35.08662215868632 sec\nrounds: 3"
           }
         ]
       }
