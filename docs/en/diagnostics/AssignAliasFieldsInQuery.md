@@ -1,19 +1,21 @@
 # Assigning aliases to selected fields in a query (AssignAliasFieldsInQuery)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |       `standard`<br>`sql`<br>`badpractice`       |
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           | `standard`<br>`sql`<br>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it. For example, if the algorithm uses a query with a field declared as
+Рекомендуется указывать и необязательные конструкции запроса, прежде всего - явно назначать псевдонимы полям, в целях повышения наглядности текста запроса и "устойчивости" использующего его кода.  
+Например, если в алгоритме используется запрос с полем, объявленным как
 
 ```bsl
 CashBox.Currency
 ```
 when changing the name of the attribute, you will also need to change the code that calls the selection from the query result by the name of the Currency property. If the field is declared as
+
 ```bsl
 CashBox.Currency As Currency
 ```
@@ -27,7 +29,8 @@ The aliases of tables and fields from secondary queries from "UNION" are not che
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
- ```bsl   
+
+```bsl   
     Query = New Query;
 Query.Text =
 "SELECT
@@ -73,7 +76,8 @@ Query1.Text =
 |       Currencies.Ref // Incorrectly
 |   FROM
 |       Catalog.Currencies AS Currencies) AS NestedRequest"; // Ignored 
-  ```
+```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 Source: [Making query text](https://its.1c.ru/db/v8std#content:437:hdoc)
