@@ -1086,6 +1086,14 @@
                 "object"
             ],
             "title": "Function returned values description is missing",
+            "properties": {
+                "allowShortDescriptionReturnValues": {
+                    "description": "Allow short description of return values",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow short description of return values"
+                }
+            },
             "$id": "#/definitions/MissingReturnedValueDescription"
         },
         "MissingSpace": {
