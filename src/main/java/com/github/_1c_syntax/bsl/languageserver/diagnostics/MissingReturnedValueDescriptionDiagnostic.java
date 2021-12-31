@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -43,6 +44,14 @@ import java.util.stream.Collectors;
   }
 )
 public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTreeDiagnostic {
+
+  private static final boolean ALLOW_SHORT_DESCRIPTION_RETURN_VALUES = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + ALLOW_SHORT_DESCRIPTION_RETURN_VALUES
+  )
+  private boolean allowShortDescriptionReturnValues = ALLOW_SHORT_DESCRIPTION_RETURN_VALUES;
 
   /**
    * Анализируется только методы, имеющие описание
@@ -81,6 +90,11 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
         return;
       }
       diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getMessage());
+      return;
+    }
+
+    // разрешено краткое описание параметра, поэтому больше не проверяем
+    if (allowShortDescriptionReturnValues) {
       return;
     }
 
