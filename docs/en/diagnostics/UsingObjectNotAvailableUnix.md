@@ -1,24 +1,25 @@
 # Using unavailable in Unix objects (UsingObjectNotAvailableUnix)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
+|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |              Tags              |
 |:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:------------------------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           |    `standard`<br>`lockinos`    |
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           | `standard`<br>`lockinos` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to NativeAPI AddIn.
+В ОС `Linux` недоступны механизмы `COM`, `OLE`, `ActiveDocument`. Для интеграции необходимо использовать другие средства, например файловый обмен в формате XML или web-сервисы. Внешние компоненты, реализованные по COM-технологии, рекомендуется переработать с использованием технологии `NativeAPI`.
 
 Checked the use of unavailable in:
 
-* COMObject
-* Mail
+* `COMОбъект`
+* `Почта`
 
-**Checking the value of the condition is not satisfied.**
+**Проверка значения выполнения условия пока не выполняется.**
 
 ### Addition
 
 When found unavailable in Linux objects, the method is checked to include condition flow for platform type:
+
 * `Linux_x86`
 * `Windows`
 * `MacOs`
