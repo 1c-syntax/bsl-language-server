@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-В ОС `Linux` недоступны механизмы `COM`, `OLE`, `ActiveDocument`. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to `NativeAPI` AddIn.
+On `Linux` OS `COM`, `OLE`, `ActiveDocument` are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to `NativeAPI` AddIn.
 
 Checked the use of unavailable in:
 
