@@ -21,20 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -62,9 +64,8 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)"
   );
 
-  private static final Pattern SERVER_COMPILER_PATTERN = CaseInsensitivePattern.compile(
-    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)"
-  );
+  private static final Set<CompilerDirectiveKind> serverCompilerDirectives =
+    EnumSet.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
@@ -136,19 +137,24 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
+    if (methodSymbol.isPresent()) {
+      var compilerDirective = methodSymbol.get().getCompilerDirectiveKind();
+      if (compilerDirective.isPresent() && serverCompilerDirectives.contains(compilerDirective.get())) {
+        return ctx;
+      }
+    }
+
+    return super.visitSub(ctx);
+  }
+
+  @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
     if (MODALITY_METHODS.matcher(methodName).matches()) {
-      BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
-      if (rootParent == null
-        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
-        .stream()
-        .filter(node ->
-          SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
-
-        diagnosticStorage.addDiagnostic(ctx,
-          info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
-      }
+      diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
     }
     return super.visitGlobalMethodCall(ctx);
   }
