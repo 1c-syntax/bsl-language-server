@@ -154,18 +154,18 @@ In the class, you need to implement:
 ```java
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    // Очистка хранилища диагностик
+    // Clearing diagnostics storage
     diagnosticStorage.clearDiagnostics();
 
-    documentContext.getComments()  // Получение коллекции токенов, в примере комментариев
+    documentContext.getComments()  // Getting the collection of tokens, here comments
       .parallelStream()
-      .filter((Token t) ->         // Поиск "нужных", т.е. тех, на обнаружение которых направлена диагностика
+      .filter((Token t) ->         // Search for "necessary" - those that the diagnostics is aimed at detecting
         !goodCommentPattern.matcher(t.getText()).matches())
       .sequential()
-      .forEach((Token t) ->        // Добавление замечаний, в примере на каждый токен отдельное замечание
+      .forEach((Token t) ->        // Adding errors, here for each token a separate error
         diagnosticStorage.addDiagnostic(t));
 
-    // Возврат обнаруженных замечаний
+    // Return of found
     return diagnosticStorage.getDiagnostics();
   }
 ```
@@ -199,9 +199,9 @@ Example:
 
 ```java
   @Override
-  public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {                 // Визитер для переменных модуля
-    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {  // Поиск нужных дочерних узлов
-      diagnosticStorage.addDiagnostic(ctx);                                         // Добавление замечания на весь узел
+  public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {                 // Visitor for module variables
+    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {  // Finding child nodes
+      diagnosticStorage.addDiagnostic(ctx);                                         // Adding a error to the entire site
     }
     return ctx;
   }
@@ -260,7 +260,7 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 В тестовом классе обязательно должны присутствовать методы для тестирования
 
 - тест диагностики, самой по себе
-- тест метода конфигурирования для параметризованных диагностик
+- test of configuration method for parameterized diagnostics
 - тест "быстрых замен" при их наличии
 
 ### Diagnostics test
@@ -268,8 +268,8 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 Упрощенно, тест диагностики состоит из следующих шагов
 
 - получение списка замечаний диагностики
-- проверка количества срабатываний
-- проверка местоположения срабатываний
+- checking the number of items found
+- checking the location of detected items
 
 Первый шагом необходимо получить список замечаний диагностики вызовом метода `getDiagnostics()` _(реализован в классе `AbstractDiagnosticTest`)_. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.  
 Следующим шагом необходимо, с помощью утверждения `hasSize()` убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.  
@@ -281,11 +281,11 @@ Test method example
 ```java
     @Test
     void test() {
-      List<Diagnostic> diagnostics = getDiagnostics();   // получение списка замечаний диагностики
+      List<Diagnostic> diagnostics = getDiagnostics();   // getting a list of diagnostics
 
-      assertThat(diagnostics).hasSize(2);                // проверка количества обнаруженных замечаний
+      assertThat(diagnostics).hasSize(2);                // checking the number of errors found
 
-      // проверка частных случаев
+      // verification of special cases
       assertThat(diagnostics)
         .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
         .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)));
@@ -297,9 +297,9 @@ Test method example
 ```java
     @Test
     void test() {
-      List<Diagnostic> diagnostics = getDiagnostics();   // получение списка замечаний диагностики
+      List<Diagnostic> diagnostics = getDiagnostics();   // getting a list of diagnostics
 
-      assertThat(diagnostics).hasSize(2);                // проверка количества обнаруженных замечаний
+      assertThat(diagnostics).hasSize(2);                // checking the number of errors found
 
       // проверка частных случаев
       assertThat(diagnostics, true)
