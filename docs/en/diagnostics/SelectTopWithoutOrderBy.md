@@ -29,7 +29,7 @@ In the above cases, it is recommended not to add the clause `ORDER BY` to the re
 
 ### Diagnostic ignorance in code
 
-В процессе анализа считаются ошибочными конструкции:
+During the analysis, constructions are considered erroneous:
 
 - Using `TOP N` in the union regardless of the presence of `ORDER BY` because ordering occurs after the union
 - Using `TOP N` where `N> 1` if missing `ORDER BY`
