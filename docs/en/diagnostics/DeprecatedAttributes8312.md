@@ -1,6 +1,6 @@
 # Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `deprecated` |
 
@@ -8,30 +8,32 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 The following items are deprecated and their use is not recommended since platform version 8.3.12:
-* Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
-* ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
-* The following properties and methods of Chart object are obsolete and not recommended for use:
-   * ColorPalette;
-   * GradientPaletteStartColor;
-   * GradientPaletteEndColor;
-   * GradientPaletteMaxColors;
-   * GetPalette();
-   * SetPalette().
-* Names of properties of the object ChartPlotArea:
-   * ShowScale;
-   * ScaleLines;
-   * ScaleColor.
-* Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:
 
-   * ShowSeriesScaleLabels. Recommended to use the SeriesScale.ScaleLabelLocation;
-   * ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;
-   * ShowValuesScaleLabels. Recommended to use the ValuesScale.ScaleLabelLocation;
-   * ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;
-   * ValueScaleFormat. Recommended to use the ValuesScale.LabelFormat;
-   * LabelsOrientation. Recommended to use the PointsScale.LabelOrientation.
-* Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
-* Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
-* Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format.
+* Для системного перечисления `ГруппировкаПодчиненныхЭлементовФормы` реализовано значение `ГоризонтальнаяВсегда`, значение `ГруппировкаПодчиненныхЭлементовФормы.Горизонтальная` считается устаревшим
+* Системное перечисление `ОриентацияМетокДиаграммы` более не доступно. Актуальный вариант `ОриентацияПодписейДиаграммы`
+* Свойства и методы объекта Диаграмма устарели и не рекомендуются к использованию:
+   * `ПалитраЦветов`;
+   * `ЦветНачалаГрадиентнойПалитры`;
+   * `ЦветКонцаГрадиентнойПалитры`;
+   * `МаксимальноеКоличествоЦветовГрадиентнойПалитры`;
+   * `ПолучитьПалитру()`;
+   * `УстановитьПалитру()`.
+
+* Названия свойств объекта `ОбластьПостроенияДиаграммы`:
+   * `ОтображатьШкалу`
+   * `ЛинииШкалы`
+   * `ЦветШкалы`
+
+* Следующие свойства объекта `ОбластьПостроенияДиаграммы` являются устаревшими, не рекомендуются для использования и поддерживаются для совместимости:
+   * `ОтображатьПодписиШкалыСерии` - рекомендуется использовать `ШкалаСерий.ПоложениеПодписейШкалы`
+   * `ОтображатьПодписиШкалыТочек` - рекомендуется использовать `ШкалаТочек.ПоложениеПодписейШкалы`
+   * `ОтображатьПодписиШкалыЗначений` - рекомендуется использовать `ШкалаЗначений.ПоложениеПодписейШкалы`
+   * `ОтображатьЛинииЗначенийШкалы` - рекомендуется использовать `ШкалаЗначений.ОтображениеЛинийСетки`
+   * `ФорматШкалыЗначений` - рекомендуется использовать `ШкалаЗначений.ФорматПодписей`
+   * `ОриентацияМеток` - доступа рекомендуется использовать `ШкалаТочек.ОриентацияПодписей`
+
+* Свойства `ОтображатьЛегенду` и `ОтображатьЗаголовок` объектов `Диаграмма`, `ДиаграммаГанта`, `СводнаяДиаграмма` являются устаревшими и не рекомендуются для использования
+* Метод глобального контекста `ОчиститьЖурналРегистрации()` применим только к журналу в формате `SQLite`, признан устаревшим и его использование не рекомендуется
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
