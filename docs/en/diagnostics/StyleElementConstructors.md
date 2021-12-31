@@ -10,8 +10,8 @@ You should use style elements to change the appearance, rather than setting spec
 
 Types of style elements:
 
-* `Цвет` - задается значение RGB
-* `Шрифт` - задаются вид, размер и начертание
+* `Color` - RGB value is set
+* `Font` - type, size and style are set
 * `Рамка` - задаются тип и ширина границ
 
 ## Examples
