@@ -1,6 +1,6 @@
 # Code out of region (CodeOutOfRegion)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `standard` |
 
@@ -24,7 +24,7 @@ The requirement to structure code by regions is to improve code readability and 
 #Region <RegionName>
 ```
 
-The standard describes only 10 region names, the names of nested regions are not checked.
+Несмотря на то, что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.
 
 Correct:
 ```bsl
@@ -38,8 +38,9 @@ Correct:
 #EndRegion
 ```
 
-Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
-| RU                                      | EN                           |
+Таблица соответствия английских имён (полный список в [исходном коде](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+
+| русск.                                  | англ.                        |
 | --------------------------------------- | ---------------------------- |
 | ПрограммныйИнтерфейс                    | Public                       |
 | СлужебныйПрограммныйИнтерфейс           | Internal                     |
