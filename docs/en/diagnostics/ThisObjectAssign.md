@@ -1,6 +1,6 @@
 # ThisObject assign (ThisObjectAssign)
 
-|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-------:|
 | `Error` | `BSL` | `Blocker` |             `Yes`             |           `1`           | `error` |
 
