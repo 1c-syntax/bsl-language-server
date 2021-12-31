@@ -15082,37 +15082,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "10c10c2fb0a72e8150e32bc02c8022bba739f8dd",
-          "message": "Merge pull request #1924 from 1c-syntax/dependabot/github_actions/actions/setup-python-2.3.1\n\nBump actions/setup-python from 2.3.0 to 2.3.1",
-          "timestamp": "2021-11-30T13:08:29+03:00",
-          "tree_id": "1fed99d2e5d8809a2caeed00711a839cc5a15f12",
-          "url": "https://github.com/1c-syntax/bsl-language-server/commit/10c10c2fb0a72e8150e32bc02c8022bba739f8dd"
-        },
-        "date": 1638451326042,
-        "tool": "pytest",
-        "benches": [
-          {
-            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
-            "value": 252.66971548398337,
-            "unit": "sec",
-            "range": "stddev: 7.597922936321473",
-            "extra": "mean: 252.66971548398337 sec\nrounds: 3"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "nixel2007@gmail.com",
-            "name": "Nikita Fedkin",
-            "username": "nixel2007"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "5ee7466c3833855fdfab6e407a72e561ce1e3262",
           "message": "Merge pull request #1931 from 1c-syntax/dependabot/gradle/org.springframework.boot-2.6.2",
           "timestamp": "2021-12-22T13:25:42+03:00",
