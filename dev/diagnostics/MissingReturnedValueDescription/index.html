@@ -929,6 +929,25 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Параметры">Параметры<a class="headerlink" href="#Параметры" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="center">Описание</th>
+<th align="center">Значение<br>по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>allowShortDescriptionReturnValues</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="center"><code>Разрешить краткое описание возвращаемого значения</code></td>
+<td align="center"><code>true</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -940,6 +959,7 @@
 <li>Отсутствие описания возвращаемого значения</li>
 <li>Наличие описания возвращаемого значения у процедуры</li>
 <li>Некачественное описание возвращаемого значения: когда имя типа присутствует в описании, но не указано его описание</li>
+<li>Для активации этой, более строгой проверки, необходимо снять разрешение краткой формы записи параметром диагностики</li>
 </ul>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -962,7 +982,9 @@
 <span class="c c-Singleline">// BSLLS:MissingReturnedValueDescription-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingReturnedValueDescription&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingReturnedValueDescription&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;allowShortDescriptionReturnValues&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </code></pre></div>
 
               
