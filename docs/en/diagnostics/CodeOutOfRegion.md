@@ -24,7 +24,7 @@ The requirement to structure code by regions is to improve code readability and 
 #Region <RegionName>
 ```
 
-Несмотря на то, что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.
+The standard describes only 10 region names, the names of nested regions are not checked.
 
 Correct:
 ```bsl
@@ -38,9 +38,9 @@ Correct:
 #EndRegion
 ```
 
-Таблица соответствия английских имён (полный список в [исходном коде](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
 
-| русск.                                  | англ.                        |
+| RU                                      | EN                           |
 | --------------------------------------- | ---------------------------- |
 | ПрограммныйИнтерфейс                    | Public                       |
 | СлужебныйПрограммныйИнтерфейс           | Internal                     |
