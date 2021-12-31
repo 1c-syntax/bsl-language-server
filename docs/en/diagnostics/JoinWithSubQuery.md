@@ -14,8 +14,8 @@ If the query contains joins with subqueries, then this can lead to negative cons
 
 - Very slow query execution with low load on server hardware
 - Unstable work of the request. Sometimes the query can work fast enough, sometimes very slow
-- Значительная разница по времени выполнения запроса на разных СУБД
-- Increased query sensitivity to the relevance and completeness of sql statistics. Сразу после полного обновления статистик запрос может работать быстро, но через некоторое время опять замедлиться
+- Significant difference in query execution time for different DBMS
+- Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
