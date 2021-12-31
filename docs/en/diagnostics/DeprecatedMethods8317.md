@@ -1,18 +1,22 @@
 # Using of deprecated platform 8.3.17 global methods (DeprecatedMethods8317)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
 | `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-In the global context of the 8.3.17 platform, created ErrorProcessing properties and error management text parameters that allow you to customize error texts. Global context methods:
-* BriefErrorDescription()
-* DetailErrorDescription()
-* ShowErrorInfo()
+В платформе `8.3.17` было реализовано свойство глобального контекста `ОбработкаОшибок` и стандартная функция `Управление настройками обработки ошибок`, позволяющая настроить тексты ошибок.
 
-You should use the same methods of the ErrorProcessing object instead.
+Методы глобального контекста считаются устаревшими:
+
+* `КраткоеПредставлениеОшибки()`
+* `ПодробноеПредставлениеОшибки()`
+* `ПоказатьИнформациюОбОшибке()`
+
+Необходимо использовать одноименные методы объекта `ОбработкаОшибок`.
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
