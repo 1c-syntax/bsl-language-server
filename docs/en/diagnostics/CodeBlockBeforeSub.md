@@ -1,14 +1,15 @@
 # Method definitions must be placed before the module body operators (CodeBlockBeforeSub)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|  Type   |        Scope        | Severity  | Activated<br>by default | Minutes<br>to fix |  Tags   |
 |:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:-------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `5`           | `error` |
+| `Error` | `BSL`<br>`OS` | `Blocker` |             `Yes`             |           `5`           | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The structure of the software module *(in general form)* is clearly defined:
+
 - first comes the variable definition block
 - then definitions of procedures and functions
 - then the module code block
