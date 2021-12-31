@@ -1,8 +1,8 @@
-# The check box «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
+# The checkbox «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
 
-|      Type       | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                         |
+|      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |                        Tags                         |
 |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------------------------:|
-| `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           |       `standard`<br>`badpractice`<br>`design`       |
+| `Vulnerability` | `BSL` | `Critical` |             `Yes`             |           `1`           | `standard`<br>`badpractice`<br>`design` |
 
 ## Parameters
 
