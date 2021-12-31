@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|           Name           |   Type    |                  Description                   | Default value |
-|:------------------------:|:---------:|:----------------------------------------------:|:-------------:|
-|     `maxLineLength`      | `Integer` |      `Max length of string in characters`      |     `120`     |
-| `checkMethodDescription` | `Boolean` | `Анализировать длину строк в описании методов` |    `true`     |
+|           Name           |   Type    |                      Description                       | Default value |
+|:------------------------:|:---------:|:------------------------------------------------------:|:-------------:|
+|     `maxLineLength`      | `Integer` |          `Max length of string in characters`          |     `120`     |
+| `checkMethodDescription` | `Boolean` | `Analyze the length of strings in method descriptions` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
