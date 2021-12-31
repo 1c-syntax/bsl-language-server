@@ -4,14 +4,14 @@
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
 | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`badpractice` |
 
-## Параметры
+## Parameters
 
 
-|                 Имя                 |   Тип    |                      Описание                       | Значение<br>по умолчанию |
-|:-----------------------------------:|:--------:|:---------------------------------------------------:|:------------------------------:|
-| `allowShortDescriptionReturnValues` | `Булево` | `Разрешить краткое описание возвращаемого значения` |             `true`             |
+|                Name                 |   Type    |                     Description                     | Default<br>value |
+|:-----------------------------------:|:---------:|:---------------------------------------------------:|:----------------------:|
+| `allowShortDescriptionReturnValues` | `Boolean` | `Разрешить краткое описание возвращаемого значения` |         `true`         |
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The description of a method (procedure or function) should be formatted correctly to help programmers use the functionality correctly.
@@ -22,13 +22,13 @@ Diagnostics detects typical errors:
 
 - No return value description
 - Return value description for procedure
-- Некачественное описание возвращаемого значения: когда имя типа присутствует в описании, но не указано его описание
+- Poor description of the return value: when the type name is present in the description, but its description is not specified
   - Для активации этой, более строгой проверки, необходимо снять разрешение краткой формы записи параметром диагностики
 
-## Примеры
+## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-## Источники
+## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
@@ -38,7 +38,7 @@ Diagnostics detects typical errors:
 
 * Standart: [Procedures and functions description](https://its.1c.ru/db/v8std#content:453:hdoc)
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
