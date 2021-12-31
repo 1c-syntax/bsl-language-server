@@ -1,6 +1,6 @@
 # Storing confidential information in code (UsingHardcodeSecretInformation)
 
-|      Type       | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|      Type       | Scope |  Severity  | Activated<br>by default | Minutes<br>to fix |    Tags    |
 |:---------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
 | `Vulnerability` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
 
