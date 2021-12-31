@@ -7,14 +7,14 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-В ОС `Linux` недоступны механизмы `COM`, `OLE`, `ActiveDocument`. Для интеграции необходимо использовать другие средства, например файловый обмен в формате XML или web-сервисы. Внешние компоненты, реализованные по COM-технологии, рекомендуется переработать с использованием технологии `NativeAPI`.
+В ОС `Linux` недоступны механизмы `COM`, `OLE`, `ActiveDocument`. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to `NativeAPI` AddIn.
 
 Checked the use of unavailable in:
 
-* `COMОбъект`
-* `Почта`
+* `COMObject`
+* `Mail`
 
-**Проверка значения выполнения условия пока не выполняется.**
+**Checking the value of the condition is not satisfied.**
 
 ### Addition
 
