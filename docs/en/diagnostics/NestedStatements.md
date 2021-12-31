@@ -1,8 +1,8 @@
 # Control flow statements should not be nested too deep (NestedStatements)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
+|     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |                  Tags                  |
 |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `30`           |    `badpractice`<br>`brainoverload`    |
+| `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `30`           | `badpractice`<br>`brainoverload` |
 
 ## Parameters
 
