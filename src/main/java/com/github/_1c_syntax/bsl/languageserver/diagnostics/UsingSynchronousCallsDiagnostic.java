@@ -33,9 +33,10 @@ import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -63,8 +64,8 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)"
   );
 
-  private static final List<CompilerDirectiveKind> serverCompilerDirectives =
-    List.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
+  private static final Set<CompilerDirectiveKind> serverCompilerDirectives =
+    EnumSet.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
