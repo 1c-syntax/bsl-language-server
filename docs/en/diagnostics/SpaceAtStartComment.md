@@ -7,10 +7,10 @@
 ## Parameters
 
 
-|         Name          |   Type   |                                                Description                                                |  Default value  |
-|:---------------------:|:--------:|:---------------------------------------------------------------------------------------------------------:|:---------------:|
-| `commentsAnnotation`  | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` |
-| `useStrictValidation` | `Булево` |        `Использовать строгую проверку, запрещающую двойные комментарии`//// Текст комментария``         |     `true`      |
+|         Name          |   Type    |                                                Description                                                |  Default value  |
+|:---------------------:|:---------:|:---------------------------------------------------------------------------------------------------------:|:---------------:|
+| `commentsAnnotation`  | `String`  | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` |
+| `useStrictValidation` | `Boolean` |        `Использовать строгую проверку, запрещающую двойные комментарии`//// Текст комментария``         |     `true`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
