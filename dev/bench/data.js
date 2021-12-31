@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1640169000069,
+  "lastUpdate": 1640943723994,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15128,6 +15128,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.3631267560217403",
             "extra": "mean: 35.541582107543945 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "806150d9d0068f99d65ea006d327b3c4a3a913e2",
+          "message": "Merge pull request #1938 from 1c-syntax/feature/fixMissingReturnedValueDescription\n\nКроткое описание возвращаемого значения MissingReturnedValueDescription",
+          "timestamp": "2021-12-31T12:35:19+03:00",
+          "tree_id": "4ad3a05ecf058fc4c69cb6b954e74f9c706ac905",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/806150d9d0068f99d65ea006d327b3c4a3a913e2"
+        },
+        "date": 1640943720495,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 35.07927974065145,
+            "unit": "sec",
+            "range": "stddev: 0.6069840265742223",
+            "extra": "mean: 35.07927974065145 sec\nrounds: 3"
           }
         ]
       }
