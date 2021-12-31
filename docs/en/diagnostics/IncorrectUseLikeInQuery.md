@@ -1,8 +1,8 @@
 # Incorrect use of 'LIKE' (IncorrectUseLikeInQuery)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                        |
+|  Type   | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                        Tags                        |
 |:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------:|
-| `Error` | `BSL` | `Major`  |             `Yes`             |          `10`           |       `standard`<br>`sql`<br>`unpredictable`       |
+| `Error` | `BSL` | `Major`  |             `Yes`             |          `10`           | `standard`<br>`sql`<br>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
