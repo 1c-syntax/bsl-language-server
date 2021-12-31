@@ -931,20 +931,21 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
-<p>В ОС Linux недоступны механизмы COM, OLE, ActiveDocument. Для интеграции 
-необходимо использовать другие средства, например файловый обмен в формате XML или web-сервисы. 
-Для внешних компонент, реализованных по COM-технологии, рекомендуется переработать их с использованием технологии NativeAPI.</p>
+<p>В ОС <code>Linux</code> недоступны механизмы <code>COM</code>, <code>OLE</code>, <code>ActiveDocument</code>. Для интеграции необходимо использовать другие средства, например файловый обмен в формате XML или web-сервисы. 
+Внешние компоненты, реализованные по COM-технологии, рекомендуется переработать с использованием технологии <code>NativeAPI</code>.</p>
 <p>Отслеживаемые механизмы, недоступные в Linux:</p>
 <ul>
-<li>COMОбъект</li>
-<li>Почта</li>
+<li><code>COMОбъект</code></li>
+<li><code>Почта</code></li>
 </ul>
-<p><strong>Проверка значение выполнения условия пока не выполняется.</strong></p>
+<p><strong>Проверка значения выполнения условия пока не выполняется.</strong></p>
 <h3 id="Дополнительно">Дополнительно<a class="headerlink" href="#Дополнительно" title="Permanent link">&para;</a></h3>
-<p>При проверке использования недоступных объектов в Linux учитываются условия, в которых можно найти следующий ключевые слова:
-* <code>Linux_x86</code>
-* <code>Windows</code>
-* <code>MacOs</code></p>
+<p>При проверке использования недоступных объектов в Linux учитываются условия, в которых можно найти следующий ключевые слова:</p>
+<ul>
+<li><code>Linux_x86</code></li>
+<li><code>Windows</code></li>
+<li><code>MacOs</code></li>
+</ul>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="nv">Компонента</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">COMОбъект</span><span class="p">(</span><span class="s">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
 </code></pre></div>

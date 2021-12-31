@@ -959,7 +959,7 @@
 
 <div class="highlight"><pre><span></span><code><span class="kd">#Область &lt;ИмяОбласти&gt;</span>
 </code></pre></div>
-<p>Не смотря на то что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.</p>
+<p>Несмотря на то, что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.</p>
 <p>Правильно:
 <div class="highlight"><pre><span></span><code><span class="kd">#Область СлужебныеПроцедурыИФункции</span>
 <span class="kd">#Область Печать</span>
@@ -970,19 +970,57 @@
 <span class="kd">#КонецОбласти</span>
 <span class="kd">#КонецОбласти</span>
 </code></pre></div></p>
-<p>Таблица соответствия английских имён (полный список в <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">исходном коде</a>):
-| русск.  | англ. |
-| ------------- | ------------- |
-| ПрограммныйИнтерфейс  | Public  |
-| СлужебныйПрограммныйИнтерфейс  | Internal  |
-| СлужебныеПроцедурыИФункции  | Private  |
-| ОбработчикиСобытий  | EventHandlers  |
-| ОбработчикиСобытийФормы  | FormEventHandlers  |
-| ОбработчикиСобытийЭлементовШапкиФормы  | FormHeaderItemsEventHandlers  |
-| ОбработчикиКомандФормы  | FormCommandsEventHandlers  |
-| ОписаниеПеременных  | Variables  |
-| Инициализация  | Initialize  |
-| ОбработчикиСобытийЭлементовТаблицыФормы  | FormTableItemsEventHandlers  |</p>
+<p>Таблица соответствия английских имён (полный список в <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">исходном коде</a>):</p>
+<table>
+<thead>
+<tr>
+<th>русск.</th>
+<th>англ.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ПрограммныйИнтерфейс</td>
+<td>Public</td>
+</tr>
+<tr>
+<td>СлужебныйПрограммныйИнтерфейс</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>СлужебныеПроцедурыИФункции</td>
+<td>Private</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытий</td>
+<td>EventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийФормы</td>
+<td>FormEventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийЭлементовШапкиФормы</td>
+<td>FormHeaderItemsEventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиКомандФормы</td>
+<td>FormCommandsEventHandlers</td>
+</tr>
+<tr>
+<td>ОписаниеПеременных</td>
+<td>Variables</td>
+</tr>
+<tr>
+<td>Инициализация</td>
+<td>Initialize</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийЭлементовТаблицыФормы</td>
+<td>FormTableItemsEventHandlers</td>
+</tr>
+</tbody>
+</table>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
