@@ -9,7 +9,7 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 In the global context of the `8.3.17` platform, created `ErrorProcessing` properties and `error management text parameters` that allow you to customize error texts.
 
-Методы глобального контекста считаются устаревшими:
+Global context methods are deprecated:
 
 * `BriefErrorDescription()`
 * `DetailErrorDescription()`
