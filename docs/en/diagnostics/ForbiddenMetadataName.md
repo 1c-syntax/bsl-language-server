@@ -8,17 +8,17 @@
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Запрещено использовать имена объектов метаданных (и их реквизитов и табличных частей), которые применяются при именовании таблиц запросов (например Документ, Справочник).
+It is forbidden to use the names of metadata objects (and their attributes and tabular sections), which are used when naming query tables (for example, Document, Catalog).
 
-Использование таких имен может приводить к ошибкам при исполнении запроса, а кроме того, затрудняют использование конструктора запросов и снижают наглядность текста запроса.
+Using such names can lead to errors in the execution of the query, and also make it difficult to use the query designer and reduce the clarity of the query text.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Плохое наименование
+Wrong name
 - `Catalog.Catalog`
-- `Справочник.МойСправочник.Реквизит.Документ`
-- `РегистрСведений.МойРегистрСведений.Изменение.Документы`
+- `Catalog.MyCatalog.Attribute.Document`
+- `InformationRegister.MyRegister.Dimenssion.Documents`
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -27,7 +27,7 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-* [Standard: Organization of data storage (RU). Имя, Синоним, Комментарий](https://its.1c.ru/db/v8std#content:474:hdoc:2.5)
+* [Standard: Organization of data storage (RU). Name, Synonym, Comment](https://its.1c.ru/db/v8std#content:474:hdoc:2.5)
 
 ## Snippets
 
