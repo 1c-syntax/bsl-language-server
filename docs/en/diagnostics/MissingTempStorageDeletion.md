@@ -7,20 +7,20 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Диагностика сейчас отслеживает все вызовы `ПолучитьИзВременногоХранилища`, для которых нет соответствующего вызова `УдалитьИзВременногоХранилища`
-- в рамках одного метода!
+Diagnostics is now tracking all `GetFromTempStorage` calls that do not have a corresponding `DeleteFromTempStorage` call
+- within one method!
 
-Разработчики нередко нарушают правила работы с объектами во временном хранилище, забывая, что хранение данных в нем не является бесплатным. There are errors even in the documentation and numerous use cases.
+The rules for working with objects in temporary storage are often violated - storing data in it is not free. There are errors even in the documentation and numerous use cases.
 
-При помещении данных во временное хранилище следует выбрать один из двух вариантов:
+When placing data in temporary storage, you should choose one of two options:
 
-- помещать данные во временное хранилище на время жизни формы, используя уникальный идентификатор формы
-  - и очищать это временное хранилище после использования.
-- предварительно выполнять инициализацию временного хранилища и переиспользовать его.
+- put data into temporary storage for the lifetime of the form using the unique identifier of the form
+  - and clean up this temporary storage after use.
+- pre-initialize temporary storage and reuse it.
 
-В противном случае при многократном повторении действия в форме, например, при многократном подборе товаров, это приводит к излишнему расходу оперативной памяти, т.к. временные хранилища накапливаются.
+Otherwise, if an action is repeated many times in a form, for example, if a product is selected many times, this leads to unnecessary consumption of RAM, because temporary stores are accumulating.
 
-Помните, что при получении на сервере значения из временного хранилища следует учитывать то, что оно получается по ссылке. Эта ссылка указывает на значение, которое хранится в кеше. В течение *20 минут*, с момента помещения в хранилище или же с момента последнего обращения, значение сохранится в кеше, а затем записывается на диск и из кеша удаляется. При следующем обращении значение загружается с диска и снова помещается в кеш.
+Remember that when a value is retrieved from the temporary storage on the server, it will be retrieved by reference. This is a reference to the value that is stored in the cache. Within *20 minutes*, from the moment it was put into the storage or from the moment of the last access, the value will be stored in the cache, and then written to disk and deleted from the cache. On the next call, the value is loaded from disk and put back into the cache.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -47,14 +47,14 @@
 2 - Consider this recommendation when working with background jobs
 
 Wrong:
-- При каждом выполнении фонового задания его результат помещается во временное хранилище на время жизни формы:
+- Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
 ```bsl
 ПараметрыВыполнения = ДлительныеОперации.ПараметрыВыполненияФункции(УникальныйИдентификатор);
 ДлительныеОперации.ВыполнитьФункцию(ПараметрыВыполнения, ПараметрФоновогоЗадания);
 ```
 
-- Если длительная операция выполняется пользователем многократно, пока эта форма открыта, то временные хранилища накапливаются, что вызывает рост потребления памяти.
-- Поэтому для уменьшения расхода оперативной памяти в большинстве случаев рекомендуется очищать временное хранилище сразу после получения результата фонового задания:
+- If a long operation is performed by the user multiple times, then temporary storage accumulates, which causes an increase in memory consumption.
+- To reduce the consumption of RAM, in most cases, it is recommended to clear the temporary storage immediately after receiving the result of the background job:
 
 Correct:
 ```bsl
@@ -62,7 +62,7 @@ Correct:
 УдалитьИзВременногоХранилища(Результат.АдресРезультата);  // Данные во временном хранилище больше не требуются.
 ```
 
-- Если же результат фонового задания требуется сохранять на протяжении нескольких серверных вызовов, то необходимо передавать фиксированный адрес заранее инициализированного временного хранилища:
+- If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
 ```bsl
 &НаСервере
 Процедура ПриСозданииНаСервере(Отказ)
@@ -111,9 +111,9 @@ Correct:
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Длительные операции на сервере, п.3.1 - Стандарт 1С](https://its.1c.ru/db/v8std#content:642:hdoc)
-- [Минимизация количества серверных вызовов, п.7.3 - Стандарт 1С](https://its.1c.ru/db/v8std#content:487:hdoc)
-- [Механизм временного хранилища - Руководство разработчика](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000000810)
+- [Long-term operations on the server, part 3.1 - Standard 1C (RU)](https://its.1c.ru/db/v8std#content:642:hdoc)
+- [Minimizing the number of server calls, part 7.3 - Standard 1C (RU)](https://its.1c.ru/db/v8std#content:487:hdoc)
+- [Temporary Storage Engine - Developer's Guide (RU)](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000000810)
 
 ## Snippets
 
