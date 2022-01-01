@@ -9,30 +9,30 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 The following items are deprecated and their use is not recommended since platform version 8.3.12:
 
-* Для системного перечисления `ГруппировкаПодчиненныхЭлементовФормы` реализовано значение `ГоризонтальнаяВсегда`, значение `ГруппировкаПодчиненныхЭлементовФормы.Горизонтальная` считается устаревшим
+* For the system enumeration `ChildFormItemsGroup` implemented the value `AlwaysHorizontal`, the value `ChildFormItemsGroup.Horizontal` is deprecated
 * `ChartLabelsOrientation` system enum is no longer available. Actual variant is `ChartLabelsOrientation`
 * The following properties and methods of Chart object are obsolete and not recommended for use:
-   * `ПалитраЦветов`;
-   * `ЦветНачалаГрадиентнойПалитры`;
-   * `ЦветКонцаГрадиентнойПалитры`;
+   * `ColorPalette`;
+   * `GradientPaletteStartColor`;
+   * `GradientPaletteEndColor`;
    * `GradientPaletteMaxColors`;
-   * `ПолучитьПалитру()`;
-   * `УстановитьПалитру()`.
+   * `GetPalette()`;
+   * `SetPalette()`.
 
 * Names of properties of the object `ChartPlotArea`:
    * `ShowScale`
    * `ScaleLines`
    * `ScaleColor`
 
-* Следующие свойства объекта `ОбластьПостроенияДиаграммы` являются устаревшими, не рекомендуются для использования и поддерживаются для совместимости:
-   * `ОтображатьПодписиШкалыСерии` - рекомендуется использовать `ШкалаСерий.ПоложениеПодписейШкалы`
-   * `ОтображатьПодписиШкалыТочек` - рекомендуется использовать `ШкалаТочек.ПоложениеПодписейШкалы`
-   * `ОтображатьПодписиШкалыЗначений` - рекомендуется использовать `ШкалаЗначений.ПоложениеПодписейШкалы`
-   * `ОтображатьЛинииЗначенийШкалы` - рекомендуется использовать `ШкалаЗначений.ОтображениеЛинийСетки`
-   * `ФорматШкалыЗначений` - рекомендуется использовать `ШкалаЗначений.ФорматПодписей`
-   * `ОриентацияМеток` - доступа рекомендуется использовать `ШкалаТочек.ОриентацияПодписей`
+* Properties of `ChartPlotArea` object are obsolete, not recomended for use and supported only for backward compatibility:
+   * `ShowSeriesScaleLabels` - it is recommended to use `SeriesScale.ScaleLabelLocation`
+   * `ShowPointsScaleLabels` - it is recommended to use `PointsScale.ScaleLabelLocation`
+   * `ShowValuesScaleLabels` - it is recommended to use `ValuesScale.ScaleLabelLocation`
+   * `ShowScaleValueLines` - it is recommended to use `ValuesScale.GridLinesShowMode`
+   * `ValueScaleFormat` - it is recommended to use `ValuesScale.LabelFormat`
+   * `LabelsOrientation` - it is recommended to use `PointsScale.LabelOrientation`
 
-* Свойства `ОтображатьЛегенду` и `ОтображатьЗаголовок` объектов `Диаграмма`, `ДиаграммаГанта`, `СводнаяДиаграмма` являются устаревшими и не рекомендуются для использования
+* The `ShowLegend` and `ShowTitle` properties of the `Chart`, `GanttChart`, `PivotChart` objects are deprecated and deprecated for use
 * Global context method `ClearEventLog()` is deprecated and only applicable to logs that have `SQLite` format
 
 ## Sources
