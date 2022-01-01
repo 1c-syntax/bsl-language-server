@@ -136,7 +136,7 @@ Below are the differences in the implementation of diagnostic classes.
 
 ### Diagnostics class, implements BSLDiagnostic interface
 
-В классе необходимо определить приватное поле `diagnosticStorage` типа `DiagnosticStorage`, которое будет хранилищем обнаруженных замечаний, и приватное свойство `info` типа `DiagnosticInfo`, которое будет предоставлять доступ к данным диагностики.
+In the class, you need to define a private field `diagnosticStorage` of type `DiagnosticStorage` to store detected diagnostics, and a private property `info` of type `DiagnosticInfo`, for access to diagnostic data.
 
 ```java
  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
@@ -145,11 +145,11 @@ private final DiagnosticInfo info;
 
 In the class, you need to implement:
 
-- метод `getDiagnostics` принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний `List<Diagnostic>`
-- метод `getInfo`, возвращающий значение свойства `info`
-- метод `setInfo`, для установки значения свойства `info`
+- method `getDiagnostics` accepting the context of the file being analyzed and returning a list of detected diagnostics `List<Diagnostic>`
+- getter `getInfo`
+- setter `setInfo`
 
-Ниже приведена общая структура метода `getDiagnostics`
+Method structure `getDiagnostics`
 
 ```java
   @Override
@@ -172,7 +172,7 @@ In the class, you need to implement:
 
 ### Diagnostics class, inherits from AbstractDiagnostic
 
-Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. В классе диагностики необходимо реализовать метод `check` - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в `diagnosticStorage`.
+For simple diagnostics, you should inherit your class from the AbstractDiagnostic class. In the diagnostic class, you need to implement the `check` method. The method should analyze the context of the document and, if noted, add diagnostics to `diagnosticStorage`.
 
 Example:
 
@@ -191,11 +191,11 @@ Example:
 
 ### Diagnostics class, inherits from AbstractVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4).  Полный список существующих методов-визитеров находится в классе `BSLParserBaseVisitor`. Необходимо обратить внимание, что для упрощения добавлены `обобщенные` визитеры, например вместо реализации `visitFunction` для функции и `visitProcedure` для процедуры можно использовать `visitSub`, обобщающий работу с методами.
+In the diagnostic class, it is necessary to implement the methods of all necessary `AST visitors`, in accordance with the language grammar described in the [ BSLParser ](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4) project.  A complete list of existing visitor methods can be found in the `BSLParserBaseVisitor` class. Please note: for simplicity, `generalized` visitors have been created, for example, instead of two `visitFunction` for a function and `visitProcedure` for a procedure, you can use `visitSub`.
 
-В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище `diagnosticStorage` _(поле уже определено в абстрактном классе)_. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.
+As a parameter, an AST node of the corresponding type is passed to each method of the visitor. In the body of the method, it is necessary to analyze the node and / or its child nodes and decide if there is an error. When a problem is found, it must be added to `diagnosticStorage` _(the field is already defined in the abstract class)_. An error note can be attached to the passed node or to its child or parent nodes, to the desired block of code.
 
-Примерная структура метода
+Method structure
 
 ```java
   @Override
@@ -207,8 +207,8 @@ Example:
   }
 ```
 
-Если диагностика **не предусматривает** анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный `super-метод`.  
-Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.
+If the diagnostics **does not provide** analysis of nested nodes, then it must return the passed input node, otherwise it is necessary to call the `super-method` of the same name.   
+This rule will save application resources without making a meaningless call.
 
 Examples:
 
