@@ -1,4 +1,4 @@
-# Ошибка разбора текста запроса (QueryParseError)
+# Query text parsing error (QueryParseError)
 
 |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
@@ -8,9 +8,9 @@
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-При написании текста запроса необходимо следовать следующему правилу: текст запроса должен быть написан таким образом, что бы он мог быть открыт конструктором запросов.
+When writing queries, you must follow the following rule: the query text must be opened by the query designer.
 
-Следование этому правилу позволяет осуществлять быструю проверку корректности синтаксиса запроса, а также доработку и сопровождение.
+This rule allows you to quickly check the correctness of the syntax of the query, as well as revision and maintenance.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -18,9 +18,9 @@
 Incorrect
 
 ```bsl
-ТекстЗапроса = "ВЫБРАТЬ
-| Номенклатура.Наименование  КАК Наименование ,
-| Номенклатура. " + FieldNameCode + " AS Code
+Text = "SELECT
+| Goods.Name  AS Name ,
+| Goods. " + FieldNameCode + " AS Code
 |From
 | Catalog.Goods КАК Goods";
 ```
@@ -28,15 +28,15 @@ Incorrect
 Right
 
 ```bsl
-ТекстЗапроса = "ВЫБРАТЬ
-| Номенклатура.Наименование  КАК Наименование ,
-| &ИмяПоляЗапроса КАК КодАртикул
-|ИЗ
-| Справочник.Номенклатура КАК Номенклатура";
+Text = "SELECT
+| Goods.Name AS Name,
+| &FieldNameCode AS Code
+|FROM
+| Catelog.Goods AS Goods";
 
-ТекстЗапроса = СтрЗаменить(ТекстЗапроса, 
-                            "&ИмяПоляКод", 
-                            "Номенклатура." + FieldNameCode);
+Text = StrReplace(Text, 
+                            "&FieldNameCode", 
+                            "Goods." + FieldNameCode);
 ```
 
 ## Sources
@@ -47,7 +47,7 @@ Right
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* [Standard: Working with queries (RU). Оформление текстов запросов](https://its.1c.ru/db/v8std#content:437:hdoc)
+* [Standard: Working with queries (RU). Formatting queries texts](https://its.1c.ru/db/v8std#content:437:hdoc)
 
 ## Snippets
 
