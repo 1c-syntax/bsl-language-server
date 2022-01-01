@@ -7,93 +7,95 @@
 ## Parameters
 
 
-|         Name          |   Type    |                            Description                             | Default<br>value |
-|:---------------------:|:---------:|:------------------------------------------------------------------:|:----------------------:|
-| `allowedNumberCopies` | `Integer` | `Допустимое количество повторов использования строкового литерала` |          `2`           |
-|     `analyzeFile`     | `Boolean` |                      `Analyze the whole file`                      |        `false`         |
-|    `caseSensitive`    | `Boolean` |                        `Учитывать регистр`                         |        `false`         |
-|    `minTextLength`    | `Integer` |       `Минимальная длина строкового литерала (с кавычками)`        |          `5`           |
+|         Name          |   Type    |                  Description                  | Default<br>value |
+|:---------------------:|:---------:|:---------------------------------------------:|:----------------------:|
+| `allowedNumberCopies` | `Integer` |  `Allowed number of copies string literals`   |          `2`           |
+|     `analyzeFile`     | `Boolean` |           `Analyze the whole file`            |        `false`         |
+|    `caseSensitive`    | `Boolean` |               `Case sensitive`                |        `false`         |
+|    `minTextLength`    | `Integer` | `Minimum length of a string literal (quoted)` |          `5`           |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Многократное использование одинаковых строковых литералов в одном модуле или методе является плохим тоном, т.к.
-- оно может приводить к сложностям при дальнейшем сопровождении, когда необходимо изменить значение и высока вероятность пропустить одно из повторений
-- оно может быть следствием "копипасты", т.е. разработчик забыл изменить, после копирования похожего блока кода.
+It is bad form to use the same string literals multiple times in the same module or method:
+- it can lead to problems with further maintenance, if necessary, change the value - there is a high probability of missing one of the repetitions
+- it can be a consequence of "copy-paste" - the developer may have forgotten to change the code after copying a similar block of code.
 
 ### Features of the implementation of diagnostic
 
-- Диагностика с настройками по умолчанию не учитывает регистр символов литерала, т.о. считаются одинаковыми строки `АААА` и `АааА`.
-- Нельзя указать минимальное значение анализируемого литерала меньше, чем значение по умолчанию. Это обусловлено тем, что часто используются служебные литералы, которые будут сильно фонить. Например: пустая строка "", числа-селекторы "1", "0" и т.д.
-- Нельзя уменьшить допустимое количество повторов использования меньше 1, т.к. это не имеет практического смысла.
+- Diagnostics with default settings does not respect the case of literal characters - the strings ` AAAA ` and ` AaaA ` are considered the same.
+- You cannot specify a minimum parsed literal value less than the default. Short service literals are often used, which will generate unnecessary comments. For example: empty string "", selector numbers "1", "0", etc.
+- You cannot reduce the allowed number of repetitions to less than 1, because it makes no practical sense.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Плохой код
+Bad code
 
 ```bsl
-Процедура Тест(Параметр)
-    Результат = "Значение";
-    Если Параметр = "ВРег" Тогда
-        Результат = Результат + ВРег("Значение");
-    Иначе
-        Результат = Результат + HРег("Значение");
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test(Param)
+    Result = "Value";
+    If Param = "One" Then
+        Result = Result + One("Value");
+    Else
+        Result = Result + Two("Value");
+    EndIf; 
+EndProcedure
 ```
 
 Сorrected:
 
 ```bsl
-Процедура Тест(Параметр)
-    Результат = "Значение";
-    Если Параметр = "ВРег" Тогда
-        Результат = Результат + ВРег(Результат);
-    Иначе
-        Результат = Результат + HРег(Результат);
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test(Param)
+    Result = "Value";
+    If Param = "One" Then
+        Result = Result + One(Result);
+    Else
+        Result = Result + Two(Result);
+    EndIf; 
+EndProcedure
 ```
 
-Плохой код
+Bad code
 
 ```bsl
-Процедура Тест2(Параметр)
-    Если Параметр = "ВРег" Тогда
-        Результат = Результат + ВРег("Значение");
-    Иначе
-        Результат = Результат + HРег("Значение");
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test2(Param)
+    Result = "Value";
+    If Param = "One" Then
+        Result = Result + One("Value");
+    Else
+        Result = Result + Two("Value");
+    EndIf; 
+EndProcedure
 
-Процедура Тест3(Параметр)
-    Если Параметр = "СОКРЛП" Тогда
-        Результат = Результат + СокрЛП("Значение");
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test3(Param)
+    If Param = "Five" Then
+        Result = Result + Five("Value");
+    EndIf; 
+EndProcedure
 ```
 
 Сorrected
 
 ```bsl
-Процедура Тест2(Параметр)
-    Если Параметр = "ВРег" Тогда
-        Результат = Результат + ВРег(СтроковоеЗначение());
-    Иначе
-        Результат = Результат + HРег(СтроковоеЗначение());
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test2(Param)
+    Result = "Value";
+    If Param = "One" Then
+        Result = Result + One(StringValue());
+    Else
+        Result = Result + Two(StringValue());
+    EndIf; 
+EndProcedure
 
-Процедура Тест3(Параметр)
-    Если Параметр = "СОКРЛП" Тогда
-        Результат = Результат + СокрЛП(СтроковоеЗначение());
-    КонецЕсли; 
-КонецПроцедуры
+Procedure Test3(Param)
+    If Param = "Five" Then
+        Result = Result + Five(StringValue());
+    EndIf; 
+EndProcedure
 
-Функция СтроковоеЗначение() 
-    Возврат "Значение"; 
-КонецПроцедуры
+Function StringValue()
+   Return "Value";
+EndFunction
 ```
 
 ## Sources
