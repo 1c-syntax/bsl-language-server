@@ -1,4 +1,4 @@
-# Объекту метаданных присвоено запрещенное имя (ForbiddenMetadataName)
+# Metadata object has a forbidden name (ForbiddenMetadataName)
 
 |  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |                    Tags                     |
 |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
