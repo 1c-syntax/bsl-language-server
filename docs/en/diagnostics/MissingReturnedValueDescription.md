@@ -7,9 +7,9 @@
 ## Parameters
 
 
-|                Name                 |   Type    |                     Description                     | Default<br>value |
-|:-----------------------------------:|:---------:|:---------------------------------------------------:|:----------------------:|
-| `allowShortDescriptionReturnValues` | `Boolean` | `Разрешить краткое описание возвращаемого значения` |         `true`         |
+|                Name                 |   Type    |                Description                 | Default<br>value |
+|:-----------------------------------:|:---------:|:------------------------------------------:|:----------------------:|
+| `allowShortDescriptionReturnValues` | `Boolean` | `Allow short description of return values` |         `true`         |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -23,7 +23,7 @@ Diagnostics detects typical errors:
 - No return value description
 - Return value description for procedure
 - Poor description of the return value: when the type name is present in the description, but its description is not specified
-  - Для активации этой, более строгой проверки, необходимо снять разрешение краткой формы записи параметром диагностики
+  - To activate this more stringent check, you must turn off the short form permission by the diagnostic parameter
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
