@@ -10,7 +10,7 @@
 |         Name          |   Type    |                                                Description                                                |  Default value  |
 |:---------------------:|:---------:|:---------------------------------------------------------------------------------------------------------:|:---------------:|
 | `commentsAnnotation`  | `String`  | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` |
-| `useStrictValidation` | `Boolean` |        `Использовать строгую проверку, запрещающую двойные комментарии`//// Текст комментария``         |     `true`      |
+| `useStrictValidation` | `Boolean` |                      `Use strict validation against double comments`//// Comment``                      |     `true`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
