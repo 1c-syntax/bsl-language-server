@@ -12,7 +12,7 @@ Types of style elements:
 
 * `Color` - RGB value is set
 * `Font` - type, size and style are set
-* `Рамка` - задаются тип и ширина границ
+* `Border` - the type and width of the borders are set
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
