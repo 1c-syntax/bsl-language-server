@@ -1,4 +1,4 @@
-# Повторное использование строкового литерала (DuplicateStringLiteral)
+# Duplicate string literal (DuplicateStringLiteral)
 
 |     Type     |        Scope        | Severity | Activated by default | Minutes<br> to fix |     Tags      |
 |:------------:|:-------------------:|:--------:|:--------------------:|:------------------------:|:-------------:|
