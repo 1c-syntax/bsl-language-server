@@ -13,7 +13,7 @@ Global context methods are deprecated:
 
 * `BriefErrorDescription()`
 * `DetailErrorDescription()`
-* `ПоказатьИнформациюОбОшибке()`
+* `ShowErrorInfo()`
 
 You should use the same methods of the `ErrorProcessing` object instead.
 
