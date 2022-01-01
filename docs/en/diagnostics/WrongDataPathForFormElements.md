@@ -1,4 +1,4 @@
-# У полей формы не указан путь к данным (WrongDataPathForFormElements)
+# Form fields do not have a data path (WrongDataPathForFormElements)
 
 |  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br> to fix |      Tags       |
 |:-------:|:-----:|:----------:|:-----------------------------:|:------------------------:|:---------------:|
@@ -7,17 +7,17 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-При активных доработках формы или связанных метаданных на форме могут оставаться элементы, у которых нет связанного элемента данных. Проблемы могут возникать после удаления соответствующих метаданных или реквизитов метаданных, а также в случае изменения основного реквизита формы. В результате такое поле формы не будет показано. При проверке подобных формы при включенной расширенной проверке в Конфигураторе 1С возникают ошибки.
+When actively reworking a form or associated metadata, there may be elements on the form that do not have an associated data element. Problems can arise after deleting metadata or metadata attributes, or when changing the main form attribute. As a result, such a form field will not be displayed. Errors occur with forms when extended validation is enabled in the 1C Configurator.
 ```
 Справочник.Контрагенты.Форма.ФормаЭлемента.Форма Неразрешимые ссылки на объекты метаданных (12)
 ```
-При этом в файлах форм из выгрузки XML значение свойства "Путь к данным" начинается со знака "~", например, для поля "Наименование": "<DataPath>~Object.Description</DataPath>".
+In this case, in form files from XML unloading, the value of the "Data path" property begins with a "~" sign, for example, for the "Description" field: "<DataPath>~Object.Description</DataPath>".
 
-Также при ручном изменении запроса динамического списка очищается свойство "Путь к данным" у его полей на форме. Это приводит к тому, что элемент формы (колонка таблицы) перестает быть связанным с полем динамического списка и исчезает из таблицы на форме.
+When you manually change the query of a dynamic list, the "Data path" property of its fields on the form is cleared. This leads to a breakdown of the connection between the form element (table column) and the dynamic list field, and it disappears from the table on the form.
 
-При этом в файлах форм из выгрузки XML значение свойства "Путь к данным" начинается со знака "~", например, для поля "Наименование": `<DataPath>~Список.Description</DataPath>`.
+In form files, when unloaded to XML, the value of the "Data path" property starts with a "~" character, for example, for the "Description" field: `<DataPath> ~ List.Description </DataPath>`.
 
-Аналогичная ситуация для кнопок командной панели, связанных свойством "Данные" со стандартным полем динамического списка, например, для кнопки с заполненным значением "Ссылка" в свойстве "Данные": `<DataPath>~Items.Список.CurrentData.Ссылка</DataPath>`.
+For command bar buttons associated with the "Data" property with a standard dynamic list field, for example, for a button with a filled "Ref" value in the "CurrentData" property: `<DataPath> ~ Items.List.CurrentData.Ref </DataPath>`.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -29,7 +29,7 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-- [Общие требования к конфигурации - Стандарты 1С](https://its.1c.ru/db/v8std#content:467:hdoc)
+- [General requirements - Standards 1C (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)
 
 ## Snippets
 
