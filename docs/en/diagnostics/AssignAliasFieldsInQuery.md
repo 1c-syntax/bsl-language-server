@@ -8,8 +8,8 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Рекомендуется указывать и необязательные конструкции запроса, прежде всего - явно назначать псевдонимы полям, в целях повышения наглядности текста запроса и "устойчивости" использующего его кода.  
-Например, если в алгоритме используется запрос с полем, объявленным как
+It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it.  
+For example, if the algorithm uses a query with a field declared as
 
 ```bsl
 CashBox.Currency
