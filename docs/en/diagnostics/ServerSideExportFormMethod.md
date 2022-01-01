@@ -1,4 +1,4 @@
-# Серверный экспортный метод формы (ServerSideExportFormMethod)
+# Server-side export form method (ServerSideExportFormMethod)
 
 |  Type   | Scope | Severity  | Activated by default | Minutes<br> to fix |                          Tags                          |
 |:-------:|:-----:|:---------:|:--------------------:|:------------------------:|:------------------------------------------------------:|
@@ -8,29 +8,29 @@
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-В модуле формы можно объявлять экспортные методы, доступные в клиентском контексте (обычно это методы-обработчики событий оповещения формы). У экспортных методов формы может быть указана только директива компиляции `НаКлиенте`, так как для остальных практического смысла нет: обращение к методам формы из вне доступно только после вызова метода `ПолучитьФорму`, который доступен только на клиенте.
+In a form module, you can declare export methods that are available in the client context (usually, these are form notification event handlers). For export methods of the form, only the compilation directive `AtClient` can be specified, since for the rest there is no practical sense: accessing form methods from outside is available only after calling the method `GetForm`, which is available only on the client.
 
-Указание экспортному методу формы иной директивы компиляции либо ее опускание считается ошибкой.
+Specifying a different compilation directive for the export method or its absence is considered an error.
 
-*В некоторых версиях платформы 1С:Предприятие существовала ошибка, позволяющая использовать экспортные серверные методы форм, но проектировать прикладное решение с эксплуатированием ошибок платформы недопустимо.*
+*In some versions of the 1C:Enterprise platform, there was an error that allowed using export server-side methods of forms, but it is unacceptable to design a solution using undocumented platform capabilities.*
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Неправильное применение экспортных методов в форме
+Incorrect use of export methods on a form
 
 ```bsl
-Процедура БезДирективКомпиляции() Экспорт
-  // процедура доступна на сервере
-КонецПроцедуры
+Procedure One() Export
+  // procedure without directive is available on the server
+EndProcedure
 
-&НаСервереБезКонтекста
-Процедура НаСервереБезКонтекста() Экспорт
-КонецПроцедуры
+&AtServerNoContext
+Procedure AtServerNoContext() Export
+EndProcedure
 
-&НаСервере
-Процедура НаСервере() Экспорт
-КонецПроцедуры
+&AtServer
+Procedure AtServer() Export
+EndProcedure
 ```
 
 ## Sources
@@ -41,7 +41,7 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* [Разработка интерфейса прикладных решений на платформе "1С:Предприятие". Ch 3.5. Исполнение модуля формы на клиенте и на сервере](https://its.1c.ru/db/pubv8devui/content/191/hdoc)
+* [Development of the interface for applied solutions on the "1C:Enterprise" platform (RU). Ch 3.5. Execution of the form module on the client and on the server](https://its.1c.ru/db/pubv8devui/content/191/hdoc)
 
 ## Snippets
 
