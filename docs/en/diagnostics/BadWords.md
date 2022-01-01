@@ -1,4 +1,4 @@
-# Запрещенные слова (BadWords)
+# Prohibited words (BadWords)
 
 |     Type     |        Scope        | Severity | Activated by default | Minutes<br> to fix |   Tags   |
 |:------------:|:-------------------:|:--------:|:--------------------:|:------------------------:|:--------:|
@@ -7,12 +7,12 @@
 ## Parameters
 
 
-|    Name    |   Type   |                 Description                 | Default<br>value |
-|:----------:|:--------:|:-------------------------------------------:|:----------------------:|
-| `badWords` | `String` | `Регулярное выражение для слов-исключений.` |          ``          |
+|    Name    |   Type   |                Description                | Default<br>value |
+|:----------:|:--------:|:-----------------------------------------:|:----------------------:|
+| `badWords` | `String` | `Regular expression for exclusion words.` |          ``          |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
-В тексте модулей не должны встречаться запрещенные слова. Список запрещенных слов задается регулярным выражением. Поиск производится без учета регистра символов.
+There should be no forbidden words in the text of the modules. The list of forbidden words is given by a regular expression. The search is made case-insensitive.
 
 **Sample setup:**
 
