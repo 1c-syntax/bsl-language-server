@@ -1,4 +1,4 @@
-# Отсутствие проверки на NULL для полей из присоединяемых таблиц (FieldsFromJoinsWithoutIsNull)
+# No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
 
 |  Type   |        Scope        |  Severity  | Activated by default | Minutes<br> to fix |                         Tags                         |
 |:-------:|:-------------------:|:----------:|:--------------------:|:------------------------:|:----------------------------------------------------:|
@@ -7,21 +7,21 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Диагностика проверяет поля из левых, правых, полных соединений, для которых не выполняется проверка с помощью `ЕСТЬNULL()` или `НЕ ЕСТЬ NULL` или или `ЕСТЬ НЕ NULL`.
+Diagnostics checks fields from left, right, full joins that are not validated with `ISNULL()` or `NOT IS NULL` or `IS NOT NULL</0 >.</p>
 
-В запросах нельзя использовать реквизиты из присоединяемых слева или справа таблиц без проверки значений на `NULL`. Указанное обращение может приводить к ошибкам, если условие соединения не выполнено и нет подходящих записей в левой или правой таблице. В итоге в результате запроса можно получить неожиданные данные и система может повести себя неверным образом.
+<p spaces-before="0">Queries cannot use attributes from left-join or right-join tables without checking the values for <code>NULL`. Such a call can lead to errors if the join condition is not met and there are no matching records in the left or right table. As a result, as a result of executing the query, you may receive unexpected data and the system may behave in an incorrect way.
 
-Важно помнить, что любое сравнение значения `NULL` с любым другими выражением всегда ложно, даже сравнение `NULL` и `NULL` всегда ложно. Смотрите ниже пример подобных неверных сравнений. Поэтому нужно правильно выполнять сравнение с `NULL` - или через оператор `ЕСТЬ NULL` или через функцию `ЕСТЬNULL()`.
+It is important to remember that any comparison of the value `NULL` with any other expression is always false, even the comparison of `NULL` and `NULL` is always false. The following are examples of such incorrect comparisons. It is correct to compare with `NULL` - operator `IS NULL` or function `ISNULL()`.
 
-Также достаточно часто используются левые\правые соединения, хотя данные позволяют использовать внутреннее соединение, в этом случае не нужны проверки на `NULL`.
+Left \ right joins are often used, although the data allows an inner join without checking for `NULL`.
 
-Или дополнительные проверки реквизитов выполняются в коде 1С, а не в тексте запроса. Подобные обращения затрудняют чтение кода и рефакторинг кода, т.к. контекст обращения к реквизиту приходится учитывать в нескольких местах. В дополнение нужно учитывать, что простые проверки в запросе выполняются чуть быстрее и проще, чем в интерпретируемом коде 1С.
+Additional checks of field values can be performed in the 1C code, and not in the query text. This makes it difficult to read the code and refactor the code, because the context of the access to the field has to be considered in several places. It should be remembered that simple checks in a query are performed a little faster and easier than in interpreted 1C code.
 
-Указанные проблемы являются одними из самых частых ошибок разработчиков 1С самого разного уровня компетенций.
+These problems are the most common mistakes made by 1C developers of all skill levels.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-Пример, показывающий проблемы сравнения с NULL - в примере 2 таблицы соединяются заведомо неверно и приведены разные способы сравнения
+Example showing NULL comparison problems - joining 2 tables incorrectly and showing different comparison methods
 ```sdbl
 ВЫБРАТЬ
   ВЫБОР
