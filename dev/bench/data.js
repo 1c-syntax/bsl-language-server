@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641121671722,
+  "lastUpdate": 1641142136762,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15252,6 +15252,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6073242905007533",
             "extra": "mean: 32.82908916473389 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "a7144745004e93a3ae2422f32b6a675ccec96604",
+          "message": "Исправление двойного шедуллинга задачи рассчета конфигурации на два тред-пулла",
+          "timestamp": "2022-01-02T19:45:06+03:00",
+          "tree_id": "e08e57141c32ccb6b5dbe6093677417093869f35",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a7144745004e93a3ae2422f32b6a675ccec96604"
+        },
+        "date": 1641142133900,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 32.97351280848185,
+            "unit": "sec",
+            "range": "stddev: 1.0868003029772484",
+            "extra": "mean: 32.97351280848185 sec\nrounds: 3"
           }
         ]
       }
