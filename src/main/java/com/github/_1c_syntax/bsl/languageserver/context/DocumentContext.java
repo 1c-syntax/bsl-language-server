@@ -277,10 +277,7 @@ public class DocumentContext {
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
-
-    if (!isComputedDataFrozen) {
-      symbolTree = computeSymbolTree();
-    }
+    symbolTree = computeSymbolTree();
 
     computeLock.unlock();
   }
