@@ -64,6 +64,9 @@ public class SymbolTree {
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
 
+  @Getter(lazy = true)
+  Map<String, MethodSymbol> methodsByName = createMethodsByName();
+
   /**
    * Плоский список всех переменных документа
    */
@@ -149,9 +152,7 @@ public class SymbolTree {
    * @return MethodSymbol, если он был найден в дереве символов.
    */
   public Optional<MethodSymbol> getMethodSymbol(String methodName) {
-    return getMethods().stream()
-      .filter(methodSymbol -> methodName.equalsIgnoreCase(methodSymbol.getName()))
-      .findAny();
+    return Optional.ofNullable(getMethodsByName().get(methodName));
   }
 
   /**
@@ -219,6 +220,18 @@ public class SymbolTree {
           VariableSymbol::getName,
           () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER),
           toMap(VariableSymbol::getScope, Function.identity())
+        )
+      );
+  }
+
+  private Map<String, MethodSymbol> createMethodsByName() {
+    return getMethods().stream()
+      .collect(
+        toMap(
+          MethodSymbol::getName,
+          Function.identity(),
+          (existing, replacement) -> existing,
+          () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
         )
       );
   }

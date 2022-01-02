@@ -118,9 +118,7 @@ public class ReferenceIndexFiller {
       var methodName = ctx.methodName().getStart();
       var methodNameText = methodName.getText();
 
-      documentContext.getSymbolTree().getMethods().stream()
-        .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
-        .findAny()
+      documentContext.getSymbolTree().getMethodSymbol(methodNameText)
         .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
 
       return super.visitGlobalMethodCall(ctx);
