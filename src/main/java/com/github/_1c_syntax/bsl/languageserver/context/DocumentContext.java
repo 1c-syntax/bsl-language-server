@@ -78,6 +78,7 @@ public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
 
+  @Getter
   private final URI uri;
 
   @Nullable
@@ -92,7 +93,9 @@ public class DocumentContext {
   @Setter(onMethod = @__({@Autowired}))
   private LanguageServerConfiguration configuration;
 
+  @Getter
   private FileType fileType;
+  @Getter
   private BSLTokenizer tokenizer;
   @Getter
   private boolean isComputedDataFrozen;
@@ -168,8 +171,8 @@ public class DocumentContext {
       throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
-    String startString = contentListUnboxed[start.getLine()];
-    StringBuilder sb = new StringBuilder();
+    var startString = contentListUnboxed[start.getLine()];
+    var sb = new StringBuilder();
 
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
@@ -209,14 +212,6 @@ public class DocumentContext {
 
   public MetricStorage getMetrics() {
     return metrics.getOrCompute();
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-
-  public FileType getFileType() {
-    return fileType;
   }
 
   public ComplexityData getCognitiveComplexityData() {
@@ -361,7 +356,7 @@ public class DocumentContext {
   }
 
   private MetricStorage computeMetrics() {
-    MetricStorage metricsTemp = new MetricStorage();
+    var metricsTemp = new MetricStorage();
     final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
