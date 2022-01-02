@@ -63,7 +63,7 @@ public class RegionSymbol implements SourceDefinedSymbol {
   public List<MethodSymbol> getMethods() {
     return children.stream()
       .filter(MethodSymbol.class::isInstance)
-      .map(symbol -> (MethodSymbol) symbol)
+      .map(MethodSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
