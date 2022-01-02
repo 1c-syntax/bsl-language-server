@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641148392974,
+  "lastUpdate": 1641151570845,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15469,6 +15469,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7048670471193371",
             "extra": "mean: 34.97286677360535 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "skikaha@yandex.ru",
+            "name": "Eduard Ivanov",
+            "username": "qtLex"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2b2ba52c031475263ef0b7921998d41fcb4199d",
+          "message": "Feature/in memory db references to variables (#1871)",
+          "timestamp": "2022-01-02T22:21:52+03:00",
+          "tree_id": "d7fecdb98605637c22c59d554a99b50b5bcfb58d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c2b2ba52c031475263ef0b7921998d41fcb4199d"
+        },
+        "date": 1641151568359,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 40.13981000582377,
+            "unit": "sec",
+            "range": "stddev: 0.8490682125805986",
+            "extra": "mean: 40.13981000582377 sec\nrounds: 3"
           }
         ]
       }
