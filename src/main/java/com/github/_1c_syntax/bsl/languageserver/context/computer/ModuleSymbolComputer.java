@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.EnumSet;
@@ -49,7 +51,12 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
   @Override
   public ModuleSymbol compute() {
-    var firstRange = Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+    var firstRange = documentContext.getTokens().stream()
+      .filter(token -> token.getType() != Token.EOF)
+      .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
+      .map(Ranges::create)
+      .filter(range -> (!range.getStart().equals(range.getEnd())))
+      .findFirst()
       .orElseGet(Ranges::create); // используем нулевую область
 
     return ModuleSymbol.builder()
