@@ -154,7 +154,7 @@ Total: **158**
  [UnusedLocalMethod](UnusedLocalMethod.md) | Unused local method | Yes | Major | Code smell | `standard`<br>`suspicious`<br>`unused` 
  [UnusedLocalVariable](UnusedLocalVariable.md) | Unused local variable | Yes | Major | Code smell | `brainoverload`<br>`badpractice` 
  [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design`<br>`unused` 
- [UsageWriteLogEvent](UsageWriteLogEvent.md) | Incorrect use of the method | Yes | Info | Code smell | `standard`<br>`badpractice` 
+ [UsageWriteLogEvent](UsageWriteLogEvent.md) | Incorrect use of the method "WriteLogEvent" | Yes | Info | Code smell | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` 
  [UsingCancelParameter](UsingCancelParameter.md) | Using parameter "Cancel" | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [UsingExternalCodeTools](UsingExternalCodeTools.md) | Using external code tools | Yes | Critical | Security Hotspot | `standard`<br>`design` 

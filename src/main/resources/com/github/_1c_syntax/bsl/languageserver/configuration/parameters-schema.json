@@ -1086,6 +1086,14 @@
                 "object"
             ],
             "title": "Function returned values description is missing",
+            "properties": {
+                "allowShortDescriptionReturnValues": {
+                    "description": "Allow short description of return values",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow short description of return values"
+                }
+            },
             "$id": "#/definitions/MissingReturnedValueDescription"
         },
         "MissingSpace": {
@@ -1811,13 +1819,13 @@
             "$id": "#/definitions/UnusedParameters"
         },
         "UsageWriteLogEvent": {
-            "description": "Incorrect use of the method",
+            "description": "Incorrect use of the method \"WriteLogEvent\"",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Incorrect use of the method",
+            "title": "Incorrect use of the method \"WriteLogEvent\"",
             "$id": "#/definitions/UsageWriteLogEvent"
         },
         "UseLessForEach": {

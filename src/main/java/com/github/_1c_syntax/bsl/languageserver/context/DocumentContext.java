@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
+ * Copyright (c) 2018-2022
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -94,6 +94,8 @@ public class DocumentContext {
 
   private FileType fileType;
   private BSLTokenizer tokenizer;
+  @Getter
+  private boolean isComputedDataFrozen;
 
   private final ReentrantLock computeLock = new ReentrantLock();
   private final ReentrantLock diagnosticsLock = new ReentrantLock();
@@ -255,6 +257,14 @@ public class DocumentContext {
       .orElseGet(Collections::emptyList);
   }
 
+  public void freezeComputedData() {
+    isComputedDataFrozen = true;
+  }
+
+  public void unfreezeComputedData() {
+    isComputedDataFrozen = false;
+  }
+
   public void rebuild(String content, int version) {
     computeLock.lock();
 
@@ -267,8 +277,10 @@ public class DocumentContext {
       return;
     }
 
-    clearSecondaryData();
-    symbolTree.clear();
+    if (!isComputedDataFrozen) {
+      clearSecondaryData();
+      symbolTree.clear();
+    }
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
@@ -277,15 +289,19 @@ public class DocumentContext {
 
   public void clearSecondaryData() {
     computeLock.lock();
+
     content = null;
     contentList.clear();
     tokenizer = null;
-    cognitiveComplexityData.clear();
-    cyclomaticComplexityData.clear();
-    metrics.clear();
-    diagnosticIgnoranceData.clear();
     queries.clear();
     clearDependantData();
+
+    if (!isComputedDataFrozen) {
+      cognitiveComplexityData.clear();
+      cyclomaticComplexityData.clear();
+      metrics.clear();
+      diagnosticIgnoranceData.clear();
+    }
     computeLock.unlock();
   }
 

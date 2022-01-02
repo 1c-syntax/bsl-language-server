@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
+ * Copyright (c) 2018-2022
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -86,6 +86,7 @@ public abstract class ServerContext {
       var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
+        documentContext.freezeComputedData();
         documentContext.clearSecondaryData();
       }
     });
@@ -128,6 +129,7 @@ public abstract class ServerContext {
       documentContext = createDocumentContext(uri, content, version);
     } else {
       documentContext.rebuild(content, version);
+      documentContext.unfreezeComputedData();
     }
 
     contextLock.readLock().unlock();
