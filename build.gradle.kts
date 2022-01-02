@@ -49,7 +49,7 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "5.5"
+val languageToolVersion = "5.6"
 
 dependencies {
 
@@ -114,7 +114,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
     testImplementation("org.awaitility", "awaitility", "4.1.1")
 }
 
