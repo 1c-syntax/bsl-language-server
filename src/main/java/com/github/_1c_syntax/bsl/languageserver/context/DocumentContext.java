@@ -98,6 +98,9 @@ public class DocumentContext {
   @Getter
   private BSLTokenizer tokenizer;
   @Getter
+  private SymbolTree symbolTree;
+
+  @Getter
   private boolean isComputedDataFrozen;
 
   private final ReentrantLock computeLock = new ReentrantLock();
@@ -107,7 +110,6 @@ public class DocumentContext {
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -140,10 +142,6 @@ public class DocumentContext {
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
-  }
-
-  public SymbolTree getSymbolTree() {
-    return symbolTree.getOrCompute();
   }
 
   public List<Token> getTokens() {
@@ -274,11 +272,16 @@ public class DocumentContext {
 
     if (!isComputedDataFrozen) {
       clearSecondaryData();
-      symbolTree.clear();
     }
+
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
+
+    if (!isComputedDataFrozen) {
+      symbolTree = computeSymbolTree();
+    }
+
     computeLock.unlock();
   }
 
@@ -357,7 +360,7 @@ public class DocumentContext {
 
   private MetricStorage computeMetrics() {
     var metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
