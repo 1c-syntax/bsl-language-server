@@ -46,6 +46,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -190,12 +191,18 @@ public abstract class ServerContext {
     }
 
     Configuration configuration;
-    ForkJoinPool customThreadPool = new ForkJoinPool();
+    var customThreadPool = new ForkJoinPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).fork().join();
-    } catch (RuntimeException e) {
+      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
+    } catch (InterruptedException e) {
+      LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
+      configuration = Configuration.create();
+      Thread.currentThread().interrupt();
+    } finally {
+      customThreadPool.shutdown();
     }
 
     return configuration;
