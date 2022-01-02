@@ -44,6 +44,7 @@ import java.util.Optional;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+  @EqualsAndHashCode.Include
   String name;
 
   @Builder.Default

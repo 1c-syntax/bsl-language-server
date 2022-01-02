@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -28,35 +29,23 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterAsyncCallDiagnostic> {
-  CodeAfterAsyncCallDiagnosticTest() {
-    super(CodeAfterAsyncCallDiagnostic.class);
+@CleanupContextBeforeClassAndAfterClass
+class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLocalVariableDiagnostic> {
+  UnusedLocalVariableDiagnosticTest() {
+    super(UnusedLocalVariableDiagnostic.class);
   }
 
   @Test
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRange(4,  4, 96)
-      .hasRange(21, 8, 100)
-      .hasRange(34, 8, 100)
-      .hasRange(48, 12, 104)
-      .hasRange(63, 12, 104)
-      .hasRange(78, 12, 104)
-      .hasRange(93, 12, 104)
-      .hasRange(108, 12, 104)
-      .hasRange(123, 12, 104)
-      .hasRange(136, 4, 36)
-      .hasRange(145, 8, 100)
-      .hasRange(158, 12, 104)
-      .hasRange(172, 12, 104)
-      .hasRange(186, 12, 104)
-      .hasRange(200, 12, 104)
-      .hasRange(214, 12, 104)
-      .hasRange(228, 12, 104)
-      .hasSize(17);
+      .hasRange(0, 6, 36)
+      .hasRange(14, 10, 35)
+      .hasRange(14, 37, 63)
+      .hasRange(19, 4, 28)
+      .hasRange(41, 0, 25);
 
   }
 }

@@ -21,54 +21,51 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.Optional;
+import java.util.EnumSet;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 3,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 1,
   tags = {
-    DiagnosticTag.DEPRECATED,
-    DiagnosticTag.DESIGN
+    DiagnosticTag.BRAINOVERLOAD,
+    DiagnosticTag.BADPRACTICE
+  },
+  modules = {
+    ModuleType.CommandModule,
+    ModuleType.CommonModule,
+    ModuleType.ManagerModule,
+    ModuleType.ValueManagerModule,
+    ModuleType.SessionModule,
+    ModuleType.UNKNOWN
   }
 )
 @RequiredArgsConstructor
-public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
+public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
   private final ReferenceIndex referenceIndex;
+  private static final Set<VariableKind> CHECKING_VARIABLE_KINDS = EnumSet.of(
+    VariableKind.MODULE,
+    VariableKind.LOCAL,
+    VariableKind.DYNAMIC
+  );
 
   @Override
   public void check() {
-    var uri = documentContext.getUri();
-
-    referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
-      .filter(reference -> reference.getSymbol().isDeprecated())
-      .filter(reference -> !reference.getFrom().isDeprecated())
-      .forEach((Reference reference) -> {
-        Symbol deprecatedSymbol = reference.getSymbol();
-        String deprecationInfo = getDeprecationInfo(deprecatedSymbol);
-        String message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
-        diagnosticStorage.addDiagnostic(reference.getSelectionRange(), message);
-      });
-  }
-
-  private static String getDeprecationInfo(Symbol deprecatedSymbol) {
-    return Optional.of(deprecatedSymbol)
-      .filter(Describable.class::isInstance)
-      .map(Describable.class::cast)
-      .flatMap(Describable::getDescription)
-      .map(SourceDefinedSymbolDescription::getDeprecationInfo)
-      .orElse("");
+    documentContext.getSymbolTree().getVariables().stream()
+      .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
+      .filter(variable -> !variable.isExport())
+      .filter(variable -> referenceIndex.getReferencesTo(variable).stream().filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty())
+      .forEach(variable -> diagnosticStorage.addDiagnostic(variable.getSelectionRange(), info.getMessage(variable.getName())));
   }
 }

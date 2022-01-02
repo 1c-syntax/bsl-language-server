@@ -43,13 +43,32 @@ import java.util.Optional;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
+
+  /**
+   * Имя переменной.
+   */
   @EqualsAndHashCode.Include
   String name;
+
+  /**
+   * Область доступности символа. Метод или модуль.
+   */
+  SourceDefinedSymbol scope;
+
+  /**
+   * Тип символа. По умолчанию переменная.
+   */
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
+
+  /**
+   * Файл в котором располагается переменная.
+   */
   @EqualsAndHashCode.Include
   DocumentContext owner;
+
   Range range;
+
   @EqualsAndHashCode.Include
   Range variableNameRange;
 
@@ -62,8 +81,19 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   @Builder.Default
   List<SourceDefinedSymbol> children = Collections.emptyList();
 
+  /**
+   * Тип переменной.
+   */
   VariableKind kind;
+
+  /**
+   * Признак экспортной переменной.
+   */
   boolean export;
+
+  /**
+   * Описание переменной.
+   */
   Optional<VariableDescription> description;
 
   @Override

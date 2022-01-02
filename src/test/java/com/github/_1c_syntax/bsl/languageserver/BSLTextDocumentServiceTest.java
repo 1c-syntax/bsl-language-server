@@ -134,7 +134,7 @@ class BSLTextDocumentServiceTest {
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then
-    assertThat(diagnostics.getDiagnostics()).hasSize(1);
+    assertThat(diagnostics.getDiagnostics()).hasSize(2);
   }
 
   private File getTestFile() {

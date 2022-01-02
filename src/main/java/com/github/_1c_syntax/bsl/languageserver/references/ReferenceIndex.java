@@ -68,12 +68,19 @@ public class ReferenceIndex {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
+    String scopeName = "";
 
-    // this#toSymbol
+    if (symbol.getSymbolKind() == SymbolKind.Variable) {
+      scopeName = symbol.getRootParent(SymbolKind.Method)
+        .map(SourceDefinedSymbol::getName)
+        .map(name -> name.toLowerCase(Locale.ENGLISH))
+        .orElse("");
+    }
+
     var symbolDto = Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
-      .scopeName("")
+      .scopeName(scopeName)
       .symbolKind(symbol.getSymbolKind())
       .symbolName(symbolName)
       .build();
@@ -108,6 +115,21 @@ public class ReferenceIndex {
   public List<Reference> getReferencesFrom(URI uri) {
 
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .map(this::buildReference)
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Поиск ссылок на символы в документе.
+   *
+   * @param uri URI документа, в котором нужно найти ссылки на другие символы.
+   * @return Список ссылок на символы.
+   */
+  public List<Reference> getReferencesFrom(URI uri, SymbolKind kind) {
+
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .filter(s -> s.getSymbol().getSymbolKind() == kind)
       .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
@@ -157,9 +179,49 @@ public class ReferenceIndex {
       .build();
 
     var location = new Location(uri, range);
-
     var symbolOccurrence = SymbolOccurrence.builder()
       .occurrenceType(OccurrenceType.REFERENCE)
+      .symbol(symbol)
+      .location(location)
+      .build();
+
+    symbolOccurrenceRepository.save(symbolOccurrence);
+    locationRepository.updateLocation(symbolOccurrence);
+  }
+
+  /**
+   * Добавить обращение к переменной в индекс.
+   *
+   * @param uri          URI документа, откуда произошел вызов.
+   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType   Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
+   * @param variableName Имя переменной, к которой происходит обращение.
+   * @param range        Диапазон, в котором происходит обращение к символу.
+   * @param definition     Признак обновления значения переменной.
+   */
+  public void addVariableUsage(URI uri,
+                               String mdoRef,
+                               ModuleType moduleType,
+                               String methodName,
+                               String variableName,
+                               Range range,
+                               boolean definition) {
+    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
+    String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH);
+
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName(methodNameCanonical)
+      .symbolKind(SymbolKind.Variable)
+      .symbolName(variableNameCanonical)
+      .build();
+
+    var location = new Location(uri, range);
+
+    var symbolOccurrence = SymbolOccurrence.builder()
+      .occurrenceType(definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
       .symbol(symbol)
       .location(location)
       .build();
@@ -189,10 +251,16 @@ public class ReferenceIndex {
     ModuleType moduleType = symbolEntity.getModuleType();
     String symbolName = symbolEntity.getSymbolName();
 
+    if (symbolEntity.getSymbolKind() == SymbolKind.Variable) {
+      return serverContext.getDocument(mdoRef, moduleType)
+        .map(DocumentContext::getSymbolTree)
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.getScopeName())
+        .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
+        .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+    }
+
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
-      // TODO: SymbolTree#getSymbol(Position)?
-      //  Для поиска не только методов, но и переменных, которые могут иметь одинаковые имена
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -65,6 +66,45 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).get()
       .extracting(Reference::getSelectionRange)
       .isEqualTo(Ranges.create(4, 0, 4, 9));
+  }
+
+  @Test
+  void testFindVariables() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(25, 24)
+    );
+    assertThat(referencedSymbol).isPresent();
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Первая");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getFrom)
+      .extracting(Symbol::getName)
+      .isEqualTo("ТретийМетод");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getOccurrenceType)
+      .isEqualTo(OccurrenceType.REFERENCE);
+
+    var scopeMethod = documentContext
+      .getSymbolTree()
+      .getMethodSymbol("ТретийМетод");
+    assertThat(scopeMethod).isPresent();
+    var references = referenceIndex.getReferencesFrom(scopeMethod.get());
+    assertThat(references).hasSize(11);
+
+    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).hasSize(5);
   }
 
   @Test
