@@ -39,16 +39,18 @@ import java.util.stream.Collectors;
 
 @Value
 @Builder(access = lombok.AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
+  @EqualsAndHashCode.Include
   DocumentContext owner;
   Range range;
   Range startRange;
   Range endRange;
+  @EqualsAndHashCode.Include
   Range regionNameRange;
 
   @Getter
