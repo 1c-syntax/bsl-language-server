@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641147299396,
+  "lastUpdate": 1641148392974,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15438,6 +15438,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4547841731244918",
             "extra": "mean: 34.70608329772949 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "99b2622443dc9a378c1917e31b7cc02fb82a01f9",
+          "message": "Оптимизация расчета хэш-кода для символов\n\nCo-authored-by: Eduard Ivanov <skikaha@yandex.ru>",
+          "timestamp": "2022-01-02T21:29:06+03:00",
+          "tree_id": "d05da0ec45a07fde147b7b8d7ac9da2e68ff4814",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/99b2622443dc9a378c1917e31b7cc02fb82a01f9"
+        },
+        "date": 1641148390624,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 34.97286677360535,
+            "unit": "sec",
+            "range": "stddev: 0.7048670471193371",
+            "extra": "mean: 34.97286677360535 sec\nrounds: 3"
           }
         ]
       }
