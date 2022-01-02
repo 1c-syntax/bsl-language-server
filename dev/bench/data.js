@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641142136762,
+  "lastUpdate": 1641142874743,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15283,6 +15283,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0868003029772484",
             "extra": "mean: 32.97351280848185 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "373793111b3be1535f881269cb2139003574bb3f",
+          "message": "SymbolTree больше не lazy-поле\n\nТ.к. символьное дерево все равно рассчитывается сразу же (в т.ч. при заполнении референс-индекса) и никогда не очищается, нет смысла делать его lazy, внося дополнительную нагрузку на синхронизацию",
+          "timestamp": "2022-01-02T19:57:25+03:00",
+          "tree_id": "4efc9aaada6c6af9ffc217c1458e3b3fe1603b28",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/373793111b3be1535f881269cb2139003574bb3f"
+        },
+        "date": 1641142872389,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 33.373474518458046,
+            "unit": "sec",
+            "range": "stddev: 0.6196525236494334",
+            "extra": "mean: 33.373474518458046 sec\nrounds: 3"
           }
         ]
       }
