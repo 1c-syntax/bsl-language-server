@@ -41,7 +41,7 @@ import java.util.Optional;
  */
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class ModuleSymbol implements SourceDefinedSymbol {
   /**
@@ -52,12 +52,18 @@ public class ModuleSymbol implements SourceDefinedSymbol {
    * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
    */
   String name;
+
   SymbolKind symbolKind;
+
+  @EqualsAndHashCode.Include
   DocumentContext owner;
+
   Range range;
+
   /**
    * Область первого токена модуля
    */
+  @EqualsAndHashCode.Include
   Range selectionRange;
 
   @Getter
