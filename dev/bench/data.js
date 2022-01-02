@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641046725765,
+  "lastUpdate": 1641121671722,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -15221,6 +15221,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4831082272007572",
             "extra": "mean: 34.96006933848063 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "debf990b39c06e1c1c7b5e4e378f79a1df6a1d11",
+          "message": "Merge pull request #1921 from 1c-syntax/feature/freeze-dc-state",
+          "timestamp": "2022-01-02T14:02:38+03:00",
+          "tree_id": "35ef088ffcd83691405d58b6163951484e389beb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/debf990b39c06e1c1c7b5e4e378f79a1df6a1d11"
+        },
+        "date": 1641121668465,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 32.82908916473389,
+            "unit": "sec",
+            "range": "stddev: 0.6073242905007533",
+            "extra": "mean: 32.82908916473389 sec\nrounds: 3"
           }
         ]
       }
