@@ -201,6 +201,8 @@ public abstract class ServerContext {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
       configuration = Configuration.create();
       Thread.currentThread().interrupt();
+    } finally {
+      customThreadPool.shutdown();
     }
 
     return configuration;

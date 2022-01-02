@@ -78,6 +78,7 @@ public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
 
+  @Getter
   private final URI uri;
 
   @Nullable
@@ -92,8 +93,13 @@ public class DocumentContext {
   @Setter(onMethod = @__({@Autowired}))
   private LanguageServerConfiguration configuration;
 
+  @Getter
   private FileType fileType;
+  @Getter
   private BSLTokenizer tokenizer;
+  @Getter
+  private SymbolTree symbolTree;
+
   @Getter
   private boolean isComputedDataFrozen;
 
@@ -104,7 +110,6 @@ public class DocumentContext {
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -139,10 +144,6 @@ public class DocumentContext {
     return tokenizer.getAst();
   }
 
-  public SymbolTree getSymbolTree() {
-    return symbolTree.getOrCompute();
-  }
-
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
@@ -168,8 +169,8 @@ public class DocumentContext {
       throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
-    String startString = contentListUnboxed[start.getLine()];
-    StringBuilder sb = new StringBuilder();
+    var startString = contentListUnboxed[start.getLine()];
+    var sb = new StringBuilder();
 
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
@@ -209,14 +210,6 @@ public class DocumentContext {
 
   public MetricStorage getMetrics() {
     return metrics.getOrCompute();
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-
-  public FileType getFileType() {
-    return fileType;
   }
 
   public ComplexityData getCognitiveComplexityData() {
@@ -279,11 +272,13 @@ public class DocumentContext {
 
     if (!isComputedDataFrozen) {
       clearSecondaryData();
-      symbolTree.clear();
     }
+
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
+    symbolTree = computeSymbolTree();
+
     computeLock.unlock();
   }
 
@@ -361,8 +356,8 @@ public class DocumentContext {
   }
 
   private MetricStorage computeMetrics() {
-    MetricStorage metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
+    var metricsTemp = new MetricStorage();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());

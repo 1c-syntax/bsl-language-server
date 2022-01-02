@@ -55,20 +55,17 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
 
     //todo может ли не быть модуля web-сервиса? тогда непонятно, на какой модуль вешать замечания
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(this::processModuleWithRange);
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (!Ranges.isEmpty(diagnosticRange)) {
+      processModule();
+    }
   }
 
-  private void processModuleWithRange(Range range) {
-    diagnosticRange = range;
-
+  private void processModule() {
     documentContext.getMdObject()
       .filter(MDWebService.class::isInstance)
       .map(MDWebService.class::cast)
       .ifPresent(this::checkService);
-
-    diagnosticRange = null;
-
   }
 
   private void checkService(MDWebService mdWebService) {

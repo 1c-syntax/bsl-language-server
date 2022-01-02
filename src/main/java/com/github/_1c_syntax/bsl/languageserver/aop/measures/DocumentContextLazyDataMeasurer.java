@@ -55,12 +55,10 @@ public class DocumentContextLazyDataMeasurer {
 
     LOGGER.debug("Take measurements for {}", documentContext.getUri());
 
-    measureCollector.measureIt(documentContext::getAst, "context: ast");
     measureCollector.measureIt(documentContext::getQueries, "context: queries");
     for (SDBLTokenizer sdblTokenizer : documentContext.getQueries()) {
       measureCollector.measureIt(sdblTokenizer::getAst, "context: queryAst");
     }
-    measureCollector.measureIt(documentContext::getSymbolTree, "context: symbolTree");
     measureCollector.measureIt(documentContext.getSymbolTree()::getChildrenFlat, "context: symbolTree - childrenFlat");
     measureCollector.measureIt(documentContext.getSymbolTree()::getMethods, "context: symbolTree - methods");
     measureCollector.measureIt(documentContext.getSymbolTree()::getVariables, "context: symbolTree - variables");

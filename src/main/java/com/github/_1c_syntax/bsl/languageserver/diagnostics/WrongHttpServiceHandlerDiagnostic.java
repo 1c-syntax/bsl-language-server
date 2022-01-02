@@ -56,19 +56,17 @@ public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
 
     //todo может ли не быть модуля http-сервиса? тогда непонятно, на какой модуль вешать замечания
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(this::processModuleWithRange);
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (!Ranges.isEmpty(diagnosticRange)) {
+      processModule();
+    }
   }
 
-  private void processModuleWithRange(Range range) {
-    diagnosticRange = range;
-
+  private void processModule() {
     documentContext.getMdObject()
       .filter(MDHttpService.class::isInstance)
       .map(MDHttpService.class::cast)
       .ifPresent(this::checkService);
-
-    diagnosticRange = null;
   }
 
   private void checkService(MDHttpService mdHttpService) {
