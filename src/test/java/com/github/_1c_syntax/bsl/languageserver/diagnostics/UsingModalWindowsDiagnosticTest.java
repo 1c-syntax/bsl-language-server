@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
@@ -121,7 +122,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     when(configuration.getModalityUseMode()).thenReturn(useMode);
     when(context.getConfiguration()).thenReturn(configuration);
 
-    return context.addDocument(testFile.toUri(), getText(), 1);
+    return TestUtils.getDocumentContext(testFile.toUri(), getText());
   }
 
 }

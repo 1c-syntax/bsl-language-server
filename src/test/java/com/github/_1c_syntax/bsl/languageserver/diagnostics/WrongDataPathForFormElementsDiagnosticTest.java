@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.utils.Absolute;
@@ -111,7 +112,7 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   private List<Diagnostic> getDiagnosticListForMockedFile(String pathToDynamicListModuleFile) {
     var testFile = Paths.get(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
 
-    var documentContext = context.addDocument(testFile.toUri(), getText(), 1);
+    var documentContext = TestUtils.getDocumentContext(testFile.toUri(), getText());
 
     return getDiagnostics(documentContext);
   }
