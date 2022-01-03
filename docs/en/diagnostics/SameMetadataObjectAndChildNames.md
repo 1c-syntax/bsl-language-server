@@ -1,8 +1,8 @@
 # Same metadata object and child name (SameMetadataObjectAndChildNames)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-------------------------------------------:|
+| `Error` |             `BSL`             | `Critical` |              `Yes`              |                `30`                 |       `standard`<br>`sql`<br>`design`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
