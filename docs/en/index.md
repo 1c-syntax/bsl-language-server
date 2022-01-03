@@ -13,18 +13,18 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
-- [Contributing guidelines](contributing/index.md)
-- <a href="#capabilities">Capabilities</a>
-- <a href="#cli">Run from command line</a>
-- <a href="#analyze">Run in analyzer mode</a>
-- <a href="#format">Run in formatter mode</a>
-- <a href="#configuration">Configuration file</a>
-- <a href="reporters">Reporters</a>
-- <a href="diagnostics">Diagnostics</a>
-- <a href="features">Features</a>
-- [Frequently asked questions](faq.md)
-- [System requirements](systemRequirements.md)
-- <a href="#thanks">Acknowledgments</a>
+* [Contributing guidelines](contributing/index.md)
+* <a href="#capabilities">Capabilities</a>
+* <a href="#cli">Run from command line</a>
+* <a href="#analyze">Run in analyzer mode</a>
+* <a href="#format">Run in formatter mode</a>
+* <a href="#configuration">Configuration file</a>
+* <a href="reporters">Reporters</a>
+* <a href="diagnostics">Diagnostics</a>
+* <a href="features">Features</a>
+* [Frequently asked questions](faq.md)
+* [System requirements](systemRequirements.md)
+* <a href="#thanks">Acknowledgments</a>
 
 <a id="capabilities"></a>
 
@@ -32,22 +32,21 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 
 ## Capabilities
 
-- File formatting
-- Selected region formatting
-- Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
-- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
-- Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
-- Tooltip on local methods and methods of common / manager modules
-- Go to method definitions
-- Finding places to use methods
-- Method call hierarchy
-- Expand selection
-- Display color representation and convert between `Color and `WebColors`
-- Diagnostics
-- Quick fixes for several diagnostics
-- Run diagnostics engine from command line
-- Run formatter engine from command line
-
+* File formatting
+* Selected region formatting
+* Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
+* Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
+* Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
+* Tooltip on local methods and methods of common / manager modules
+* Go to method definitions
+* Finding places to use methods
+* Method call hierarchy
+* Expand selection
+* Display color representation and convert between `Color and `WebColors`
+* Diagnostics
+* Quick fixes for several diagnostics
+* Run diagnostics engine from command line
+* Run formatter engine from command line
 
 ## Supported protocol operations
 
@@ -199,9 +198,9 @@ java -jar bsl-language-server.jar --format --src ./src/cf
 
 A detailed description of the configuration file is given on [this page](features/ConfigurationFile.md)
 
-## Special thanks
+<a id="thanks"></a>
 
-Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
+## Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
 
 You are awesome!
 
@@ -223,4 +222,5 @@ With `YourKit Java Profiler` we profile and improve project performance.
 
 `IntelliJ IDEA Ultimate` is one of the best tools in its class.
 
+`IntelliJ IDEA Ultimate` is one of the best tools in its class.
 
