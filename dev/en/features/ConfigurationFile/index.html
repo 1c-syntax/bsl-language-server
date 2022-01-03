@@ -373,7 +373,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -961,7 +961,7 @@
 <h1 id="BSL-Language-Server-Configuration">BSL Language Server Configuration<a class="headerlink" href="#BSL-Language-Server-Configuration" title="Permanent link">&para;</a></h1>
 <p>BSL Language Server provides the ability to change the settings using a configuration file in json format.<br />
 The created file must be specified using the key <code>--configuration</code> <em>(or <code>-c</code>)</em> when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation <em>(this is usually the root of a project or workspace)</em>.</p>
-<p>If there is no configuration file, an attempt will be made to find the file ".bsl-language-server.json" in "%HOMEPATH%"</p>
+<p>If there is no configuration file, an attempt will be made to find the ".bsl-language-server.json" file in "%HOMEPATH%"</p>
 <h2 id="Settings">Settings<a class="headerlink" href="#Settings" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -983,14 +983,19 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td align="left">Contains the settings for displaying <code>lens</code> in advanced code editors/IDEs <em>(for example, <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information above a block of code. Object properties</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showCognitiveComplexity</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">cyclomatic complexity</a> of the method over its definition. By default enabled (<em>is set to <code>true</code></em>)</td>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Collection of lens settings. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is lens key<br/></em> <em>object value</em> - if is boolean, then interpreted as lens off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of lens parameters.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showCyclomaticComplexity</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">cognitive complexity</a> of the method over its definition. By default is enabled (<em>is set to <code>true</code></em>)</td>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td align="left">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">cognitive complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td align="left">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">cyclomatic complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
 </tr>
 <tr>
 <td align="left"><code>diagnostics</code></td>
@@ -1035,7 +1040,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 <tr>
 <td align="left"><code>useDevSite</code></td>
 <td align="center"><code>Boolean</code></td>
-<td align="left">When the setting is enabled, the generated links to the documentation will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
+<td align="left">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
 </tr>
 <tr>
 <td align="left"><code>siteRoot</code></td>
@@ -1058,7 +1063,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 <div class="highlight"><pre><span></span><code>https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 </code></pre></div>
 <h2 id="Example">Example<a class="headerlink" href="#Example" title="Permanent link">&para;</a></h2>
-<p>The following is an example of a settings:</p>
+<p>Setting example:</p>
 <ul>
 <li>Language of diagnostics messages - English;</li>
 <li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>

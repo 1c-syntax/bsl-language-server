@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -931,8 +931,39 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Form-fields-do-not-have-a-data-path-WrongDataPathForFormElements_1">Form fields do not have a data path (WrongDataPathForFormElements)<a class="headerlink" href="#Form-fields-do-not-have-a-data-path-WrongDataPathForFormElements_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br> to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Error</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Critical</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>5</code></td>
+<td align="center"><code>unpredictable</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>When actively reworking a form or associated metadata, there may be elements on the form that do not have an associated data element. Problems can arise after deleting metadata or metadata attributes, or when changing the main form attribute. As a result, such a form field will not be displayed. Errors occur with forms when extended validation is enabled in the 1C Configurator.
+<div class="highlight"><pre><span></span><code>Справочник.Контрагенты.Форма.ФормаЭлемента.Форма Неразрешимые ссылки на объекты метаданных (12)
+</code></pre></div>
+In this case, in form files from XML unloading, the value of the "Data path" property begins with a "~" sign, for example, for the "Description" field: "<DataPath>~Object.Description</DataPath>".</p>
+<p>When you manually change the query of a dynamic list, the "Data path" property of its fields on the form is cleared. This leads to a breakdown of the connection between the form element (table column) and the dynamic list field, and it disappears from the table on the form.</p>
+<p>In form files, when unloaded to XML, the value of the "Data path" property starts with a "~" character, for example, for the "Description" field: <code>&lt;DataPath&gt; ~ List.Description &lt;/DataPath&gt;</code>.</p>
+<p>For command bar buttons associated with the "Data" property with a standard dynamic list field, for example, for a button with a filled "Ref" value in the "CurrentData" property: <code>&lt;DataPath&gt; ~ Items.List.CurrentData.Ref &lt;/DataPath&gt;</code>.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -943,7 +974,9 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:467:hdoc">General requirements - Standards 1C (RU)</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

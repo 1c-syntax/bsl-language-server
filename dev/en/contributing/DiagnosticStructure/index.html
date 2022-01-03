@@ -373,7 +373,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -1070,6 +1070,8 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLListenerDiagnostic</span>
+</code></pre></div>
 <p>Diagnostic may provide so-called <code>quick fixes</code>. In order to provide quick fixes the diagnostic class must implement <code>QuickFixProvider</code> interface. See this <a href="../DiagnosticQuickFix/">article</a> on adding a <code>quick fix</code> to diagnostic.</p>
 <p>Examples</p>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
@@ -1082,20 +1084,22 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLListenerDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
 <p>After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the <a href="../DiagnostcAddSettings/">article</a>.</p>
 <p>Below are the differences in the implementation of diagnostic classes.</p>
 <h3 id="Diagnostics-class-implements-BSLDiagnostic-interface">Diagnostics class, implements BSLDiagnostic interface<a class="headerlink" href="#Diagnostics-class-implements-BSLDiagnostic-interface" title="Permanent link">&para;</a></h3>
-<p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечаний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
+<p>In the class, you need to define a private field <code>diagnosticStorage</code> of type <code>DiagnosticStorage</code> to store detected diagnostics, and a private property <code>info</code> of type <code>DiagnosticInfo</code>, for access to diagnostic data.</p>
 <div class="highlight"><pre><span></span><code> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 <span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">;</span>
 </code></pre></div>
 <p>In the class, you need to implement:</p>
 <ul>
-<li>метод <code>getDiagnostics</code> принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний <code>List&lt;Diagnostic&gt;</code></li>
-<li>метод <code>getInfo</code>, возвращающий значение свойства <code>info</code></li>
-<li>метод <code>setInfo</code>, для установки значения свойства <code>info</code></li>
+<li>method <code>getDiagnostics</code> accepting the context of the file being analyzed and returning a list of detected diagnostics <code>List&lt;Diagnostic&gt;</code></li>
+<li>getter <code>getInfo</code></li>
+<li>setter <code>setInfo</code></li>
 </ul>
-<p>Ниже приведена общая структура метода <code>getDiagnostics</code></p>
+<p>Method structure <code>getDiagnostics</code></p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Clearing diagnostics storage</span>
@@ -1114,7 +1118,7 @@ To create necessary files in right places, should run command <code>gradlew newD
   <span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractDiagnostic">Diagnostics class, inherits from AbstractDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractDiagnostic" title="Permanent link">&para;</a></h3>
-<p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. В классе диагностики необходимо реализовать метод <code>check</code> - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+<p>For simple diagnostics, you should inherit your class from the AbstractDiagnostic class. In the diagnostic class, you need to implement the <code>check</code> method. The method should analyze the context of the document and, if noted, add diagnostics to <code>diagnosticStorage</code>.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">()</span> <span class="p">{</span>
@@ -1127,9 +1131,9 @@ To create necessary files in right places, should run command <code>gradlew newD
   <span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractVisitorDiagnostic">Diagnostics class, inherits from AbstractVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractVisitorDiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>BSLParserBaseVisitor</code>. Необходимо обратить внимание, что для упрощения добавлены <code>обобщенные</code> визитеры, например вместо реализации <code>visitFunction</code> для функции и <code>visitProcedure</code> для процедуры можно использовать <code>visitSub</code>, обобщающий работу с методами.</p>
-<p>В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище <code>diagnosticStorage</code> <em>(поле уже определено в абстрактном классе)</em>. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.</p>
-<p>Примерная структура метода</p>
+<p>In the diagnostic class, it is necessary to implement the methods of all necessary <code>AST visitors</code>, in accordance with the language grammar described in the <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4"> BSLParser </a> project.  A complete list of existing visitor methods can be found in the <code>BSLParserBaseVisitor</code> class. Please note: for simplicity, <code>generalized</code> visitors have been created, for example, instead of two <code>visitFunction</code> for a function and <code>visitProcedure</code> for a procedure, you can use <code>visitSub</code>.</p>
+<p>As a parameter, an AST node of the corresponding type is passed to each method of the visitor. In the body of the method, it is necessary to analyze the node and / or its child nodes and decide if there is an error. When a problem is found, it must be added to <code>diagnosticStorage</code> <em>(the field is already defined in the abstract class)</em>. An error note can be attached to the passed node or to its child or parent nodes, to the desired block of code.</p>
+<p>Method structure</p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span>                 <span class="c1">// Visitor for module variables</span>
     <span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// Finding child nodes</span>
@@ -1138,8 +1142,8 @@ To create necessary files in right places, should run command <code>gradlew newD
     <span class="k">return</span> <span class="n">ctx</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>Если диагностика <strong>не предусматривает</strong> анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный <code>super-метод</code>.<br />
-Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.</p>
+<p>If the diagnostics <strong>does not provide</strong> analysis of nested nodes, then it must return the passed input node, otherwise it is necessary to call the <code>super-method</code> of the same name. <br />
+This rule will save application resources without making a meaningless call.</p>
 <p>Examples:</p>
 <ul>
 <li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
@@ -1177,15 +1181,15 @@ To create necessary files in right places, should run command <code>gradlew newD
 <p>В тестовом классе обязательно должны присутствовать методы для тестирования</p>
 <ul>
 <li>тест диагностики, самой по себе</li>
-<li>тест метода конфигурирования для параметризованных диагностик</li>
+<li>test of configuration method for parameterized diagnostics</li>
 <li>тест "быстрых замен" при их наличии</li>
 </ul>
 <h3 id="Diagnostics-test">Diagnostics test<a class="headerlink" href="#Diagnostics-test" title="Permanent link">&para;</a></h3>
 <p>Упрощенно, тест диагностики состоит из следующих шагов</p>
 <ul>
 <li>получение списка замечаний диагностики</li>
-<li>проверка количества срабатываний</li>
-<li>проверка местоположения срабатываний</li>
+<li>checking the number of items found</li>
+<li>checking the location of detected items</li>
 </ul>
 <p>Первый шагом необходимо получить список замечаний диагностики вызовом метода <code>getDiagnostics()</code> <em>(реализован в классе <code>AbstractDiagnosticTest</code>)</em>. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.<br />
 Следующим шагом необходимо, с помощью утверждения <code>hasSize()</code> убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.<br />

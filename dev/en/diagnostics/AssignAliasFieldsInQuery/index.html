@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -933,11 +933,12 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it. For example, if the algorithm uses a query with a field declared as</p>
+<p>It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it.<br />
+For example, if the algorithm uses a query with a field declared as</p>
 <p><div class="highlight"><pre><span></span><code><span class="nv">CashBox</span><span class="o">.</span><span class="nv">Currency</span>
 </code></pre></div>
-when changing the name of the attribute, you will also need to change the code that calls the selection from the query result by the name of the Currency property. If the field is declared as
-<div class="highlight"><pre><span></span><code><span class="nv">CashBox</span><span class="o">.</span><span class="nv">Currency</span> <span class="nv">As</span> <span class="nv">Currency</span>
+when changing the name of the attribute, you will also need to change the code that calls the selection from the query result by the name of the Currency property. If the field is declared as</p>
+<p><div class="highlight"><pre><span></span><code><span class="nv">CashBox</span><span class="o">.</span><span class="nv">Currency</span> <span class="nv">As</span> <span class="nv">Currency</span>
 </code></pre></div>
 then changing the attribute name will only change the request text.</p>
 <p>You should be especially careful about automatically assigned aliases for fields - attributes of other fields, such as "... CashBox.Currency.Name...". In the above example, the field will be automatically getting aliased CurrencyName, but not Name.</p>
@@ -945,52 +946,53 @@ then changing the attribute name will only change the request text.</p>
 <p>The aliases of tables and fields from secondary queries from "UNION" are not checked by the diagnostics.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<p>```bsl <br />
-    Query = New Query;
-Query.Text =
-"SELECT
-|   Currencies.Ref, // Incorrectly
-|   Currencies.Ref AS AliasFieldsRef, // Correctly
-|   Currencies.Code Code // Incorrectly
-|FROM
-|   Catalog.Currencies AS Currencies // Ignored
-|
-|UNION ALL
-|
-|SELECT
-|   Currencies.Ref, // Ignored
-|   Currencies.Ref, // Ignored
-|   Currencies.Code // Ignored
-|FROM
-|   Catalog.Currencies AS Currencies // Ignored
-|;
-|
-|////////////////////////////////////////////////////////////////////////////////
-|SELECT
-|   Currencies.Ref, // Incorrectly
-|   Currencies.Ref AS AliasFieldsRef, // Correctly
-|   Currencies.Code Code // Incorrectly
-|FROM
-|   Catalog.Currencies AS Currencies // Ignored
-|
-|UNION ALL
-|
-|SELECT
-|   Currencies.Ref, // Ignored
-|   Currencies.Ref, // Ignored
-|   Currencies.Code // Ignored
-|FROM
-|   Catalog.Currencies AS Currencies"; // Ignored</p>
-<p>Query1 = New Query;
-Query1.Text =
-"SELECT
-|   NestedRequest.Ref AS Ref // Correctly
-|FROM
-|   (SELECT
-|       Currencies.Ref // Incorrectly
-|   FROM
-|       Catalog.Currencies AS Currencies) AS NestedRequest"; // Ignored 
-  ```</p>
+
+<div class="highlight"><pre><span></span><code>    <span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
+<span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
+<span class="s">&quot;SELECT</span>
+<span class="s">|   Currencies.Ref, // Incorrectly</span>
+<span class="s">|   Currencies.Ref AS AliasFieldsRef, // Correctly</span>
+<span class="s">|   Currencies.Code Code // Incorrectly</span>
+<span class="s">|FROM</span>
+<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
+<span class="s">|</span>
+<span class="s">|UNION ALL</span>
+<span class="s">|</span>
+<span class="s">|SELECT</span>
+<span class="s">|   Currencies.Ref, // Ignored</span>
+<span class="s">|   Currencies.Ref, // Ignored</span>
+<span class="s">|   Currencies.Code // Ignored</span>
+<span class="s">|FROM</span>
+<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
+<span class="s">|;</span>
+<span class="s">|</span>
+<span class="s">|////////////////////////////////////////////////////////////////////////////////</span>
+<span class="s">|SELECT</span>
+<span class="s">|   Currencies.Ref, // Incorrectly</span>
+<span class="s">|   Currencies.Ref AS AliasFieldsRef, // Correctly</span>
+<span class="s">|   Currencies.Code Code // Incorrectly</span>
+<span class="s">|FROM</span>
+<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
+<span class="s">|</span>
+<span class="s">|UNION ALL</span>
+<span class="s">|</span>
+<span class="s">|SELECT</span>
+<span class="s">|   Currencies.Ref, // Ignored</span>
+<span class="s">|   Currencies.Ref, // Ignored</span>
+<span class="s">|   Currencies.Code // Ignored</span>
+<span class="s">|FROM</span>
+<span class="s">|   Catalog.Currencies AS Currencies&quot;</span><span class="p">;</span> <span class="c c-Singleline">// Ignored</span>
+
+<span class="nv">Query1</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
+<span class="nv">Query1</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
+<span class="s">&quot;SELECT</span>
+<span class="s">|   NestedRequest.Ref AS Ref // Correctly</span>
+<span class="s">|FROM</span>
+<span class="s">|   (SELECT</span>
+<span class="s">|       Currencies.Ref // Incorrectly</span>
+<span class="s">|   FROM</span>
+<span class="s">|       Catalog.Currencies AS Currencies) AS NestedRequest&quot;</span><span class="p">;</span> <span class="c c-Singleline">// Ignored </span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <p>Source: <a href="https://its.1c.ru/db/v8std#content:437:hdoc">Making query text</a></p>

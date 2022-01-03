@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -934,11 +934,13 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 <p>When writing queries, you should not use subquery joins. Only metadata objects or temporary tables should be joined to each other.</p>
-<p>If the query contains joins with subqueries, then this can lead to negative consequences:
-- Very slow query execution with low load on server hardware
-- Unstable work of the request. Sometimes the query can work fast enough, sometimes very slow
-- Significant difference in query execution time for different DBMS;
-- Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down.</p>
+<p>If the query contains joins with subqueries, then this can lead to negative consequences:</p>
+<ul>
+<li>Very slow query execution with low load on server hardware</li>
+<li>Unstable work of the request. Sometimes the query can work fast enough, sometimes very slow</li>
+<li>Significant difference in query execution time for different DBMS</li>
+<li>Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down</li>
+</ul>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 

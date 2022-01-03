@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -931,11 +931,42 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Same-metadata-object-and-child-name-SameMetadataObjectAndChildNames_1">Same metadata object and child name (SameMetadataObjectAndChildNames)<a class="headerlink" href="#Same-metadata-object-and-child-name-SameMetadataObjectAndChildNames_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br> to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Error</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Critical</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>30</code></td>
+<td align="center"><code>standard</code><br><code>sql</code><br><code>design</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>For child metadata objects, such as attributes, dimensions, resources, tabular sections (and their attributes), it is not recommended to use names that match the names of the owner objects, since this can lead to errors in queries.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>Incorrect names</p>
+<div class="highlight"><pre><span></span><code>Catalog.Contractors.TabularSection.Contractors
+InformationRegister.SubordinateDocuments.Dimension.SubordinateDocuments
+Document.Container.TabularSection.Container. Attribute.Container
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -944,6 +975,9 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:474:hdoc:2.4">Standard: Organization of data storage (RU). Name, Synonym, Comment</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

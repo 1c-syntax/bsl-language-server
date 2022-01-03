@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -952,19 +952,25 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>Using the <code>TOP N</code> construct without specifying the sort order in <code>ORDER BY</code> or conditions in the <code>WHERE</code> section is fraught with unexpected results:
-- The order of the returned results may differ in different DBMSs
-- The order in different copies of information security will differ from the order expected by the developer</p>
-<p>According to the standard, the absence of the sentence <code>ORDER BY</code> is justified only in cases where
-- the algorithm for processing query results does not rely on a specific order of records
-- the result of processing the executed request is not shown to the user
-- query result - obviously one record</p>
+<p>Using the <code>TOP N</code> construct without specifying the sort order in <code>ORDER BY</code> or conditions in the <code>WHERE</code> section is fraught with unexpected results:</p>
+<ul>
+<li>The order of the returned results may differ in different DBMSs</li>
+<li>The order in different copies of information security will differ from the order expected by the developer</li>
+</ul>
+<p>According to the standard, the absence of the sentence <code>ORDER BY</code> is justified only in cases where</p>
+<ul>
+<li>the algorithm for processing query results does not rely on a specific order of records</li>
+<li>the result of processing the executed request is not shown to the user</li>
+<li>query result - obviously one record</li>
+</ul>
 <p>In the above cases, it is recommended not to add the clause <code>ORDER BY</code> to the request body, as this leads to additional time-consuming execution of the request.</p>
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<p>During the analysis, constructions are considered erroneous
-- Using <code>TOP N</code> in the union regardless of the presence of <code>ORDER BY</code> because ordering occurs after the union
-- Using <code>TOP N</code> where <code>N&gt; 1</code> if missing <code>ORDER BY</code>
-- Using <code>TOP 1</code>, if there is no <code>ORDER BY</code> and conditions in <code>WHERE</code>. This rule is disabled by default by a diagnostic option</p>
+<p>During the analysis, constructions are considered erroneous:</p>
+<ul>
+<li>Using <code>TOP N</code> in the union regardless of the presence of <code>ORDER BY</code> because ordering occurs after the union</li>
+<li>Using <code>TOP N</code> where <code>N&gt; 1</code> if missing <code>ORDER BY</code></li>
+<li>Using <code>TOP 1</code>, if there is no <code>ORDER BY</code> and conditions in <code>WHERE</code>. This rule is disabled by default by a diagnostic option</li>
+</ul>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 

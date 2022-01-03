@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -931,11 +931,56 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Query-text-parsing-error-QueryParseError_1">Query text parsing error (QueryParseError)<a class="headerlink" href="#Query-text-parsing-error-QueryParseError_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br>to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Важный</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>5</code></td>
+<td align="center"><code>standard</code><br><code>sql</code><br><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>When writing queries, you must follow the following rule: the query text must be opened by the query designer.</p>
+<p>This rule allows you to quickly check the correctness of the syntax of the query, as well as revision and maintenance.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>Incorrect</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
+<span class="s">| Goods.Name  AS Name ,</span>
+<span class="s">| Goods. &quot;</span> <span class="o">+</span> <span class="nv">FieldNameCode</span> <span class="o">+</span> <span class="s">&quot; AS Code</span>
+<span class="s">|From</span>
+<span class="s">| Catalog.Goods КАК Goods&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>Right</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
+<span class="s">| Goods.Name AS Name,</span>
+<span class="s">| &amp;FieldNameCode AS Code</span>
+<span class="s">|FROM</span>
+<span class="s">| Catelog.Goods AS Goods&quot;</span><span class="p">;</span>
+
+<span class="nv">Text</span> <span class="o">=</span> <span class="nb">StrReplace</span><span class="p">(</span><span class="nv">Text</span><span class="p">,</span> 
+                            <span class="s">&quot;&amp;FieldNameCode&quot;</span><span class="p">,</span> 
+                            <span class="s">&quot;Goods.&quot;</span> <span class="o">+</span> <span class="nv">FieldNameCode</span><span class="p">);</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -944,6 +989,9 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:437:hdoc">Standard: Working with queries (RU). Formatting queries texts</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

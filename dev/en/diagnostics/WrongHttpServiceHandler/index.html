@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -931,11 +931,52 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Missing-handler-for-http-service-WrongHttpServiceHandler_1">Missing handler for http service (WrongHttpServiceHandler)<a class="headerlink" href="#Missing-handler-for-http-service-WrongHttpServiceHandler_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated by default</th>
+<th align="center">Minutes<br> to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Error</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Critical</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>10</code></td>
+<td align="center"><code>suspicious</code><br><code>error</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>In the absence of a http service operation handler, a call to this method will not give out either the data itself, or an error on the client side of the service, or an error on the side of the service itself.</p>
+<p>It is important to remember that the http service method should only accept one parameter.</p>
+<p>The configurator notices violations of the specified restrictions only when the "Check for the existence of assigned handlers" flag is enabled.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<p>Invalid handler method with empty body
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">StorageGETRequest</span><span class="p">(</span><span class="nv">Request</span><span class="p">)</span>
 
+<span class="k">EndFunction</span>
+</code></pre></div></p>
+<p>Correct handler method - only one parameter is specified and there is a method body
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">StorageGETRequest</span><span class="p">(</span><span class="nv">Request</span><span class="p">)</span>
+    <span class="k">Return</span> <span class="nv">Requests</span><span class="o">.</span><span class="nf">Getter</span><span class="p">(</span><span class="nv">Request</span><span class="p">);</span>
+<span class="k">EndFunction</span>
+</code></pre></div></p>
+<p>Invalid handler method with the wrong number of parameters
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">StorageGETRequest</span><span class="p">(</span><span class="nv">Request</span><span class="p">,</span> <span class="nv">Additionals</span><span class="p">)</span>
+    <span class="k">Return</span> <span class="nv">Requests</span><span class="o">.</span><span class="nf">Getter</span><span class="p">(</span><span class="nv">Request</span><span class="p">);</span>
+<span class="k">EndFunction</span>
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -943,7 +984,10 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<ul>
+<li><a href="https://its.1c.ru/db/v8320doc#bookmark:dev:TI000000783">Developer Guide 8.3.20 - Web service mechanisms (RU)</a></li>
+<li><a href="https://its.1c.ru/db/metod8dev/browse/13/-1/1989/2565/2567/2590">Web-services and HTTP-services - recommendations from 1C</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

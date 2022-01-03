@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -931,11 +931,115 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Отсутствует-удаление-данных-из-временного-хранилища-после-использования-MissingTempStorageDeletion">Отсутствует удаление данных из временного хранилища после использования (MissingTempStorageDeletion)<a class="headerlink" href="#Отсутствует-удаление-данных-из-временного-хранилища-после-использования-MissingTempStorageDeletion" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated by default</th>
+<th align="center">Minutes<br> to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
+<td align="center"><code>Critical</code></td>
+<td align="center"><code>No</code></td>
+<td align="center"><code>3</code></td>
+<td align="center"><code>standard</code><br><code>performance</code><br><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>Diagnostics is now tracking all <code>GetFromTempStorage</code> calls that do not have a corresponding <code>DeleteFromTempStorage</code> call
+- within one method!</p>
+<p>The rules for working with objects in temporary storage are often violated - storing data in it is not free. There are errors even in the documentation and numerous use cases.</p>
+<p>When placing data in temporary storage, you should choose one of two options:</p>
+<ul>
+<li>put data into temporary storage for the lifetime of the form using the unique identifier of the form</li>
+<li>and clean up this temporary storage after use.</li>
+<li>pre-initialize temporary storage and reuse it.</li>
+</ul>
+<p>Otherwise, if an action is repeated many times in a form, for example, if a product is selected many times, this leads to unnecessary consumption of RAM, because temporary stores are accumulating.</p>
+<p>Remember that when a value is retrieved from the temporary storage on the server, it will be retrieved by reference. This is a reference to the value that is stored in the cache. Within <em>20 minutes</em>, from the moment it was put into the storage or from the moment of the last access, the value will be stored in the cache, and then written to disk and deleted from the cache. On the next call, the value is loaded from disk and put back into the cache.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>1 - Example of correct code:
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<span class="k">Процедура</span> <span class="nf">ПриОбработкеПодобранныхТоваров</span><span class="p">(</span><span class="nv">Элемент</span><span class="p">,</span> <span class="nv">АдресТоваровВХранилище</span><span class="p">,</span> <span class="nv">СтандартнаяОбработка</span><span class="p">)</span> <span class="k">Экспорт</span>
+    <span class="k">Если</span> <span class="nv">АдресТоваровВХранилище</span> <span class="o">=</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>
+        <span class="k">Возврат</span><span class="p">;</span>
+    <span class="k">КонецЕсли</span><span class="p">;</span>
+    <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span> 
+<span class="k">КонецПроцедуры</span>
+
+<span class="kd">&amp;НаСервере</span>
+<span class="k">Процедура</span> <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">)</span>
+    <span class="nv">ПодобранныеТовары</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span>
+    <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Загрузить</span><span class="p">(</span><span class="nv">ПодобранныеТовары</span><span class="p">);</span>
+
+    <span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровДокумента</span><span class="p">);</span> <span class="c c-Singleline">// очищается временное хранилище для минимизации расхода оперативной памяти</span>
+<span class="k">КонецПроцедуры</span> 
+</code></pre></div></p>
+<p>2 - Consider this recommendation when working with background jobs</p>
+<p>Wrong:
+- Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыВыполнения</span> <span class="o">=</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ПараметрыВыполненияФункции</span><span class="p">(</span><span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
+<span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span> <span class="nv">ПараметрФоновогоЗадания</span><span class="p">);</span>
+</code></pre></div></p>
+<ul>
+<li>If a long operation is performed by the user multiple times, then temporary storage accumulates, which causes an increase in memory consumption.</li>
+<li>To reduce the consumption of RAM, in most cases, it is recommended to clear the temporary storage immediately after receiving the result of the background job:</li>
+</ul>
+<p>Correct:
+<div class="highlight"><pre><span></span><code><span class="nv">Настройки</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">Результат</span><span class="o">.</span><span class="nv">АдресРезультата</span><span class="p">);</span>
+<span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">Результат</span><span class="o">.</span><span class="nv">АдресРезультата</span><span class="p">);</span>  <span class="c c-Singleline">// Данные во временном хранилище больше не требуются.</span>
+</code></pre></div></p>
+<ul>
+<li>If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаСервере</span>
+<span class="k">Процедура</span> <span class="nf">ПриСозданииНаСервере</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+    <span class="nv">АдресРезультатаФоновогоЗадания</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c c-Singleline">// Резервируем адрес временного хранилища</span>
+<span class="k">КонецПроцедуры</span>
+
+<span class="kd">&amp;НаСервере</span>
+<span class="k">Функция</span> <span class="nf">НачатьПоискНастроекУчетнойЗаписи</span><span class="p">()</span>
+    <span class="nv">ПараметрыВыполнения</span> <span class="o">=</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ПараметрыВыполненияФункции</span><span class="p">(</span><span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
+    <span class="nv">ПараметрыВыполнения</span><span class="o">.</span><span class="nv">АдресРезультата</span> <span class="o">=</span> <span class="nv">АдресРезультатаФоновогоЗадания</span><span class="p">;</span> <span class="c c-Singleline">// всегда используем одно и то же временное хранилище</span>
+
+    <span class="k">Возврат</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span>
+        <span class="s">&quot;Справочники.УчетныеЗаписиЭлектроннойПочты.ОпределитьНастройкиУчетнойЗаписи&quot;</span><span class="p">,</span>
+        <span class="nv">АдресЭлектроннойПочты</span><span class="p">,</span> <span class="nv">Пароль</span><span class="p">);</span>
+<span class="k">КонецФункции</span>
+</code></pre></div></li>
+</ul>
+<p>3 - Another example of preliminary initialization of temporary storage for reuse</p>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// в форме документа</span>
+<span class="kd">&amp;НаСервере</span>
+<span class="k">Процедура</span> <span class="nf">ПриСозданииНаСервере</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+    <span class="nv">АдресТоваров</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c c-Singleline">// Инициализируется реквизит формы</span>
+<span class="k">КонецПроцедуры</span>
+
+<span class="kd">&amp;НаСервере</span>
+<span class="k">Функция</span> <span class="nf">ТоварыВоВременномХранилище</span><span class="p">()</span>
+    <span class="k">Возврат</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Выгрузить</span><span class="p">(),</span> <span class="nv">АдресТоваров</span><span class="p">);</span>
+<span class="k">КонецФункции</span>
+
+<span class="c c-Singleline">// и далее при переиспользовании временного хранилища не требуется удалять значение из временного хранилища:</span>
+
+<span class="kd">&amp;НаСервере</span>
+<span class="k">Процедура</span> <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">)</span>
+    <span class="nv">ПодобранныеТовары</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span>
+    <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Загрузить</span><span class="p">(</span><span class="nv">ПодобранныеТовары</span><span class="p">);</span>
+<span class="k">КонецПроцедуры</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -944,6 +1048,11 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:642:hdoc">Long-term operations on the server, part 3.1 - Standard 1C (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:487:hdoc">Minimizing the number of server calls, part 7.3 - Standard 1C (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8319doc#bookmark:dev:TI000000810">Temporary Storage Engine - Developer's Guide (RU)</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>

@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -932,31 +932,42 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>The following items are deprecated and their use is not recommended since platform version 8.3.12:
-* Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
-* ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
-* The following properties and methods of Chart object are obsolete and not recommended for use:
-   * ColorPalette;
-   * GradientPaletteStartColor;
-   * GradientPaletteEndColor;
-   * GradientPaletteMaxColors;
-   * GetPalette();
-   * SetPalette().
-* Names of properties of the object ChartPlotArea:
-   * ShowScale;
-   * ScaleLines;
-   * ScaleColor.
-* Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:</p>
+<p>The following items are deprecated and their use is not recommended since platform version 8.3.12:</p>
 <ul>
-<li>ShowSeriesScaleLabels. Recommended to use the SeriesScale.ScaleLabelLocation;</li>
-<li>ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;</li>
-<li>ShowValuesScaleLabels. Recommended to use the ValuesScale.ScaleLabelLocation;</li>
-<li>ShowPointsScaleLabels. Recommended to use the PointsScale.ScaleLabelLocation;</li>
-<li>ValueScaleFormat. Recommended to use the ValuesScale.LabelFormat;</li>
-<li>LabelsOrientation. Recommended to use the PointsScale.LabelOrientation.</li>
-<li>Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</li>
-<li>Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.</li>
-<li>Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format.</li>
+<li>For the system enumeration <code>ChildFormItemsGroup</code> implemented the value <code>AlwaysHorizontal</code>, the value <code>ChildFormItemsGroup.Horizontal</code> is deprecated</li>
+<li><code>ChartLabelsOrientation</code> system enum is no longer available. Actual variant is <code>ChartLabelsOrientation</code></li>
+<li>The following properties and methods of Chart object are obsolete and not recommended for use:</li>
+<li><code>ColorPalette</code>;</li>
+<li><code>GradientPaletteStartColor</code>;</li>
+<li><code>GradientPaletteEndColor</code>;</li>
+<li><code>GradientPaletteMaxColors</code>;</li>
+<li><code>GetPalette()</code>;</li>
+<li>
+<p><code>SetPalette()</code>.</p>
+</li>
+<li>
+<p>Names of properties of the object <code>ChartPlotArea</code>:</p>
+</li>
+<li><code>ShowScale</code></li>
+<li><code>ScaleLines</code></li>
+<li>
+<p><code>ScaleColor</code></p>
+</li>
+<li>
+<p>Properties of <code>ChartPlotArea</code> object are obsolete, not recomended for use and supported only for backward compatibility:</p>
+</li>
+<li><code>ShowSeriesScaleLabels</code> - it is recommended to use <code>SeriesScale.ScaleLabelLocation</code></li>
+<li><code>ShowPointsScaleLabels</code> - it is recommended to use <code>PointsScale.ScaleLabelLocation</code></li>
+<li><code>ShowValuesScaleLabels</code> - it is recommended to use <code>ValuesScale.ScaleLabelLocation</code></li>
+<li><code>ShowScaleValueLines</code> - it is recommended to use <code>ValuesScale.GridLinesShowMode</code></li>
+<li><code>ValueScaleFormat</code> - it is recommended to use <code>ValuesScale.LabelFormat</code></li>
+<li>
+<p><code>LabelsOrientation</code> - it is recommended to use <code>PointsScale.LabelOrientation</code></p>
+</li>
+<li>
+<p>The <code>ShowLegend</code> and <code>ShowTitle</code> properties of the <code>Chart</code>, <code>GanttChart</code>, <code>PivotChart</code> objects are deprecated and deprecated for use</p>
+</li>
+<li>Global context method <code>ClearEventLog()</code> is deprecated and only applicable to logs that have <code>SQLite</code> format</li>
 </ul>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

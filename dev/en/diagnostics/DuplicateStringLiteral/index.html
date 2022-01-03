@@ -371,7 +371,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        BSL Language Server
+        Index
       </a>
     </li>
   
@@ -968,11 +968,138 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Duplicate-string-literal-DuplicateStringLiteral_1">Duplicate string literal (DuplicateStringLiteral)<a class="headerlink" href="#Duplicate-string-literal-DuplicateStringLiteral_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated by default</th>
+<th align="center">Minutes<br> to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
+<td align="center"><code>Minor</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>1</code></td>
+<td align="center"><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="Parameters_1">Parameters<a class="headerlink" href="#Parameters_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th align="center">Type</th>
+<th align="center">Description</th>
+<th align="center">Default<br>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>allowedNumberCopies</code></td>
+<td align="center"><code>Integer</code></td>
+<td align="center"><code>Allowed number of copies string literals</code></td>
+<td align="center"><code>2</code></td>
+</tr>
+<tr>
+<td align="center"><code>analyzeFile</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="center"><code>Analyze the whole file</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+<tr>
+<td align="center"><code>caseSensitive</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="center"><code>Case sensitive</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+<tr>
+<td align="center"><code>minTextLength</code></td>
+<td align="center"><code>Integer</code></td>
+<td align="center"><code>Minimum length of a string literal (quoted)</code></td>
+<td align="center"><code>5</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>It is bad form to use the same string literals multiple times in the same module or method:
+- it can lead to problems with further maintenance, if necessary, change the value - there is a high probability of missing one of the repetitions
+- it can be a consequence of "copy-paste" - the developer may have forgotten to change the code after copying a similar block of code.</p>
+<h3 id="Features-of-the-implementation-of-diagnostic">Features of the implementation of diagnostic<a class="headerlink" href="#Features-of-the-implementation-of-diagnostic" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Diagnostics with default settings does not respect the case of literal characters - the strings <code>AAAA</code> and <code>AaaA</code> are considered the same.</li>
+<li>You cannot specify a minimum parsed literal value less than the default. Short service literals are often used, which will generate unnecessary comments. For example: empty string "", selector numbers "1", "0", etc.</li>
+<li>You cannot reduce the allowed number of repetitions to less than 1, because it makes no practical sense.</li>
+</ul>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>Bad code</p>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">Else</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+</code></pre></div>
+<p>Сorrected:</p>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span>
+    <span class="k">Else</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+</code></pre></div>
+<p>Bad code</p>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test2</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">Else</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+
+<span class="k">Procedure</span> <span class="nf">Test3</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;Five&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Five</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+</code></pre></div>
+<p>Сorrected</p>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test2</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
+    <span class="k">Else</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+
+<span class="k">Procedure</span> <span class="nf">Test3</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;Five&quot;</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Five</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
+    <span class="k">EndIf</span><span class="p">;</span> 
+<span class="k">EndProcedure</span>
+
+<span class="k">Function</span> <span class="nf">StringValue</span><span class="p">()</span>
+   <span class="k">Return</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+<span class="k">EndFunction</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
