@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind;
+package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,9 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Служебный класс-десериализатор для коллекции настроек диагностик.
- * <p>
- * См. {@link com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions#getParameters()}
+ * Служебный класс-десериализатор для коллекции настроек.
  */
 @Slf4j
 public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
@@ -51,42 +49,42 @@ public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<
     DeserializationContext context
   ) throws IOException {
 
-    JsonNode diagnostics = p.getCodec().readTree(p);
+    JsonNode parameters = p.getCodec().readTree(p);
 
-    if (diagnostics == null) {
+    if (parameters == null) {
       return Collections.emptyMap();
     }
 
-    ObjectMapper mapper = new ObjectMapper();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = new HashMap<>();
+    var mapper = new ObjectMapper();
+    Map<String, Either<Boolean, Map<String, Object>>> parametersMap = new HashMap<>();
 
-    Iterator<Map.Entry<String, JsonNode>> diagnosticsNodes = diagnostics.fields();
-    diagnosticsNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
-      JsonNode diagnosticConfig = entry.getValue();
-      if (diagnosticConfig.isBoolean()) {
-        diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
+    Iterator<Map.Entry<String, JsonNode>> parametersNodes = parameters.fields();
+    parametersNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
+      JsonNode parameterConfig = entry.getValue();
+      if (parameterConfig.isBoolean()) {
+        parametersMap.put(entry.getKey(), Either.forLeft(parameterConfig.asBoolean()));
       } else {
-        Map<String, Object> diagnosticConfiguration = getDiagnosticConfiguration(mapper, entry.getValue());
-        diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
+        Map<String, Object> parameterConfiguration = getParameterConfiguration(mapper, entry.getValue());
+        parametersMap.put(entry.getKey(), Either.forRight(parameterConfiguration));
       }
     });
 
-    return diagnosticsMap;
+    return parametersMap;
   }
 
-  private static Map<String, Object> getDiagnosticConfiguration(
+  private static Map<String, Object> getParameterConfiguration(
     ObjectMapper mapper,
-    JsonNode diagnosticConfig
+    JsonNode parameterConfig
   ) {
-    Map<String, Object> diagnosticConfiguration;
+    Map<String, Object> parameterConfiguration;
     try {
       JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {});
-      diagnosticConfiguration = mapper.readValue(mapper.treeAsTokens(diagnosticConfig), type);
+      parameterConfiguration = mapper.readValue(mapper.treeAsTokens(parameterConfig), type);
     } catch (IOException e) {
-      LOGGER.error("Can't deserialize diagnostic configuration", e);
-      return null;
+      LOGGER.error("Can't deserialize parameter configuration", e);
+      return Collections.emptyMap();
     }
-    return diagnosticConfiguration;
+    return parameterConfiguration;
   }
 
 }

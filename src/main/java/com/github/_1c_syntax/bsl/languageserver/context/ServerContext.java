@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -46,6 +46,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -83,9 +84,10 @@ public abstract class ServerContext {
     contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
-      DocumentContext documentContext = getDocument(file.toURI());
+      var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
+        documentContext.freezeComputedData();
         documentContext.clearSecondaryData();
       }
     });
@@ -123,11 +125,12 @@ public abstract class ServerContext {
   public DocumentContext addDocument(URI uri, String content, int version) {
     contextLock.readLock().lock();
 
-    DocumentContext documentContext = getDocument(uri);
+    var documentContext = getDocument(uri);
     if (documentContext == null) {
       documentContext = createDocumentContext(uri, content, version);
     } else {
       documentContext.rebuild(content, version);
+      documentContext.unfreezeComputedData();
     }
 
     contextLock.readLock().unlock();
@@ -171,7 +174,7 @@ public abstract class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = lookupDocumentContext(absoluteURI);
+    var documentContext = lookupDocumentContext(absoluteURI);
     documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);
@@ -188,12 +191,18 @@ public abstract class ServerContext {
     }
 
     Configuration configuration;
-    ForkJoinPool customThreadPool = new ForkJoinPool();
+    var customThreadPool = new ForkJoinPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).fork().join();
-    } catch (RuntimeException e) {
+      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
+    } catch (InterruptedException e) {
+      LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
+      configuration = Configuration.create();
+      Thread.currentThread().interrupt();
+    } finally {
+      customThreadPool.shutdown();
     }
 
     return configuration;

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -40,14 +40,36 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
+
+  /**
+   * Имя переменной.
+   */
+  @EqualsAndHashCode.Include
   String name;
+
+  /**
+   * Область доступности символа. Метод или модуль.
+   */
+  SourceDefinedSymbol scope;
+
+  /**
+   * Тип символа. По умолчанию переменная.
+   */
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
+
+  /**
+   * Файл в котором располагается переменная.
+   */
+  @EqualsAndHashCode.Include
   DocumentContext owner;
+
   Range range;
+
+  @EqualsAndHashCode.Include
   Range variableNameRange;
 
   @Getter
@@ -59,8 +81,19 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   @Builder.Default
   List<SourceDefinedSymbol> children = Collections.emptyList();
 
+  /**
+   * Тип переменной.
+   */
   VariableKind kind;
+
+  /**
+   * Признак экспортной переменной.
+   */
   boolean export;
+
+  /**
+   * Описание переменной.
+   */
   Optional<VariableDescription> description;
 
   @Override

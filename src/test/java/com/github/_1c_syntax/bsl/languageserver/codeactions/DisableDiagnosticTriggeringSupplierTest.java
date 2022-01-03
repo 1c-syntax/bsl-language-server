@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -60,7 +60,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActions() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -77,7 +77,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(10)
+      .hasSize(11)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable NumberOfValuesInStructureConstructor in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable ExportVariables in file"))
@@ -94,7 +94,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsOneLine() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -121,7 +121,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(6)
+      .hasSize(8)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
@@ -133,7 +133,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsRegion() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
 
@@ -158,7 +158,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(8)
+      .hasSize(10)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
@@ -172,7 +172,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testGetCodeActionsEmptyFile() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
 
@@ -196,7 +196,7 @@ class DisableDiagnosticTriggeringSupplierTest {
   @Test
   void testNoBslLsDiagnostic() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+    var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
 

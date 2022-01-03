@@ -1,4 +1,4 @@
-# Incorrect use of the method (UsageWriteLogEvent)
+# Incorrect use of the method "WriteLogEvent" (UsageWriteLogEvent)
 
 |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|

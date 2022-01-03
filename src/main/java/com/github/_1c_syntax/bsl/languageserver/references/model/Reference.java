@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
@@ -56,6 +56,11 @@ public class Reference {
    */
   Range selectionRange;
 
+  /**
+   * Тип обращения к символу в ссылке.
+   */
+  OccurrenceType occurrenceType;
+
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
       .filter(SourceDefinedSymbol.class::isInstance)
@@ -71,7 +76,16 @@ public class Reference {
   }
 
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange());
+    return of(from, symbol, location, OccurrenceType.REFERENCE);
+  }
+
+  public static Reference of(
+    SourceDefinedSymbol from,
+    Symbol symbol,
+    Location location,
+    OccurrenceType occurrenceType
+  ) {
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), occurrenceType);
   }
 
 }

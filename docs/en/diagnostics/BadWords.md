@@ -1,24 +1,26 @@
 # Prohibited words (BadWords)
 
-|     Type     |        Scope        | Severity | Activated by default | Minutes<br> to fix |   Tags   |
-|:------------:|:-------------------:|:--------:|:--------------------:|:------------------------:|:--------:|
-| `Code smell` | `BSL`<br>`OS` | `Важный` |         `No`         |           `1`            | `design` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `No`              |           `1`           | `design` |
 
 ## Parameters
 
 
-|    Name    |   Type   |                Description                | Default<br>value |
-|:----------:|:--------:|:-----------------------------------------:|:----------------------:|
-| `badWords` | `String` | `Regular expression for exclusion words.` |          ``          |
+|    Name    |   Type   |                Description                 | Default value |
+|:----------:|:--------:|:------------------------------------------:|:-------------:|
+| `badWords` | `String` | `Regular expression for prohibited words.` |      ``       |
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostics description
-There should be no forbidden words in the text of the modules. The list of forbidden words is given by a regular expression. The search is made case-insensitive.
+## Description
+Software modules should not contain prohibited words.
+The list of forbidden words is set by a regular expression.
+The search is case-insensitive.
 
-**Sample setup:**
+**For example:**
 
-"редиска|лопух|экзистенциальность"
+"singularity|avada kedavra|Donald"
 
-"ло(х|шара|шпед)"
+"transcenden(tal|ce)"
 
 ## Snippets
 

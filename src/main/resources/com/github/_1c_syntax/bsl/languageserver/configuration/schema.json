@@ -14,8 +14,8 @@
             "title": "Concrete diagnostic parameters' configuration.\nCan be boolean for turning on/off or object.",
             "default": true
         },
-        "parameters": {
-            "$id": "#/definitions/parameters",
+        "diagnosticParameters": {
+            "$id": "#/definitions/diagnosticParameters",
             "type": "object",
             "title": "Diagnostics parameters configuration.\nKey-value object, where key is a diagnosticCode, and value is boolean or object with concrete diagnostic configuration.",
             "default": null,
@@ -167,6 +167,9 @@
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
+                "FieldsFromJoinsWithoutIsNull": {
+                    "$ref": "parameters-schema.json#/definitions/FieldsFromJoinsWithoutIsNull"
+                },
                 "FormDataToValue": {
                     "$ref": "parameters-schema.json#/definitions/FormDataToValue"
                 },
@@ -262,6 +265,9 @@
                 },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
+                },
+                "MissingTempStorageDeletion": {
+                    "$ref": "parameters-schema.json#/definitions/MissingTempStorageDeletion"
                 },
                 "MissingTemporaryFileDeletion": {
                     "$ref": "parameters-schema.json#/definitions/MissingTemporaryFileDeletion"
@@ -398,6 +404,9 @@
                 "UnusedLocalMethod": {
                     "$ref": "parameters-schema.json#/definitions/UnusedLocalMethod"
                 },
+                "UnusedLocalVariable": {
+                    "$ref": "parameters-schema.json#/definitions/UnusedLocalVariable"
+                },
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
                 },
@@ -449,6 +458,9 @@
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
+                "WrongDataPathForFormElements": {
+                    "$ref": "parameters-schema.json#/definitions/WrongDataPathForFormElements"
+                },
                 "WrongUseFunctionProceedWithCall": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
@@ -457,6 +469,51 @@
                 },
                 "YoLetterUsage": {
                     "$ref": "parameters-schema.json#/definitions/YoLetterUsage"
+                }
+            }
+        },
+        "codeLensParameters": {
+            "$id": "#/definitions/codeLensParameters",
+            "type": "object",
+            "title": "CodeLenses parameters configuration.\nKey-value object, where key is a code lens ID, and value is boolean or object with concrete code lens configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cognitive complexity score above method definition.",
+                    "properties": {
+                        "complexityThreshold": {
+                            "description": "Complexity threshold to show the lens",
+                            "default": -1,
+                            "type": "integer",
+                            "title": "Complexity threshold to show the lens"
+                        }
+                    },
+                    "$id": "#/definitions/codeLensParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cyclomatic complexity score above method definition.",
+                    "properties": {
+                        "complexityThreshold": {
+                            "description": "Complexity threshold to show the lens",
+                            "default": -1,
+                            "type": "integer",
+                            "title": "Complexity threshold to show the lens"
+                        }
+                    },
+                    "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
         }
@@ -483,17 +540,8 @@
             "type": "object",
             "title": "Code Lens configuration.",
             "properties": {
-                "showCognitiveComplexity": {
-                    "$id": "#/properties/showCognitiveComplexity",
-                    "type": "boolean",
-                    "title": "Show cognitive complexity score above method definition.",
-                    "default": true
-                },
-                "showCyclomaticComplexity": {
-                    "$id": "#/properties/showCyclomaticComplexity",
-                    "type": "boolean",
-                    "title": "Show cyclomatic complexity score above method definition.",
-                    "default": true
+                "parameters": {
+                    "$ref": "#/definitions/codeLensParameters"
                 }
             }
         },
@@ -516,7 +564,7 @@
             "title": "Diagnostics configuration.",
             "properties": {
                 "parameters": {
-                    "$ref": "#/definitions/parameters"
+                    "$ref": "#/definitions/diagnosticParameters"
                 },
                 "computeTrigger": {
                     "$id": "#/properties/computeTrigger",

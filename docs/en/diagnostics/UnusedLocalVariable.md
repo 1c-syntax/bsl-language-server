@@ -1,26 +1,27 @@
-# Неиспользуемая локальная переменная (UnusedLocalVariable)
+# Unused local variable (UnusedLocalVariable)
 
-|      Тип      | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) |                  Теги                  |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:--------------------------------------:|
-| `Дефект кода` |      `BSL`<br>`OS`      | `Важный` |              `Да`              |                 `1`                 | `brainoverload`<br>`badpractice` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           |    `brainoverload`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
-Программные модули не должны иметь неиспользуемых переменных.
+## Description
+Unused local variables should be removed
 
-Если локальная переменная объявлена, но не используется, это мертвый код, который следует удалить. Это улучшит удобство обслуживания, поскольку разработчики не будут удивляться, для чего используется переменная.
+If a local variable is declared but not used, it is dead code and should be removed.
+Doing so will improve maintainability because developers will not wonder what the variable is used for.
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:UnusedLocalVariable-off
 // BSLLS:UnusedLocalVariable-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
 "UnusedLocalVariable": false

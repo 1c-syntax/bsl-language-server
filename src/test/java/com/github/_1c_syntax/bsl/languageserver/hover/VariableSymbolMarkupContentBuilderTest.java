@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -58,7 +58,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testFileVarContentFromDirectFile_NoComments() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("ИмяБезОписания", symbolTree.getModule()).orElseThrow();
 
@@ -81,7 +81,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testFileVarContentFromDirectFile_OneCommentsStringFromRight() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСправаОднойСтрокой", symbolTree.getModule()).orElseThrow();
 
@@ -106,7 +106,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testMethodVarContentFromDirectFile_2_comments_strings() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуДвеСтроки_Функция", methodSymbol).orElseThrow();
@@ -133,7 +133,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testMethodVarContentFromDirectFile_3_comments_strings() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция", methodSymbol).orElseThrow();

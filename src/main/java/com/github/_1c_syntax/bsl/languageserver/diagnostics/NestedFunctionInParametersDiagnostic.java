@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -42,6 +43,14 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final boolean DEFAULT_ALLOW_ONELINER = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_ALLOW_ONELINER
+  )
+  private boolean allowOneliner = DEFAULT_ALLOW_ONELINER;
+
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     checkMethodCall(ctx, ctx.doCall(), ctx.methodName());
@@ -57,34 +66,41 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
-    if (findNestedCall(ctx, ctx.doCall())) {
-      if (ctx.typeName() != null) {
-        diagnosticStorage.addDiagnostic(
-          ctx.typeName(),
-          info.getMessage(
-            info.getResourceString("diagnosticMessageConstructor"),
-            ctx.typeName().getText()));
-      } else { // для констукторов через параметр New
-        diagnosticStorage.addDiagnostic(
-          ctx.getStart(),
-          info.getResourceString("diagnosticMessageWithoutName",
-            info.getResourceString("diagnosticMessageConstructor")));
-      }
+    if (!findNestedCall(ctx, ctx.doCall())) {
+      return super.visitNewExpression(ctx);
+    }
+
+    if (ctx.typeName() != null) {
+      diagnosticStorage.addDiagnostic(
+        ctx.typeName(),
+        info.getMessage(
+          info.getResourceString("diagnosticMessageConstructor"),
+          ctx.typeName().getText()));
+    } else { // для конструкторов через параметр New
+      diagnosticStorage.addDiagnostic(
+        ctx.getStart(),
+        info.getResourceString("diagnosticMessageWithoutName",
+          info.getResourceString("diagnosticMessageConstructor")));
     }
 
     return super.visitNewExpression(ctx);
   }
 
-  private static boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
+  private boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
     if (ctxDoCall == null
-      || ctxDoCall.callParamList() == null) {
+      || ctxDoCall.callParamList() == null
+      || ctxDoCall.callParamList().isEmpty()) {
       return false;
     }
 
-    // если есть параметры и вызов не в одной строке, то найдем вызовы методов
-    return !ctxDoCall.callParamList().isEmpty()
-      && ctx.getStart().getLine() != ctx.getStop().getLine()
-      && Trees.nodeContains(ctx, ctxDoCall, BSLParser.RULE_doCall);
+    return ctx.getStart().getLine() != ctx.getStop().getLine()
+      && Trees.nodeContains(ctx, ctxDoCall, BSLParser.RULE_doCall)
+      && multilineParam(ctxDoCall);
+  }
+
+  private boolean multilineParam(BSLParser.DoCallContext ctxDoCall) {
+    return !allowOneliner || ctxDoCall.callParamList().callParam().stream()
+      .anyMatch(callParamContext -> callParamContext.getStop().getLine() > callParamContext.getStart().getLine());
   }
 
   private void checkMethodCall(BSLParserRuleContext ctx,
