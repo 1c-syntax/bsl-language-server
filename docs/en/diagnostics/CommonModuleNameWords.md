@@ -1,14 +1,14 @@
 # Unrecommended common module name (CommonModuleNameWords)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `5`                 | `standard` |
 
 ## Parameters
 
 
-|  Name   |   Type   |      Description      |                                               Default value                                                |
-|:-------:|:--------:|:---------------------:|:----------------------------------------------------------------------------------------------------------:|
+|   Name   |   Type    |        Description         |                                          Default value                                          |
+|:-------:|:--------:|:-----------------------:|:----------------------------------------------------------------------------------------------------------:|
 | `words` | `String` | `Unrecommended words` | `процедуры|procedures|функции|functions|обработчики|handlers|модуль|module|функциональность|functionality` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
