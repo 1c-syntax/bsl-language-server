@@ -1,8 +1,8 @@
 # Using of deprecated platform 8.3.17 global methods (DeprecatedMethods8317)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `deprecated` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:------------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `5`                 | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
