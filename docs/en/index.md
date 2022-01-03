@@ -200,7 +200,7 @@ A detailed description of the configuration file is given on [this page](feature
 
 <a id="thanks"></a>
 
-## Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
+## Special thanks
 
 You are awesome!
 
