@@ -1,8 +1,8 @@
 # Mixing Latin and Cyrillic characters in one identifier (LatinAndCyrillicSymbolInWord)
 
-|     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                 Tags                  |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
 |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
-| `Code smell` | `BSL`<br>`OS` | `Minor`  |             `Yes`             |           `5`           | `brainoverload`<br>`suspicious` |
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `5`           |    `brainoverload`<br>`suspicious`    |
 
 ## Parameters
 

@@ -1,5 +1,14 @@
 # No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
 
+|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
+|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
+| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `2`           |       `sql`<br>`suspicious`<br>`unpredictable`       |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
+
 |  Type   |        Scope        |  Severity  | Activated by default | Minutes<br> to fix |                         Tags                         |
 |:-------:|:-------------------:|:----------:|:--------------------:|:------------------------:|:----------------------------------------------------:|
 | `Error` | `BSL`<br>`OS` | `Critical` |        `Yes`         |           `2`            | `sql`<br>`suspicious`<br>`unpredictable` |

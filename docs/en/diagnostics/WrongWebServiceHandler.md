@@ -1,5 +1,14 @@
 # Wrong handler for web service (WrongWebServiceHandler)
 
+|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |             Tags              |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `10`           |    `suspicious`<br>`error`    |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Wrong handler for web service (WrongWebServiceHandler)
+
 |  Type   | Scope |  Severity  | Activated by default | Minutes<br> to fix |             Tags              |
 |:-------:|:-----:|:----------:|:--------------------:|:------------------------:|:-----------------------------:|
 | `Error` | `BSL` | `Critical` |        `Yes`         |           `10`           | `suspicious`<br>`error` |

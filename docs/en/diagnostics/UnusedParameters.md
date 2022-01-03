@@ -1,8 +1,8 @@
 # Unused parameter (UnusedParameters)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |            Tags            |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags            |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------:|
-| `Code smell` | `OS`  | `Major`  |             `Yes`             |           `5`           | `design`<br>`unused` |
+| `Code smell` | `OS`  | `Major`  |             `Yes`             |           `5`           |    `design`<br>`unused`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

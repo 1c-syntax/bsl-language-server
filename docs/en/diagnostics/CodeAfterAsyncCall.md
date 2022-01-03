@@ -1,8 +1,8 @@
 # Lines of code after the asynchronous method call (CodeAfterAsyncCall)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br> to fix |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:------------------------:|:------------:|
-| `Code smell` | `BSL` | `Major`  |             `No`              |           `10`           | `suspicious` |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
+| `Code smell` | `BSL` | `Major`  |             `No`              |          `10`           | `suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

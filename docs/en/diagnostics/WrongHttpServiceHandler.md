@@ -1,5 +1,14 @@
 # Missing handler for http service (WrongHttpServiceHandler)
 
+|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |             Tags              |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `10`           |    `suspicious`<br>`error`    |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Missing handler for http service (WrongHttpServiceHandler)
+
 |  Type   | Scope |  Severity  | Activated by default | Minutes<br> to fix |             Tags              |
 |:-------:|:-----:|:----------:|:--------------------:|:------------------------:|:-----------------------------:|
 | `Error` | `BSL` | `Critical` |        `Yes`         |           `10`           | `suspicious`<br>`error` |

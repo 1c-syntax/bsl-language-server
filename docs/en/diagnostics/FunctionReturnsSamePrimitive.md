@@ -1,8 +1,8 @@
 # The function always returns the same primitive value (FunctionReturnsSamePrimitive)
 
-|  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |              Tags               |
+|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags               |
 |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------:|
-| `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `design`<br>`badpractice` |
+| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `design`<br>`badpractice`    |
 
 ## Parameters
 

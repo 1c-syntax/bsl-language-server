@@ -1,5 +1,14 @@
 # Query text parsing error (QueryParseError)
 
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`badpractice`       |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Query text parsing error (QueryParseError)
+
 |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
 | `Code smell` | `BSL` | `Важный` |             `Yes`             |           `5`           | `standard`<br>`sql`<br>`badpractice` |

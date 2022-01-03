@@ -1,5 +1,14 @@
 # Server-side export form method (ServerSideExportFormMethod)
 
+|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                          Tags                          |
+|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------:|
+| `Error` | `BSL` | `Blocker` |             `Yes`             |           `5`           |       `error`<br>`unpredictable`<br>`suspicious`       |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Server-side export form method (ServerSideExportFormMethod)
+
 |  Type   | Scope | Severity  | Activated by default | Minutes<br> to fix |                          Tags                          |
 |:-------:|:-----:|:---------:|:--------------------:|:------------------------:|:------------------------------------------------------:|
 | `Error` | `BSL` | `Blocker` |        `Yes`         |           `5`            | `error`<br>`unpredictable`<br>`suspicious` |

@@ -1,8 +1,8 @@
 # TempFilesDir() method call (TempFilesDir)
 
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
 |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard`<br>`badpractice` |
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
