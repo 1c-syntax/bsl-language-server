@@ -1,8 +1,8 @@
 # Virtual table call without parameters (VirtualTableCallWithoutParameters)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `sql`<br>`standard`<br>`performance`       |
+|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
+| `Error` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `sql`<br>`standard`<br>`performance`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
