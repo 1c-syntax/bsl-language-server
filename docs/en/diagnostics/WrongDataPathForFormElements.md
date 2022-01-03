@@ -1,8 +1,8 @@
 # Form fields do not have a data path (WrongDataPathForFormElements)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |           `5`           | `unpredictable` |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:---------------:|
+| `Error` |             `BSL`             | `Critical` |              `Yes`              |                 `5`                 | `unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
