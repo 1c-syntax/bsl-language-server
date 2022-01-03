@@ -1,16 +1,16 @@
 # Space at the beginning of the comment (SpaceAtStartComment)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Info` |              `Yes`              |                 `1`                 | `standard` |
 
 ## Parameters
 
 
-|         Name          |   Type    |                                        Description                                         |  Default value  |
-|:---------------------:|:---------:|:------------------------------------------------------------------------------------------:|:---------------:|
-| `commentsAnnotation`  | `String`  | `Skip comments-annotations staring with given substrings. List, values separated by comma` | `//@,//(c),//©` |
-| `useStrictValidation` | `Boolean` |               `Use strict validation against double comments `//// Comment``               |     `true`      |
+|          Name          |   Type    |                                                     Description                                                     |    Default value    |
+|:---------------------:|:--------:|:----------------------------------------------------------------------------------------------------------------:|:------------------------------:|
+| `commentsAnnotation`  | `String` | `Skip comments-annotations staring with given substrings. List, values separated by comma` |        `//@,//(c),//©`         |
+| `useStrictValidation` | `Boolean` |            `Use strict validation against double comments `//// Comment``             |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
