@@ -208,7 +208,7 @@ You are awesome!
 
 Thanks to companies supporting open source projects, and especially to those who supported us:
 
-[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
+---
 
 [YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling `Java` and `.NET` applications. YourKit has offered an open source license [YourKit Java Profiler](https://www.yourkit.com) for `BSL Language Server` to improve its performance.
 
