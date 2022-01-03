@@ -1,8 +1,8 @@
 # Using deprecated property "ThisForm" (UsingThisForm)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
-| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `1`           |    `standard`<br>`deprecated`    |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:--------------------------------:|
+| `Code smell` |             `BSL`             | `Minor` |              `Yes`              |                 `1`                 |    `standard`<br>`deprecated`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
