@@ -1,8 +1,8 @@
 # Lines of code after the asynchronous method call (CodeAfterAsyncCall)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Code smell` | `BSL` | `Major`  |             `No`              |          `10`           | `suspicious` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------:|
+| `Code smell` |             `BSL`             | `Major` |             `No`              |                `10`                 | `suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,17 +18,17 @@ Incorrect code
 ```bsl
 &AtClient
 Procedure Command1(Command)
-	AdditionalParameters = New Structure("Result", 10);
-	Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
-	
-	Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
+    AdditionalParameters = New Structure("Result", 10);
+    Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
+
+    Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
 EndProcedure
 
 &AtClient
 Procedure AfterNumberWereInputted(Number, AdditionalParameters) Export
-	If Number <> Undefined Then
-		AdditionalParameters.Result = Number;
-	EndIf;
+    If Number <> Undefined Then
+        AdditionalParameters.Result = Number;
+    EndIf;
 EndProcedure;
 ```
 
