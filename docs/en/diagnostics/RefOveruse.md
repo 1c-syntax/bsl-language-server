@@ -1,8 +1,8 @@
 # Overuse "Reference" in a query (RefOveruse)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `sql`<br>`performance`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |    `sql`<br>`performance`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
