@@ -1,8 +1,8 @@
 # Nested ternary operator (NestedTernaryOperator)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           | `brainoverload` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 | `brainoverload` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,7 +20,7 @@ Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz");
 ```bsl
 If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 
-      Status = "Done";
+      Status = "Done";
 
 EndIf;
 ```
@@ -42,7 +42,7 @@ EndIf;
 ```bsl
 If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
 
-      Status = "Done";
+      Status = "Done";
 
 End If;
 ```
