@@ -1,16 +1,16 @@
 # Cognitive complexity (CognitiveComplexity)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `15`           | `brainoverload` |
+|      Type      |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|:-------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:---------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                `15`                 | `brainoverload` |
 
 ## Parameters
 
 
-|         Name          |   Type    |      Description       | Default value |
-|:---------------------:|:---------:|:----------------------:|:-------------:|
-| `complexityThreshold` | `Integer` | `Complexity threshold` |     `15`      |
-|   `checkModuleBody`   | `Boolean` |  `Check module body`   |    `true`     |
+|          Name          |   Type    |                 Description                  |    Default value    |
+|:---------------------:|:--------:|:-----------------------------------------:|:------------------------------:|
+| `complexityThreshold` | `Integer`  | `Complexity threshold` |              `15`              |
+|   `checkModuleBody`   | `Boolean` |          `Check module body`          |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
