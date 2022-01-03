@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -77,6 +78,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+  private static final Configuration EMPTY = Configuration.create();
 
   @Getter
   private final URI uri;
@@ -190,7 +192,7 @@ public class DocumentContext {
   }
 
   public Locale getScriptVariantLocale() {
-    var mdConfiguration = getServerContext().getConfiguration();
+    var mdConfiguration = getConfiguration();
 
     String languageTag;
     if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
@@ -233,7 +235,7 @@ public class DocumentContext {
   }
 
   public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+    return Optional.ofNullable(getConfiguration().getModulesByObject().get(getUri()));
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -336,13 +338,12 @@ public class DocumentContext {
     return new SymbolTreeComputer(this).compute();
   }
 
-
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleType(uri);
+    return getConfiguration().getModuleType(uri);
   }
 
   private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
-    return context.getConfiguration().getModuleSupport(uri);
+    return getConfiguration().getModuleSupport(uri);
   }
 
   private ComplexityData computeCognitiveComplexity() {
@@ -406,4 +407,11 @@ public class DocumentContext {
     return (new QueryComputer(this)).compute();
   }
 
+  private Configuration getConfiguration() {
+    var serverContext = getServerContext();
+    if (serverContext == null) {
+      return EMPTY;
+    }
+    return getServerContext().getConfiguration();
+  }
 }

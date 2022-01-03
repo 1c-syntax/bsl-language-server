@@ -239,4 +239,20 @@ class DocumentContextTest {
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
   }
+
+  @Test
+  void testServerContextIsNull() {
+    String content = "А = \"ВЫБРАТЬ РАЗРЕШЕННЫЕ Поле.Один \n" +
+      "|КАК \n" +
+      "|  Один, 2 \n" +
+      " |  КАК Два ИЗ Справочник.Поле\n" +
+      "|АВТОУПОРЯДОЧИВАНИЕ;\";";
+    var documentContext = new DocumentContext(URI.create("file:///fake.bsl"));
+
+    assertThat(documentContext.getServerContext()).isNull();
+
+    documentContext.rebuild(content, 1);
+
+    assertThat(documentContext.getAst()).isNotNull();
+  }
 }
