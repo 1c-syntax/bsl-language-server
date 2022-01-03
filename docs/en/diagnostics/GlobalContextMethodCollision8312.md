@@ -1,8 +1,8 @@
 # Global context method names collision (GlobalContextMethodCollision8312)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
-|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |          `10`           |    `error`<br>`unpredictable`    |
+|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
+|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:--------------------------------:|
+| `Error` |         `BSL`<br>`OS`         | `Blocker` |              `Yes`              |                `10`                 |    `error`<br>`unpredictable`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -10,18 +10,18 @@
 
 The platform version `8.3.12` implements new methods of the global context, which may coincide with the configuration functions of the application solution.
 
-|      Russian variant       |  English variant  |
-|:--------------------------:|:-----------------:|
-|        ПроверитьБит        |     CheckBit      |
-|  ПроверитьПоБитовойМаске   |  CheckByBitMask   |
-|       УстановитьБит        |      SetBit       |
-|         ПобитовоеИ         |    BitwiseAnd     |
-|        ПобитовоеИли        |     BitwiseOr     |
-|        ПобитовоеНе         |    BitwiseNot     |
-|        ПобитовоеИНе        |   BitwiseAndNot   |
-| ПобитовоеИсключительноеИли |    BitwiseXor     |
-|    ПобитовыйСдвигВлево     | BitwiseShiftLeft  |
-|    ПобитовыйСдвигВправо    | BitwiseShiftRight |
+Russian variant|English variant
+:-: | :-:
+ПроверитьБит|CheckBit
+ПроверитьПоБитовойМаске|CheckByBitMask
+УстановитьБит|SetBit
+ПобитовоеИ|BitwiseAnd
+ПобитовоеИли|BitwiseOr
+ПобитовоеНе|BitwiseNot
+ПобитовоеИНе|BitwiseAndNot
+ПобитовоеИсключительноеИли|BitwiseXor
+ПобитовыйСдвигВлево|BitwiseShiftLeft
+ПобитовыйСдвигВправо|BitwiseShiftRight
 
 The configuration functions must either be renamed or deleted, replacing the call to them with the methods of the global context.
 
