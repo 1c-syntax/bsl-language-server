@@ -9,6 +9,7 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The structure of the software module *(in general form)* is clearly defined:
+
 - first comes the variable definition block
 - then definitions of procedures and functions
 - then the module code block

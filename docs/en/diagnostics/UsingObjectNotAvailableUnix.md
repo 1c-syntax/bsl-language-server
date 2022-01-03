@@ -7,18 +7,19 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to NativeAPI AddIn.
+On `Linux` OS `COM`, `OLE`, `ActiveDocument` are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to `NativeAPI` AddIn.
 
 Checked the use of unavailable in:
 
-* COMObject
-* Mail
+* `COMObject`
+* `Mail`
 
 **Checking the value of the condition is not satisfied.**
 
 ### Addition
 
 When found unavailable in Linux objects, the method is checked to include condition flow for platform type:
+
 * `Linux_x86`
 * `Windows`
 * `MacOs`

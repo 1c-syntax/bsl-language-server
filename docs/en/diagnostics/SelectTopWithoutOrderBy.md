@@ -15,10 +15,12 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Using the `TOP N` construct without specifying the sort order in `ORDER BY` or conditions in the `WHERE` section is fraught with unexpected results:
+
 - The order of the returned results may differ in different DBMSs
 - The order in different copies of information security will differ from the order expected by the developer
 
 According to the standard, the absence of the sentence `ORDER BY` is justified only in cases where
+
 - the algorithm for processing query results does not rely on a specific order of records
 - the result of processing the executed request is not shown to the user
 - query result - obviously one record
@@ -27,7 +29,8 @@ In the above cases, it is recommended not to add the clause `ORDER BY` to the re
 
 ### Diagnostic ignorance in code
 
-During the analysis, constructions are considered erroneous
+During the analysis, constructions are considered erroneous:
+
 - Using `TOP N` in the union regardless of the presence of `ORDER BY` because ordering occurs after the union
 - Using `TOP N` where `N> 1` if missing `ORDER BY`
 - Using `TOP 1`, if there is no `ORDER BY` and conditions in `WHERE`. This rule is disabled by default by a diagnostic option

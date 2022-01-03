@@ -23,6 +23,7 @@ Diagnostics detects typical errors:
 - No return value description
 - Return value description for procedure
 - Poor description of the return value: when the type name is present in the description, but its description is not specified
+  - To activate this more stringent check, you must turn off the short form permission by the diagnostic parameter
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->

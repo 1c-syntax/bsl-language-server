@@ -7,12 +7,16 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-In the global context of the 8.3.17 platform, created ErrorProcessing properties and error management text parameters that allow you to customize error texts. Global context methods:
-* BriefErrorDescription()
-* DetailErrorDescription()
-* ShowErrorInfo()
+In the global context of the `8.3.17` platform, created `ErrorProcessing` properties and `error management text parameters` that allow you to customize error texts.
 
-You should use the same methods of the ErrorProcessing object instead.
+Global context methods are deprecated:
+
+* `BriefErrorDescription()`
+* `DetailErrorDescription()`
+* `ShowErrorInfo()`
+
+You should use the same methods of the `ErrorProcessing` object instead.
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

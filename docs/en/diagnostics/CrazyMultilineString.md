@@ -9,6 +9,7 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In source text, multi-line constants can be initialized in two ways:
+
 - 'classic', which uses line feed and string concatenation
 - 'crazy' where lines are separated by whitespace
 
