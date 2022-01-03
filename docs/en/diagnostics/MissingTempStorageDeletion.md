@@ -1,8 +1,8 @@
 # Missing temporary storage data deletion after using (MissingTempStorageDeletion)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `No`              |           `3`           |       `standard`<br>`performance`<br>`badpractice`       |
+|      Type      |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
+|:-------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Critical` |             `No`              |                 `3`                 |       `standard`<br>`performance`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -33,7 +33,7 @@ Remember that when a value is retrieved from the temporary storage on the server
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-  
+
 1 - Example of correct code:
 ```bsl
 &НаКлиенте
