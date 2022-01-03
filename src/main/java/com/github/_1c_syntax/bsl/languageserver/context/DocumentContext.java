@@ -78,7 +78,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
-  private static final Configuration EMPTY = Configuration.create();
+  private static final Configuration EMPTY_CONFIGURATION = Configuration.create(); // для защиты от NPE
 
   @Getter
   private final URI uri;
@@ -410,7 +410,7 @@ public class DocumentContext {
   private Configuration getConfiguration() {
     var serverContext = getServerContext();
     if (serverContext == null) {
-      return EMPTY;
+      return EMPTY_CONFIGURATION;
     }
     return getServerContext().getConfiguration();
   }

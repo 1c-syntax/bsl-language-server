@@ -253,6 +253,6 @@ class DocumentContextTest {
 
     documentContext.rebuild(content, 1);
 
-    assertThat(documentContext.getAst()).isNotNull();
+    assertThat(documentContext.getModuleType()).isNotNull();
   }
 }
