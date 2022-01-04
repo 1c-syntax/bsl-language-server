@@ -1,8 +1,8 @@
 # Restriction on the use of deprecated "Message" method (DeprecatedMessage)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
-| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `2`           |    `standard`<br>`deprecated`    |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:--------------------------------:|
+| `Code smell` |             `BSL`             | `Minor` |              `Yes`              |                 `2`                 |    `standard`<br>`deprecated`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ To display messages to the user in all cases, you should use the MessageUser obj
 
 ## Sources
 
-* [Standard: Limit use of the obsolete method Message](https://its.1c.ru/db/v8std#content:418:hdoc)
+* [Standard: Limit use of the obsolete method Message (RU)](https://its.1c.ru/db/v8std#content:418:hdoc)
 
 ## Snippets
 
