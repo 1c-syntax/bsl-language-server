@@ -2,13 +2,19 @@ name: QA
 
 on: 
   push:
-    branches:
-      - develop
-      - master
+    branches: [develop, master]
+
   pull_request:
 
 jobs:
+  gatekeeper:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
+    steps:
+      - run: echo 'Open the Golden Gate'
+
   QA:
+    needs: gatekeeper
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.event.repository.full_name
     steps:

@@ -1,9 +1,19 @@
 name: Java CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - "translations_*"
+  pull_request:
 
 jobs:
+  gatekeeper:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
+    steps:
+      - run: echo 'Open the Golden Gate'
   build:
+    needs: gatekeeper
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
