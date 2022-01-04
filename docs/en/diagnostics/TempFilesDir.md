@@ -1,8 +1,8 @@
 # TempFilesDir() method call (TempFilesDir)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |    `standard`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ If a temporary file name is generated otherwise, and the application code fails 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Wrong:
+Incorrect:
 
 ```bsl
 Catalog = TempFilesDir();
