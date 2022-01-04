@@ -1,8 +1,8 @@
 # Using 'LIKE' in query (UsingLikeInQuery)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------:|
-| `Error` | `BSL` | `Major`  |             `No`              |          `10`           |    `sql`<br>`unpredictable`    |
+|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
+|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------:|
+| `Error` |             `BSL`             | `Major` |             `No`              |                `10`                 |    `sql`<br>`unpredictable`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -19,7 +19,7 @@ In most algorithms, it is possible to do without using the operator `LIKE`, and 
 Property LIKE "123%"
 ```
 
-### Parameter for config
+### Incorrect:
 
 ```bsl
 Property LIKE Table.Template
