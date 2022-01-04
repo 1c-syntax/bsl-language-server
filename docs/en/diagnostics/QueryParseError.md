@@ -1,8 +1,8 @@
 # Query text parsing error (QueryParseError)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`badpractice`       |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`sql`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -34,7 +34,7 @@ Text = "SELECT
 | Catalog.Goods КАК Goods";
 ```
 
-Right
+Correct
 
 ```bsl
 Text = "SELECT
