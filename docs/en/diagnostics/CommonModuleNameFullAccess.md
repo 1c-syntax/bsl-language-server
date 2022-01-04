@@ -1,8 +1,8 @@
 # Missed postfix "FullAccess" (CommonModuleNameFullAccess)
 
-|        Type        | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:------------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Security Hotspot` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
+|            Type             |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|:--------------------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
+| `Security Hotspot` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`badpractice`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ Modules executed in privileged mode have the Privileged flag, are named with the
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-FilesFullAccess
+Example: FilesFullAccess
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
