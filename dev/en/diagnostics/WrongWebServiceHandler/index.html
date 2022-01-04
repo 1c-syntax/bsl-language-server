@@ -931,36 +931,11 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<h1 id="Wrong-handler-for-web-service-WrongWebServiceHandler_1">Wrong handler for web service (WrongWebServiceHandler)<a class="headerlink" href="#Wrong-handler-for-web-service-WrongWebServiceHandler_1" title="Permanent link">&para;</a></h1>
-<table>
-<thead>
-<tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated by default</th>
-<th align="center">Minutes<br> to fix</th>
-<th align="center">Tags</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Critical</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>10</code></td>
-<td align="center"><code>suspicious</code><br><code>error</code></td>
-</tr>
-</tbody>
-</table>
-<!-- Блоки выше заполняются автоматически, не трогать -->
-<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>In the absence of a web service operation handler, a call to this operation will not give out either the data itself, or an error on the client side of the service, or an error on the side of the service itself.</p>
-<p>It is important to remember that the number of parameters for a web service operation must match the number of parameters specified in the settings for a web service operation.</p>
-<p>The configurator notices violations of the specified restrictions only when the "Check for the existence of assigned handlers" flag is enabled.</p>
-<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<p>If there is no web-service operation handler, then the call to the operation will return neither data, nor errors on the client side of the service, nor errors on the side of the service itself.</p>
+<p>It is important to remember: the number of parameters of the web service operation method must match the number of parameters specified in the settings of the web service operation.</p>
+<p>The configurator notices violations only when the "Check for the existence of assigned handlers" flag is enabled.</p>
+<h2 id="Severity">Severity<a class="headerlink" href="#Severity" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Invalid handler method with empty body
 <div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">)</span>
@@ -969,24 +944,24 @@
 </code></pre></div></p>
 <p>Correct handler method - there is a method body and the correct set of parameters is specified
 <div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">)</span>
-    <span class="k">Return</span> <span class="nv">Mobiles</span><span class="o">.</span><span class="nf">LoadCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">);</span>
+    <span class="k">Return</span> <span class="nv">MobileOrders</span><span class="o">.</span><span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">);</span>
 <span class="k">EndFunction</span>
 </code></pre></div></p>
 <p>Invalid handler method with the wrong number of parameters
-<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">,</span> <span class="nv">Additionals</span><span class="p">)</span>
-    <span class="k">Return</span> <span class="nv">Mobiles</span><span class="o">.</span><span class="nf">LoadCatlogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">,</span> <span class="nv">Additional</span><span class="p">)</span>
+<span class="k">Return</span> <span class="nv">MobileOrders</span><span class="o">.</span><span class="nf">FillCatalogs</span><span class="p">(</span><span class="nv">MobileDeviceID</span><span class="p">,</span> <span class="nv">MessageExchange</span><span class="p">);</span>
 <span class="k">EndFunction</span>
 </code></pre></div></p>
-<h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
+<h2 id="Yes"><code>Yes</code><a class="headerlink" href="#Yes" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 <ul>
-<li><a href="https://its.1c.ru/db/v8320doc#bookmark:dev:TI000000783">Developer Guide 8.3.20 - Web service mechanisms (RU)</a></li>
-<li><a href="https://its.1c.ru/db/metod8dev/browse/13/-1/1989/2565/2567/2590">Web-services and HTTP-services - recommendations from 1C</a></li>
+<li><a href="https://its.1c.ru/db/v8320doc#bookmark:dev:TI000000783">Developers guide 8.3.20. Internet service mechanisms (RU)</a></li>
+<li><a href="https://its.1c.ru/db/metod8dev/browse/13/-1/1989/2565/2567/2590">Configuration guidelines. Web services and HTTP services (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
