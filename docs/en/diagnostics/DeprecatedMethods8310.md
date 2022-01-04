@@ -1,13 +1,15 @@
 # Deprecated client application method. (DeprecatedMethods8310)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `deprecated` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:------------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
 The following global context methods are deprecated and are not recommended since platform version 8.3.10:
+
 ```bsl
 SetShortApplicationCaption();
 GetShortApplicationCaption();
