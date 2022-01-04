@@ -932,10 +932,12 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
 <p>To open forms, use the OpenForm global context method (when using the 1C: Enterprise 8.2 platform version and earlier versions, also use OpenFormModal). An alternative method, using the GetForm method, is not recommended.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<p><div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">()</span>
+
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">()</span>
     <span class="nv">Doc</span> <span class="o">=</span> <span class=" -Class">Documents</span><span class="o">.</span><span class="nv">PlanOperation</span><span class="o">.</span><span class="nf">CreateDocument</span><span class="p">();</span>
     <span class="nv">Form</span> <span class="o">=</span> <span class="nv">Doc</span><span class="o">.</span><span class="nf">GetForm</span><span class="p">(</span><span class="s">&quot;DocumentForm&quot;</span><span class="p">);</span> <span class="c c-Singleline">// here</span>
 <span class="k">EndProcedure</span>
@@ -943,11 +945,11 @@
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test2</span><span class="p">()</span>
     <span class="nv">Form</span> <span class="o">=</span> <span class="nb">GetForm</span><span class="p">(</span><span class="s">&quot;CommonForms.MyForm&quot;</span><span class="p">);</span>
 <span class="k">EndProcedure</span>
-</code></pre></div></p>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-<p>Source: <a href="https://its.1c.ru/db/v8std/content/404/hdoc">Standard</a></p>
+<p>Source: <a href="https://its.1c.ru/db/v8std/content/404/hdoc">Development standards (RU)</a></p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
