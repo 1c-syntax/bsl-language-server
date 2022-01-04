@@ -1,8 +1,8 @@
 # Cached public methods (CachedPublic)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`design`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |    `standard`<br>`design`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,7 +17,7 @@ You should not create a programming interface in modules that reuse return value
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Source: [Standard: Ensuring Library Compatibility](https://its.1c.ru/db/v8std#content:644:hdoc:3.6)
+* Source: [Standard: Ensuring Library Compatibility (RU)](https://its.1c.ru/db/v8std#content:644:hdoc:3.6)
 
 ## Snippets
 
