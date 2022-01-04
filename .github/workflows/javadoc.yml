@@ -1,6 +1,10 @@
 name: javadoc
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - "translations_*"
+  pull_request:
 
 jobs:
   build:

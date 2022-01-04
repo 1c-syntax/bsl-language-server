@@ -2,9 +2,8 @@ name: QA
 
 on: 
   push:
-    branches:
-      - develop
-      - master
+    branches: [develop, master]
+
   pull_request:
 
 jobs:
