@@ -936,7 +936,8 @@
 <p>Using the SafeMode() method, in which the result is implicitly converted to a Boolean type is unsafe, must be corrected for the code with an explicit comparison of the result with the value False. Thus, with the installed security profile, the code will be executed in the same way as in the safe mode.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<p>Wrong:
+
+<p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">SafeMode</span><span class="p">()</span> <span class="k">Then</span>
      <span class="c c-Singleline">// some logic in safe mode...</span>
 <span class="k">EndIf</span><span class="p">;</span>
@@ -945,17 +946,17 @@
      <span class="c c-Singleline">// some logic in unsafe mode...</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
-Correct:
+<p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">SafeMode</span><span class="p">()</span> <span class="o">&lt;&gt;</span> <span class="kc">False</span> <span class="k">Then</span>
    <span class="c c-Singleline">// some code</span>
 <span class="k">EndIf</span><span class="p">;</span>
 <span class="k">EndIf</span>
-</code></pre></div></p>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
-<li>Source: <a href="https://its.1c.ru/db/metod8dev#content:5293:hdoc:izmenenie_bezopasnyjrezhim">SafeMode method</a></li>
+<li>Source: <a href="https://its.1c.ru/db/metod8dev#content:5293:hdoc:izmenenie_bezopasnyjrezhim">SafeMode method (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
