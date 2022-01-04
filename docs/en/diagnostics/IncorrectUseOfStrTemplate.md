@@ -1,8 +1,8 @@
 # Incorrect use of "StrTemplate" (IncorrectUseOfStrTemplate)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                              Tags                              |
-|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `1`           |       `brainoverload`<br>`suspicious`<br>`unpredictable`       |
+|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |                              Tags                              |
+|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------------------:|
+| `Error` |         `BSL`<br>`OS`         | `Blocker` |              `Yes`              |                 `1`                 |       `brainoverload`<br>`suspicious`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -25,7 +25,8 @@ Option 2 - no values are passed at all, except for a formatted string due to the
 
   - `StrTemplate(NStr("en='Name (version %1)'", Version()));`
 
-Here mistake not closed parenthesis for `NStr</ 0>. As a result, the expression after evaluating <code>NStr` becomes empty. It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
+Here mistake not closed parenthesis for `NStr`. As a result, the expression after evaluating `NStr` becomes empty. 
+It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
 
 Correct option
   - `StrTemplate(NStr("en='Name (version %1)'"), Version());`
