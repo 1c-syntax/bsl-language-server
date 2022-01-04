@@ -948,7 +948,8 @@
 <ul>
 <li><code>StrTemplate(NStr("en='Name (version %1)'", Version()));</code></li>
 </ul>
-<p>Here mistake not closed parenthesis for <code>NStr&lt;!-- 0--&gt;. As a result, the expression after evaluating &lt;code&gt;NStr</code> becomes empty. It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.</p>
+<p>Here mistake not closed parenthesis for <code>NStr</code>. As a result, the expression after evaluating <code>NStr</code> becomes empty. 
+It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.</p>
 <p>Correct option
   - <code>StrTemplate(NStr("en='Name (version %1)'"), Version());</code></p>
 <p>Option 3 - correct example of passing digits immediately after a template value
@@ -962,7 +963,7 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 <ul>
-<li><a href="https://its.1c.ru/db/v8std/content/763/hdoc">Standard: Localization Requirements</a></li>
+<li><a href="https://its.1c.ru/db/v8std/content/763/hdoc">Standard: Localization Requirements (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
