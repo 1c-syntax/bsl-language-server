@@ -1,8 +1,8 @@
 # Missing temporary storage data deletion after using (MissingTempStorageDeletion)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `No`              |           `3`           |       `standard`<br>`performance`<br>`badpractice`       |
+|      Type      |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
+|:-------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Critical` |             `No`              |                 `3`                 |       `standard`<br>`performance`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -33,7 +33,7 @@ Remember that when a value is retrieved from the temporary storage on the server
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-  
+
 1 - Example of correct code:
 ```bsl
 &НаКлиенте
@@ -55,7 +55,7 @@ Remember that when a value is retrieved from the temporary storage on the server
 
 2 - Consider this recommendation when working with background jobs
 
-Wrong:
+Incorrect:
 - Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
 ```bsl
 ПараметрыВыполнения = ДлительныеОперации.ПараметрыВыполненияФункции(УникальныйИдентификатор);
@@ -73,10 +73,10 @@ Correct:
 
 - If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
 ```bsl
-&НаСервере
+&AtServer
 Процедура ПриСозданииНаСервере(Отказ)
     АдресРезультатаФоновогоЗадания = ПоместитьВоВременноеХранилище(Неопределено, УникальныйИдентификатор); // Резервируем адрес временного хранилища
-КонецПроцедуры
+EndProcedure
 
 &НаСервере
 Функция НачатьПоискНастроекУчетнойЗаписи()
