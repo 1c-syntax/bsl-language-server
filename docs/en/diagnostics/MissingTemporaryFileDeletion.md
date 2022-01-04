@@ -1,14 +1,14 @@
 # Missing temporary file deletion after using (MissingTemporaryFileDeletion)
 
-|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `badpractice`<br>`standard`    |
+|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
+| `Error` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 |    `badpractice`<br>`standard`    |
 
 ## Parameters
 
 
-|           Name           |   Type   |                    Description                     |                                        Default value                                        |
-|:------------------------:|:--------:|:--------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
+|           Name            |   Type    |                           Description                            |                                  Default value                                   |
+|:------------------------:|:--------:|:-------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
 | `searchDeleteFileMethod` | `String` | `Keywords to search for delete/move files methods` | `УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -42,7 +42,7 @@ Catch
 EndTry;
 ```
 
-## Peculiarities
+## Nuances
 
 Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.
 
