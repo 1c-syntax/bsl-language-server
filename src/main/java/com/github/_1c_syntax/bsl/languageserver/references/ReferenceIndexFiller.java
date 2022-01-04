@@ -213,7 +213,7 @@ public class ReferenceIndexFiller {
             s.getRootParent(SymbolKind.Method),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
-            false
+            ctx.acceptor() != null
           );
         }
       });
