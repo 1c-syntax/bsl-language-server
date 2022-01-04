@@ -1,15 +1,15 @@
 # There is a localized text for all languages declared in the configuration (MultilingualStringHasAllDeclaredLanguages)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
-| `Error` | `BSL` | `Minor`  |             `Yes`             |           `2`           |    `error`<br>`localize`    |
+|   Type    |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
+|:--------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:---------------------------:|
+| `Error` |             `BSL`             | `Minor` |              `Yes`              |                 `2`                 |    `error`<br>`localize`    |
 
 ## Parameters
 
 
-|        Name         |   Type   |     Description      | Default value |
-|:-------------------:|:--------:|:--------------------:|:-------------:|
-| `declaredLanguages` | `String` | `Declared languages` |     `ru`      |
+|         Name         |   Type    |      Description      |    Default value    |
+|:-------------------:|:--------:|:------------------:|:------------------------------:|
+| `declaredLanguages` | `String` | `Declared languages` |              `ru`              |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -17,7 +17,7 @@ NStr in a multilingual configuration has different fragments for different langu
 
 ## Sources
 
-- [localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [Standard: Localization Requirements (RU)](https://its.1c.ru/db/v8std/content/763/hdoc)
 
 ## Snippets
 
