@@ -1,8 +1,8 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |    `brainoverload`<br>`suspicious`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `1`                 |    `brainoverload`<br>`suspicious`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -15,7 +15,7 @@ A common module must have at least one export method and region "Public" or "Int
 
 Incorrect
 
-```Bsl
+```bsl
 // Start module
 Procedure Test(A)
     A = A + 1;
@@ -25,7 +25,7 @@ EndProcedure
 
 Correct
 
-```Bsl
+```bsl
 // Start module
 #Region Internal
 Procedure Test(A) Export
@@ -38,7 +38,7 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 
