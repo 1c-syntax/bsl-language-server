@@ -31,7 +31,7 @@ Data.Write(TempFile);
 
 To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).
 
-Wrong:
+Incorrect:
 
 ```bsl
 ArchFile = New ZipFileReader(FileName);
