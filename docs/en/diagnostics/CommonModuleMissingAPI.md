@@ -1,8 +1,8 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |    `brainoverload`<br>`suspicious`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                 Tags                  |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `1`                 |    `brainoverload`<br>`suspicious`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -15,7 +15,7 @@ A common module must have at least one export method and region "Public" or "Int
 
 Incorrect
 
-```Bsl
+```bsl
 // Start module
 Procedure Test(A)
     A = A + 1;
