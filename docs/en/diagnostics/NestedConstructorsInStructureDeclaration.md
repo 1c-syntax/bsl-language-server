@@ -1,8 +1,8 @@
 # Nested constructors with parameters in structure declaration (NestedConstructorsInStructureDeclaration)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `10`           |    `badpractice`<br>`brainoverload`    |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:--------------------------------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                `10`                 |    `badpractice`<br>`brainoverload`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
