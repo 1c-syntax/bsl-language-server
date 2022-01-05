@@ -1,14 +1,14 @@
 # Unrecommended common module name (CommonModuleNameWords)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `5`                 | `standard` |
 
 ## Parameters
 
 
-|  Name   |   Type   |      Description      |                                               Default value                                                |
-|:-------:|:--------:|:---------------------:|:----------------------------------------------------------------------------------------------------------:|
+|   Name   |   Type    |        Description         |                                          Default value                                          |
+|:-------:|:--------:|:-----------------------:|:----------------------------------------------------------------------------------------------------------:|
 | `words` | `String` | `Unrecommended words` | `процедуры|procedures|функции|functions|обработчики|handlers|модуль|module|функциональность|functionality` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -19,7 +19,7 @@ It is not recommended to use the words "Procedures", "Functions", "Handlers", "M
 
 ## Sources
 
-* Standard: Rules for creating common modules (RU)
+* Standard: [Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:3.1)
 
 ## Snippets
 
