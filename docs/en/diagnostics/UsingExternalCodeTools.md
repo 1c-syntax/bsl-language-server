@@ -1,8 +1,8 @@
 # Using external code tools (UsingExternalCodeTools)
 
-|        Type        |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:------------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------:|
-| `Security Hotspot` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `15`           |    `standard`<br>`design`    |
+|            Type             |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
+|:--------------------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:----------------------------:|
+| `Security Hotspot` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                `15`                 |    `standard`<br>`design`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -16,7 +16,7 @@ Examples of invalid execution of "external" code in unsafe mode:
 * external reports and processings (print forms, etc.)
 * configuration extensions
 
-### Diagnostic ignorance in code
+### Restrictions
 
 At the moment, the server context is not analyzed, so diagnostic works both at client and server contexts
 
@@ -27,7 +27,7 @@ At the moment, the server context is not analyzed, so diagnostic works both at c
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* [Restriction on the execution of "external" code](https://its.1c.ru/db/v8std#content:669:hdoc)
+* [Restriction on the execution of "external" code (RU)](https://its.1c.ru/db/v8std#content:669:hdoc)
 
 ## Snippets
 
