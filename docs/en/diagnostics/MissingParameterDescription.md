@@ -1,8 +1,8 @@
 # Method parameters description are missing (MissingParameterDescription)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 |    `standard`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -30,7 +30,7 @@ Diagnostic detects typical errors:
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* Standart: Procedures and functions description
+* Standart: [Procedures and functions description (RU)](https://its.1c.ru/db/v8std#content:453:hdoc)
 
 ## Snippets
 
