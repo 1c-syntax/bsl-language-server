@@ -1,8 +1,8 @@
 # Lines of code after the asynchronous method call (CodeAfterAsyncCall)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Code smell` | `BSL` | `Major`  |             `No`              |          `10`           | `suspicious` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------:|
+| `Code smell` |             `BSL`             | `Major` |             `No`              |                `10`                 | `suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,17 +18,17 @@ Incorrect code
 ```bsl
 &AtClient
 Procedure Command1(Command)
-	AdditionalParameters = New Structure("Result", 10);
-	Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
-	
-	Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
+    AdditionalParameters = New Structure("Result", 10);
+    Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
+
+    Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
 EndProcedure
 
 &AtClient
 Procedure AfterNumberWereInputted(Number, AdditionalParameters) Export
-	If Number <> Undefined Then
-		AdditionalParameters.Result = Number;
-	EndIf;
+    If Number <> Undefined Then
+        AdditionalParameters.Result = Number;
+    EndIf;
 EndProcedure;
 ```
 
@@ -82,7 +82,7 @@ It is also important to consider that an asynchronous method can be called in on
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [Sync and async methods - Developers guide Chapter 4. Internal language](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
