@@ -1,8 +1,8 @@
 # Form fields do not have a data path (WrongDataPathForFormElements)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |           `5`           | `unpredictable` |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:---------------:|
+| `Error` |             `BSL`             | `Critical` |              `Yes`              |                 `5`                 | `unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -35,7 +35,7 @@ For command bar buttons associated with the "Data" property with a standard dyna
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [General requirements - Standards 1C (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)
