@@ -1,8 +1,8 @@
 # Function name shouldn't start with "Получить" (FunctionNameStartsWithGet)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `No`              |           `3`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Info` |             `No`              |                 `3`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -11,7 +11,7 @@ In the name of the function, the word get superfluous since function by definiti
 
 ## Examples
 ```bsl
-// Not correct: 
+// Incorrect: 
 Function GetNameByCode()
 
 // Correct: 
@@ -20,7 +20,7 @@ Function NameByCode()
 
 
 ## Sources
-* Source: [Standard: Names of procedures and functions c 6.1](https://its.1c.ru/db/v8std#content:647:hdoc)
+* Source: [Standard: Names of procedures and functions c 6.1 (RU)](https://its.1c.ru/db/v8std#content:647:hdoc)
 
 ## Snippets
 
