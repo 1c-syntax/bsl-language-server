@@ -16,7 +16,7 @@ Total: **158**
 * Code smell: **98**
 
 
-| Key | Name| Enabled by default | Severity | Type | Tags |
+| Key | Name | Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
  [AllFunctionPathMustHaveReturn](AllFunctionPathMustHaveReturn.md) | All execution paths of a function must have a Return statement | Yes | Major | Code smell | `unpredictable`<br>`badpractice`<br>`suspicious` 
  [AssignAliasFieldsInQuery](AssignAliasFieldsInQuery.md) | Assigning aliases to selected fields in a query | Yes | Major | Code smell | `standard`<br>`sql`<br>`badpractice` 
