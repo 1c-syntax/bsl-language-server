@@ -1,20 +1,11 @@
 # Query text parsing error (QueryParseError)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`badpractice`       |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`sql`<br>`badpractice`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
-# Query text parsing error (QueryParseError)
-
-|     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Важный` |             `Yes`             |           `5`           | `standard`<br>`sql`<br>`badpractice` |
-
-<!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostics description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When writing queries, you must follow the following rule: the query text must be opened by the query designer.
@@ -34,7 +25,7 @@ Text = "SELECT
 | Catalog.Goods КАК Goods";
 ```
 
-Right
+Correct
 
 ```bsl
 Text = "SELECT
