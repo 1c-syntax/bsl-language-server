@@ -933,7 +933,8 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>When you develop applications, note that not only execution of a code written in the Enterprise mode is unsafe, but also places, where the <code>Execute</code> or <code>Eval</code> methods are used to execute the code created based on parameters passed to server functions and procedures.</p>
+<p>When you develop applications, note that not only execution of a code written in the Enterprise mode is unsafe, but also places, where the <code>Execute</code> or <code>Eval</code> methods are used to execute the code created based on parameters passed to server functions and procedures.
+It is forbidden to use the <code>Execute</code> and<code>Eval</code> methods in server methods of form modules, commands, objects, etc.</p>
 <p><strong>This restriction is not applicable to the code being executed on the client</strong></p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
