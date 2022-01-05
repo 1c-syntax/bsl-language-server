@@ -39,7 +39,7 @@ Method list:
 |КАТАЛОГВРЕМЕННЫХФАЙЛОВ|TEMPFILESDIR|
 |КАТАЛОГДОКУМЕНТОВ|DOCUMENTSDIR|
 |РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ|USERDATAWORKDIR|
-|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|REQUESTUSERPERMISSION|
+|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|PUTFILES|
 |ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP|
 |Sources|[Limit on the use of modal windows and synchronous calls (RU)](https://its.1c.ru/db/v8std/content/703/hdoc/)|
 
