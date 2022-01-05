@@ -937,10 +937,10 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
+<h3 id="Correct">Correct<a class="headerlink" href="#Correct" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nv">Property</span> <span class="nv">LIKE</span> <span class="s">&quot;123%&quot;</span>
 </code></pre></div>
-<h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
+<h3 id="Incorrect">Incorrect:<a class="headerlink" href="#Incorrect" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nv">Property</span> <span class="nv">LIKE</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Template</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
@@ -952,16 +952,16 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 <ul>
-<li><a href="https://its.1c.ru/db/v8std#content:726:hdoc">Standard. Features of use in operator requests LIKE</a></li>
-<li><a href="https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506">Developers guide. Pattern-like string validation operator</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:726:hdoc">Standard. Features of use in operator requests LIKE (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506">Developers guide. Pattern-like string validation operator  (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-<h3 id="Diagnostic-ignorance-in-code_1">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code_1" title="Permanent link">&para;</a></h3>
+<h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingLikeInQuery-off</span>
 <span class="c c-Singleline">// BSLLS:UsingLikeInQuery-on</span>
 </code></pre></div>
-<h3 id="Parameter-for-config_1">Parameter for config<a class="headerlink" href="#Parameter-for-config_1" title="Permanent link">&para;</a></h3>
+<h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingLikeInQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
 </code></pre></div>
 
