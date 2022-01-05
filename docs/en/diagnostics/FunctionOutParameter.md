@@ -1,8 +1,8 @@
 # Out function parameter (FunctionOutParameter)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `No`              |          `10`           | `design` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:--------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |             `No`              |                `10`                 | `design` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -14,14 +14,14 @@ The function must have no output parameters. All output must be in the return va
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-// Wrong:
+// Incorrect:
 ServiceURL = "";
 UserName = "";
 UserPassword = "";
 
 FillConnectionParameters(ServiceURL, UserName, UserPassword);
 
-// Correctly:
+// Correct:
 ConnectionParameters = NewConnectionParameters();
 // Returned value - Structure:
 //     Service URL  - String
