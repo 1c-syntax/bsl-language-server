@@ -1,8 +1,8 @@
 # Global module with postfix "Client" (CommonModuleNameGlobalClient)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           | `standard` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,9 +13,11 @@ For global modules, the "Global" (rus. "Глобальный") postfix is added 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Incorrect: InfobaseUpdateGlobalClient
+Incorrect:
+InfobaseUpdateGlobalClient
 
-Correct: InfobaseUpdateGlobal
+Correct: 
+InfobaseUpdateGlobal
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
