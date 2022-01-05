@@ -45,7 +45,7 @@ class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLoc
       .hasRange(14, 10, 35)
       .hasRange(14, 37, 63)
       .hasRange(19, 4, 28)
-      .hasRange(41, 0, 25);
+      .hasRange(45, 0, 25);
 
   }
 }
