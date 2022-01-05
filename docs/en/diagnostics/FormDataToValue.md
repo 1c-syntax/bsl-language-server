@@ -1,8 +1,8 @@
 # FormDataToValue method call (FormDataToValue)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `5`           | `badpractice` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:-------------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `5`                 | `badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -21,7 +21,7 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Using of FormAttributeToValue and FormDataToValue methods](https://its.1c.ru/db/v8std#content:409:hdoc)
+Source: [Using of FormAttributeToValue and FormDataToValue methods (RU)](https://its.1c.ru/db/v8std#content:409:hdoc)
 
 ## Snippets
 
