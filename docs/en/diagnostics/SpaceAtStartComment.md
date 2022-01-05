@@ -1,16 +1,16 @@
 # Space at the beginning of the comment (SpaceAtStartComment)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Info` |              `Yes`              |                 `1`                 | `standard` |
 
 ## Parameters
 
 
-|         Name          |   Type    |                                        Description                                         |  Default value  |
-|:---------------------:|:---------:|:------------------------------------------------------------------------------------------:|:---------------:|
-| `commentsAnnotation`  | `String`  | `Skip comments-annotations staring with given substrings. List, values separated by comma` | `//@,//(c),//©` |
-| `useStrictValidation` | `Boolean` |               `Use strict validation against double comments `//// Comment``               |     `true`      |
+|          Name          |   Type    |                                                     Description                                                     |    Default value    |
+|:---------------------:|:--------:|:----------------------------------------------------------------------------------------------------------------:|:------------------------------:|
+| `commentsAnnotation`  | `String` | `Skip comments-annotations staring with given substrings. List, values separated by comma` |        `//@,//(c),//©`         |
+| `useStrictValidation` | `Boolean` |            `Use strict validation against double comments `//// Comment``             |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -20,7 +20,7 @@ Exception from the rule is _**comments-annotations**_, comments starting with sp
 
 ## Sources
 
-* [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
 
 ## Snippets
 
