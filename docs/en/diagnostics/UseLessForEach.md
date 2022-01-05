@@ -1,8 +1,8 @@
 # Useless collection iteration (UseLessForEach)
 
-|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
-|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------:|
-| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `2`           | `clumsy` |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:--------:|
+| `Error` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                 `2`                 | `clumsy` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ The absence of an iterator in the loop body indicates either a useless iteration
 
 Incorrect:
 
-```Bsl
+```bsl
 
 For Each Iterator From Collection Loop
 
@@ -23,9 +23,9 @@ EndLoop;
 
 ```
 
-Correct:
+Correct
 
-```Bsl
+```bsl
 
 For Each Iterator From Collection Loop
 
