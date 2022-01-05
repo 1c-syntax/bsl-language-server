@@ -168,7 +168,7 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
+    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH).intern();
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -207,8 +207,8 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
-    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
-    String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH);
+    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH).intern();
+    String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH).intern();
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
