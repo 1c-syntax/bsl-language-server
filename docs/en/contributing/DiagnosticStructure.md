@@ -337,7 +337,7 @@ Test method example
 
 ### Quick fixes test **(Work in progress)**
 
-_**<В разработке>**_
+_**<Work on progress>**_
 
 ## Diagnostics resources
 
