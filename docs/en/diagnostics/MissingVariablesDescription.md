@@ -1,8 +1,8 @@
 # All variables declarations must have a description (MissingVariablesDescription)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `1`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -30,7 +30,7 @@ Var Context;
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 
