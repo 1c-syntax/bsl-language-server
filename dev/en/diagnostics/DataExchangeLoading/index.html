@@ -956,7 +956,7 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Bad:
+<p>Incorrect:
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span> 
 
      <span class="k">If</span> <span class="k">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>
@@ -969,7 +969,7 @@
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
-Good:
+Correct:
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span> 
 
      <span class="k">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>
