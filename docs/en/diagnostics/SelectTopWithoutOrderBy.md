@@ -1,15 +1,15 @@
 # Using 'SELECT TOP' without 'ORDER BY' (SelectTopWithoutOrderBy)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                      Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`suspicious`       |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                      Tags                       |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`sql`<br>`suspicious`       |
 
 ## Parameters
 
 
-|        Name        |   Type    |                Description                | Default value |
-|:------------------:|:---------:|:-----------------------------------------:|:-------------:|
-| `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |    `true`     |
+|        Name         |   Type    |                      Description                      |    Default value    |
+|:------------------:|:--------:|:--------------------------------------------------:|:------------------------------:|
+| `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -76,7 +76,7 @@ SORT BY
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard: Ordering Query Results](https://its.1c.ru/db/v8std#content:412:hdoc)
+- [Standard: Ordering Query Results (RU)](https://its.1c.ru/db/v8std#content:412:hdoc)
 
 ## Snippets
 
