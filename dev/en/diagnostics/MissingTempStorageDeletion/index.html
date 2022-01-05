@@ -989,7 +989,7 @@
 <span class="k">КонецПроцедуры</span> 
 </code></pre></div></p>
 <p>2 - Consider this recommendation when working with background jobs</p>
-<p>Wrong:
+<p>Incorrect:
 - Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
 <div class="highlight"><pre><span></span><code><span class="nv">ПараметрыВыполнения</span> <span class="o">=</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ПараметрыВыполненияФункции</span><span class="p">(</span><span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
 <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span> <span class="nv">ПараметрФоновогоЗадания</span><span class="p">);</span>
@@ -1004,10 +1004,10 @@
 </code></pre></div></p>
 <ul>
 <li>If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаСервере</span>
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;AtServer</span>
 <span class="k">Процедура</span> <span class="nf">ПриСозданииНаСервере</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
     <span class="nv">АдресРезультатаФоновогоЗадания</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c c-Singleline">// Резервируем адрес временного хранилища</span>
-<span class="k">КонецПроцедуры</span>
+<span class="k">EndProcedure</span>
 
 <span class="kd">&amp;НаСервере</span>
 <span class="k">Функция</span> <span class="nf">НачатьПоискНастроекУчетнойЗаписи</span><span class="p">()</span>
@@ -1017,7 +1017,7 @@
     <span class="k">Возврат</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span>
         <span class="s">&quot;Справочники.УчетныеЗаписиЭлектроннойПочты.ОпределитьНастройкиУчетнойЗаписи&quot;</span><span class="p">,</span>
         <span class="nv">АдресЭлектроннойПочты</span><span class="p">,</span> <span class="nv">Пароль</span><span class="p">);</span>
-<span class="k">КонецФункции</span>
+<span class="k">EndFunction</span>
 </code></pre></div></li>
 </ul>
 <p>3 - Another example of preliminary initialization of temporary storage for reuse</p>
