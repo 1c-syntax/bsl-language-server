@@ -1,15 +1,15 @@
 # There is no check for the attribute DataExchange.Load in the object's event handler (DataExchangeLoading)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
+| `Error` |             `BSL`             | `Critical` |              `Yes`              |                 `5`                 |       `standard`<br>`badpractice`<br>`unpredictable`       |
 
 ## Parameters
 
 
-|    Name     |   Type    |       Description       | Default value |
-|:-----------:|:---------:|:-----------------------:|:-------------:|
-| `findFirst` | `Boolean` | `Check should go first` |    `false`    |
+|     Name     |   Type    |           Description            |    Default value    |
+|:-----------:|:--------:|:-----------------------------:|:------------------------------:|
+| `findFirst` | `Boolean` | `Check should go first` |            `false`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,7 +20,7 @@ This is necessary so that no business logic of the object is executed when writi
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Bad:
+Incorrect:
 ```bsl
 Procedure BeforeWrite(Cancel) 
 
@@ -34,7 +34,7 @@ Procedure BeforeWrite(Cancel)
 
 EndProcedure
 ```
-Good:
+Correct:
 ```bsl
 Procedure BeforeWrite(Cancel) 
 
