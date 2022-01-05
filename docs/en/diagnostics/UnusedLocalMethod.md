@@ -1,15 +1,15 @@
 # Unused local method (UnusedLocalMethod)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                        |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           |       `standard`<br>`suspicious`<br>`unused`       |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                        Tags                        |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `1`                 |       `standard`<br>`suspicious`<br>`unused`       |
 
 ## Parameters
 
 
-|            Name            |   Type   |             Description             |        Default value        |
-|:--------------------------:|:--------:|:-----------------------------------:|:---------------------------:|
-| `attachableMethodPrefixes` | `String` | `Method prefixes (comma separated)` | `подключаемый_,attachable_` |
+|            Name             |   Type    |                    Description                     |    Default value    |
+|:--------------------------:|:--------:|:-----------------------------------------------:|:------------------------------:|
+| `attachableMethodPrefixes` | `String` | `Method prefixes (comma separated)` |  `подключаемый_,attachable_`   |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -17,7 +17,7 @@ Modules should not have unused procedures and functions. Diagnostics can skip `a
 
 ## Sources
 
-* [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
 
 ## Snippets
 
