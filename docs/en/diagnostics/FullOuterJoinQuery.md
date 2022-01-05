@@ -1,8 +1,8 @@
 # Using of "FULL OUTER JOIN" in queries (FullOuterJoinQuery)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `10`           |       `sql`<br>`standard`<br>`performance`       |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
+| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                `10`                 |       `sql`<br>`standard`<br>`performance`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -31,7 +31,7 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* [Ограничение на использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах (RU)](https://its.1c.ru/db/v8std#content:435:hdoc)
+* [Restricting the use of the "FULL OUTER JOINT" construct in queries (RU)](https://its.1c.ru/db/v8std#content:435:hdoc)
 * [Руководство администратора, особенности использования PostgreSQL (RU)](https://its.1c.ru/db/metod8dev#content:1556:hdoc)
 
 ## Snippets
