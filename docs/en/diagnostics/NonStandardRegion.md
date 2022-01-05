@@ -1,8 +1,8 @@
 # Non-standard region of module (NonStandardRegion)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,7 +18,7 @@ The set of sections for each type of module (form module, object module, common 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 
