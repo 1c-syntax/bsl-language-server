@@ -937,7 +937,7 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Wrong:</p>
+<p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Catalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">();</span>
 <span class="nv">FileName</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">New</span> <span class="nv">UUID</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.xml&quot;</span><span class="p">;</span>
 <span class="nv">TempFile</span> <span class="o">=</span> <span class="nv">Catalog</span> <span class="o">+</span> <span class="nv">FileName</span><span class="p">;</span>
@@ -948,7 +948,7 @@
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
 </code></pre></div>
 <p>To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).</p>
-<p>Wrong:</p>
+<p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
 <span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;main_zip\&quot;</span><span class="p">;</span>
 <span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
