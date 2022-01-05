@@ -1,8 +1,8 @@
 # Deprecated ManagedForm type (DeprecatedTypeManagedForm)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
-| `Code smell` | `BSL` |  `Info`  |             `Yes`             |           `1`           |    `standard`<br>`deprecated`    |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:--------------------------------:|
+| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 |    `standard`<br>`deprecated`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -12,7 +12,7 @@ Starting from the platform version 8.3.14, the "ManagedForm" type has been renam
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Source: [Changelog](https://dl03.1c.ru/content/Platform/8_3_16_1148/1cv8upd_8_3_16_1148.htm)
+* Source: [Platform 8.3.16 changelog (RU)](https://dl03.1c.ru/content/Platform/8_3_16_1148/1cv8upd_8_3_16_1148.htm)
 
 ## Snippets
 
