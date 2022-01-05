@@ -1,8 +1,8 @@
 # Wrong use of ProceedWithCall function (WrongUseFunctionProceedWithCall)
 
-|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |             Tags              |
-|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
-| `Error` | `BSL` | `Blocker` |             `Yes`             |           `1`           |    `error`<br>`suspicious`    |
+|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |             Tags              |
+|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:-----------------------------:|
+| `Error` |             `BSL`             | `Blocker` |              `Yes`              |                 `1`                 |    `error`<br>`suspicious`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -21,7 +21,7 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Extensions. Functionality -> Modules](https://its.1c.ru/db/pubextensions#content:54:1)
+Source: [Extensions. Functionality -> Modules (RU)](https://its.1c.ru/db/pubextensions#content:54:1)
 
 ## Snippets
 
