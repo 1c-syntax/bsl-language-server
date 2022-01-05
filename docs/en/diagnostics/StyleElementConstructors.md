@@ -1,8 +1,8 @@
 # Style element constructor (StyleElementConstructors)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Error` | `BSL` | `Minor`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
+|   Type    |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:--------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
+| `Error` |             `BSL`             | `Minor` |              `Yes`              |                 `5`                 |    `standard`<br>`badpractice`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -19,7 +19,7 @@ Types of style elements:
 
 ## Sources
 System of standards
-* Source: [Standard: Style Elements](https://its.1c.ru/db/v8std#content:667:hdoc)
+* Source: [Standard: Style Elements (RU)](https://its.1c.ru/db/v8std#content:667:hdoc)
 
 ## Snippets
 
