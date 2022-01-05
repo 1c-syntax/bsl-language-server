@@ -13,7 +13,7 @@ Important: the http service method should only accept one parameter.
 
 The configurator notices violations only when the "Check for the existence of assigned handlers" flag is enabled.
 
-## Severity
+## Examples
 Activated by default
 Minutes<br> to fix
 
