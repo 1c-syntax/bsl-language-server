@@ -54,7 +54,8 @@ public class MdoRefBuilder {
     return documentContext.getMdObject()
       .map(AbstractMDObjectBase::getMdoReference)
       .map(MDOReference::getMdoRef)
-      .orElseGet(() -> documentContext.getUri().toString());
+      .orElseGet(() -> documentContext.getUri().toString())
+      .intern();
   }
 
   public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
@@ -84,7 +85,7 @@ public class MdoRefBuilder {
       )
       .ifPresent(mdoRef::set);
 
-    return mdoRef.get();
+    return mdoRef.get().intern();
   }
 
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
