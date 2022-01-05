@@ -1,8 +1,8 @@
 # Non export methods in API regions (NonExportMethodsInApiRegion)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `1`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -11,7 +11,7 @@
 
 * The “Service Programming Interface” region is intended for modules that are part of some functional subsystem. It should contain export procedures and functions that can only be called from other functional subsystems of the same library.
 
-## Reference
+## Sources
 
 * [Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
