@@ -1,8 +1,8 @@
 # The region should not be empty (EmptyRegion)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `1`           | `standard` |
+|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Info` |              `Yes`              |                 `1`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,7 +18,7 @@ Module should not contain empty regions.
 
 ## Sources
 
-* Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 
