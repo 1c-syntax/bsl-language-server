@@ -1,15 +1,15 @@
 # Method size (MethodSize)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `30`           | `badpractice` |
+|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------------:|
+| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                `30`                 | `badpractice` |
 
 ## Parameters
 
 
-|      Name       |   Type    |       Description        | Default value |
-|:---------------:|:---------:|:------------------------:|:-------------:|
-| `maxMethodSize` | `Integer` | `Max method line count.` |     `200`     |
+|       Name       |   Type   |               Description                |    Default value    |
+|:---------------:|:-------:|:-------------------------------------:|:------------------------------:|
+| `maxMethodSize` | `Integer` | `Max method line count.` |             `200`              |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -21,7 +21,7 @@ There are two rules for refactoring a large method:
 - If when writing a method you want to add a comment to the code, you must put this functionality in a separate method
 - If the method takes more than 50-100 lines of code, you should determine the tasks and subtasks that it performs and try to put the subtasks in a separate method
 
-## Reference
+## Sources
 
 - [Software Architecture Refactoring: Layering](http://citforum.ru/SE/project/refactor/)
 - [Martin Fowler: Refactoring](https://www.refactoring.com/)
