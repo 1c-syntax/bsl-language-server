@@ -958,7 +958,7 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Wrong:</p>
+<p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Attachments</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span>  <span class="nv">AttachedFile</span><span class="o">.</span><span class="nv">Description</span><span class="p">,</span>  <span class="k">New</span> <span class="nf">Picture</span><span class="p">(</span><span class="nb">GetFromTempStorage</span><span class="p">(</span>   <span class="nv">AttachedFiles</span><span class="o">.</span><span class="nf">GetFileData</span><span class="p">(</span><span class="nv">AttachedFile</span><span class="o">.</span><span class="nv">Ref</span><span class="p">)</span><span class="o">.</span><span class="nv">RefToFileBinaryData</span><span class="p">)));</span>
 </code></pre></div>
 <p>It is correct to break such calls into separate operators using additional local variables:</p>
