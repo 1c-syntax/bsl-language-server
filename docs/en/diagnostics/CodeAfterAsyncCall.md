@@ -83,7 +83,7 @@ It is also important to consider that an asynchronous method can be called in on
 <!-- Примеры источников
 
 * Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [Sync and async methods - Developers guide Chapter 4. Internal language](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
 
