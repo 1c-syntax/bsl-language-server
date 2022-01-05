@@ -1,30 +1,26 @@
 # No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
 
-|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
-|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `2`           |       `sql`<br>`suspicious`<br>`unpredictable`       |
+|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
+|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------:|
+| `Error` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                 `2`                 |       `sql`<br>`suspicious`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-
-# No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
-
-|  Type   |        Scope        |  Severity  | Activated by default | Minutes<br> to fix |                         Tags                         |
-|:-------:|:-------------------:|:----------:|:--------------------:|:------------------------:|:----------------------------------------------------:|
-| `Error` | `BSL`<br>`OS` | `Critical` |        `Yes`         |           `2`            | `sql`<br>`suspicious`<br>`unpredictable` |
-
-<!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Diagnostics checks fields from left, right, full joins that are not validated with `ISNULL()` or `NOT IS NULL` or `IS NOT NULL</0 >.</p>
+Diagnostics checks fields from left, right, full joins that are not checked with `ISNULL()` or `IS NOT NULL`  or `NOT IS NULL` .
 
-<p spaces-before="0">Queries cannot use attributes from left-join or right-join tables without checking the values for <code>NULL`. Such a call can lead to errors if the join condition is not met and there are no matching records in the left or right table. As a result, as a result of executing the query, you may receive unexpected data and the system may behave in an incorrect way.
+Queries cannot use attributes from left-join or right-join tables without checking the values for `NULL`. 
+Such a call can lead to errors if the join condition is not met and there are no matching records in the left or right table. 
+As a result, as a result of executing the query, you may receive unexpected data and the system may behave in an incorrect way.
 
-It is important to remember that any comparison of the value `NULL` with any other expression is always false, even the comparison of `NULL` and `NULL` is always false. The following are examples of such incorrect comparisons. It is correct to compare with `NULL` - operator `IS NULL` or function `ISNULL()`.
+It is important to remember that any comparison of the value `NULL` with any other expression is always false, even the comparison of `NULL` and `NULL` is always false. 
+The following are examples of such incorrect comparisons. 
+It is correct to compare with `NULL` - operator `IS NULL` or function `ISNULL()`.
 
 Left \ right joins are often used, although the data allows an inner join without checking for `NULL`.
 
-Additional checks of field values can be performed in the 1C code, and not in the query text. This makes it difficult to read the code and refactor the code, because the context of the access to the field has to be considered in several places. It should be remembered that simple checks in a query are performed a little faster and easier than in interpreted 1C code.
+Additional checks of field values can be performed in the 1C code, and not in the query text. This makes it difficult to read the code and refactor the code, because the context of the access to the field has to be considered in several places. 
+It should be remembered that simple checks in a query are performed a little faster and easier than in interpreted 1C code.
 
 These problems are the most common mistakes made by 1C developers of all skill levels.
 
@@ -56,7 +52,7 @@ Example showing NULL comparison problems - joining 2 tables incorrectly and show
 ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
 ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
 ```
-Right
+Correct
 ```sdbl
 ВЫБРАТЬ 
   ДокументыПродажи.Ссылка КАК ДокПродажи,
@@ -65,7 +61,7 @@ Right
 ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
 ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
 ```
-Also correct
+Also correct:
 ```sdbl
 ВЫБРАТЬ 
   ДокументыПродажи.Ссылка КАК ДокПродажи,
@@ -88,36 +84,33 @@ Also correct
     РегистрПродажи.Документ ЕСТЬ НЕ NULL
     //или НЕ РегистрПродажи.Документ ЕСТЬ NULL
 ```
-Последний вариант - не самый лучший, т.к. в нем фактически эмулируется внутреннее соединение. И проще явно указать `ВНУТРЕННЕЕ СОЕДИНЕНИЕ` вместо использования левого соединения с проверкой `ЕСТЬ НЕ NULL` или `НЕ ЕСТЬ NULL`
+Последний вариант - не самый лучший, т.к. в нем фактически эмулируется внутреннее соединение. 
+И проще явно указать `ВНУТРЕННЕЕ СОЕДИНЕНИЕ` вместо использования левого соединения с проверкой `ЕСТЬ НЕ NULL` или `НЕ ЕСТЬ NULL`
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-* [Использование функции ЕСТЬNULL() - Стандарт](https://its.1c.ru/db/metod8dev/content/2653/hdoc)
-* [Понятие "пустых" значений - Методические рекомендации 1С](https://its.1c.ru/db/metod8dev/content/2614/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
-    * [Чем отличается значение типа Неопределено и значение типа Null? - Guidelines 1C](https://its.1c.ru/db/metod8dev#content:2516:hdoc)
-* [Особенности связи с виртуальной таблицей остатков - Методические рекомендации 1С](https://its.1c.ru/db/metod8dev/content/2657/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
-* [Сортировка по полю запроса, которое может потенциально содержать NULL - статья "Упорядочивание результатов запроса" - Стандарт](https://its.1c.ru/db/v8std/content/412/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
-* [Поля иерархического справочника могут содержать NULL - Методические рекомендации 1С](https://its.1c.ru/db/metod8dev/content/2649/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
-    * [Как получить записи иерархической таблицы и расположить их в порядке иерархии - Методические рекомендации 1С](https://its.1c.ru/db/pubqlang/content/27/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
-* [Как получить данные из разных таблиц для одного и того же поля - онлайн-книга "Язык запросов 1С:Предприятия"](https://its.1c.ru/db/pubqlang#content:43:hdoc)
+* [Standard: Using the ISNULL function (RU)](https://its.1c.ru/db/metod8dev/content/2653/hdoc)
+* [Guidelines: The concept of "empty" values (RU)](https://its.1c.ru/db/metod8dev/content/2614/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
+    * [Guidelines: What is the difference between a value of type Undefined and a value of type Null? (RU)](https://its.1c.ru/db/metod8dev#content:2516:hdoc)
+* [Methodical recommendations: Peculiarities of communication with the virtual table of residuals (RU)](https://its.1c.ru/db/metod8dev/content/2657/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
+* [Standard: Sorting by query field that can potentially contain NULL. The article "Ordering query results" (RU)](https://its.1c.ru/db/v8std/content/412/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
+* [Methodological recommendations: Fields of a hierarchical directory can contain NULL (RU)](https://its.1c.ru/db/metod8dev/content/2649/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
+    * [Guidelines: How to get the records of a hierarchical table and arrange them in the order of the hierarchy (RU)](https://its.1c.ru/db/pubqlang/content/27/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
+* [Online book "1C: Enterprise Query Language": How to get data from different tables for the same field (RU)](https://its.1c.ru/db/pubqlang#content:43:hdoc)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
-```bsl
-// BSLLS:FieldsFromJoinsWithoutIsNull-off
-// BSLLS:FieldsFromJoinsWithoutIsNull-on
-```
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+<!-- Примеры источников
 
-### Parameter for config
+### Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 
-```json
-"FieldsFromJoinsWithoutIsNull": false
-```
+Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
