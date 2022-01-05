@@ -28,7 +28,7 @@ There are several ways to correctly store this information:
 
 When search for Windows / Unix  paths, also check for URL in a string. URL search keywords:
 * ``http``
-* `https`
+* ``https``
 * `ftp`
 
 ## Examples
