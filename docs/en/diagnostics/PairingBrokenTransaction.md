@@ -1,8 +1,8 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
-|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `15`           | `standard` |
+|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------:|
+| `Error` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                `15`                 | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -55,7 +55,7 @@ EndProcedure
 
 ```
 
-## Reference
+## Sources
 
 * [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
 
