@@ -35,11 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SymbolOccurrenceRepository {
 
   /**
-   * Общий список обращений к символам.
-   */
-  private final Set<SymbolOccurrence> occurrences = ConcurrentHashMap.newKeySet();
-
-  /**
    * Список обращений к символам в разрезе символов.
    */
   private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
@@ -50,7 +45,6 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrence Обращение к символу.
    */
   public void save(SymbolOccurrence symbolOccurrence) {
-    occurrences.add(symbolOccurrence);
     occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
   }
@@ -71,7 +65,6 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrences Список обращений к символам.
    */
   public void deleteAll(Set<SymbolOccurrence> symbolOccurrences) {
-    occurrences.removeAll(symbolOccurrences);
     symbolOccurrences.forEach(symbolOccurrence ->
       occurrencesToSymbols.get(symbolOccurrence.getSymbol()).remove(symbolOccurrence)
     );
