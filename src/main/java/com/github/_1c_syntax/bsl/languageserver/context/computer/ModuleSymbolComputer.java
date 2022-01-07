@@ -60,7 +60,7 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
       .orElseGet(Ranges::create); // используем нулевую область
 
     return ModuleSymbol.builder()
-      .name(getName(documentContext))
+      .name(getName(documentContext).intern())
       .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))

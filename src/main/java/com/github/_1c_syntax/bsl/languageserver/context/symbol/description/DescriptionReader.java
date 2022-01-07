@@ -58,10 +58,12 @@ public class DescriptionReader {
     if (ctx.parameters().hyperlinkBlock() != null) {
       List<ParameterDescription> result = new ArrayList<>();
       if (ctx.parameters().hyperlinkBlock().hyperlinkType() != null) {
-        result.add(new ParameterDescription("",
+        result.add(new ParameterDescription(
+          "",
           Collections.emptyList(),
           getDescriptionString(ctx.parameters().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
-          true));
+          true
+        ));
       }
       return result;
     }
@@ -92,11 +94,13 @@ public class DescriptionReader {
     if (ctx.returnsValues().hyperlinkBlock() != null) {
       List<TypeDescription> result = new ArrayList<>();
       if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
-        result.add(new TypeDescription("",
+        result.add(new TypeDescription(
+          "",
           "",
           Collections.emptyList(),
           getDescriptionString(ctx.returnsValues().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
-          true));
+          true
+        ));
       }
       return result;
     }
@@ -135,7 +139,7 @@ public class DescriptionReader {
     if (ctx.deprecate() != null) {
       var deprecationDescription = ctx.deprecate().deprecateDescription();
       if (deprecationDescription != null) {
-        return deprecationDescription.getText().strip();
+        return deprecationDescription.getText().strip().intern();
       }
     }
     return "";
@@ -154,6 +158,7 @@ public class DescriptionReader {
         return strings.stream()
           .map(DescriptionReader::getDescriptionString)
           .filter((String s) -> !s.isBlank())
+          .map(String::intern)
           .collect(Collectors.toList());
       }
     }
@@ -173,6 +178,7 @@ public class DescriptionReader {
         return strings.stream()
           .map(DescriptionReader::getDescriptionString)
           .filter((String s) -> !s.isBlank())
+          .map(String::intern)
           .collect(Collectors.toList());
       }
     }
@@ -193,7 +199,8 @@ public class DescriptionReader {
           return strings.stream()
             .map(DescriptionReader::getDescriptionString)
             .collect(Collectors.joining("\n"))
-            .strip();
+            .strip()
+            .intern();
         }
       }
       if (ctx.descriptionBlock().hyperlinkBlock() != null) {
@@ -227,7 +234,7 @@ public class DescriptionReader {
       }
     }
 
-    return strings.toString().strip();
+    return strings.toString().strip().intern();
   }
 
   private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
@@ -333,11 +340,13 @@ public class DescriptionReader {
           if (child.isHyperlink) {
             link = child.name.substring(HYPERLINK_REF_LEN);
           }
-          return new TypeDescription(child.name,
-            child.description.toString(),
+          return new TypeDescription(
+            child.name.intern(),
+            child.description.toString().intern(),
             subParameters,
-            link,
-            child.isHyperlink);
+            link.intern(),
+            child.isHyperlink
+          );
         }).collect(Collectors.toList());
       return new ParameterDescription(name, parameterTypes, "", false);
     }
