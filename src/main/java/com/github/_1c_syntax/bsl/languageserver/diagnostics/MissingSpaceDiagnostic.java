@@ -30,6 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.StringInterner;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -52,6 +54,7 @@ import java.util.Set;
     DiagnosticTag.BADPRACTICE
   }
 )
+@RequiredArgsConstructor
 public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   // символы, требующие пробелы только слева
@@ -119,6 +122,8 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   private Set<String> setR = Set.of(listForCheckRight.split(" "));
   private Set<String> setLR = Set.of(listForCheckLeftAndRight.split(" "));
   private final Set<String> setUnary = Set.of(UNARY.split(" "));
+
+  private final StringInterner stringInterner;
 
   @Override
   public void check() {
@@ -287,8 +292,8 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     return true;
   }
 
-  private static String getErrorMessage(String formatString, String errorMessage, String tokenText) {
-    return String.format(formatString, errorMessage, tokenText).intern();
+  private String getErrorMessage(String formatString, String errorMessage, String tokenText) {
+    return stringInterner.intern(String.format(formatString, errorMessage, tokenText));
   }
 
   private static Set<Integer> computeKeywordsWithLeftRightSpace() {

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
@@ -50,6 +51,7 @@ public class DiagnosticInfo {
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final LanguageServerConfiguration configuration;
+  private final StringInterner stringInterner;
 
   private final DiagnosticCode diagnosticCode;
   private final DiagnosticMetadata diagnosticMetadata;
@@ -57,10 +59,12 @@ public class DiagnosticInfo {
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
-    LanguageServerConfiguration configuration
+    LanguageServerConfiguration configuration,
+    StringInterner stringInterner
   ) {
     this.diagnosticClass = diagnosticClass;
     this.configuration = configuration;
+    this.stringInterner = stringInterner;
 
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
@@ -121,7 +125,7 @@ public class DiagnosticInfo {
   }
 
   public String getMessage(Object... args) {
-    return String.format(getMessage(), args).intern();
+    return stringInterner.intern(String.format(getMessage(), args));
   }
 
   public String getResourceString(String key) {
@@ -201,7 +205,7 @@ public class DiagnosticInfo {
       simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
     }
 
-    return new DiagnosticCode(simpleName.intern());
+    return new DiagnosticCode(stringInterner.intern(simpleName));
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {

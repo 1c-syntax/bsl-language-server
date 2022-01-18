@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenc
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
 public class ReferenceIndex {
 
   private final ServerContext serverContext;
+  private final StringInterner stringInterner;
 
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
@@ -168,7 +170,7 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH).intern();
+    String symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -207,8 +209,8 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
-    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH).intern();
-    String variableNameCanonical = variableName.toLowerCase(Locale.ENGLISH).intern();
+    String methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
+    String variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
