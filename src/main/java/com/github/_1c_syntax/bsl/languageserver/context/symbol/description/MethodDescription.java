@@ -84,7 +84,7 @@ public class MethodDescription implements SourceDefinedSymbolDescription {
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
       .map(Token::getText)
-      .collect(Collectors.joining("\n")).intern();
+      .collect(Collectors.joining("\n"));
 
     var tokenizer = new BSLMethodDescriptionTokenizer(description);
     var ast = requireNonNull(tokenizer.getAst());

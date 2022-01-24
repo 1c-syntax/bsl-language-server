@@ -199,8 +199,7 @@ public class DescriptionReader {
           return strings.stream()
             .map(DescriptionReader::getDescriptionString)
             .collect(Collectors.joining("\n"))
-            .strip()
-            .intern();
+            .strip();
         }
       }
       if (ctx.descriptionBlock().hyperlinkBlock() != null) {
@@ -234,7 +233,7 @@ public class DescriptionReader {
       }
     }
 
-    return strings.toString().strip().intern();
+    return strings.toString().strip();
   }
 
   private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
@@ -292,7 +291,7 @@ public class DescriptionReader {
     private TempParameterData(BSLMethodDescriptionParser.ParameterContext parameter) {
       this();
       if (parameter.parameterName() != null) {
-        this.name = parameter.parameterName().getText().strip();
+        this.name = parameter.parameterName().getText().strip().intern();
         this.empty = false;
         if (parameter.typesBlock() != null) {
           addType(parameter.typesBlock().type(), parameter.typesBlock().typeDescription());
@@ -304,7 +303,7 @@ public class DescriptionReader {
       this();
       this.level = level;
       if (subParameter.parameterName() != null) {
-        this.name = subParameter.parameterName().getText().strip();
+        this.name = subParameter.parameterName().getText().strip().intern();
         this.empty = false;
         if (subParameter.typesBlock() != null) {
           addType(subParameter.typesBlock().type(), subParameter.typesBlock().typeDescription());
@@ -314,7 +313,7 @@ public class DescriptionReader {
 
     private TempParameterData(String name) {
       this();
-      this.name = name.strip();
+      this.name = name.strip().intern();
       this.empty = false;
     }
 
@@ -348,7 +347,7 @@ public class DescriptionReader {
             child.isHyperlink
           );
         }).collect(Collectors.toList());
-      return new ParameterDescription(name, parameterTypes, "", false);
+      return new ParameterDescription(name.intern(), parameterTypes, "", false);
     }
 
     private void addType(@Nullable BSLMethodDescriptionParser.TypeContext paramType,
@@ -405,7 +404,7 @@ public class DescriptionReader {
     private final boolean isHyperlink;
 
     private TempParameterTypeData(String name, int level, boolean isHyperlink) {
-      this.name = name;
+      this.name = name.intern();
       this.description = new StringJoiner("\n");
       this.level = level;
       this.subParameters = new ArrayList<>();

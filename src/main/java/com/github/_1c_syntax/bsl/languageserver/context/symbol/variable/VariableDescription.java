@@ -83,7 +83,7 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
   public VariableDescription(List<Token> comments, Optional<Token> trailingComment) {
     description = comments.stream()
       .map(Token::getText)
-      .collect(Collectors.joining("\n")).intern();
+      .collect(Collectors.joining("\n"));
 
     var tokenizer = new BSLMethodDescriptionTokenizer(description);
     var ast = requireNonNull(tokenizer.getAst());
