@@ -125,7 +125,7 @@ public class DiagnosticInfo {
   }
 
   public String getMessage(Object... args) {
-    return stringInterner.intern(String.format(getMessage(), args));
+    return getResourceString("diagnosticMessage", args);
   }
 
   public String getResourceString(String key) {
