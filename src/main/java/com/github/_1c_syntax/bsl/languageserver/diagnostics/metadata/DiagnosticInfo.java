@@ -94,7 +94,7 @@ public class DiagnosticInfo {
       languageSuffix
     );
 
-    return siteDiagnosticsUrl + diagnosticCode.getStringValue();
+    return stringInterner.intern(siteDiagnosticsUrl + diagnosticCode.getStringValue());
   }
 
   public String getName() {
