@@ -193,7 +193,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var strings = new StringJoiner("");
     while (matcher.find()) {
       var quotesLineLength = matcher.group(0).length();
-      var emptyString = (" ".repeat(quotesLineLength / 2)).intern();
+      var emptyString = (" ".repeat(quotesLineLength / 2));
       strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
         + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
 
