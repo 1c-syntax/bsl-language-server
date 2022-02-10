@@ -126,7 +126,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     var variable = VariableSymbol.builder()
-      .name(ctx.IDENTIFIER().getText())
+      .name(ctx.IDENTIFIER().getText().intern())
       .scope(currentMethod)
       .owner(documentContext)
       .range(Ranges.create(ctx))
@@ -152,7 +152,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     var variable = VariableSymbol.builder()
-      .name(ctx.getText())
+      .name(ctx.getText().intern())
       .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx))

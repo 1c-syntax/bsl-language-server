@@ -70,7 +70,7 @@ public final class RegionSymbolComputer
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .owner(documentContext)
-      .name(ctx.regionName().getText())
+      .name(ctx.regionName().getText().intern())
       .regionNameRange(Ranges.create(ctx.regionName()))
       .startRange(Ranges.create(ctx));
 
