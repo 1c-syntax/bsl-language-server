@@ -139,7 +139,7 @@ public class DescriptionReader {
     if (ctx.deprecate() != null) {
       var deprecationDescription = ctx.deprecate().deprecateDescription();
       if (deprecationDescription != null) {
-        return deprecationDescription.getText().strip().intern();
+        return deprecationDescription.getText().strip();
       }
     }
     return "";
@@ -341,9 +341,9 @@ public class DescriptionReader {
           }
           return new TypeDescription(
             child.name.intern(),
-            child.description.toString().intern(),
+            child.description.toString(),
             subParameters,
-            link.intern(),
+            link,
             child.isHyperlink
           );
         }).collect(Collectors.toList());

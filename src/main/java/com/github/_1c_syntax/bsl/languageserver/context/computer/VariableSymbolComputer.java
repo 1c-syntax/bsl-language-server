@@ -79,7 +79,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
     var symbol = VariableSymbol.builder()
-      .name(ctx.var_name().getText().intern())
+      .name(ctx.var_name().getText())
       .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
@@ -105,7 +105,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   @Override
   public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
     var symbol = VariableSymbol.builder()
-      .name(ctx.var_name().getText().intern())
+      .name(ctx.var_name().getText())
       .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
