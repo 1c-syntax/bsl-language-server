@@ -26,7 +26,8 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Хранилище обращений к символам.
@@ -37,7 +38,7 @@ public class SymbolOccurrenceRepository {
   /**
    * Список обращений к символам в разрезе символов.
    */
-  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
+  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentSkipListMap<>();
 
   /**
    * Сохранить обращение к символу в хранилище.
@@ -45,7 +46,7 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrence Обращение к символу.
    */
   public void save(SymbolOccurrence symbolOccurrence) {
-    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
+    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> new ConcurrentSkipListSet<>())
       .add(symbolOccurrence);
   }
 
