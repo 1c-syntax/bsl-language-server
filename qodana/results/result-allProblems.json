@@ -1,0 +1,1597 @@
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Synchronization on a non-final field",
+  "severity": "High",
+  "comment": "Synchronization on a non-final field `lock`",
+  "detailsInfo": "Reports `synchronized` statement lock expressions that consist of a non-`final` field reference. Such statements are unlikely to have useful semantics, as different threads may acquire different locks even when operating on the same object.\n\n**Example:**\n\n\n      private Object o;\n      public void foo() {\n        synchronized (o) // synchronization on a non-final field\n        { }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 65,
+      "offset": 19,
+      "length": 4,
+      "code": {
+        "startLine": 63,
+        "length": 4,
+        "offset": 131,
+        "surroundingCode": "\n    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.\n    synchronized (lock) {\n      if (Objects.equals(file, this.file)) {\n        return;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SynchronizeOnNonFinalField"
+  },
+  "hash": "71510b63c026228016296af8bcabeb9928d46981295b1743fabe674d359834ff"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'trailingComment'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/variable/VariableDescription.java",
+      "language": "JAVA",
+      "line": 83,
+      "offset": 52,
+      "length": 15,
+      "code": {
+        "startLine": 81,
+        "length": 15,
+        "offset": 56,
+        "surroundingCode": "  }\n\n  public VariableDescription(List<Token> comments, Optional<Token> trailingComment) {\n    description = comments.stream()\n      .map(Token::getText)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "101e6495c6e75c5faf643fa205a966c284df9f992762561f13302150e92727d4"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'trailingDescription'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/variable/VariableDescription.java",
+      "language": "JAVA",
+      "line": 77,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 75,
+        "length": 29,
+        "offset": 18,
+        "surroundingCode": "  Range range;\n\n  Optional<VariableDescription> trailingDescription;\n\n  public VariableDescription(List<Token> comments) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "10ccdb2d9e293a254254585219c5e1facedcf2f5d2126b24eb2d7675c2509d02"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 70,
+      "offset": 3,
+      "length": 27,
+      "code": {
+        "startLine": 68,
+        "length": 27,
+        "offset": 40,
+        "surroundingCode": "  boolean function;\n  boolean export;\n  Optional<MethodDescription> description;\n\n  boolean deprecated;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "967798d042fcd79969bd8d6363bb3bd0636077a0b6de0475f3bb295435683fb8"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'parent'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 63,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 61,
+        "length": 29,
+        "offset": 33,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "122bf9a07fa45ae2b63c16ea31a7530d1253e60e433fd2ba3f3f46a0adf7c91c"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'compilerDirectiveKind'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 78,
+      "offset": 3,
+      "length": 31,
+      "code": {
+        "startLine": 76,
+        "length": 31,
+        "offset": 22,
+        "surroundingCode": "\n  @Builder.Default\n  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();\n  @Builder.Default\n  List<Annotation> annotations = new ArrayList<>();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "097dbbb021e1c860938cb95a248409ed170293e0f6a927ad400beaaa8ff2f47e"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'parent'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/ModuleSymbol.java",
+      "language": "JAVA",
+      "line": 73,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 71,
+        "length": 29,
+        "offset": 33,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "1362f9183c17ee670cec5597e370bdab66254075d97a40d6a8bcb47c8ee1f00e"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'parent'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/RegionSymbol.java",
+      "language": "JAVA",
+      "line": 60,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 58,
+        "length": 29,
+        "offset": 33,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "46a390184210f6f947c8d87edc09c53e80962fc03d94bfeea7cc8b6c81420168"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'parent'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/VariableSymbol.java",
+      "language": "JAVA",
+      "line": 79,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 77,
+        "length": 29,
+        "offset": 33,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "06c4f36872301e31b8f05e7b1e8b1ee87bc2656ad83f9ffd7f02d2dc5a17753d"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/VariableSymbol.java",
+      "language": "JAVA",
+      "line": 97,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 95,
+        "length": 29,
+        "offset": 34,
+        "surroundingCode": "   * Описание переменной.\n   */\n  Optional<VariableDescription> description;\n\n  @Override"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "25fa6c81eeaa96fe338d98d4c2c4b8661a69db53afa6dbf862abe1ea826ec365"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/ParameterDefinition.java",
+      "language": "JAVA",
+      "line": 51,
+      "offset": 3,
+      "length": 30,
+      "code": {
+        "startLine": 49,
+        "length": 30,
+        "offset": 33,
+        "surroundingCode": "   * Описание параметра.\n   */\n  Optional<ParameterDescription> description;\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "6c527431e6ceec50165d1b52b4ee7a876546aa0912ecd8717225a31fd82d9013"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'symbol'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/SourceDefinedSymbol.java",
+      "language": "JAVA",
+      "line": 62,
+      "offset": 18,
+      "length": 29,
+      "code": {
+        "startLine": 60,
+        "length": 29,
+        "offset": 95,
+        "surroundingCode": "   * @param symbol Символ, внутри которого располагается данный символ.\n   */\n  void setParent(Optional<SourceDefinedSymbol> symbol);\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "203aca9512d13cad494f5f580002611e5adad0426dae576d1fc69ffcd70e4f83"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
+      "language": "JAVA",
+      "line": 223,
+      "offset": 5,
+      "length": 27,
+      "code": {
+        "startLine": 221,
+        "length": 27,
+        "offset": 117,
+        "surroundingCode": "  private static List<ParameterDefinition> createParameters(\n    @Nullable BSLParser.ParamListContext paramList,\n    Optional<MethodDescription> description\n  ) {\n    if (paramList == null) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "3ab95b8fe62b96e413d6e2e5cefb9dbd8a1e5b3ce6ccb31730954ba2f7122cf5"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
+      "language": "JAVA",
+      "line": 302,
+      "offset": 5,
+      "length": 27,
+      "code": {
+        "startLine": 300,
+        "length": 27,
+        "offset": 103,
+        "surroundingCode": "  private static Optional<ParameterDescription> getParameterDescription(\n    String parameterName,\n    Optional<MethodDescription> description) {\n\n    return description.map(MethodDescription::getParameters)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "70d129bca35040f32ae05838f15a28cd4af965275a6e2cc6164cef20de951911"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'compilerDirective'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
+      "language": "JAVA",
+      "line": 189,
+      "offset": 5,
+      "length": 31,
+      "code": {
+        "startLine": 187,
+        "length": 31,
+        "offset": 46,
+        "surroundingCode": "    boolean function,\n    boolean export,\n    Optional<CompilerDirectiveKind> compilerDirective,\n    List<Annotation> annotations\n  ) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "486e302282cb80274442777594b65f217f60b0ac773732992bfc49a3e7c78e41"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'methodSymbol'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/references/ReferenceIndexFiller.java",
+      "language": "JAVA",
+      "line": 264,
+      "offset": 35,
+      "length": 29,
+      "code": {
+        "startLine": 262,
+        "length": 29,
+        "offset": 41,
+        "surroundingCode": "    }\n\n    private void addVariableUsage(Optional<SourceDefinedSymbol> methodSymbol,\n                                  String variableName,\n                                  Range range,"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "5a78080a63eebfaf5cf3af006aa497fcece8a9bbcbce031a6cf4b831ed626d9f"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'subCodeBlockContext'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CodeAfterAsyncCallDiagnostic.java",
+      "language": "JAVA",
+      "line": 81,
+      "offset": 11,
+      "length": 36,
+      "code": {
+        "startLine": 79,
+        "length": 36,
+        "offset": 113,
+        "surroundingCode": "\n  private static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, RULE_subCodeBlock);\n  private Optional<BSLParser.CodeBlockContext> subCodeBlockContext = Optional.empty();\n\n  private static boolean checkNextBlocks(BSLParser.StatementContext statement) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "0330e913e8d30c612a5e9d1a71aa115156465c40aba6667cec788221ef36f5dd"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'ctx'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 221,
+      "offset": 57,
+      "length": 36,
+      "code": {
+        "startLine": 219,
+        "length": 36,
+        "offset": 61,
+        "surroundingCode": "  }\n\n  private static Optional<String> getStringFromNStrCall(Optional<BSLParser.CallParamContext> ctx) {\n\n    final var nstrCallParamCtx = ctx"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "503e99bf1de443382f15a95b028dfe4de5cf708d93f1049ca21a58407dc2db78"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'expressionContext'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 133,
+      "offset": 59,
+      "length": 37,
+      "code": {
+        "startLine": 131,
+        "length": 37,
+        "offset": 70,
+        "surroundingCode": "\n  @NotNull\n  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {\n    final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;\n    return getConstValue(expressionContext, true)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "3997cee453340274857cdb4e6c322b2cc71fef17323b19c82555b3cc1371b721"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'expressionContext'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 142,
+      "offset": 70,
+      "length": 37,
+      "code": {
+        "startLine": 140,
+        "length": 37,
+        "offset": 81,
+        "surroundingCode": "\n  @NotNull\n  private static Optional<BSLParser.ConstValueContext> getConstValue(Optional<BSLParser.ExpressionContext> expressionContext, \n                                                                     boolean isFullSearch) {\n    return expressionContext"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "6f32a0167ba1c77cb0b88c54ff4b01e5aee9b621cebd836997e12072fe90593c"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'ctx'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 125,
+      "offset": 45,
+      "length": 36,
+      "code": {
+        "startLine": 123,
+        "length": 36,
+        "offset": 49,
+        "surroundingCode": "  }\n\n  private static Optional<String> getString(Optional<BSLParser.CallParamContext> ctx) {\n\n    final var expressionContext = ctx"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "a937d3f247b75a8bffae1d7309024abb2c647e9bc6cabc00e43a2d137e538d50"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched read and write of array",
+  "severity": "High",
+  "comment": "Contents of array `reportersOptions` are read, but never written to",
+  "detailsInfo": "Reports arrays whose contents are read but not updated, or updated but not read. Such inconsistent reads and writes are pointless and probably indicate dead, incomplete or erroneous code.\n\n**Example:**\n\n\n      final int[] bar = new int[3];\n      bar[2] = 3;\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/AnalyzeCommand.java",
+      "language": "JAVA",
+      "line": 137,
+      "offset": 20,
+      "length": 16,
+      "code": {
+        "startLine": 135,
+        "length": 16,
+        "offset": 128,
+        "surroundingCode": "    completionCandidates = ReportersKeys.class,\n    description = \"Reporter key (${COMPLETION-CANDIDATES})\")\n  private String[] reportersOptions = {};\n\n  @Option("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedArrayReadWrite"
+  },
+  "hash": "e23dc253d61398ae5cac8d40ded5019138a68b672262b608bb6c606167416647"
+},{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
+      "language": "JAVA",
+      "line": 51,
+      "offset": 20,
+      "length": 17,
+      "code": {
+        "startLine": 49,
+        "length": 17,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DefaultAnnotationParam"
+  },
+  "hash": "1cd580b858af24ae77df398d6173b43754b59023573376c9b9a35badfef2b455"
+},{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
+      "language": "JAVA",
+      "line": 85,
+      "offset": 20,
+      "length": 32,
+      "code": {
+        "startLine": 83,
+        "length": 32,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = \"\" + DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DefaultAnnotationParam"
+  },
+  "hash": "ca64a04ba19658fc674d4f283bfbf661f8dbb073c58f6c23596647ea696fd7e2"
+},{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Field accessed in both synchronized and unsynchronized contexts",
+  "severity": "High",
+  "comment": "Field `isEmpty` is accessed in both synchronized and unsynchronized contexts",
+  "detailsInfo": "Reports non-final fields that are accessed in both `synchronized` and non-`synchronized` contexts. `volatile` fields as well as accesses in constructors and initializers are ignored by this inspection.\n\n\nSuch \"partially synchronized\" access is often the result of a coding oversight\nand may lead to unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      public class Program {\n        Console console; // warning: Field 'console' is accessed in both synchronized and unsynchronized contexts\n\n        public synchronized void execute() {\n          console.print(\"running\");\n        }\n\n        public void check() {\n          console.check();\n        }\n      }\n\n\nUse the option to specify if simple getters and setters are counted as accesses too.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 49,
+      "offset": 19,
+      "length": 7,
+      "code": {
+        "startLine": 47,
+        "length": 7,
+        "offset": 75,
+        "surroundingCode": "public class FileAwarePrintWriter extends PrintWriter {\n\n  private boolean isEmpty = true;\n  private File file;\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldAccessedSynchronizedAndUnsynchronized"
+  },
+  "hash": "8780740d1a34a0b0b9829350c1581750574ec4414f1b32654c87c25b0744da64"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Redundant character escape",
+  "severity": "High",
+  "comment": "Redundant character escape `\\\\*` in RegExp",
+  "detailsInfo": "Reports character escapes that are replaceable with the unescaped character without a change in meaning. Note that inside the square brackets of a character class, many escapes are unnecessary that would be necessary outside of a character class.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\nNew in 2017.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "language": "RegExp",
+      "line": 67,
+      "offset": 76,
+      "length": 3,
+      "code": {
+        "startLine": 65,
+        "length": 3,
+        "offset": 81,
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpRedundantEscape"
+  },
+  "hash": "6db027724eca46be1c37530db8747a3dd0031592cfb0e7dea684fd3808dc7669"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Unnecessary 'continue' statement",
+  "severity": "High",
+  "comment": "`continue` is unnecessary as the last statement in a loop",
+  "detailsInfo": "Reports `continue` statements if they are the last reachable statements in the loop. These `continue` statements are unnecessary and can be safely removed.\n\nExample:\n\n\n      for (String element: elements) {\n        System.out.println();\n        continue;\n      }\n\nAfter the quick-fix is applied:\n\n\n      for (String element: elements) {\n        System.out.println();\n      }\n\nThe inspection doesn't analyze JSP files.\n\n\nUse the **Ignore in then branch of 'if' statement with 'else' branch** option to ignore\n`continue` statements when they are placed in a `then` branch of a complete\n`if`-`else` statement.\n\nExample:\n\n\n      for (String element: elements) {\n        if(element.isEmpty()) {\n          continue;\n        } else {\n          //...\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/ExpressionTreeBuildingVisitor.java",
+      "language": "JAVA",
+      "line": 86,
+      "offset": 11,
+      "length": 8,
+      "code": {
+        "startLine": 84,
+        "length": 8,
+        "offset": 144,
+        "surroundingCode": "          visitMember((BSLParser.MemberContext) child);\n        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {\n          continue;\n        } else {\n          throw new IllegalStateException();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnnecessaryContinue"
+  },
+  "hash": "c70d70b6e7328acd0c64552167509c2554789136a5f6e56b42cbb9204a3e10c2"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "Non-serializable field in a Serializable class",
+  "severity": "High",
+  "comment": "Non-serializable field 'exitPoint' in a Serializable class",
+  "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/ControlFlowGraph.java",
+      "language": "JAVA",
+      "line": 35,
+      "offset": 22,
+      "length": 9,
+      "code": {
+        "startLine": 33,
+        "length": 9,
+        "offset": 32,
+        "surroundingCode": "\n  @Getter\n  private ExitVertex exitPoint;\n\n  ControlFlowGraph() {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "NonSerializableFieldInSerializableClass"
+  },
+  "hash": "a330a052f7fb4db0324ec4ebc4b4aebd24031a56f77d397604f85b354d76f263"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "Non-serializable field in a Serializable class",
+  "severity": "High",
+  "comment": "Non-serializable field 'compatibilityMode' in a Serializable class",
+  "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticCompatibilityMode.java",
+      "language": "JAVA",
+      "line": 54,
+      "offset": 35,
+      "length": 17,
+      "code": {
+        "startLine": 52,
+        "length": 17,
+        "offset": 39,
+        "surroundingCode": "  ;\n\n  private final CompatibilityMode compatibilityMode;\n\n  DiagnosticCompatibilityMode(int minor, int version) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "NonSerializableFieldInSerializableClass"
+  },
+  "hash": "e717666e46e191ad4105dd94fe13539a43e95b731c06c3b54656af8c4f11c5ea"
+},{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "'protected' member in 'final' class",
+  "severity": "High",
+  "comment": "Class member declared `protected` in 'final' class",
+  "detailsInfo": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/TernaryOperatorNode.java",
+      "language": "JAVA",
+      "line": 40,
+      "offset": 3,
+      "length": 9,
+      "code": {
+        "startLine": 38,
+        "length": 9,
+        "offset": 30,
+        "surroundingCode": "  BslExpression falsePart;\n\n  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {\n    super(ExpressionNodeType.TERNARY_OP);\n    this.condition = condition;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ProtectedMemberInFinalClass"
+  },
+  "hash": "a6d80b534536073a4fb6262653b6f6d1e410126df2120e0d92bcc01ec12c4b9c"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:\\\\u00A0)`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/InvalidCharacterInFileDiagnostic.java",
+      "language": "RegExp",
+      "line": 57,
+      "offset": 45,
+      "length": 3,
+      "code": {
+        "startLine": 55,
+        "length": 3,
+        "offset": 148,
+        "surroundingCode": "public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic implements QuickFixProvider {\n\n  public static final String SPACE_REGEX = \"(?:\" +\n    \"\\\\u00A0\" + // 160\n    \")\";"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "0a67c2e8ba72996f0e314810d16131207cebd47ce69e7f6763991878160a6207"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:[\\\\u00AD\\\\u2012\\\\u2013\\\\u2014\\\\u2015\\\\u2212])`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/InvalidCharacterInFileDiagnostic.java",
+      "language": "RegExp",
+      "line": 61,
+      "offset": 67,
+      "length": 3,
+      "code": {
+        "startLine": 59,
+        "length": 3,
+        "offset": 76,
+        "surroundingCode": "    \")\";\n\n  private static final Pattern ILLEGAL_PATTERN = Pattern.compile(\"(?:[\" +\n      \"\\\\u00AD\" + // 173\n      \"\\\\u2012\" + // 8210"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "828467ea3355d70cf1f007ab813339229bc6e9e7f4f3f9aa97e83cb0e2b7cbb9"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:\\u00A0)`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/InvalidCharacterInFileDiagnostic.java",
+      "language": "RegExp",
+      "line": 69,
+      "offset": 9,
+      "length": 0,
+      "code": {
+        "startLine": 67,
+        "length": 0,
+        "offset": 47,
+        "surroundingCode": "      \"\\\\u2212\" + // 8722\n      \"])\" +\n      \"|\" + SPACE_REGEX,\n    Pattern.UNICODE_CASE);\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "ee20fced70976b66a881684c06f307f4bdf9dac0d2f20185106ecbd8813a17de"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:[A-Z][A-Za-z]+[A-Za-z1-9_]*[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*)`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LatinAndCyrillicSymbolInWordDiagnostic.java",
+      "language": "RegExp",
+      "line": 84,
+      "offset": 22,
+      "length": 3,
+      "code": {
+        "startLine": 82,
+        "length": 3,
+        "offset": 79,
+        "surroundingCode": "   */\n  private static final Pattern RU_EN_LANG_PATTERN =\n    Pattern.compile(\"(?:[A-Z][A-Za-z]+[A-Za-z1-9_]*[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*)|\" +\n      \"(?:[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*[A-Z][A-Za-z]+[A-Za-z1-9_]*)\");\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "60b92d37baf0c5407b9578d27f3733fec238005f9f91a40ce4053a7f4226663a"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*[A-Z][A-Za-z]+[A-Za-z1-9_]*)`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LatinAndCyrillicSymbolInWordDiagnostic.java",
+      "language": "RegExp",
+      "line": 85,
+      "offset": 8,
+      "length": 3,
+      "code": {
+        "startLine": 83,
+        "length": 3,
+        "offset": 148,
+        "surroundingCode": "  private static final Pattern RU_EN_LANG_PATTERN =\n    Pattern.compile(\"(?:[A-Z][A-Za-z]+[A-Za-z1-9_]*[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*)|\" +\n      \"(?:[А-ЯЁ][А-Яа-яЁё]+[А-Яа-я1-9Ёё_]*[A-Z][A-Za-z]+[A-Za-z1-9_]*)\");\n\n  @DiagnosticParameter("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "48590b0c28822aaee34b3aa9eb44ba0eccd6d271154452869b3cf820230c2500"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Condition `identifier != null` is always `true`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingExternalCodeToolsDiagnostic.java",
+      "language": "JAVA",
+      "line": 72,
+      "offset": 9,
+      "length": 18,
+      "code": {
+        "startLine": 70,
+        "length": 18,
+        "offset": 103,
+        "surroundingCode": "\n  private void checkUseExternalCodeTools(BSLParserRuleContext ctx, TerminalNode identifier) {\n    if (identifier != null\n      && externalCodeToolsName.matcher(identifier.getText()).matches()\n      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_methodCall)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "d3ae4f93d4a8a5344d8bc2d79c218c4459e69a26c9c7d8b3a3f8ba9c7670702c"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Method invocation `procedure` may produce `NullPointerException`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingTempStorageDeletionDiagnostic.java",
+      "language": "JAVA",
+      "line": 190,
+      "offset": 52,
+      "length": 9,
+      "code": {
+        "startLine": 188,
+        "length": 9,
+        "offset": 119,
+        "surroundingCode": "\n  private BSLParser.SubCodeBlockContext getSubCodeBlockContext() {\n    BSLParser.ProcedureContext method = currentSub.procedure();\n    if (method == null) {\n      return currentSub.function().subCodeBlock();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "3442792881a04c2c2612bcb30cc7d6d06c7035ba689e9e21a54fa8e38c90377d"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Method invocation `codeBlock` may produce `NullPointerException`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingTempStorageDeletionDiagnostic.java",
+      "language": "JAVA",
+      "line": 170,
+      "offset": 73,
+      "length": 9,
+      "code": {
+        "startLine": 168,
+        "length": 9,
+        "offset": 152,
+        "surroundingCode": "    if (isInsideFileCodeBlock) {\n      if (fileCodeBlockStatements.isEmpty()) {\n        fileCodeBlockStatements = findAllStatementsInside(fileCodeBlock.codeBlock());\n      }\n      return fileCodeBlockStatements;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "8a5ed8d1cb9964ae4c9d1f59744d2e09834736fe3db668616dfd351d70074ac6"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Method invocation `codeBlock` may produce `NullPointerException`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingTempStorageDeletionDiagnostic.java",
+      "language": "JAVA",
+      "line": 176,
+      "offset": 91,
+      "length": 9,
+      "code": {
+        "startLine": 174,
+        "length": 9,
+        "offset": 188,
+        "surroundingCode": "    if (isInsideFileCodeBlockBeforeSub) {\n      if (fileCodeBlockBeforeSubStatements.isEmpty()) {\n        fileCodeBlockBeforeSubStatements = findAllStatementsInside(fileCodeBlockBeforeSub.codeBlock());\n      }\n      return fileCodeBlockBeforeSubStatements;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "4f50e78df519e0f3f77ba34595ef4d35301c67bc11c4df6c2e6e52e16c4efdcb"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Condition `ctxDoCall == null` is always `false`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
+      "language": "JAVA",
+      "line": 90,
+      "offset": 9,
+      "length": 17,
+      "code": {
+        "startLine": 88,
+        "length": 17,
+        "offset": 105,
+        "surroundingCode": "\n  private boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {\n    if (ctxDoCall == null\n      || ctxDoCall.callParamList() == null\n      || ctxDoCall.callParamList().isEmpty()) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "84b8ecf9f2c4242d3de3eeafa3c19b0ae531062b07799d0fd9748b169b788018"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Method reference result is always 'true'",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/FieldsFromJoinsWithoutIsNullDiagnostic.java",
+      "language": "JAVA",
+      "line": 217,
+      "offset": 15,
+      "length": 16,
+      "code": {
+        "startLine": 215,
+        "length": 16,
+        "offset": 128,
+        "surroundingCode": "      .map(SDBLParser.BuiltInFunctionsContext.class::cast)\n      .map(SDBLParser.BuiltInFunctionsContext::ISNULL)\n      .filter(Objects::nonNull)\n      .isPresent();\n  }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "347381a4b6a48cc348afc32004905a80c9940d26c67a23743136660d566fc7a1"
+},{
+  "tool": "Code Inspection",
+  "category": "Inheritance issues",
+  "type": "Abstract class which has no concrete subclass",
+  "severity": "High",
+  "comment": "Abstract class `AbstractCfgVisitor` has no concrete subclass",
+  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/AbstractCfgVisitor.java",
+      "language": "JAVA",
+      "line": 32,
+      "offset": 23,
+      "length": 18,
+      "code": {
+        "startLine": 30,
+        "length": 18,
+        "offset": 63,
+        "surroundingCode": " * конкретных узлов графа управления\n */\npublic abstract class AbstractCfgVisitor {\n\n  @FunctionalInterface"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "AbstractClassNeverImplemented"
+  },
+  "hash": "250f295ed1d99a3e34b62c1608641577216dc19ed5ba5ceeb0c3a1651a20a4ab"
+},{
+  "tool": "Code Inspection",
+  "category": "Inheritance issues",
+  "type": "Abstract class which has no concrete subclass",
+  "severity": "High",
+  "comment": "Abstract class `DiagnosticComputer` has no concrete subclass",
+  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/DiagnosticComputer.java",
+      "language": "JAVA",
+      "line": 39,
+      "offset": 23,
+      "length": 18,
+      "code": {
+        "startLine": 37,
+        "length": 18,
+        "offset": 54,
+        "surroundingCode": "@RequiredArgsConstructor\n@Slf4j\npublic abstract class DiagnosticComputer {\n\n  public List<Diagnostic> compute(DocumentContext documentContext) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "AbstractClassNeverImplemented"
+  },
+  "hash": "a508c9d777c317e228c597aaf9c21e550b0364857c085c77a2affd1eb4dcbb06"
+},{
+  "tool": "Code Inspection",
+  "category": "Inheritance issues",
+  "type": "Abstract class which has no concrete subclass",
+  "severity": "High",
+  "comment": "Abstract class `ServerContext` has no concrete subclass",
+  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/ServerContext.java",
+      "language": "JAVA",
+      "line": 57,
+      "offset": 23,
+      "length": 13,
+      "code": {
+        "startLine": 55,
+        "length": 13,
+        "offset": 58,
+        "surroundingCode": "@Component\n@RequiredArgsConstructor\npublic abstract class ServerContext {\n  private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());\n  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "AbstractClassNeverImplemented"
+  },
+  "hash": "709f6f42fba172a78e8cee60c6e5b3ec41d541434cab6e7f08cc9abd89363f06"
+},{
+  "tool": "Code Inspection",
+  "category": "Inheritance issues",
+  "type": "Abstract class which has no concrete subclass",
+  "severity": "High",
+  "comment": "Abstract class `DiagnosticMixIn` has no concrete subclass",
+  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/databind/DiagnosticMixIn.java",
+      "language": "JAVA",
+      "line": 34,
+      "offset": 23,
+      "length": 15,
+      "code": {
+        "startLine": 32,
+        "length": 15,
+        "offset": 108,
+        "surroundingCode": " * См. {@link com.fasterxml.jackson.databind.ObjectMapper#addMixIn(Class, Class)}\n */\npublic abstract class DiagnosticMixIn {\n\n  @JsonSerialize(using = DiagnosticCodeSerializer.class)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "AbstractClassNeverImplemented"
+  },
+  "hash": "90b50e5f61f0466d344d0ee800056565883a508ec770e774a050442d08db423c"
+},{
+  "tool": "Code Inspection",
+  "category": "Inheritance issues",
+  "type": "Abstract class which has no concrete subclass",
+  "severity": "High",
+  "comment": "Abstract class `DiagnosticsConfiguration` has no concrete subclass",
+  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/infrastructure/DiagnosticsConfiguration.java",
+      "language": "JAVA",
+      "line": 54,
+      "offset": 23,
+      "length": 24,
+      "code": {
+        "startLine": 52,
+        "length": 24,
+        "offset": 62,
+        "surroundingCode": "@Configuration\n@RequiredArgsConstructor\npublic abstract class DiagnosticsConfiguration {\n\n  private final LanguageServerConfiguration configuration;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "AbstractClassNeverImplemented"
+  },
+  "hash": "668701c9ca4d6c1d7f3a4e48b4dcbb6d4c1027e17f0d0bc1f1499baea9abb02a"
+},{
+  "tool": "Code Inspection",
+  "category": "Lombok",
+  "type": "@Qualifier not copyable by lombok",
+  "severity": "High",
+  "comment": "Lombok does not copy the annotation 'org.springframework.beans.factory.annotation.Qualifier' into the constructor",
+  "detailsInfo": "Reports Spring `@Qualifier` annotations on class fields that are ignored by the corresponding Lombok `@RequiredArgsConstructor` and `@AllArgsConstructor` annotations. The generated constructors will not receive the `@Qualifier` annotation without a `lombok.copyableAnnotations` definition inside the `lombok.config` file.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 43,
+      "offset": 3,
+      "length": 31,
+      "code": {
+        "startLine": 41,
+        "length": 31,
+        "offset": 16,
+        "surroundingCode": "\n  @Autowired\n  @Qualifier(\"filteredReporters\")\n  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly."
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringQualifierCopyableLombok"
+  },
+  "hash": "04085f7c5cec4361bb0d0b37131da1089051295ed971c2b35d37e940fafa99ea"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Unused assignment",
+  "severity": "High",
+  "comment": "Variable `parent` initializer `Optional.empty()` is redundant",
+  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 63,
+      "offset": 42,
+      "length": 16,
+      "code": {
+        "startLine": 61,
+        "length": 16,
+        "offset": 72,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnusedAssignment"
+  },
+  "hash": "3f701da4d6eb3cc20cd22fb7bb716c282ccccac508cee3bc13b07e90164dc9e7"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Unused assignment",
+  "severity": "High",
+  "comment": "Variable `parent` initializer `Optional.empty()` is redundant",
+  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/ModuleSymbol.java",
+      "language": "JAVA",
+      "line": 73,
+      "offset": 42,
+      "length": 16,
+      "code": {
+        "startLine": 71,
+        "length": 16,
+        "offset": 72,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnusedAssignment"
+  },
+  "hash": "75fe57bbb1e4cf679e4bffcc2fd509812bc21d5ed63ebe41fc9a615d38331fd8"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Unused assignment",
+  "severity": "High",
+  "comment": "Variable `parent` initializer `Optional.empty()` is redundant",
+  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/RegionSymbol.java",
+      "language": "JAVA",
+      "line": 60,
+      "offset": 42,
+      "length": 16,
+      "code": {
+        "startLine": 58,
+        "length": 16,
+        "offset": 72,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnusedAssignment"
+  },
+  "hash": "7858ceef9af3c64af41eb6576d742722144e74deddc4fedf5ed350652ecf92ce"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Unused assignment",
+  "severity": "High",
+  "comment": "Variable `parent` initializer `Optional.empty()` is redundant",
+  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/VariableSymbol.java",
+      "language": "JAVA",
+      "line": 79,
+      "offset": 42,
+      "length": 16,
+      "code": {
+        "startLine": 77,
+        "length": 16,
+        "offset": 72,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnusedAssignment"
+  },
+  "hash": "bbc70d2d5000ceb1810bc87284af435da9dfd167f4e9e4b9de0a70de140a0f18"
+},{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Non-private field accessed in synchronized context",
+  "severity": "High",
+  "comment": "Non-private field `lock` accessed in synchronized context",
+  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 65,
+      "offset": 19,
+      "length": 4,
+      "code": {
+        "startLine": 63,
+        "length": 4,
+        "offset": 131,
+        "surroundingCode": "\n    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.\n    synchronized (lock) {\n      if (Objects.equals(file, this.file)) {\n        return;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
+  },
+  "hash": "b9cd696aed6a19477e5750c6176339b1e8882c3ae315fec182787d6f68688f9d"
+},{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Non-private field accessed in synchronized context",
+  "severity": "High",
+  "comment": "Non-private field `this.out` accessed in synchronized context",
+  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 93,
+      "offset": 7,
+      "length": 8,
+      "code": {
+        "startLine": 91,
+        "length": 8,
+        "offset": 34,
+        "surroundingCode": "      closeOutputStream();\n\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
+  },
+  "hash": "b1fafb47d0d71b5a92a9523f880ea3fc5c41fb8cf8b85817f944b3772350c09d"
+},{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Non-private field accessed in synchronized context",
+  "severity": "High",
+  "comment": "Non-private field `this.lock` accessed in synchronized context",
+  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 94,
+      "offset": 7,
+      "length": 9,
+      "code": {
+        "startLine": 92,
+        "length": 9,
+        "offset": 110,
+        "surroundingCode": "\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;\n    }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
+  },
+  "hash": "13f8a0c6fc69d593f935abf1b0b692d43b50cf16caff6898ed66510718171085"
+},{
+  "tool": "Code Inspection",
+  "category": "Threading issues",
+  "type": "Non-private field accessed in synchronized context",
+  "severity": "High",
+  "comment": "Non-private field `this.out` accessed in synchronized context",
+  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "language": "JAVA",
+      "line": 94,
+      "offset": 19,
+      "length": 8,
+      "code": {
+        "startLine": 92,
+        "length": 8,
+        "offset": 122,
+        "surroundingCode": "\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;\n    }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
+  },
+  "hash": "f111af7068dfc76ca7c9d16705fc326b4ea11cea756d746bf7a54199352e8268"
+},{
+  "tool": "Code Inspection",
+  "category": "Class structure",
+  "type": "Utility class with 'public' constructor",
+  "severity": "High",
+  "comment": "Class `BSLLSBinding` has only 'static' members, and a 'public' constructor",
+  "detailsInfo": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/BSLLSBinding.java",
+      "language": "JAVA",
+      "line": 43,
+      "offset": 14,
+      "length": 12,
+      "code": {
+        "startLine": 41,
+        "length": 12,
+        "offset": 97,
+        "surroundingCode": "@EnableAutoConfiguration\n@ComponentScan(\"com.github._1c_syntax.bsl.languageserver\")\npublic class BSLLSBinding {\n\n  @Getter(lazy = true, value = AccessLevel.PRIVATE)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UtilityClassWithPublicConstructor"
+  },
+  "hash": "2c148ff0fe1e588079873203724019e5e6ca93a51f0882c21988a94471e1733b"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Result of method call ignored",
+  "severity": "High",
+  "comment": "Result of `DocumentContext.getSymbolTree()` is ignored",
+  "detailsInfo": "Reports method calls whose result is ignored.\n\nFor many methods, ignoring the result is perfectly\nlegitimate, but for some it is almost certainly an error. Examples of methods where ignoring\nthe result is likely an error include `java.io.inputStream.read()`,\nwhich returns the number of bytes actually read, and any method on\n`java.lang.String` or `java.math.BigInteger`. These methods do not produce side-effects and thus pointless\nif their result is ignored.\n\nThe calls to the following methods are inspected:\n\n* Simple getters (which do nothing except return a field)\n* Methods specified in the settings of this inspection\n* Methods annotated with `org.jetbrains.annotations.Contract(pure=true)`\n* Methods annotated with .\\*.`CheckReturnValue`\n* Methods in a class or package annotated with `javax.annotation.CheckReturnValue`\n* Optionally, all non-library methods\n\nCalls to methods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation are not reported.\n\n\nUse the inspection settings to specify the classes to check.\nMethods are matched by name or name pattern using Java regular expression syntax.\nFor classes, use fully-qualified names. Each entry applies to both the class and all its inheritors.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/ServerContext.java",
+      "language": "JAVA",
+      "line": 183,
+      "offset": 21,
+      "length": 13,
+      "code": {
+        "startLine": 181,
+        "length": 13,
+        "offset": 71,
+        "surroundingCode": "    addMdoRefByUri(absoluteURI, documentContext);\n\n    documentContext.getSymbolTree();\n\n    return documentContext;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "IgnoreResultOfCall"
+  },
+  "hash": "12e05e0340dbf81ad51131484ff3e7852b9c02e8a8043a6f06ec24b4c3debb75"
+}]}
