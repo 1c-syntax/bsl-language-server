@@ -17,6 +17,8 @@ jobs:
         uses: JetBrains/qodana-action@v4.2.2
         with:
           linter: jetbrains/qodana-jvm-community
+      - name: Qodana - License Audit
+        uses: JetBrains/qodana-license-audit-action@v2.0-eap
       - uses: github/codeql-action/upload-sarif@v1
         with:
           sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
