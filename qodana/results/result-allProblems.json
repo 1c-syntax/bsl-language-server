@@ -87,6 +87,34 @@
   "category": "Abstraction issues",
   "type": "'Optional' used as field or parameter type",
   "severity": "High",
+  "comment": "`Optional` used as type for field 'compilerDirectiveKind'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 78,
+      "offset": 3,
+      "length": 31,
+      "code": {
+        "startLine": 76,
+        "length": 31,
+        "offset": 22,
+        "surroundingCode": "\n  @Builder.Default\n  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();\n  @Builder.Default\n  List<Annotation> annotations = new ArrayList<>();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "097dbbb021e1c860938cb95a248409ed170293e0f6a927ad400beaaa8ff2f47e"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
   "comment": "`Optional` used as type for field 'description'",
   "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
   "sources": [
@@ -138,34 +166,6 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "122bf9a07fa45ae2b63c16ea31a7530d1253e60e433fd2ba3f3f46a0adf7c91c"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
-  "comment": "`Optional` used as type for field 'compilerDirectiveKind'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
-      "language": "JAVA",
-      "line": 78,
-      "offset": 3,
-      "length": 31,
-      "code": {
-        "startLine": 76,
-        "length": 31,
-        "offset": 22,
-        "surroundingCode": "\n  @Builder.Default\n  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();\n  @Builder.Default\n  List<Annotation> annotations = new ArrayList<>();"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "097dbbb021e1c860938cb95a248409ed170293e0f6a927ad400beaaa8ff2f47e"
 },{
   "tool": "Code Inspection",
   "category": "Abstraction issues",
@@ -367,34 +367,6 @@
   "category": "Abstraction issues",
   "type": "'Optional' used as field or parameter type",
   "severity": "High",
-  "comment": "`Optional` used as type for parameter 'description'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
-      "language": "JAVA",
-      "line": 302,
-      "offset": 5,
-      "length": 27,
-      "code": {
-        "startLine": 300,
-        "length": 27,
-        "offset": 103,
-        "surroundingCode": "  private static Optional<ParameterDescription> getParameterDescription(\n    String parameterName,\n    Optional<MethodDescription> description) {\n\n    return description.map(MethodDescription::getParameters)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "70d129bca35040f32ae05838f15a28cd4af965275a6e2cc6164cef20de951911"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
   "comment": "`Optional` used as type for parameter 'compilerDirective'",
   "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
   "sources": [
@@ -418,6 +390,34 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "486e302282cb80274442777594b65f217f60b0ac773732992bfc49a3e7c78e41"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
+      "language": "JAVA",
+      "line": 302,
+      "offset": 5,
+      "length": 27,
+      "code": {
+        "startLine": 300,
+        "length": 27,
+        "offset": 103,
+        "surroundingCode": "  private static Optional<ParameterDescription> getParameterDescription(\n    String parameterName,\n    Optional<MethodDescription> description) {\n\n    return description.map(MethodDescription::getParameters)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "70d129bca35040f32ae05838f15a28cd4af965275a6e2cc6164cef20de951911"
 },{
   "tool": "Code Inspection",
   "category": "Abstraction issues",
@@ -479,62 +479,6 @@
   "category": "Abstraction issues",
   "type": "'Optional' used as field or parameter type",
   "severity": "High",
-  "comment": "`Optional` used as type for parameter 'ctx'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
-      "language": "JAVA",
-      "line": 221,
-      "offset": 57,
-      "length": 36,
-      "code": {
-        "startLine": 219,
-        "length": 36,
-        "offset": 61,
-        "surroundingCode": "  }\n\n  private static Optional<String> getStringFromNStrCall(Optional<BSLParser.CallParamContext> ctx) {\n\n    final var nstrCallParamCtx = ctx"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "503e99bf1de443382f15a95b028dfe4de5cf708d93f1049ca21a58407dc2db78"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
-  "comment": "`Optional` used as type for parameter 'expressionContext'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
-      "language": "JAVA",
-      "line": 133,
-      "offset": 59,
-      "length": 37,
-      "code": {
-        "startLine": 131,
-        "length": 37,
-        "offset": 70,
-        "surroundingCode": "\n  @NotNull\n  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {\n    final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;\n    return getConstValue(expressionContext, true)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "3997cee453340274857cdb4e6c322b2cc71fef17323b19c82555b3cc1371b721"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
   "comment": "`Optional` used as type for parameter 'expressionContext'",
   "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
   "sources": [
@@ -586,6 +530,62 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "a937d3f247b75a8bffae1d7309024abb2c647e9bc6cabc00e43a2d137e538d50"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'ctx'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 221,
+      "offset": 57,
+      "length": 36,
+      "code": {
+        "startLine": 219,
+        "length": 36,
+        "offset": 61,
+        "surroundingCode": "  }\n\n  private static Optional<String> getStringFromNStrCall(Optional<BSLParser.CallParamContext> ctx) {\n\n    final var nstrCallParamCtx = ctx"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "503e99bf1de443382f15a95b028dfe4de5cf708d93f1049ca21a58407dc2db78"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'expressionContext'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 133,
+      "offset": 59,
+      "length": 37,
+      "code": {
+        "startLine": 131,
+        "length": 37,
+        "offset": 70,
+        "surroundingCode": "\n  @NotNull\n  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {\n    final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;\n    return getConstValue(expressionContext, true)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "3997cee453340274857cdb4e6c322b2cc71fef17323b19c82555b3cc1371b721"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -843,34 +843,6 @@
   "category": "RegExp",
   "type": "Unnecessary non-capturing group",
   "severity": "High",
-  "comment": "Unnecessary non-capturing group `(?:\\\\u00A0)`",
-  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/InvalidCharacterInFileDiagnostic.java",
-      "language": "RegExp",
-      "line": 57,
-      "offset": 45,
-      "length": 3,
-      "code": {
-        "startLine": 55,
-        "length": 3,
-        "offset": 148,
-        "surroundingCode": "public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic implements QuickFixProvider {\n\n  public static final String SPACE_REGEX = \"(?:\" +\n    \"\\\\u00A0\" + // 160\n    \")\";"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
-  },
-  "hash": "0a67c2e8ba72996f0e314810d16131207cebd47ce69e7f6763991878160a6207"
-},{
-  "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Unnecessary non-capturing group",
-  "severity": "High",
   "comment": "Unnecessary non-capturing group `(?:[\\\\u00AD\\\\u2012\\\\u2013\\\\u2014\\\\u2015\\\\u2212])`",
   "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
   "sources": [
@@ -922,6 +894,34 @@
     "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
   },
   "hash": "ee20fced70976b66a881684c06f307f4bdf9dac0d2f20185106ecbd8813a17de"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Unnecessary non-capturing group",
+  "severity": "High",
+  "comment": "Unnecessary non-capturing group `(?:\\\\u00A0)`",
+  "detailsInfo": "Reports unnecessary non-capturing groups, which have no influence on the match result.\n\n**Example:**\n\n\n      Everybody be cool, (?:this) is a robbery!\n\nAfter the quick-fix is applied:\n\n\n      Everybody be cool, this is a robbery!\n\nNew in 2021.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/InvalidCharacterInFileDiagnostic.java",
+      "language": "RegExp",
+      "line": 57,
+      "offset": 45,
+      "length": 3,
+      "code": {
+        "startLine": 55,
+        "length": 3,
+        "offset": 148,
+        "surroundingCode": "public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic implements QuickFixProvider {\n\n  public static final String SPACE_REGEX = \"(?:\" +\n    \"\\\\u00A0\" + // 160\n    \")\";"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpUnnecessaryNonCapturingGroup"
+  },
+  "hash": "0a67c2e8ba72996f0e314810d16131207cebd47ce69e7f6763991878160a6207"
 },{
   "tool": "Code Inspection",
   "category": "RegExp",
@@ -1011,34 +1011,6 @@
   "category": "Probable bugs",
   "type": "Constant conditions & exceptions",
   "severity": "High",
-  "comment": "Method invocation `procedure` may produce `NullPointerException`",
-  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingTempStorageDeletionDiagnostic.java",
-      "language": "JAVA",
-      "line": 190,
-      "offset": 52,
-      "length": 9,
-      "code": {
-        "startLine": 188,
-        "length": 9,
-        "offset": 119,
-        "surroundingCode": "\n  private BSLParser.SubCodeBlockContext getSubCodeBlockContext() {\n    BSLParser.ProcedureContext method = currentSub.procedure();\n    if (method == null) {\n      return currentSub.function().subCodeBlock();"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "ConstantConditions"
-  },
-  "hash": "3442792881a04c2c2612bcb30cc7d6d06c7035ba689e9e21a54fa8e38c90377d"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Constant conditions & exceptions",
-  "severity": "High",
   "comment": "Method invocation `codeBlock` may produce `NullPointerException`",
   "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
   "sources": [
@@ -1090,6 +1062,34 @@
     "inspectionName": "ConstantConditions"
   },
   "hash": "4f50e78df519e0f3f77ba34595ef4d35301c67bc11c4df6c2e6e52e16c4efdcb"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Constant conditions & exceptions",
+  "severity": "High",
+  "comment": "Method invocation `procedure` may produce `NullPointerException`",
+  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingTempStorageDeletionDiagnostic.java",
+      "language": "JAVA",
+      "line": 190,
+      "offset": 52,
+      "length": 9,
+      "code": {
+        "startLine": 188,
+        "length": 9,
+        "offset": 119,
+        "surroundingCode": "\n  private BSLParser.SubCodeBlockContext getSubCodeBlockContext() {\n    BSLParser.ProcedureContext method = currentSub.procedure();\n    if (method == null) {\n      return currentSub.function().subCodeBlock();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ConstantConditions"
+  },
+  "hash": "3442792881a04c2c2612bcb30cc7d6d06c7035ba689e9e21a54fa8e38c90377d"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
