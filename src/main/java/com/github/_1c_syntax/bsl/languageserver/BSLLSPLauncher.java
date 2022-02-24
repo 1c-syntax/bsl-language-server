@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.WebsocketStartCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +55,8 @@ import static picocli.CommandLine.Command;
     AnalyzeCommand.class,
     FormatCommand.class,
     VersionCommand.class,
-    LanguageServerStartCommand.class
+    LanguageServerStartCommand.class,
+    WebsocketStartCommand.class
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
