@@ -83,6 +83,11 @@ dependencies {
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 
+    // lsp4j websocket
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.12.0")
+    api("org.glassfish.tyrus:tyrus-server:1.8")
+    api("org.glassfish.tyrus:tyrus-container-grizzly-server:1.8")
+
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
