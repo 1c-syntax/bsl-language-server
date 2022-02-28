@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1645784893583,
+  "lastUpdate": 1646077082647,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -16213,6 +16213,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5473872512860182",
             "extra": "mean: 40.829097747802734 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58484823d85d2a7bc8c6cc8685e661b882f6b516",
+          "message": "Merge pull request #2539 from 1c-syntax/feature/reduce-memory-consume",
+          "timestamp": "2022-02-28T22:33:29+03:00",
+          "tree_id": "286ee644f121882bbcaa23ba66f9a410df3dabbf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/58484823d85d2a7bc8c6cc8685e661b882f6b516"
+        },
+        "date": 1646077079417,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 41.05789717038473,
+            "unit": "sec",
+            "range": "stddev: 1.2838153986439824",
+            "extra": "mean: 41.05789717038473 sec\nrounds: 3"
           }
         ]
       }
