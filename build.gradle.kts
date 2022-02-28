@@ -72,7 +72,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "48335fb954fb94c0468b8a56399026a5247a7396")
-    api("com.github.1c-syntax", "mdclasses", "10f7c5a194dbb3185a2db252811cf6d0caf6ecfc")
+    api("com.github.1c-syntax", "mdclasses", "892e0e9f51f6837f68165dd9a16187c7176f4f55")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
