@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import lombok.Getter;
+
+import java.util.Locale;
+
 /**
- * Язык для сообщений, ресурсов и прочих взаимододействий между
+ * Язык для сообщений, ресурсов и прочих взаимодействий между
  * BSL Language Server и пользователем.
  */
 public enum Language {
@@ -42,19 +46,24 @@ public enum Language {
    */
   public static final Language DEFAULT_LANGUAGE = RU;
 
+  /**
+   * Код языка в соответствии с {@link java.util.Locale#getLanguage()}.
+   */
+  @Getter
   private final String languageCode;
 
   /**
-   * @param languageCode код языка в соответствии с {@link java.util.Locale#getLanguage()}
+   * Локаль языка.
+   */
+  @Getter
+  private final Locale locale;
+
+  /**
+   * @param languageCode Код языка в соответствии с {@link java.util.Locale#getLanguage()}
    */
   Language(String languageCode) {
     this.languageCode = languageCode;
+    this.locale = Locale.forLanguageTag(languageCode);
   }
 
-  /**
-   * @return код языка в соответствии с {@link java.util.Locale#getLanguage()}
-   */
-  public String getLanguageCode() {
-    return languageCode;
-  }
 }

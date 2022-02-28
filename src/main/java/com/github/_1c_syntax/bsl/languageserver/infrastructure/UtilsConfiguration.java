@@ -19,41 +19,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references.model;
+package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
-import org.jetbrains.annotations.NotNull;
+import com.github._1c_syntax.utils.StringInterner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * Обращение к символу в файле.
+ * Конфигурация бинов из 1c-syntax/utils.
  */
-@Value
-@AllArgsConstructor
-@Builder
-public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
+@Configuration
+public class UtilsConfiguration {
 
   /**
-   * Тип обращения к символу.
+   * @return Настроенный объект интернирователя строк.
    */
-  OccurrenceType occurrenceType;
-
-  /**
-   * Символ, к которому происходит обращение.
-   */
-  Symbol symbol;
-
-  /**
-   * Месторасположение обращения к символу.
-   */
-  Location location;
-
-  @Override
-  public int compareTo(@NotNull SymbolOccurrence o) {
-    if (this.equals(o)) {
-      return 0;
-    }
-    return hashCode() > o.hashCode() ? 1 : -1;
+  @Bean
+  public StringInterner stringInterner() {
+    return new StringInterner();
   }
 }

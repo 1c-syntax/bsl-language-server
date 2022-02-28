@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -48,6 +49,7 @@ public class DiagnosticInfosConfiguration {
 
   private final ApplicationContext applicationContext;
   private final LanguageServerConfiguration configuration;
+  private final StringInterner stringInterner;
 
   @SuppressWarnings("unchecked")
   @Bean("diagnosticInfosByCode")
@@ -86,6 +88,6 @@ public class DiagnosticInfosConfiguration {
   private DiagnosticInfo createDiagnosticInfo(
     @Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass
   ) {
-    return new DiagnosticInfo(diagnosticClass, configuration);
+    return new DiagnosticInfo(diagnosticClass, configuration, stringInterner);
   }
 }

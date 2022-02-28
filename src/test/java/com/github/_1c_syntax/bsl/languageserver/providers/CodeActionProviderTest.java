@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKey
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.StringInterner;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -55,6 +56,8 @@ class CodeActionProviderTest {
   private CodeActionProvider codeActionProvider;
   @Autowired
   private LanguageServerConfiguration configuration;
+  @Autowired
+  private StringInterner stringInterner;
 
   private DocumentContext documentContext;
 
@@ -70,8 +73,8 @@ class CodeActionProviderTest {
     // given
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
       CanonicalSpellingKeywordsDiagnostic.class,
-      configuration
-    );
+      configuration,
+      stringInterner);
     DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
 
     List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
@@ -136,8 +139,8 @@ class CodeActionProviderTest {
 
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
       CanonicalSpellingKeywordsDiagnostic.class,
-      configuration
-    );
+      configuration,
+      stringInterner);
     DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
 
     List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()

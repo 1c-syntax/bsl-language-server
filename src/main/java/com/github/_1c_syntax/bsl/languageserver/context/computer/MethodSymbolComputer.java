@@ -195,7 +195,7 @@ public final class MethodSymbolComputer
       .orElse(false);
 
     return MethodSymbol.builder()
-      .name(subName.getText())
+      .name(subName.getText().intern())
       .owner(documentContext)
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
@@ -249,25 +249,25 @@ public final class MethodSymbolComputer
     ParameterDefinition.DefaultValue defaultValue;
     if (constValue.DATETIME() != null) {
       var value = constValue.DATETIME().getSymbol().getText();
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.DATETIME, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.DATETIME, value.intern());
     } else if (constValue.FALSE() != null) {
       var value = constValue.FALSE().getSymbol().getText();
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value.intern());
     } else if (constValue.TRUE() != null) {
       var value = constValue.TRUE().getSymbol().getText();
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value.intern());
     } else if (constValue.UNDEFINED() != null) {
       var value = constValue.UNDEFINED().getSymbol().getText();
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.UNDEFINED, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.UNDEFINED, value.intern());
     } else if (constValue.NULL() != null) {
       var value = constValue.NULL().getSymbol().getText();
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NULL, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NULL, value.intern());
     } else if (constValue.string() != null) {
       var value = constValue.string().STRING().stream()
         .map(TerminalNode::getSymbol)
         .map(Token::getText)
         .collect(Collectors.joining("\n"));
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.STRING, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.STRING, value.intern());
     } else if (constValue.numeric() != null) {
       var value = constValue.numeric().getText();
       if (constValue.MINUS() != null) {
@@ -276,7 +276,7 @@ public final class MethodSymbolComputer
       if (constValue.PLUS() != null) {
         value = constValue.PLUS().getSymbol().getText() + value;
       }
-      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NUMERIC, value);
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NUMERIC, value.intern());
     } else {
       defaultValue = ParameterDefinition.DefaultValue.EMPTY;
     }
@@ -287,6 +287,7 @@ public final class MethodSymbolComputer
   private static String getParameterName(TerminalNode identifier) {
     return Optional.ofNullable(identifier)
       .map(ParseTree::getText)
+      .map(String::intern)
       .orElse("<UNKNOWN_IDENTIFIER>");
   }
 
@@ -317,7 +318,7 @@ public final class MethodSymbolComputer
 
   private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
     return Annotation.builder()
-      .name(annotation.annotationName().getText())
+      .name(annotation.annotationName().getText().intern())
       .kind(AnnotationKind.of(annotation.annotationName().getStop().getType()))
       .parameters(getAnnotationParameter(annotation.annotationParams()))
       .build();

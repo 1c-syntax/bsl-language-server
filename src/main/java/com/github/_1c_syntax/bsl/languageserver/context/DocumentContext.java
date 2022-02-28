@@ -52,6 +52,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -92,6 +93,11 @@ public class DocumentContext {
   private DiagnosticComputer diagnosticComputer;
   @Setter(onMethod = @__({@Autowired}))
   private LanguageServerConfiguration configuration;
+
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
   @Getter
   private FileType fileType;
@@ -346,12 +352,12 @@ public class DocumentContext {
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
     return cognitiveComplexityComputer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
     return cyclomaticComplexityComputer.compute();
   }
 
