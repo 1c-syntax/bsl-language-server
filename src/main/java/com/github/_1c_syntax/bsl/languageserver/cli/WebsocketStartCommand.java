@@ -58,7 +58,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-w", "--websocket"},
   description = "Websocket server mode",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
 public class WebsocketStartCommand implements Callable<Integer> {
@@ -74,6 +74,13 @@ public class WebsocketStartCommand implements Callable<Integer> {
     paramLabel = "<path>",
     defaultValue = "")
   private String configurationOption;
+
+  @Option(
+    names = {"--host"},
+    description = "Hostname to open websocket",
+    paramLabel = "<host>",
+    defaultValue = "localhost")
+  private String websocketHost;
 
   @Option(
     names = {"-p", "--port"},
@@ -92,7 +99,7 @@ public class WebsocketStartCommand implements Callable<Integer> {
       configuration.update(configurationFile);
     }
 
-    launcher.runWebSocketServer(websocketPort);
+    launcher.runWebSocketServer(websocketHost, websocketPort);
     return -1;
 
   }

@@ -36,11 +36,10 @@ public class WebSocketRunner {
 
   private final LanguageServerConfiguration configuration;
 
-  public void runWebSocketServer(int port) {
+  public void runWebSocketServer(String hostname, int port) {
 
-    String hostname = "localhost";
     String contextPath = "/";
-    Server server = new Server(hostname, port, contextPath, null, BSLLSWebSocketServerConfigProvider.class);
+    var server = new Server(hostname, port, contextPath, null, BSLLSWebSocketServerConfigProvider.class);
     Runtime.getRuntime().addShutdownHook(new Thread(server::stop, "bsl-websocket-server-shutdown-hook"));
 
     try {
