@@ -10,20 +10,20 @@
       "version": "4.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-starter-test:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-starter-test:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-test",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-starter:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-starter:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
       "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
@@ -42,20 +42,20 @@
       "version": "0.20.3"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:utils:48335fb954fb94c0468b8a56399026a5247a7396",
-      "gradleName": "com.github.1c-syntax:utils:48335fb954fb94c0468b8a56399026a5247a7396",
+      "ideaName": "Gradle: com.github.1c-syntax:utils:0.3.4",
+      "gradleName": "com.github.1c-syntax:utils:0.3.4",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "utils",
-      "version": "48335fb954fb94c0468b8a56399026a5247a7396"
+      "version": "0.3.4"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:892e0e9f51f6837f68165dd9a16187c7176f4f55",
-      "gradleName": "com.github.1c-syntax:mdclasses:892e0e9f51f6837f68165dd9a16187c7176f4f55",
+      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.9.2",
+      "gradleName": "com.github.1c-syntax:mdclasses:0.9.2",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "mdclasses",
-      "version": "892e0e9f51f6837f68165dd9a16187c7176f4f55"
+      "version": "0.9.2"
     },
     {
       "ideaName": "Gradle: org.languagetool:language-en:5.6",
@@ -202,36 +202,36 @@
       "version": "4.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-test-autoconfigure:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-test-autoconfigure:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-test-autoconfigure",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-test:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-test:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-test:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-test:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-test",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-test:5.3.16",
-      "gradleName": "org.springframework:spring-test:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-test:5.3.15",
+      "gradleName": "org.springframework:spring-test:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-test",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-core:5.3.16",
-      "gradleName": "org.springframework:spring-core:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-core:5.3.15",
+      "gradleName": "org.springframework:spring-core:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-core",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
       "ideaName": "Gradle: com.jayway.jsonpath:json-path:2.6.0",
@@ -306,28 +306,28 @@
       "version": "2.8.4"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-autoconfigure:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-autoconfigure:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-autoconfigure",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.4",
-      "gradleName": "org.springframework.boot:spring-boot-starter-logging:2.6.4",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.3",
+      "gradleName": "org.springframework.boot:spring-boot-starter-logging:2.6.3",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-logging",
-      "version": "2.6.4"
+      "version": "2.6.3"
     },
     {
       "ideaName": "Gradle: jakarta.annotation:jakarta.annotation-api:1.3.5",
@@ -562,12 +562,12 @@
       "version": "2.3.1"
     },
     {
-      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
-      "gradleName": "org.glassfish.jaxb:jaxb-runtime:2.3.6",
+      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.5",
+      "gradleName": "org.glassfish.jaxb:jaxb-runtime:2.3.5",
       "unresolved": false,
       "groupId": "org.glassfish.jaxb",
       "artifactId": "jaxb-runtime",
-      "version": "2.3.6"
+      "version": "2.3.5"
     },
     {
       "ideaName": "Gradle: javax.activation:javax.activation-api:1.2.0",
@@ -578,12 +578,12 @@
       "version": "1.2.0"
     },
     {
-      "ideaName": "Gradle: org.slf4j:slf4j-api:1.7.36",
-      "gradleName": "org.slf4j:slf4j-api:1.7.36",
+      "ideaName": "Gradle: org.slf4j:slf4j-api:1.7.33",
+      "gradleName": "org.slf4j:slf4j-api:1.7.33",
       "unresolved": false,
       "groupId": "org.slf4j",
       "artifactId": "slf4j-api",
-      "version": "1.7.36"
+      "version": "1.7.33"
     },
     {
       "ideaName": "Gradle: com.gitlab.dumonts:hunspell:1.1.1",
@@ -610,12 +610,12 @@
       "version": "0.12.0"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-registry-prometheus:1.8.3",
-      "gradleName": "io.micrometer:micrometer-registry-prometheus:1.8.3",
+      "ideaName": "Gradle: io.micrometer:micrometer-registry-prometheus:1.8.2",
+      "gradleName": "io.micrometer:micrometer-registry-prometheus:1.8.2",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-registry-prometheus",
-      "version": "1.8.3"
+      "version": "1.8.2"
     },
     {
       "ideaName": "Gradle: io.prometheus:simpleclient:0.12.0",
@@ -754,20 +754,20 @@
       "version": "3.0.2"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-jcl:5.3.16",
-      "gradleName": "org.springframework:spring-jcl:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-jcl:5.3.15",
+      "gradleName": "org.springframework:spring-jcl:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-jcl",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
-      "ideaName": "Gradle: net.minidev:json-smart:2.4.8",
-      "gradleName": "net.minidev:json-smart:2.4.8",
+      "ideaName": "Gradle: net.minidev:json-smart:2.4.7",
+      "gradleName": "net.minidev:json-smart:2.4.7",
       "unresolved": false,
       "groupId": "net.minidev",
       "artifactId": "json-smart",
-      "version": "2.4.8"
+      "version": "2.4.7"
     },
     {
       "ideaName": "Gradle: jakarta.activation:jakarta.activation-api:1.2.2",
@@ -810,12 +810,12 @@
       "version": "1.11.22"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-context:5.3.16",
-      "gradleName": "org.springframework:spring-context:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-context:5.3.15",
+      "gradleName": "org.springframework:spring-context:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-context",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
       "ideaName": "Gradle: ch.qos.logback:logback-classic:1.2.10",
@@ -834,12 +834,12 @@
       "version": "2.17.1"
     },
     {
-      "ideaName": "Gradle: org.slf4j:jul-to-slf4j:1.7.36",
-      "gradleName": "org.slf4j:jul-to-slf4j:1.7.36",
+      "ideaName": "Gradle: org.slf4j:jul-to-slf4j:1.7.33",
+      "gradleName": "org.slf4j:jul-to-slf4j:1.7.33",
       "unresolved": false,
       "groupId": "org.slf4j",
       "artifactId": "jul-to-slf4j",
-      "version": "1.7.36"
+      "version": "1.7.33"
     },
     {
       "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
@@ -946,12 +946,12 @@
       "version": "1.1"
     },
     {
-      "ideaName": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
-      "gradleName": "org.glassfish.jaxb:txw2:2.3.6",
+      "ideaName": "Gradle: org.glassfish.jaxb:txw2:2.3.5",
+      "gradleName": "org.glassfish.jaxb:txw2:2.3.5",
       "unresolved": false,
       "groupId": "org.glassfish.jaxb",
       "artifactId": "txw2",
-      "version": "2.3.6"
+      "version": "2.3.5"
     },
     {
       "ideaName": "Gradle: com.sun.istack:istack-commons-runtime:3.0.12",
@@ -978,12 +978,12 @@
       "version": "0.12.0"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-core:1.8.3",
-      "gradleName": "io.micrometer:micrometer-core:1.8.3",
+      "ideaName": "Gradle: io.micrometer:micrometer-core:1.8.2",
+      "gradleName": "io.micrometer:micrometer-core:1.8.2",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-core",
-      "version": "1.8.3"
+      "version": "1.8.2"
     },
     {
       "ideaName": "Gradle: io.prometheus:simpleclient_tracer_otel:0.12.0",
@@ -1058,12 +1058,12 @@
       "version": "20170516"
     },
     {
-      "ideaName": "Gradle: net.minidev:accessors-smart:2.4.8",
-      "gradleName": "net.minidev:accessors-smart:2.4.8",
+      "ideaName": "Gradle: net.minidev:accessors-smart:2.4.7",
+      "gradleName": "net.minidev:accessors-smart:2.4.7",
       "unresolved": false,
       "groupId": "net.minidev",
       "artifactId": "accessors-smart",
-      "version": "2.4.8"
+      "version": "2.4.7"
     },
     {
       "ideaName": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
@@ -1090,28 +1090,28 @@
       "version": "1.2.0"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-aop:5.3.16",
-      "gradleName": "org.springframework:spring-aop:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-aop:5.3.15",
+      "gradleName": "org.springframework:spring-aop:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-aop",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-beans:5.3.16",
-      "gradleName": "org.springframework:spring-beans:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-beans:5.3.15",
+      "gradleName": "org.springframework:spring-beans:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-beans",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-expression:5.3.16",
-      "gradleName": "org.springframework:spring-expression:5.3.16",
+      "ideaName": "Gradle: org.springframework:spring-expression:5.3.15",
+      "gradleName": "org.springframework:spring-expression:5.3.15",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-expression",
-      "version": "5.3.16"
+      "version": "5.3.15"
     },
     {
       "ideaName": "Gradle: ch.qos.logback:logback-core:1.2.10",
