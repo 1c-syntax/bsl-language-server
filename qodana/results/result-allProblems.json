@@ -87,34 +87,6 @@
   "category": "Abstraction issues",
   "type": "'Optional' used as field or parameter type",
   "severity": "High",
-  "comment": "`Optional` used as type for field 'parent'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
-      "language": "JAVA",
-      "line": 63,
-      "offset": 3,
-      "length": 29,
-      "code": {
-        "startLine": 61,
-        "length": 29,
-        "offset": 33,
-        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "122bf9a07fa45ae2b63c16ea31a7530d1253e60e433fd2ba3f3f46a0adf7c91c"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
   "comment": "`Optional` used as type for field 'compilerDirectiveKind'",
   "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
   "sources": [
@@ -138,6 +110,34 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "097dbbb021e1c860938cb95a248409ed170293e0f6a927ad400beaaa8ff2f47e"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for field 'parent'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
+      "language": "JAVA",
+      "line": 63,
+      "offset": 3,
+      "length": 29,
+      "code": {
+        "startLine": 61,
+        "length": 29,
+        "offset": 33,
+        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "122bf9a07fa45ae2b63c16ea31a7530d1253e60e433fd2ba3f3f46a0adf7c91c"
 },{
   "tool": "Code Inspection",
   "category": "Abstraction issues",
@@ -346,6 +346,34 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
       "language": "JAVA",
+      "line": 303,
+      "offset": 5,
+      "length": 27,
+      "code": {
+        "startLine": 301,
+        "length": 27,
+        "offset": 103,
+        "surroundingCode": "  private static Optional<ParameterDescription> getParameterDescription(\n    String parameterName,\n    Optional<MethodDescription> description) {\n\n    return description.map(MethodDescription::getParameters)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "7dc8a55046623dfcfc9e0969c953ff0755e17edc655827af4658c83fa865c771"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'description'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
+      "language": "JAVA",
       "line": 223,
       "offset": 5,
       "length": 27,
@@ -361,7 +389,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
-  "hash": "3ab95b8fe62b96e413d6e2e5cefb9dbd8a1e5b3ce6ccb31730954ba2f7122cf5"
+  "hash": "565cbfef2288c5d2a502f4767b06a3ae95f4d7160ac353f10e113ef5e8841826"
 },{
   "tool": "Code Inspection",
   "category": "Abstraction issues",
@@ -390,34 +418,6 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "486e302282cb80274442777594b65f217f60b0ac773732992bfc49a3e7c78e41"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
-  "comment": "`Optional` used as type for parameter 'description'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/MethodSymbolComputer.java",
-      "language": "JAVA",
-      "line": 302,
-      "offset": 5,
-      "length": 27,
-      "code": {
-        "startLine": 300,
-        "length": 27,
-        "offset": 103,
-        "surroundingCode": "  private static Optional<ParameterDescription> getParameterDescription(\n    String parameterName,\n    Optional<MethodDescription> description) {\n\n    return description.map(MethodDescription::getParameters)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "70d129bca35040f32ae05838f15a28cd4af965275a6e2cc6164cef20de951911"
 },{
   "tool": "Code Inspection",
   "category": "Abstraction issues",
@@ -507,34 +507,6 @@
   "category": "Abstraction issues",
   "type": "'Optional' used as field or parameter type",
   "severity": "High",
-  "comment": "`Optional` used as type for parameter 'expressionContext'",
-  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
-      "language": "JAVA",
-      "line": 133,
-      "offset": 59,
-      "length": 37,
-      "code": {
-        "startLine": 131,
-        "length": 37,
-        "offset": 70,
-        "surroundingCode": "\n  @NotNull\n  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {\n    final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;\n    return getConstValue(expressionContext, true)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "OptionalUsedAsFieldOrParameterType"
-  },
-  "hash": "3997cee453340274857cdb4e6c322b2cc71fef17323b19c82555b3cc1371b721"
-},{
-  "tool": "Code Inspection",
-  "category": "Abstraction issues",
-  "type": "'Optional' used as field or parameter type",
-  "severity": "High",
   "comment": "`Optional` used as type for parameter 'ctx'",
   "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
   "sources": [
@@ -586,6 +558,34 @@
     "inspectionName": "OptionalUsedAsFieldOrParameterType"
   },
   "hash": "503e99bf1de443382f15a95b028dfe4de5cf708d93f1049ca21a58407dc2db78"
+},{
+  "tool": "Code Inspection",
+  "category": "Abstraction issues",
+  "type": "'Optional' used as field or parameter type",
+  "severity": "High",
+  "comment": "`Optional` used as type for parameter 'expressionContext'",
+  "detailsInfo": "Reports any cases in which `java.util.Optional<T>`, `java.util.OptionalDouble`, `java.util.OptionalInt`, `java.util.OptionalLong`, or `com.google.common.base.Optional` are used as types for fields or parameters.\n\n`Optional` was designed to provide a limited mechanism for library method return types in which a clear way to represent \"no result\"\nwas needed.\n\nUsing a field with the `java.util.Optional` type is also problematic if the class needs to be\n`Serializable`, as `java.util.Optional` is not serializable.\n\nExample:\n\n\n      class MyClass {\n        Optional<String> name; // Optional field\n\n        // Optional parameter\n        void setName(Optional<String> name) {\n          this.name = name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IncorrectUseOfStrTemplateDiagnostic.java",
+      "language": "JAVA",
+      "line": 133,
+      "offset": 59,
+      "length": 37,
+      "code": {
+        "startLine": 131,
+        "length": 37,
+        "offset": 70,
+        "surroundingCode": "\n  @NotNull\n  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {\n    final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;\n    return getConstValue(expressionContext, true)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "OptionalUsedAsFieldOrParameterType"
+  },
+  "hash": "3997cee453340274857cdb4e6c322b2cc71fef17323b19c82555b3cc1371b721"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -654,11 +654,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
       "language": "JAVA",
-      "line": 85,
+      "line": 88,
       "offset": 20,
       "length": 32,
       "code": {
-        "startLine": 83,
+        "startLine": 86,
         "length": 32,
         "offset": 68,
         "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = \"\" + DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
@@ -669,7 +669,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "DefaultAnnotationParam"
   },
-  "hash": "ca64a04ba19658fc674d4f283bfbf661f8dbb073c58f6c23596647ea696fd7e2"
+  "hash": "e54d22da1df29d2d0b5068135afdbf35b6b42cd84636402376982a54bbc1f1ac"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
