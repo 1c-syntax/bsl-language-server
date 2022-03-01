@@ -4,6 +4,13 @@
     "Code Inspection": 57
   },
   "attributes": {
+    "vcs": {
+      "sarifIdea": {
+        "repositoryUri": "https://github.com/1c-syntax/bsl-language-server",
+        "revisionId": "c8fa5353f7685f7ae10153dfc5e126301b39e70b",
+        "branch": "feature/qodana"
+      }
+    },
     "deviceId": "200820300000000-b1e0-16a1-bac0-af3b5dba5b3d"
   }
 }
