@@ -7,8 +7,8 @@
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server",
-        "revisionId": "0dfaeecfcf579d3ccd527265be4d76be941412f9",
-        "branch": "feature/qodana"
+        "revisionId": "ce76e5763373d7c4ef048a40766f9e6e81d330c9",
+        "branch": "develop"
       }
     },
     "deviceId": "200820300000000-b1e0-16a1-bac0-af3b5dba5b3d"

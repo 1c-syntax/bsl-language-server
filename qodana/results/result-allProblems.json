@@ -94,11 +94,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
       "language": "JAVA",
-      "line": 85,
+      "line": 88,
       "offset": 20,
       "length": 32,
       "code": {
-        "startLine": 83,
+        "startLine": 86,
         "length": 32,
         "offset": 68,
         "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = \"\" + DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
@@ -109,7 +109,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "DefaultAnnotationParam"
   },
-  "hash": "ca64a04ba19658fc674d4f283bfbf661f8dbb073c58f6c23596647ea696fd7e2"
+  "hash": "e54d22da1df29d2d0b5068135afdbf35b6b42cd84636402376982a54bbc1f1ac"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
