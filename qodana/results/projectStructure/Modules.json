@@ -26,13 +26,13 @@
           "path": "file://$PROJECT_DIR$/src/test",
           "sourceFolders": [
             {
-              "path": "file://$PROJECT_DIR$/src/test/java",
-              "type": "TestSource",
+              "path": "file://$PROJECT_DIR$/src/test/resources",
+              "type": "TestResource",
               "packagePrefix": ""
             },
             {
-              "path": "file://$PROJECT_DIR$/src/test/resources",
-              "type": "TestResource",
+              "path": "file://$PROJECT_DIR$/src/test/java",
+              "type": "TestSource",
               "packagePrefix": ""
             }
           ]
@@ -704,13 +704,13 @@
           "path": "file://$PROJECT_DIR$/src/main",
           "sourceFolders": [
             {
-              "path": "file://$PROJECT_DIR$/src/main/java",
-              "type": "Source",
+              "path": "file://$PROJECT_DIR$/src/main/resources",
+              "type": "Resource",
               "packagePrefix": ""
             },
             {
-              "path": "file://$PROJECT_DIR$/src/main/resources",
-              "type": "Resource",
+              "path": "file://$PROJECT_DIR$/src/main/java",
+              "type": "Source",
               "packagePrefix": ""
             }
           ]
