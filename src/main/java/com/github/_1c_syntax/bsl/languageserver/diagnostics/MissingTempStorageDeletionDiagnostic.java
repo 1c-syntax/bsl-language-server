@@ -38,6 +38,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -137,12 +138,12 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     final var isInsideFileCodeBlock = fileCodeBlock != null;
     final var isInsideFileCodeBlockBeforeSub = fileCodeBlockBeforeSub != null;
 
-    if (!super.checkGlobalMethodCall(ctx) || (!isInsideSub && !isInsideFileCodeBlock && !isInsideFileCodeBlockBeforeSub)) {
+    if (!super.checkGlobalMethodCall(ctx) ||
+      (!isInsideSub && !isInsideFileCodeBlock && !isInsideFileCodeBlockBeforeSub)) {
       return;
     }
     // чтобы не перевычислять, если в большом методе несколько вызовов ПолучитьИзВременногоХранилища
-    final var statements =
-      getStatements(isInsideSub, isInsideFileCodeBlock, isInsideFileCodeBlockBeforeSub);
+    final var statements = getStatements();
 
     final var sourceCallContext = ctx.doCall();
 
@@ -157,21 +158,20 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
     }
   }
 
-  private Collection<? extends ParseTree> getStatements(boolean isInsideSub, boolean isInsideFileCodeBlock,
-                                                        boolean isInsideFileCodeBlockBeforeSub) {
-    if (isInsideSub) {
+  private Collection<? extends ParseTree> getStatements() {
+    if (currentSub != null) {
       if (subStatements.isEmpty()) {
         subStatements = calcSubStatements();
       }
       return subStatements;
     }
-    if (isInsideFileCodeBlock) {
+    if (fileCodeBlock != null) {
       if (fileCodeBlockStatements.isEmpty()) {
         fileCodeBlockStatements = findAllStatementsInside(fileCodeBlock.codeBlock());
       }
       return fileCodeBlockStatements;
     }
-    if (isInsideFileCodeBlockBeforeSub) {
+    if (fileCodeBlockBeforeSub != null) {
       if (fileCodeBlockBeforeSubStatements.isEmpty()) {
         fileCodeBlockBeforeSubStatements = findAllStatementsInside(fileCodeBlockBeforeSub.codeBlock());
       }
@@ -187,6 +187,7 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
   }
 
   private BSLParser.SubCodeBlockContext getSubCodeBlockContext() {
+    Objects.requireNonNull(currentSub);
     BSLParser.ProcedureContext method = currentSub.procedure();
     if (method == null) {
       return currentSub.function().subCodeBlock();

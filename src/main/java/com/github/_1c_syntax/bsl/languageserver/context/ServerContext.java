@@ -180,8 +180,6 @@ public abstract class ServerContext {
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
 
-    documentContext.getSymbolTree();
-
     return documentContext;
   }
 
