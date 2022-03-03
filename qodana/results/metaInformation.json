@@ -1,13 +1,13 @@
 {
-  "total": 37,
+  "total": 28,
   "tools inspection": {
-    "Code Inspection": 37
+    "Code Inspection": 28
   },
   "attributes": {
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server",
-        "revisionId": "3427733a806faa7150bfa197574fb8f559f78ba1",
+        "revisionId": "303c64a61c8f19da10e6123dbd3db8c6398046ef",
         "branch": "develop"
       }
     },
