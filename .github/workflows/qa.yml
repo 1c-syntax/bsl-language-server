@@ -9,7 +9,7 @@ on:
 jobs:
   gatekeeper:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
+    if: github.event_name == 'pull_request' && (!startsWith(github.head_ref, 'translations_') == false || github.event.pull_request.user.login != 'dependabot[bot]') || github.event_name == 'push'
     steps:
       - run: echo 'Open the Golden Gate'
 
