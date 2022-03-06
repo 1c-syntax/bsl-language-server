@@ -58,8 +58,8 @@ Remember that when a value is retrieved from the temporary storage on the server
 Incorrect:
 - Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
 ```bsl
-ПараметрыВыполнения = ДлительныеОперации.ПараметрыВыполненияФункции(УникальныйИдентификатор);
-ДлительныеОперации.ВыполнитьФункцию(ПараметрыВыполнения, ПараметрФоновогоЗадания);
+Parameters = LongOperations.FunctionParameters(UUID);
+LongOperations.ExecFunction(Pframeters, BackgroundJobParameter);
 ```
 
 - If a long operation is performed by the user multiple times, then temporary storage accumulates, which causes an increase in memory consumption.
