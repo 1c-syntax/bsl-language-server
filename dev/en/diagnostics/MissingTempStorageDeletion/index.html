@@ -993,8 +993,8 @@
 <p>2 - Consider this recommendation when working with background jobs</p>
 <p>Incorrect:
 - Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыВыполнения</span> <span class="o">=</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ПараметрыВыполненияФункции</span><span class="p">(</span><span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
-<span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span> <span class="nv">ПараметрФоновогоЗадания</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Parameters</span> <span class="o">=</span> <span class="nv">LongOperations</span><span class="o">.</span><span class="nf">FunctionParameters</span><span class="p">(</span><span class="nv">UUID</span><span class="p">);</span>
+<span class="nv">LongOperations</span><span class="o">.</span><span class="nf">ExecFunction</span><span class="p">(</span><span class="nv">Pframeters</span><span class="p">,</span> <span class="nv">BackgroundJobParameter</span><span class="p">);</span>
 </code></pre></div></p>
 <ul>
 <li>If a long operation is performed by the user multiple times, then temporary storage accumulates, which causes an increase in memory consumption.</li>
