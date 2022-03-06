@@ -1,19 +1,20 @@
 # Missing temporary file deletion after using (MissingTemporaryFileDeletion)
 
-|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `badpractice`<br>`standard`    |
+|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
+| `Error` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 |    `badpractice`<br>`standard`    |
 
 ## Parameters
 
 
-|           Name           |   Type   |                    Description                     |                                        Default value                                        |
-|:------------------------:|:--------:|:--------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
+|           Name            |   Type    |                           Description                            |                                  Default value                                   |
+|:------------------------:|:--------:|:-------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
 | `searchDeleteFileMethod` | `String` | `Keywords to search for delete/move files methods` | `УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-After you finished working with temporary file or folder, you need to delete it yourself. You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
+After you finished working with temporary file or folder, you need to delete it yourself. 
+You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
 
 ## Examples
 
@@ -42,7 +43,7 @@ Catch
 EndTry;
 ```
 
-## Peculiarities
+## Nuances
 
 Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.
 
@@ -58,7 +59,7 @@ and so on.
 
 ## Sources
 
-* [File system access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
+* [File system access from application code (RU)](https://its.1c.ru/db/v8std#content:542:hdoc)
 
 ## Snippets
 
