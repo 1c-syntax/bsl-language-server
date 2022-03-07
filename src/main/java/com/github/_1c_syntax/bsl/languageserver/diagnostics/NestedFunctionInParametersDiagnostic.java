@@ -26,10 +26,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,6 +48,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final boolean DEFAULT_ALLOW_ONELINER = true;
+  private static final Pattern EXCLUDE_METHODS_NAMES_PATTERN = CaseInsensitivePattern.compile(
+    "(НСтр|NStr|ПредопределенноеЗначение|PredefinedValue)"
+  );
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -87,14 +94,18 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
   }
 
   private boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
-    if (ctxDoCall == null
-      || ctxDoCall.callParamList() == null
-      || ctxDoCall.callParamList().isEmpty()) {
+    // однострочники пропускаем сразу
+    if (ctx.getStart().getLine() == ctx.getStop().getLine()) {
       return false;
     }
 
-    return ctx.getStart().getLine() != ctx.getStop().getLine()
-      && Trees.nodeContains(ctx, ctxDoCall, BSLParser.RULE_doCall)
+    // пропускаем с пустым списком параметров вызова
+    if (emptyCallParameterList(ctxDoCall)) {
+      return false;
+    }
+
+    // вложенные вызовы есть, если среди них нет запрещенных, то посчитаем, что все хорошо
+    return containsForbiddenMethod(ctxDoCall)
       && multilineParam(ctxDoCall);
   }
 
@@ -107,10 +118,40 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
                                BSLParser.DoCallContext ctxDoCall,
                                BSLParser.MethodNameContext ctxMethodName) {
     if (findNestedCall(ctx, ctxDoCall)) {
+
       diagnosticStorage.addDiagnostic(ctxMethodName,
         info.getMessage(
           info.getResourceString("diagnosticMessageMethod"),
           ctxMethodName.getText()));
     }
+  }
+
+  private static boolean containsForbiddenMethod(ParseTree t) {
+    var needReturn = false;
+    if (t instanceof ParserRuleContext) {
+      if (BSLParser.RULE_methodCall == ((ParserRuleContext) t).getRuleIndex()) {
+        needReturn = true;
+      } else if (BSLParser.RULE_newExpression == ((ParserRuleContext) t).getRuleIndex()) {
+        needReturn = !emptyCallParameterList(((BSLParser.NewExpressionContext) t).doCall());
+      } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {
+        needReturn = !EXCLUDE_METHODS_NAMES_PATTERN.matcher(
+          ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();
+      } else {
+        // no-op
+      }
+    }
+
+    if (needReturn) {
+      return true;
+    }
+
+    return IntStream.range(0, t.getChildCount())
+      .anyMatch(i -> containsForbiddenMethod(t.getChild(i)));
+  }
+
+  private static boolean emptyCallParameterList(BSLParser.DoCallContext ctxDoCall) {
+    return ctxDoCall == null
+      || ctxDoCall.callParamList() == null
+      || ctxDoCall.callParamList().isEmpty();
   }
 }
