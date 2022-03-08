@@ -83,7 +83,7 @@ jobs:
     - name: Build documentation
       run: |
         ./gradlew generateDiagnosticDocs --build
-        ./gradlew generateDiagnosticsIndexTask --build
+        ./gradlew generateDiagnosticsIndex --build
 
     - name: Build Russian
       run: |
