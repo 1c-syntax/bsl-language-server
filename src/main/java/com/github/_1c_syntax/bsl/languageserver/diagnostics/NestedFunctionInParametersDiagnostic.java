@@ -32,6 +32,8 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -48,9 +50,9 @@ import java.util.stream.IntStream;
 public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final boolean DEFAULT_ALLOW_ONELINER = true;
-  private static final Pattern EXCLUDE_METHODS_NAMES_PATTERN = CaseInsensitivePattern.compile(
-    "(НСтр|NStr|ПредопределенноеЗначение|PredefinedValue)"
-  );
+  private static final String ALLOWED_METHOD_NAMES = "НСтр,NStr,ПредопределенноеЗначение,PredefinedValue";
+
+  private Pattern allowedMethodNamesPattern = compilePattern(ALLOWED_METHOD_NAMES);
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -58,10 +60,27 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
   )
   private boolean allowOneliner = DEFAULT_ALLOW_ONELINER;
 
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ALLOWED_METHOD_NAMES
+  )
+  private String allowedMethodNames = ALLOWED_METHOD_NAMES;
+
+  private static Pattern compilePattern(String allowedNames) {
+    return CaseInsensitivePattern.compile(
+      "^(" + allowedNames.replace(" ", "").replace(",", "|") + ")");
+  }
+
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     checkMethodCall(ctx, ctx.doCall(), ctx.methodName());
     return super.visitMethodCall(ctx);
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
+    allowedMethodNamesPattern = compilePattern(allowedMethodNames);
   }
 
   @Override
@@ -126,7 +145,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
     }
   }
 
-  private static boolean containsForbiddenMethod(ParseTree t) {
+  private boolean containsForbiddenMethod(ParseTree t) {
     var needReturn = false;
     if (t instanceof ParserRuleContext) {
       if (BSLParser.RULE_methodCall == ((ParserRuleContext) t).getRuleIndex()) {
@@ -134,7 +153,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
       } else if (BSLParser.RULE_newExpression == ((ParserRuleContext) t).getRuleIndex()) {
         needReturn = !emptyCallParameterList(((BSLParser.NewExpressionContext) t).doCall());
       } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {
-        needReturn = !EXCLUDE_METHODS_NAMES_PATTERN.matcher(
+        needReturn = !allowedMethodNamesPattern.matcher(
           ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();
       } else {
         // no-op
@@ -149,7 +168,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
       .anyMatch(i -> containsForbiddenMethod(t.getChild(i)));
   }
 
-  private static boolean emptyCallParameterList(BSLParser.DoCallContext ctxDoCall) {
+  private static boolean emptyCallParameterList(@Nullable BSLParser.DoCallContext ctxDoCall) {
     return ctxDoCall == null
       || ctxDoCall.callParamList() == null
       || ctxDoCall.callParamList().isEmpty();
