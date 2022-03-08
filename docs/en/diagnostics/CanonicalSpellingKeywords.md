@@ -1,9 +1,5 @@
 # Canonical keyword writing (CanonicalSpellingKeywords)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Info` |              `Yes`              |                 `1`                 | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -88,19 +84,3 @@ A built-in language constructs, keywords must be written canonically.
 ## Sources
 
 + [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CanonicalSpellingKeywords-off
-// BSLLS:CanonicalSpellingKeywords-on
-```
-
-### Parameter for config
-
-```json
-"CanonicalSpellingKeywords": false
-```

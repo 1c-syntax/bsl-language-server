@@ -1,9 +1,5 @@
 # Incorrect use of the method "WriteLogEvent" (UsageWriteLogEvent)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Info` |              `Yes`              |                 `1`                 |    `standard`<br>`badpractice`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -70,19 +66,3 @@ Correct code
 
 * [Using the event log (RU)](https://its.1c.ru/db/v8std#content:498:hdoc)
 * [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:UsageWriteLogEvent-off
-// BSLLS:UsageWriteLogEvent-on
-```
-
-### Parameter for config
-
-```json
-"UsageWriteLogEvent": false
-```

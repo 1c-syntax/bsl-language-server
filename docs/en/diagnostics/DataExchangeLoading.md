@@ -1,15 +1,5 @@
 # There is no check for the attribute DataExchange.Load in the object's event handler (DataExchangeLoading)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
-| `Error` |             `BSL`             | `Critical` |              `Yes`              |                 `5`                 |       `standard`<br>`badpractice`<br>`unpredictable`       |
-
-## Parameters
-
-
-|     Name     |   Type    |           Description            |    Default value    |
-|:-----------:|:--------:|:-----------------------------:|:------------------------------:|
-| `findFirst` | `Boolean` | `Check should go first` |            `false`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -55,21 +45,3 @@ EndProcedure
 * [Handler OnWrite (RU)](https://its.1c.ru/db/v8std#content:465)
 * [Handler BeforeWrite (RU)](https://its.1c.ru/db/v8std#content:464)
 * [Handler BeforeDelete (RU)](https://its.1c.ru/db/v8std#content:752)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:DataExchangeLoading-off
-// BSLLS:DataExchangeLoading-on
-```
-
-### Parameter for config
-
-```json
-"DataExchangeLoading": {
-    "findFirst": false
-}
-```

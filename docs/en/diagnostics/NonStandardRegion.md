@@ -1,9 +1,5 @@
 # Non-standard region of module (NonStandardRegion)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -19,19 +15,3 @@ The set of sections for each type of module (form module, object module, common 
 
 
 * Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NonStandardRegion-off
-// BSLLS:NonStandardRegion-on
-```
-
-### Parameter for config
-
-```json
-"NonStandardRegion": false
-```

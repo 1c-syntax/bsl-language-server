@@ -1,9 +1,5 @@
 # Using a logical "OR" in the "WHERE" section of a query (LogicalOrInTheWhereSectionOfQuery)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                `15`                 |       `sql`<br>`performance`<br>`standard`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -99,19 +95,3 @@ WHERE
 - [Standard: Effective Query Conditions, Clause 2 (RU)](https://its.1c.ru/db/v8std/content/658/hdoc)
 - [Typical Causes of Suboptimal Query Performance and Optimization Techniques: Using Logical OR in Conditions (RU)](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm#or)
 - [Article on Habr: Interesting analysis of SQL queries in various DBMS (not about 1C) (RU)](https://m.habr.com/ru/company/lsfusion/blog/463095/)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:LogicalOrInTheWhereSectionOfQuery-off
-// BSLLS:LogicalOrInTheWhereSectionOfQuery-on
-```
-
-### Parameter for config
-
-```json
-"LogicalOrInTheWhereSectionOfQuery": false
-```

@@ -1,9 +1,5 @@
 # Form fields do not have a data path (WrongDataPathForFormElements)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:---------------:|
-| `Error` |             `BSL`             | `Critical` |              `Yes`              |                 `5`                 | `unpredictable` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -39,19 +35,3 @@ For command bar buttons associated with the "Data" property with a standard dyna
 * Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [General requirements - Standards 1C (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:WrongDataPathForFormElements-off
-// BSLLS:WrongDataPathForFormElements-on
-```
-
-### Parameter for config
-
-```json
-"WrongDataPathForFormElements": false
-```

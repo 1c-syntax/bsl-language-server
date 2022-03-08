@@ -1,9 +1,5 @@
 # Join with sub queries (JoinWithSubQuery)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                `10`                 |       `sql`<br>`standard`<br>`performance`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -42,19 +38,3 @@ LEFT JOIN (
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Standard: Restrictions on SubQuery and Virtual Table Joins (RU)](https://its.1c.ru/db/v8std#content:655:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:JoinWithSubQuery-off
-// BSLLS:JoinWithSubQuery-on
-```
-
-### Parameter for config
-
-```json
-"JoinWithSubQuery": false
-```

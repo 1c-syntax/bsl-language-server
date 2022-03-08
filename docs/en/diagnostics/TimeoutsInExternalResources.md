@@ -1,15 +1,5 @@
 # Timeouts working with external resources (TimeoutsInExternalResources)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-----------------------------------:|
-| `Error` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                 `5`                 |    `unpredictable`<br>`standard`    |
-
-## Parameters
-
-
-|                   Name                   |   Type    |                      Description                       |    Default value    |
-|:---------------------------------------:|:--------:|:---------------------------------------------------:|:------------------------------:|
-| `analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -54,21 +44,3 @@ HTTPConnection.Timeout = 1;
 
 * [Timeouts when working with external resources (RU)](https://its.1c.ru/db/v8std#content:748:hdoc)
 * [InternetMail Profilehas a default timeout (RU)](https://its.1c.ru/db/metod8dev/content/2358/hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:TimeoutsInExternalResources-off
-// BSLLS:TimeoutsInExternalResources-on
-```
-
-### Parameter for config
-
-```json
-"TimeoutsInExternalResources": {
-    "analyzeInternetMailProfileZeroTimeout": true
-}
-```

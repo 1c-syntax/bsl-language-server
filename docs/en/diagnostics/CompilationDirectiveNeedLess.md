@@ -1,9 +1,5 @@
 # Needless compilation directive (CompilationDirectiveNeedLess)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                          |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `1`                 |       `clumsy`<br>`standard`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -21,19 +17,3 @@ In server or client common modules, the execution context is obvious, so there i
 
 ## Sources
 * [Standard: Use of compilation and preprocessor directives (RU)](https://its.1c.ru/db/v8std#content:439:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CompilationDirectiveNeedLess-off
-// BSLLS:CompilationDirectiveNeedLess-on
-```
-
-### Parameter for config
-
-```json
-"CompilationDirectiveNeedLess": false
-```

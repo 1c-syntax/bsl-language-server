@@ -79,7 +79,12 @@ jobs:
         sed -i "s%https://1c-syntax.github.io/bsl-language-server%https://1c-syntax.github.io/bsl-language-server/dev%g" mkdocs.en.yml
         sed -i "s%link: /bsl-language-server/%link: /bsl-language-server/dev/%g" mkdocs.yml
         sed -i "s%link: /bsl-language-server/%link: /bsl-language-server/dev/%g" mkdocs.en.yml
-    
+
+    - name: Build documentation
+      run: |
+        ./gradlew generateDiagnosticDocs --build
+        ./gradlew generateDiagnosticsIndexTask --build
+
     - name: Build Russian
       run: |
         mkdir temp

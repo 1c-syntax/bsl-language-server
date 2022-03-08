@@ -1,9 +1,5 @@
 # Missed postfix "Cached" (CommonModuleNameCached)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`badpractice`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,19 +16,3 @@ FilesClientCached, UsersInternalCached
 
 
 [Standard: Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:3.2.3)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CommonModuleNameCached-off
-// BSLLS:CommonModuleNameCached-on
-```
-
-### Parameter for config
-
-```json
-"CommonModuleNameCached": false
-```

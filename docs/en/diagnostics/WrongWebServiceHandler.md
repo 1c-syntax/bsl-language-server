@@ -1,9 +1,5 @@
 # Wrong handler for web service (WrongWebServiceHandler)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |             Tags              |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-----------------------------:|
-| `Error` |             `BSL`             | `Critical` |              `Yes`              |                `10`                 |    `suspicious`<br>`error`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -45,19 +41,3 @@ EndFunction
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 * [Developers guide 8.3.20. Internet service mechanisms (RU)](https://its.1c.ru/db/v8320doc#bookmark:dev:TI000000783)
 * [Configuration guidelines. Web services and HTTP services (RU)](https://its.1c.ru/db/metod8dev/browse/13/-1/1989/2565/2567/2590)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:WrongWebServiceHandler-off
-// BSLLS:WrongWebServiceHandler-on
-```
-
-### Parameter for config
-
-```json
-"WrongWebServiceHandler": false
-```

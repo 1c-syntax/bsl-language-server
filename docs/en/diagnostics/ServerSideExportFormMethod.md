@@ -1,5 +1,10 @@
 # Server-side export form method (ServerSideExportFormMethod)
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Server-side export form method (ServerSideExportFormMethod)
+
 |   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |                          Tags                          |
 |:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------:|
 | `Error` |             `BSL`             | `Blocker` |              `Yes`              |                 `5`                 |       `error`<br>`unpredictable`<br>`suspicious`       |
@@ -42,19 +47,3 @@ EndProcedure
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Development of the interface for applied solutions on the "1C:Enterprise" platform (RU). Ch 3.5. Execution of the form module on the client and on the server](https://its.1c.ru/db/pubv8devui/content/191/hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ServerSideExportFormMethod-off
-// BSLLS:ServerSideExportFormMethod-on
-```
-
-### Parameter for config
-
-```json
-"ServerSideExportFormMethod": false
-```

@@ -1,9 +1,5 @@
 # Common module invalid type (CommonModuleInvalidType)
 
-|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                          |
-|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------------:|
-| `Error` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`unpredictable`<br>`design`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -23,19 +19,3 @@ When developing common modules, you should choose one of four code execution con
 ## Sources
 
 * Standard: [Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:1.2)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CommonModuleInvalidType-off
-// BSLLS:CommonModuleInvalidType-on
-```
-
-### Parameter for config
-
-```json
-"CommonModuleInvalidType": false
-```

@@ -1,9 +1,5 @@
 # Execution query on cycle (CreateQueryInCycle)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-------------:|
-| `Error` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                `20`                 | `performance` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -55,20 +51,4 @@ While AccountsSelection.Next() Do
   ProcessBankAccounts(AccountsSelection.Account);
 EndDo;
 
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CreateQueryInCycle-off
-// BSLLS:CreateQueryInCycle-on
-```
-
-### Parameter for config
-
-```json
-"CreateQueryInCycle": false
 ```

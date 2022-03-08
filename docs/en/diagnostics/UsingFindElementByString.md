@@ -1,9 +1,5 @@
 # Using FindByName and FindByCode (UsingFindElementByString)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `2`                 |       `standard`<br>`badpractice`<br>`performance`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -27,20 +23,4 @@ Catalogs.Currencies.FindByCode(CurrentData.CurrencyCodeDigital);
 ```
 ```bsl
 Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:UsingFindElementByString-off
-// BSLLS:UsingFindElementByString-on
-```
-
-### Parameter for config
-
-```json
-"UsingFindElementByString": false
 ```

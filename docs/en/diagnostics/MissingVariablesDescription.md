@@ -1,9 +1,5 @@
 # All variables declarations must have a description (MissingVariablesDescription)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `1`                 | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -31,19 +27,3 @@ Var Context;
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:MissingVariablesDescription-off
-// BSLLS:MissingVariablesDescription-on
-```
-
-### Parameter for config
-
-```json
-"MissingVariablesDescription": false
-```

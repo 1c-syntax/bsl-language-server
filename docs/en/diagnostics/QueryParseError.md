@@ -1,5 +1,10 @@
 # Query text parsing error (QueryParseError)
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+# Query text parsing error (QueryParseError)
+
 |      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
 |:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
 | `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`sql`<br>`badpractice`       |
@@ -48,19 +53,3 @@ Text = StrReplace(Text,
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Standard: Working with queries (RU). Formatting queries texts](https://its.1c.ru/db/v8std#content:437:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:QueryParseError-off
-// BSLLS:QueryParseError-on
-```
-
-### Parameter for config
-
-```json
-"QueryParseError": false
-```

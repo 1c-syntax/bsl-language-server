@@ -1,9 +1,5 @@
 # Missing temporary storage data deletion after using (MissingTempStorageDeletion)
 
-|      Type      |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                           |
-|:-------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:--------------------------------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Critical` |             `No`              |                 `3`                 |       `standard`<br>`performance`<br>`badpractice`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -123,19 +119,3 @@ EndFunction
 - [Long-term operations on the server, part 3.1 - Standard 1C (RU)](https://its.1c.ru/db/v8std#content:642:hdoc)
 - [Minimizing the number of server calls, part 7.3 - Standard 1C (RU)](https://its.1c.ru/db/v8std#content:487:hdoc)
 - [Temporary Storage Engine - Developer's Guide (RU)](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000000810)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:MissingTempStorageDeletion-off
-// BSLLS:MissingTempStorageDeletion-on
-```
-
-### Parameter for config
-
-```json
-"MissingTempStorageDeletion": false
-```

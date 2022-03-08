@@ -1,15 +1,5 @@
 # Code out of region (CodeOutOfRegion)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 | `standard` |
-
-## Parameters
-
-
-|           Name            |   Type    |               Description               |    Default value    |
-|:------------------------:|:--------:|:------------------------------------:|:------------------------------:|
-| `checkUnknownModuleType` | `Boolean` | `Check unknown module type` |            `false`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -58,21 +48,3 @@ Name matching table (full in [source code](https://github.com/1c-syntax/bsl-lang
 
 
 * Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CodeOutOfRegion-off
-// BSLLS:CodeOutOfRegion-on
-```
-
-### Parameter for config
-
-```json
-"CodeOutOfRegion": {
-    "checkUnknownModuleType": false
-}
-```

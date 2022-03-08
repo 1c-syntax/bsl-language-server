@@ -1,9 +1,5 @@
 # Missed postfix "Global" (CommonModuleNameGlobal)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`badpractice`<br>`brainoverload`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,19 +16,3 @@ FilesGlobal, InfobaseUpdateGlobal
 
 
 [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:3.2.1)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CommonModuleNameGlobal-off
-// BSLLS:CommonModuleNameGlobal-on
-```
-
-### Parameter for config
-
-```json
-"CommonModuleNameGlobal": false
-```

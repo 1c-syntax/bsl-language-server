@@ -1,17 +1,5 @@
 # Redundant access to an object (RedundantAccessToObject)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------------------------:|
-| `Code smell` |             `BSL`             | `Info` |              `Yes`              |                 `1`                 |    `standard`<br>`clumsy`    |
-
-## Parameters
-
-
-|          Name           |   Type    |              Description              |    Default value    |
-|:----------------------:|:--------:|:----------------------------------:|:------------------------------:|
-|  `checkObjectModule`   | `Boolean` |    `Check object modules`     |             `true`             |
-|   `checkFormModule`    | `Boolean` |      `Check form modules`       |             `true`             |
-| `checkRecordSetModule` | `Boolean` | `Check record set modules` |             `true`             |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 In the forms and modules of objects, it is wrong to refer to the attributes through the property ThisObject. In common modules, it is redundant to refer to methods through their name, except for modules with Cashed.
@@ -35,24 +23,4 @@ Commons.SendMessage("en = 'Hi!'");
 correct
 ```bsl
 SendMessage("en = 'Hi!'");
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:RedundantAccessToObject-off
-// BSLLS:RedundantAccessToObject-on
-```
-
-### Parameter for config
-
-```json
-"RedundantAccessToObject": {
-    "checkObjectModule": true,
-    "checkFormModule": true,
-    "checkRecordSetModule": true
-}
 ```

@@ -1,9 +1,5 @@
 # Global context method names collision (GlobalContextMethodCollision8312)
 
-|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |               Tags               |
-|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:--------------------------------:|
-| `Error` |         `BSL`<br>`OS`         | `Blocker` |              `Yes`              |                `10`                 |    `error`<br>`unpredictable`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -37,19 +33,3 @@ The configuration functions must either be renamed or deleted, replacing the cal
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Transfer of configurations to the 1C: Enterprise 8.3 platform without compatibility mode with version 8.2 (RU)](https://its.1c.ru/db/metod8dev#content:5293:hdoc:pereimenovaniya_metodov_i_svojstv)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:GlobalContextMethodCollision8312-off
-// BSLLS:GlobalContextMethodCollision8312-on
-```
-
-### Parameter for config
-
-```json
-"GlobalContextMethodCollision8312": false
-```

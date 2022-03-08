@@ -1,9 +1,5 @@
 # Nested ternary operator (NestedTernaryOperator)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 | `brainoverload` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -45,20 +41,4 @@ If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
       Status = "Done";
 
 End If;
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NestedTernaryOperator-off
-// BSLLS:NestedTernaryOperator-on
-```
-
-### Parameter for config
-
-```json
-"NestedTernaryOperator": false
 ```

@@ -1,9 +1,5 @@
 # IsInRole global method call (IsInRoleMethod)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 | `error` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -36,19 +32,3 @@ If IsInRole("Treasurer") OR PrivilegedMode() Then ...
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Standard: [Checking access rights (RU)](https://its.1c.ru/db/v8std#content:737:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IsInRoleMethod-off
-// BSLLS:IsInRoleMethod-on
-```
-
-### Parameter for config
-
-```json
-"IsInRoleMethod": false
-```

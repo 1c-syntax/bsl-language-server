@@ -1,9 +1,5 @@
 # Executing of external code on the server (ExecuteExternalCode)
 
-|     Type      |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
-|:------------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:---------------------------:|
-| `Vulnerability` |             `BSL`             | `Critical` |              `Yes`              |                 `1`                 |    `error`<br>`standard`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -21,19 +17,3 @@ It is forbidden to use the `Execute` and` Eval` methods in server methods of for
 
 
 * [Restrictions on the use of Execute and Eval on the server (RU)](https://its.1c.ru/db/v8std#content:770:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ExecuteExternalCode-off
-// BSLLS:ExecuteExternalCode-on
-```
-
-### Parameter for config
-
-```json
-"ExecuteExternalCode": false
-```

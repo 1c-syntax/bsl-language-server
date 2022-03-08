@@ -1,9 +1,5 @@
 # Using of "FULL OUTER JOIN" in queries (FullOuterJoinQuery)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                `10`                 |       `sql`<br>`standard`<br>`performance`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -33,19 +29,3 @@ EndProcedure
 
 * [Restricting the use of the "FULL OUTER JOINT" construct in queries (RU)](https://its.1c.ru/db/v8std#content:435:hdoc)
 * [Administrator's Guide: Peculiarities of Using PostgreSQL (RU)](https://its.1c.ru/db/metod8dev#content:1556:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:FullOuterJoinQuery-off
-// BSLLS:FullOuterJoinQuery-on
-```
-
-### Parameter for config
-
-```json
-"FullOuterJoinQuery": false
-```
