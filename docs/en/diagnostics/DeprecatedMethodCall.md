@@ -1,8 +1,8 @@
 # Deprecated methods should not be used (DeprecatedMethodCall)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `3`                 |    `deprecated`<br>`design`    |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `3`           |    `deprecated`<br>`design`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

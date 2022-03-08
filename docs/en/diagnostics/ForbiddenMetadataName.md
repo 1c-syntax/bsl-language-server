@@ -1,11 +1,12 @@
 # Metadata object has a forbidden name (ForbiddenMetadataName)
 
-|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:-------------------------------------------:|
-| `Error` |             `BSL`             | `Blocker` |              `Yes`              |                `30`                 |       `standard`<br>`sql`<br>`design`       |
+|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
+|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
+| `Error` | `BSL` | `Blocker` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It is forbidden to use the names of metadata objects (and their attributes and tabular sections), which are used when naming query tables (for example, Document, Catalog).

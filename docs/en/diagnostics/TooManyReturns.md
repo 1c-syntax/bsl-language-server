@@ -1,15 +1,15 @@
 # Methods should not have too many return statements (TooManyReturns)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:---------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |             `No`              |                `20`                 | `brainoverload` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `No`              |          `20`           | `brainoverload` |
 
 ## Parameters
 
 
-|        Name        |   Type   |                          Description                           |    Default value    |
-|:-----------------:|:-------:|:-----------------------------------------------------------:|:------------------------------:|
-| `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` |              `3`               |
+|       Name        |   Type    |                  Description                   | Default value |
+|:-----------------:|:---------:|:----------------------------------------------:|:-------------:|
+| `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

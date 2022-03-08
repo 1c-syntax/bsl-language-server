@@ -1,11 +1,12 @@
 # Same metadata object and child name (SameMetadataObjectAndChildNames)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-------------------------------------------:|
-| `Error` |             `BSL`             | `Critical` |              `Yes`              |                `30`                 |       `standard`<br>`sql`<br>`design`       |
+|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
+|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
+| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 For child metadata objects, such as attributes, dimensions, resources, tabular sections (and their attributes), it is not recommended to use names that match the names of the owner objects, since this can lead to errors in queries.

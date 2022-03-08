@@ -1,15 +1,15 @@
 # Prohibited words (BadWords)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:--------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |             `No`              |                 `1`                 | `design` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |   Tags   |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `No`              |           `1`           | `design` |
 
 ## Parameters
 
 
-|    Name     |   Type    |                  Description                   |    Default value    |
-|:----------:|:--------:|:-------------------------------------------:|:------------------------------:|
-| `badWords` | `String` | `Regular expression for prohibited words.` |               ``               |
+|    Name    |   Type   |                Description                 | Default value |
+|:----------:|:--------:|:------------------------------------------:|:-------------:|
+| `badWords` | `String` | `Regular expression for prohibited words.` |      ``       |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 Software modules should not contain prohibited words.

@@ -1,15 +1,15 @@
 # Commented out code (CommentedCode)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `1`                 |    `standard`<br>`badpractice`    |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `1`           |    `standard`<br>`badpractice`    |
 
 ## Parameters
 
 
-|     Name     |            Type             |        Description         |    Default value    |
-|:-----------:|:--------------------------:|:-----------------------:|:------------------------------:|
-| `threshold` | `Float` | `Threshold` |             `0.9`              |
+|    Name     |  Type   | Description | Default value |
+|:-----------:|:-------:|:-----------:|:-------------:|
+| `threshold` | `Float` | `Threshold` |     `0.9`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 

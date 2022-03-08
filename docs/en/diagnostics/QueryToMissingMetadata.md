@@ -1,8 +1,8 @@
 # Using non-existent metadata in the query (QueryToMissingMetadata)
 
-|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
-|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:---------------------------:|
-| `Error` |             `BSL`             | `Blocker` |              `Yes`              |                 `5`                 |    `suspicious`<br>`sql`    |
+|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
+|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:---------------------------:|
+| `Error` | `BSL` | `Blocker` |             `Yes`             |           `5`           |    `suspicious`<br>`sql`    |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

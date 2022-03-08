@@ -1,11 +1,12 @@
 # Server-side export form method (ServerSideExportFormMethod)
 
-|   Type    |    Scope    |   Severity    |    Activated<br>by default    |    Minutes<br>to fix    |                          Tags                          |
-|:--------:|:-----------------------------:|:-------------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------:|
-| `Error` |             `BSL`             | `Blocker` |              `Yes`              |                 `5`                 |       `error`<br>`unpredictable`<br>`suspicious`       |
+|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                          Tags                          |
+|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------:|
+| `Error` | `BSL` | `Blocker` |             `Yes`             |           `5`           |       `error`<br>`unpredictable`<br>`suspicious`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In a form module, you can declare export methods that are available in the client context (usually, these are form notification event handlers). For export methods of the form, only the compilation directive `AtClient` can be specified, since for the rest there is no practical sense: accessing form methods from outside is available only after calling the method `GetForm`, which is available only on the client.

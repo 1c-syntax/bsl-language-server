@@ -1,8 +1,8 @@
 # Source code parse error (ParseError)
 
-|   Type    |    Scope    |  Severity   |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
-|:--------:|:-----------------------------:|:-----------:|:------------------------------:|:-----------------------------------:|:-------:|
-| `Error` |         `BSL`<br>`OS`         | `Critical` |              `Yes`              |                 `5`                 | `error` |
+|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
+|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-------:|
+| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `5`           | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
