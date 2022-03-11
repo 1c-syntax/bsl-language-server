@@ -32,7 +32,7 @@ import java.util.Set;
 @Component
 public class BSLLSWebSocketServerConfigProvider implements ServerApplicationConfig {
 
-  private static final String WEBSOCKET_SERVER_PATH = "/bsl-language-server";
+  public static final String WEBSOCKET_SERVER_PATH = "/bsl-language-server";
 
   @Override
   public Set<ServerEndpointConfig> getEndpointConfigs(Set<Class<? extends Endpoint>> endpointClasses) {
