@@ -108,6 +108,29 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
+  void testErrorVariables() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerErrorVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(48, 1)
+    );
+    assertThat(referencedSymbol).isPresent();
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Запрос");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getOccurrenceType)
+      .isEqualTo(OccurrenceType.DEFINITION);
+  }
+
+  @Test
   void testRebuildClearReferences() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
