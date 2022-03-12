@@ -163,7 +163,14 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .build();
     variables.add(variable);
 
-    currentMethodVariables.put(ctx.getText(), ctx.getText());
+    // Если файл с ошибками разбора может возникнуть ситуация, когда по дереву мы будем находиться внутри метода,
+    // но при определении скоупа в модуле. В таких случаях будем сохранять описание в коллекции переменных модуля.
+    if (currentMethod == module) {
+      moduleVariables.put(ctx.getText(), ctx.getText());
+    } else {
+      currentMethodVariables.put(ctx.getText(), ctx.getText());
+    }
+
     return ctx;
   }
 
