@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1646343349069,
+  "lastUpdate": 1647080341429,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -16368,6 +16368,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.25910349874890987",
             "extra": "mean: 41.1030220190684 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "52417e67ab3226d86edd0a6959b656ea0d728ab4",
+          "message": "Merge pull request #2577 from qtLex/fix/variable-symbol-computer-with-parse-error\n\nИсправлено падение при работе с индексом ссылок переменных в файле с ошибками разбора",
+          "timestamp": "2022-03-12T13:12:28+03:00",
+          "tree_id": "a43a24c0eccf1593a438263adb50584aa5d48e50",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/52417e67ab3226d86edd0a6959b656ea0d728ab4"
+        },
+        "date": 1647080337285,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 41.027170499165855,
+            "unit": "sec",
+            "range": "stddev: 1.1923752144970305",
+            "extra": "mean: 41.027170499165855 sec\nrounds: 3"
           }
         ]
       }
