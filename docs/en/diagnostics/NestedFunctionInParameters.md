@@ -1,15 +1,16 @@
 # Initialization of method and constructor parameters by calling nested methods (NestedFunctionInParameters)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------------------------------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `2`                 |       `standard`<br>`brainoverload`<br>`badpractice`       |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `2`           |       `standard`<br>`brainoverload`<br>`badpractice`       |
 
 ## Parameters
 
 
-|       Name       |   Type    |              Description              |    Default value    |
-|:---------------:|:--------:|:----------------------------------:|:------------------------------:|
-| `allowOneliner` | `Boolean` | `Allow oneliner expression` |             `true`             |
+|         Name         |   Type    |                               Description                               |                    Default value                     |
+|:--------------------:|:---------:|:-----------------------------------------------------------------------:|:----------------------------------------------------:|
+|   `allowOneliner`    | `Boolean` |                       `Allow oneliner expression`                       |                        `true`                        |
+| `allowedMethodNames` | `String`  | `Names of methods that are allowed to be used to initialize parameters` | `НСтр,NStr,ПредопределенноеЗначение,PredefinedValue` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -54,6 +55,7 @@ FileImageHRef = AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData;
 
 ```json
 "NestedFunctionInParameters": {
-    "allowOneliner": true
+    "allowOneliner": true,
+    "allowedMethodNames": "НСтр,NStr,ПредопределенноеЗначение,PredefinedValue"
 }
 ```

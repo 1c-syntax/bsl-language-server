@@ -1,16 +1,16 @@
 # All execution paths of a function must have a Return statement (AllFunctionPathMustHaveReturn)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                             Tags                             |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `1`                 |       `unpredictable`<br>`badpractice`<br>`suspicious`       |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                             Tags                             |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           |       `unpredictable`<br>`badpractice`<br>`suspicious`       |
 
 ## Parameters
 
 
-|            Name             |   Type    |                                                                        Description                                                                        |    Default value    |
-|:--------------------------:|:--------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------:|
-| `loopsExecutedAtLeastOnce` | `Boolean` |                                                `Assume loops are executed at least once`                                                |             `true`             |
-| `ignoreMissingElseOnExit`  | `Boolean` | `Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False` |            `false`             |
+|            Name            |   Type    |                                                    Description                                                     | Default value |
+|:--------------------------:|:---------:|:------------------------------------------------------------------------------------------------------------------:|:-------------:|
+| `loopsExecutedAtLeastOnce` | `Boolean` |                                     `Assume loops are executed at least once`                                      |    `true`     |
+| `ignoreMissingElseOnExit`  | `Boolean` | `Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False` |    `false`    |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 Functions should not have an implicit return. If control reaches the EndFunction line function returns an Undefined value.

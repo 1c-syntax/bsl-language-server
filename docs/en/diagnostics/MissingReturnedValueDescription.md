@@ -1,15 +1,15 @@
 # Function returned values description is missing (MissingReturnedValueDescription)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `5`                 |    `standard`<br>`badpractice`    |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
 
 ## Parameters
 
 
-|                 Name                 |   Type    |                      Description                       |    Default value    |
-|:-----------------------------------:|:--------:|:---------------------------------------------------:|:------------------------------:|
-| `allowShortDescriptionReturnValues` | `Boolean` | `Allow short description of return values` |             `true`             |
+|                Name                 |   Type    |                Description                 | Default value |
+|:-----------------------------------:|:---------:|:------------------------------------------:|:-------------:|
+| `allowShortDescriptionReturnValues` | `Boolean` | `Allow short description of return values` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

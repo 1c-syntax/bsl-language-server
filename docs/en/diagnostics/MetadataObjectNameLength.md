@@ -1,15 +1,15 @@
 # Metadata object names must not exceed the allowed length (MetadataObjectNameLength)
 
-|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Error` |             `BSL`             | `Major` |              `Yes`              |                `10`                 | `standard` |
+|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Error` | `BSL` | `Major`  |             `Yes`             |          `10`           | `standard` |
 
 ## Parameters
 
 
-|              Name              |   Type   |                       Description                       |    Default value    |
-|:-----------------------------:|:-------:|:----------------------------------------------------:|:------------------------------:|
-| `maxMetadataObjectNameLength` | `Integer` | `Permissible length of the name of the configuration object` |              `80`              |
+|             Name              |   Type    |                         Description                          | Default value |
+|:-----------------------------:|:---------:|:------------------------------------------------------------:|:-------------:|
+| `maxMetadataObjectNameLength` | `Integer` | `Permissible length of the name of the configuration object` |     `80`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->

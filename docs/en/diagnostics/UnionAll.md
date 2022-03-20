@@ -1,8 +1,8 @@
 # Using keyword "UNION" in queries (UnionAll)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Minor` |              `Yes`              |                 `5`                 |       `standard`<br>`sql`<br>`performance`       |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
+| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`performance`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

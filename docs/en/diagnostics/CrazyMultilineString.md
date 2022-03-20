@@ -1,8 +1,8 @@
 # Crazy multiline literals (CrazyMultilineString)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                             Tags                             |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                 `1`                 |       `badpractice`<br>`suspicious`<br>`unpredictable`       |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                             Tags                             |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           |       `badpractice`<br>`suspicious`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

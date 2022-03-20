@@ -1,8 +1,8 @@
 # Else...The...ElseIf... statement should end with Else branch (IfElseIfEndsWithElse)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Major` |              `Yes`              |                `10`                 | `badpractice` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-------------:|
+| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |          `10`           | `badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

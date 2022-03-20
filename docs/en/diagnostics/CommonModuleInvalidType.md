@@ -1,8 +1,8 @@
 # Common module invalid type (CommonModuleInvalidType)
 
-|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                          |
-|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-----------------------------------------------------:|
-| `Error` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`unpredictable`<br>`design`       |
+|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                          |
+|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------------:|
+| `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`unpredictable`<br>`design`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

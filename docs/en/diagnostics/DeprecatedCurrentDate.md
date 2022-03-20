@@ -1,8 +1,8 @@
 # Using of the deprecated method "CurrentDate" (DeprecatedCurrentDate)
 
-|   Type    |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                            |
-|:--------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:---------------------------------------------------------:|
-| `Error` |             `BSL`             | `Major` |              `Yes`              |                 `5`                 |       `standard`<br>`deprecated`<br>`unpredictable`       |
+|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                           Tags                            |
+|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------------------------------:|
+| `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`deprecated`<br>`unpredictable`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

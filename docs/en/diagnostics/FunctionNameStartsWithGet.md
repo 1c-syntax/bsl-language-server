@@ -1,8 +1,8 @@
 # Function name shouldn't start with "Получить" (FunctionNameStartsWithGet)
 
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:----------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Info` |             `No`              |                 `3`                 | `standard` |
+|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
+|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `No`              |           `3`           | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

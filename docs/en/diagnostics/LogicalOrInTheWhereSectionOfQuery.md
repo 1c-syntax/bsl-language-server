@@ -1,8 +1,8 @@
 # Using a logical "OR" in the "WHERE" section of a query (LogicalOrInTheWhereSectionOfQuery)
 
-|      Type      |    Scope    | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:------------------------------------------------:|
-| `Code smell` |             `BSL`             | `Major` |              `Yes`              |                `15`                 |       `sql`<br>`performance`<br>`standard`       |
+|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
+|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
+| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `15`           |       `sql`<br>`performance`<br>`standard`       |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
