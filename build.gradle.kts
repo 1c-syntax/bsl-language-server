@@ -139,8 +139,6 @@ tasks.jar {
     enabled = true
     archiveClassifier.set("")
 
-    filteringCharset = "UTF-8"
-
     from("build/docs/diagnostics") {
         into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
     }
@@ -185,6 +183,7 @@ tasks.jacocoTestReport {
 }
 
 tasks.processResources {
+    filteringCharset = "UTF-8"
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
