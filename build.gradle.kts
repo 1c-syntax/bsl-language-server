@@ -196,6 +196,7 @@ tasks.classes {
 }
 
 tasks.processTestResources {
+    dependsOn(tasks.generateDiagnosticDocs)
     from("build/docs/diagnostics") {
         into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
     }
