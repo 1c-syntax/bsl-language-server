@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1647080341429,
+  "lastUpdate": 1647753722345,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -16399,6 +16399,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1923752144970305",
             "extra": "mean: 41.027170499165855 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e5d6cef6a6dc7a57c76c69544790fdab816763b",
+          "message": "Merge pull request #2574 from 1c-syntax/feature/fix1923\n\nИсключение методов \"NStr\" из \"PredefinedValue\" для диагностики NestedFunctionInParametersDiagnostic",
+          "timestamp": "2022-03-20T08:17:36+03:00",
+          "tree_id": "eb421b0a7ab10233aa1d23767505cfaa17073414",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8e5d6cef6a6dc7a57c76c69544790fdab816763b"
+        },
+        "date": 1647753719897,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 41.20356019337972,
+            "unit": "sec",
+            "range": "stddev: 0.5139591336579122",
+            "extra": "mean: 41.20356019337972 sec\nrounds: 3"
           }
         ]
       }
