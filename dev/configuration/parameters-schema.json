@@ -1246,6 +1246,12 @@
                     "default": true,
                     "type": "boolean",
                     "title": "Allow oneliner expression"
+                },
+                "allowedMethodNames": {
+                    "description": "Names of methods that are allowed to be used to initialize parameters",
+                    "default": "\u041d\u0421\u0442\u0440,NStr,\u041f\u0440\u0435\u0434\u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u043d\u043e\u0435\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435,PredefinedValue",
+                    "type": "string",
+                    "title": "Names of methods that are allowed to be used to initialize parameters"
                 }
             },
             "$id": "#/definitions/NestedFunctionInParameters"
