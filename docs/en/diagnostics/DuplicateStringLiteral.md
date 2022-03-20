@@ -3,23 +3,6 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-# Duplicate string literal (DuplicateStringLiteral)
-
-|      Type      |    Scope    |     Severity     |    Activated<br>by default    |    Minutes<br>to fix    |     Tags      |
-|:-------------:|:-----------------------------:|:----------------:|:------------------------------:|:-----------------------------------:|:-------------:|
-| `Code smell` |         `BSL`<br>`OS`         | `Minor` |              `Yes`              |                 `1`                 | `badpractice` |
-
-## Parameters
-
-
-|          Name          |   Type    |                              Description                              |    Default value    |
-|:---------------------:|:--------:|:------------------------------------------------------------------:|:------------------------------:|
-| `allowedNumberCopies` | `Integer`  | `Allowed number of copies string literals` |              `2`               |
-|     `analyzeFile`     | `Boolean` |                 `Analyze file`                  |            `false`             |
-|    `caseSensitive`    | `Boolean` |                        `Case sensitive`                         |            `false`             |
-|    `minTextLength`    | `Integer`  |       `Minimum length of a string literal (quoted)`        |              `5`               |
-<!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It is bad form to use the same string literals multiple times in the same module or method:

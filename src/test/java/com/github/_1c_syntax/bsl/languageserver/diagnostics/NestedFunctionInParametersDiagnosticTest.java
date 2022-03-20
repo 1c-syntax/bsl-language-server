@@ -56,7 +56,7 @@ class NestedFunctionInParametersDiagnosticTest extends AbstractDiagnosticTest<Ne
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(1, 22, 30)
       .hasRange(3, 11, 19)
@@ -68,6 +68,37 @@ class NestedFunctionInParametersDiagnosticTest extends AbstractDiagnosticTest<Ne
       .hasRange(47, 72, 94)
       .hasRange(51, 72, 94)
       .hasRange(56, 4, 28)
+      .hasRange(69, 16, 21)
+      .hasRange(79, 24, 43)
+    ;
+
+  }
+
+  @Test
+  void testConfigureMethods() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("allowedMethodNames", "НСтр, ПредопределенноеЗначение, PredefinedValue, ДругаяФункция");
+    configuration.put("allowOneliner", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(13);
+    assertThat(diagnostics, true)
+      .hasRange(1, 22, 30)
+      .hasRange(3, 11, 19)
+      .hasRange(3, 20, 49)
+      .hasRange(8, 4, 12)
+      .hasRange(13, 35, 42)
+      .hasRange(17, 22, 31)
+      .hasRange(36, 14, 19)
+      .hasRange(47, 72, 94)
+      .hasRange(51, 72, 94)
+      .hasRange(56, 4, 28)
+      .hasRange(72, 15, 20)
+      .hasRange(79, 24, 43)
+      .hasRange(82, 11, 26)
     ;
 
   }
