@@ -100,6 +100,7 @@
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br>`badpractice` 
  [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Отсутствует обработчик подписки на событие | Да | Блокирующий | Ошибка | `error` 
  [MissingParameterDescription](MissingParameterDescription.md) | Отсутствует описание параметров метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
+ [MissingQueryParameter](MissingQueryParameter.md) | Все параметры запроса инициализированы | Да | Информационный | Дефект кода | `suspicious` 
  [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Отсутствует описание возвращаемого значения функции | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
  [MissingTempStorageDeletion](MissingTempStorageDeletion.md) | Отсутствует удаление данных из временного хранилища после использования | Нет | Критичный | Дефект кода | `standard`<br>`performance`<br>`badpractice` 

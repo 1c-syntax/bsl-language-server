@@ -1078,6 +1078,16 @@
             "title": "Method parameters description are missing",
             "$id": "#/definitions/MissingParameterDescription"
         },
+        "MissingQueryParameter": {
+            "description": "\u0412\u0441\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0437\u0430\u043f\u0440\u043e\u0441\u0430 \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u044b",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "\u0412\u0441\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0437\u0430\u043f\u0440\u043e\u0441\u0430 \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u044b",
+            "$id": "#/definitions/MissingQueryParameter"
+        },
         "MissingReturnedValueDescription": {
             "description": "Function returned values description is missing",
             "default": true,
