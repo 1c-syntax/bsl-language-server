@@ -18,7 +18,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.6.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.6.1"
     id("ru.vyarus.pom") version "2.2.1"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
@@ -138,6 +138,16 @@ tasks.jar {
     }
     enabled = true
     archiveClassifier.set("")
+
+    filteringCharset = "UTF-8"
+
+    from("build/docs/diagnostics") {
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+    }
+
+    from("build/docs/en/diagnostics") {
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+    }
 }
 
 tasks.bootJar {
@@ -175,18 +185,23 @@ tasks.jacocoTestReport {
 }
 
 tasks.processResources {
-    filteringCharset = "UTF-8"
-    from("docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
-
-    from("docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
-    }
-
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
+    }
+}
+
+tasks.classes {
+    finalizedBy(tasks.generateDiagnosticDocs)
+}
+
+tasks.processTestResources {
+    from("build/docs/diagnostics") {
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+    }
+
+    from("build/docs/en/diagnostics") {
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
     }
 }
 
