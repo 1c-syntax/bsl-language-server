@@ -911,7 +911,7 @@
 <h1 id="Events-subsystem">Events subsystem<a class="headerlink" href="#Events-subsystem" title="Permanent link">&para;</a></h1>
 <p>В приложении могут возникать события, требующие реакции от слабосвязанных между собой объектов.</p>
 <p>Например: в файле конфигурации BSL Language Server (<code>.bsl-language-server.json</code>) есть поле <code>traceLog</code>, в котором можно указать путь к файлу для вывода подробного лога взаимодействия между сервером и клиентом. При изменении конфигурации генерируется событие "конфигурация сервера изменена", и все заинтересованные в таком событии компоненты могут перечитать ее и переконфигурировать себя. В частности компонент вывода лога изменяет путь к файлу, в который осуществляется вывод.</p>
-<p>The subsystem consists of three components:</p>
+<p>Подсистема состоит из трех компонентов:</p>
 <ul>
 <li>events;</li>
 <li>post events;</li>
@@ -923,8 +923,8 @@
 </blockquote>
 <h2 id="Events">Events<a class="headerlink" href="#Events" title="Permanent link">&para;</a></h2>
 <p>Все события являются наследником <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEvent.html"><code>ApplicationEvent</code></a>. Класс события необходимо размещать в подпакете <code>events</code> того пакета, объект которого может сгенерировать это событие.</p>
-<p>For example, change event <code>com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration</code>  is located in the package <code>com.github._1c_syntax.bsl.languageserver.configuration.events</code> and and has the name <code>LanguageServerConfigurationChangedEvent</code>.</p>
-<p>In the event class it is recommended:</p>
+<p>Например, событие изменения <code>com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration</code> располагается в пакете <code>com.github._1c_syntax.bsl.languageserver.configuration.events</code> и называется <code>LanguageServerConfigurationChangedEvent</code>.</p>
+<p>В классе события рекомендуется:</p>
 <ul>
 <li>объявлять конструктор, принимающий в себя "источник" события - объект, на котором сработало данное событие, и вызывающий <code>super</code>-конструктор;</li>
 <li>переопределять метод <code>getSource</code>, возвращая <code>source</code>, приведенный к типу источника.</li>
@@ -966,7 +966,7 @@
 </code></pre></div>
 <h2 id="Events-subscriptions">Events subscriptions<a class="headerlink" href="#Events-subscriptions" title="Permanent link">&para;</a></h2>
 <p>Для подписи на событие компонент может либо реализовать интерфейс <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationListener.html"><code>ApplicationListener</code></a> либо объявить публичный метод, помеченный аннотацией <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/event/EventListener.html"><code>@EventListener</code></a>, принимающий в качестве параметра конкретный класс события.</p>
-<p>Below is an example of handling the <code>LanguageServerConfigurationChangedEvent</code> event via annotations:</p>
+<p>Ниже представлен пример обработки события <code>LanguageServerConfigurationChangedEvent</code> через аннотации:</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@Component</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileAwarePrintWriter</span> <span class="p">{</span>
   <span class="cm">/**</span>
