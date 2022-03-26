@@ -36,11 +36,11 @@ HTTPConnection = New HTTPConnection("zabbix.localhost", 80,,,, 1);
 or
 
 ```bsl
-HTTPConnection = New HTTPConnection("zabbix.localhost", 80);
-HTTPConnection.Timeout = 1;
+ConnectiomTimeout = 180;
+HTTPConnection = New HTTPConnection("zabbix.localhost", 80,,,, ConnectiomTimeout);
 ```
 
-## Reference
+## Sources
 
 * [Timeouts when working with external resources (RU)](https://its.1c.ru/db/v8std#content:748:hdoc)
 * [InternetMail Profilehas a default timeout (RU)](https://its.1c.ru/db/metod8dev/content/2358/hdoc)
