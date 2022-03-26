@@ -1,7 +1,7 @@
 # Duplicate regions (DuplicateRegion)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 All code should be structured and divided into sections (regions), each section should be present in the module in the singular.
