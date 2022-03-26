@@ -1,7 +1,7 @@
 # The function always returns the same primitive value (FunctionReturnsSamePrimitive)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 A function should not return the same primitive value. If the result of the function isn't use into code, then you need the function rewrite to the procedure.
