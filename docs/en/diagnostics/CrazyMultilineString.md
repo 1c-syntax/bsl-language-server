@@ -1,7 +1,7 @@
 # Crazy multiline literals (CrazyMultilineString)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In source text, multi-line constants can be initialized in two ways:
