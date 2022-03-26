@@ -972,10 +972,10 @@ For the InternetMailProfile the platform sets the default timeout value to 30 se
 <div class="highlight"><pre><span></span><code><span class="nv">HTTPConnection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">HTTPConnection</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="m">1</span><span class="p">);</span>
 </code></pre></div>
 <p>or</p>
-<div class="highlight"><pre><span></span><code><span class="nv">HTTPConnection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">HTTPConnection</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
-<span class="nv">HTTPConnection</span><span class="o">.</span><span class="nv">Timeout</span> <span class="o">=</span> <span class="m">1</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ConnectiomTimeout</span> <span class="o">=</span> <span class="m">180</span><span class="p">;</span>
+<span class="nv">HTTPConnection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">HTTPConnection</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="nv">ConnectiomTimeout</span><span class="p">);</span>
 </code></pre></div>
-<h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
+<h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:748:hdoc">Timeouts when working with external resources (RU)</a></li>
 <li><a href="https://its.1c.ru/db/metod8dev/content/2358/hdoc">InternetMail Profilehas a default timeout (RU)</a></li>
