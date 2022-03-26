@@ -165,6 +165,7 @@ tasks.test {
 
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
+    mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
 tasks.jacocoTestReport {
