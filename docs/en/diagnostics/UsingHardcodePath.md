@@ -14,7 +14,7 @@ There are several ways to correctly store this information:
 * Store in separate module, where this diagnostic is disabled (not recommended).
 * Store in Catalog, Exchange plan node and etc.
 
-### Implementation features
+### Nuances
 
 When search for Windows / Unix  paths, also check for URL in a string. URL search keywords:
 * ``http``
