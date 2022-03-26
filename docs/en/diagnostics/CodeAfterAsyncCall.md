@@ -49,10 +49,10 @@ Correct code
 
 In some cases, executing code immediately after calling an asynchronous method is entirely possible if you do not need to wait for the results of the asynchronous action. For example
 ```bsl
-&НаКлиенте
-Процедура Команда1(Команда)
-    ПоказатьПредупреждение(, "Предупреждаю", 10);
-    Сообщить("начал работать код после ПоказатьПредупреждение");
+&AtClient
+Procedure Command(Command)
+    ShowMessageBox(, "Moneo te!", 10);
+    Message("code started working after ShowMessageBox");
     // ...
 EndProcedure
 ```
