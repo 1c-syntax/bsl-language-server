@@ -1,8 +1,8 @@
 # Events subsystem
 
-В приложении могут возникать события, требующие реакции от слабосвязанных между собой объектов.
+Events can occur in an application that require the response of loosely coupled objects.
 
-Например: в файле конфигурации BSL Language Server (`.bsl-language-server.json`) есть поле `traceLog`, в котором можно указать путь к файлу для вывода подробного лога взаимодействия между сервером и клиентом. При изменении конфигурации генерируется событие "конфигурация сервера изменена", и все заинтересованные в таком событии компоненты могут перечитать ее и переконфигурировать себя. В частности компонент вывода лога изменяет путь к файлу, в который осуществляется вывод.
+For example: BSL Language Server configuration file (`.bsl-language-server.json`) has a `traceLog` field. In it, you can specify the path to the file to display a detailed log of the interaction between the server and the client. When a configuration is changed, a "server configuration changed" event is generated, and all components can reread it and reconfigure themselves if this event is important to them. In this example, the log output component changes the path to the output file.
 
 The subsystem consists of three components:
 
