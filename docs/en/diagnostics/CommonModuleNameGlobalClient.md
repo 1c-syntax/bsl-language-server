@@ -1,7 +1,7 @@
 # Global module with postfix "Client" (CommonModuleNameGlobalClient)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 For global modules, the "Global" (rus. "Глобальный") postfix is added , "Client" postfix should not be added.
