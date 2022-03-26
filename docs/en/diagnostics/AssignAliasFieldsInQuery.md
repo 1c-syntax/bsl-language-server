@@ -1,7 +1,7 @@
 # Assigning aliases to selected fields in a query (AssignAliasFieldsInQuery)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It is recommended to specify optional query constructs, first, to explicitly assign aliases to fields in order to increase the clarity of the query text and the "steadiness" of the code that uses it.  
