@@ -1,7 +1,7 @@
 # Method definitions must be placed before the module body operators (CodeBlockBeforeSub)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The structure of the software module *(in general form)* is clearly defined:
