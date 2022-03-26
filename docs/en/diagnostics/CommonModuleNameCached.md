@@ -1,7 +1,7 @@
 # Missed postfix "Cached" (CommonModuleNameCached)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Use the "Cached" (rus. ПовтИсп) and "ClientCached" (rus. КлиентПовтИсп) postfixes for the modules that implement functions with repeated use of return values (upon the call or session time) on the server and on the client respectively.
