@@ -23,7 +23,7 @@ FROM
 Document.GoodsSale AS GoodsSale
 ```
 
-Сorrect:
+Correct:
 
 ```bsl
 SELECT
