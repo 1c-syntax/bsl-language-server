@@ -7,7 +7,7 @@ The absence of an iterator in the loop body indicates either a useless iteration
 
 ## Examples
 
-Incorrect:
+Incorrect
 
 ```bsl
 
