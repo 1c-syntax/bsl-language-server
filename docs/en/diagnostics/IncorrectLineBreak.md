@@ -1,7 +1,7 @@
 # Incorrect expression line break (IncorrectLineBreak)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Long arithmetic expressions are carried as follows: one entry can contain more than one operand; when wrapping, operation characters are written at the beginning of the line (and not at the end of the previous line); operands on a new line are preceded by standard indentation, or they are aligned to the beginning of the first operand, regardless of the operation signs.
