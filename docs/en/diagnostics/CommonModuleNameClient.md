@@ -1,7 +1,7 @@
 # Missed postfix "Client" (CommonModuleNameClient)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Client common modules contain client business logic (functionality specific to the client only) and have the following features:
