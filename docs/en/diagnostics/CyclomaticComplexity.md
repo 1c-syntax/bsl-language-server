@@ -1,7 +1,7 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Cyclomatic complexity of the program code is one of the oldest metrics, it was first mentioned by Thomas McCab in 1976.  
