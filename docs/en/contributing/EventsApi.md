@@ -4,7 +4,7 @@
 
 Например: в файле конфигурации BSL Language Server (`.bsl-language-server.json`) есть поле `traceLog`, в котором можно указать путь к файлу для вывода подробного лога взаимодействия между сервером и клиентом. При изменении конфигурации генерируется событие "конфигурация сервера изменена", и все заинтересованные в таком событии компоненты могут перечитать ее и переконфигурировать себя. В частности компонент вывода лога изменяет путь к файлу, в который осуществляется вывод.
 
-Подсистема состоит из трех компонентов:
+The subsystem consists of three components:
 
 * events;
 * post events;
@@ -18,9 +18,9 @@
 
 Все события являются наследником [`ApplicationEvent`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEvent.html). Класс события необходимо размещать в подпакете `events` того пакета, объект которого может сгенерировать это событие.
 
-Например, событие изменения `com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration` располагается в пакете `com.github._1c_syntax.bsl.languageserver.configuration.events` и называется `LanguageServerConfigurationChangedEvent`.
+For example, change event `com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration`  is located in the package `com.github._1c_syntax.bsl.languageserver.configuration.events` and and has the name `LanguageServerConfigurationChangedEvent`.
 
-В классе события рекомендуется:
+In the event class it is recommended:
 
 * объявлять конструктор, принимающий в себя "источник" события - объект, на котором сработало данное событие, и вызывающий `super`-конструктор;
 * переопределять метод `getSource`, возвращая `source`, приведенный к типу источника.
