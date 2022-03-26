@@ -1,7 +1,7 @@
 # Metadata object names must not exceed the allowed length (MetadataObjectNameLength)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Metadata object names must not exceed 80 characters.
