@@ -1,7 +1,7 @@
 # Event subscription handler missing (MissingEventSubscriptionHandler)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 If the handler for the "event subscription" is not filled or does not exist, then an error will occur in the application.
