@@ -138,14 +138,6 @@ tasks.jar {
     }
     enabled = true
     archiveClassifier.set("")
-
-    from("build/docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
-
-    from("build/docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
-    }
 }
 
 tasks.bootJar {
@@ -194,14 +186,18 @@ tasks.classes {
     finalizedBy(tasks.generateDiagnosticDocs)
 }
 
-tasks.processTestResources {
-    dependsOn(tasks.generateDiagnosticDocs)
-    from("build/docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
+tasks.generateDiagnosticDocs {
+    doLast {
+        val resourcePath = tasks["processResources"].outputs.files.singleFile
+        copy {
+            from("$buildDir/docs/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+        }
 
-    from("build/docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+        copy {
+            from("$buildDir/docs/en/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+        }
     }
 }
 
