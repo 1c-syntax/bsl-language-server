@@ -24,11 +24,11 @@ EndIf;
 ### Possible implementation
 
 ```bsl
-If x % 15 = 0 Then
+If x% 15 = 0 Then
     Result = "FizzBuzz";
-ElseIf x % 3 = 0 Then
+ElseIf, if x% 3 = 0 Then
     Result = "Fizz";
-ElseIf x % 5 = 0 Then
+ElseIf, if x% 5 = 0 Then
     Result = "Buzz";
 Else
     Result = x;
