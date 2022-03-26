@@ -18,7 +18,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.5.2"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
@@ -165,6 +165,7 @@ tasks.test {
 
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
+    mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
 tasks.jacocoTestReport {
@@ -176,17 +177,28 @@ tasks.jacocoTestReport {
 
 tasks.processResources {
     filteringCharset = "UTF-8"
-    from("docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
-
-    from("docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
-    }
-
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
+    }
+}
+
+tasks.classes {
+    finalizedBy(tasks.generateDiagnosticDocs)
+}
+
+tasks.generateDiagnosticDocs {
+    doLast {
+        val resourcePath = tasks["processResources"].outputs.files.singleFile
+        copy {
+            from("$buildDir/docs/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+        }
+
+        copy {
+            from("$buildDir/docs/en/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+        }
     }
 }
 

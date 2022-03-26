@@ -1,9 +1,5 @@
 # Using external code tools (UsingExternalCodeTools)
 
-|        Type        |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:------------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------:|
-| `Security Hotspot` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `15`           |    `standard`<br>`design`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -28,19 +24,3 @@ At the moment, the server context is not analyzed, so diagnostic works both at c
 
 
 * [Restriction on the execution of "external" code (RU)](https://its.1c.ru/db/v8std#content:669:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:UsingExternalCodeTools-off
-// BSLLS:UsingExternalCodeTools-on
-```
-
-### Parameter for config
-
-```json
-"UsingExternalCodeTools": false
-```

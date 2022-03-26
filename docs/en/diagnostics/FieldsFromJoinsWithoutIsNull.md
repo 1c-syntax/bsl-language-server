@@ -1,9 +1,5 @@
 # No NULL checks for fields from joined tables (FieldsFromJoinsWithoutIsNull)
 
-|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                         |
-|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `2`           |       `sql`<br>`suspicious`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -102,19 +98,3 @@ Also correct:
 * [Methodological recommendations: Fields of a hierarchical directory can contain NULL (RU)](https://its.1c.ru/db/metod8dev/content/2649/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
     * [Guidelines: How to get the records of a hierarchical table and arrange them in the order of the hierarchy (RU)](https://its.1c.ru/db/pubqlang/content/27/hdoc/_top/%D0%B5%D1%81%D1%82%D1%8C%20null)
 * [Online book "1C: Enterprise Query Language": How to get data from different tables for the same field (RU)](https://its.1c.ru/db/pubqlang#content:43:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:FieldsFromJoinsWithoutIsNull-off
-// BSLLS:FieldsFromJoinsWithoutIsNull-on
-```
-
-### Parameter for config
-
-```json
-"FieldsFromJoinsWithoutIsNull": false
-```

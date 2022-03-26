@@ -1,9 +1,5 @@
 # Incorrect use of "StrTemplate" (IncorrectUseOfStrTemplate)
 
-|  Type   |        Scope        | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                              Tags                              |
-|:-------:|:-------------------:|:---------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------------:|
-| `Error` |    `BSL`<br>`OS`    | `Blocker` |             `Yes`             |           `1`           |       `brainoverload`<br>`suspicious`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -43,19 +39,3 @@ Option 3 - correct example of passing digits immediately after a template value
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - [Standard: Localization Requirements (RU)](https://its.1c.ru/db/v8std/content/763/hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IncorrectUseOfStrTemplate-off
-// BSLLS:IncorrectUseOfStrTemplate-on
-```
-
-### Parameter for config
-
-```json
-"IncorrectUseOfStrTemplate": false
-```

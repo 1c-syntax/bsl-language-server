@@ -1,9 +1,5 @@
 # Using non-existent metadata in the query (QueryToMissingMetadata)
 
-|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
-|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:---------------------------:|
-| `Error` | `BSL` | `Blocker` |             `Yes`             |           `5`           |    `suspicious`<br>`sql`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -40,19 +36,3 @@ FROM
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [Development standards. Working with queries (RU)](https://its.1c.ru/db/v8std#browse:13:-1:26:27)
 - [Development standards. Optimizing queries (RU)](https://its.1c.ru/db/v8std#browse:13:-1:26:28)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:QueryToMissingMetadata-off
-// BSLLS:QueryToMissingMetadata-on
-```
-
-### Parameter for config
-
-```json
-"QueryToMissingMetadata": false
-```

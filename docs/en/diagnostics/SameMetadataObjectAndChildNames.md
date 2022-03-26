@@ -1,9 +1,5 @@
 # Same metadata object and child name (SameMetadataObjectAndChildNames)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -31,19 +27,3 @@ Document.Container.TabularSection.Container. Attribute.Container
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Standard: Organization of data storage (RU). Name, Synonym, Comment](https://its.1c.ru/db/v8std#content:474:hdoc:2.4)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:SameMetadataObjectAndChildNames-off
-// BSLLS:SameMetadataObjectAndChildNames-on
-```
-
-### Parameter for config
-
-```json
-"SameMetadataObjectAndChildNames": false
-```

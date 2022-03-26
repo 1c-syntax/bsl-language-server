@@ -1,15 +1,5 @@
 # Number of parameters in method (NumberOfParams)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `30`           |    `standard`<br>`brainoverload`    |
-
-## Parameters
-
-
-|       Name       |   Type    |         Description          | Default value |
-|:----------------:|:---------:|:----------------------------:|:-------------:|
-| `maxParamsCount` | `Integer` | `Max number of params count` |      `7`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -41,21 +31,3 @@ EndProcedure
 ## Sources
 
 * [Standard: Procedure and function parameters (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NumberOfParams-off
-// BSLLS:NumberOfParams-on
-```
-
-### Parameter for config
-
-```json
-"NumberOfParams": {
-    "maxParamsCount": 7
-}
-```

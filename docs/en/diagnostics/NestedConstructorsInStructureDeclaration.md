@@ -1,9 +1,5 @@
 # Nested constructors with parameters in structure declaration (NestedConstructorsInStructureDeclaration)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `10`           |    `badpractice`<br>`brainoverload`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -34,20 +30,4 @@ Parameters.Вставить("CharacteristicsUsed", New Structure("Good", "Charac
 Parameters.Вставить("Type",                New Structure("Good", "Type"));
 Parameters.Вставить("Variant",             New Structure("Good", "Variant"));
 GoodsServer.MakeGoods(Object.Products,     Parameters);
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NestedConstructorsInStructureDeclaration-off
-// BSLLS:NestedConstructorsInStructureDeclaration-on
-```
-
-### Parameter for config
-
-```json
-"NestedConstructorsInStructureDeclaration": false
 ```

@@ -1,9 +1,5 @@
 # Assigning aliases to selected fields in a query (AssignAliasFieldsInQuery)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |       `standard`<br>`sql`<br>`badpractice`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -86,19 +82,3 @@ Source: [Making query text](https://its.1c.ru/db/v8std#content:437:hdoc)
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:AssignAliasFieldsInQuery-off
-// BSLLS:AssignAliasFieldsInQuery-on
-```
-
-### Parameter for config
-
-```json
-"AssignAliasFieldsInQuery": false
-```

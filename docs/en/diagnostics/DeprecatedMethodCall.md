@@ -1,9 +1,5 @@
 # Deprecated methods should not be used (DeprecatedMethodCall)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |              Tags              |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `3`           |    `deprecated`<br>`design`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -28,19 +24,3 @@ DeprecatedProcedure(); // Triggering diagnostics
 
 * Standart: [Procedures and functions description (RU)](https://its.1c.ru/db/v8std#content:453:hdoc)
 * [CWE-477 Use of Obsolete Function](http://cwe.mitre.org/data/definitions/477.html)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:DeprecatedMethodCall-off
-// BSLLS:DeprecatedMethodCall-on
-```
-
-### Parameter for config
-
-```json
-"DeprecatedMethodCall": false
-```

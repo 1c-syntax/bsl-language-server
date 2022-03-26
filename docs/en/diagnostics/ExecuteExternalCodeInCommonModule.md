@@ -1,9 +1,5 @@
 # Executing of external code in a common module on the server (ExecuteExternalCodeInCommonModule)
 
-|        Type        | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Security Hotspot` | `BSL` | `Critical` |             `Yes`             |          `15`           |    `badpractice`<br>`standard`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -21,19 +17,3 @@ If the execution of arbitrary code Is necessary then it has to be preliminarily 
 
 
 * [Restrictions on the use of Execute and Eval on the server (RU)](https://its.1c.ru/db/v8std#content:770:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ExecuteExternalCodeInCommonModule-off
-// BSLLS:ExecuteExternalCodeInCommonModule-on
-```
-
-### Parameter for config
-
-```json
-"ExecuteExternalCodeInCommonModule": false
-```

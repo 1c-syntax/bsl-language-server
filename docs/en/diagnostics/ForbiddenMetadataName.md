@@ -1,9 +1,5 @@
 # Metadata object has a forbidden name (ForbiddenMetadataName)
 
-|  Type   | Scope | Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                    Tags                     |
-|:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-------------------------------------------:|
-| `Error` | `BSL` | `Blocker` |             `Yes`             |          `30`           |       `standard`<br>`sql`<br>`design`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -29,19 +25,3 @@ Wrong name
 * Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 * [Standard: Organization of data storage (RU). Name, Synonym, Comment](https://its.1c.ru/db/v8std#content:474:hdoc:2.5)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ForbiddenMetadataName-off
-// BSLLS:ForbiddenMetadataName-on
-```
-
-### Parameter for config
-
-```json
-"ForbiddenMetadataName": false
-```

@@ -1,15 +1,5 @@
 # Using hardcode file paths in code (UsingHardcodePath)
 
-|  Type   | Scope |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:-------:|:-----:|:----------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |          `15`           | `standard` |
-
-## Parameters
-
-
-|           Name            |   Type   |                   Description                    |                                       Default value                                       |
-|:-------------------------:|:--------:|:------------------------------------------------:|:-----------------------------------------------------------------------------------------:|
-| `searchWordsStdPathsUnix` | `String` | `Search keywords for standard Unix root folders` | `bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -49,22 +39,4 @@ or
 
 ```bsl
 ExchangeFolder = DataExchangeReuse.ExchangeFolder();
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:UsingHardcodePath-off
-// BSLLS:UsingHardcodePath-on
-```
-
-### Parameter for config
-
-```json
-"UsingHardcodePath": {
-    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
-}
 ```

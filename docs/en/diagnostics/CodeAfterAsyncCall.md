@@ -1,9 +1,5 @@
 # Lines of code after the asynchronous method call (CodeAfterAsyncCall)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Code smell` | `BSL` | `Major`  |             `No`              |          `10`           | `suspicious` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -86,19 +82,3 @@ It is also important to consider that an asynchronous method can be called in on
 * Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [Developers guide: Internal language. Ch. 4: Sync and async methods (RU)](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CodeAfterAsyncCall-off
-// BSLLS:CodeAfterAsyncCall-on
-```
-
-### Parameter for config
-
-```json
-"CodeAfterAsyncCall": false
-```

@@ -1,15 +1,5 @@
 # There are identical sub-expressions to the left and to the right of the "foo" operator (IdenticalExpressions)
 
-|  Type   |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |     Tags     |
-|:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
-| `Error` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           | `suspicious` |
-
-## Parameters
-
-
-|       Name        |   Type   |                                                                                       Description                                                                                        | Default value |
-|:-----------------:|:--------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------:|
-| `popularDivisors` | `String` | `There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation` |  `60, 1024`   |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -43,22 +33,4 @@ If Summ <> 0 Then
     // TODO
 
 EndIf;
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IdenticalExpressions-off
-// BSLLS:IdenticalExpressions-on
-```
-
-### Parameter for config
-
-```json
-"IdenticalExpressions": {
-    "popularDivisors": "60, 1024"
-}
 ```

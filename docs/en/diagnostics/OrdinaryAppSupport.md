@@ -1,9 +1,5 @@
 # Ordinary application support (OrdinaryAppSupport)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `1`           |    `standard`<br>`unpredictable`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -26,19 +22,3 @@ The refusal to support the launch of configuration in the ordinary application a
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Source: [Standard: General Configuration Requirements (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:OrdinaryAppSupport-off
-// BSLLS:OrdinaryAppSupport-on
-```
-
-### Parameter for config
-
-```json
-"OrdinaryAppSupport": false
-```

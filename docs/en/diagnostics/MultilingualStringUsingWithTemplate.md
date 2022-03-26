@@ -1,15 +1,5 @@
 # Partially localized text is used in the StrTemplate function (MultilingualStringUsingWithTemplate)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |            Tags             |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------:|
-| `Error` | `BSL` | `Major`  |             `Yes`             |           `2`           |    `error`<br>`localize`    |
-
-## Parameters
-
-
-|        Name         |   Type   |     Description      | Default value |
-|:-------------------:|:--------:|:--------------------:|:-------------:|
-| `declaredLanguages` | `String` | `Declared languages` |     `ru`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -19,21 +9,3 @@ If you start a session under a language code that is not in the string passed to
 ## Sources
 
 - [localization requirements (RU)](https://its.1c.ru/db/v8std/content/763/hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:MultilingualStringUsingWithTemplate-off
-// BSLLS:MultilingualStringUsingWithTemplate-on
-```
-
-### Parameter for config
-
-```json
-"MultilingualStringUsingWithTemplate": {
-    "declaredLanguages": "ru"
-}
-```

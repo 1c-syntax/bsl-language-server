@@ -1,9 +1,5 @@
 # Virtual table call without parameters (VirtualTableCallWithoutParameters)
 
-|  Type   | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:-------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Error` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `sql`<br>`standard`<br>`performance`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -45,19 +41,3 @@ Query.Text = "SELECT
 * Standard: [Using virtual tables (RU)](https://its.1c.ru/db/v8std#content:657:hdoc)
 * Standard: [Effective use of the virtual table «Turnovers» (RU)](https://its.1c.ru/db/v8std#content:733:hdoc)
 * 1C Recommendation: [Using the Condition parameter when accessing a virtual table (RU)](https://its.1c.ru/db/metod8dev/content/5457/hdoc) (RU)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:VirtualTableCallWithoutParameters-off
-// BSLLS:VirtualTableCallWithoutParameters-on
-```
-
-### Parameter for config
-
-```json
-"VirtualTableCallWithoutParameters": false
-```

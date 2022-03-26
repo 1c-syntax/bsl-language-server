@@ -1,9 +1,5 @@
 # Non export methods in API regions (NonExportMethodsInApiRegion)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |    Tags    |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `1`           | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -14,19 +10,3 @@
 ## Sources
 
 * Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NonExportMethodsInApiRegion-off
-// BSLLS:NonExportMethodsInApiRegion-on
-```
-
-### Parameter for config
-
-```json
-"NonExportMethodsInApiRegion": false
-```

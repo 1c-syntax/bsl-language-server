@@ -1,9 +1,5 @@
 # Source code parse error (ParseError)
 
-|  Type   |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |  Tags   |
-|:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:-------:|
-| `Error` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `5`           | `error` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -47,19 +43,3 @@ Result = Example4(Parameter1,
 ## Sources
 
 * [Standard: Use of compilation and preprocessor directives (RU)](https://its.1c.ru/db/v8std#content:439:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ParseError-off
-// BSLLS:ParseError-on
-```
-
-### Parameter for config
-
-```json
-"ParseError": false
-```
