@@ -1,7 +1,7 @@
 # Common module should have a programming interface (CommonModuleMissingAPI)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 A common module must have at least one export method and region "Public" or "Internal".
