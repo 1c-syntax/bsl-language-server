@@ -1,7 +1,7 @@
 # Using 'SELECT TOP' without 'ORDER BY' (SelectTopWithoutOrderBy)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Using the `TOP N` construct without specifying the sort order in `ORDER BY` or conditions in the `WHERE` section is fraught with unexpected results:
