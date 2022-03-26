@@ -1,7 +1,7 @@
 # Join with virtual table (JoinWithVirtualTable)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When writing queries, you should not use virtual tables joins. Only metadata objects or temporary tables should be joined to each other.
