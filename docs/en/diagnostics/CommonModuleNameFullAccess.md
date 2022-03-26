@@ -1,7 +1,7 @@
 # Missed postfix "FullAccess" (CommonModuleNameFullAccess)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Modules executed in privileged mode have the Privileged flag, are named with the "FullAccess" postfix (rus. "ПолныеПрава").
