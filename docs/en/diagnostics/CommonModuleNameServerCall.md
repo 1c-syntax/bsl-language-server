@@ -1,7 +1,7 @@
 # Missed postfix "ServerCall" (CommonModuleNameServerCall)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Common server modules for calling from the client contain server procedures and functions available from the client code. They constitute the client interface of the application server. Such procedures and functions are placed in common modules with the following property:
