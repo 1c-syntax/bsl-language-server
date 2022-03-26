@@ -24,19 +24,19 @@ These problems are the most common mistakes made by 1C developers of all skill l
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Example showing NULL comparison problems - joining 2 tables incorrectly and showing different comparison methods
 ```sdbl
-ВЫБРАТЬ
-  ВЫБОР
-    КОГДА Левая.Поле2 = 0 ТОГДА "Равно 0 - не работает"
-    КОГДА Левая.Поле2 <> 0 ТОГДА "НЕ Равно 0 - не работает"
-    КОГДА Левая.Поле2 = NULL ТОГДА "Равно NULL - не работает"
-    КОГДА Левая.Поле2 ЕСТЬ NULL ТОГДА "ЕСТЬ NULL - этот вариант работает"
-    КОГДА ЕСТЬNULL(Левая.Поле2, 0) = 0  ТОГДА "ЕСТЬNULL() - этот вариант также работает"
-    ИНАЧЕ "Иначе"
-  КОНЕЦ
+SELECT
+  CASE
+    WHEN LeftTable.Fld2 = 0 THEN "Equals 0 - does not work"
+    WHEN LeftTable.Fld2 <> 0 THEN "NOT Equals 0 - does not work"
+    WHEN LeftTable.Fld2 = NULL THEN "Equals NULL - does not work"
+    WHEN LeftTable.Fld2 IS NULL THEN "IS NULL - it works"
+    WHEN ISNULL(LeftTable.Fld2, 0) = 0  THEN "ISNULL() - and this works too"
+    ELSE "else"
+  END
 ИЗ
-  Первая КАК Первая
-  ЛЕВОЕ СОЕДИНЕНИЕ Левая КАК Левая
-  ПО Ложь // чтобы не было соединения
+  First AS First
+  LEFT JOIN LeftTable AS LeftTable
+  ON FALSE
 ```
 
 Подозрительный код обращения к реквизиту присоединенной таблицы
