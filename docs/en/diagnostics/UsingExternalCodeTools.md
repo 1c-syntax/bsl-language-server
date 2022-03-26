@@ -1,7 +1,7 @@
 # Using external code tools (UsingExternalCodeTools)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 For application solutions it is forbidden to execute in unsafe mode any code on the 1C:Enterprise server that is not part of the application solution (configuration) itself.  
