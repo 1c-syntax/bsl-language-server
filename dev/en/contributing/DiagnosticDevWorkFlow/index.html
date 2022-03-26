@@ -953,22 +953,20 @@
 <li>
 <p>After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks.<br />
 To simplify, a special command has been created that can be run in the console <code>gradlew precommit</code> or from the Gradle taskbar <code>precommit</code>. Task includes subtasks
-test - autotesting project</p>
+Sub Commands</p>
 </li>
 <li>
-<p>licenseFormat - installation of a license block in java source files</p>
+<p>check - checking and testing the entire project</p>
 </li>
-<li>updateDiagnosticDocs - diagnostic help update</li>
-<li>updateDiagnosticIndex - diagnostic index update</li>
-<li>updateJsonSchema - json schema update</li>
+<li>licenseFormat - set license block in java source files</li>
+<li>
+<p>updateJsonSchema - update the json schema of the configuration file</p>
+</li>
 <li>
 <p>If everything is done correctly, you need to commit the changes and push to your remote repository.</p>
 </li>
-<li>
-<p>You need to create <code>Pull request</code> from your feature branch to the <code>develop</code> branch of the primary repository and fill in the information in the description.</p>
-</li>
-<li>Before closing <code>Pull request</code>, the maintainers will conduct a Code review. Correction of errors must be done in the same feature branch, GitHub will automatically add changes to the created <code>Pull request</code>.</li>
-<li>Closing <code>Pull request</code> confirms the completion of the task.</li>
+<li>You need to create <code>Pull request</code> from your feature branch to the <code>develop</code> branch of the primary repository and fill in the information in the description.</li>
+<li>Before closing the <code>pull request</code>, the maintainers will check the code and make comments. Bug fixes must be done in the same feature branch, github will automatically add the changes to the generated <code>pull request</code>.</li>
 <li>Closing a <code>pull request</code> confirms the completion of the task.</li>
 </ol>
 
