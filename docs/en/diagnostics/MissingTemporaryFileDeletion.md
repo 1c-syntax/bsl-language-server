@@ -16,7 +16,7 @@ Data.Write(TempFileName);
 // Not delete temporary file
 ```
 
-Сorrect:
+Correct:
 
 ```bsl
 TempFileName = GetTempFileName("xml");
