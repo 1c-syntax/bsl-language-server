@@ -1,7 +1,7 @@
 # Out function parameter (FunctionOutParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The function must have no output parameters. All output must be in the return value. If you need to return multiple values, you should use such types as Structure, Array, etc.
