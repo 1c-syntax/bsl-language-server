@@ -1,7 +1,7 @@
 # Initialization of method and constructor parameters by calling nested methods (NestedFunctionInParameters)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Similarly, it is not recommended to use nested calls of other functions or other parameterized constructors when initializing constructor parameters  
