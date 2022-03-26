@@ -973,10 +973,10 @@
 <span class="k">КонецПроцедуры</span><span class="p">;</span>
 </code></pre></div></p>
 <p>In some cases, executing code immediately after calling an asynchronous method is entirely possible if you do not need to wait for the results of the asynchronous action. For example
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
-<span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
-    <span class="nb">ПоказатьПредупреждение</span><span class="p">(,</span> <span class="s">&quot;Предупреждаю&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;начал работать код после ПоказатьПредупреждение&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;AtClient</span>
+<span class="k">Procedure</span> <span class="nf">Command</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
+    <span class="nb">ShowMessageBox</span><span class="p">(,</span> <span class="s">&quot;Moneo te!&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
+    <span class="nb">Message</span><span class="p">(</span><span class="s">&quot;code started working after ShowMessageBox&quot;</span><span class="p">);</span>
     <span class="c c-Singleline">// ...</span>
 <span class="k">EndProcedure</span>
 </code></pre></div></p>
