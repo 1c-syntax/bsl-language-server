@@ -7,4 +7,4 @@ In code it is prohibited to use character "yo" ("ё"). Exception is interface te
 
 ## Sources
 
-* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
