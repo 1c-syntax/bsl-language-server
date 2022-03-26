@@ -7,7 +7,7 @@ Execution query in cycle.
 
 ## Examples
 
-Bad
+Incorrect
 
 ```bsl
 
@@ -32,7 +32,7 @@ EndDo;
 
 ```
 
-Good
+Correct
 
 ```bsl
 // BanksToProcess - contains an array of banks
