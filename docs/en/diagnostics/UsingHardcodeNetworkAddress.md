@@ -1,14 +1,14 @@
 # Using hardcode ip addresses in code (UsingHardcodeNetworkAddress)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It's forbidden to store in code:
 
 * Network addresses (ip6, ip4)
 
-There are several ways to properly store such information:
+There are several ways to correctly store this information:
 
 * Store in Constants.
 * Store in Information registers.
