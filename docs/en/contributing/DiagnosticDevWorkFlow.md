@@ -23,13 +23,11 @@ At startup, a list of available diagnostic tags is displayed. You must enter 1-3
 To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
 test - autotesting project
 
-- licenseFormat - installation of a license block in java source files
+- check - checking and testing the entire project
 - updateDiagnosticDocs - diagnostic help update
-- updateDiagnosticIndex - diagnostic index update
-- updateJsonSchema - json schema update
 - If everything is done correctly, you need to commit the changes and push to your remote repository.
 
 7. You need to create `Pull request` from your feature branch to the `develop` branch of the primary repository and fill in the information in the description.
-8. Before closing `Pull request`, the maintainers will conduct a Code review. Correction of errors must be done in the same feature branch, GitHub will automatically add changes to the created `Pull request`.
+8. You need to create `Pull request` from your feature branch to the `develop` branch of the primary repository and fill in the information in the description.
 9. Closing `Pull request` confirms the completion of the task.
 10. Closing a `pull request` confirms the completion of the task.
