@@ -1,8 +1,7 @@
 # Query text parsing error (QueryParseError)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When writing queries, you must follow the following rule: the query text must be opened by the query designer.
