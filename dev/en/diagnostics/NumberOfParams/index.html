@@ -956,21 +956,20 @@
 <p>If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
-<span class="k">Procedure</span> <span class="nf">CreateNewGoods</span><span class="p">(</span><span class="nv">Description</span><span class="p">,</span> <span class="nv">Goods</span><span class="p">,</span> <span class="nv">Units</span><span class="p">,</span> <span class="nv">Weight</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create an item in catalog &quot;Goods&quot;</span>
+<span class="k">Procedure</span> <span class="nf">CreateSKU</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> <span class="nv">Goods</span><span class="p">,</span> <span class="nv">Units</span><span class="p">,</span> <span class="nv">Weight</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="c c-Singleline">// ... </span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <p>Correct:<br />
 Group parameters, having goods item properties into Structure Values.</p>
 <div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
 <span class="k">Procedure</span> <span class="nf">CreateNewGoods</span><span class="p">(</span><span class="nv">Values</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Standard: Procedure and function parameters (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Standard: Parameters of procedures and functions (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
