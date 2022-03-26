@@ -7,7 +7,7 @@ To improve code readability to the left and right of operators `+ - * / = % < > 
 
 ## Examples
 
-Incorrect
+Bad
 
 ```bsl
 Procedure Sum(Param1,Param2)
@@ -17,7 +17,7 @@ Procedure Sum(Param1,Param2)
 EndProcedure
 ```
 
-Correct
+Good
 
 ```bsl
 Procedure Sum(Param1, Param2)
