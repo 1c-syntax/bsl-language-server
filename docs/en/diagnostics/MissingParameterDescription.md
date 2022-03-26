@@ -1,7 +1,7 @@
 # Method parameters description are missing (MissingParameterDescription)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The description of a method (procedure or function) should be formatted correctly to help programmers use the functionality correctly.
