@@ -1,7 +1,7 @@
 # Using 'LIKE' in query (UsingLikeInQuery)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In most algorithms, it is possible to do without using the operator `LIKE`, and in the rest, you must use it carefully. The result in some situations can be very different from the expected, for example, when using different DBMS.
