@@ -9,7 +9,7 @@ It is important to remember: the number of parameters of the web service operati
 
 The configurator notices violations only when the "Check for the existence of assigned handlers" flag is enabled.
 
-## Severity
+## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Invalid handler method with empty body
 ```bsl
@@ -32,7 +32,7 @@ Return MobileOrders.FillCatalogs(MobileDeviceID, MessageExchange);
 EndFunction
 ```
 
-## `Yes`
+## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
