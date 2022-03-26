@@ -1,7 +1,7 @@
 # Consecutive empty lines (ConsecutiveEmptyLines)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 To separate blocks of code among themselves, insert an empty line.
