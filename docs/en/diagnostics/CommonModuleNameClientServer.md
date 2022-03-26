@@ -1,7 +1,7 @@
 # Missed postfix "ClientServer" (CommonModuleNameClientServer)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 To avoid code duplication, it is recommended to create client-server common modules with methods whose contents are the same on the server and on the client. These modules have signs:
