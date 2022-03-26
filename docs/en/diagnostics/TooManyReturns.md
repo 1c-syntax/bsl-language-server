@@ -1,7 +1,7 @@
 # Methods should not have too many return statements (TooManyReturns)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 A large number of returns in a method (procedure or function) increases its complexity and reduces performance and perception.
