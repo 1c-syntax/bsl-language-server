@@ -1103,9 +1103,8 @@ After implementation of the check, the file will take the form</p>
 <h3 id="Creating-a-diagnostic-description">Creating a diagnostic description<a class="headerlink" href="#Creating-a-diagnostic-description" title="Permanent link">&para;</a></h3>
 <p>To describe the created diagnostics, create two files <code>SemicolonPresence.md</code>: in catalog<code>docs/diagnostics</code> in Russian, in catalog <code>docs/en/diagnostics</code> in English.</p>
 <h2 id="Completion">Completion<a class="headerlink" href="#Completion" title="Permanent link">&para;</a></h2>
-<p>After successfully testing the diagnostics, add it to the list of implemented diagnostics of the project by editing the files <code>docs/index.md</code> for the Russian and <code>docs/en/index.md</code> for the English.<br />
-Updating the documentation index can be done automatically by running the updateDiagnosticsIndex gradle task (from the command line or IDE)<code>gradlew updateDiagnosticsIndex</code>.<br />
-In order not to forget anything, it is easier to run the command <code>gradlew precommit</code> from the command line or <code>precommit</code> from the Gradle taskbar in the IDE. </p>
+<p>The help index is updated automatically when the documentation site is built, so you don't have to do anything by hand.</p>
+<p>Before finishing development, you need to run <code>gradlew precommit</code> from the command line or <code>precommit</code> from the Gradle taskbar in the IDE.</p>
 
               
             </article>
