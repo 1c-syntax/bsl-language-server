@@ -176,6 +176,6 @@ To describe the created diagnostics, create two files `SemicolonPresence.md`: in
 
 ## Completion
 
-After successfully testing the diagnostics, add it to the list of implemented diagnostics of the project by editing the files `docs/index.md` for the Russian and `docs/en/index.md` for the English.  
-Updating the documentation index can be done automatically by running the updateDiagnosticsIndex gradle task (from the command line or IDE)`gradlew updateDiagnosticsIndex`.  
-In order not to forget anything, it is easier to run the command `gradlew precommit` from the command line or `precommit` from the Gradle taskbar in the IDE. 
+The help index is updated automatically when the documentation site is built, so you don't have to do anything by hand.
+
+Before finishing development, you need to run `gradlew precommit` from the command line or `precommit` from the Gradle taskbar in the IDE.
