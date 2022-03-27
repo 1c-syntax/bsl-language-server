@@ -78,4 +78,4 @@ commentsAnnotation=Skip annotation comments starting with the specified substrin
 
 ### Documentation change
 
-Manual editing of the documentation is not required: after adding / changing diagnostic parameters, you need to run the gradlew task `updateDiagnosticDocs`.
+Adding information about diagnostic parameters to the documentation occurs automatically during build.
