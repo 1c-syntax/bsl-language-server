@@ -11,16 +11,16 @@
   "sources": [
     {
       "type": "method",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/VersionCommand.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/LanguageServerLauncherConfiguration.java",
       "language": "JAVA",
-      "line": 56,
-      "offset": 4,
+      "line": 48,
+      "offset": 23,
       "length": 10,
       "code": {
-        "startLine": 54,
+        "startLine": 46,
         "length": 10,
-        "offset": 11,
-        "surroundingCode": "    }\n\n    System.out.printf(\n      \"version: %s%n\",\n      version"
+        "offset": 61,
+        "surroundingCode": "  ) {\n    InputStream in = System.in;\n    OutputStream out = System.out;\n\n    return LSPLauncher.createServerLauncher(server, in, out, false, printWriter);"
       }
     }
   ],
@@ -28,5 +28,5 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SystemOutErr"
   },
-  "hash": "5358509987364272209"
+  "hash": "1993311615598732155"
 }]}
