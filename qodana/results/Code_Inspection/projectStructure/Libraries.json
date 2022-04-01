@@ -7,9 +7,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.6.5/26a7cd427b33d44d1166097ad31cd49880efe695/spring-boot-starter-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.6.6/b34b4f0c1e99edc181ea40a6b1b79fa72658ee04/spring-boot-starter-2.6.6.jar!/"
       ]
     },
     {
@@ -139,21 +139,21 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.6.5/c7b562cfde36709581afdcfac128979a83e8fe7d/spring-boot-autoconfigure-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.6.6/e5b575d304ec5c6746fef3cc594bbe89721d64c2/spring-boot-autoconfigure-2.6.6.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.6.5/7a93e397b7af3300a9692e6be82fe7410092841c/spring-boot-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.6.6/286137a0c57d159f845faa1c2e8d0b7548391085/spring-boot-2.6.6.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.6.5/70d21bfd3993dea813c68b29d623853a069a0af1/spring-boot-starter-logging-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.6.6/e37b388e2407a1b03f920a7fd0722e41745c92c6/spring-boot-starter-logging-2.6.6.jar!/"
       ]
     },
     {
@@ -163,9 +163,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-core:5.3.17",
+      "name": "Gradle: org.springframework:spring-core:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/5.3.17/e709af88b40e1b3df193df3460faef44da41fd51/spring-core-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/5.3.18/7ff3000f3342989cb011b6095a0e86f2e5176cef/spring-core-5.3.18.jar!/"
       ]
     },
     {
@@ -259,9 +259,9 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2",
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.2/926e48c451166a291f1ce6c6276d9abbefa7c00f/jackson-databind-2.13.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.2.2/ffeb635597d093509f33e1e94274d14be610f933/jackson-databind-2.13.2.2.jar!/"
       ]
     },
     {
@@ -475,9 +475,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-context:5.3.17",
+      "name": "Gradle: org.springframework:spring-context:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-context/5.3.17/756201e2e2488fc164ae15b2e561f96960162577/spring-context-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-context/5.3.18/34f6683d9dbe6edb02ad9393df3d3211b5484622/spring-context-5.3.18.jar!/"
       ]
     },
     {
@@ -499,9 +499,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-jcl:5.3.17",
+      "name": "Gradle: org.springframework:spring-jcl:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/5.3.17/2d3c82d3c656d0743ed927a475745ac2394ea421/spring-jcl-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/5.3.18/7e5d8cd447981bc20d4c397a2ba0a1c65ff2267a/spring-jcl-5.3.18.jar!/"
       ]
     },
     {
@@ -673,21 +673,21 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-aop:5.3.17",
+      "name": "Gradle: org.springframework:spring-aop:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.17/b7aaf5dd40a64b3419ff779746fcaf7bea92d29d/spring-aop-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.18/8e9cce60c60257ae1d5b3cd675ec3a8286ed1955/spring-aop-5.3.18.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-beans:5.3.17",
+      "name": "Gradle: org.springframework:spring-beans:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.17/3d9c415cb47c96a81b1267665f513e4676af53b4/spring-beans-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.18/3f0ea6598a5a1eae0a672f025a33a0b7e0d6dfd3/spring-beans-5.3.18.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-expression:5.3.17",
+      "name": "Gradle: org.springframework:spring-expression:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/5.3.17/31746d5387cfec075a5ec01adb407d6658dd59e/spring-expression-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/5.3.18/61c51831e49a85fc5bf925253ca63f46fec6f013/spring-expression-5.3.18.jar!/"
       ]
     },
     {
@@ -799,9 +799,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.6.5/652bfc7d538aa666ff98f39a41282363ce85c163/spring-boot-starter-test-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.6.6/b6b577cad64544e47dc9f523d7091c2cbb85bd52/spring-boot-starter-test-2.6.6.jar!/"
       ]
     },
     {
@@ -817,21 +817,21 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.6.5/53d80474bbc4e7584e17d93fc058cd2faeb97ea7/spring-boot-test-autoconfigure-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.6.6/c2571e2dd0a9543525b9bd6253942a89195d9b4d/spring-boot-test-autoconfigure-2.6.6.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test:2.6.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-test:2.6.6",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.6.5/21dcc8b330b7787cd306fbea8b9f4659db7c889f/spring-boot-test-2.6.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.6.6/97626f535c1625e0ca3ede4351e4d55e4cd80ae1/spring-boot-test-2.6.6.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-test:5.3.17",
+      "name": "Gradle: org.springframework:spring-test:5.3.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.3.17/49705efaf6243481a0a12a3e4c8722c58f054a36/spring-test-5.3.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.3.18/9d6a388deed7abd60e2bddde44d927f9d009d3be/spring-test-5.3.18.jar!/"
       ]
     },
     {

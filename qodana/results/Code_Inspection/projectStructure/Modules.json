@@ -56,11 +56,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.6",
           "type": "Library"
         },
         {
@@ -152,19 +152,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-test:5.3.17",
+          "name": "Gradle: org.springframework:spring-test:5.3.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:5.3.17",
+          "name": "Gradle: org.springframework:spring-core:5.3.18",
           "type": "Library"
         },
         {
@@ -204,15 +204,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.6",
           "type": "Library"
         },
         {
@@ -264,7 +264,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2.2",
           "type": "Library"
         },
         {
@@ -428,7 +428,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:5.3.17",
+          "name": "Gradle: org.springframework:spring-jcl:5.3.18",
           "type": "Library"
         },
         {
@@ -456,7 +456,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:5.3.17",
+          "name": "Gradle: org.springframework:spring-context:5.3.18",
           "type": "Library"
         },
         {
@@ -596,15 +596,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:5.3.17",
+          "name": "Gradle: org.springframework:spring-aop:5.3.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:5.3.17",
+          "name": "Gradle: org.springframework:spring-beans:5.3.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:5.3.17",
+          "name": "Gradle: org.springframework:spring-expression:5.3.18",
           "type": "Library"
         },
         {
@@ -730,7 +730,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.6",
           "type": "Library"
         },
         {
@@ -818,15 +818,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.6.6",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.5",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.6",
           "type": "Library"
         },
         {
@@ -834,7 +834,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:5.3.17",
+          "name": "Gradle: org.springframework:spring-core:5.3.18",
           "type": "Library"
         },
         {
@@ -898,7 +898,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2.2",
           "type": "Library"
         },
         {
@@ -1042,7 +1042,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:5.3.17",
+          "name": "Gradle: org.springframework:spring-context:5.3.18",
           "type": "Library"
         },
         {
@@ -1058,7 +1058,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:5.3.17",
+          "name": "Gradle: org.springframework:spring-jcl:5.3.18",
           "type": "Library"
         },
         {
@@ -1174,15 +1174,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:5.3.17",
+          "name": "Gradle: org.springframework:spring-aop:5.3.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:5.3.17",
+          "name": "Gradle: org.springframework:spring-beans:5.3.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:5.3.17",
+          "name": "Gradle: org.springframework:spring-expression:5.3.18",
           "type": "Library"
         },
         {
