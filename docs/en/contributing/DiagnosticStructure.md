@@ -212,18 +212,18 @@ This rule will save application resources without making a meaningless call.
 
 Examples:
 
-- Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
-- Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
+- Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist
+- Diagnostics for a condition or region block must call the `super-method`, as they exist and are used (e.g. `return super.visitSub(ctx)` for methods)
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка запросов, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4).  Полный список существующих методов-визитеров находится в классе `SDBLParserBaseVisitor`.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
-Остальные правила использования идентичны `AbstractVisitorDiagnostic`.
+The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<В разработке>**_
+_**<Work in Progress>**_
 
 ## Diagnostics test class
 
