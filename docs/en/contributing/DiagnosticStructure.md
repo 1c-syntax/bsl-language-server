@@ -212,27 +212,26 @@ This rule will save application resources without making a meaningless call.
 
 Examples:
 
-- Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
-- Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
+- Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist
+- Diagnostics for a condition or region block must call the `super-method`, as they exist and are used (e.g. `return super.visitSub(ctx)` for methods)
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка запросов, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4).  Полный список существующих методов-визитеров находится в классе `SDBLParserBaseVisitor`.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
-Остальные правила использования идентичны `AbstractVisitorDiagnostic`.
+The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<В разработке>**_
+_**<Work in Progress>**_
 
 ## Diagnostics test class
 
-При написании тестов используется фреймворк [JUnit5](https://junit.org/junit5/), для утверждений - библиотека [AssertJ](https://joel-costigliola.github.io/assertj/), предоставляющая [текучий/fluent-интерфейс](https://ru.wikipedia.org/wiki/Fluent_interface) "ожиданий", подобно привычной многим библиотеке [asserts](https://github.com/oscript-library/asserts) для [OneScript](http://oscript.io/).
+The tests use the [JUnit5 framework](https://junit.org/junit5/) and the [AssertJ assertion library](https://joel-costigliola.github.io/assertj/) providing a [fluent interface](https://ru.wikipedia.org/wiki/Fluent_interface) "expectations", like the familiar [asserts](https://github.com/oscript-library/asserts) library for [OneScript](http://oscript.io/).
 
-Теста реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/test/java`.
+A test is a java class added to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/test/java` directory.
 
-В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(аналогично классу реализации диагностики)_.  
-В файле необходимо создать одноименный файлу класс, унаследованый от класса `AbstractDiagnosticTest` для созданного класса диагностики.
+In the file, you need to specify the package in which the class and the import block _(similar to the diagnostic implementation class)_ are added, then you need to create a class of the same name to the file, inherited from the `AbstractDiagnosticTest` class for the created diagnostic class.
 
 Test class example
 
@@ -255,26 +254,26 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 }
 ```
 
-Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест `@Test`.
+To add a new test to the created class, you need to add a method with the `@Test` annotation.
 
-В тестовом классе обязательно должны присутствовать методы для тестирования
+The test class must contain methods for testing.
 
-- тест диагностики, самой по себе
+- diagnostic test itself
 - test of configuration method for parameterized diagnostics
-- тест "быстрых замен" при их наличии
+- test "quick fixes" if available
 
 ### Diagnostics test
 
-Упрощенно, тест диагностики состоит из следующих шагов
+Simplified, the diagnostic test contains the steps
 
-- получение списка замечаний диагностики
+- getting a list of diagnostics
 - checking the number of items found
 - checking the location of detected items
 
-Первый шагом необходимо получить список замечаний диагностики вызовом метода `getDiagnostics()` _(реализован в классе `AbstractDiagnosticTest`)_. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.  
-Следующим шагом необходимо, с помощью утверждения `hasSize()` убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.  
-После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом `getRange()`, с ожидаемой областью _(стоит использовать класс `RangeHelper` для упрощения формирования контрольнх значений)_.  
-В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом `getMessage()` диагностики.
+The first step is to get the list of notes by calling the `getDiagnostics()` method _(implemented in the `AbstractDiagnosticTest` class)_. Calling this method will parse the diagnostics resource file and return a list of remarks in it.
+The next step is to use the `hasSize()` statement to make sure that the number of diagnostics is fixed as much as allowed in the fixtures.
+After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the `getRange()` method with the expected area _(you should use the `RangeHelper` class to simplify the formation of control values)_.
+If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the `getMessage()` method of diagnostics.
 
 Test method example
 
@@ -292,7 +291,7 @@ Test method example
     }
 ```
 
-Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер `util.Assertions.assertThat` и тогда пример выше будет выглядеть следующим образом:
+To reduce the amount of test code, you can use the `util.Assertions.assertThat` helper, then the example above will look like this:
 
 ```java
     @Test
@@ -301,7 +300,7 @@ Test method example
 
       assertThat(diagnostics).hasSize(2);                // checking the number of errors found
 
-      // проверка частных случаев
+      // verification of special cases
       assertThat(diagnostics, true)
         .hasRange(27, 4, 27, 29)
         .hasRange(40, 4, 40, 29);
