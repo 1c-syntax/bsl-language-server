@@ -212,7 +212,7 @@ This rule will save application resources without making a meaningless call.
 
 Examples:
 
-- Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
+- Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist
 - Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
