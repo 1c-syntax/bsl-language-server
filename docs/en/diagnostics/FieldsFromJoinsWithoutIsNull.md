@@ -39,7 +39,7 @@ SELECT
   ON FALSE
 ```
 
-Подозрительный код обращения к реквизиту присоединенной таблицы
+Suspicious code for accessing an joined table attribute
 ```sdbl
 ВЫБРАТЬ 
   ДокументыПродажи.Ссылка КАК ДокПродажи,
