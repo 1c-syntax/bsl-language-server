@@ -212,27 +212,26 @@ This rule will save application resources without making a meaningless call.
 
 Examples:
 
-- Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
-- Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
+- Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist
+- Diagnostics for a condition or region block must call the `super-method`, as they exist and are used (e.g. `return super.visitSub(ctx)` for methods)
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка запросов, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4).  Полный список существующих методов-визитеров находится в классе `SDBLParserBaseVisitor`.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
-Остальные правила использования идентичны `AbstractVisitorDiagnostic`.
+The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<В разработке>**_
+_**<Work in Progress>**_
 
 ## Diagnostics test class
 
-При написании тестов используется фреймворк [JUnit5](https://junit.org/junit5/), для утверждений - библиотека [AssertJ](https://joel-costigliola.github.io/assertj/), предоставляющая [текучий/fluent-интерфейс](https://ru.wikipedia.org/wiki/Fluent_interface) "ожиданий", подобно привычной многим библиотеке [asserts](https://github.com/oscript-library/asserts) для [OneScript](http://oscript.io/).
+The tests use the [JUnit5 framework](https://junit.org/junit5/) and the [AssertJ assertion library](https://joel-costigliola.github.io/assertj/) providing a [fluent interface](https://ru.wikipedia.org/wiki/Fluent_interface) "expectations", like the familiar [asserts](https://github.com/oscript-library/asserts) library for [OneScript](http://oscript.io/).
 
-Теста реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/test/java`.
+A test is a java class added to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/test/java` directory.
 
-В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(аналогично классу реализации диагностики)_.  
-В файле необходимо создать одноименный файлу класс, унаследованый от класса `AbstractDiagnosticTest` для созданного класса диагностики.
+In the file, you need to specify the package in which the class and the import block _(similar to the diagnostic implementation class)_ are added, then you need to create a class of the same name to the file, inherited from the `AbstractDiagnosticTest` class for the created diagnostic class.
 
 Test class example
 
@@ -255,17 +254,17 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 }
 ```
 
-Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест `@Test`.
+To add a new test to the created class, you need to add a method with the `@Test` annotation.
 
-В тестовом классе обязательно должны присутствовать методы для тестирования
+The test class must contain methods for testing.
 
-- тест диагностики, самой по себе
+- diagnostic test itself
 - test of configuration method for parameterized diagnostics
-- тест "быстрых замен" при их наличии
+- test "quick fixes" if available
 
 ### Diagnostics test
 
-Упрощенно, тест диагностики состоит из следующих шагов
+Simplified, the diagnostic test contains the steps
 
 - получение списка замечаний диагностики
 - checking the number of items found
