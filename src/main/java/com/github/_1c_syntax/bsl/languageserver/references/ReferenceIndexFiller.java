@@ -234,7 +234,7 @@ public class ReferenceIndexFiller {
         }
       });
 
-      return ctx;
+      return super.visitLValue(ctx);
     }
 
     @Override
