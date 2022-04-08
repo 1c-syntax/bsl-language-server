@@ -186,6 +186,22 @@ public class ReferenceIndexFiller {
     private SourceDefinedSymbol currentScope;
 
     @Override
+    public BSLParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
+      findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
+        if (notVariableInitialization(ctx, s)) {
+          addVariableUsage(
+            s.getRootParent(SymbolKind.Method),
+            ctx.var_name().getText(),
+            Ranges.create(ctx.var_name()),
+            false
+          );
+        }
+      });
+
+      return ctx;
+    }
+
+    @Override
     public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
 
@@ -218,7 +234,7 @@ public class ReferenceIndexFiller {
         }
       });
 
-      return ctx;
+      return super.visitLValue(ctx);
     }
 
     @Override
@@ -258,6 +274,10 @@ public class ReferenceIndexFiller {
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {
+      return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
+    }
+
+    private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx, VariableSymbol variableSymbol) {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
     }
 

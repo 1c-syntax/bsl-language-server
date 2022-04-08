@@ -41,11 +41,11 @@ class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLoc
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRange(0, 6, 36)
-      .hasRange(14, 10, 35)
-      .hasRange(14, 37, 63)
-      .hasRange(19, 4, 28)
-      .hasRange(45, 0, 25);
+      .hasRange(1, 6, 36)
+      .hasRange(19, 10, 35)
+      .hasRange(19, 37, 63)
+      .hasRange(24, 4, 28)
+      .hasRange(83, 0, 25);
 
   }
 }

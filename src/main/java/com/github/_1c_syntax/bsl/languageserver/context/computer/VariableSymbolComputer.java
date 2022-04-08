@@ -47,7 +47,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
@@ -78,6 +77,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
+    if (moduleVariables.containsKey(ctx.var_name().getText())) {
+      return ctx;
+    }
+
     var symbol = VariableSymbol.builder()
       .name(ctx.var_name().getText())
       .owner(documentContext)
