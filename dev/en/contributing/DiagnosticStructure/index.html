@@ -1148,19 +1148,18 @@ To create necessary files in right places, should run command <code>gradlew newD
 This rule will save application resources without making a meaningless call.</p>
 <p>Examples:</p>
 <ul>
-<li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
-<li>Диагностика для блока условия или области должна вызывать <code>super-метод</code>, т.к. они существуют и используются (например <code>return super.visitSub(ctx)</code> для методов)</li>
+<li>Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist</li>
+<li>Diagnostics for a condition or region block must call the <code>super-method</code>, as they exist and are used (e.g. <code>return super.visitSub(ctx)</code> for methods)</li>
 </ul>
 <h3 id="Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic">Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка запросов, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>SDBLParserBaseVisitor</code>.</p>
-<p>Остальные правила использования идентичны <code>AbstractVisitorDiagnostic</code>.</p>
+<p>The diagnostic class implements the necessary <code>AST visitors</code>, according to the grammar of the query language (see <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4">BSLParser</a>). The complete list of visitor methods is in the <code>SDBLParserBaseVisitor</code> class.</p>
+<p>The rest of the rules are identical to <code>AbstractVisitorDiagnostic</code>.</p>
 <h3 id="Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress">Diagnostics class, inherits from AbstractListenerDiagnostic <strong>(Work in Progress)</strong><a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress" title="Permanent link">&para;</a></h3>
-<p><em><strong>&lt;В разработке&gt;</strong></em></p>
+<p><em><strong><Work in Progress></strong></em></p>
 <h2 id="Diagnostics-test-class">Diagnostics test class<a class="headerlink" href="#Diagnostics-test-class" title="Permanent link">&para;</a></h2>
-<p>При написании тестов используется фреймворк <a href="https://junit.org/junit5/">JUnit5</a>, для утверждений - библиотека <a href="https://joel-costigliola.github.io/assertj/">AssertJ</a>, предоставляющая <a href="https://ru.wikipedia.org/wiki/Fluent_interface">текучий/fluent-интерфейс</a> "ожиданий", подобно привычной многим библиотеке <a href="https://github.com/oscript-library/asserts">asserts</a> для <a href="http://oscript.io/">OneScript</a>.</p>
-<p>Теста реализуется посредством добавления java-класса в пакет <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> в каталоге <code>src/test/java</code>.</p>
-<p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(аналогично классу реализации диагностики)</em>.<br />
-В файле необходимо создать одноименный файлу класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.</p>
+<p>The tests use the <a href="https://junit.org/junit5/">JUnit5 framework</a> and the <a href="https://joel-costigliola.github.io/assertj/">AssertJ assertion library</a> providing a <a href="https://ru.wikipedia.org/wiki/Fluent_interface">fluent interface</a> "expectations", like the familiar <a href="https://github.com/oscript-library/asserts">asserts</a> library for <a href="http://oscript.io/">OneScript</a>.</p>
+<p>A test is a java class added to the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package in the <code>src/test/java</code> directory.</p>
+<p>In the file, you need to specify the package in which the class and the import block <em>(similar to the diagnostic implementation class)</em> are added, then you need to create a class of the same name to the file, inherited from the <code>AbstractDiagnosticTest</code> class for the created diagnostic class.</p>
 <p>Test class example</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
@@ -1179,24 +1178,24 @@ This rule will save application resources without making a meaningless call.</p>
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест <code>@Test</code>.</p>
-<p>В тестовом классе обязательно должны присутствовать методы для тестирования</p>
+<p>To add a new test to the created class, you need to add a method with the <code>@Test</code> annotation.</p>
+<p>The test class must contain methods for testing.</p>
 <ul>
-<li>тест диагностики, самой по себе</li>
+<li>diagnostic test itself</li>
 <li>test of configuration method for parameterized diagnostics</li>
-<li>тест "быстрых замен" при их наличии</li>
+<li>test "quick fixes" if available</li>
 </ul>
 <h3 id="Diagnostics-test">Diagnostics test<a class="headerlink" href="#Diagnostics-test" title="Permanent link">&para;</a></h3>
-<p>Упрощенно, тест диагностики состоит из следующих шагов</p>
+<p>Simplified, the diagnostic test contains the steps</p>
 <ul>
-<li>получение списка замечаний диагностики</li>
+<li>getting a list of diagnostics</li>
 <li>checking the number of items found</li>
 <li>checking the location of detected items</li>
 </ul>
-<p>Первый шагом необходимо получить список замечаний диагностики вызовом метода <code>getDiagnostics()</code> <em>(реализован в классе <code>AbstractDiagnosticTest</code>)</em>. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.<br />
-Следующим шагом необходимо, с помощью утверждения <code>hasSize()</code> убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.<br />
-После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом <code>getRange()</code>, с ожидаемой областью <em>(стоит использовать класс <code>RangeHelper</code> для упрощения формирования контрольнх значений)</em>.<br />
-В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом <code>getMessage()</code> диагностики.</p>
+<p>The first step is to get the list of notes by calling the <code>getDiagnostics()</code> method <em>(implemented in the <code>AbstractDiagnosticTest</code> class)</em>. Calling this method will parse the diagnostics resource file and return a list of remarks in it.
+The next step is to use the <code>hasSize()</code> statement to make sure that the number of diagnostics is fixed as much as allowed in the fixtures.
+After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the <code>getRange()</code> method with the expected area <em>(you should use the <code>RangeHelper</code> class to simplify the formation of control values)</em>.
+If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the <code>getMessage()</code> method of diagnostics.</p>
 <p>Test method example</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
@@ -1210,64 +1209,64 @@ This rule will save application resources without making a meaningless call.</p>
         <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">)));</span>
     <span class="p">}</span>
 </code></pre></div>
-<p>Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер <code>util.Assertions.assertThat</code> и тогда пример выше будет выглядеть следующим образом:</p>
+<p>To reduce the amount of test code, you can use the <code>util.Assertions.assertThat</code> helper, then the example above will look like this:</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
       <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// getting a list of diagnostics</span>
 
       <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// checking the number of errors found</span>
 
-      <span class="c1">// проверка частных случаев</span>
+      <span class="c1">// verification of special cases</span>
       <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
         <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
         <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
     <span class="p">}</span>
 </code></pre></div>
 <h3 id="Test-of-configuration-method-for-parameterized-diagnostics">Test of configuration method for parameterized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parameterized-diagnostics" title="Permanent link">&para;</a></h3>
-<p>Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.<br />
-Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом <code>getDefaultDiagnosticConfiguration()</code>, используя информацию текущего объекта диагностики <code>diagnosticInstance.getInfo()</code>. Полученный результат представляет собой соответствие, в котором, методом <code>put</code>, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом <code>configure()</code> текущего объекта диагностики <code>diagnosticInstance</code>.</p>
+<p>Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test.
+Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the <code>getDefaultDiagnosticConfiguration()</code> method using the information of the current diagnostic object <code>diagnosticInstance.getInfo()</code>. The result is a map in which the <code>put</code> method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the <code>configure()</code> method of the current diagnostic object <code>diagnosticInstance</code>.</p>
 <p>Test method example</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">testConfigure</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// получение настроек диагностики по умолчанию</span>
+        <span class="c1">// getting default diagnostic settings</span>
         <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
 
-        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// установка параметру &quot;templateParem&quot; значения &quot;newValue&quot;</span>
-        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// применение настроек</span>
+        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// setting &quot;templateParem&quot; to &quot;newValue&quot;</span>
+        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// applying settings</span>
 
-        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// получение списка замечаний диагностики</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// getting a list of diagnostics</span>
 
-        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// проверка количества обнаруженных замечаний</span>
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// checking the number of detected</span>
 
-        <span class="c1">// проверка частных случаев</span>
+        <span class="c1">// special case check</span>
         <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
           <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
           <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
     <span class="p">}</span>
 </code></pre></div>
 <h3 id="Quick-fixes-test-Work-in-progress">Quick fixes test <strong>(Work in progress)</strong><a class="headerlink" href="#Quick-fixes-test-Work-in-progress" title="Permanent link">&para;</a></h3>
-<p><em><strong><Work on progress></strong></em></p>
+<p><em><strong><Work in Progress></strong></em></p>
 <h2 id="Diagnostics-resources">Diagnostics resources<a class="headerlink" href="#Diagnostics-resources" title="Permanent link">&para;</a></h2>
-<p>BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге <code>src/main/resources</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".</p>
-<p>Обязательные параметры, используемые при добавлении замечания по диагностике методам <code>diagnosticStorage.addDiagnostic</code></p>
+<p>BSL LS supports two languages ​​in diagnostics: Russian and English, so the diagnostics includes two resource files located in the <code>src/main/resources</code> directory in the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package, one for each language. The file structure is the same: it is a text file in UTF-8 encoding, each line of which contains a "Key=Value" pair.</p>
+<p>Required parameters used when adding diagnostics using the <code>diagnosticStorage.addDiagnostic</code> method</p>
 <ul>
-<li>diagnosticMessage - diagnostic message. Значение поддерживает параметризацию (см <code>String.format</code>)</li>
+<li>diagnosticMessage - diagnostic message. Value supports parameterization (see <code>String.format</code>)</li>
 <li>diagnosticName - Diagnostic name, human-readable</li>
 </ul>
-<p>Для <code>быстрых исправлений</code> применяется параметр <code>quickFixMessage</code>, содержащий описание действия-исправления.</p>
+<p>For <code>quick fixes</code>, the <code>quickFixMessage</code> parameter is used, which contains a description of the fix action.</p>
 <h2 id="Diagnostics-test-resources">Diagnostics test resources<a class="headerlink" href="#Diagnostics-test-resources" title="Permanent link">&para;</a></h2>
-<p>В качестве фикстур используется содержимое ресурсного файла теста, расположенного в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>. Файл должен содержать необходимые примеры кода на языке 1С <em>(или oscript)</em>.<br />
-Необходимо добавлять как ошиочный, так и корректный код, <strong>помечая с помощью комментариев места, где диагностика должна зафиксировать замечания, а где нет</strong>. Лукчше всего, если тестовые примеры будут <code>реальиными</code>, из практики, а не синтетическими, придуманными <code>под диагностику</code>.</p>
+<p>The fixtures are the contents of the test resource file located in the <code>src/test/resources</code> directory in the <code>diagnostics</code> package. The file must contain the necessary code examples in 1C language <em>(or oscript language)</em>. </p>
+<p>It is necessary to add both erroneous and correct code, <strong>marking the places of errors with comments</strong>. It is best if the test cases are <code>real</code>, from practice, and not synthetic, invented <code>for diagnostics</code>.</p>
 <h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
-<p>Описание диагностики создается в формате <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> в двух вариантах - для русского и английчского языков. Файлы с описанием располагаются в каталоге <code>docs/diagnostics</code> для русского языка, для английского в <code>docs/diagnostics</code>.<br />
-Файл в общем случае описания имеет следующую структуру</p>
+<p>The diagnostic description is created in the <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> format in two versions - for Russian and English. The files are located in the <code>docs/diagnostics</code> directory for Russian, for English in <code>docs/en/diagnostics</code>. 
+The file has the structure</p>
 <ul>
-<li>Заголовок, равный значению <code>diagnosticName</code> из файла ресурса диагностики соответствующего языка</li>
-<li>Тело с описанием диагностики, указанием "почему так плохо"</li>
-<li>Исключительные ситуации, когда диагностика не детектирует замечание</li>
+<li>Header equal to the value of <code>diagnosticName</code> from the corresponding language's diagnostic resource file</li>
+<li>A block with a description of the diagnostics, indicating "why it is so bad"</li>
+<li>List of exceptions that diagnostics do not detect</li>
 <li>Examples of good and bad code</li>
-<li>Algorithm of diagnostics for complex</li>
-<li>Ссылки на источники, если диагностика является реализацией стандарта (например на <a href="https://its.1c.ru">ИТС</a>).</li>
+<li>The diagnostic algorithm, if it is not obvious</li>
+<li>If diagnostics is an implementation of the standard, then links to sources (for example, to <a href="https://its.1c.ru">ITS</a>).</li>
 </ul>
 
               
