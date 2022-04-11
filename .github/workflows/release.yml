@@ -95,7 +95,7 @@ jobs:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
             - name: Upload assets to release
-              uses: AButler/upload-release-assets@v1.0
+              uses: AButler/upload-release-assets@v2.0
               with:
                   files: './bsl-language-server_${{ matrix.prefix }}.zip'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -104,7 +104,7 @@ jobs:
               run: ./gradlew build
             - name: Upload jar to release
               if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v1.0
+              uses: AButler/upload-release-assets@v2.0
               with:
                   files: './build/libs/*.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
