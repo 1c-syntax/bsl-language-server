@@ -50,12 +50,12 @@ import java.util.stream.Stream;
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 2,
+  activatedByDefault = false,
   tags = {
     DiagnosticTag.SQL,
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.UNPREDICTABLE
   }
-
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
