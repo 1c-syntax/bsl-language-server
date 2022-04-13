@@ -226,3 +226,8 @@ java -jar bsl-language-server.jar --format --src ./src/cf
 
 `IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
 
+---
+
+[![Digilabs](https://digilabs.ru/1c359e054740a0b75966f8c4babc239a.svg)](https://Digilabs.ru)
+
+[Digilabs](https://digilabs.ru) - авторы `Алькир`- программного комплекса по мониторингу производительности систем на базе 1С:Предприятие 8. Digilabs предоставляет нам серверные мощности для проведения постоянного тестирования производительности BSL Language Server.
