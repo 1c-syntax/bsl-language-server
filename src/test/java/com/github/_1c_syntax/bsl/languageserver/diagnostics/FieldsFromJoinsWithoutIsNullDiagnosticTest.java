@@ -226,8 +226,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
   @Test
   void testWithIsNullOperatorInsideSelect() {
     var sample =
-        "    Запрос.Текст =\n" +
-        "    \"ВЫБРАТЬ \n" +
+        "    Запрос.Текст = \"ВЫБРАТЬ\n" +
         "    |  ВЫБОР КОГДА Сотрудники15.Реквизит ЕСТЬ NULL ТОГДА Истина // не ошибка\n" +
         "    |    КОГДА НЕ Сотрудники15.Реквизит ЕСТЬ NULL ТОГДА Истина // не ошибка\n" +
         "    |КОГДА Сотрудники15.Реквизит ЕСТЬ НЕ NULL ТОГДА Истина // не ошибка\n" +
@@ -235,8 +234,7 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
         "    |ИЗ Справочник.Склады КАК Склады15\n" +
         "    |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Сотрудники КАК Сотрудники15\n" +
         "    |ПО Склады15.Кладовщик = Сотрудники15.Ссылка\n" +
-        "    |\";\n" +
-        "КонецПроцедуры";
+        "    |\";\n";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
