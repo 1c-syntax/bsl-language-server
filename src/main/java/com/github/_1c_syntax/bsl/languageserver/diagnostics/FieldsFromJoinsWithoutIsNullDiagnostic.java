@@ -60,18 +60,15 @@ import java.util.stream.Stream;
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
-  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
 
   private static final Integer WHERE_ROOT = SDBLParser.RULE_searchCondition;
-  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
 
   private static final Integer JOIN_ROOT = SDBLParser.RULE_joinPart;
   private static final Collection<Integer> JOIN_STATEMENTS = Set.of(JOIN_ROOT, SDBLParser.RULE_builtInFunctions);
 
-  public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(SDBLParser.RULE_searchCondition,
-    SDBLParser.RULE_query);
+  public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(SDBLParser.RULE_searchCondition, SDBLParser.RULE_query);
 
   public static final int NOT_WITH_PARENS_EXPR_MEMBERS_COUNT = 4;
   public static final int NOT_IS_NULL_EXPR_MEMBER_COUNT = 2;
