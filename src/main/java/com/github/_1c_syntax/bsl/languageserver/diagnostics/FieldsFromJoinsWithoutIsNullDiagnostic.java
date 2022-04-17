@@ -231,6 +231,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext) ctx).joinPart().stream())
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
       .map(SDBLParser.JoinPartContext::searchConditions)
+      .filter(Objects::nonNull)
       .forEach(searchConditionsContext -> checkStatements(tableName, searchConditionsContext,
         JOIN_STATEMENTS, JOIN_ROOT, false));
   }
