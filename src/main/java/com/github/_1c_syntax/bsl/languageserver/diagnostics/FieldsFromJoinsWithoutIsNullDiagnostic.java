@@ -165,15 +165,16 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT, false);
   }
 
-  private void checkStatements(String tableName, BSLParserRuleContext expression, Collection<Integer> statements,
+  private void checkStatements(String tableName, @Nullable BSLParserRuleContext expression, Collection<Integer> statements,
                                Integer rootForStatement, boolean checkIsNullOperator) {
+    Optional.ofNullable(expression)
+      .ifPresent(existExpression -> Trees.findAllRuleNodes(existExpression, SDBLParser.RULE_column).stream()
+        .filter(Objects::nonNull)
+        .filter(SDBLParser.ColumnContext.class::isInstance)
+        .map(SDBLParser.ColumnContext.class::cast)
+        .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement, checkIsNullOperator))
+        .collect(Collectors.toCollection(() -> nodesForIssues)));
 
-    Trees.findAllRuleNodes(expression, SDBLParser.RULE_column).stream()
-      .filter(Objects::nonNull)
-      .filter(SDBLParser.ColumnContext.class::isInstance)
-      .map(SDBLParser.ColumnContext.class::cast)
-      .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement, checkIsNullOperator))
-      .collect(Collectors.toCollection(() -> nodesForIssues));
   }
 
   private static boolean checkColumn(String tableName, SDBLParser.ColumnContext columnCtx,
@@ -214,7 +215,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(SDBLParser.BuiltInFunctionsContext.class::isInstance)
       .map(SDBLParser.BuiltInFunctionsContext.class::cast)
       .map(SDBLParser.BuiltInFunctionsContext::ISNULL)
-      .filter(Objects::nonNull)
       .isPresent();
   }
 
