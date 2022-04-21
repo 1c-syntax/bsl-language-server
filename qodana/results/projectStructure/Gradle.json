@@ -162,12 +162,12 @@
       "version": "1.5.1"
     },
     {
-      "ideaName": "Gradle: org.projectlombok:lombok:1.18.22",
-      "gradleName": "org.projectlombok:lombok:1.18.22",
+      "ideaName": "Gradle: org.projectlombok:lombok:1.18.24",
+      "gradleName": "org.projectlombok:lombok:1.18.24",
       "unresolved": false,
       "groupId": "org.projectlombok",
       "artifactId": "lombok",
-      "version": "1.18.22"
+      "version": "1.18.24"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",

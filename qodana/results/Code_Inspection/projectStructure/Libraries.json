@@ -127,9 +127,9 @@
       ]
     },
     {
-      "name": "Gradle: org.projectlombok:lombok:1.18.22",
+      "name": "Gradle: org.projectlombok:lombok:1.18.24",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.22/9c08ea24c6eb714e2d6170e8122c069a0ba9aacf/lombok-1.18.22.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.24/13a394eed5c4f9efb2a6d956e2086f1d81e857d9/lombok-1.18.24.jar!/"
       ]
     },
     {
