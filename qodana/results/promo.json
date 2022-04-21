@@ -1,0 +1,32 @@
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Code maturity",
+  "type": "Use of System.out or System.err",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Uses of <code>System.out</code> should probably be replaced with more robust logging",
+  "detailsInfo": "Reports usages of `System.out` or `System.err`.\n\nSuch statements are often used for temporary debugging and should be either removed from the production code, or replaced by a more robust\nlogging facility.",
+  "sources": [
+    {
+      "type": "method",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/VersionCommand.java",
+      "language": "JAVA",
+      "line": 56,
+      "offset": 4,
+      "length": 10,
+      "code": {
+        "startLine": 54,
+        "length": 10,
+        "offset": 11,
+        "surroundingCode": "    }\n\n    System.out.printf(\n      \"version: %s%n\",\n      version"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SystemOutErr"
+  },
+  "hash": "5358509987364272209"
+}]}
