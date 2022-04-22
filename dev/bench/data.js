@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1650642150874,
+  "lastUpdate": 1650649844235,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -16957,6 +16957,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.34758755704178373",
             "extra": "mean: 43.6043016910553 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "25b9298eb5cd0ebd35c0923a68fa7f348af71c09",
+          "message": "Merge pull request #2738 from artbear/strTemplate-add\n\nпропущенный тест IncorrectUseOfStrTemplateDiagnostic",
+          "timestamp": "2022-04-22T17:46:10Z",
+          "tree_id": "70e08188afe7ddf64b229ebb45e613d7b21b0ead",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/25b9298eb5cd0ebd35c0923a68fa7f348af71c09"
+        },
+        "date": 1650649842137,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 43.69621602694193,
+            "unit": "sec",
+            "range": "stddev: 0.40677112518863784",
+            "extra": "mean: 43.69621602694193 sec\nrounds: 3"
           }
         ]
       }
