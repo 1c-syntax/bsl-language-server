@@ -50,8 +50,9 @@ class IncorrectUseOfStrTemplateDiagnosticTest extends AbstractDiagnosticTest<Inc
       .hasRange(24, 8, 45)
       .hasRange(27, 10, 116)
       .hasRange(29, 8, 38)
+      .hasRange(58, 8, 58)
     ;
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
 
   }
 }
