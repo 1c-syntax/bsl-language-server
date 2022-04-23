@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -26,7 +26,8 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Хранилище обращений к символам.
@@ -35,14 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SymbolOccurrenceRepository {
 
   /**
-   * Общий список обращений к символам.
-   */
-  private final Set<SymbolOccurrence> occurrences = ConcurrentHashMap.newKeySet();
-
-  /**
    * Список обращений к символам в разрезе символов.
    */
-  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
+  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentSkipListMap<>();
 
   /**
    * Сохранить обращение к символу в хранилище.
@@ -50,8 +46,7 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrence Обращение к символу.
    */
   public void save(SymbolOccurrence symbolOccurrence) {
-    occurrences.add(symbolOccurrence);
-    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
+    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> new ConcurrentSkipListSet<>())
       .add(symbolOccurrence);
   }
 
@@ -71,7 +66,6 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrences Список обращений к символам.
    */
   public void deleteAll(Set<SymbolOccurrence> symbolOccurrences) {
-    occurrences.removeAll(symbolOccurrences);
     symbolOccurrences.forEach(symbolOccurrence ->
       occurrencesToSymbols.get(symbolOccurrence.getSymbol()).remove(symbolOccurrence)
     );

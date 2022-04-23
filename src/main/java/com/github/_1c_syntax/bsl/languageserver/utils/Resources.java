@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.experimental.UtilityClass;
 
 import java.util.Locale;
@@ -33,6 +34,8 @@ import java.util.ResourceBundle;
 @UtilityClass
 public class Resources {
 
+  private final StringInterner stringInterner = new StringInterner();
+
   /**
    * @param language Язык получения ресурсной строки.
    * @param clazz    Класс, ресурсы которого необходимо прочитать.
@@ -40,9 +43,7 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public String getResourceString(Language language, Class<?> clazz, String key) {
-    String languageCode = language.getLanguageCode();
-    var locale = Locale.forLanguageTag(languageCode);
-    return ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key).intern();
+    return getResourceString(language.getLocale(), clazz, key);
   }
 
   /**
@@ -52,7 +53,8 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public String getResourceString(Locale locale, Class<?> clazz, String key) {
-    return ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key).intern();
+    var resourceString = ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key);
+    return stringInterner.intern(resourceString);
   }
 
   /**
@@ -63,7 +65,7 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public String getResourceString(Language language, Class<?> clazz, String key, Object... args) {
-    return String.format(getResourceString(language, clazz, key), args).intern();
+    return getResourceString(language.getLocale(), clazz, key, args);
   }
 
   /**
@@ -74,6 +76,7 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public String getResourceString(Locale locale, Class<?> clazz, String key, Object... args) {
-    return String.format(getResourceString(locale, clazz, key), args).intern();
+    var resourceString = String.format(getResourceString(locale, clazz, key), args);
+    return stringInterner.intern(resourceString);
   }
 }

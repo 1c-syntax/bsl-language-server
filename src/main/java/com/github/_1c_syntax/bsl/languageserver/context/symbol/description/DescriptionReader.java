@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -58,10 +58,12 @@ public class DescriptionReader {
     if (ctx.parameters().hyperlinkBlock() != null) {
       List<ParameterDescription> result = new ArrayList<>();
       if (ctx.parameters().hyperlinkBlock().hyperlinkType() != null) {
-        result.add(new ParameterDescription("",
+        result.add(new ParameterDescription(
+          "",
           Collections.emptyList(),
           getDescriptionString(ctx.parameters().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
-          true));
+          true
+        ));
       }
       return result;
     }
@@ -92,11 +94,13 @@ public class DescriptionReader {
     if (ctx.returnsValues().hyperlinkBlock() != null) {
       List<TypeDescription> result = new ArrayList<>();
       if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
-        result.add(new TypeDescription("",
+        result.add(new TypeDescription(
+          "",
           "",
           Collections.emptyList(),
           getDescriptionString(ctx.returnsValues().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
-          true));
+          true
+        ));
       }
       return result;
     }
@@ -154,6 +158,7 @@ public class DescriptionReader {
         return strings.stream()
           .map(DescriptionReader::getDescriptionString)
           .filter((String s) -> !s.isBlank())
+          .map(String::intern)
           .collect(Collectors.toList());
       }
     }
@@ -173,6 +178,7 @@ public class DescriptionReader {
         return strings.stream()
           .map(DescriptionReader::getDescriptionString)
           .filter((String s) -> !s.isBlank())
+          .map(String::intern)
           .collect(Collectors.toList());
       }
     }
@@ -285,7 +291,7 @@ public class DescriptionReader {
     private TempParameterData(BSLMethodDescriptionParser.ParameterContext parameter) {
       this();
       if (parameter.parameterName() != null) {
-        this.name = parameter.parameterName().getText().strip();
+        this.name = parameter.parameterName().getText().strip().intern();
         this.empty = false;
         if (parameter.typesBlock() != null) {
           addType(parameter.typesBlock().type(), parameter.typesBlock().typeDescription());
@@ -297,7 +303,7 @@ public class DescriptionReader {
       this();
       this.level = level;
       if (subParameter.parameterName() != null) {
-        this.name = subParameter.parameterName().getText().strip();
+        this.name = subParameter.parameterName().getText().strip().intern();
         this.empty = false;
         if (subParameter.typesBlock() != null) {
           addType(subParameter.typesBlock().type(), subParameter.typesBlock().typeDescription());
@@ -307,7 +313,7 @@ public class DescriptionReader {
 
     private TempParameterData(String name) {
       this();
-      this.name = name.strip();
+      this.name = name.strip().intern();
       this.empty = false;
     }
 
@@ -333,13 +339,15 @@ public class DescriptionReader {
           if (child.isHyperlink) {
             link = child.name.substring(HYPERLINK_REF_LEN);
           }
-          return new TypeDescription(child.name,
+          return new TypeDescription(
+            child.name.intern(),
             child.description.toString(),
             subParameters,
             link,
-            child.isHyperlink);
+            child.isHyperlink
+          );
         }).collect(Collectors.toList());
-      return new ParameterDescription(name, parameterTypes, "", false);
+      return new ParameterDescription(name.intern(), parameterTypes, "", false);
     }
 
     private void addType(@Nullable BSLMethodDescriptionParser.TypeContext paramType,
@@ -396,7 +404,7 @@ public class DescriptionReader {
     private final boolean isHyperlink;
 
     private TempParameterTypeData(String name, int level, boolean isHyperlink) {
-      this.name = name;
+      this.name = name.intern();
       this.description = new StringJoiner("\n");
       this.level = level;
       this.subParameters = new ArrayList<>();

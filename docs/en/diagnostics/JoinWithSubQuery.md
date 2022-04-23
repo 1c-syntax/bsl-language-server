@@ -1,9 +1,5 @@
 # Join with sub queries (JoinWithSubQuery)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                       Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |          `10`           |       `sql`<br>`standard`<br>`performance`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -11,10 +7,11 @@
 When writing queries, you should not use subquery joins. Only metadata objects or temporary tables should be joined to each other.
 
 If the query contains joins with subqueries, then this can lead to negative consequences:
+
 - Very slow query execution with low load on server hardware
 - Unstable work of the request. Sometimes the query can work fast enough, sometimes very slow
-- Significant difference in query execution time for different DBMS;
-- Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down.
+- Significant difference in query execution time for different DBMS
+- Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -41,19 +38,3 @@ LEFT JOIN (
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 * [Standard: Restrictions on SubQuery and Virtual Table Joins (RU)](https://its.1c.ru/db/v8std#content:655:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:JoinWithSubQuery-off
-// BSLLS:JoinWithSubQuery-on
-```
-
-### Parameter for config
-
-```json
-"JoinWithSubQuery": false
-```

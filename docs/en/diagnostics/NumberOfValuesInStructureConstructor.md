@@ -1,15 +1,5 @@
 # Limit on the number of property values passed to the structure constructor (NumberOfValuesInStructureConstructor)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `10`           |    `standard`<br>`brainoverload`    |
-
-## Parameters
-
-
-|       Name       |   Type    |                            Description                            | Default value |
-|:----------------:|:---------:|:-----------------------------------------------------------------:|:-------------:|
-| `maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -61,24 +51,6 @@ Parameters.Insert("UUID ", UUID);
 Parameters.Insert("Description", Description);
 ```
 
-## Reference
+## Sources
 
-* [Standard: Using objects of type Structure](https://its.1c.ru/db/v8std#content:693:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NumberOfValuesInStructureConstructor-off
-// BSLLS:NumberOfValuesInStructureConstructor-on
-```
-
-### Parameter for config
-
-```json
-"NumberOfValuesInStructureConstructor": {
-    "maxValuesCount": 3
-}
-```
+* [Standard: Using objects of type Structure (RU)](https://its.1c.ru/db/v8std#content:693:hdoc)

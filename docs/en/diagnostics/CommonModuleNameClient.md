@@ -1,9 +1,5 @@
 # Missed postfix "Client" (CommonModuleNameClient)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Code smell` | `BSL` | `Minor`  |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,19 +23,3 @@ FilesClient, CommonClient, StandardSubsystemsClient
 
 
 [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:2.3)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CommonModuleNameClient-off
-// BSLLS:CommonModuleNameClient-on
-```
-
-### Parameter for config
-
-```json
-"CommonModuleNameClient": false
-```

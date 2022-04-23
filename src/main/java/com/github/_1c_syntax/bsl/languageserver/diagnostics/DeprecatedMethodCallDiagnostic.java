@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -52,8 +52,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   public void check() {
     var uri = documentContext.getUri();
 
-    referenceIndex.getReferencesFrom(uri).stream()
-      .filter(reference -> reference.getSymbol().getSymbolKind() == SymbolKind.Method)
+    referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
       .filter(reference -> reference.getSymbol().isDeprecated())
       .filter(reference -> !reference.getFrom().isDeprecated())
       .forEach((Reference reference) -> {

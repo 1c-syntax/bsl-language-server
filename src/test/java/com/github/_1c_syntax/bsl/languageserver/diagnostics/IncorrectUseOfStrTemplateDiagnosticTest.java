@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -50,8 +50,9 @@ class IncorrectUseOfStrTemplateDiagnosticTest extends AbstractDiagnosticTest<Inc
       .hasRange(24, 8, 45)
       .hasRange(27, 10, 116)
       .hasRange(29, 8, 38)
+      .hasRange(58, 8, 58)
     ;
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
 
   }
 }
