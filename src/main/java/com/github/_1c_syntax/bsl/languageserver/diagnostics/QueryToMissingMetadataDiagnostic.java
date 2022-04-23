@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -36,6 +38,7 @@ import java.util.Optional;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
+  scope = DiagnosticScope.BSL,
   minutesToFix = 5,
   tags = {
     DiagnosticTag.SUSPICIOUS,
@@ -43,10 +46,21 @@ import java.util.Optional;
   }
 
 )
-public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnostic {
+
+  @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+
+    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
+      return ctx;
+    }
+
+    return super.visitQueryPackage(ctx);
+  }
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
+
     if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,
         info.getMessage(mdo.getText()));
@@ -61,7 +75,7 @@ public class WrongMetadataInQueryDiagnostic extends AbstractSDBLVisitorDiagnosti
   private Optional<AbstractMDObjectBase> getMdo(String mdoTypeName, String mdoName) {
     return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
       documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().entrySet().stream()
-        .filter(entry -> entry.getKey().getType().equals(mdoType)
+        .filter(entry -> entry.getKey().getType() == mdoType
           && mdoName.equals(entry.getValue().getName()))
         .map(Map.Entry::getValue)
         .findFirst()

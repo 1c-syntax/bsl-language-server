@@ -1,9 +1,5 @@
 # Ternary operator usage (TernaryOperatorUsage)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `No`              |           `3`           | `brainoverload` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -35,29 +31,13 @@ Bad:
 
 ```bsl
 If ?(P.Emp_emptype = Null, 0, P.Emp_emptype) = 0 Then
-      Status = "Done";
+      Status = "Done";
 EndIf;
 ```
 Good:
 
 ```bsl
 If P.Emp_emptype = Null OR P.Emp_emptype = 0 Then
-      Status = "Done";
+      Status = "Done";
 End If;
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:TernaryOperatorUsage-off
-// BSLLS:TernaryOperatorUsage-on
-```
-
-### Parameter for config
-
-```json
-"TernaryOperatorUsage": false
 ```

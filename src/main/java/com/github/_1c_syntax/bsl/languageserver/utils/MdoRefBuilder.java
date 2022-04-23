@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -29,6 +29,7 @@ import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.utils.MDOUtils;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -42,6 +43,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @UtilityClass
 public class MdoRefBuilder {
 
+  private final StringInterner stringInterner = new StringInterner();
+
   public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
     if (callStatement.globalMethodCall() != null) {
       return getMdoRef(documentContext);
@@ -51,10 +54,11 @@ public class MdoRefBuilder {
   }
 
   public static String getMdoRef(DocumentContext documentContext) {
-    return documentContext.getMdObject()
+    var mdoRef = documentContext.getMdObject()
       .map(AbstractMDObjectBase::getMdoReference)
       .map(MDOReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
+    return stringInterner.intern(mdoRef);
   }
 
   public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
@@ -84,7 +88,7 @@ public class MdoRefBuilder {
       )
       .ifPresent(mdoRef::set);
 
-    return mdoRef.get();
+    return stringInterner.intern(mdoRef.get());
   }
 
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {

@@ -1,15 +1,5 @@
 # Usage of complex expressions in the "If" condition (IfConditionComplexity)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `5`           | `brainoverload` |
-
-## Parameters
-
-
-|            Name            |   Type    |                             Description                             | Default value |
-|:--------------------------:|:---------:|:-------------------------------------------------------------------:|:-------------:|
-| `maxIfConditionComplexity` | `Integer` | `Acceptable number of logical expressions in operator If condition` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -55,22 +45,4 @@ Function IsCorrectId(Id)
             Or Id = "Expr9";
 
 EndFunction
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IfConditionComplexity-off
-// BSLLS:IfConditionComplexity-on
-```
-
-### Parameter for config
-
-```json
-"IfConditionComplexity": {
-    "maxIfConditionComplexity": 3
-}
 ```

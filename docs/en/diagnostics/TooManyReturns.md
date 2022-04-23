@@ -1,15 +1,5 @@
 # Methods should not have too many return statements (TooManyReturns)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `No`              |          `20`           | `brainoverload` |
-
-## Parameters
-
-
-|       Name        |   Type    |                  Description                   | Default value |
-|:-----------------:|:---------:|:----------------------------------------------:|:-------------:|
-| `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` |      `3`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -44,21 +34,3 @@ EndFunction
 * [Why Many Return Statements Are a Bad Idea in OOP](https://www.yegor256.com/2015/08/18/multiple-return-statements-in-oop.html)
 * [JAVA: Methods should not have too many return statements](https://rules.sonarsource.com/java/RSPEC-1142)
 * [Why fast return is so important?](https://habr.com/ru/post/348074/)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:TooManyReturns-off
-// BSLLS:TooManyReturns-on
-```
-
-### Parameter for config
-
-```json
-"TooManyReturns": {
-    "maxReturnsCount": 3
-}
-```

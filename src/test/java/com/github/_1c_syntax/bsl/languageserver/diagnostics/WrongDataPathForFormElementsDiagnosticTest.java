@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -39,6 +41,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@DirtiesContext
 class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<WrongDataPathForFormElementsDiagnostic> {
 
   public static final String PATH_TO_ELEMENT_MODULE_FILE = "/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl";
@@ -111,7 +114,7 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   private List<Diagnostic> getDiagnosticListForMockedFile(String pathToDynamicListModuleFile) {
     var testFile = Paths.get(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
 
-    var documentContext = context.addDocument(testFile.toUri(), getText(), 1);
+    var documentContext = TestUtils.getDocumentContext(testFile.toUri(), getText());
 
     return getDiagnostics(documentContext);
   }

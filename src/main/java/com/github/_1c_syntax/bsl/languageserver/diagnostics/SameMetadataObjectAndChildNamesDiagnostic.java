@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -34,6 +34,7 @@ import com.github._1c_syntax.mdclasses.mdo.attributes.AbstractMDOAttribute;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.utils.StringInterner;
 
 import java.util.List;
 
@@ -57,8 +58,12 @@ import java.util.List;
 public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataDiagnostic {
 
   private final LanguageServerConfiguration serverConfiguration;
+  private final StringInterner stringInterner;
 
-  SameMetadataObjectAndChildNamesDiagnostic(LanguageServerConfiguration serverConfiguration) {
+  SameMetadataObjectAndChildNamesDiagnostic(
+    LanguageServerConfiguration serverConfiguration,
+    StringInterner stringInterner
+  ) {
     super(List.of(
       MDOType.ACCOUNTING_REGISTER,
       MDOType.ACCUMULATION_REGISTER,
@@ -74,6 +79,7 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
       MDOType.TASK
     ));
     this.serverConfiguration = serverConfiguration;
+    this.stringInterner = stringInterner;
   }
 
   @Override
@@ -82,7 +88,7 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
       return;
     }
 
-    var mdoName = mdo.getName().intern();
+    var mdoName = stringInterner.intern(mdo.getName());
     ((AbstractMDObjectComplex) mdo).getAttributes().stream()
       .filter(attribute -> mdoName.equalsIgnoreCase(attribute.getName()))
       .forEach(attribute -> addAttributeDiagnostic(attribute, mdoName));
@@ -91,7 +97,7 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
       .filter(TabularSection.class::isInstance)
       .map(TabularSection.class::cast)
       .forEach((TabularSection table) -> {
-        var tableName = table.getName().intern();
+        var tableName = stringInterner.intern(table.getName());
         table.getAttributes().stream()
           .filter(attribute -> tableName.equalsIgnoreCase(attribute.getName()))
           .forEach(attribute -> addAttributeDiagnostic(attribute, tableName));

@@ -1,9 +1,5 @@
 # Ban export global module variables (ExportVariables)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                         Tags                          |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`design`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -42,20 +38,4 @@ FileObject.Write();
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников -->
 
-[Standard: Using global variables in modules](https://its.1c.ru/db/v8std#content:639:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:ExportVariables-off
-// BSLLS:ExportVariables-on
-```
-
-### Parameter for config
-
-```json
-"ExportVariables": false
-```
+[Standard: Using global variables in modules (RU)](https://its.1c.ru/db/v8std#content:639:hdoc)

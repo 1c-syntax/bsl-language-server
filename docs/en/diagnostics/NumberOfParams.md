@@ -1,15 +1,5 @@
 # Number of parameters in method (NumberOfParams)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                Tags                 |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |          `30`           |    `standard`<br>`brainoverload`    |
-
-## Parameters
-
-
-|       Name       |   Type    |         Description          | Default value |
-|:----------------:|:---------:|:----------------------------:|:-------------:|
-| `maxParamsCount` | `Integer` | `Max number of params count` |      `7`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -22,9 +12,9 @@ If need to pass many parameters to a function, it is recommended to group same-t
 Incorrect:
 
 ```bsl
-// Create item in catalog "Goods"
-Procedure CreateNewGoods(Description, Goods, Units, Weight, Check = True)
-
+// Create an item in catalog "Goods"
+Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
+// ... 
 EndProcedure
 ```
 
@@ -34,28 +24,9 @@ Group parameters, having goods item properties into Structure Values.
 ```bsl
 // Create item in catalog "Goods"
 Procedure CreateNewGoods(Values, Check = True)
-
 EndProcedure
 ```
 
 ## Sources
 
-* [Standard: Procedure and function parameters (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NumberOfParams-off
-// BSLLS:NumberOfParams-on
-```
-
-### Parameter for config
-
-```json
-"NumberOfParams": {
-    "maxParamsCount": 7
-}
-```
+* [Standard: Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)

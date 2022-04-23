@@ -1,15 +1,5 @@
 # Initialization of method and constructor parameters by calling nested methods (NestedFunctionInParameters)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Minor`  |             `Yes`             |           `2`           |       `standard`<br>`brainoverload`<br>`badpractice`       |
-
-## Parameters
-
-
-|      Name       |   Type    |         Description         | Default value |
-|:---------------:|:---------:|:---------------------------:|:-------------:|
-| `allowOneliner` | `Boolean` | `Allow oneliner expression` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -22,7 +12,7 @@ At the same time, if the code with nested calls is compact (does not require the
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Wrong:
+Incorrect:
 
 ```bsl
 Attachments.Insert(  AttachedFile.Description,  New Picture(GetFromTempStorage(   AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData)));
@@ -39,21 +29,3 @@ FileImageHRef = AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData;
 
 
 * [Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NestedFunctionInParameters-off
-// BSLLS:NestedFunctionInParameters-on
-```
-
-### Parameter for config
-
-```json
-"NestedFunctionInParameters": {
-    "allowOneliner": true
-}
-```

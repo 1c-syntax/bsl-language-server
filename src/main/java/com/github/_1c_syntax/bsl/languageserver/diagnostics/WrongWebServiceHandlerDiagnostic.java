@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -55,20 +55,17 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
 
     //todo может ли не быть модуля web-сервиса? тогда непонятно, на какой модуль вешать замечания
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(this::processModuleWithRange);
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (!Ranges.isEmpty(diagnosticRange)) {
+      processModule();
+    }
   }
 
-  private void processModuleWithRange(Range range) {
-    diagnosticRange = range;
-
+  private void processModule() {
     documentContext.getMdObject()
       .filter(MDWebService.class::isInstance)
       .map(MDWebService.class::cast)
       .ifPresent(this::checkService);
-
-    diagnosticRange = null;
-
   }
 
   private void checkService(MDWebService mdWebService) {

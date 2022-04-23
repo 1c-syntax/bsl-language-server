@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -49,7 +49,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
     List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
-    List<VariableSymbol> variables = new VariableSymbolComputer(documentContext).compute();
+    List<VariableSymbol> variables = new VariableSymbolComputer(documentContext, moduleSymbol, methods).compute();
 
     List<SourceDefinedSymbol> allOfThem = new ArrayList<>(methods);
     allOfThem.addAll(regions);

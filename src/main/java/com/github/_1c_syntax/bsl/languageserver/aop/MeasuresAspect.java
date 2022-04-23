@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.aop.measures.MeasureCollector;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.NoArgsConstructor;
@@ -60,6 +61,24 @@ public class MeasuresAspect {
     var diagnostic = (BSLDiagnostic) jp.getThis();
     var diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
     return measureCollector.measureIt(jp::proceed, "diagnostic: " + diagnosticCode);
+  }
+
+  @Before("Pointcuts.isDocumentContext() && execution(* computeSymbolTree(..))")
+  public void measureGetTokens(JoinPoint jp) {
+    if (measureCollector == null) {
+      return;
+    }
+    var documentContext = (DocumentContext) jp.getTarget();
+    measureCollector.measureIt(documentContext::getTokens, "context: tokens");
+    measureCollector.measureIt(documentContext::getAst, "context: ast");
+  }
+
+  @Around("Pointcuts.isDocumentContext() && execution(* computeSymbolTree(..))")
+  public Object measureComputeSymbolTree(ProceedingJoinPoint jp) throws Throwable {
+    if (measureCollector == null) {
+      return jp.proceed();
+    }
+    return measureCollector.measureIt(jp::proceed, "context: symbolTree");
   }
 
   @Before("Pointcuts.isServerContext() && execution(* populateContext(..)) && args(files)")

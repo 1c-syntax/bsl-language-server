@@ -1086,6 +1086,14 @@
                 "object"
             ],
             "title": "Function returned values description is missing",
+            "properties": {
+                "allowShortDescriptionReturnValues": {
+                    "description": "Allow short description of return values",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow short description of return values"
+                }
+            },
             "$id": "#/definitions/MissingReturnedValueDescription"
         },
         "MissingSpace": {
@@ -1238,6 +1246,12 @@
                     "default": true,
                     "type": "boolean",
                     "title": "Allow oneliner expression"
+                },
+                "allowedMethodNames": {
+                    "description": "Names of methods that are allowed to be used to initialize parameters",
+                    "default": "\u041d\u0421\u0442\u0440,NStr,\u041f\u0440\u0435\u0434\u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u043d\u043e\u0435\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435,PredefinedValue",
+                    "type": "string",
+                    "title": "Names of methods that are allowed to be used to initialize parameters"
                 }
             },
             "$id": "#/definitions/NestedFunctionInParameters"
@@ -1441,6 +1455,16 @@
             ],
             "title": "Query text parsing error",
             "$id": "#/definitions/QueryParseError"
+        },
+        "QueryToMissingMetadata": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/QueryToMissingMetadata"
         },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
@@ -1780,6 +1804,16 @@
             },
             "$id": "#/definitions/UnusedLocalMethod"
         },
+        "UnusedLocalVariable": {
+            "description": "Unused local variable",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local variable",
+            "$id": "#/definitions/UnusedLocalVariable"
+        },
         "UnusedParameters": {
             "description": "Unused parameter",
             "default": true,
@@ -1791,13 +1825,13 @@
             "$id": "#/definitions/UnusedParameters"
         },
         "UsageWriteLogEvent": {
-            "description": "Incorrect use of the method",
+            "description": "Incorrect use of the method \"WriteLogEvent\"",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Incorrect use of the method",
+            "title": "Incorrect use of the method \"WriteLogEvent\"",
             "$id": "#/definitions/UsageWriteLogEvent"
         },
         "UseLessForEach": {
@@ -2015,16 +2049,6 @@
             ],
             "title": "Missing handler for http service",
             "$id": "#/definitions/WrongHttpServiceHandler"
-        },
-        "WrongMetadataInQuery": {
-            "description": "Using non-existent metadata in the query",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using non-existent metadata in the query",
-            "$id": "#/definitions/WrongMetadataInQuery"
         },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",

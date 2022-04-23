@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -28,11 +28,19 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.StringInterner;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,28 +50,36 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
+@Component
+@Scope(SCOPE_PROTOTYPE)
+@RequiredArgsConstructor
 public class CognitiveComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
   private final DocumentContext documentContext;
 
+  @Setter(onMethod = @__({@Autowired}), value = AccessLevel.PACKAGE)
+  private StringInterner stringInterner;
+
   private int fileComplexity;
   private int fileCodeBlockComplexity;
-  private final List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
+  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
-  private final Map<MethodSymbol, Integer> methodsComplexity;
-  private final Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+  private Map<MethodSymbol, Integer> methodsComplexity;
+  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 
   private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
-  private final Set<BSLParserRuleContext> ignoredContexts;
+  private Set<BSLParserRuleContext> ignoredContexts;
 
-  public CognitiveComplexityComputer(DocumentContext documentContext) {
-    this.documentContext = documentContext;
+  @PostConstruct
+  public void init() {
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
     fileBlockComplexitySecondaryLocations = new ArrayList<>();
@@ -381,7 +397,7 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), message.intern());
+    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), stringInterner.intern(message));
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

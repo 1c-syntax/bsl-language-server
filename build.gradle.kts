@@ -9,17 +9,17 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.2.0"
-    id("io.freefair.javadoc-links") version "6.2.0"
-    id("io.freefair.javadoc-utf-8") version "6.2.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.2.0"
-    id("io.freefair.maven-central.validate-poms") version "6.2.0"
-    id("me.qoomon.git-versioning") version "5.1.1"
-    id("com.github.ben-manes.versions") version "0.39.0"
-    id("org.springframework.boot") version "2.5.5"
+    id("io.freefair.lombok") version "6.4.3"
+    id("io.freefair.javadoc-links") version "6.4.3"
+    id("io.freefair.javadoc-utf-8") version "6.4.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.4.3"
+    id("io.freefair.maven-central.validate-poms") version "6.4.3"
+    id("me.qoomon.git-versioning") version "5.2.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
+    id("org.springframework.boot") version "2.6.7"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "0.5.0"
-    id("ru.vyarus.pom") version "2.2.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
+    id("ru.vyarus.pom") version "2.2.1"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
 
@@ -49,8 +49,7 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "5.4"
-aspectj.version.set("1.9.7")
+val languageToolVersion = "5.6"
 
 dependencies {
 
@@ -58,13 +57,13 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.6.1")
+    api("info.picocli:picocli-spring-boot-starter:4.6.3")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.20.1") {
+    api("com.github.1c-syntax", "bsl-parser", "0.20.3") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -72,8 +71,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.3.4")
-    api("com.github.1c-syntax", "mdclasses", "0.9.2")
+    api("com.github.1c-syntax", "utils", "48335fb954fb94c0468b8a56399026a5247a7396")
+    api("com.github.1c-syntax", "mdclasses", "892e0e9f51f6837f68165dd9a16187c7176f4f55")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -81,7 +80,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", aspectj.version.get())
+    implementation("org.aspectj", "aspectjrt", "1.9.7")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -115,8 +114,8 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
-    testImplementation("org.awaitility", "awaitility", "4.1.0")
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
+    testImplementation("org.awaitility", "awaitility", "4.1.1")
 }
 
 java {
@@ -166,6 +165,7 @@ tasks.test {
 
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
+    mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
 tasks.jacocoTestReport {
@@ -177,17 +177,28 @@ tasks.jacocoTestReport {
 
 tasks.processResources {
     filteringCharset = "UTF-8"
-    from("docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
-
-    from("docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
-    }
-
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
+    }
+}
+
+tasks.classes {
+    finalizedBy(tasks.generateDiagnosticDocs)
+}
+
+tasks.generateDiagnosticDocs {
+    doLast {
+        val resourcePath = tasks["processResources"].outputs.files.singleFile
+        copy {
+            from("$buildDir/docs/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+        }
+
+        copy {
+            from("$buildDir/docs/en/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+        }
     }
 }
 
@@ -206,7 +217,7 @@ license {
     header(rootProject.file("license/HEADER.txt"))
     newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
-    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
+    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
     exclude("**/*.properties")
     exclude("**/*.xml")
@@ -295,7 +306,7 @@ publishing {
                     }
                     developer {
                         id.set("nixel2007")
-                        name.set("Nikita Gryzlov")
+                        name.set("Nikita Fedkin")
                         email.set("nixel2007@gmail.com")
                         url.set("https://github.com/nixel2007")
                         organization.set("1c-syntax")
