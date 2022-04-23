@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -56,72 +55,5 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(212, 6, 214,22)
       .hasSize(13)
     ;
-
-  }
-
-  @Test
-  void testBriefDescriptionWithoutFullDesc() {
-    var sample =
-      "  Попытка\n" +
-      "      // клиентский код, приводящий к вызову исключения\n" +
-      "      СоздатьФайлНаДиске();\n" +
-      "  Исключение\n" +
-      "      //ТекстСообщения = КраткоеПредставлениеОшибки(ИнформацияОбОшибке());\n" +
-      "      ПоказатьПредупреждение(,НСтр(\"ru = 'Операция не может быть выполнена по причине:'\") + Символы.ПС + ТекстСообщения);\n" +
-      "      ЗаписьЖурналаРегистрации(НСтр(\"ru = 'Выполнение операции'\"),\n" +
-      "       УровеньЖурналаРегистрации.Ошибка,,,\n" +
-      "       КраткоеПредставлениеОшибки(ИнформацияОбОшибке()));\n" +
-      "  КонецПопытки;\n";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).hasSize(1);
-  }
-
-  @Test
-  void testSimpleWriteLogEventWithoutFullDesc() {
-    var sample =
-      "Процедура ОбычнаяЗаписьВЖР(Знач ИмяСобытия, Знач ОписаниеОшибки, Знач Ответ, Знач СсылкаНаДанные = Неопределено) Экспорт\n" +
-      " ТекстЗаписи = ТекстОтвета(ОписаниеОшибки, Ответ);\n" +
-      "   ЗаписьЖурналаРегистрации(\n" +
-      "   ИмяСобытия,\n" +
-      "   УровеньЖурналаРегистрации.Ошибка,\n" +
-      "   ,\n" +
-      "   СсылкаНаДанные,\n" +
-      "   ТекстЗаписи); // не ошибка\n" +
-      "КонецПроцедуры";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).isEmpty();
-  }
-
-  @Test
-  void testHardLogEventInsideException() {
-    var sample =
-      "Процедура СложныйМетодСИспользованиемПодробногоПредставленияВнутриИсключения(Знач ИмяСобытия, Знач ОписаниеОшибки, Знач Ответ, Знач СсылкаНаДанные = Неопределено) Экспорт\n" +
-        "\t\tПопытка\n" +
-        "\t\t\tБлокировка.Заблокировать();\n" +
-        "\t\tИсключение\n" +
-        "            ТекстСообщения = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(\n" +
-        "                НСтр(\"ru = 'Не удалось обработать график работы по причине:\n" +
-        "                      |%2'\"), \n" +
-        "                ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));\n" +
-        "        \n" +
-        "            ЗаписьЖурналаРегистрации(\n" +
-        "                ИмяСобытия,\n" +
-        "                УровеньЖурналаРегистрации.Ошибка,\n" +
-        "                ,\n" +
-        "                СсылкаНаДанные,\n" +
-        "                ТекстСообщения); // ошибка\n" +
-        "\t\tКонецПопытки;\n" +
-        "КонецПроцедуры\n";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).isEmpty();
   }
 }
