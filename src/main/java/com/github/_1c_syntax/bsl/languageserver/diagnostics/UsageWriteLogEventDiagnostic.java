@@ -68,42 +68,49 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   private static final int WRITE_LOG_EVENT_METHOD_PARAMS_COUNT = 5;
+  public static final String WRONG_NUMBER_MESSAGE = "wrongNumberMessage";
+  public static final String NO_SECOND_PARAMETER = "noSecondParameter";
+  public static final String NO_COMMENT = "noComment";
+  public static final String NO_ERROR_LOG_LEVEL_INSIDE_EXCEPT_BLOCK = "noErrorLogLevelInsideExceptBlock";
+  public static final String NO_DETAIL_ERROR_DESCRIPTION = "noDetailErrorDescription";
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
     if (!checkMethodName(ctx)) {
-      return super.visitGlobalMethodCall(ctx);
+      return super.defaultResult();
     }
 
     final var callParams = ctx.doCall().callParamList().callParam();
     if (callParams.size() < WRITE_LOG_EVENT_METHOD_PARAMS_COUNT) {
-      fireIssue(ctx, "wrongNumberMessage");
-      return super.visitGlobalMethodCall(ctx);
+      fireIssue(ctx, WRONG_NUMBER_MESSAGE);
+      return super.defaultResult();
     }
 
     final BSLParser.CallParamContext secondParamCtx = callParams.get(1);
     if (secondParamCtx.getChildCount() == 0) {
-      fireIssue(ctx, "noSecondParameter");
-      return super.visitGlobalMethodCall(ctx);
+      fireIssue(ctx, NO_SECOND_PARAMETER);
+      return super.defaultResult();
     }
 
     final BSLParser.CallParamContext commentCtx = callParams.get(4);
     if (commentCtx.getChildCount() == 0) {
-      fireIssue(ctx, "noComment");
-      return super.visitGlobalMethodCall(ctx);
+      fireIssue(ctx, NO_COMMENT);
+      return super.defaultResult();
     }
 
-    if (!hasErrorLogLevel(secondParamCtx) && isInsideExceptBlock(ctx)) {
-      fireIssue(ctx, "noErrorLogLevelInsideExceptBlock");
-      return super.visitGlobalMethodCall(ctx);
+    if (isInsideExceptBlock(ctx)){
+      if (!hasErrorLogLevel(secondParamCtx)) {
+        fireIssue(ctx, NO_ERROR_LOG_LEVEL_INSIDE_EXCEPT_BLOCK);
+        return super.defaultResult();
+      }
+
+      if (!isCommentCorrect(commentCtx)) {
+        fireIssue(ctx, NO_DETAIL_ERROR_DESCRIPTION);
+      }
     }
 
-    if (!isCommentCorrect(commentCtx)) {
-      fireIssue(ctx, "noDetailErrorDescription");
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+    return super.defaultResult();
   }
 
   private static boolean checkMethodName(BSLParser.GlobalMethodCallContext ctx) {
@@ -221,24 +228,23 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isValidExpression(BSLParser.MemberContext ctx, BSLParser.CodeBlockContext codeBlock,
                                            boolean checkPrevAssignment) {
-    if (!isInsideExceptBlock(codeBlock) && ctx.constValue() != null) {
-      return true;
-    } else {
-      if (checkPrevAssignment) {
-        final var complexIdentifier = ctx.complexIdentifier();
-        if (complexIdentifier != null) {
-          return isValidVarAssignment(complexIdentifier, codeBlock);
-        }
-      }
+    if (ctx.constValue() != null) {
       return false;
     }
+    if (checkPrevAssignment) {
+      final var complexIdentifier = ctx.complexIdentifier();
+      if (complexIdentifier != null) {
+        return isValidVarAssignment(complexIdentifier, codeBlock);
+      }
+    }
+    return false;
   }
 
   private static boolean isValidVarAssignment(
-    BSLParser.ComplexIdentifierContext var,
+    BSLParser.ComplexIdentifierContext varContext,
     BSLParser.CodeBlockContext codeBlock
   ) {
-    String varName = var.getText();
+    String varName = varContext.getText();
     return getAssignment(varName, codeBlock)
       .map(BSLParser.AssignmentContext::expression)
       .map(expression -> isValidExpression(codeBlock, expression, false))
