@@ -19,9 +19,9 @@
       ]
     },
     {
-      "name": "Gradle: com.github.1c-syntax:bsl-parser:0.20.3",
+      "name": "Gradle: com.github.1c-syntax:bsl-parser:7e8e696b8259feaef0fac2111f8e25e1576f4424",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/0.20.3/17587dad726270f8f50f121b96b180e212ef117/bsl-parser-0.20.3.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/7e8e696b8259feaef0fac2111f8e25e1576f4424/91ca03a3d6424c17b3cab3c673d58d2c9be7f9ac/bsl-parser-7e8e696b8259feaef0fac2111f8e25e1576f4424.jar!/"
       ]
     },
     {
