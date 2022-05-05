@@ -1,26 +1,21 @@
 name: QA
 
 on: 
-  push:
-    branches: [develop, master]
-
-  pull_request:
+  workflow_run​:
+    workflows​: ​[Java CI] 
+    types​: ​[completed]
 
 jobs:
-  gatekeeper:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && (!startsWith(github.head_ref, 'translations_') == false || github.event.pull_request.user.login != 'dependabot[bot]') || github.event_name == 'push'
-    steps:
-      - run: echo 'Open the Golden Gate'
 
   QA:
-    needs: gatekeeper
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.event.repository.full_name
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: ''
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0 
     - run: |
         git fetch --prune --unshallow
     - name: Set up JDK 11
