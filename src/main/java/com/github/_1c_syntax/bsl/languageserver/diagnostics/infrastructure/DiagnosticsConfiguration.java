@@ -31,12 +31,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDO;
+import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
@@ -50,6 +53,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor
@@ -95,7 +99,7 @@ public abstract class DiagnosticsConfiguration {
     DiagnosticsOptions diagnosticsOptions
   ) {
     return checkSupport(documentContext, diagnosticsOptions)
-      && !filterSubsystems(documentContext, diagnosticsOptions);
+      && filterSubsystems(documentContext, diagnosticsOptions);
   }
 
   private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
@@ -107,8 +111,11 @@ public abstract class DiagnosticsConfiguration {
 
     var subSystemsName = diagnosticsOptions.getSubsystemsFilter();
 
-    return mdoObject.get().getIncludedSubsystems().stream()
-      .flatMap(mdSubsystem -> mdSubsystem.getIncludedSubsystems().stream())
+    if (ArrayUtils.isEmpty(subSystemsName)) {
+      return true;
+    }
+
+    return MdoRefBuilder.subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
       .map(AbstractMDO::getName)
       .anyMatch(mdoSystemName -> Arrays.stream(subSystemsName).anyMatch(mdoSystemName::equalsIgnoreCase));
   }

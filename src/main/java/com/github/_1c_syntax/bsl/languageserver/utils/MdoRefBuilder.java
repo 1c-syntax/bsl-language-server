@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -39,6 +40,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @UtilityClass
 public class MdoRefBuilder {
@@ -89,6 +92,13 @@ public class MdoRefBuilder {
       .ifPresent(mdoRef::set);
 
     return stringInterner.intern(mdoRef.get());
+  }
+
+  // todo перенести в mdClasses
+  public static List<MDSubsystem> subsystemFlatList(List<MDSubsystem> memberList) {
+    return memberList.stream()
+      .flatMap(subsystem -> Stream.concat(Stream.of(subsystem), subsystemFlatList(subsystem.getIncludedSubsystems()).stream()))
+      .collect(Collectors.toList());
   }
 
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
