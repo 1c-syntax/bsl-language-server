@@ -2,8 +2,8 @@ name: QA
 
 on: 
   workflow_run:
-    workflows​: ​[Java CI]
-    types​: ​[completed]
+    workflows: [Java CI]
+    types: [completed]
 
 jobs:
 
