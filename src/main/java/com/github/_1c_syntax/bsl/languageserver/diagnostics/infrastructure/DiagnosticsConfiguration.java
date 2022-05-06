@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDO;
-import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
@@ -53,7 +52,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor

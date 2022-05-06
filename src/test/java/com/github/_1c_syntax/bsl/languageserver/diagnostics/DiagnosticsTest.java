@@ -32,12 +32,10 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
-import com.github._1c_syntax.mdclasses.mdo.support.FormType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import com.github._1c_syntax.utils.Absolute;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +44,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
