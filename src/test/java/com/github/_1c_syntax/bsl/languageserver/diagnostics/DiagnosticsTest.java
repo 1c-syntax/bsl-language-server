@@ -295,6 +295,7 @@ class DiagnosticsTest {
   void testDiagnosticSubsystemsCheck() {
 
     var PATH_TO_METADATA = "src/test/resources/metadata";
+    context.clear();
     context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
     context.populateContext();
 
@@ -303,19 +304,22 @@ class DiagnosticsTest {
       .findFirst()
       .get());
 
-
     var documentContext = spy(TestUtils.getDocumentContext("Сообщить()", context));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
-    when(form.getFormType()).thenReturn(FormType.ORDINARY);
     when(documentContext.getMdObject()).thenReturn(Optional.of(form));
 
-    // when
-    configuration.getDiagnosticsOptions().setSubsystemsFilter(new String[]{"One"});
-
+    // Без фильтра
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .hasSizeGreaterThan(10)
-      .flatExtracting(Object::getClass)
-      .contains(TooManyReturnsDiagnostic.class);
+      .isNotEmpty();
+
+    configuration.getDiagnosticsOptions().setSubsystemsFilter(new String[]{"ПодсистемаКотройНет"});
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+
+    configuration.getDiagnosticsOptions().setSubsystemsFilter(new String[]{"Подсистема1"});
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
   }
 
 }

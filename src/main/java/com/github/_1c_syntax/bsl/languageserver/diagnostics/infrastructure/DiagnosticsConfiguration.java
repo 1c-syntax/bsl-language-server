@@ -104,14 +104,9 @@ public abstract class DiagnosticsConfiguration {
 
   private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
     var mdoObject = documentContext.getMdObject();
-
-    if (mdoObject.isEmpty()) {
-      return true;
-    }
-
     var subSystemsName = diagnosticsOptions.getSubsystemsFilter();
 
-    if (ArrayUtils.isEmpty(subSystemsName)) {
+    if (mdoObject.isEmpty() || ArrayUtils.isEmpty(subSystemsName)) {
       return true;
     }
 
