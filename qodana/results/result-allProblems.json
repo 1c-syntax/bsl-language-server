@@ -333,7 +333,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "ConstantConditions"
   },
-  "hash": "16ce46a85b9a3a3dedb4d790a4c0226bb1491d9582f60c85295df55ad9918a20"
+  "hash": "5ff2c7d6f81fee92330289be6f8d42eac7b2ff137bb58be33e7ceb98cc880afa"
 },{
   "tool": "Code Inspection",
   "category": "Inheritance issues",
