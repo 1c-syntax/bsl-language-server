@@ -24,13 +24,13 @@ jobs:
         java-version: 11
         distribution: 'temurin'
     - name: SonarCloud Scan on PR
-      if: github.event.workflow_run.pull_requests[0] != null
+      if: github.event.workflow_run.event == 'pull_request'
       run: ./gradlew check sonarqube -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} -Dsonar.pullrequest.key=${{ github.event.workflow_run.pull_requests[0].number }} -Dsonar.pullrequest.branch=${{ github.event.workflow_run.pull_requests[0].head.ref }} -Dsonar.pullrequest.base=${{ github.event.workflow_run.pull_requests[0].base.ref }}
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: SonarCloud Scan on push
-      if: github.event.workflow_run.pull_requests[0] == null && github.event.workflow_run.head_repository.full_name == github.event.repository.full_name
+      if: github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.event.repository.full_name
       run: ./gradlew check sonarqube -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} -Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
