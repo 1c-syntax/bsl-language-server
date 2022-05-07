@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
+    - name: echo event
+      run: echo $GITHUB_EVENT_PATH
     - uses: actions/checkout@v3
       with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
