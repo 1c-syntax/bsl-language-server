@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1652092498552,
+  "lastUpdate": 1652302793407,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -17205,6 +17205,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7820802963074098",
             "extra": "mean: 41.82272720336914 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "21a6bb5172cbc4591a05414d5d0ac221689e45ce",
+          "message": "Merge pull request #2753 from nixel2007/UsageWriteLogEvent-2741\n\nrecreate: Исправил FP",
+          "timestamp": "2022-05-11T23:55:04+03:00",
+          "tree_id": "bb54c3fc8da70f4e82ec018280a5e3af53795d49",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/21a6bb5172cbc4591a05414d5d0ac221689e45ce"
+        },
+        "date": 1652302790152,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 44.41991957028707,
+            "unit": "sec",
+            "range": "stddev: 1.0437893448056437",
+            "extra": "mean: 44.41991957028707 sec\nrounds: 3"
           }
         ]
       }
