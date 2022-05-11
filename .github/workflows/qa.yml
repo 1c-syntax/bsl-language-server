@@ -43,7 +43,7 @@ jobs:
       with:
         route: GET /repos/{full_name}/pulls/{number}
         number: ${{ steps.pr_number.outputs.content }}
-        full_name: ${{ github.event.reposotiory.full_name }}
+        full_name: ${{ github.event.repository.full_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: SonarCloud Scan on PR
