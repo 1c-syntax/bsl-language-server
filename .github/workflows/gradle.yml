@@ -35,3 +35,12 @@ jobs:
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test
+    - name: Save PR number to file
+      if: github.event_name == 'pull_request' && ${{ matrix.os }} == 'ubuntu-latest' && ${{ matrix.java_version }} == '17'
+      run: echo ${{ github.event.number }} > PR_NUMBER.txt
+    - name: Archive PR number
+      if: github.event_name == 'pull_request' && ${{ matrix.os }} == 'ubuntu-latest' && ${{ matrix.java_version }} == '17'
+      uses: actions/upload-artifact@v3
+      with:
+        name: PR_NUMBER
+        path: PR_NUMBER.txt
