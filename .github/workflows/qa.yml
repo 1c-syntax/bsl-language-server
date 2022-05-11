@@ -41,8 +41,9 @@ jobs:
       uses: octokit/request-action@v2.x
       id: get_pr_data
       with:
-        route: GET /repos/${{ github.event.reposotiory.full_name }}/pulls/{number}
+        route: GET /repos/{full_name}/pulls/{number}
         number: ${{ steps.pr_number.outputs.content }}
+        full_name: ${{ github.event.reposotiory.full_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: SonarCloud Scan on PR
