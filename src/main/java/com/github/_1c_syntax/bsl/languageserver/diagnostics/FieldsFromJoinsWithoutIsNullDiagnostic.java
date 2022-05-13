@@ -214,7 +214,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(SDBLParser.BuiltInFunctionsContext.class::isInstance)
       .map(SDBLParser.BuiltInFunctionsContext.class::cast)
       .map(SDBLParser.BuiltInFunctionsContext::ISNULL)
-      .filter(Objects::nonNull)
       .isPresent();
   }
 
