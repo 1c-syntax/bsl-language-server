@@ -273,6 +273,10 @@ public final class Keywords {
   public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU =
     "ОбработчикиСобытийЭлементовТаблицыФормы";
   public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN = "FormTableItemsEventHandlers";
+  public static final String ASYNC_EN = "Async";
+  public static final String ASYNC_RU = "Асинх";
+  public static final String AWAIT_EN = "Await";
+  public static final String AWAIT_RU = "Ждать";
 
   private Keywords() {
     // static utils

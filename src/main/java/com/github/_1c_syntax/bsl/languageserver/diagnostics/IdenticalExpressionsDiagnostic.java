@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -170,7 +169,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     return false;
   }
 
-  private static String getOperandText(BinaryOperationNode node) {
+  private String getOperandText(BinaryOperationNode node) {
 
     assert node.getRepresentingAst() != null;
 
@@ -180,7 +179,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return FormatProvider.getNewText(tokens, Locale.getDefault(), Ranges.create(), 0, new FormattingOptions()).trim();
+    return FormatProvider.getNewText(tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }
 

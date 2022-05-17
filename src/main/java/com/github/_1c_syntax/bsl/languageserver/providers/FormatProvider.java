@@ -22,11 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 public final class FormatProvider {
 
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
-  private static final Map<Integer, Pair<String, String>> keywordCanonText = getKeywordsCanonicalText();
+  private static final Map<Locale, Map<Integer, String>> keywordCanonText = getKeywordsCanonicalText();
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.LPAREN,
     BSLLexer.PROCEDURE_KEYWORD,
@@ -303,25 +303,7 @@ public final class FormatProvider {
   }
 
   private static String checkAndFormatKeyword(Token token, Locale languageLocale) {
-    var canonicalText = keywordCanonText.get(token.getType());
-
-    if (canonicalText == null) {
-      return token.getText();
-    }
-
-    if (languageLocale.equals(Locale.forLanguageTag("en"))) {
-      var tokenCanonText = canonicalText.getLeft();
-      if (!tokenCanonText.equals(token.getText())) {
-        return tokenCanonText;
-      }
-    } else if (languageLocale.equals(Locale.forLanguageTag("ru"))) {
-      var tokenCanonText = canonicalText.getRight();
-      if (!tokenCanonText.equals(token.getText())) {
-        return tokenCanonText;
-      }
-    }
-
-    return token.getText();
+    return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText());
   }
 
   private static List<Token> filteredTokens(List<Token> tokens) {
@@ -467,47 +449,91 @@ public final class FormatProvider {
   /**
    * @return мэппинг типа токена к паре, где слева английский текст, справа русский
    */
-  private static Map<Integer, Pair<String, String>> getKeywordsCanonicalText() {
-    Map<Integer, Pair<String, String>> result = new HashMap<>();
+  private static Map<Locale, Map<Integer, String>> getKeywordsCanonicalText() {
+    Map<Locale, Map<Integer, String>> canonWords = new HashMap<>();
+    var ruLocale = Locale.forLanguageTag("ru");
+    var enLocale = Locale.forLanguageTag("en");
+    
+    
+    canonWords.put(ruLocale, new HashMap<>());
+    canonWords.put(enLocale, new HashMap<>());
+    canonWords.get(ruLocale).put(BSLLexer.IF_KEYWORD, Keywords.IF_RU);
+    canonWords.get(ruLocale).put(BSLLexer.THEN_KEYWORD, Keywords.THEN_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ELSIF_KEYWORD, Keywords.ELSIF_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ELSE_KEYWORD, Keywords.ELSE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ENDIF_KEYWORD, Keywords.ENDIF_RU);
+    canonWords.get(ruLocale).put(BSLLexer.FOR_KEYWORD, Keywords.FOR_RU);
+    canonWords.get(ruLocale).put(BSLLexer.EACH_KEYWORD, Keywords.EACH_RU);
+    canonWords.get(ruLocale).put(BSLLexer.IN_KEYWORD, Keywords.IN_RU);
+    canonWords.get(ruLocale).put(BSLLexer.TO_KEYWORD, Keywords.TO_RU);
+    canonWords.get(ruLocale).put(BSLLexer.WHILE_KEYWORD, Keywords.WHILE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.DO_KEYWORD, Keywords.DO_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ENDDO_KEYWORD, Keywords.END_DO_RU);
+    canonWords.get(ruLocale).put(BSLLexer.PROCEDURE_KEYWORD, Keywords.PROCEDURE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.FUNCTION_KEYWORD, Keywords.FUNCTION_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ENDFUNCTION_KEYWORD, Keywords.END_FUNCTION_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ENDPROCEDURE_KEYWORD, Keywords.END_PROCEDURE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.VAR_KEYWORD, Keywords.VAR_RU);
+    canonWords.get(ruLocale).put(BSLLexer.GOTO_KEYWORD, Keywords.GOTO_RU);
+    canonWords.get(ruLocale).put(BSLLexer.RETURN_KEYWORD, Keywords.RETURN_RU);
+    canonWords.get(ruLocale).put(BSLLexer.BREAK_KEYWORD, Keywords.BREAK_RU);
+    canonWords.get(ruLocale).put(BSLLexer.CONTINUE_KEYWORD, Keywords.CONTINUE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.AND_KEYWORD, Keywords.AND_RU);
+    canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_RU);
+    canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_RU);
+    canonWords.get(ruLocale).put(BSLLexer.TRY_KEYWORD, Keywords.TRY_RU);
+    canonWords.get(ruLocale).put(BSLLexer.EXCEPT_KEYWORD, Keywords.EXCEPT_RU);
+    canonWords.get(ruLocale).put(BSLLexer.RAISE_KEYWORD, Keywords.RAISE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ENDTRY_KEYWORD, Keywords.END_TRY_RU);
+    canonWords.get(ruLocale).put(BSLLexer.NEW_KEYWORD, Keywords.NEW_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ADDHANDLER_KEYWORD, Keywords.ADD_HANDLER_RU);
+    canonWords.get(ruLocale).put(BSLLexer.REMOVEHANDLER_KEYWORD, Keywords.REMOVE_HANDLER_RU);
+    canonWords.get(ruLocale).put(BSLLexer.ASYNC_KEYWORD, Keywords.ASYNC_RU);
+    canonWords.get(ruLocale).put(BSLLexer.AWAIT_KEYWORD, Keywords.AWAIT_RU);
+    canonWords.get(ruLocale).put(BSLLexer.VAL_KEYWORD, Keywords.VAL_RU);
+    canonWords.get(ruLocale).put(BSLLexer.EXECUTE_KEYWORD, Keywords.EXECUTE_RU);
+    canonWords.get(ruLocale).put(BSLLexer.EXPORT_KEYWORD, Keywords.EXPORT_RU);
+    
+    
+    canonWords.get(enLocale).put(BSLLexer.IF_KEYWORD, Keywords.IF_EN);
+    canonWords.get(enLocale).put(BSLLexer.THEN_KEYWORD, Keywords.THEN_EN);
+    canonWords.get(enLocale).put(BSLLexer.ELSIF_KEYWORD, Keywords.ELSIF_EN);
+    canonWords.get(enLocale).put(BSLLexer.ELSE_KEYWORD, Keywords.ELSE_EN);
+    canonWords.get(enLocale).put(BSLLexer.ENDIF_KEYWORD, Keywords.ENDIF_EN);
+    canonWords.get(enLocale).put(BSLLexer.FOR_KEYWORD, Keywords.FOR_EN);
+    canonWords.get(enLocale).put(BSLLexer.EACH_KEYWORD, Keywords.EACH_EN);
+    canonWords.get(enLocale).put(BSLLexer.IN_KEYWORD, Keywords.IN_EN);
+    canonWords.get(enLocale).put(BSLLexer.TO_KEYWORD, Keywords.TO_EN);
+    canonWords.get(enLocale).put(BSLLexer.WHILE_KEYWORD, Keywords.WHILE_EN);
+    canonWords.get(enLocale).put(BSLLexer.DO_KEYWORD, Keywords.DO_EN);
+    canonWords.get(enLocale).put(BSLLexer.ENDDO_KEYWORD, Keywords.END_DO_EN);
+    canonWords.get(enLocale).put(BSLLexer.PROCEDURE_KEYWORD, Keywords.PROCEDURE_EN);
+    canonWords.get(enLocale).put(BSLLexer.FUNCTION_KEYWORD, Keywords.FUNCTION_EN);
+    canonWords.get(enLocale).put(BSLLexer.ENDFUNCTION_KEYWORD, Keywords.END_FUNCTION_EN);
+    canonWords.get(enLocale).put(BSLLexer.ENDPROCEDURE_KEYWORD, Keywords.END_PROCEDURE_EN);
+    canonWords.get(enLocale).put(BSLLexer.VAR_KEYWORD, Keywords.VAR_EN);
+    canonWords.get(enLocale).put(BSLLexer.GOTO_KEYWORD, Keywords.GOTO_EN);
+    canonWords.get(enLocale).put(BSLLexer.RETURN_KEYWORD, Keywords.RETURN_EN);
+    canonWords.get(enLocale).put(BSLLexer.BREAK_KEYWORD, Keywords.BREAK_EN);
+    canonWords.get(enLocale).put(BSLLexer.CONTINUE_KEYWORD, Keywords.CONTINUE_EN);
+    canonWords.get(enLocale).put(BSLLexer.AND_KEYWORD, Keywords.AND_EN);
+    canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_EN);
+    canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_EN);
+    canonWords.get(enLocale).put(BSLLexer.TRY_KEYWORD, Keywords.TRY_EN);
+    canonWords.get(enLocale).put(BSLLexer.EXCEPT_KEYWORD, Keywords.EXCEPT_EN);
+    canonWords.get(enLocale).put(BSLLexer.RAISE_KEYWORD, Keywords.RAISE_EN);
+    canonWords.get(enLocale).put(BSLLexer.ENDTRY_KEYWORD, Keywords.END_TRY_EN);
+    canonWords.get(enLocale).put(BSLLexer.NEW_KEYWORD, Keywords.NEW_EN);
+    canonWords.get(enLocale).put(BSLLexer.ADDHANDLER_KEYWORD, Keywords.ADD_HANDLER_EN);
+    canonWords.get(enLocale).put(BSLLexer.REMOVEHANDLER_KEYWORD, Keywords.REMOVE_HANDLER_EN);
+    canonWords.get(enLocale).put(BSLLexer.ASYNC_KEYWORD, Keywords.ASYNC_EN);
+    canonWords.get(enLocale).put(BSLLexer.AWAIT_KEYWORD, Keywords.AWAIT_EN);
+    canonWords.get(enLocale).put(BSLLexer.VAL_KEYWORD, Keywords.VAL_EN);
+    canonWords.get(enLocale).put(BSLLexer.EXECUTE_KEYWORD, Keywords.EXECUTE_EN);
+    canonWords.get(enLocale).put(BSLLexer.EXPORT_KEYWORD, Keywords.EXPORT_EN);
+    
 
-    result.put(BSLLexer.IF_KEYWORD, Pair.of("If", "Если"));
-    result.put(BSLLexer.THEN_KEYWORD, Pair.of("Then", "Тогда"));
-    result.put(BSLLexer.ELSIF_KEYWORD, Pair.of("ElsIf", "ИначеЕсли"));
-    result.put(BSLLexer.ELSE_KEYWORD, Pair.of("Else", "Иначе"));
-    result.put(BSLLexer.ENDIF_KEYWORD, Pair.of("EndIf", "КонецЕсли"));
-    result.put(BSLLexer.FOR_KEYWORD, Pair.of("For", "Для"));
-    result.put(BSLLexer.EACH_KEYWORD, Pair.of("Each", "Каждого"));
-    result.put(BSLLexer.IN_KEYWORD, Pair.of("In", "Из"));
-    result.put(BSLLexer.TO_KEYWORD, Pair.of("To", "По"));
-    result.put(BSLLexer.WHILE_KEYWORD, Pair.of("While", "Пока"));
-    result.put(BSLLexer.DO_KEYWORD, Pair.of("Do", "Цикл"));
-    result.put(BSLLexer.ENDDO_KEYWORD, Pair.of("EndDo", "КонецЦикла"));
-    result.put(BSLLexer.PROCEDURE_KEYWORD, Pair.of("Procedure", "Процедура"));
-    result.put(BSLLexer.FUNCTION_KEYWORD, Pair.of("Function", "Функция"));
-    result.put(BSLLexer.ENDFUNCTION_KEYWORD, Pair.of("EndFunction", "КонецФункции"));
-    result.put(BSLLexer.ENDPROCEDURE_KEYWORD, Pair.of("EndProcedure", "КонецПроцедуры"));
-    result.put(BSLLexer.VAR_KEYWORD, Pair.of("Var", "Перем"));
-    result.put(BSLLexer.GOTO_KEYWORD, Pair.of("Goto", "Перейти"));
-    result.put(BSLLexer.RETURN_KEYWORD, Pair.of("Return", "Возврат"));
-    result.put(BSLLexer.BREAK_KEYWORD, Pair.of("Break", "Прервать"));
-    result.put(BSLLexer.CONTINUE_KEYWORD, Pair.of("Continue", "Продолжить"));
-    result.put(BSLLexer.AND_KEYWORD, Pair.of("And", "И"));
-    result.put(BSLLexer.OR_KEYWORD, Pair.of("Or", "Или"));
-    result.put(BSLLexer.NOT_KEYWORD, Pair.of("Not", "Не"));
-    result.put(BSLLexer.TRY_KEYWORD, Pair.of("Try", "Попытка"));
-    result.put(BSLLexer.EXCEPT_KEYWORD, Pair.of("Except", "Исключение"));
-    result.put(BSLLexer.RAISE_KEYWORD, Pair.of("Raise", "ВызватьИсключение"));
-    result.put(BSLLexer.ENDTRY_KEYWORD, Pair.of("EndTry", "КонецПопытки"));
-    result.put(BSLLexer.NEW_KEYWORD, Pair.of("New", "Новый"));
-    result.put(BSLLexer.ADDHANDLER_KEYWORD, Pair.of("AddHandler", "ДобавитьОбработчик"));
-    result.put(BSLLexer.REMOVEHANDLER_KEYWORD, Pair.of("RemoveHandler", "УдалитьОбработчик"));
-    result.put(BSLLexer.ASYNC_KEYWORD, Pair.of("Async", "Асинх"));
-    result.put(BSLLexer.AWAIT_KEYWORD, Pair.of("Await", "Ждать"));
-    result.put(BSLLexer.VAL_KEYWORD, Pair.of("Val", "Знач"));
-    result.put(BSLLexer.EXECUTE_KEYWORD, Pair.of("Execute", "Выполнить"));
-    result.put(BSLLexer.EXPORT_KEYWORD, Pair.of("Export", "Экспорт"));
-
-    return result;
+    return canonWords;
   }
 
 }
