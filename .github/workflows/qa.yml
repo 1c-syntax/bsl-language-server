@@ -2,7 +2,7 @@ name: QA
 
 on: 
   workflow_run:
-    workflows: [Java CI]
+    workflows: [Pre-QA]
     types: [completed]
 
 jobs:
@@ -11,13 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
-    - name: echo event
-      run: cat $GITHUB_EVENT_PATH
     - name: Download PR number artifact
       if: github.event.workflow_run.event == 'pull_request'
       uses: dawidd6/action-download-artifact@v2
       with:
-        workflow: Java CI
+        workflow: ${{ github.event.workflow_run.name }}
         run_id: ${{ github.event.workflow_run.id }}
         name: PR_NUMBER
     - name: Read PR_NUMBER.txt
