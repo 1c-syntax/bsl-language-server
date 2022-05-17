@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -31,6 +33,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextEdit;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,9 +43,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class FormatProviderTest {
@@ -113,6 +119,63 @@ class FormatProviderTest {
     TextEdit textEdit = textEdits.get(0);
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
 
+  }
+
+  @Test
+  void testFormatRuKeywords() throws IOException {
+    var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
+    var formattedFile = new File("./src/test/resources/providers/format_formattedKeywordsRu.bsl");
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(2, true));
+
+    String fileContent = FileUtils.readFileToString(originalFile, StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(formattedFile, StandardCharsets.UTF_8);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    Assertions.assertEquals(formattedFileContent, textEdit.getNewText());
+  }
+
+  @Test
+  void testFormatEngKeywords() throws IOException {
+    var originalFile = new File("./src/test/resources/providers/formatKeywordsEng.bsl");
+    var formattedFile = new File("./src/test/resources/providers/format_formattedKeywordsEng.bsl");
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(2, true));
+
+    String fileContent = FileUtils.readFileToString(originalFile, StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(formattedFile, StandardCharsets.UTF_8);
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+    
+    var configuration = new LanguageServerConfiguration();
+    configuration.setLanguage(Language.EN);
+    documentContext.setConfiguration(configuration);
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    Assertions.assertEquals(formattedFileContent, textEdit.getNewText());
   }
 
   @Test

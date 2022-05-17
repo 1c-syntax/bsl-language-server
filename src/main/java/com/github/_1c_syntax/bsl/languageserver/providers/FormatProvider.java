@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -36,14 +37,19 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public final class FormatProvider {
 
+  private static final Set<Integer> keywordTypes = keywordsTokenTypes();
+  private static final Map<Integer, Pair<String, String>> keywordCanonText = getKeywordsCanonicalText();
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.LPAREN,
     BSLLexer.PROCEDURE_KEYWORD,
@@ -82,6 +88,7 @@ public final class FormatProvider {
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
+    var locale = documentContext.getScriptVariantLocale();
     if (tokens.isEmpty()) {
       return Collections.emptyList();
     }
@@ -90,6 +97,7 @@ public final class FormatProvider {
 
     return getTextEdits(
       tokens,
+      locale,
       Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
     );
   }
@@ -114,7 +122,7 @@ public final class FormatProvider {
       })
       .collect(Collectors.toList());
 
-    return getTextEdits(tokens, params.getRange(), startCharacter, params.getOptions());
+    return getTextEdits(tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
   }
 
   private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
@@ -129,12 +137,13 @@ public final class FormatProvider {
 
   private static List<TextEdit> getTextEdits(
     List<Token> tokens,
+    Locale languageLocale,
     Range range,
     int startCharacter,
     FormattingOptions options
   ) {
 
-    String newText = getNewText(tokens, range, startCharacter, options);
+    String newText = getNewText(tokens, languageLocale, range, startCharacter, options);
 
     if (newText.isEmpty()) {
       return Collections.emptyList();
@@ -148,6 +157,7 @@ public final class FormatProvider {
 
   public static String getNewText(
     List<Token> tokens,
+    Locale languageLocale,
     Range range,
     int startCharacter,
     FormattingOptions options
@@ -248,6 +258,8 @@ public final class FormatProvider {
       String addedText = token.getText();
       if (tokenType == BSLLexer.LINE_COMMENT) {
         addedText = addedText.trim();
+      } else if (keywordTypes.contains(tokenType)) {
+        addedText = checkAndFormatKeyword(token, languageLocale);
       }
       newTextBuilder.append(addedText);
 
@@ -288,6 +300,28 @@ public final class FormatProvider {
     }
 
     return newTextBuilder.toString();
+  }
+
+  private static String checkAndFormatKeyword(Token token, Locale languageLocale) {
+    var canonicalText = keywordCanonText.get(token.getType());
+
+    if (canonicalText == null) {
+      return token.getText();
+    }
+
+    if (languageLocale.equals(Locale.forLanguageTag("en"))) {
+      var tokenCanonText = canonicalText.getLeft();
+      if (!tokenCanonText.equals(token.getText())) {
+        return tokenCanonText;
+      }
+    } else if (languageLocale.equals(Locale.forLanguageTag("ru"))) {
+      var tokenCanonText = canonicalText.getRight();
+      if (!tokenCanonText.equals(token.getText())) {
+        return tokenCanonText;
+      }
+    }
+
+    return token.getText();
   }
 
   private static List<Token> filteredTokens(List<Token> tokens) {
@@ -385,6 +419,95 @@ public final class FormatProvider {
 
   private static boolean isPrimitive(int tokenType) {
     return primitiveTokenTypes.contains(tokenType);
+  }
+
+  private static Set<Integer> keywordsTokenTypes() {
+    Set<Integer> result = new HashSet<>();
+
+    result.add(BSLLexer.IF_KEYWORD);
+    result.add(BSLLexer.THEN_KEYWORD);
+    result.add(BSLLexer.ELSIF_KEYWORD);
+    result.add(BSLLexer.ELSE_KEYWORD);
+    result.add(BSLLexer.ENDIF_KEYWORD);
+    result.add(BSLLexer.FOR_KEYWORD);
+    result.add(BSLLexer.EACH_KEYWORD);
+    result.add(BSLLexer.IN_KEYWORD);
+    result.add(BSLLexer.TO_KEYWORD);
+    result.add(BSLLexer.WHILE_KEYWORD);
+    result.add(BSLLexer.DO_KEYWORD);
+    result.add(BSLLexer.ENDDO_KEYWORD);
+    result.add(BSLLexer.PROCEDURE_KEYWORD);
+    result.add(BSLLexer.FUNCTION_KEYWORD);
+    result.add(BSLLexer.ENDFUNCTION_KEYWORD);
+    result.add(BSLLexer.ENDPROCEDURE_KEYWORD);
+    result.add(BSLLexer.VAR_KEYWORD);
+    result.add(BSLLexer.GOTO_KEYWORD);
+    result.add(BSLLexer.RETURN_KEYWORD);
+    result.add(BSLLexer.BREAK_KEYWORD);
+    result.add(BSLLexer.CONTINUE_KEYWORD);
+    result.add(BSLLexer.AND_KEYWORD);
+    result.add(BSLLexer.OR_KEYWORD);
+    result.add(BSLLexer.NOT_KEYWORD);
+    result.add(BSLLexer.TRY_KEYWORD);
+    result.add(BSLLexer.EXCEPT_KEYWORD);
+    result.add(BSLLexer.RAISE_KEYWORD);
+    result.add(BSLLexer.ENDTRY_KEYWORD);
+    result.add(BSLLexer.NEW_KEYWORD);
+    result.add(BSLLexer.ADDHANDLER_KEYWORD);
+    result.add(BSLLexer.REMOVEHANDLER_KEYWORD);
+    result.add(BSLLexer.ASYNC_KEYWORD);
+    result.add(BSLLexer.AWAIT_KEYWORD);
+    result.add(BSLLexer.VAL_KEYWORD);
+    result.add(BSLLexer.EXECUTE_KEYWORD);
+    result.add(BSLLexer.EXPORT_KEYWORD);
+
+    return result;
+  }
+
+  /**
+   * @return мэппинг типа токена к паре, где слева английский текст, справа русский
+   */
+  private static Map<Integer, Pair<String, String>> getKeywordsCanonicalText() {
+    Map<Integer, Pair<String, String>> result = new HashMap<>();
+
+    result.put(BSLLexer.IF_KEYWORD, Pair.of("If", "Если"));
+    result.put(BSLLexer.THEN_KEYWORD, Pair.of("Then", "Тогда"));
+    result.put(BSLLexer.ELSIF_KEYWORD, Pair.of("ElsIf", "ИначеЕсли"));
+    result.put(BSLLexer.ELSE_KEYWORD, Pair.of("Else", "Иначе"));
+    result.put(BSLLexer.ENDIF_KEYWORD, Pair.of("EndIf", "КонецЕсли"));
+    result.put(BSLLexer.FOR_KEYWORD, Pair.of("For", "Для"));
+    result.put(BSLLexer.EACH_KEYWORD, Pair.of("Each", "Каждого"));
+    result.put(BSLLexer.IN_KEYWORD, Pair.of("In", "Из"));
+    result.put(BSLLexer.TO_KEYWORD, Pair.of("To", "По"));
+    result.put(BSLLexer.WHILE_KEYWORD, Pair.of("While", "Пока"));
+    result.put(BSLLexer.DO_KEYWORD, Pair.of("Do", "Цикл"));
+    result.put(BSLLexer.ENDDO_KEYWORD, Pair.of("EndDo", "КонецЦикла"));
+    result.put(BSLLexer.PROCEDURE_KEYWORD, Pair.of("Procedure", "Процедура"));
+    result.put(BSLLexer.FUNCTION_KEYWORD, Pair.of("Function", "Функция"));
+    result.put(BSLLexer.ENDFUNCTION_KEYWORD, Pair.of("EndFunction", "КонецФункции"));
+    result.put(BSLLexer.ENDPROCEDURE_KEYWORD, Pair.of("EndProcedure", "КонецПроцедуры"));
+    result.put(BSLLexer.VAR_KEYWORD, Pair.of("Var", "Перем"));
+    result.put(BSLLexer.GOTO_KEYWORD, Pair.of("Goto", "Перейти"));
+    result.put(BSLLexer.RETURN_KEYWORD, Pair.of("Return", "Возврат"));
+    result.put(BSLLexer.BREAK_KEYWORD, Pair.of("Break", "Прервать"));
+    result.put(BSLLexer.CONTINUE_KEYWORD, Pair.of("Continue", "Продолжить"));
+    result.put(BSLLexer.AND_KEYWORD, Pair.of("And", "И"));
+    result.put(BSLLexer.OR_KEYWORD, Pair.of("Or", "Или"));
+    result.put(BSLLexer.NOT_KEYWORD, Pair.of("Not", "Не"));
+    result.put(BSLLexer.TRY_KEYWORD, Pair.of("Try", "Попытка"));
+    result.put(BSLLexer.EXCEPT_KEYWORD, Pair.of("Except", "Исключение"));
+    result.put(BSLLexer.RAISE_KEYWORD, Pair.of("Raise", "ВызватьИсключение"));
+    result.put(BSLLexer.ENDTRY_KEYWORD, Pair.of("EndTry", "КонецПопытки"));
+    result.put(BSLLexer.NEW_KEYWORD, Pair.of("New", "Новый"));
+    result.put(BSLLexer.ADDHANDLER_KEYWORD, Pair.of("AddHandler", "ДобавитьОбработчик"));
+    result.put(BSLLexer.REMOVEHANDLER_KEYWORD, Pair.of("RemoveHandler", "УдалитьОбработчик"));
+    result.put(BSLLexer.ASYNC_KEYWORD, Pair.of("Async", "Асинх"));
+    result.put(BSLLexer.AWAIT_KEYWORD, Pair.of("Await", "Ждать"));
+    result.put(BSLLexer.VAL_KEYWORD, Pair.of("Val", "Знач"));
+    result.put(BSLLexer.EXECUTE_KEYWORD, Pair.of("Execute", "Выполнить"));
+    result.put(BSLLexer.EXPORT_KEYWORD, Pair.of("Export", "Экспорт"));
+
+    return result;
   }
 
 }
