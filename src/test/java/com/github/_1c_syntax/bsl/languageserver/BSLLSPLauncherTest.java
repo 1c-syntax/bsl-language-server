@@ -173,6 +173,26 @@ class BSLLSPLauncherTest {
 
   @Test
   @ExpectSystemExitWithStatus(0)
+  void testFormatTwoFiles() {
+    // given
+    String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt,./src/test/resources/cli/test.bsl".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
     String[] args = "--format --src ./src/test/resources/cli --silent".split(" ");
