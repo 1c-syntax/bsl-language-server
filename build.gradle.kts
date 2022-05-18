@@ -14,7 +14,7 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "6.4.3"
     id("io.freefair.aspectj.post-compile-weaving") version "6.4.3"
     id("io.freefair.maven-central.validate-poms") version "6.4.3"
-    id("me.qoomon.git-versioning") version "5.2.0"
+    id("me.qoomon.git-versioning") version "6.1.1"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.7"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
@@ -63,7 +63,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.20.3") {
+    api("com.github.1c-syntax", "bsl-parser", "0.21.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")

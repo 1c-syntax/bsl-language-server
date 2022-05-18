@@ -68,7 +68,29 @@ public class Symbol implements Comparable<Symbol> {
     if (this.equals(o)) {
       return 0;
     }
-    return hashCode() > o.hashCode() ? 1 : -1;
+
+    int compareResult = mdoRef.compareTo(o.mdoRef);
+    if (compareResult != 0) {
+      return compareResult;
+    }
+
+    compareResult = moduleType.compareTo(o.moduleType);
+    if (compareResult != 0) {
+      return compareResult;
+    }
+
+    compareResult = scopeName.compareTo(o.scopeName);
+    if (compareResult != 0) {
+      return compareResult;
+    }
+
+    compareResult = symbolKind.compareTo(o.symbolKind);
+    if (compareResult != 0) {
+      return compareResult;
+    }
+
+    compareResult = symbolName.compareTo(o.symbolName);
+    return compareResult;
   }
 
 }
