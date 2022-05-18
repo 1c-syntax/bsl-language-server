@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
 
 @Component
 public final class FormatProvider {
-
+  
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
   private static final Map<Locale, Map<Integer, String>> keywordCanonText = getKeywordsCanonicalText();
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
@@ -62,6 +63,7 @@ public final class FormatProvider {
     BSLLexer.TRY_KEYWORD,
     BSLLexer.EXCEPT_KEYWORD
   ));
+  private static final Set<Integer> orNotKeywordTypes = Set.of(BSLLexer.NOT_KEYWORD, BSLLexer.OR_KEYWORD);
 
   private static final Set<Integer> decrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.RPAREN,
@@ -85,6 +87,12 @@ public final class FormatProvider {
     BSLLexer.FLOAT,
     BSLLexer.STRING
   ));
+  
+  private final LanguageServerConfiguration languageServerConfiguration;
+
+  public FormatProvider(LanguageServerConfiguration languageServerConfiguration) {
+    this.languageServerConfiguration = languageServerConfiguration;
+  }
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
@@ -125,17 +133,17 @@ public final class FormatProvider {
     return getTextEdits(tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
   }
 
-  private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
+  private boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
     return tokenCharacter >= startCharacter
       && tokenCharacter < endCharacter;
   }
 
-  private static boolean inLineRange(int startLine, int endLine, int tokenLine) {
+  private boolean inLineRange(int startLine, int endLine, int tokenLine) {
     return tokenLine >= startLine
       && tokenLine < endLine;
   }
 
-  private static List<TextEdit> getTextEdits(
+  private List<TextEdit> getTextEdits(
     List<Token> tokens,
     Locale languageLocale,
     Range range,
@@ -155,7 +163,7 @@ public final class FormatProvider {
 
   }
 
-  public static String getNewText(
+  public String getNewText(
     List<Token> tokens,
     Locale languageLocale,
     Range range,
@@ -302,18 +310,26 @@ public final class FormatProvider {
     return newTextBuilder.toString();
   }
 
-  private static String checkAndFormatKeyword(Token token, Locale languageLocale) {
+  private String checkAndFormatKeyword(Token token, Locale languageLocale) {
+    var tokenType = token.getType();
+    if (orNotKeywordTypes.contains(tokenType)) {
+      var useUpperCaseForOrNotKeywords = languageServerConfiguration.getBslFormattingOptions().isUseUpperCaseForOrNotKeywords();
+      if (useUpperCaseForOrNotKeywords) {
+        return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText()).toUpperCase(Locale.ENGLISH);
+      }
+    }
+    
     return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText());
   }
 
-  private static List<Token> filteredTokens(List<Token> tokens) {
+  private List<Token> filteredTokens(List<Token> tokens) {
     return tokens.stream()
       .filter(token -> token.getChannel() == Token.DEFAULT_CHANNEL
         || token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
   }
 
-  private static boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
+  private boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
 
     if (previousIsUnary) {
       return false;
@@ -365,7 +381,7 @@ public final class FormatProvider {
     }
   }
 
-  private static boolean isUnary(int type, int previousTokenType) {
+  private boolean isUnary(int type, int previousTokenType) {
     if (type != BSLLexer.MINUS) {
       return false;
     }
@@ -391,15 +407,15 @@ public final class FormatProvider {
     }
   }
 
-  private static boolean needIncrementIndent(int tokenType) {
+  private boolean needIncrementIndent(int tokenType) {
     return incrementIndentTokens.contains(tokenType);
   }
 
-  private static boolean needDecrementIndent(int tokenType) {
+  private boolean needDecrementIndent(int tokenType) {
     return decrementIndentTokens.contains(tokenType);
   }
 
-  private static boolean isPrimitive(int tokenType) {
+  private boolean isPrimitive(int tokenType) {
     return primitiveTokenTypes.contains(tokenType);
   }
 

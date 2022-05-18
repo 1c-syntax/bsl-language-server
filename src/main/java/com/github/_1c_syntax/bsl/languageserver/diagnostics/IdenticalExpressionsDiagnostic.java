@@ -70,6 +70,11 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
+  private final FormatProvider formatProvider;
+
+  public IdenticalExpressionsDiagnostic(FormatProvider formatProvider) {
+    this.formatProvider = formatProvider;
+  }
 
   private static Set<String> parseCommaSeparatedSet(String values) {
     if (values.trim().isEmpty()) {
@@ -179,7 +184,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return FormatProvider.getNewText(tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
+    return formatProvider.getNewText(tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }
 

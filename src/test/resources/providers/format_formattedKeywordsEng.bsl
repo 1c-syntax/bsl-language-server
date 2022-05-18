@@ -1,7 +1,7 @@
 Async Procedure тест(Val парам1) Export
   Var тест;
   
-  If условие And УсловиеДва Or Not Условие3 Then
+  If условие And УсловиеДва OR NOT Условие3 Then
   ElsIf Условие4 Then
   Else
   EndIf;

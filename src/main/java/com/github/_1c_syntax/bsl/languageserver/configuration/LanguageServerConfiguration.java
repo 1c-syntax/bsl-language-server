@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.github._1c_syntax.bsl.languageserver.configuration.codelens.BSLFormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
@@ -88,6 +89,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
+  
+  @JsonProperty("formatting")
+  @Setter(value = AccessLevel.NONE)
+  private BSLFormattingOptions bslFormattingOptions = new BSLFormattingOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -213,6 +218,7 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+    PropertyUtils.copyProperties(this.bslFormattingOptions, configuration.bslFormattingOptions);
   }
 
 }
