@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,4 +51,13 @@ public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisito
 
     return diagnosticStorage.getDiagnostics();
   }
+
+  @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    if (Trees.treeContainsErrors(ctx)) {
+      return ctx;
+    }
+    return super.visitQueryPackage(ctx);
+  }
+
 }
