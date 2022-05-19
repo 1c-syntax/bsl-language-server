@@ -19,12 +19,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration;
+package com.github._1c_syntax.bsl.languageserver.configuration.formating;
 
 import lombok.Getter;
 import lombok.Setter;
 
-public class BSLFormattingOptions {
+public class FormattingOptions {
   
   @Getter
   @Setter

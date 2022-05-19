@@ -33,7 +33,6 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextEdit;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -145,7 +144,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    Assertions.assertEquals(formattedFileContent, textEdit.getNewText());
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
   @Test
@@ -173,7 +172,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    Assertions.assertEquals(formattedFileContent, textEdit.getNewText());
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
   @Test
@@ -203,7 +202,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    Assertions.assertEquals(formattedFileContent, textEdit.getNewText());
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
   @Test

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -34,6 +35,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
 public final class FormatProvider {
   
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
-  private static final Map<Locale, Map<Integer, String>> keywordCanonText = getKeywordsCanonicalText();
+  private final Map<Locale, Map<Integer, String>> keywordCanonText;
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.LPAREN,
     BSLLexer.PROCEDURE_KEYWORD,
@@ -92,6 +94,7 @@ public final class FormatProvider {
 
   public FormatProvider(LanguageServerConfiguration languageServerConfiguration) {
     this.languageServerConfiguration = languageServerConfiguration;
+    keywordCanonText = getKeywordsCanonicalText();
   }
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
@@ -131,6 +134,11 @@ public final class FormatProvider {
       .collect(Collectors.toList());
 
     return getTextEdits(tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
+  }
+  
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    putLogicalNotOrKeywords(keywordCanonText);
   }
 
   private boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
@@ -311,14 +319,6 @@ public final class FormatProvider {
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {
-    var tokenType = token.getType();
-    if (orNotKeywordTypes.contains(tokenType)) {
-      var useUpperCaseForOrNotKeywords = languageServerConfiguration.getBslFormattingOptions().isUseUpperCaseForOrNotKeywords();
-      if (useUpperCaseForOrNotKeywords) {
-        return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText()).toUpperCase(Locale.ENGLISH);
-      }
-    }
-    
     return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText());
   }
 
@@ -465,7 +465,7 @@ public final class FormatProvider {
   /**
    * @return мэппинг типа токена к паре, где слева английский текст, справа русский
    */
-  private static Map<Locale, Map<Integer, String>> getKeywordsCanonicalText() {
+  private Map<Locale, Map<Integer, String>> getKeywordsCanonicalText() {
     Map<Locale, Map<Integer, String>> canonWords = new HashMap<>();
     var ruLocale = Locale.forLanguageTag("ru");
     var enLocale = Locale.forLanguageTag("en");
@@ -495,8 +495,6 @@ public final class FormatProvider {
     canonWords.get(ruLocale).put(BSLLexer.BREAK_KEYWORD, Keywords.BREAK_RU);
     canonWords.get(ruLocale).put(BSLLexer.CONTINUE_KEYWORD, Keywords.CONTINUE_RU);
     canonWords.get(ruLocale).put(BSLLexer.AND_KEYWORD, Keywords.AND_RU);
-    canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_RU);
-    canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_RU);
     canonWords.get(ruLocale).put(BSLLexer.TRY_KEYWORD, Keywords.TRY_RU);
     canonWords.get(ruLocale).put(BSLLexer.EXCEPT_KEYWORD, Keywords.EXCEPT_RU);
     canonWords.get(ruLocale).put(BSLLexer.RAISE_KEYWORD, Keywords.RAISE_RU);
@@ -533,8 +531,6 @@ public final class FormatProvider {
     canonWords.get(enLocale).put(BSLLexer.BREAK_KEYWORD, Keywords.BREAK_EN);
     canonWords.get(enLocale).put(BSLLexer.CONTINUE_KEYWORD, Keywords.CONTINUE_EN);
     canonWords.get(enLocale).put(BSLLexer.AND_KEYWORD, Keywords.AND_EN);
-    canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_EN);
-    canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_EN);
     canonWords.get(enLocale).put(BSLLexer.TRY_KEYWORD, Keywords.TRY_EN);
     canonWords.get(enLocale).put(BSLLexer.EXCEPT_KEYWORD, Keywords.EXCEPT_EN);
     canonWords.get(enLocale).put(BSLLexer.RAISE_KEYWORD, Keywords.RAISE_EN);
@@ -547,9 +543,28 @@ public final class FormatProvider {
     canonWords.get(enLocale).put(BSLLexer.VAL_KEYWORD, Keywords.VAL_EN);
     canonWords.get(enLocale).put(BSLLexer.EXECUTE_KEYWORD, Keywords.EXECUTE_EN);
     canonWords.get(enLocale).put(BSLLexer.EXPORT_KEYWORD, Keywords.EXPORT_EN);
-    
+
+    putLogicalNotOrKeywords(canonWords);
 
     return canonWords;
+  }
+
+  private void putLogicalNotOrKeywords(Map<Locale, Map<Integer, String>> canonWords) {
+    var ruLocale = Locale.forLanguageTag("ru");
+    var enLocale = Locale.forLanguageTag("en");
+    var useUppercaseForLogicalOrNotKeywords = languageServerConfiguration.getFormattingOptions().isUseUpperCaseForOrNotKeywords();
+
+    if (useUppercaseForLogicalOrNotKeywords) {
+      canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_UP_RU);
+      canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_UP_RU);
+      canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_UP_EN);
+      canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_UP_EN);
+    } else {
+      canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_RU);
+      canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_RU);
+      canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_EN);
+      canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_EN);
+    }
   }
 
 }

@@ -652,6 +652,28 @@
                 }
             }
         },
+        "formatting": {
+            "$id": "#/properties/formatting",
+            "type": "object",
+            "title": "Formatting configuration.",
+            "properties": {
+                "useUpperCaseForOrNotKeywords": {
+                    "$id": "#/properties/useUpperCaseForOrNotKeywords",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Configuration use uppercase 'AND' and 'NOT' keywords."
+                        },
+                        {
+                            "const": false,
+                            "description": "Configuration use CamelCase 'And' and 'Not' keywords."
+                        }
+                    ]
+                }
+            }
+        },
         "useDevSite": {
             "$id": "#/properties/useDevSite",
             "type": "boolean",

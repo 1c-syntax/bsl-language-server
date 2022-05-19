@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOper
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -60,6 +61,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.SUSPICIOUS
   }
 )
+@RequiredArgsConstructor
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
@@ -71,11 +73,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
   private final FormatProvider formatProvider;
-
-  public IdenticalExpressionsDiagnostic(FormatProvider formatProvider) {
-    this.formatProvider = formatProvider;
-  }
-
+  
   private static Set<String> parseCommaSeparatedSet(String values) {
     if (values.trim().isEmpty()) {
       return Collections.emptySet();
