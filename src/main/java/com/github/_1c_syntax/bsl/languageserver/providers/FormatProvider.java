@@ -318,7 +318,12 @@ public final class FormatProvider {
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {
-    return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText());
+    var needFormatKeyword = languageServerConfiguration.getFormattingOptions().isUseKeywordsFormatting();
+    if (needFormatKeyword) {
+      return keywordCanonText.get(languageLocale).getOrDefault(token.getType(), token.getText());
+    }
+    
+    return token.getText();
   }
 
   private List<Token> filteredTokens(List<Token> tokens) {

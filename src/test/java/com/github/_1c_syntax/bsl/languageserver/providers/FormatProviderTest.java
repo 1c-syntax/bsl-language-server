@@ -176,6 +176,32 @@ class FormatProviderTest {
   }
 
   @Test
+  void testDisabledKeywordsFormatting() throws IOException {
+    var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
+    languageServerConfiguration.update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(2, true));
+
+    String fileContent = FileUtils.readFileToString(originalFile, StandardCharsets.UTF_8);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    assertThat(textEdit.getNewText()).isEqualTo(fileContent);
+  }
+
+  @Test
   void testFormatEngKeywords() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsEng.bsl");
     var formattedFile = new File("./src/test/resources/providers/format_formattedKeywordsEng.bsl");

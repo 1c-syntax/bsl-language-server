@@ -671,6 +671,21 @@
                             "description": "Configuration use CamelCase 'Or' and 'Not' keywords."
                         }
                     ]
+                },
+                "useKeywordsFormatting": {
+                    "$id": "#/properties/useKeywordsFormatting",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Format keywords to canonical view"
+                        },
+                        {
+                            "const": false,
+                            "description": "Don't format keywords to canonical view"
+                        }
+                    ]
                 }
             }
         },

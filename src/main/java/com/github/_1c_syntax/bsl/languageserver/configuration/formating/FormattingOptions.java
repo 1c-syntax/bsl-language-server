@@ -32,6 +32,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FormattingOptions {
-  
   private boolean useUpperCaseForOrNotKeywords = true;
+  private boolean useKeywordsFormatting = true;
 }
