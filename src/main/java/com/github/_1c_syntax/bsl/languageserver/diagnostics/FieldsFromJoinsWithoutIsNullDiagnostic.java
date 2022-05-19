@@ -60,7 +60,8 @@ import java.util.stream.Stream;
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
-  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions);
+  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions,
+    SDBLParser.RULE_isNullPredicate);
 
   private static final Integer WHERE_ROOT = SDBLParser.RULE_predicate;
   private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, SDBLParser.RULE_builtInFunctions,
@@ -162,7 +163,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkSelect(String tableName, SDBLParser.SelectedFieldsContext columns) {
-    checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT, false);
+    checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT, true);
   }
 
   private void checkStatements(String tableName, BSLParserRuleContext expression, Collection<Integer> statements,
@@ -205,7 +206,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     return Optional.of(ctx)
       .filter(SDBLParser.IsNullPredicateContext.class::isInstance)
       .map(SDBLParser.IsNullPredicateContext.class::cast)
-      .filter(isNullPredicateContext -> isNullPredicateContext.NOT() == null)
       .isPresent();
   }
 
