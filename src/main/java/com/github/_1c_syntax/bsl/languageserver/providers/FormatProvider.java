@@ -552,18 +552,28 @@ public final class FormatProvider {
     var ruLocale = Locale.forLanguageTag("ru");
     var enLocale = Locale.forLanguageTag("en");
     var useUppercaseForLogicalOrNotKeywords = languageServerConfiguration.getFormattingOptions().isUseUpperCaseForOrNotKeywords();
-
+    String orKeywordCanonTextRu;
+    String orKeywordCanonTextEng;
+    String notKeywordCanonTextRu;
+    String notKeywordCanonTextEng;
+    
+    
     if (useUppercaseForLogicalOrNotKeywords) {
-      canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_UP_RU);
-      canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_UP_RU);
-      canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_UP_EN);
-      canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_UP_EN);
+      orKeywordCanonTextRu = Keywords.OR_UP_RU;
+      orKeywordCanonTextEng = Keywords.OR_UP_EN;
+      notKeywordCanonTextRu = Keywords.NOT_UP_RU;
+      notKeywordCanonTextEng = Keywords.NOT_UP_EN;
     } else {
-      canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_RU);
-      canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_RU);
-      canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, Keywords.OR_EN);
-      canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, Keywords.NOT_EN);
+      orKeywordCanonTextRu = Keywords.OR_RU;
+      orKeywordCanonTextEng = Keywords.OR_EN;
+      notKeywordCanonTextRu = Keywords.NOT_RU;
+      notKeywordCanonTextEng = Keywords.NOT_EN;
     }
+
+    canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, orKeywordCanonTextRu);
+    canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, notKeywordCanonTextRu);
+    canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, orKeywordCanonTextEng);
+    canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, notKeywordCanonTextEng);
   }
 
 }
