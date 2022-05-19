@@ -65,7 +65,6 @@ public final class FormatProvider {
     BSLLexer.TRY_KEYWORD,
     BSLLexer.EXCEPT_KEYWORD
   ));
-  private static final Set<Integer> orNotKeywordTypes = Set.of(BSLLexer.NOT_KEYWORD, BSLLexer.OR_KEYWORD);
 
   private static final Set<Integer> decrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.RPAREN,

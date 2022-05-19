@@ -664,11 +664,11 @@
                     "oneOf": [
                         {
                             "const": true,
-                            "description": "Configuration use uppercase 'AND' and 'NOT' keywords."
+                            "description": "Configuration use uppercase 'OR' and 'NOT' keywords."
                         },
                         {
                             "const": false,
-                            "description": "Configuration use CamelCase 'And' and 'Not' keywords."
+                            "description": "Configuration use CamelCase 'Or' and 'Not' keywords."
                         }
                     ]
                 }
