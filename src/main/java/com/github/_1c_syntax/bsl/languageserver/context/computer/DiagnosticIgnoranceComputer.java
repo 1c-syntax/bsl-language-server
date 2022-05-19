@@ -22,7 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
@@ -38,10 +42,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
@@ -62,6 +69,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private static final Pattern IGNORE_DIAGNOSTIC_OFF = CaseInsensitivePattern.compile(
     "BSLLS:(\\w+)-(?:выкл|off)"
   );
+  public static final String ON = "on";
+  public static final String OFF = "off";
 
   private final DocumentContext documentContext;
 
@@ -82,6 +91,59 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     if (codeTokens.isEmpty()) {
       return new Data(diagnosticIgnorance);
     }
+
+    computeCommentsIgnorance(codeTokens);
+    computeExtensionIgnorance();
+
+    return new Data(diagnosticIgnorance);
+  }
+
+  private void computeExtensionIgnorance() {
+    var lines = new TreeMap<Integer, String>();
+
+    documentContext.getSymbolTree()
+      .getMethods().stream()
+      .filter(
+        method -> method.getAnnotations().stream()
+          .map(Annotation::getKind)
+          .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
+      ).forEach(methodSymbol -> {
+        lines.put(methodSymbol.getRange().getStart().getLine(), ON);
+        lines.put(methodSymbol.getRange().getEnd().getLine(), OFF);
+      });
+
+    documentContext.getTokens().stream()
+      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
+      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT
+        || token.getType() == BSLLexer.PREPROC_ENDINSERT)
+      .forEach(token -> {
+        if (token.getType() == BSLLexer.PREPROC_INSERT) {
+          lines.put(token.getLine(), OFF);
+        }
+        if (token.getType() == BSLLexer.PREPROC_ENDINSERT) {
+          lines.put(token.getLine(), ON);
+        }
+      });
+
+    var lastTokenLine = -1;
+    var tokenLine = -1;
+
+    for (Map.Entry<Integer, String> entry : lines.entrySet()) {
+
+      if (ON.equals(entry.getValue())) {
+        tokenLine = entry.getKey();
+      }
+
+      if (OFF.equals(entry.getValue())) {
+        lastTokenLine = entry.getKey();
+        addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
+      }
+
+    }
+
+  }
+
+  private void computeCommentsIgnorance(List<Token> codeTokens) {
     Set<Integer> codeLines = codeTokens.stream().map(Token::getLine).collect(Collectors.toSet());
 
     List<Token> comments = documentContext.getComments();
@@ -102,8 +164,6 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     ignoranceStack.forEach((DiagnosticCode diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
     );
-
-    return new Data(diagnosticIgnorance);
   }
 
   private boolean checkTrailingComment(Set<Integer> codeLines, Token comment) {
