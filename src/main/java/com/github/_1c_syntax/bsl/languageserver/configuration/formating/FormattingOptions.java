@@ -21,12 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.formating;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FormattingOptions {
   
-  @Getter
-  @Setter
   private boolean useUpperCaseForOrNotKeywords = true;
 }
