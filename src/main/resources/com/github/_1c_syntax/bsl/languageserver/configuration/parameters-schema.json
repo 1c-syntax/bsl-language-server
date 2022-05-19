@@ -630,7 +630,7 @@
         },
         "FieldsFromJoinsWithoutIsNull": {
             "description": "No NULL checks for fields from joined tables",
-            "default": true,
+            "default": false,
             "type": [
                 "boolean",
                 "object"

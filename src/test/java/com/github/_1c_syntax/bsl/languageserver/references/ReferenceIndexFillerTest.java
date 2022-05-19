@@ -108,6 +108,54 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
+  void testFindVariablesRangesCallStatement() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(33, 10)
+    );
+    assertThat(referencedSymbol).isPresent();
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Модуль");
+
+    referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(33, 13)
+    );
+    assertThat(referencedSymbol).isEmpty();
+  }
+
+  @Test
+  void testFindVariablesRangesComplexIdentifier() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(34, 16)
+    );
+    assertThat(referencedSymbol).isPresent();
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Модуль");
+
+    referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(34, 23)
+    );
+    assertThat(referencedSymbol).isEmpty();
+  }
+
+  @Test
   void testErrorVariables() {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexFillerErrorVariableTest.bsl"
