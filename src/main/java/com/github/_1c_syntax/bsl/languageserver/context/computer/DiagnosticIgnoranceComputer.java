@@ -112,6 +112,11 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         lines.put(methodSymbol.getRange().getEnd().getLine(), OFF);
       });
 
+    // not extended method
+    if (lines.isEmpty()) {
+      return;
+    }
+
     documentContext.getTokens().stream()
       .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
       .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT
