@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
@@ -104,7 +105,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         method -> method.getAnnotations().stream()
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
-      ).forEach(methodSymbol -> {
+      ).forEach((MethodSymbol methodSymbol) -> {
         lines.put(methodSymbol.getRange().getStart().getLine(), true);
         lines.put(methodSymbol.getRange().getEnd().getLine(), false);
       });
@@ -124,7 +125,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     for (Map.Entry<Integer, Boolean> entry : lines.entrySet()) {
 
-      if (entry.getValue()) {
+      if (Boolean.TRUE.equals(entry.getValue())) {
         tokenLine = entry.getKey();
       } else {
         lastTokenLine = entry.getKey();
