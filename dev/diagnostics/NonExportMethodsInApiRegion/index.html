@@ -931,6 +931,25 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Параметры">Параметры<a class="headerlink" href="#Параметры" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="center">Описание</th>
+<th align="center">Значение<br>по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>skipAnnotatedMethods</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="center"><code>Пропускать методы с аннотациями расширений</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <ul>
@@ -952,7 +971,9 @@
 <span class="c c-Singleline">// BSLLS:NonExportMethodsInApiRegion-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;NonExportMethodsInApiRegion&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NonExportMethodsInApiRegion&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;skipAnnotatedMethods&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </code></pre></div>
 
               
