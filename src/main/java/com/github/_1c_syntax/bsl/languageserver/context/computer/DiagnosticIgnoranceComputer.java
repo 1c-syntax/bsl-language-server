@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
@@ -69,8 +68,6 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private static final Pattern IGNORE_DIAGNOSTIC_OFF = CaseInsensitivePattern.compile(
     "BSLLS:(\\w+)-(?:выкл|off)"
   );
-  public static final String ON = "on";
-  public static final String OFF = "off";
 
   private final DocumentContext documentContext;
 
@@ -99,7 +96,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   }
 
   private void computeExtensionIgnorance() {
-    var lines = new TreeMap<Integer, String>();
+    var lines = new TreeMap<Integer, Boolean>();
 
     documentContext.getSymbolTree()
       .getMethods().stream()
@@ -108,8 +105,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
       ).forEach(methodSymbol -> {
-        lines.put(methodSymbol.getRange().getStart().getLine(), ON);
-        lines.put(methodSymbol.getRange().getEnd().getLine(), OFF);
+        lines.put(methodSymbol.getRange().getStart().getLine(), true);
+        lines.put(methodSymbol.getRange().getEnd().getLine(), false);
       });
 
     // not extended method
@@ -119,27 +116,17 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     documentContext.getTokens().stream()
       .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
-      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT
-        || token.getType() == BSLLexer.PREPROC_ENDINSERT)
-      .forEach(token -> {
-        if (token.getType() == BSLLexer.PREPROC_INSERT) {
-          lines.put(token.getLine(), OFF);
-        }
-        if (token.getType() == BSLLexer.PREPROC_ENDINSERT) {
-          lines.put(token.getLine(), ON);
-        }
-      });
+      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT || token.getType() == BSLLexer.PREPROC_ENDINSERT)
+      .forEach(token -> lines.put(token.getLine(), token.getType() == BSLLexer.PREPROC_ENDINSERT));
 
     var lastTokenLine = -1;
     var tokenLine = -1;
 
-    for (Map.Entry<Integer, String> entry : lines.entrySet()) {
+    for (Map.Entry<Integer, Boolean> entry : lines.entrySet()) {
 
-      if (ON.equals(entry.getValue())) {
+      if (entry.getValue()) {
         tokenLine = entry.getKey();
-      }
-
-      if (OFF.equals(entry.getValue())) {
+      } else {
         lastTokenLine = entry.getKey();
         addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
       }
