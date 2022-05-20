@@ -652,6 +652,43 @@
                 }
             }
         },
+        "formatting": {
+            "$id": "#/properties/formatting",
+            "type": "object",
+            "title": "Formatting configuration.",
+            "properties": {
+                "useUpperCaseForOrNotKeywords": {
+                    "$id": "#/properties/useUpperCaseForOrNotAndKeywords",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Configuration use uppercase 'OR', 'NOT', 'AND' keywords."
+                        },
+                        {
+                            "const": false,
+                            "description": "Configuration use CamelCase 'Or', 'Not', 'And' keywords."
+                        }
+                    ]
+                },
+                "useKeywordsFormatting": {
+                    "$id": "#/properties/useKeywordsFormatting",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Format keywords to canonical view"
+                        },
+                        {
+                            "const": false,
+                            "description": "Don't format keywords to canonical view"
+                        }
+                    ]
+                }
+            }
+        },
         "useDevSite": {
             "$id": "#/properties/useDevSite",
             "type": "boolean",

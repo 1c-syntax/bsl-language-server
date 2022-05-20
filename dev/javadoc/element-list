@@ -15,6 +15,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.databind
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.configuration.events
+com.github._1c_syntax.bsl.languageserver.configuration.formating
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
