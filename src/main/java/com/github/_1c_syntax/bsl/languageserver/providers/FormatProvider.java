@@ -556,29 +556,34 @@ public final class FormatProvider {
   private void putLogicalNotOrKeywords(Map<Locale, Map<Integer, String>> canonWords) {
     var ruLocale = Locale.forLanguageTag("ru");
     var enLocale = Locale.forLanguageTag("en");
-    var useUppercaseForLogicalOrNotKeywords = languageServerConfiguration.getFormattingOptions().isUseUpperCaseForOrNotKeywords();
+    var useUppercaseForLogicalOrNotAndKeywords = languageServerConfiguration.getFormattingOptions().isUseUpperCaseForOrNotAndKeywords();
     String orKeywordCanonTextRu;
-    String orKeywordCanonTextEng;
     String notKeywordCanonTextRu;
+    
     String notKeywordCanonTextEng;
+    String andKeywordCanonTextEng;
+    String orKeywordCanonTextEng;
     
-    
-    if (useUppercaseForLogicalOrNotKeywords) {
+    if (useUppercaseForLogicalOrNotAndKeywords) {
       orKeywordCanonTextRu = Keywords.OR_UP_RU;
       orKeywordCanonTextEng = Keywords.OR_UP_EN;
       notKeywordCanonTextRu = Keywords.NOT_UP_RU;
       notKeywordCanonTextEng = Keywords.NOT_UP_EN;
+      andKeywordCanonTextEng = Keywords.AND_UP_EN;
     } else {
       orKeywordCanonTextRu = Keywords.OR_RU;
       orKeywordCanonTextEng = Keywords.OR_EN;
       notKeywordCanonTextRu = Keywords.NOT_RU;
       notKeywordCanonTextEng = Keywords.NOT_EN;
+      andKeywordCanonTextEng = Keywords.AND_EN;
     }
 
     canonWords.get(ruLocale).put(BSLLexer.OR_KEYWORD, orKeywordCanonTextRu);
     canonWords.get(ruLocale).put(BSLLexer.NOT_KEYWORD, notKeywordCanonTextRu);
+    
     canonWords.get(enLocale).put(BSLLexer.OR_KEYWORD, orKeywordCanonTextEng);
     canonWords.get(enLocale).put(BSLLexer.NOT_KEYWORD, notKeywordCanonTextEng);
+    canonWords.get(enLocale).put(BSLLexer.AND_KEYWORD, andKeywordCanonTextEng);
   }
 
 }

@@ -658,17 +658,17 @@
             "title": "Formatting configuration.",
             "properties": {
                 "useUpperCaseForOrNotKeywords": {
-                    "$id": "#/properties/useUpperCaseForOrNotKeywords",
+                    "$id": "#/properties/useUpperCaseForOrNotAndKeywords",
                     "type": "boolean",
                     "default": true,
                     "oneOf": [
                         {
                             "const": true,
-                            "description": "Configuration use uppercase 'OR' and 'NOT' keywords."
+                            "description": "Configuration use uppercase 'OR', 'NOT', 'AND' keywords."
                         },
                         {
                             "const": false,
-                            "description": "Configuration use CamelCase 'Or' and 'Not' keywords."
+                            "description": "Configuration use CamelCase 'Or', 'Not', 'And' keywords."
                         }
                     ]
                 },

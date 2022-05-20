@@ -19,7 +19,7 @@
     }
   },
   "formatting": {
-    "useUpperCaseForOrNotKeywords": false
+    "useUpperCaseForOrNotAndKeywords": false
   },
   "useDevSite": true,
   "traceLog": "build/.trace.log",
