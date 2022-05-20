@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOper
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -60,6 +61,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.SUSPICIOUS
   }
 )
+@RequiredArgsConstructor
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
@@ -70,7 +72,8 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
-
+  private final FormatProvider formatProvider;
+  
   private static Set<String> parseCommaSeparatedSet(String values) {
     if (values.trim().isEmpty()) {
       return Collections.emptySet();
@@ -169,7 +172,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     return false;
   }
 
-  private static String getOperandText(BinaryOperationNode node) {
+  private String getOperandText(BinaryOperationNode node) {
 
     assert node.getRepresentingAst() != null;
 
@@ -179,7 +182,8 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return FormatProvider.getNewText(tokens, Ranges.create(), 0, new FormattingOptions()).trim();
+    return formatProvider.getNewText(
+      tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }
 

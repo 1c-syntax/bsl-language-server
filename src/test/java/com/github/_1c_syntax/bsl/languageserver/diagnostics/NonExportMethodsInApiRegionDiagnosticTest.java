@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -42,13 +43,40 @@ class NonExportMethodsInApiRegionDiagnosticTest extends AbstractDiagnosticTest<N
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       // на +
       .hasRange(8, 10, 8, 16)
       .hasRange(20, 10, 20, 13)
       .hasRange(25, 14, 25, 27)
       .hasRange(64, 10, 64, 39)
+      .hasRange(64, 10, 64, 39)
+      .hasRange(68, 10, 29)
+      .hasRange(72, 10, 31)
     ;
   }
+
+  @Test
+  void testSkipAnnotated() {
+
+    // given
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("skipAnnotatedMethods", true);
+    diagnosticInstance.configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics, true)
+      .hasRange(8, 10, 8, 16)
+      .hasRange(20, 10, 20, 13)
+      .hasRange(25, 14, 25, 27)
+      .hasRange(64, 10, 64, 39)
+      .hasRange(64, 10, 64, 39)
+      .hasRange(68, 10, 29)
+    ;
+  }
+
 }
