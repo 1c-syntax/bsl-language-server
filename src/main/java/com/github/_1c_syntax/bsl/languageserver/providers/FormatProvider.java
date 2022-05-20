@@ -98,13 +98,13 @@ public final class FormatProvider {
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
-    var locale = documentContext.getScriptVariantLocale();
     if (tokens.isEmpty()) {
       return Collections.emptyList();
     }
     Token firstToken = tokens.get(0);
     Token lastToken = tokens.get(tokens.size() - 1);
 
+    var locale = documentContext.getScriptVariantLocale();
     return getTextEdits(
       tokens,
       locale,
@@ -132,7 +132,8 @@ public final class FormatProvider {
       })
       .collect(Collectors.toList());
 
-    return getTextEdits(tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
+    return getTextEdits(
+      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
   }
   
   @EventListener
@@ -556,7 +557,10 @@ public final class FormatProvider {
   private void putLogicalNotOrKeywords(Map<Locale, Map<Integer, String>> canonWords) {
     var ruLocale = Locale.forLanguageTag("ru");
     var enLocale = Locale.forLanguageTag("en");
-    var useUppercaseForLogicalOrNotAndKeywords = languageServerConfiguration.getFormattingOptions().isUseUpperCaseForOrNotAndKeywords();
+    var useUppercaseForLogicalOrNotAndKeywords = languageServerConfiguration
+      .getFormattingOptions()
+      .isUseUpperCaseForOrNotAndKeywords();
+    
     String orKeywordCanonTextRu;
     String notKeywordCanonTextRu;
     

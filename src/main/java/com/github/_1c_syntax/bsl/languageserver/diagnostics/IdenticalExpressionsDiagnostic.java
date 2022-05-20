@@ -182,7 +182,8 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return formatProvider.getNewText(tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
+    return formatProvider.getNewText(
+      tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }
 
