@@ -253,8 +253,8 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isValidExpression(BSLParser.MemberContext context, BSLParser.CodeBlockContext codeBlock,
                                            boolean checkPrevAssignment) {
-    if (!isInsideExceptBlock(codeBlock) && context.constValue() != null) {
-      return true;
+    if (context.constValue() != null) {
+      return false;
     }
     if (checkPrevAssignment) {
       final var complexIdentifier = context.complexIdentifier();
