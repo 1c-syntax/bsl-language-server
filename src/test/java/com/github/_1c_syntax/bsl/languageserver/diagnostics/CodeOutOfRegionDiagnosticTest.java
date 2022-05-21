@@ -112,6 +112,14 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
       .hasRange(1, 10, 1, 19);
   }
 
+  @Test
+  void testStandartPreproc() {
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticStandartPreproc", ModuleType.ObjectModule);
+
+    assertThat(diagnostics).isEmpty();
+
+  }
+
   private List<Diagnostic> getDiagnostics(String fileName, ModuleType moduleType) {
     var documentContext = spy(TestUtils.getDocumentContext(getText(fileName)));
     doReturn(moduleType).when(documentContext).getModuleType();

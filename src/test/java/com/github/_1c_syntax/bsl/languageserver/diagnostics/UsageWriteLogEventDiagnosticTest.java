@@ -38,6 +38,7 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(3, 4, 39)
       .hasRange(4, 4, 73)
@@ -55,5 +56,6 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(212, 6, 214,22)
       .hasSize(13)
     ;
+
   }
 }

@@ -38,9 +38,8 @@ class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErr
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(5, 1, 6, 30)
       .hasRange(9, 1, 10, 59)
       .hasRange(14, 1, 19, 11)
       .hasRange(27, 1, 28, 3)
