@@ -37,7 +37,7 @@ import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR,
+  severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
   modules = {
     ModuleType.CommonModule
