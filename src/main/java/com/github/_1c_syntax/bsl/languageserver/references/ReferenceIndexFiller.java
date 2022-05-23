@@ -223,7 +223,7 @@ public class ReferenceIndexFiller {
         return super.visitLValue(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
@@ -267,7 +267,7 @@ public class ReferenceIndexFiller {
         return super.visitForStatement(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
@@ -287,7 +287,7 @@ public class ReferenceIndexFiller {
         return super.visitForEachStatement(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
