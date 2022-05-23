@@ -7,7 +7,7 @@
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server",
-        "revisionId": "bc6760b239093054b10c450c6c5d58e102a67910",
+        "revisionId": "d19cf0add11dfb9c53803a087c0e4d664cb3865a",
         "branch": "develop"
       }
     },
