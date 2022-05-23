@@ -231,7 +231,7 @@ public abstract class DiagnosticsConfiguration {
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
   }
 
-  // todo перенести в mdClasses
+  // перенести в mdClasses
   private static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
     return subsystems.stream()
       .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
