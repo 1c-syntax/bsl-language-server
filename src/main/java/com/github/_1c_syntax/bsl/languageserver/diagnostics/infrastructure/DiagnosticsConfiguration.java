@@ -108,16 +108,16 @@ public abstract class DiagnosticsConfiguration {
       return true;
     }
 
-    var stringStream = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
+    var subsystemsNames = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
       .map(AbstractMDO::getName)
       .collect(Collectors.toList());
 
     var include = subsystemsFilter.getInclude().isEmpty()
-      || stringStream.stream()
+      || subsystemsNames.stream()
       .anyMatch(mdoSystemName -> subsystemsFilter.getInclude().contains(mdoSystemName));
 
     var exclude = !subsystemsFilter.getExclude().isEmpty()
-      && stringStream.stream()
+      && subsystemsNames.stream()
       .anyMatch(mdoSystemName -> subsystemsFilter.getExclude().contains(mdoSystemName));
 
     return include && !exclude;
