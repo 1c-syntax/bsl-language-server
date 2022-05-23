@@ -223,7 +223,7 @@ public class ReferenceIndexFiller {
         return super.visitLValue(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
@@ -261,6 +261,46 @@ public class ReferenceIndexFiller {
       return super.visitComplexIdentifier(ctx);
     }
 
+    @Override
+    public BSLParserRuleContext visitForStatement(BSLParser.ForStatementContext ctx) {
+      if (ctx.IDENTIFIER() == null) {
+        return super.visitForStatement(ctx);
+      }
+
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
+        if (notVariableInitialization(ctx, s)) {
+          addVariableUsage(
+            s.getRootParent(SymbolKind.Method),
+            ctx.IDENTIFIER().getText(),
+            Ranges.create(ctx.IDENTIFIER()),
+            false
+          );
+        }
+      });
+
+      return super.visitForStatement(ctx);
+    }
+
+    @Override
+    public BSLParserRuleContext visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+      if (ctx.IDENTIFIER() == null) {
+        return super.visitForEachStatement(ctx);
+      }
+
+      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
+        if (notVariableInitialization(ctx, s)) {
+          addVariableUsage(
+            s.getRootParent(SymbolKind.Method),
+            ctx.IDENTIFIER().getText(),
+            Ranges.create(ctx.IDENTIFIER()),
+            false
+          );
+        }
+      });
+
+      return super.visitForEachStatement(ctx);
+    }
+
     private Optional<VariableSymbol> findVariableSymbol(String variableName) {
       var variableSymbol = documentContext.getSymbolTree()
         .getVariableSymbol(variableName, currentScope);
@@ -279,6 +319,14 @@ public class ReferenceIndexFiller {
 
     private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx, VariableSymbol variableSymbol) {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
+    }
+
+    private boolean notVariableInitialization(BSLParser.ForStatementContext ctx, VariableSymbol variableSymbol) {
+      return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx.IDENTIFIER()));
+    }
+
+    private boolean notVariableInitialization(BSLParser.ForEachStatementContext ctx, VariableSymbol variableSymbol) {
+      return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx.IDENTIFIER()));
     }
 
     private void addVariableUsage(Optional<SourceDefinedSymbol> methodSymbol,

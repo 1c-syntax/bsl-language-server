@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -154,27 +155,34 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return ctx;
     }
 
-    var variable = VariableSymbol.builder()
-      .name(ctx.getText().intern())
-      .owner(documentContext)
-      .range(Ranges.create(ctx))
-      .variableNameRange(Ranges.create(ctx))
-      .export(false)
-      .kind(VariableKind.DYNAMIC)
-      .scope(currentMethod)
-      .description(createDescription(ctx))
-      .build();
-    variables.add(variable);
+    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    return ctx;
+  }
 
-    // Если файл с ошибками разбора может возникнуть ситуация, когда по дереву мы будем находиться внутри метода,
-    // но при определении скоупа в модуле. В таких случаях будем сохранять описание в коллекции переменных модуля.
-    if (currentMethod == module) {
-      moduleVariables.put(ctx.getText(), ctx.getText());
-    } else {
-      currentMethodVariables.put(ctx.getText(), ctx.getText());
+  @Override
+  public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
+    if (
+      currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
+      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+    ) {
+      return super.visitForStatement(ctx);
     }
 
-    return ctx;
+    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    return super.visitForStatement(ctx);
+  }
+
+  @Override
+  public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    if (
+      currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
+      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+    ) {
+      return super.visitForEachStatement(ctx);
+    }
+
+    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    return super.visitForEachStatement(ctx);
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
@@ -229,6 +237,28 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     return Optional.of(new VariableDescription(comments, trailingComments));
 
+  }
+
+  private void updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
+    var variable = VariableSymbol.builder()
+      .name(node.getText().intern())
+      .owner(documentContext)
+      .range(Ranges.create(node))
+      .variableNameRange(Ranges.create(node))
+      .export(false)
+      .kind(VariableKind.DYNAMIC)
+      .scope(currentMethod)
+      .description(description)
+      .build();
+    variables.add(variable);
+
+    // Если файл с ошибками разбора может возникнуть ситуация, когда по дереву мы будем находиться внутри метода,
+    // но при определении скоупа в модуле. В таких случаях будем сохранять описание в коллекции переменных модуля.
+    if (currentMethod == module) {
+      moduleVariables.put(node.getText(), node.getText());
+    } else {
+      currentMethodVariables.put(node.getText(), node.getText());
+    }
   }
 
 }
