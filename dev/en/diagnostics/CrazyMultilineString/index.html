@@ -933,6 +933,9 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Crazy-multiline-literals-CrazyMultilineString_1">Crazy multiline literals (CrazyMultilineString)<a class="headerlink" href="#Crazy-multiline-literals-CrazyMultilineString_1" title="Permanent link">&para;</a></h1>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 <p>In source text, multi-line constants can be initialized in two ways:</p>
@@ -944,6 +947,14 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>Difficulty understanding:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">String</span> <span class="o">=</span> <span class="s">&quot;BBB&quot;</span> <span class="s">&quot;CC&quot;</span>
+<span class="s">&quot;F&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>Classic variant:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">String</span> <span class="o">=</span> <span class="s">&quot;BBB&quot;</span> <span class="o">+</span> <span class="s">&quot;CC&quot;</span>
+         <span class="o">+</span> <span class="s">&quot;F&quot;</span><span class="p">;</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
