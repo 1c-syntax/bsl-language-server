@@ -933,68 +933,77 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Using-a-logical-OR-in-the-WHERE-section-of-a-query-LogicalOrInTheWhereSectionOfQuery_1">Using a logical "OR" in the "WHERE" section of a query (LogicalOrInTheWhereSectionOfQuery)<a class="headerlink" href="#Using-a-logical-OR-in-the-WHERE-section-of-a-query-LogicalOrInTheWhereSectionOfQuery_1" title="Permanent link">&para;</a></h1>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>Do not use <code>OR</code> in the <code>WHERE</code> section of the query. This can lead to the DBMS being unable to use the indexes of the tables and will perform scans, which will increase the query time and the likelihood of locks occurring. Instead, you should split one query into several and combine the results.</p>
-<p>For example, the query
-<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Item</span><span class="o">.</span><span class="nv">Name</span> <span class="nv">FROM</span> <span class="nv">Directory</span><span class="o">.</span><span class="nv">Products</span> <span class="nv">AS</span> <span class="nv">Item</span>
-<span class="nv">WHERE</span> <span class="nv">Article</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span> <span class="k">OR</span> <span class="nv">Price</span> <span class="o">=</span> <span class="m">10</span>
-</code></pre></div></p>
-<p>should be replaced with a query</p>
-<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Product</span><span class="o">.</span><span class="nv">Name</span> <span class="nv">FROM</span> <span class="nv">Directory</span><span class="o">.</span><span class="nv">Products</span> <span class="nv">AS</span> <span class="nv">Product</span> <span class="nv">WHERE</span> <span class="nv">Article</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span>
+<p>Не следует использовать <code>ИЛИ</code> в секции <code>ГДЕ</code> запроса. Это может привести к тому, что СУБД не сможет использовать 
+индексы таблиц и будет выполнять сканирование, что увеличит время работы запроса и вероятность возникновения блокировок. 
+Вместо этого следует разбить один запрос на несколько и объединить результаты.</p>
+<h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+<p>For example, query:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Description</span> <span class="nv">FROM</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span> 
+<span class="nv">WHERE</span> <span class="nv">Code</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span> <span class="k">OR</span> <span class="nv">Cost</span> <span class="o">=</span> <span class="m">10</span>
+</code></pre></div>
+<p>should instead of a query:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Description</span> <span class="nv">FROM</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span> 
+<span class="nv">WHERE</span> <span class="nv">Code</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span> 
+
 <span class="nv">UNION</span> <span class="nv">ALL</span>
-<span class="nv">SELECT</span> <span class="nv">Product</span><span class="o">.</span><span class="nv">Name</span> <span class="nv">FROM</span> <span class="nv">Directory</span><span class="o">.</span><span class="nv">Products</span> <span class="nv">AS</span> <span class="nv">Product</span> <span class="nv">WHERE</span> <span class="nv">Price</span> <span class="o">=</span> <span class="m">10</span>
+
+<span class="nv">SELECT</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Description</span> <span class="nv">FROM</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span> 
+<span class="nv">WHERE</span> <span class="nv">Cost</span> <span class="o">=</span> <span class="m">10</span>
 </code></pre></div>
 <blockquote>
-<p><strong>Important</strong> - the current diagnostic implementation triggers any <code>OR</code> in the <code>WHERE</code> section and may give false positives for some conditions.</p>
+<p><strong>Important</strong> - the current implementation of the diagnostic triggers on any <code>OR</code> in the <code>WHERE</code> section and may issue false positives for some conditions.</p>
 </blockquote>
-<p>1) In the main condition, the <code>OR</code> operator can be used only for the last used or the only index field, when the <code>OR</code> operator can be replaced with the <code>IN</code> operator.</p>
-<p>CORRECT:</p>
+<p>1) In the main condition, the <code>OR</code> operator can only be used for the last used or the only index field, when the <code>OR</code> operator can be replaced by the <code>IN</code> operator.</p>
+<p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
-     <span class="k">OR</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
+    <span class="k">OR</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
 </code></pre></div>
-<p>since can be rewritten using the <code>IN</code> operator (you don't need to rewrite it specifically, you can leave it as it is):</p>
+<p>because can be rewritten using the <code>IN</code> operator (you don’t need to specifically rewrite it, you can leave it as it is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value)</span>
 </code></pre></div>
-<p>WRONG:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
-     <span class="k">OR</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
-</code></pre></div>
-<p>cannot be overwritten with <code>IN</code>, but can be overwritten with <code>UNION ALL</code> (each field Field1 and Field2 must be indexed):</p>
+<p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
+    <span class="k">OR</span>  <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
+</code></pre></div>
+<p>cannot be rewritten with <code>IN</code>, but can be rewritten with <code>UNION ALL</code> (each Field1 and Field2 must be indexed):</p>
+<div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
+     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
 
-<span class="nv">ОБЪЕДИНИТЬ</span> <span class="nv">ВСЕ</span>
+<span class="nv">UNION</span> <span class="nv">ALL</span>
 
 <span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
+     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
 </code></pre></div>
 <blockquote>
-<p>Note: replacing <code>OR</code> with <code>UNION ALL</code> is not always possible, make sure the result is indeed the same as <code>OR</code> before use.</p>
+<p>Note: it is not always possible to replace <code>OR</code> with <code>UNION ALL</code>, make sure the result is really the same as with <code>OR</code> before applying.</p>
 </blockquote>
-<p>2) In an additional condition, the OR operator can be used without restrictions.</p>
-<p>CORRECT 1:</p>
+<p>2) Additionally, the 'OR' operator can be used without restriction.</p>
+<p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1 // Main condition (uses index)</span>
-     <span class="k">AND</span> <span class="c c-Singleline">// Additional condition (you can use OR)</span>
-     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value2 OR Table.Field3 = &amp;Value3)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="kd">&amp;Value1 // Main condition (use index)</span>
+    <span class="k">AND</span> <span class="c c-Singleline">// Addition condition (can use OR)</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="kd">&amp;Value2 OR Table.Filed3 = &amp;Value3)</span>
 </code></pre></div>
-<p>CORRECT 2:</p>
+<p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1 OR Table.Field1 = &amp;Value2)</span>
-     <span class="k">AND</span>
-     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value3 OR Table.Field2 = &amp;Value4)</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="kd">&amp;Value1 OR Table.Filed1 = &amp;Value2)</span>
+    <span class="k">AND</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="kd">&amp;Value3 OR Table.Filed2 = &amp;Value4)</span>
 </code></pre></div>
-<p>since can be rewritten using the IN operator (you don't need to rewrite it specifically, you can leave it as it is):</p>
+<p>because can be rewritten using 'IN' (no special rewriting needed, can be left as is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="nf">B</span> <span class="p">(</span><span class="kd">&amp;Values1) // Main condition</span>
-     <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="nf">B</span> <span class="p">(</span><span class="kd">&amp;Values2) // Additional condition (or vice versa)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value1)   // Main condition</span>
+    <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value2) // Additional condition (or vice versa)</span>
 </code></pre></div>
-<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

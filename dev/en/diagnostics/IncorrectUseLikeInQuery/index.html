@@ -933,16 +933,52 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Incorrect-use-of-LIKE-IncorrectUseLikeInQuery_1">Incorrect use of 'LIKE' (IncorrectUseLikeInQuery)<a class="headerlink" href="#Incorrect-use-of-LIKE-IncorrectUseLikeInQuery_1" title="Permanent link">&para;</a></h1>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>When using the operator <code>LIKE</code> in the query text, it is allowed to use only
 - constant string literals
 - query parameters</p>
 <p>It is forbidden to form a template string using calculations, use string concatenation using the query language.</p>
 <p>Queries in which the control characters of the operator template <code>LIKE</code> are in query fields or in calculated expressions are interpreted differently on different DBMSs.</p>
+<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+<h3 id="String-concatenation-by-language-features">String concatenation by language features<a class="headerlink" href="#String-concatenation-by-language-features" title="Permanent link">&para;</a></h3>
+<p>Allowed:</p>
+<div class="highlight"><pre><span></span><code>Field LIKE &quot;123%&quot;
+</code></pre></div>
+<p>Not allowed:</p>
+<div class="highlight"><pre><span></span><code>Field LIKE &quot;123&quot; + &quot;%&quot;
+Field LIKE Table.Template
+</code></pre></div>
+<h3 id="Operator-template-control-characters-LIKE-are-found-in-query-fields-or-in-calculated-expressions">Operator template control characters LIKE are found in query fields or in calculated expressions<a class="headerlink" href="#Operator-template-control-characters-LIKE-are-found-in-query-fields-or-in-calculated-expressions" title="Permanent link">&para;</a></h3>
+<p>For example, instead of:</p>
+<div class="highlight"><pre><span></span><code>Query = New Query(&quot;
+|SELECT
+|    Goods.Ref
+|FROM
+|    Catalog.Goods AS Goods
+|WHERE
+|    Goods.Country.Description LOKE &amp;NameTemplate + &quot;_&quot;
+|&quot;);
+
+Query.SetParameter(&quot;NameTemplate&quot;, &quot;FU&quot;);
+</code></pre></div>
+<p>Nessesary to use:</p>
+<div class="highlight"><pre><span></span><code>Query = New Query(&quot;
+|SELECT
+|    Goods.Ref
+|FROM
+|    Catalog.Goods AS Goods
+|WHERE
+|    Goods.Country.Description LOKE &amp;NameTemplate
+|&quot;);
+
+Query.SetParameter(&quot;NameTemplate&quot;, &quot;FU_&quot;);
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -951,6 +987,9 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std/content/726/hdoc?ysclid=l3g3fkmxsx">Standard. Features of use in operator requests LIKE (RU)</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
