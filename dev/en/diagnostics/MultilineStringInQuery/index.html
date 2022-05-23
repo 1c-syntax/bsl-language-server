@@ -933,6 +933,9 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
+<h1 id="Multi-line-literal-in-query-MultilineStringInQuery_1">Multi-line literal in query (MultilineStringInQuery)<a class="headerlink" href="#Multi-line-literal-in-query-MultilineStringInQuery_1" title="Permanent link">&para;</a></h1>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+<h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 <p>Multi-line literals are rarely used in query texts, mostly these are error results due to an incorrect number of double quotes.</p>
@@ -943,7 +946,7 @@
 <div class="highlight"><pre><span></span><code><span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
 <span class="s">|   OrderGoods.Cargo AS Cargo,</span>
-<span class="s">|   ISNULL(OrderGoods.Cargo.Code, &quot;&quot;) AS CargoCode,</span>
+<span class="s">|   ISNULL(OrderGoods.Cargo.Code, &quot;&quot;) AS CargoCode, // quote error here, should be &quot;&quot;&quot;&quot;</span>
 <span class="s">|   ISNULL(OrderGoods.Cargo.Name, &quot;&quot;) AS CargoName</span>
 <span class="s">|FROM</span>
 <span class="s">|   Document.Order.Goods AS OrderGoods</span>
