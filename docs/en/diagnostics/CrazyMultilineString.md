@@ -1,7 +1,7 @@
 # Crazy multiline literals (CrazyMultilineString)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In source text, multi-line constants can be initialized in two ways:
@@ -13,6 +13,20 @@ The second method complicates the perception; when using it, it is easy to make 
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+Difficulty understanding:
+
+```bsl
+String = "BBB" "CC"
+"F";
+```
+
+Classic variant:
+
+```bsl
+String = "BBB" + "CC"
+         + "F";
+```
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
