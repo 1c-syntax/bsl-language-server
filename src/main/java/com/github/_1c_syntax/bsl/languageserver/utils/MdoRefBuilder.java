@@ -95,13 +95,6 @@ public class MdoRefBuilder {
     return stringInterner.intern(mdoRef.get());
   }
 
-  // todo перенести в mdClasses
-  public static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
-    return subsystems.stream()
-      .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
-      .collect(Collectors.toList());
-  }
-
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
     return documentContext.getServerContext()
       .getConfiguration()
