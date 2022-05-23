@@ -100,16 +100,26 @@ public abstract class DiagnosticsConfiguration {
 
   private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
     var mdoObject = documentContext.getMdObject();
-    var subSystemsName = diagnosticsOptions.getSubsystemsFilter();
+    var subsystemsFilter = diagnosticsOptions.getSubsystemsFilter();
 
     if (mdoObject.isEmpty()
-      || (subSystemsName.getInclude().isEmpty())) {
+      || (subsystemsFilter.getInclude().isEmpty() && subsystemsFilter.getExclude().isEmpty())) {
       return true;
     }
 
-    return MdoRefBuilder.subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
+    var stringStream = MdoRefBuilder.subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
       .map(AbstractMDO::getName)
-      .anyMatch(mdoSystemName -> subSystemsName.getInclude().stream().anyMatch(mdoSystemName::equalsIgnoreCase));
+      .collect(Collectors.toList());
+
+    var include = subsystemsFilter.getInclude().isEmpty()
+      || stringStream.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getInclude().contains(mdoSystemName));
+
+    var exclude = !subsystemsFilter.getExclude().isEmpty()
+      && stringStream.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getExclude().contains(mdoSystemName));
+
+    return include && !exclude;
   }
 
   private static boolean checkSupport(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {

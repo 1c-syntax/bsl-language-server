@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.TreeSet;
 
 /**
  * Фильтр диагностик по подсистемам
@@ -32,7 +32,6 @@ import java.util.ArrayList;
 @Data
 @NoArgsConstructor
 public class SubsystemFilter {
-  private ArrayList<String> include = new ArrayList<>();
-  // todo Exclude subsystems
-//  private ArrayList<String> exclude = new ArrayList<>();
+  private TreeSet<String> include = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+  private TreeSet<String> exclude = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 }

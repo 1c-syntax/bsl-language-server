@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SubsystemFilter;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -32,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Diagn
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
@@ -43,18 +41,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -311,69 +307,102 @@ class DiagnosticsTest {
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("ПодсистемаКотройНет")));
+      .setInclude(new TreeSet<>(List.of("ПодсистемаКотройНет")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("Подсистема1")));
+      .setInclude(new TreeSet<>(List.of("Подсистема1")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("Подсистема1_1")));
+      .setInclude(new TreeSet<>(List.of("Подсистема1_1")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-        .setInclude(new ArrayList<>(List.of("Подсистема1_1_1")));
+      .setInclude(new TreeSet<>(List.of("Подсистема1_1_1")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("Подсистема1_1_3")));
+      .setInclude(new TreeSet<>(List.of("Подсистема1_1_3")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("Подсистема2")));
+      .setInclude(new TreeSet<>(List.of("Подсистема2")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
-      .setInclude(new ArrayList<>(List.of("Подсистема3")));
+      .setInclude(new TreeSet<>(List.of("Подсистема3")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
   }
-//
-//  @Test
-//  void testDiagnosticSubsystemsExcludeCheck() {
-//
-//    var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
-//    context.clear();
-//    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
-//    context.populateContext();
-//
-//    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
-//
-//    var mdObject = context.getConfiguration().getChildren().stream()
-//      .filter(mdo -> mdo.getName().equalsIgnoreCase("ОбщийМодуль1"))
-//      .findFirst();
-//
-//    doReturn(mdObject).when(documentContext).getMdObject();
-//    // Без фильтра
-//    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-//      .isNotEmpty();
-//
-//    configuration.getDiagnosticsOptions().getSubsystemsFilter()
-//      .setExclude(new ArrayList<>(List.of("ПодсистемаКотройНет")));
-//    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-//      .isNotNull();
-//    configuration.getDiagnosticsOptions().getSubsystemsFilter()
-//      .setExclude(new ArrayList<>(List.of("Подсистема2")));
-//    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-//      .isNull();
-//  }
+
+  //
+  @Test
+  void testDiagnosticSubsystemsExcludeCheck() {
+
+    var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
+    context.clear();
+    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
+    context.populateContext();
+
+    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+
+    var mdObject = context.getConfiguration().getChildren().stream()
+      .filter(mdo -> mdo.getName().equalsIgnoreCase("ОбщийМодуль1"))
+      .findFirst();
+
+    doReturn(mdObject).when(documentContext).getMdObject();
+    // Без фильтра
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    configuration.getDiagnosticsOptions().getSubsystemsFilter()
+      .setExclude(new TreeSet<>(List.of("ПодсистемаКотройНет")));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+    configuration.getDiagnosticsOptions().getSubsystemsFilter()
+      .setExclude(new TreeSet<>(List.of("Подсистема2")));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+  }
+
+  @Test
+  void testDiagnosticSubsystemsIncludeExcludeCheck() {
+
+    var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
+    context.clear();
+    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
+    context.populateContext();
+
+    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+
+    var mdObject = context.getConfiguration().getChildren().stream()
+      .filter(mdo -> mdo.getName().equalsIgnoreCase("ОбщийМодуль1"))
+      .findFirst();
+
+    doReturn(mdObject).when(documentContext).getMdObject();
+    // Без фильтра
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    configuration.getDiagnosticsOptions().getSubsystemsFilter()
+      .setInclude(new TreeSet<>(List.of("Подсистема2")));
+    configuration.getDiagnosticsOptions().getSubsystemsFilter()
+      .setExclude(new TreeSet<>(List.of("Подсистема2_2")));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+
+    configuration.getDiagnosticsOptions().getSubsystemsFilter()
+      .setExclude(new TreeSet<>(List.of("Подсистема2")));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+  }
 
 }
