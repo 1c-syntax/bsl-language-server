@@ -1,7 +1,7 @@
 # Multi-line literal in query (MultilineStringInQuery)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Multi-line literals are rarely used in query texts, mostly these are error results due to an incorrect number of double quotes.
@@ -15,7 +15,7 @@ In the example below, the selection will have two fields instead of three.
 Query = New Query;
 Query.Text = "SELECT
 |   OrderGoods.Cargo AS Cargo,
-|   ISNULL(OrderGoods.Cargo.Code, "") AS CargoCode,
+|   ISNULL(OrderGoods.Cargo.Code, "") AS CargoCode, // quote error here, should be """"
 |   ISNULL(OrderGoods.Cargo.Name, "") AS CargoName
 |FROM
 |   Document.Order.Goods AS OrderGoods
