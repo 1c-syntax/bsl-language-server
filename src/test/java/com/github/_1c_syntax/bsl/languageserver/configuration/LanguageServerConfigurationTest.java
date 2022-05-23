@@ -50,7 +50,7 @@ class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
   private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
     = "./src/test/resources/.partial-bsl-language-server.json";
 

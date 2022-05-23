@@ -47,7 +47,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     super(ForbiddenMetadataNameDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @BeforeEach
   void beforeTest() {

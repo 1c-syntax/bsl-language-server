@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest {
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";

@@ -40,7 +40,7 @@ class WrongWebServiceHandlerDiagnosticTest extends AbstractDiagnosticTest<WrongW
     super(WrongWebServiceHandlerDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = PATH_TO_METADATA + "/WebServices/WebСервис1/Ext/Module.bsl";
 
   @SneakyThrows

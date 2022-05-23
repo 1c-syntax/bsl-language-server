@@ -45,7 +45,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @DirtiesContext
 class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
-  private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/Configuration.xml").toFile();
+  private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/designer/Configuration.xml").toFile();
   private Path tempDir;
 
   TimeoutsInExternalResourcesDiagnosticTest() {
@@ -95,7 +95,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     // when
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic.bsl").toAbsolutePath();
-    initServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath());
+    initServerContext(Paths.get("./src/test/resources/metadata/designer").toAbsolutePath());
     DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),

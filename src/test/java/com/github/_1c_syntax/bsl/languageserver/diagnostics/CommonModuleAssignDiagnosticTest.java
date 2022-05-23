@@ -43,7 +43,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
     super(CommonModuleAssignDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/diagnostics/CommonModuleAssignDiagnostic.bsl";
 
   @SneakyThrows
