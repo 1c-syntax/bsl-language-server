@@ -36,6 +36,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -95,9 +96,9 @@ public class MdoRefBuilder {
   }
 
   // todo перенести в mdClasses
-  public static List<MDSubsystem> subsystemFlatList(List<MDSubsystem> memberList) {
-    return memberList.stream()
-      .flatMap(subsystem -> Stream.concat(Stream.of(subsystem), subsystemFlatList(subsystem.getIncludedSubsystems()).stream()))
+  public static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
+    return subsystems.stream()
+      .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
       .collect(Collectors.toList());
   }
 
