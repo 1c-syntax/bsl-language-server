@@ -38,14 +38,12 @@ import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -104,13 +102,14 @@ public abstract class DiagnosticsConfiguration {
     var mdoObject = documentContext.getMdObject();
     var subSystemsName = diagnosticsOptions.getSubsystemsFilter();
 
-    if (mdoObject.isEmpty() || ArrayUtils.isEmpty(subSystemsName)) {
+    if (mdoObject.isEmpty()
+      || (subSystemsName.getInclude().isEmpty())) {
       return true;
     }
 
     return MdoRefBuilder.subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
       .map(AbstractMDO::getName)
-      .anyMatch(mdoSystemName -> Arrays.stream(subSystemsName).anyMatch(mdoSystemName::equalsIgnoreCase));
+      .anyMatch(mdoSystemName -> subSystemsName.getInclude().stream().anyMatch(mdoSystemName::equalsIgnoreCase));
   }
 
   private static boolean checkSupport(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
