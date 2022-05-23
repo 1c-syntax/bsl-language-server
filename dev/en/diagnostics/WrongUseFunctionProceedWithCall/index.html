@@ -934,12 +934,17 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>You should call ProceedWithCall function only in Extensions and only methods annotated with &amp;AROUND.</p>
+
+<p>Using the <code>ProceedWithCall</code> function outside of extension methods with the <code>&amp;Around</code> annotation will result in a run-time error.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
 <div class="highlight"><pre><span></span><code><span class="kd">&amp;AtClient</span>
 <span class="k">Procedure</span> <span class="nf">Test</span><span class="p">()</span>
-    <span class="nf">ProceedWithCall</span><span class="p">();</span> <span class="c c-Singleline">// there is error    </span>
+
+    <span class="c c-Singleline">// copy-past from extension</span>
+    <span class="nf">ProceedWithCall</span><span class="p">();</span> <span class="c c-Singleline">// Срабатывание здесь</span>
+
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
