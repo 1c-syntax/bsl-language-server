@@ -3,14 +3,19 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-You should call ProceedWithCall function only in Extensions and only methods annotated with &AROUND.
+
+Using the `ProceedWithCall` function outside of extension methods with the `&Around` annotation will result in a run-time error.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
 ```bsl
 &AtClient
 Procedure Test()
-    ProceedWithCall(); // there is error    
+
+    // copy-past from extension
+    ProceedWithCall(); // Срабатывание здесь
+
 EndProcedure
 ```
 
