@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1653300711617,
+  "lastUpdate": 1653306369328,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -17546,6 +17546,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6618418654099153",
             "extra": "mean: 43.24231298764547 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "92ec8dd340eb3ea12ee021aafb6fa8df34de9435",
+          "message": "Merge pull request #1880 from artbear/WriteLogEvent-1714\n\n[FN] UsageWriteLogEvent - сейчас не срабатывает, если в блоке исключения есть получение краткого представления ошибки, но нет полного",
+          "timestamp": "2022-05-23T14:41:29+03:00",
+          "tree_id": "08ceeef00cc4c9b7bfd0ff084c86be81c1d6e39d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/92ec8dd340eb3ea12ee021aafb6fa8df34de9435"
+        },
+        "date": 1653306366757,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 44.39455906550089,
+            "unit": "sec",
+            "range": "stddev: 0.6387616889843679",
+            "extra": "mean: 44.39455906550089 sec\nrounds: 3"
           }
         ]
       }
