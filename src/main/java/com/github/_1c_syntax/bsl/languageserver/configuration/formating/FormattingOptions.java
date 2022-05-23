@@ -19,30 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.configuration.formating;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
-class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErrorDiagnostic> {
-  QueryParseErrorDiagnosticTest() {
-    super(QueryParseErrorDiagnostic.class);
-  }
-
-  @Test
-  void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics, true)
-      .hasRange(9, 1, 10, 59)
-      .hasRange(14, 1, 19, 11)
-      .hasRange(27, 1, 28, 3)
-    ;
-  }
+@Data
+@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class FormattingOptions {
+  private boolean useUpperCaseForOrNotAndKeywords = true;
+  private boolean useKeywordsFormatting = true;
 }

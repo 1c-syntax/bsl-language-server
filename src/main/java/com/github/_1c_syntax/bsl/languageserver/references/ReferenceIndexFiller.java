@@ -245,7 +245,7 @@ public class ReferenceIndexFiller {
 
       var variableName = ctx.IDENTIFIER().getText();
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
+        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
       return super.visitCallStatement(ctx);
     }
 
@@ -257,7 +257,7 @@ public class ReferenceIndexFiller {
 
       var variableName = ctx.IDENTIFIER().getText();
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx), true));
+        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
       return super.visitComplexIdentifier(ctx);
     }
 

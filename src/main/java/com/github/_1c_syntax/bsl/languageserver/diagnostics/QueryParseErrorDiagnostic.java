@@ -44,6 +44,11 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class QueryParseErrorDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    return visitChildren(ctx);
+  }
+
+  @Override
   // анализируем каждый запрос пакета
   public ParseTree visitQueries(SDBLParser.QueriesContext ctx) {
     if (Trees.treeContainsErrors(ctx)) {

@@ -19,30 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
-
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
-class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErrorDiagnostic> {
-  QueryParseErrorDiagnosticTest() {
-    super(QueryParseErrorDiagnostic.class);
-  }
-
-  @Test
-  void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics, true)
-      .hasRange(9, 1, 10, 59)
-      .hasRange(14, 1, 19, 11)
-      .hasRange(27, 1, 28, 3)
-    ;
-  }
-}
+/**
+ * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.FormatProvider}
+ */
+package com.github._1c_syntax.bsl.languageserver.configuration.formating;

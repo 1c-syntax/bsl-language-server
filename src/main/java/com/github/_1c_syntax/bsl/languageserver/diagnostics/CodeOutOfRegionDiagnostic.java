@@ -44,6 +44,8 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -145,7 +147,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
         && !(node instanceof TerminalNode))
       .findFirst()
       .ifPresent((Tree node) -> {
-          Range ctxRange = Ranges.create((BSLParserRuleContext) node);
+          var ctxRange = Ranges.create((BSLParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic(ctx);
@@ -182,14 +184,26 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node -> node.getParent().getParent() == ctx)
       .forEach((ParseTree child) -> {
-        if (child.getChildCount() > 1
-          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext)) {
-          Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
+        if ((child.getChildCount() > 1
+          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext))
+          && !isRaiseStatement(child)) {
+
+          var ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic((BSLParser.StatementContext) child);
           }
         }
       });
+  }
+
+  private static boolean isRaiseStatement(ParseTree child) {
+    return Optional.of(child).stream()
+      .filter(BSLParser.StatementContext.class::isInstance)
+      .map(BSLParser.StatementContext.class::cast)
+      .map(BSLParser.StatementContext::compoundStatement)
+      .filter(Objects::nonNull)
+      .map(BSLParser.CompoundStatementContext::raiseStatement)
+      .anyMatch(Objects::nonNull);
   }
 }

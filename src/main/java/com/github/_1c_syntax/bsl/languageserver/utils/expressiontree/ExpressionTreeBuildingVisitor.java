@@ -137,7 +137,7 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
           break;
-        case BSLLexer.WAIT_KEYWORD:
+        case BSLLexer.AWAIT_KEYWORD:
           visitAwaitedMember(ctx.getChild(childIndex + 1));
           break;
         default:
