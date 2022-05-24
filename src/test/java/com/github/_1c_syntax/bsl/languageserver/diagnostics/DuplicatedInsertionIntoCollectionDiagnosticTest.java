@@ -91,7 +91,19 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(0);
-//    assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+  }
+
+  @Test
+  void newAssignWithDotsBetweenDuplications() {
+    var code =
+      "        Данные.ПовторнаяСоздаваемаяКоллекция = Новый Массив;\n" +
+      "        Данные.ПовторнаяСоздаваемаяКоллекция.Добавить(\"Пользователь\");\n" +
+      "        Данные.ПовторнаяСоздаваемаяКоллекция = Новый Массив;\n" +
+      "        Данные.ПовторнаяСоздаваемаяКоллекция.Добавить(\"Пользователь\");\n";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(0);
   }
 
   // дубль следующих методов из кода FieldsFromJoinsWithoutIsNullDiagnosticTest

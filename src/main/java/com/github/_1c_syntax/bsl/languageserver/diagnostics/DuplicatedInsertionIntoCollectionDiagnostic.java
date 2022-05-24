@@ -100,7 +100,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     final var fullIdentifier = callStatement.modifier().stream()
       .map(modifierContext -> modifierContext.getText())
-      .reduce(callStatement.IDENTIFIER().getText(), (x, y) -> x.concat(".").concat(y));
+      .reduce(callStatement.IDENTIFIER().getText(), (x, y) -> x.concat(".").concat(y))
+      .replace("..", ".");
 
     var firstParam = callParams.get(0).getText();
     return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, callParamListContext);
