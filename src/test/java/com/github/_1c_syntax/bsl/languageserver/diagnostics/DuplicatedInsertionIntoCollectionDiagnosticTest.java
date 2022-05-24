@@ -72,7 +72,23 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
         Ranges.create(58, 12, 58, 76))
     );
 
-    assertThat(diagnostics).hasSize(6);
+    checkContent(
+      diagnostics.get(6),
+      Ranges.create(99, 8, 99, 77),
+      Arrays.asList(
+        Ranges.create(98, 8, 98, 77),
+        Ranges.create(99, 8, 99, 77))
+    );
+
+    checkContent(
+      diagnostics.get(7),
+      Ranges.create(102, 8, 102, 92),
+      Arrays.asList(
+        Ranges.create(101, 8, 101, 92),
+        Ranges.create(102, 8, 102, 92))
+    );
+
+    assertThat(diagnostics).hasSize(8);
 
   }
 
