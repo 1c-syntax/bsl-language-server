@@ -171,8 +171,17 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasValidAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
     final var text = assignmentContext.lValue().getText();
-    return text.equalsIgnoreCase(groupingData.identifier)
-      || text.equalsIgnoreCase(groupingData.firstParam);
+    if (text.equalsIgnoreCase(groupingData.identifier)
+      || text.equalsIgnoreCase(groupingData.firstParam)){
+      return true;
+    }
+    final var textWithDot = text.concat(".");
+    return startWithIgnoreCase(groupingData.identifier, textWithDot)
+      || startWithIgnoreCase(groupingData.firstParam, textWithDot);
+  }
+
+  private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
+    return identifier.length() >= textWithDot.length() && identifier.substring(0, textWithDot.length()).equalsIgnoreCase(textWithDot);
   }
 
   private boolean hasBreakersBetweenCalls(GroupingData groupingData, GroupingData groupingData1, Range range, BSLParser.CodeBlockContext codeBlock) {
