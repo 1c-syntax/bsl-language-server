@@ -1,5 +1,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -73,6 +74,24 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
 
     assertThat(diagnostics).hasSize(6);
 
+  }
+
+  @Test
+  void newAssignBetweenDuplications() {
+    var code = "        ПовторнаяСоздаваемаяКоллекция = Новый Массив;\n" +
+      "        ПовторнаяСоздаваемаяКоллекция.Добавить(\"Пользователь\");\n" +
+//      "        ОбщаяКоллекция.Добавить(ПовторнаяСоздаваемаяКоллекция);\n" +
+      "        ПовторнаяСоздаваемаяКоллекция = Новый Массив;\n" +
+      "        ПовторнаяСоздаваемаяКоллекция.Добавить(\"Пользователь\"); // не ошибка\n";
+//      "//TODO        ПовторнаяСоздаваемаяКоллекция.Добавить(\"Пользователь\"); // не ошибка\n" +
+//      "//TODO        ОбщаяКоллекция.Добавить(ПовторнаяСоздаваемаяКоллекция); // не ошибка\n";
+
+    // TODO проверить     Массив.sdf().asf = Новый Массив; - вызов метода посередине
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(0);
+//    assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
   }
 
   // дубль следующих методов из кода FieldsFromJoinsWithoutIsNullDiagnosticTest
