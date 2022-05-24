@@ -122,7 +122,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 //      .filter(groupingData -> )
     for (int i = 1; i < listOfDuplicatedData.size(); i++) {
       if (hasNormalChange(listOfDuplicatedData.get(0), listOfDuplicatedData.get(i), codeBlock)){
-        break;
+        break;// последующие элементы нет смысла проверять, их нужно исключать
       }
       listForIssue.add(listOfDuplicatedData.get(i));
     }
@@ -142,8 +142,13 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     var range = Ranges.create(groupingData.callStatement, groupingData1.callStatement);
     return blockAssignments.stream()
       .filter(assignmentContext -> Ranges.containsRange(range, Ranges.create(assignmentContext)))
-      .map(assignmentContext -> assignmentContext.lValue())
-      .anyMatch(lValueContext -> lValueContext.getText().equalsIgnoreCase(groupingData.identifier));
+      .anyMatch(assignmentContext -> hasNormalAssign(assignmentContext, groupingData));
+  }
+
+  private boolean hasNormalAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
+    final var text = assignmentContext.lValue().getText();
+    return text.equalsIgnoreCase(groupingData.identifier)
+      || text.equalsIgnoreCase(groupingData.firstParam);
   }
 
   private void fireIssue(List<GroupingData> listOfDuplicatedData) {
