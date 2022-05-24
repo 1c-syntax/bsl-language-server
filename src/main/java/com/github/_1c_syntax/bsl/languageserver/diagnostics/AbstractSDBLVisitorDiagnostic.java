@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
 import lombok.Getter;
@@ -33,7 +32,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
   @Getter
