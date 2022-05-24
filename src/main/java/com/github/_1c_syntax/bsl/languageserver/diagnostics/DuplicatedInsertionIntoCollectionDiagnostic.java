@@ -90,6 +90,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
     blockAssignments = null;
     blockBreakers = null;
+    blockRange = null;
 
     return super.visitCodeBlock(codeBlock);
   }
@@ -125,16 +126,33 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private void excludeValidChanges(List<GroupingData> listOfDuplicatedData, BSLParser.CodeBlockContext codeBlock) {
 
     var listForIssue = new ArrayList<GroupingData>();
-    listForIssue.add(listOfDuplicatedData.get(0));
-    for (int i = 1; i < listOfDuplicatedData.size(); i++) {
-      if (hasValidChange(listOfDuplicatedData.get(0), listOfDuplicatedData.get(i), codeBlock)){
-        break;// последующие элементы нет смысла проверять, их нужно исключать
-      }
-      listForIssue.add(listOfDuplicatedData.get(i));
+    for (int i = 0; i < listOfDuplicatedData.size(); i++) {
+      if (!excludeValidElements(listOfDuplicatedData, i, codeBlock, listForIssue)){
+        break;
+      };
     }
     if (listForIssue.size() > 1){
       fireIssue(listForIssue);
     }
+  }
+
+  private boolean excludeValidElements(List<GroupingData> listOfDuplicatedData, int currIndex, BSLParser.CodeBlockContext codeBlock, ArrayList<GroupingData> listForIssue) {
+    if (listOfDuplicatedData.size() - currIndex < 2){
+      return false;
+    }
+    final var elem = listOfDuplicatedData.get(currIndex);
+    boolean alreadyAdd = false;
+    for (int i = currIndex + 1; i < listOfDuplicatedData.size(); i++) {
+      if (hasValidChange(elem, listOfDuplicatedData.get(i), codeBlock)){
+        break;// последующие элементы нет смысла проверять, их нужно исключать
+      }
+      if (!alreadyAdd){
+        alreadyAdd = true;
+        listForIssue.add(elem);
+      }
+      listForIssue.add(listOfDuplicatedData.get(i));
+    }
+    return true;
   }
 
   private boolean hasValidChange(GroupingData groupingData, GroupingData groupingData1, BSLParser.CodeBlockContext codeBlock) {
@@ -142,10 +160,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (hasAssignBetweenCalls(groupingData, range, codeBlock)){
       return true;
     }
-    if (hasBreakersBetweenCalls(groupingData, groupingData1, range, codeBlock)){
-      return true;
-    }
-    return false;
+    return hasBreakersBetweenCalls(groupingData, groupingData1, range, codeBlock);
   }
 
   private boolean hasAssignBetweenCalls(GroupingData groupingData, Range range, BSLParser.CodeBlockContext codeBlock) {
