@@ -100,11 +100,31 @@ class ReferenceIndexFillerTest {
       .getMethodSymbol("ТретийМетод");
     assertThat(scopeMethod).isPresent();
     var references = referenceIndex.getReferencesFrom(scopeMethod.get());
-    assertThat(references).hasSize(11);
+    assertThat(references).hasSize(13);
 
     var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
     var usage = referenceIndex.getReferencesTo(targetVariable);
     assertThat(usage).hasSize(5);
+  }
+
+  @Test
+  void testFindVariablesInForStatements() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedForStatementsSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(38, 25)
+    );
+    assertThat(referencedForStatementsSymbol).isPresent();
+
+    var referencedForEachStatementSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(44, 30)
+    );
+    assertThat(referencedForEachStatementSymbol).isPresent();
   }
 
   @Test

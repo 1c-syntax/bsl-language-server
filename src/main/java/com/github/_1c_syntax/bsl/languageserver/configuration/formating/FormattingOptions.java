@@ -19,37 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.configuration.formating;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
-class CodeAfterAsyncCallDiagnosticTest extends AbstractDiagnosticTest<CodeAfterAsyncCallDiagnostic> {
-  CodeAfterAsyncCallDiagnosticTest() {
-    super(CodeAfterAsyncCallDiagnostic.class);
-  }
-
-  @Test
-  void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics, true)
-      .hasRange(4, 4, 96)
-      .hasRange(21, 8, 100)
-      .hasRange(34, 8, 100)
-      .hasRange(48, 12, 104)
-      .hasRange(63, 12, 104)
-      .hasRange(78, 12, 104)
-      .hasRange(93, 12, 104)
-      .hasRange(108, 12, 104)
-      .hasRange(123, 12, 104)
-      .hasRange(270, 12, 104)
-      .hasSize(10);
-
-  }
+@Data
+@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class FormattingOptions {
+  private boolean useUpperCaseForOrNotAndKeywords = true;
+  private boolean useKeywordsFormatting = true;
 }

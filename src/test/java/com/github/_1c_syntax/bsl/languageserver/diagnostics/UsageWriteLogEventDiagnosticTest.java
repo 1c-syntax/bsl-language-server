@@ -46,11 +46,16 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(11, 4, 79)
       .hasRange(16, 6, 17, 25)
       .hasRange(23, 6, 24, 24)
-      .hasRange(31, 6, 32, 35)
+      .hasRange(31, 6, 32, 45)
       .hasRange(38, 6, 39, 37)
       .hasRange(45, 6, 46, 21)
+      .hasRange(45, 6, 46, 21)
+      .hasRange(190, 6, 192,56)
+      .hasRange(204, 6, 206,22)
+      .hasRange(219, 6, 221,22)
+      .hasRange(286, 12, 291,39)
+      .hasSize(14)
     ;
-    assertThat(diagnostics).hasSize(10);
 
   }
 }

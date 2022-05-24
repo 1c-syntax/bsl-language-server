@@ -226,3 +226,8 @@ With `YourKit Java Profiler` we profile and improve project performance.
 
 `IntelliJ IDEA Ultimate` is one of the best tools in its class.
 
+---
+
+[![Digilabs](https://digilabs.ru/1c359e054740a0b75966f8c4babc239a.svg)](https://Digilabs.ru)
+
+[Digilabs](https://digilabs.ru) - authors of `Alkir` - a software package for monitoring the performance of systems based on 1C:Enterprise 8. Digilabs provides us with server facilities for continuous performance testing of the BSL Language Server.
