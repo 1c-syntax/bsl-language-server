@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -28,7 +30,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
+import lombok.Getter;
+import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Diagnostic;
+
+import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -41,11 +50,26 @@ import org.antlr.v4.runtime.tree.ParseTree;
   },
   scope = DiagnosticScope.BSL
 )
-public class QueryParseErrorDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class QueryParseErrorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
+
+  @Getter
+  @Setter
+  protected DiagnosticInfo info;
+  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  protected DocumentContext documentContext;
 
   @Override
-  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
-    return visitChildren(ctx);
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    this.documentContext = documentContext;
+    diagnosticStorage.clearDiagnostics();
+    var queries = documentContext.getQueries();
+    if (!queries.isEmpty()) {
+      queries.stream()
+        .map(Tokenizer::getAst)
+        .forEach(this::visitQueryPackage);
+    }
+
+    return diagnosticStorage.getDiagnostics();
   }
 
   @Override

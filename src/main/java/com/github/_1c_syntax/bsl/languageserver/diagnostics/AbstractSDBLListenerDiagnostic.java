@@ -23,7 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParserBaseListener;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
 import lombok.Getter;
 import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -46,7 +48,10 @@ public abstract class AbstractSDBLListenerDiagnostic extends SDBLParserBaseListe
     var walker = new ParseTreeWalker();
     var queries = documentContext.getQueries();
     if (!queries.isEmpty()) {
-      queries.forEach(sdblTokenizer -> walker.walk(this, sdblTokenizer.getAst()));
+      queries.stream()
+        .map(Tokenizer::getAst)
+        .filter(ctx -> !Trees.treeContainsErrors(ctx))
+        .forEach(ctx -> walker.walk(this, ctx));
     }
     return diagnosticStorage.getDiagnostics();
   }
