@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest {
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
@@ -81,7 +81,7 @@ class ServerContextTest {
     serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
-    DocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
+    var documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
     assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()

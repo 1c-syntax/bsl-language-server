@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
@@ -48,8 +49,8 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     super(UsingModalWindowsDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
   @Test
   void testDontUse() {
@@ -63,7 +64,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUse() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
   }
@@ -71,7 +72,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUseWithForce() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("forceModalityMode", true);
@@ -121,7 +122,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     when(configuration.getModalityUseMode()).thenReturn(useMode);
     when(context.getConfiguration()).thenReturn(configuration);
 
-    return context.addDocument(testFile.toUri(), getText(), 1);
+    return TestUtils.getDocumentContext(testFile.toUri(), getText());
   }
 
 }

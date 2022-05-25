@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -41,21 +41,23 @@ import org.antlr.v4.runtime.tree.ParseTree;
   scope = DiagnosticScope.BSL
 )
 public class JoinWithSubQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
+
   @Override
   public ParseTree visitDataSources(SDBLParser.DataSourcesContext ctx) {
     ctx.dataSource().stream()
       .filter(dataSourceContext -> !dataSourceContext.joinPart().isEmpty())
-      .filter(dataSourceContext -> dataSourceContext.inlineSubquery() != null)
-      .forEach(dataSourceContext -> diagnosticStorage.addDiagnostic(dataSourceContext.inlineSubquery()));
+      .filter(dataSourceContext -> dataSourceContext.subquery() != null)
+      .forEach(dataSourceContext -> diagnosticStorage.addDiagnostic(dataSourceContext.subquery()));
 
     return super.visitDataSources(ctx);
   }
 
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    if (ctx.dataSource() != null && ctx.dataSource().inlineSubquery() != null) {
-      diagnosticStorage.addDiagnostic(ctx.dataSource().inlineSubquery());
+    if (ctx.dataSource() != null && ctx.dataSource().subquery() != null) {
+      diagnosticStorage.addDiagnostic(ctx.dataSource().subquery());
     }
+
     return super.visitJoinPart(ctx);
   }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -84,12 +84,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    var documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -102,12 +102,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);

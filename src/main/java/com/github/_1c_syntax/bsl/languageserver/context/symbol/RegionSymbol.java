@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -39,16 +39,18 @@ import java.util.stream.Collectors;
 
 @Value
 @Builder(access = lombok.AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
+  @EqualsAndHashCode.Include
   DocumentContext owner;
   Range range;
   Range startRange;
   Range endRange;
+  @EqualsAndHashCode.Include
   Range regionNameRange;
 
   @Getter
@@ -63,7 +65,7 @@ public class RegionSymbol implements SourceDefinedSymbol {
   public List<MethodSymbol> getMethods() {
     return children.stream()
       .filter(MethodSymbol.class::isInstance)
-      .map(symbol -> (MethodSymbol) symbol)
+      .map(MethodSymbol.class::cast)
       .collect(Collectors.toList());
   }
 

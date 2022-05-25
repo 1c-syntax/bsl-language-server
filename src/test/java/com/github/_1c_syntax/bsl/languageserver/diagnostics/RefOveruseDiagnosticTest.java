@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -38,7 +38,7 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(3, 28, 3, 45)
       .hasRange(13, 8, 13, 34)
@@ -48,6 +48,7 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
       .hasRange(38, 8, 38, 35)
       .hasRange(56, 37, 56, 43)
       .hasRange(57, 42, 57, 48)
+      .hasRange(92, 8, 29)
       .hasRange(153, 13, 153, 41)
       .hasRange(164, 13, 164, 53)
       .hasRange(178, 13, 178, 35);

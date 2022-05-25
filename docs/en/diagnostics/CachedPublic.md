@@ -1,9 +1,5 @@
 # Cached public methods (CachedPublic)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |             Tags             |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`design`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -17,20 +13,4 @@ You should not create a programming interface in modules that reuse return value
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Source: [Standard: Ensuring Library Compatibility](https://its.1c.ru/db/v8std#content:644:hdoc:3.6)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CachedPublic-off
-// BSLLS:CachedPublic-on
-```
-
-### Parameter for config
-
-```json
-"CachedPublic": false
-```
+* Source: [Standard: Ensuring Library Compatibility (RU)](https://its.1c.ru/db/v8std#content:644:hdoc:3.6)

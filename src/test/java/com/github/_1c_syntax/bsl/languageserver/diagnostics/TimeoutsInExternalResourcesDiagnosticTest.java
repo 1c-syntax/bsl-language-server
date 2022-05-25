@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -45,7 +45,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @DirtiesContext
 class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
-  private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/Configuration.xml").toFile();
+  private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/designer/Configuration.xml").toFile();
   private Path tempDir;
 
   TimeoutsInExternalResourcesDiagnosticTest() {
@@ -95,7 +95,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     // when
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic.bsl").toAbsolutePath();
-    initServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath());
+    initServerContext(Paths.get("./src/test/resources/metadata/designer").toAbsolutePath());
     DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),

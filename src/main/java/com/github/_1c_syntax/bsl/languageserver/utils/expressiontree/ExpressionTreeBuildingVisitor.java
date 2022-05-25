@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -137,7 +137,7 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
           break;
-        case BSLLexer.WAIT_KEYWORD:
+        case BSLLexer.AWAIT_KEYWORD:
           visitAwaitedMember(ctx.getChild(childIndex + 1));
           break;
         default:

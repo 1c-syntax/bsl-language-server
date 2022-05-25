@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -41,16 +41,19 @@ import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+  @EqualsAndHashCode.Include
   String name;
 
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
 
+  @EqualsAndHashCode.Include
   DocumentContext owner;
   Range range;
+  @EqualsAndHashCode.Include
   Range subNameRange;
 
   @Getter

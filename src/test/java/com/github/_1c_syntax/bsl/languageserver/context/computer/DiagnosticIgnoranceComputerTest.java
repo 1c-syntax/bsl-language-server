@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -41,7 +41,7 @@ class DiagnosticIgnoranceComputerTest {
 
     // given
     String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
-    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
+    final var documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 
@@ -66,6 +66,32 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+  }
+
+  @Test
+  void testDiagnosticIgnoranceExtension() {
+
+    // given
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerExtensionTest.bsl";
+    final var documentContext = getDocumentContextFromFile(filePath);
+
+    List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
+    ignoredDiagnostics.add(createDiagnostic("MissingSpace", 6));
+
+    List<Diagnostic> notIgnoredDiagnostics = new ArrayList<>();
+    notIgnoredDiagnostics.add(createDiagnostic("MissingSpace", 16));
+    notIgnoredDiagnostics.add(createDiagnostic("UnusedLocalVariable", 16));
+    notIgnoredDiagnostics.add(createDiagnostic("SemicolonPresence", 10));
+
+    // when
+    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =
+      new DiagnosticIgnoranceComputer(documentContext);
+    DiagnosticIgnoranceComputer.Data data = diagnosticIgnoranceComputer.compute();
+
+    // then
+    assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
+    assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+
   }
 
   private static Diagnostic createDiagnostic(String code, int line) {

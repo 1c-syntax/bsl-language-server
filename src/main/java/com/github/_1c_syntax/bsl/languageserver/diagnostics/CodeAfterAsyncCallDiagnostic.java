@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_codeBlock;
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
@@ -59,7 +60,7 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_subCodeBlock;
 )
 public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern ASYNC_METHODS = CaseInsensitivePattern.compile(
-    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ОТКРЫТЬФОРМУ|OPENFORM|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
+    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
       "|ПОКАЗАТЬПРЕДУПРЕЖДЕНИЕ|SHOWMESSAGEBOX|ПОКАЗАТЬВВОДДАТЫ|SHOWINPUTDATE|ПОКАЗАТЬВВОДЗНАЧЕНИЯ|SHOWINPUTVALUE" +
       "|ПОКАЗАТЬВВОДСТРОКИ|SHOWINPUTSTRING|ПОКАЗАТЬВВОДЧИСЛА|SHOWINPUTNUMBER" +
       "|НАЧАТЬУСТАНОВКУВНЕШНЕЙКОМПОНЕНТЫ|BEGININSTALLADDIN" +
@@ -85,10 +86,24 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     if (codeBlock == null || codeBlock.statement().isEmpty()) {
       return false;
     }
-    if (Trees.getNextNode(codeBlock, statement, RULE_statement) != null) {
-      return true;
+    final var asyncLine = statement.getStop().getLine();
+    final var statements = codeBlock.statement().stream()
+      .filter(statementContext -> statementContext != statement &&
+        statementContext.getStart().getLine() > asyncLine)
+      .collect(Collectors.toList());
+    final var compoundCtx = statements.stream()
+      .findFirst()
+      .map(BSLParser.StatementContext::compoundStatement);
+    final var returnAfterAsync = compoundCtx
+      .map(BSLParser.CompoundStatementContext::returnStatement)
+      .isPresent();
+    if (returnAfterAsync){
+      return false;
     }
-    return checkParentBlock(codeBlock);
+    final var breakAfterAsync = compoundCtx
+      .map(BSLParser.CompoundStatementContext::breakStatement)
+      .isPresent();
+    return (!breakAfterAsync && !statements.isEmpty()) || checkParentBlock(codeBlock);
   }
 
   private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {

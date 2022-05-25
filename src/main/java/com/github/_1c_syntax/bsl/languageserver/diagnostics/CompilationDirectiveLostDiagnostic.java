@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
+import com.github._1c_syntax.mdclasses.mdo.support.FormType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -46,6 +48,20 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 )
 public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnostic {
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    if (documentContext.getModuleType() == ModuleType.FormModule) {
+      var mdo = documentContext.getMdObject();
+      if (mdo.isPresent() && mdo.get() instanceof AbstractMDOForm) {
+        var form = (AbstractMDOForm) mdo.get();
+        if (form.getFormType() != FormType.MANAGED) {
+          return ctx;
+        }
+      }
+    }
+    return super.visitFile(ctx);
+  }
 
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {

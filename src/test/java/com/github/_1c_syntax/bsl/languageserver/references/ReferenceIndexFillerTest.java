@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
@@ -47,7 +49,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testFindCalledMethod() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     referenceIndexFiller.fill(documentContext);
 
     // when
@@ -67,9 +69,139 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
+  void testFindVariables() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(25, 24)
+    );
+    assertThat(referencedSymbol).isPresent();
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Первая");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getFrom)
+      .extracting(Symbol::getName)
+      .isEqualTo("ТретийМетод");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getOccurrenceType)
+      .isEqualTo(OccurrenceType.REFERENCE);
+
+    var scopeMethod = documentContext
+      .getSymbolTree()
+      .getMethodSymbol("ТретийМетод");
+    assertThat(scopeMethod).isPresent();
+    var references = referenceIndex.getReferencesFrom(scopeMethod.get());
+    assertThat(references).hasSize(13);
+
+    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).hasSize(5);
+  }
+
+  @Test
+  void testFindVariablesInForStatements() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedForStatementsSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(38, 25)
+    );
+    assertThat(referencedForStatementsSymbol).isPresent();
+
+    var referencedForEachStatementSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(44, 30)
+    );
+    assertThat(referencedForEachStatementSymbol).isPresent();
+  }
+
+  @Test
+  void testFindVariablesRangesCallStatement() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(33, 10)
+    );
+    assertThat(referencedSymbol).isPresent();
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Модуль");
+
+    referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(33, 13)
+    );
+    assertThat(referencedSymbol).isEmpty();
+  }
+
+  @Test
+  void testFindVariablesRangesComplexIdentifier() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(34, 16)
+    );
+    assertThat(referencedSymbol).isPresent();
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Модуль");
+
+    referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(34, 23)
+    );
+    assertThat(referencedSymbol).isEmpty();
+  }
+
+  @Test
+  void testErrorVariables() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerErrorVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var referencedSymbol = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(48, 1)
+    );
+    assertThat(referencedSymbol).isPresent();
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getSymbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Запрос");
+
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::getOccurrenceType)
+      .isEqualTo(OccurrenceType.DEFINITION);
+  }
+
+  @Test
   void testRebuildClearReferences() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
 
     // when

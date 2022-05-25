@@ -1,20 +1,7 @@
 # Incorrect expression line break (IncorrectLineBreak)
 
-|     Type     |        Scope        | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    |  `Info`  |             `Yes`             |           `2`           |    `standard`<br>`badpractice`    |
-
-## Parameters
-
-
-|             Name             |   Type    |                                               Description                                               |       Default value        |
-|:----------------------------:|:---------:|:-------------------------------------------------------------------------------------------------------:|:--------------------------:|
-|      `checkFirstSymbol`      | `Boolean` |                            `Check beginning of line for invalid characters`                             |           `true`           |
-| `listOfIncorrectFirstSymbol` | `String`  | `Vertical bar-separated characters that should not start the line (special characters must be escaped)` |        `\)|;|,|\);`        |
-|      `checkLastSymbol`       | `Boolean` |                               `Check end of line for invalid characters`                                |           `true`           |
-| `listOfIncorrectLastSymbol`  | `String`  | `Vertical bar-separated characters that must not end in the line (special characters must be escaped)`  | `ИЛИ|И|OR|AND|\+|-|/|%|\*` |
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Long arithmetic expressions are carried as follows: one entry can contain more than one operand; when wrapping, operation characters are written at the beginning of the line (and not at the end of the previous line); operands on a new line are preceded by standard indentation, or they are aligned to the beginning of the first operand, regardless of the operation signs.
@@ -34,34 +21,31 @@ Complex logical conditions in If ... ElseIf ... EndIf should be carried as follo
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+Incorrect:
+
 ```bsl
 AmountDocument = AmountWithoutDiscount +
                  AmountManualDiscounts +
                  AmountAutomaticDiscount;
 ```
 
+Correct:
+
+```bsl
+AmountDocument = AmountWithoutDiscount 
+    + AmountManualDiscounts 
+    + AmountAutomaticDiscount;
+```
+
+or
+
+```bsl
+AmountDocument = AmountWithoutDiscount 
+                 + AmountManualDiscounts 
+                 + AmountAutomaticDiscount;
+```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * Standard: [Wrap expressions (RU)](https://its.1c.ru/db/v8std#content:444:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IncorrectLineBreak-off
-// BSLLS:IncorrectLineBreak-on
-```
-
-### Parameter for config
-
-```json
-"IncorrectLineBreak": {
-    "checkFirstSymbol": true,
-    "listOfIncorrectFirstSymbol": "\\)|;|,|\\);",
-    "checkLastSymbol": true,
-    "listOfIncorrectLastSymbol": "ИЛИ|И|OR|AND|\\+|-|/|%|\\*"
-}
-```

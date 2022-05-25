@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -43,10 +43,14 @@ class QueryComputerTest {
     //then
     assertThat(queries).hasSize(10);
     assertThat(queries.get(0).getTokens().get(1).getLine()).isEqualTo(3);
-    assertThat(queries.get(6).getTokens().get(2).getLine()).isEqualTo(30);
-    assertThat(queries.get(8).getTokens().get(1).getLine()).isEqualTo(45);
+    assertThat(queries.get(1).getTokens().get(1).getLine()).isEqualTo(5);
+    assertThat(queries.get(2).getTokens().get(1).getLine()).isEqualTo(12);
+    assertThat(queries.get(3).getTokens().get(1).getLine()).isEqualTo(14);
+    assertThat(queries.get(4).getTokens().get(2).getLine()).isEqualTo(21);
+    assertThat(queries.get(5).getTokens().get(2).getLine()).isEqualTo(23);
+    assertThat(queries.get(6).getTokens().get(1).getLine()).isEqualTo(30);
+    assertThat(queries.get(7).getTokens().get(15).getLine()).isEqualTo(39);
     assertThat(queries.get(8).getTokens().get(31).getLine()).isEqualTo(50);
-    assertThat(queries.get(9).getTokens().get(9).getLine()).isEqualTo(59);
-
+    assertThat(queries.get(9).getTokens().get(31).getLine()).isEqualTo(62);
   }
 }

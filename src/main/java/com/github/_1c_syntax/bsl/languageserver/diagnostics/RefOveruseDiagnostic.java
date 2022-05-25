@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -60,22 +60,19 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
 
-    if (columnsCollection.isEmpty()) {
+    if (columnsCollection.isEmpty()
+      || dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
       return ctx;
     }
 
-    if (dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
+    if (dataSourceCollection.isEmpty()) {
+      performSimpleCheck(columnsCollection);
       return ctx;
     }
 
     var tableNames = dataSourceCollection.stream()
       .map(RefOveruseDiagnostic::getTableNameOrAlias)
       .collect(Collectors.toSet());
-
-    if (dataSourceCollection.isEmpty()) {
-      performSimpleCheck(columnsCollection);
-      return ctx;
-    }
 
     columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
     return ctx;
@@ -149,5 +146,4 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .flatMap(child -> Trees.getFirstChild(child, SDBLParser.RULE_identifier))
       .map(BSLParserRuleContext::getText);
   }
-
 }

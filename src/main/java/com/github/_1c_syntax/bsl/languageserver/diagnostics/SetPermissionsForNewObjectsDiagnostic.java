@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -62,27 +62,28 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void check() {
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
 
-    var tokens = documentContext.getTokens();
-
-    Ranges.getFirstSignificantTokenRange(tokens).ifPresent(range ->
-      documentContext.getServerContext().getConfiguration().getRoles().stream()
-        .filter(role -> role.getRoleData().isSetForNewObjects())
-        .map(MDRole::getName)
-        .filter(Predicate.not(namesFullAccessRole::contains))
-        .map(info::getMessage)
-        .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage))
-    );
+    documentContext.getServerContext().getConfiguration().getRoles().stream()
+      .filter(role -> role.getRoleData().isSetForNewObjects())
+      .map(MDRole::getName)
+      .filter(Predicate.not(namesFullAccessRole::contains))
+      .map(info::getMessage)
+      .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage)
+      );
   }
 
   @Override
-  public void configure(Map<String, Object> configuration){
+  public void configure(Map<String, Object> configuration) {
     var namesFullAccessRoleString = (String) configuration
       .getOrDefault("namesFullAccessRole", NAMES_FULL_ACCESS_ROLE);
     this.namesFullAccessRole = getSetFromString(namesFullAccessRoleString);
   }
 
-  private static Set<String> getSetFromString(String inputParam){
+  private static Set<String> getSetFromString(String inputParam) {
     return Set.of(inputParam.split(","));
   }
 

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -38,7 +38,6 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(3, 4, 39)
       .hasRange(4, 4, 73)
@@ -47,9 +46,15 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(11, 4, 79)
       .hasRange(16, 6, 17, 25)
       .hasRange(23, 6, 24, 24)
-      .hasRange(31, 6, 32, 35)
+      .hasRange(31, 6, 32, 45)
       .hasRange(38, 6, 39, 37)
       .hasRange(45, 6, 46, 21)
+      .hasRange(45, 6, 46, 21)
+      .hasRange(190, 6, 192,56)
+      .hasRange(204, 6, 206,22)
+      .hasRange(219, 6, 221,22)
+      .hasRange(286, 12, 291,39)
+      .hasSize(14)
     ;
 
   }

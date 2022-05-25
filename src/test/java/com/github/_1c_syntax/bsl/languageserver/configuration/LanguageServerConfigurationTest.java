@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -50,7 +50,7 @@ class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
   private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
     = "./src/test/resources/.partial-bsl-language-server.json";
 
@@ -154,8 +154,8 @@ class LanguageServerConfigurationTest {
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     // then
-    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
-    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+    assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
+    assertThat(codeLensOptions.getParameters()).containsEntry("cyclomaticComplexity", Either.forLeft(false));
 
     assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
 

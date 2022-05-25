@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -58,7 +58,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testFileVarContentFromDirectFile_NoComments() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("ИмяБезОписания", symbolTree.getModule()).orElseThrow();
 
@@ -74,14 +74,14 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем ИмяБезОписания\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
   }
 
   @Test
   void testFileVarContentFromDirectFile_OneCommentsStringFromRight() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСправаОднойСтрокой", symbolTree.getModule()).orElseThrow();
 
@@ -97,7 +97,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСправаОднойСтрокой\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     assertThat(blocks.get(2)).matches("описание\n" +
       "\n");
@@ -106,7 +106,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testMethodVarContentFromDirectFile_2_comments_strings() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуДвеСтроки_Функция", methodSymbol).orElseThrow();
@@ -123,7 +123,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСверхуДвеСтроки_Функция\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     // TODO баг - нет \n для многострочного описания переменной
     assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
@@ -133,7 +133,7 @@ class VariableSymbolMarkupContentBuilderTest {
   @Test
   void testMethodVarContentFromDirectFile_3_comments_strings() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция", methodSymbol).orElseThrow();
@@ -150,7 +150,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "Перем Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция\n" +
       "```\n" +
       "\n");
-    assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
+    assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)\n" +
       "\n");
     assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
       "\n");
@@ -175,7 +175,7 @@ class VariableSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSize(2);
     assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
       "Перем ВалютаУчета\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Переменная из Catalog.Справочник1\n\n");
+    assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
   }
 
 }

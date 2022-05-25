@@ -8,7 +8,8 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
-[![Crowdin](https://badges.crowdin.net/bsl-language-server/localized.svg)](https://crowdin.com/project/bsl-language-server)
+[![Qodana](https://github.com/1c-syntax/bsl-language-server/actions/workflows/qodana.yml/badge.svg)](https://1c-syntax.github.io/bsl-language-server/qodana)
+[![Transifex](https://img.shields.io/badge/translation-transifex-green)](https://www.transifex.com/1c-syntax/bsl-language-server)
 [![Benchmark](bench/benchmark.svg)](bench/index.html)
 [![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
 
@@ -90,8 +91,8 @@
     | [codeAction](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | codeActionKinds = ? (см. [#1433](https://github.com/1c-syntax/bsl-language-server/issues/1433))<br />isPreferredSupport = true | да               |
     | [codeAction/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [codeLens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | resolveProvider = false                                      | да               |
-    | [codeLens/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-    | [codeLens/refresh](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [codeLens/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+    | [codeLens/refresh](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [documentLink](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Показ гиперссылок на документацию по диагностикам.<br />tooltipSupport = true<br />resolveProvider = false | да               |
     | [documentLink/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [documentColor](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
@@ -225,3 +226,8 @@ java -jar bsl-language-server.jar --format --src ./src/cf
 
 `IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
 
+---
+
+[![Digilabs](https://digilabs.ru/1c359e054740a0b75966f8c4babc239a.svg)](https://Digilabs.ru)
+
+[Digilabs](https://digilabs.ru) - авторы `Алькир`- программного комплекса по мониторингу производительности систем на базе 1С:Предприятие 8. Digilabs предоставляет нам серверные мощности для проведения постоянного тестирования производительности BSL Language Server.

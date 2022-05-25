@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -41,7 +41,7 @@ import java.util.Optional;
  */
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
 public class ModuleSymbol implements SourceDefinedSymbol {
   /**
@@ -52,9 +52,19 @@ public class ModuleSymbol implements SourceDefinedSymbol {
    * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
    */
   String name;
+
   SymbolKind symbolKind;
+
+  @EqualsAndHashCode.Include
   DocumentContext owner;
+
   Range range;
+
+  /**
+   * Область первого токена модуля
+   */
+  @EqualsAndHashCode.Include
+  Range selectionRange;
 
   @Getter
   @Setter
@@ -68,11 +78,6 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitModule(this);
-  }
-
-  @Override
-  public Range getSelectionRange() {
-    return getRange();
   }
 
 }

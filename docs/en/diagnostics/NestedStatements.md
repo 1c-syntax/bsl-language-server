@@ -1,15 +1,5 @@
 # Control flow statements should not be nested too deep (NestedStatements)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |                  Tags                  |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `30`           |    `badpractice`<br>`brainoverload`    |
-
-## Parameters
-
-
-|       Name        |   Type    |    Description     | Default value |
-|:-----------------:|:---------:|:------------------:|:-------------:|
-| `maxAllowedLevel` | `Integer` | `Max nested level` |      `4`      |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -19,7 +9,7 @@ Such code is hard for reading, refactoring and support.
 
 ## Examples
 
-Wrong
+Incorrect
 
 ```bsl
 
@@ -44,21 +34,3 @@ EndIf;
 ## Sources
 
 * [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:NestedStatements-off
-// BSLLS:NestedStatements-on
-```
-
-### Parameter for config
-
-```json
-"NestedStatements": {
-    "maxAllowedLevel": 4
-}
-```
