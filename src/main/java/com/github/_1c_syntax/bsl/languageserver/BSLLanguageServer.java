@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -44,6 +45,7 @@ import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ReferenceOptions;
+import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -101,6 +103,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
+    capabilities.setRenameProvider(getRenameProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -272,5 +275,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var colorProviderOptions = new ColorProviderOptions();
     colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
     return colorProviderOptions;
+  }
+
+  private static RenameOptions getRenameProvider() {
+    var renameOptions = new RenameOptions();
+    renameOptions.setWorkDoneProgress(Boolean.FALSE);
+    renameOptions.setPrepareProvider(Boolean.TRUE);
+    return renameOptions;
   }
 }
