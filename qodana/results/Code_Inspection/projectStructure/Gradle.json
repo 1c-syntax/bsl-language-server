@@ -42,20 +42,20 @@
       "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:utils:48335fb954fb94c0468b8a56399026a5247a7396",
-      "gradleName": "com.github.1c-syntax:utils:48335fb954fb94c0468b8a56399026a5247a7396",
+      "ideaName": "Gradle: com.github.1c-syntax:utils:0.4.0",
+      "gradleName": "com.github.1c-syntax:utils:0.4.0",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "utils",
-      "version": "48335fb954fb94c0468b8a56399026a5247a7396"
+      "version": "0.4.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:892e0e9f51f6837f68165dd9a16187c7176f4f55",
-      "gradleName": "com.github.1c-syntax:mdclasses:892e0e9f51f6837f68165dd9a16187c7176f4f55",
+      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+      "gradleName": "com.github.1c-syntax:mdclasses:0.9.5",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "mdclasses",
-      "version": "892e0e9f51f6837f68165dd9a16187c7176f4f55"
+      "version": "0.9.5"
     },
     {
       "ideaName": "Gradle: org.languagetool:language-en:5.6",

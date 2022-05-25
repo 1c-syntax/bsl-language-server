@@ -25,15 +25,15 @@
       ]
     },
     {
-      "name": "Gradle: com.github.1c-syntax:utils:48335fb954fb94c0468b8a56399026a5247a7396",
+      "name": "Gradle: com.github.1c-syntax:utils:0.4.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/48335fb954fb94c0468b8a56399026a5247a7396/bc2eb5fd5d119bc7a8a9122ae06d1228cf7236dd/utils-48335fb954fb94c0468b8a56399026a5247a7396.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.4.0/6d29fe162d62fa3724ba0cc44b00f394ae35d93f/utils-0.4.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: com.github.1c-syntax:mdclasses:892e0e9f51f6837f68165dd9a16187c7176f4f55",
+      "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/892e0e9f51f6837f68165dd9a16187c7176f4f55/35f6b7f1cc802e81065c0ada21a20956155b9dd4/mdclasses-892e0e9f51f6837f68165dd9a16187c7176f4f55.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.9.5/a5b8bb0dfc6976500c17f3d0100a44073a58c28c/mdclasses-0.9.5.jar!/"
       ]
     },
     {
