@@ -1030,6 +1030,21 @@
 <td align="left">Параметр представляет собой коллекцию настроек диагностик. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся ключом диагностики<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение диагностики (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек диагностики.<br/><br/>Ключ, включена ли по умолчанию, а также описание возможных параметров и примеры для конфигурационного файла представлены на странице с описанием каждой диагностики.</td>
 </tr>
 <tr>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
+<td align="center"><code>JSON-Объект</code></td>
+<td align="left">Фильтр по подсистемам конфигурации</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
+<td align="center"><code>Массив</code> <code>Строка</code></td>
+<td align="left">Список имен подсистем по объектам которых выполняется анализ, включая подчиненные подсистемы</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
+<td align="center"><code>Массив</code> <code>Строка</code></td>
+<td align="left">Список имен подсистем исключенных из анализа, включая подчиненные подсистемы</td>
+</tr>
+<tr>
 <td align="left"><code>documentLink</code></td>
 <td align="center"><code>JSON-Объект</code></td>
 <td align="left">Содержит настройки ссылок на документацию</td>
@@ -1071,6 +1086,7 @@
 <li>Изменяет настройку диагностики <a href="../../diagnostics/LineLength/">LineLength - Ограничение на длину строки</a>, устанавливая предел длины строки в 140 символов;</li>
 <li>Отключает диагностику <a href="../../diagnostics/MethodSize/">MethodSize - Ограничение на размер метода</a>.</li>
 <li>Включает расчет диагностик в непрерывном режиме (<code>computeTrigger = onType</code>)</li>
+<li>Диагностики рассчитываются только по объектам подсистемы "СтандартныеПодсистемы" за исключением "ВариантыОтчетов" и "ВерсионированиеОбъектов"</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span><span class="w"></span>
@@ -1082,6 +1098,10 @@
 <span class="w">        </span><span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">140</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;subsystemsFilter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;СтандартныеПодсистемы&quot;</span><span class="p">],</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ВариантыОтчетов&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ВерсионированиеОбъектов&quot;</span><span class="p">]</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="w">  </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
