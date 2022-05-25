@@ -183,6 +183,7 @@
 		</Properties>
 		<ChildObjects>
 			<Language>Русский</Language>
+			<Subsystem>Подсистема1</Subsystem>
 			<Role>Роль1</Role>
 			<Role>Роль2</Role>
 			<Role>ПолныеПрава</Role>

@@ -32,7 +32,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryToMissingMetadataDiagnostic> {
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   QueryToMissingMetadataDiagnosticTest() {
     super(QueryToMissingMetadataDiagnostic.class);

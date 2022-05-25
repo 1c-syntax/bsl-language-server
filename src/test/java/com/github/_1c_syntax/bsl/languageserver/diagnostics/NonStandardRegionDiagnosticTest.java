@@ -41,7 +41,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @DirtiesContext
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
-  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
+  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata/designer");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
 
   NonStandardRegionDiagnosticTest() {

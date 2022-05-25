@@ -40,7 +40,7 @@ class MissingEventSubscriptionHandlerDiagnosticTest extends AbstractDiagnosticTe
     super(MissingEventSubscriptionHandlerDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @Test
   void test() {

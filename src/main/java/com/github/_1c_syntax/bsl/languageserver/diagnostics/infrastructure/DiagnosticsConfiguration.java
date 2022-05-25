@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDO;
+import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
@@ -48,6 +50,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor
@@ -92,6 +95,35 @@ public abstract class DiagnosticsConfiguration {
     DocumentContext documentContext,
     DiagnosticsOptions diagnosticsOptions
   ) {
+    return checkSupport(documentContext, diagnosticsOptions)
+      && filterSubsystems(documentContext, diagnosticsOptions);
+  }
+
+  private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
+    var mdoObject = documentContext.getMdObject();
+    var subsystemsFilter = diagnosticsOptions.getSubsystemsFilter();
+
+    if (mdoObject.isEmpty()
+      || (subsystemsFilter.getInclude().isEmpty() && subsystemsFilter.getExclude().isEmpty())) {
+      return true;
+    }
+
+    var subsystemsNames = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
+      .map(AbstractMDO::getName)
+      .collect(Collectors.toList());
+
+    var include = subsystemsFilter.getInclude().isEmpty()
+      || subsystemsNames.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getInclude().contains(mdoSystemName));
+
+    var exclude = !subsystemsFilter.getExclude().isEmpty()
+      && subsystemsNames.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getExclude().contains(mdoSystemName));
+
+    return include && !exclude;
+  }
+
+  private static boolean checkSupport(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
     var configuredMode = diagnosticsOptions.getMode();
 
     if (configuredMode == Mode.OFF) {
@@ -197,6 +229,13 @@ public abstract class DiagnosticsConfiguration {
     }
 
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
+  }
+
+  // перенести в mdClasses
+  private static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
+    return subsystems.stream()
+      .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
+      .collect(Collectors.toList());
   }
 
 }
