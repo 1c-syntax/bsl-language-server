@@ -71,8 +71,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "48335fb954fb94c0468b8a56399026a5247a7396")
-    api("com.github.1c-syntax", "mdclasses", "0678feac186bae8907dea2fd0a5dff84ca6c991b")
+    api("com.github.1c-syntax", "utils", "0.4.0")
+    api("com.github.1c-syntax", "mdclasses", "0.9.5")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
