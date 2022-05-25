@@ -8,11 +8,10 @@
       
       
       
-      
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticStructure/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.11">
     
     
       
@@ -20,40 +19,29 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.802231af.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8c5ef100.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.9647289d.min.css">
         
       
     
     
     
       
+        
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
-    
     
     
       <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
-  
-
-
-
-  
-  
-
-
-
-  <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-150754232-1","auto"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){var e;this.value&&(e=document.location.pathname,ga("send","pageview",e+"?q="+this.value))}),"undefined"!=typeof location$&&location$.subscribe(function(e){ga("send","pageview",e.pathname)})})</script>
-  <script async src="https://www.google-analytics.com/analytics.js"></script>
-
 
     
     
@@ -70,9 +58,8 @@
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
   
     
-    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
-      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -89,7 +76,10 @@
       
     </div>
     
-      <header class="md-header" data-md-component="header">
+    
+      
+
+<header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="BSL Language Server" class="md-header__button md-logo" aria-label="BSL Language Server" data-md-component="logo">
       
@@ -97,7 +87,7 @@
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -123,7 +113,7 @@
           <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
             </label>
           
         
@@ -132,7 +122,7 @@
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
             <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
             </label>
           
         
@@ -143,7 +133,7 @@
         <div class="md-select">
           
           <button class="md-header__button md-icon" aria-label="Select language">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
           </button>
           <div class="md-select__inner">
             <ul class="md-select__list">
@@ -167,22 +157,21 @@
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
         <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -202,11 +191,10 @@
     
     
       <div class="md-header__source">
-        
-<a href="https://github.com/1c-syntax/bsl-language-server/" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/1c-syntax/bsl-language-server" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     1c-syntax/bsl-language-server
@@ -215,6 +203,7 @@
       </div>
     
   </nav>
+  
 </header>
     
     <div class="md-container" data-md-component="container">
@@ -222,6 +211,7 @@
       
         
           
+            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
@@ -307,6 +297,7 @@
     </ul>
   </div>
 </nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -335,11 +326,10 @@
   </label>
   
     <div class="md-nav__source">
-      
-<a href="https://github.com/1c-syntax/bsl-language-server/" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/1c-syntax/bsl-language-server" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     1c-syntax/bsl-language-server
@@ -362,10 +352,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
-      <label class="md-nav__link" for="__nav_1">
-        Home
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Home
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Home" data-md-level="1">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
@@ -374,6 +368,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -384,8 +379,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -396,8 +393,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -408,6 +407,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -430,10 +430,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
-      <label class="md-nav__link" for="__nav_2">
-        Contributing
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Contributing
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Contributing" data-md-level="1">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
@@ -442,6 +446,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -452,8 +457,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -463,10 +470,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
       
-      <label class="md-nav__link" for="__nav_2_2">
-        Start
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2">
+          Start
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Start" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_2">
           <span class="md-nav__icon md-icon"></span>
@@ -475,6 +486,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -485,8 +497,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -497,8 +511,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -509,8 +525,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -521,14 +539,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -540,10 +561,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" checked>
       
-      <label class="md-nav__link" for="__nav_2_3">
-        Diagnostics development
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_3">
+          Diagnostics development
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Diagnostics development" data-md-level="2">
         <label class="md-nav__title" for="__nav_2_3">
           <span class="md-nav__icon md-icon"></span>
@@ -552,6 +577,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -562,8 +588,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -574,8 +602,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -599,6 +629,7 @@
       </a>
       
         
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -661,8 +692,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -673,8 +706,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -685,8 +720,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -697,8 +734,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -709,12 +748,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -735,10 +776,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
-      <label class="md-nav__link" for="__nav_3">
-        Reporters
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Reporters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Reporters" data-md-level="1">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
@@ -747,6 +792,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -757,8 +803,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -769,8 +817,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -781,8 +831,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -793,8 +845,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -805,8 +859,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -817,6 +873,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -852,10 +909,14 @@
       
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="__nav_5">
-        Features
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Features
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Features" data-md-level="1">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
@@ -864,6 +925,7 @@
         <ul class="md-nav__list" data-md-scrollfix>
           
             
+              
   
   
   
@@ -874,8 +936,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -886,8 +950,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -898,6 +964,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -917,12 +984,13 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticStructure.md" title="Edit this page" class="md-content__button md-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
-                  </a>
-                
-                
-                <h1 id="Diagnostics-structure-files-contents-and-purpose">Diagnostics structure, files contents and purpose<a class="headerlink" href="#Diagnostics-structure-files-contents-and-purpose" title="Permanent link">&para;</a></h1>
+  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticStructure.md" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+
+<h1 id="Diagnostics-structure-files-contents-and-purpose">Diagnostics structure, files contents and purpose<a class="headerlink" href="#Diagnostics-structure-files-contents-and-purpose" title="Permanent link">&para;</a></h1>
 <p>This article contains rules of diagnostics usage, creation and information about content templates.</p>
 <ul>
 <li><a href="#%d0%a1%d1%82%d1%80%d1%83%d0%ba%d1%82%d1%83%d1%80%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d0%bd%d0%b0%d0%b7%d0%bd%d0%b0%d1%87%d0%b5%d0%bd%d0%b8%d0%b5-%d0%b8-%d1%81%d0%be%d0%b4%d0%b5%d1%80%d0%b6%d0%b8%d0%bc%d0%be%d0%b5-%d1%84%d0%b0%d0%b9%d0%bb%d0%be%d0%b2">Diagnostics structure, files contents and purpose</a></li>
@@ -1004,6 +1072,8 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLListenerDiagnostic</span>
+</code></pre></div>
 <p>Diagnostic may provide so-called <code>quick fixes</code>. In order to provide quick fixes the diagnostic class must implement <code>QuickFixProvider</code> interface. See this <a href="../DiagnosticQuickFix/">article</a> on adding a <code>quick fix</code> to diagnostic.</p>
 <p>Examples</p>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
@@ -1016,20 +1086,22 @@ To create necessary files in right places, should run command <code>gradlew newD
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLListenerDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
 <p>After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the <a href="../DiagnostcAddSettings/">article</a>.</p>
 <p>Below are the differences in the implementation of diagnostic classes.</p>
 <h3 id="Diagnostics-class-implements-BSLDiagnostic-interface">Diagnostics class, implements BSLDiagnostic interface<a class="headerlink" href="#Diagnostics-class-implements-BSLDiagnostic-interface" title="Permanent link">&para;</a></h3>
-<p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечаний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
+<p>In the class, you need to define a private field <code>diagnosticStorage</code> of type <code>DiagnosticStorage</code> to store detected diagnostics, and a private property <code>info</code> of type <code>DiagnosticInfo</code>, for access to diagnostic data.</p>
 <div class="highlight"><pre><span></span><code> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 <span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">;</span>
 </code></pre></div>
 <p>In the class, you need to implement:</p>
 <ul>
-<li>метод <code>getDiagnostics</code> принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний <code>List&lt;Diagnostic&gt;</code></li>
-<li>метод <code>getInfo</code>, возвращающий значение свойства <code>info</code></li>
-<li>метод <code>setInfo</code>, для установки значения свойства <code>info</code></li>
+<li>method <code>getDiagnostics</code> accepting the context of the file being analyzed and returning a list of detected diagnostics <code>List&lt;Diagnostic&gt;</code></li>
+<li>getter <code>getInfo</code></li>
+<li>setter <code>setInfo</code></li>
 </ul>
-<p>Ниже приведена общая структура метода <code>getDiagnostics</code></p>
+<p>Method structure <code>getDiagnostics</code></p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Clearing diagnostics storage</span>
@@ -1048,7 +1120,7 @@ To create necessary files in right places, should run command <code>gradlew newD
   <span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractDiagnostic">Diagnostics class, inherits from AbstractDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractDiagnostic" title="Permanent link">&para;</a></h3>
-<p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. В классе диагностики необходимо реализовать метод <code>check</code> - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+<p>For simple diagnostics, you should inherit your class from the AbstractDiagnostic class. In the diagnostic class, you need to implement the <code>check</code> method. The method should analyze the context of the document and, if noted, add diagnostics to <code>diagnosticStorage</code>.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">()</span> <span class="p">{</span>
@@ -1061,9 +1133,9 @@ To create necessary files in right places, should run command <code>gradlew newD
   <span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractVisitorDiagnostic">Diagnostics class, inherits from AbstractVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractVisitorDiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>BSLParserBaseVisitor</code>. Необходимо обратить внимание, что для упрощения добавлены <code>обобщенные</code> визитеры, например вместо реализации <code>visitFunction</code> для функции и <code>visitProcedure</code> для процедуры можно использовать <code>visitSub</code>, обобщающий работу с методами.</p>
-<p>В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище <code>diagnosticStorage</code> <em>(поле уже определено в абстрактном классе)</em>. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.</p>
-<p>Примерная структура метода</p>
+<p>In the diagnostic class, it is necessary to implement the methods of all necessary <code>AST visitors</code>, in accordance with the language grammar described in the <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4"> BSLParser </a> project.  A complete list of existing visitor methods can be found in the <code>BSLParserBaseVisitor</code> class. Please note: for simplicity, <code>generalized</code> visitors have been created, for example, instead of two <code>visitFunction</code> for a function and <code>visitProcedure</code> for a procedure, you can use <code>visitSub</code>.</p>
+<p>As a parameter, an AST node of the corresponding type is passed to each method of the visitor. In the body of the method, it is necessary to analyze the node and / or its child nodes and decide if there is an error. When a problem is found, it must be added to <code>diagnosticStorage</code> <em>(the field is already defined in the abstract class)</em>. An error note can be attached to the passed node or to its child or parent nodes, to the desired block of code.</p>
+<p>Method structure</p>
 <div class="highlight"><pre><span></span><code>  <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span>                 <span class="c1">// Visitor for module variables</span>
     <span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// Finding child nodes</span>
@@ -1072,23 +1144,22 @@ To create necessary files in right places, should run command <code>gradlew newD
     <span class="k">return</span> <span class="n">ctx</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>Если диагностика <strong>не предусматривает</strong> анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный <code>super-метод</code>.<br />
-Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.</p>
+<p>If the diagnostics <strong>does not provide</strong> analysis of nested nodes, then it must return the passed input node, otherwise it is necessary to call the <code>super-method</code> of the same name. <br />
+This rule will save application resources without making a meaningless call.</p>
 <p>Examples:</p>
 <ul>
-<li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
-<li>Диагностика для блока условия или области должна вызывать <code>super-метод</code>, т.к. они существуют и используются (например <code>return super.visitSub(ctx)</code> для методов)</li>
+<li>Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist</li>
+<li>Diagnostics for a condition or region block must call the <code>super-method</code>, as they exist and are used (e.g. <code>return super.visitSub(ctx)</code> for methods)</li>
 </ul>
 <h3 id="Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic">Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка запросов, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>SDBLParserBaseVisitor</code>.</p>
-<p>Остальные правила использования идентичны <code>AbstractVisitorDiagnostic</code>.</p>
+<p>The diagnostic class implements the necessary <code>AST visitors</code>, according to the grammar of the query language (see <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4">BSLParser</a>). The complete list of visitor methods is in the <code>SDBLParserBaseVisitor</code> class.</p>
+<p>The rest of the rules are identical to <code>AbstractVisitorDiagnostic</code>.</p>
 <h3 id="Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress">Diagnostics class, inherits from AbstractListenerDiagnostic <strong>(Work in Progress)</strong><a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress" title="Permanent link">&para;</a></h3>
-<p><em><strong>&lt;В разработке&gt;</strong></em></p>
+<p><em><strong><Work in Progress></strong></em></p>
 <h2 id="Diagnostics-test-class">Diagnostics test class<a class="headerlink" href="#Diagnostics-test-class" title="Permanent link">&para;</a></h2>
-<p>При написании тестов используется фреймворк <a href="https://junit.org/junit5/">JUnit5</a>, для утверждений - библиотека <a href="https://joel-costigliola.github.io/assertj/">AssertJ</a>, предоставляющая <a href="https://ru.wikipedia.org/wiki/Fluent_interface">текучий/fluent-интерфейс</a> "ожиданий", подобно привычной многим библиотеке <a href="https://github.com/oscript-library/asserts">asserts</a> для <a href="http://oscript.io/">OneScript</a>.</p>
-<p>Теста реализуется посредством добавления java-класса в пакет <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> в каталоге <code>src/test/java</code>.</p>
-<p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(аналогично классу реализации диагностики)</em>.<br />
-В файле необходимо создать одноименный файлу класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.</p>
+<p>The tests use the <a href="https://junit.org/junit5/">JUnit5 framework</a> and the <a href="https://joel-costigliola.github.io/assertj/">AssertJ assertion library</a> providing a <a href="https://ru.wikipedia.org/wiki/Fluent_interface">fluent interface</a> "expectations", like the familiar <a href="https://github.com/oscript-library/asserts">asserts</a> library for <a href="http://oscript.io/">OneScript</a>.</p>
+<p>A test is a java class added to the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package in the <code>src/test/java</code> directory.</p>
+<p>In the file, you need to specify the package in which the class and the import block <em>(similar to the diagnostic implementation class)</em> are added, then you need to create a class of the same name to the file, inherited from the <code>AbstractDiagnosticTest</code> class for the created diagnostic class.</p>
 <p>Test class example</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
@@ -1107,24 +1178,24 @@ To create necessary files in right places, should run command <code>gradlew newD
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест <code>@Test</code>.</p>
-<p>В тестовом классе обязательно должны присутствовать методы для тестирования</p>
+<p>To add a new test to the created class, you need to add a method with the <code>@Test</code> annotation.</p>
+<p>The test class must contain methods for testing.</p>
 <ul>
-<li>тест диагностики, самой по себе</li>
-<li>тест метода конфигурирования для параметризованных диагностик</li>
-<li>тест "быстрых замен" при их наличии</li>
+<li>diagnostic test itself</li>
+<li>test of configuration method for parameterized diagnostics</li>
+<li>test "quick fixes" if available</li>
 </ul>
 <h3 id="Diagnostics-test">Diagnostics test<a class="headerlink" href="#Diagnostics-test" title="Permanent link">&para;</a></h3>
-<p>Упрощенно, тест диагностики состоит из следующих шагов</p>
+<p>Simplified, the diagnostic test contains the steps</p>
 <ul>
-<li>получение списка замечаний диагностики</li>
-<li>проверка количества срабатываний</li>
-<li>проверка местоположения срабатываний</li>
+<li>getting a list of diagnostics</li>
+<li>checking the number of items found</li>
+<li>checking the location of detected items</li>
 </ul>
-<p>Первый шагом необходимо получить список замечаний диагностики вызовом метода <code>getDiagnostics()</code> <em>(реализован в классе <code>AbstractDiagnosticTest</code>)</em>. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.<br />
-Следующим шагом необходимо, с помощью утверждения <code>hasSize()</code> убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.<br />
-После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом <code>getRange()</code>, с ожидаемой областью <em>(стоит использовать класс <code>RangeHelper</code> для упрощения формирования контрольнх значений)</em>.<br />
-В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом <code>getMessage()</code> диагностики.</p>
+<p>The first step is to get the list of notes by calling the <code>getDiagnostics()</code> method <em>(implemented in the <code>AbstractDiagnosticTest</code> class)</em>. Calling this method will parse the diagnostics resource file and return a list of remarks in it.
+The next step is to use the <code>hasSize()</code> statement to make sure that the number of diagnostics is fixed as much as allowed in the fixtures.
+After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the <code>getRange()</code> method with the expected area <em>(you should use the <code>RangeHelper</code> class to simplify the formation of control values)</em>.
+If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the <code>getMessage()</code> method of diagnostics.</p>
 <p>Test method example</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
@@ -1138,72 +1209,65 @@ To create necessary files in right places, should run command <code>gradlew newD
         <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">)));</span>
     <span class="p">}</span>
 </code></pre></div>
-<p>Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер <code>util.Assertions.assertThat</code> и тогда пример выше будет выглядеть следующим образом:</p>
+<p>To reduce the amount of test code, you can use the <code>util.Assertions.assertThat</code> helper, then the example above will look like this:</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
       <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// getting a list of diagnostics</span>
 
       <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// checking the number of errors found</span>
 
-      <span class="c1">// проверка частных случаев</span>
+      <span class="c1">// verification of special cases</span>
       <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
         <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
         <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
     <span class="p">}</span>
 </code></pre></div>
 <h3 id="Test-of-configuration-method-for-parameterized-diagnostics">Test of configuration method for parameterized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parameterized-diagnostics" title="Permanent link">&para;</a></h3>
-<p>Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.<br />
-Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом <code>getDefaultDiagnosticConfiguration()</code>, используя информацию текущего объекта диагностики <code>diagnosticInstance.getInfo()</code>. Полученный результат представляет собой соответствие, в котором, методом <code>put</code>, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом <code>configure()</code> текущего объекта диагностики <code>diagnosticInstance</code>.</p>
+<p>Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test.
+Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the <code>getDefaultDiagnosticConfiguration()</code> method using the information of the current diagnostic object <code>diagnosticInstance.getInfo()</code>. The result is a map in which the <code>put</code> method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the <code>configure()</code> method of the current diagnostic object <code>diagnosticInstance</code>.</p>
 <p>Test method example</p>
 <div class="highlight"><pre><span></span><code>    <span class="nd">@Test</span>
     <span class="kt">void</span> <span class="nf">testConfigure</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// получение настроек диагностики по умолчанию</span>
+        <span class="c1">// getting default diagnostic settings</span>
         <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
 
-        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// установка параметру &quot;templateParem&quot; значения &quot;newValue&quot;</span>
-        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// применение настроек</span>
+        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// setting &quot;templateParem&quot; to &quot;newValue&quot;</span>
+        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// applying settings</span>
 
-        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// получение списка замечаний диагностики</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// getting a list of diagnostics</span>
 
-        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// проверка количества обнаруженных замечаний</span>
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// checking the number of detected</span>
 
-        <span class="c1">// проверка частных случаев</span>
+        <span class="c1">// special case check</span>
         <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
           <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
           <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
     <span class="p">}</span>
 </code></pre></div>
 <h3 id="Quick-fixes-test-Work-in-progress">Quick fixes test <strong>(Work in progress)</strong><a class="headerlink" href="#Quick-fixes-test-Work-in-progress" title="Permanent link">&para;</a></h3>
-<p><em><strong>&lt;В разработке&gt;</strong></em></p>
+<p><em><strong><Work in Progress></strong></em></p>
 <h2 id="Diagnostics-resources">Diagnostics resources<a class="headerlink" href="#Diagnostics-resources" title="Permanent link">&para;</a></h2>
-<p>BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге <code>src/main/resources</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".</p>
-<p>Обязательные параметры, используемые при добавлении замечания по диагностике методам <code>diagnosticStorage.addDiagnostic</code></p>
+<p>BSL LS supports two languages ​​in diagnostics: Russian and English, so the diagnostics includes two resource files located in the <code>src/main/resources</code> directory in the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package, one for each language. The file structure is the same: it is a text file in UTF-8 encoding, each line of which contains a "Key=Value" pair.</p>
+<p>Required parameters used when adding diagnostics using the <code>diagnosticStorage.addDiagnostic</code> method</p>
 <ul>
-<li>diagnosticMessage - diagnostic message. Значение поддерживает параметризацию (см <code>String.format</code>)</li>
+<li>diagnosticMessage - diagnostic message. Value supports parameterization (see <code>String.format</code>)</li>
 <li>diagnosticName - Diagnostic name, human-readable</li>
 </ul>
-<p>Для <code>быстрых исправлений</code> применяется параметр <code>quickFixMessage</code>, содержащий описание действия-исправления.</p>
+<p>For <code>quick fixes</code>, the <code>quickFixMessage</code> parameter is used, which contains a description of the fix action.</p>
 <h2 id="Diagnostics-test-resources">Diagnostics test resources<a class="headerlink" href="#Diagnostics-test-resources" title="Permanent link">&para;</a></h2>
-<p>В качестве фикстур используется содержимое ресурсного файла теста, расположенного в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>. Файл должен содержать необходимые примеры кода на языке 1С <em>(или oscript)</em>.<br />
-Необходимо добавлять как ошиочный, так и корректный код, <strong>помечая с помощью комментариев места, где диагностика должна зафиксировать замечания, а где нет</strong>. Лукчше всего, если тестовые примеры будут <code>реальиными</code>, из практики, а не синтетическими, придуманными <code>под диагностику</code>.</p>
+<p>The fixtures are the contents of the test resource file located in the <code>src/test/resources</code> directory in the <code>diagnostics</code> package. The file must contain the necessary code examples in 1C language <em>(or oscript language)</em>. </p>
+<p>It is necessary to add both erroneous and correct code, <strong>marking the places of errors with comments</strong>. It is best if the test cases are <code>real</code>, from practice, and not synthetic, invented <code>for diagnostics</code>.</p>
 <h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
-<p>Описание диагностики создается в формате <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> в двух вариантах - для русского и английчского языков. Файлы с описанием располагаются в каталоге <code>docs/diagnostics</code> для русского языка, для английского в <code>docs/diagnostics</code>.<br />
-Файл в общем случае описания имеет следующую структуру</p>
+<p>The diagnostic description is created in the <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> format in two versions - for Russian and English. The files are located in the <code>docs/diagnostics</code> directory for Russian, for English in <code>docs/en/diagnostics</code>. 
+The file has the structure</p>
 <ul>
-<li>Заголовок, равный значению <code>diagnosticName</code> из файла ресурса диагностики соответствующего языка</li>
-<li>Описание параметров диагностики при их наличии</li>
-<li>Тело с описанием диагностики, указанием "почему так плохо"</li>
-<li>Исключительные ситуации, когда диагностика не детектирует замечание</li>
+<li>Header equal to the value of <code>diagnosticName</code> from the corresponding language's diagnostic resource file</li>
+<li>A block with a description of the diagnostics, indicating "why it is so bad"</li>
+<li>List of exceptions that diagnostics do not detect</li>
 <li>Examples of good and bad code</li>
-<li>Algorithm of diagnostics for complex</li>
-<li>Ссылки на источники, если диагностика является реализацией стандарта (например на <a href="https://its.1c.ru">ИТС</a>).</li>
+<li>The diagnostic algorithm, if it is not obvious</li>
+<li>If diagnostics is an implementation of the standard, then links to sources (for example, to <a href="https://its.1c.ru">ITS</a>).</li>
 </ul>
-<p>Кроме непосредственно создания файлов описания диагностики, необходимо обновлять индекс-файлы <code>index.md</code> для каждого языка, добавляя диагностику в таблицу реализованных.</p>
-                
-              
-              
-                
-
 
               
             </article>
@@ -1212,15 +1276,14 @@ To create necessary files in right places, should run command <code>gradlew newD
         
       </main>
       
-        
-<footer class="md-footer">
+        <footer class="md-footer">
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
         <a href="../DiagnosticExample/" class="md-footer__link md-footer__link--prev" aria-label="Previous: An example of creating a new diagnostic" rel="prev">
           <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
           <div class="md-footer__title">
             <div class="md-ellipsis">
@@ -1244,7 +1307,7 @@ To create necessary files in right places, should run command <code>gradlew newD
             </div>
           </div>
           <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
           </div>
         </a>
       
@@ -1252,37 +1315,38 @@ To create necessary files in right places, should run command <code>gradlew newD
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-        Made with
-        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs
-        </a>
-        
-      </div>
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
       
-  <div class="md-footer-social">
+        <div class="md-social">
+  
+    
     
       
       
-        
-        
-      
-      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github.com" class="md-footer-social__link">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
-      </a>
+    
+    <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
     
       
       
-        
-        
-      
-      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="t.me" class="md-footer-social__link">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm121.8 169.9-40.7 191.8c-3 13.6-11.1 16.9-22.4 10.5l-62-45.7-29.9 28.8c-3.3 3.3-6.1 6.1-12.5 6.1l4.4-63.1 114.9-103.8c5-4.4-1.1-6.9-7.7-2.5l-142 89.4-61.2-19.1c-13.3-4.2-13.6-13.3 2.8-19.7l239.1-92.2c11.1-4 20.8 2.7 17.2 19.5z"/></svg>
-      </a>
     
-  </div>
-
+    <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="t.me" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M248 8C111.033 8 0 119.033 0 256s111.033 248 248 248 248-111.033 248-248S384.967 8 248 8Zm114.952 168.66c-3.732 39.215-19.881 134.378-28.1 178.3-3.476 18.584-10.322 24.816-16.948 25.425-14.4 1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25 5.342-39.5 3.652-3.793 67.107-61.51 68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608 69.142-14.845 10.194-26.894 9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7 18.45-13.7 108.446-47.248 144.628-62.3c68.872-28.647 83.183-33.623 92.511-33.789 2.052-.034 6.639.474 9.61 2.885a10.452 10.452 0 0 1 3.53 6.716 43.765 43.765 0 0 1 .417 9.769Z"/></svg>
+    </a>
+  
+</div>
+      
     </div>
   </div>
 </footer>
@@ -1291,10 +1355,10 @@ To create necessary files in right places, should run command <code>gradlew newD
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2a1c317c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.756773cc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.748e2769.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

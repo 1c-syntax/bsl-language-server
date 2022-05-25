@@ -6,13 +6,16 @@ com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.codelenses
+com.github._1c_syntax.bsl.languageserver.codelenses.databind
+com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure
 com.github._1c_syntax.bsl.languageserver.color
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
+com.github._1c_syntax.bsl.languageserver.configuration.databind
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
-com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.configuration.events
+com.github._1c_syntax.bsl.languageserver.configuration.formating
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
@@ -34,6 +37,7 @@ com.github._1c_syntax.bsl.languageserver.jsonrpc
 com.github._1c_syntax.bsl.languageserver.providers
 com.github._1c_syntax.bsl.languageserver.recognizer
 com.github._1c_syntax.bsl.languageserver.references
+com.github._1c_syntax.bsl.languageserver.references.model
 com.github._1c_syntax.bsl.languageserver.reporters
 com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind
