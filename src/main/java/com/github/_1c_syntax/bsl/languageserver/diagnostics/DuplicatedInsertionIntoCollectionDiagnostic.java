@@ -73,7 +73,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private List<BSLParser.AssignmentContext> blockAssignments;
   private List<BSLParserRuleContext> blockBreakers;
   private List<BSLParser.CallParamContext> blockCallParams;
-  private final List<List<BSLParser.ComplexIdentifierContext>> firstParamComplexIdentifiersStorage = new ArrayList<>();
+  private final List<List<String>> firstParamComplexIdentifiersStorage = new ArrayList<>();
 
   @Value
   private static class GroupingData {
@@ -81,8 +81,10 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     String collectionName;
     String methodName;
     String firstParamName;
-    List<? extends BSLParser.CallParamContext> callParams; // TODO не используется, удалить?
-  }
+    String firstParamNameWithDot;
+    BSLParser.CallParamContext firstParamContext;
+
+}
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext codeBlock) {
@@ -131,7 +133,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
     final var fullIdentifier = getFullIdentifier(callStatement.IDENTIFIER().getText(), callStatement.modifier());
 
-    return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, callParams);
+    return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, firstParam.concat("."),
+      firstParamContext);
   }
 
   private static boolean isAppropriateMethodCall(String methodName) {
@@ -189,17 +192,18 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (listOfDuplicatedData.size() - currIndex <= 1) {
       return false;
     }
-    final var elem = listOfDuplicatedData.get(currIndex);
+    final var first = listOfDuplicatedData.get(currIndex);
     var alreadyAdd = false;
     for (int i = currIndex + 1; i < listOfDuplicatedData.size(); i++) {
-      if (hasValidChange(elem, listOfDuplicatedData.get(i), codeBlock)) {
+      final var next = listOfDuplicatedData.get(i);
+      if (hasValidChange(first, next, codeBlock)) {
         break;// последующие элементы нет смысла проверять, их нужно исключать
       }
       if (!alreadyAdd) {
         alreadyAdd = true;
-        listForIssue.add(elem);
+        listForIssue.add(first);
       }
-      listForIssue.add(listOfDuplicatedData.get(i));
+      listForIssue.add(next);
     }
     return true;
   }
@@ -220,22 +224,23 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   }
 
   private boolean hasValidAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
-    final var text = assignmentContext.lValue().getText();
-    if (text.equalsIgnoreCase(groupingData.collectionName)
-      || text.equalsIgnoreCase(groupingData.firstParamName)) {
+    final var assignText = assignmentContext.lValue().getText();
+    if (assignText.equalsIgnoreCase(groupingData.collectionName)
+      || assignText.equalsIgnoreCase(groupingData.firstParamName)) {
       return true;
     }
-    final var textWithDot = text.concat(".");
-    if (startWithIgnoreCase(groupingData.collectionName, textWithDot)
-      || startWithIgnoreCase(groupingData.firstParamName, textWithDot)){
+    final var assignTextWithDot = assignText.concat(".");
+    if (startWithIgnoreCase(groupingData.collectionName, assignTextWithDot)
+      || startWithIgnoreCase(groupingData.firstParamName, assignTextWithDot)
+      || startWithIgnoreCase(assignTextWithDot, groupingData.firstParamNameWithDot)
+    ){
       return true;
     }
-    final List<BSLParser.ComplexIdentifierContext> complexIdentifierContexts = getFirstParamComplexIdentifierContexts(groupingData);
+    final List<String> complexIdentifierContexts = getFirstParamComplexIdentifiers(groupingData.firstParamContext);
     return complexIdentifierContexts.stream()
-      .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
-      .map(complexIdentifierContext ->
-        getFullIdentifier(complexIdentifierContext.IDENTIFIER().getText(), complexIdentifierContext.modifier()))
-      .anyMatch(identifier -> text.equalsIgnoreCase(identifier) || startWithIgnoreCase(identifier, textWithDot));
+      .anyMatch(identifier -> assignText.equalsIgnoreCase(identifier)
+        || startWithIgnoreCase(identifier, assignTextWithDot)
+        || startWithIgnoreCase(assignTextWithDot, identifier.concat(".")));
   }
 
   private boolean hasBreakersBetweenCalls(Range range, BSLParser.CodeBlockContext codeBlock) {
@@ -324,11 +329,14 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return blockCallParams;
   }
 
-  private List<BSLParser.ComplexIdentifierContext> getFirstParamComplexIdentifierContexts(GroupingData groupingData) {
+  private List<String> getFirstParamComplexIdentifiers(BSLParser.CallParamContext param) {
     if (firstParamComplexIdentifiersStorage.isEmpty()){
       final var complexIdentifierContexts =
-        Trees.findAllRuleNodes(groupingData.callParams.get(0), BSLParser.RULE_complexIdentifier).stream()
+        Trees.findAllRuleNodes(param, BSLParser.RULE_complexIdentifier).stream()
           .map(BSLParser.ComplexIdentifierContext.class::cast)
+          .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
+          .map(complexIdentifierContext ->
+            getFullIdentifier(complexIdentifierContext.IDENTIFIER().getText(), complexIdentifierContext.modifier()))
           .collect(Collectors.toUnmodifiableList());
       firstParamComplexIdentifiersStorage.add(complexIdentifierContexts);
     }
