@@ -41,7 +41,7 @@ class ServerSideExportFormMethodDiagnosticTest extends AbstractDiagnosticTest<Se
     super(ServerSideExportFormMethodDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private AbstractMDOForm form;
 
   @BeforeEach

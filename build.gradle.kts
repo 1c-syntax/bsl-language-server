@@ -16,7 +16,7 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "6.4.3"
     id("me.qoomon.git-versioning") version "6.1.1"
     id("com.github.ben-manes.versions") version "0.42.0"
-    id("org.springframework.boot") version "2.7.0"
+    id("org.springframework.boot") version "2.6.7"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
@@ -71,8 +71,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "48335fb954fb94c0468b8a56399026a5247a7396")
-    api("com.github.1c-syntax", "mdclasses", "892e0e9f51f6837f68165dd9a16187c7176f4f55")
+    api("com.github.1c-syntax", "utils", "0.4.0")
+    api("com.github.1c-syntax", "mdclasses", "0.9.5")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)

@@ -54,7 +54,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
 
   @Test
   void testOriginalFormModule() {
-    final var PATH_TO_METADATA = "src/test/resources/metadata";
+    final var PATH_TO_METADATA = "src/test/resources/metadata/designer";
     initServerContext(Absolute.path(PATH_TO_METADATA));
     var form = spy((AbstractMDOForm) context.getConfiguration().getChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))

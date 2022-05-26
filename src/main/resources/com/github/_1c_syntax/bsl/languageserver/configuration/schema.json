@@ -649,6 +649,27 @@
                             "description": "Ignore ordinary application warnings."
                         }
                     ]
+                },
+                "subsystemsFilter": {
+                    "$id": "#/properties/subsystemsFilter",
+                    "type": "object",
+                    "title": "Subsystems filter configuration.",
+                    "properties": {
+                        "include": {
+                            "$id": "#/properties/include",
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                        },
+                        "exclude": {
+                            "$id": "#/properties/exclude",
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         },

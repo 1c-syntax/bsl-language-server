@@ -71,7 +71,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCommonModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -82,7 +82,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCommonModuleCached() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
     );
 
     var configuration = context.getConfiguration();
@@ -98,7 +98,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
 
   @SneakyThrows
   DocumentContext createDocumentContextFromFile(String pathToFile) {
-    Path path = Absolute.path("src/test/resources/metadata");
+    Path path = Absolute.path("src/test/resources/metadata/designer");
     Path testFile = Paths.get(pathToFile).toAbsolutePath();
 
     initServerContext(path);
@@ -112,7 +112,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCatalogsManagerModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/Catalogs/Справочник1/Ext/ManagerModule.bsl"
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ManagerModule.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -123,7 +123,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCatalogsObjectModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/Catalogs/Справочник1/Ext/ObjectModule.bsl"
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -134,7 +134,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCatalogsObjectModuleWithConfig() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/Catalogs/Справочник1/Ext/ObjectModule.bsl"
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl"
     );
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -148,7 +148,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCatalogsFormModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -159,7 +159,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testCatalogsFormModuleWithConfig() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
     );
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -173,7 +173,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testInformationRegistersManagerModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl"
+      "src/test/resources/metadata/designer/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -184,7 +184,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testInformationRegistersRecordSetModule() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+      "src/test/resources/metadata/designer/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
     );
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     assertThat(diagnostics).hasSize(1);
@@ -195,7 +195,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @Test
   void testInformationRegistersRecordSetModuleWithConfig() {
     var documentContext = createDocumentContextFromFile(
-      "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+      "src/test/resources/metadata/designer/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
     );
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
