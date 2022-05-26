@@ -27,6 +27,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(0),
       Ranges.create(8, 4, 8, 34),
+      getMessage("\"Ключ1\"", "Коллекция"),
       Arrays.asList(
         Ranges.create(7, 4, 7, 34),
         Ranges.create(8, 4, 8, 34))
@@ -35,6 +36,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(1),
       Ranges.create(12, 4, 12, 35),
+      getMessage("\"Ключ1\"", "Коллекция2"),
       Arrays.asList(
         Ranges.create(11, 4, 11, 35),
         Ranges.create(12, 4, 12, 35))
@@ -43,6 +45,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(2),
       Ranges.create(4, 4, 4, 34),
+      getMessage("СтрокаТаблицы", "Массив"),
       Arrays.asList(
         Ranges.create(3, 4, 3, 34),
         Ranges.create(4, 4, 4, 34))
@@ -51,6 +54,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(3),
       Ranges.create(22, 8, 22, 38),
+      getMessage("\"Ключ1\"", "Коллекция"),
       Arrays.asList(
         Ranges.create(21, 8, 21, 38),
         Ranges.create(22, 8, 22, 38))
@@ -59,6 +63,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(4),
       Ranges.create(27, 8, 27, 55),
+      getMessage("\"Пользователь\"", "Итог.Коллекция.Индексы"),
       Arrays.asList(
         Ranges.create(26, 8, 26, 55),
         Ranges.create(27, 8, 27, 55))
@@ -67,6 +72,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(5),
       Ranges.create(58, 12, 58, 76),
+      getMessage("ЭлементСтиля.Ключ", "ЭлементыСтиля"),
       Arrays.asList(
         Ranges.create(56, 12, 56, 87),
         Ranges.create(58, 12, 58, 76))
@@ -75,6 +81,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(6),
       Ranges.create(99, 8, 99, 77),
+      getMessage("\"Пользователь\"", "Данные.Метод().ПовторнаяСоздаваемаяКоллекция"),
       Arrays.asList(
         Ranges.create(98, 8, 98, 77),
         Ranges.create(99, 8, 99, 77))
@@ -83,6 +90,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(7),
       Ranges.create(102, 8, 102, 92),
+      getMessage("Данные.Метод().ПовторнаяСоздаваемаяКоллекция", "Данные.Метод().ОбщаяКоллекция"),
       Arrays.asList(
         Ranges.create(101, 8, 101, 92),
         Ranges.create(102, 8, 102, 92))
@@ -91,6 +99,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(8),
       Ranges.create(119, 4, 119, 65),
+      getMessage("\"ДополнительныеРеквизиты\"", "ВидыСвойствНабора"),
       Arrays.asList(
         Ranges.create(112, 4, 112, 63),
         Ranges.create(119, 4, 119, 65))
@@ -99,6 +108,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(9),
       Ranges.create(133, 4, 133, 58),
+      getMessage("\"Пользователь\"", "ПовторнаяСоздаваемаяКоллекция"),
       Arrays.asList(
         Ranges.create(132, 4, 132, 58),
         Ranges.create(133, 4, 133, 58))
@@ -107,6 +117,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     checkContent(
       diagnostics.get(10),
       Ranges.create(136, 4, 136, 58),
+      getMessage("ПовторнаяСоздаваемаяКоллекция", "ОбщаяКоллекция"),
       Arrays.asList(
         Ranges.create(135, 4, 135, 58),
         Ranges.create(136, 4, 136, 58))
@@ -114,6 +125,10 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
 
     assertThat(diagnostics).hasSize(11);
 
+  }
+
+  private String getMessage(String keyName, String collectionName) {
+    return String.format("Проверьте повторную вставку %s в коллекцию %s", keyName, collectionName);
   }
 
   @Test
@@ -162,6 +177,7 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
   }
 
   // дубль следующих методов из кода FieldsFromJoinsWithoutIsNullDiagnosticTest
+  // TODO перенести в DiagnosticAssert
   private void checkContent(
     Diagnostic diagnostic,
     Range diagnosticRange,
@@ -175,7 +191,14 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     Range diagnosticRange,
     List<Range> relatedLocationRanges
   ) {
+    checkContent(diagnostic, diagnosticRange, "", relatedLocationRanges);
+  }
+
+  private void checkContent(Diagnostic diagnostic, Range diagnosticRange, String message, List<Range> relatedLocationRanges) {
     assertThat(diagnostic.getRange()).isEqualTo(diagnosticRange);
+    if (!message.isEmpty()){
+      assertThat(diagnostic.getMessage()).isEqualTo(message);
+    }
     List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
     assertThat(relatedInformationList).hasSize(relatedLocationRanges.size());
 

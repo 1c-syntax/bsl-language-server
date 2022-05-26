@@ -210,7 +210,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         Ranges.create(context),
         "+1"
       )).collect(Collectors.toList());
-    diagnosticStorage.addDiagnostic(dataForIssue.callStatement, relatedInformationList);
+    final var message = info.getMessage(dataForIssue.firstParam, dataForIssue.identifier);
+    diagnosticStorage.addDiagnostic(dataForIssue.callStatement, message, relatedInformationList);
   }
 
   private List<BSLParser.AssignmentContext> getAssignments(BSLParser.CodeBlockContext codeBlock){
