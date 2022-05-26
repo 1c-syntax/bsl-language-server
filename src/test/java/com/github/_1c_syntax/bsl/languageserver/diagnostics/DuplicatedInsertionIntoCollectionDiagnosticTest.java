@@ -176,6 +176,17 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     assertThat(diagnostics).hasSize(0);
   }
 
+  @Test
+  void useAsFunctionParamsBetweenDuplications() {
+    var code = "        Контекст.Коллекция.Вставить(1, Парам);\n" +
+      "        Метод(Контекст.Коллекция, 1 + Контекст.Коллекция + 2);\n" +
+      "        Контекст.Коллекция.Вставить(1, ДругойПарам); // не ошибка или все-таки подозрительно??\n";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(0);
+  }
+
   // дубль следующих методов из кода FieldsFromJoinsWithoutIsNullDiagnosticTest
   // TODO перенести в DiagnosticAssert
   private void checkContent(

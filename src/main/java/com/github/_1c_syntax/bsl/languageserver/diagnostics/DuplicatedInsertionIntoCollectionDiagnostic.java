@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -42,23 +43,24 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private static final List<Integer> BREAKERS_ROOTS = Arrays.asList(BSLParser.RULE_subCodeBlock, BSLParser.RULE_forEachStatement,
     BSLParser.RULE_forStatement, BSLParser.RULE_whileStatement, BSLParser.RULE_tryStatement);
 
+  private Range blockRange = null;
   private List<BSLParser.AssignmentContext> blockAssignments = null;
   private List<BSLParserRuleContext> blockBreakers = null;
-  private Range blockRange = null;
+  private List<BSLParser.CallParamContext> blockCallParams = null;
 
   @Value
   private static class GroupingData {
     BSLParser.CallStatementContext callStatement;
-    String identifier;
+    String collectionName;
     String methodName;
-    String firstParam;
+    String firstParamName;
     BSLParser.CallParamListContext callParamListContext;
   }
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext codeBlock) {
     final var statements = codeBlock.statement().stream()
-      .map(statement -> statement.callStatement())
+      .map(BSLParser.StatementContext::callStatement)
       .filter(Objects::nonNull)
       .filter(callStatement -> callStatement.IDENTIFIER() != null)
       .filter(callStatement -> callStatement.accessCall() != null)
@@ -71,13 +73,13 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
     final var mapOfMapsByIdentifier = statements.stream()
       .collect(Collectors.groupingBy(
-        groupingData -> groupingData.getIdentifier(),
+        GroupingData::getCollectionName,
         CaseInsensitiveMap::new,
         Collectors.groupingBy(
-          groupingData -> groupingData.getMethodName(),
+          GroupingData::getMethodName,
           CaseInsensitiveMap::new,
           Collectors.groupingBy(
-            groupingData -> groupingData.getFirstParam(),
+            GroupingData::getFirstParamName,
             CaseInsensitiveMap::new,
             Collectors.mapping(groupingData -> groupingData, Collectors.toList()))
         )
@@ -88,9 +90,10 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .filter(listOfDuplicatedData -> listOfDuplicatedData.size() > 1)
       .forEach(listOfDuplicatedData -> excludeValidChanges(listOfDuplicatedData, codeBlock));
 
+    blockRange = null;
     blockAssignments = null;
     blockBreakers = null;
-    blockRange = null;
+    blockCallParams = null;
 
     return super.visitCodeBlock(codeBlock);
   }
@@ -107,11 +110,11 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       return null;
     }
     final var methodName = methodCallContext.methodName().getText();
-    if (!isAppropriateMethodCall(methodName, ADD_METHOD_PATTERN)) {
+    if (!isAppropriateMethodCall(methodName)) {
       return null;
     }
     final var fullIdentifier = callStatement.modifier().stream()
-      .map(modifierContext -> modifierContext.getText())
+      .map(BSLParserRuleContext::getText)
       .reduce(callStatement.IDENTIFIER().getText(), (x, y) -> x.concat(".").concat(y))
       .replace("..", ".");
 
@@ -119,8 +122,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, callParamListContext);
   }
 
-  private boolean isAppropriateMethodCall(String methodName, Pattern pattern) {
-    return pattern.matcher(methodName).matches();
+  private boolean isAppropriateMethodCall(String methodName) {
+    return ADD_METHOD_PATTERN.matcher(methodName).matches();
   }
 
   private void excludeValidChanges(List<GroupingData> listOfDuplicatedData, BSLParser.CodeBlockContext codeBlock) {
@@ -129,7 +132,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     for (int i = 0; i < listOfDuplicatedData.size(); i++) {
       if (!excludeValidElements(listOfDuplicatedData, i, codeBlock, listForIssue)){
         break;
-      };
+      }
     }
     if (listForIssue.size() > 1){
       fireIssue(listForIssue);
@@ -157,10 +160,10 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasValidChange(GroupingData groupingData, GroupingData groupingData1, BSLParser.CodeBlockContext codeBlock) {
     final var range = Ranges.create(groupingData.callStatement, groupingData1.callStatement);
-    if (hasAssignBetweenCalls(groupingData, range, codeBlock)){
+    if (hasAssignBetweenCalls(groupingData, range, codeBlock) || hasBreakersBetweenCalls(range, codeBlock)){
       return true;
     }
-    return hasBreakersBetweenCalls(groupingData, groupingData1, range, codeBlock);
+    return usedAsFunctionParamsBetweenCalls(range, codeBlock, groupingData);
   }
 
   private boolean hasAssignBetweenCalls(GroupingData groupingData, Range range, BSLParser.CodeBlockContext codeBlock) {
@@ -171,20 +174,16 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasValidAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
     final var text = assignmentContext.lValue().getText();
-    if (text.equalsIgnoreCase(groupingData.identifier)
-      || text.equalsIgnoreCase(groupingData.firstParam)){
+    if (text.equalsIgnoreCase(groupingData.collectionName)
+      || text.equalsIgnoreCase(groupingData.firstParamName)){
       return true;
     }
     final var textWithDot = text.concat(".");
-    return startWithIgnoreCase(groupingData.identifier, textWithDot)
-      || startWithIgnoreCase(groupingData.firstParam, textWithDot);
+    return startWithIgnoreCase(groupingData.collectionName, textWithDot)
+      || startWithIgnoreCase(groupingData.firstParamName, textWithDot);
   }
 
-  private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
-    return identifier.length() >= textWithDot.length() && identifier.substring(0, textWithDot.length()).equalsIgnoreCase(textWithDot);
-  }
-
-  private boolean hasBreakersBetweenCalls(GroupingData groupingData, GroupingData groupingData1, Range range, BSLParser.CodeBlockContext codeBlock) {
+  private boolean hasBreakersBetweenCalls(Range range, BSLParser.CodeBlockContext codeBlock) {
     return getBreakers(codeBlock).stream()
       .filter(bslParserRuleContext -> Ranges.containsRange(range, Ranges.create(bslParserRuleContext)))
       .anyMatch(breakerContext -> hasBreakerFromCodeBlock(breakerContext, codeBlock));
@@ -201,6 +200,28 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return !Ranges.containsRange(getBlockRange(codeBlock), Ranges.create(rootParent));
   }
 
+  private boolean usedAsFunctionParamsBetweenCalls(Range range, BSLParser.CodeBlockContext codeBlock, GroupingData groupingData) {
+    return getCallParams(codeBlock).stream()
+      .filter(callParamContext -> Ranges.containsRange(range, Ranges.create(callParamContext)))
+      .anyMatch(callParamContext -> usedAsFunctionParams(callParamContext, groupingData));
+  }
+
+  private boolean usedAsFunctionParams(BSLParser.CallParamContext callParamContext, GroupingData groupingData) {
+    return Optional.of(callParamContext)
+      .map(BSLParser.CallParamContext::expression)
+      .filter(expression -> !expression.member().isEmpty())
+      .map(BSLParser.ExpressionContext::member)
+      .filter(memberContexts -> memberContexts.stream()
+        .map(BSLParser.MemberContext::complexIdentifier)
+        .filter(Objects::nonNull)
+        .anyMatch(complexIdentifierContext -> similarIdentifier(complexIdentifierContext, groupingData.collectionName)))
+      .isPresent();
+  }
+
+  private boolean similarIdentifier(BSLParser.ComplexIdentifierContext complexIdentifierContext, String collectionName) {
+    return startWithIgnoreCase(collectionName, complexIdentifierContext.getText());
+  }
+
   private void fireIssue(List<GroupingData> listOfDuplicatedData) {
     final var dataForIssue = listOfDuplicatedData.get(1);
     final var relatedInformationList = listOfDuplicatedData.stream()
@@ -210,8 +231,16 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         Ranges.create(context),
         "+1"
       )).collect(Collectors.toList());
-    final var message = info.getMessage(dataForIssue.firstParam, dataForIssue.identifier);
+    final var message = info.getMessage(dataForIssue.firstParamName, dataForIssue.collectionName);
     diagnosticStorage.addDiagnostic(dataForIssue.callStatement, message, relatedInformationList);
+  }
+
+  private Range getBlockRange(BSLParser.CodeBlockContext codeBlock) {
+    if (blockRange != null){
+      return blockRange;
+    }
+    blockRange = Ranges.create(codeBlock);
+    return blockRange;
   }
 
   private List<BSLParser.AssignmentContext> getAssignments(BSLParser.CodeBlockContext codeBlock){
@@ -234,11 +263,17 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return blockBreakers;
   }
 
-  private Range getBlockRange(BSLParser.CodeBlockContext codeBlock) {
-    if (blockRange != null){
-      return blockRange;
+  private List<BSLParser.CallParamContext> getCallParams(BSLParser.CodeBlockContext codeBlock) {
+    if (blockCallParams != null){
+      return blockCallParams;
     }
-    blockRange = Ranges.create(codeBlock);
-    return blockRange;
+    blockCallParams = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_callParam).stream()
+      .map(parseTree -> (BSLParser.CallParamContext) parseTree)
+      .collect(Collectors.toList());
+    return blockCallParams;
+  }
+
+  private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
+    return identifier.length() >= textWithDot.length() && identifier.substring(0, textWithDot.length()).equalsIgnoreCase(textWithDot);
   }
 }
