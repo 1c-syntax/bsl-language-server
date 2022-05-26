@@ -39,7 +39,6 @@ import org.eclipse.lsp4j.Range;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -74,6 +73,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private List<BSLParser.AssignmentContext> blockAssignments;
   private List<BSLParserRuleContext> blockBreakers;
   private List<BSLParser.CallParamContext> blockCallParams;
+  private final List<List<BSLParser.ComplexIdentifierContext>> firstParamComplexIdentifiersStorage = new ArrayList<>();
 
   @Value
   private static class GroupingData {
@@ -81,7 +81,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     String collectionName;
     String methodName;
     String firstParamName;
-    BSLParser.CallParamListContext callParamListContext;
+    List<? extends BSLParser.CallParamContext> callParams; // TODO не используется, удалить?
   }
 
   @Override
@@ -112,8 +112,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (methodCallContext == null) {
       return null;
     }
-    final var callParamListContext = methodCallContext.doCall().callParamList();
-    final var callParams = callParamListContext.callParam();
+    final var callParams = methodCallContext.doCall().callParamList().callParam();
     if (callParams.isEmpty()) {
       return null;
     }
@@ -130,12 +129,9 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       return null;
     }
 
-    final var fullIdentifier = callStatement.modifier().stream()
-      .map(BSLParserRuleContext::getText)
-      .reduce(callStatement.IDENTIFIER().getText(), (x, y) -> x.concat(".").concat(y))
-      .replace("..", ".");
+    final var fullIdentifier = getFullIdentifier(callStatement.IDENTIFIER().getText(), callStatement.modifier());
 
-    return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, callParamListContext);
+    return new GroupingData(callStatement, fullIdentifier, methodName, firstParam, callParams);
   }
 
   private static boolean isAppropriateMethodCall(String methodName) {
@@ -173,7 +169,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .filter(listOfDuplicatedData -> listOfDuplicatedData.size() > 1)
       .map(listOfDuplicatedData -> excludeValidChanges(listOfDuplicatedData, codeBlock))
       .filter(list -> list.size() > 1)
-      .forEach(list -> fireIssue(list));
+      .forEach(this::fireIssue);
   }
 
   private List<GroupingData> excludeValidChanges(List<GroupingData> listOfDuplicatedData, BSLParser.CodeBlockContext codeBlock) {
@@ -184,11 +180,12 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         break;
       }
     }
+    firstParamComplexIdentifiersStorage.clear();
     return result;
   }
 
   private boolean excludeValidElements(List<GroupingData> listOfDuplicatedData, int currIndex,
-                                       BSLParser.CodeBlockContext codeBlock, ArrayList<GroupingData> listForIssue) {
+                                       BSLParser.CodeBlockContext codeBlock, List<GroupingData> listForIssue) {
     if (listOfDuplicatedData.size() - currIndex <= 1) {
       return false;
     }
@@ -209,7 +206,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasValidChange(GroupingData groupingData, GroupingData groupingData1, BSLParser.CodeBlockContext codeBlock) {
     final var range = Ranges.create(groupingData.callStatement, groupingData1.callStatement);
-    if (hasAssignBetweenCalls(groupingData, range, codeBlock) || hasBreakersBetweenCalls(range, codeBlock)) {
+    if (hasAssignBetweenCalls(groupingData, range, codeBlock)
+        || hasBreakersBetweenCalls(range, codeBlock)) {
       return true;
     }
     return usedAsFunctionParamsBetweenCalls(range, codeBlock, groupingData);
@@ -221,15 +219,23 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .anyMatch(assignmentContext -> hasValidAssign(assignmentContext, groupingData));
   }
 
-  private static boolean hasValidAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
+  private boolean hasValidAssign(BSLParser.AssignmentContext assignmentContext, GroupingData groupingData) {
     final var text = assignmentContext.lValue().getText();
     if (text.equalsIgnoreCase(groupingData.collectionName)
       || text.equalsIgnoreCase(groupingData.firstParamName)) {
       return true;
     }
     final var textWithDot = text.concat(".");
-    return startWithIgnoreCase(groupingData.collectionName, textWithDot)
-      || startWithIgnoreCase(groupingData.firstParamName, textWithDot);
+    if (startWithIgnoreCase(groupingData.collectionName, textWithDot)
+      || startWithIgnoreCase(groupingData.firstParamName, textWithDot)){
+      return true;
+    }
+    final List<BSLParser.ComplexIdentifierContext> complexIdentifierContexts = getFirstParamComplexIdentifierContexts(groupingData);
+    return complexIdentifierContexts.stream()
+      .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
+      .map(complexIdentifierContext ->
+        getFullIdentifier(complexIdentifierContext.IDENTIFIER().getText(), complexIdentifierContext.modifier()))
+      .anyMatch(identifier -> text.equalsIgnoreCase(identifier) || startWithIgnoreCase(identifier, textWithDot));
   }
 
   private boolean hasBreakersBetweenCalls(Range range, BSLParser.CodeBlockContext codeBlock) {
@@ -316,6 +322,24 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         .collect(Collectors.toUnmodifiableList());
     }
     return blockCallParams;
+  }
+
+  private List<BSLParser.ComplexIdentifierContext> getFirstParamComplexIdentifierContexts(GroupingData groupingData) {
+    if (firstParamComplexIdentifiersStorage.isEmpty()){
+      final var complexIdentifierContexts =
+        Trees.findAllRuleNodes(groupingData.callParams.get(0), BSLParser.RULE_complexIdentifier).stream()
+          .map(BSLParser.ComplexIdentifierContext.class::cast)
+          .collect(Collectors.toUnmodifiableList());
+      firstParamComplexIdentifiersStorage.add(complexIdentifierContexts);
+    }
+    return firstParamComplexIdentifiersStorage.get(0);
+  }
+
+  private static String getFullIdentifier(String firstIdentifier, List<? extends BSLParser.ModifierContext> modifiers) {
+    return modifiers.stream()
+      .map(BSLParserRuleContext::getText)
+      .reduce(firstIdentifier, (x, y) -> x.concat(".").concat(y))
+      .replace("..", ".");
   }
 
   private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
