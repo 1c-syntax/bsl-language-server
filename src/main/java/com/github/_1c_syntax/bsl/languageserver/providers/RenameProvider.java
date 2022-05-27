@@ -26,9 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +66,7 @@ public final class RenameProvider {
     return new WorkspaceEdit(changes);
   }
 
-  public Range getPrepareRename(PrepareRenameParams params, DocumentContext documentContext) {
+  public Range getPrepareRename(TextDocumentPositionParams params, DocumentContext documentContext) {
 
     return referenceResolver.findReference(
         documentContext.getUri(), params.getPosition())
