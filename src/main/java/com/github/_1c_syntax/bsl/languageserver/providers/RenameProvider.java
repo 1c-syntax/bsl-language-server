@@ -42,6 +42,13 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code textDocument/rename}
+ * и {@code textDocument/prepareRename}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename">Rename Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename">Prepare Document Request specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 public final class RenameProvider {
@@ -49,7 +56,14 @@ public final class RenameProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
-  public WorkspaceEdit getRename(RenameParams params, DocumentContext documentContext) {
+  /**
+   * {@link WorkspaceEdit}
+   *
+   * @param documentContext Контекст документа.
+   * @param params          Параметры вызова.
+   * @return Изменения документов
+   */
+  public WorkspaceEdit getRename(DocumentContext documentContext, RenameParams params) {
 
     var position = params.getPosition();
     Optional<Reference> reference = referenceResolver.findReference(documentContext.getUri(), position);
@@ -66,7 +80,14 @@ public final class RenameProvider {
     return new WorkspaceEdit(changes);
   }
 
-  public Range getPrepareRename(TextDocumentPositionParams params, DocumentContext documentContext) {
+  /**
+   * {@link Range}
+   *
+   * @param documentContext Контекст документа.
+   * @param params          Параметры вызова.
+   * @return Range
+   */
+  public Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
 
     return referenceResolver.findReference(
         documentContext.getUri(), params.getPosition())

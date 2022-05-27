@@ -65,7 +65,7 @@ class RenameProviderTest {
     params.setPosition(new Position(1, 0));
 
     // when
-    var workspaceEdit = renameProvider.getRename(params, documentContext);
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
 
     // then
     assertThat(workspaceEdit.getChanges()).isEmpty();
@@ -81,7 +81,7 @@ class RenameProviderTest {
     params.setNewName(newName);
 
     // when
-    var workspaceEdit = renameProvider.getRename(params, documentContext);
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
 
     // then
     assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
@@ -100,7 +100,7 @@ class RenameProviderTest {
     params.setNewName(newName);
 
     // when
-    var workspaceEdit = renameProvider.getRename(params, documentContext);
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
 
     // then
     assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
@@ -119,7 +119,7 @@ class RenameProviderTest {
     params.setNewName(newName);
 
     // when
-    var workspaceEdit = renameProvider.getRename(params, documentContext);
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
 
     // then
     assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
@@ -136,7 +136,7 @@ class RenameProviderTest {
     params.setPosition(new Position(0, 3));
 
     // when
-    var range = renameProvider.getPrepareRename(params, documentContext);
+    var range = renameProvider.getPrepareRename(documentContext, params);
 
     // then
     assertThat(range).isNull();
@@ -151,7 +151,7 @@ class RenameProviderTest {
     params.setPosition(new Position(0, 14));
 
     // when
-    var range = renameProvider.getPrepareRename(params, documentContext);
+    var range = renameProvider.getPrepareRename(documentContext, params);
 
     // then
     assertThat(range).isEqualTo(Ranges.create(0, 8, 18));

@@ -382,7 +382,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     return CompletableFuture.supplyAsync(() ->
-      Either.forLeft(renameProvider.getPrepareRename(params, documentContext)));
+      Either.forLeft(renameProvider.getPrepareRename(documentContext, params)));
   }
 
   @Override
@@ -392,7 +392,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> renameProvider.getRename(params, documentContext));
+    return CompletableFuture.supplyAsync(() -> renameProvider.getRename(documentContext, params));
   }
 
   public void reset() {
