@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
@@ -35,6 +34,7 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,32 +47,28 @@ public final class RenameProvider {
 
   public WorkspaceEdit getRename(RenameParams params, DocumentContext documentContext) {
 
-    Position position = params.getPosition();
-
-    var reference = referenceResolver.findReference(
-      documentContext.getUri(), params.getPosition()
-    );
+    var position = params.getPosition();
+    Optional<Reference> reference = referenceResolver.findReference(documentContext.getUri(), position);
 
     return new WorkspaceEdit(
       Stream.concat(
-          referenceResolver.findReference(documentContext.getUri(), position)
+          reference
             .flatMap(Reference::getSourceDefinedSymbol)
             .stream()
             .map(referenceIndex::getReferencesTo)
             .flatMap(Collection::stream),
-          reference.stream())
+          reference.stream().filter(Reference::isSourceDefinedSymbolReference))
         .collect(Collectors.groupingBy(
           ref -> ref.getUri().toString(),
           Collectors.mapping(Reference::getSelectionRange,
             Collectors.mapping(range -> new TextEdit(range, params.getNewName()), Collectors.toList())))));
   }
 
-  public Range getPrepareRename(
-    PrepareRenameParams params,
-    DocumentContext documentContext) {
+  public Range getPrepareRename(PrepareRenameParams params, DocumentContext documentContext) {
 
     return referenceResolver.findReference(
         documentContext.getUri(), params.getPosition())
+      .filter(Reference::isSourceDefinedSymbolReference)
       .map(Reference::getSelectionRange)
       .orElse(null);
   }
