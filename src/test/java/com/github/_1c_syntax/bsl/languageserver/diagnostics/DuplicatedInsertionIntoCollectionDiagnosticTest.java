@@ -205,7 +205,20 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     var code = "\tОписание.ИмяРеквизита = \"ТабельныйНомер\";\n" +
       "\tОписания.Добавить(Описание);\n" +
       "\tОписание.ИмяРеквизита = \"ДатаПриема\";\n" +
-      "\tОписания.Добавить(Описание); // TODO не ошибка\n";
+      "\tОписания.Добавить(Описание); // не ошибка\n";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void useAsGlobalMethodParamsBetweenDuplications() {
+    var code =
+      "\tСоздатьВТСотрудникиДляВедомостиПоОснованиям(ИмяВТСотрудники);\n" +
+      "\tИменаПромежуточныхВТ.Добавить(ИмяВТСотрудники);\n" +
+      "\tСоздатьВТСотрудникиДляВедомостиПоМестуРаботы(ИмяВТСотрудники);\n" +
+      "\tИменаПромежуточныхВТ.Добавить(ИмяВТСотрудники); // не ошибка\n";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
