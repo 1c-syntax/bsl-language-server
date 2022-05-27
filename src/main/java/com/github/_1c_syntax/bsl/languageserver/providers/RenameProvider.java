@@ -31,10 +31,14 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,18 +54,16 @@ public final class RenameProvider {
     var position = params.getPosition();
     Optional<Reference> reference = referenceResolver.findReference(documentContext.getUri(), position);
 
-    return new WorkspaceEdit(
-      Stream.concat(
-          reference
-            .flatMap(Reference::getSourceDefinedSymbol)
-            .stream()
-            .map(referenceIndex::getReferencesTo)
-            .flatMap(Collection::stream),
-          reference.stream().filter(Reference::isSourceDefinedSymbolReference))
-        .collect(Collectors.groupingBy(
-          ref -> ref.getUri().toString(),
-          Collectors.mapping(Reference::getSelectionRange,
-            Collectors.mapping(range -> new TextEdit(range, params.getNewName()), Collectors.toList())))));
+    Map<String, List<TextEdit>> changes = Stream.concat(
+      reference
+        .flatMap(Reference::getSourceDefinedSymbol)
+        .stream()
+        .map(referenceIndex::getReferencesTo)
+        .flatMap(Collection::stream),
+      reference.stream().filter(Reference::isSourceDefinedSymbolReference)
+    ).collect(Collectors.groupingBy(ref -> ref.getUri().toString(), getTexEdits(params)));
+
+    return new WorkspaceEdit(changes);
   }
 
   public Range getPrepareRename(PrepareRenameParams params, DocumentContext documentContext) {
@@ -72,4 +74,18 @@ public final class RenameProvider {
       .map(Reference::getSelectionRange)
       .orElse(null);
   }
+
+  @NotNull
+  private static Collector<Reference, ?, List<TextEdit>> getTexEdits(RenameParams params) {
+    return Collectors.mapping(
+      Reference::getSelectionRange,
+      Collectors.mapping(range -> newTextEdit(params, range), Collectors.toList())
+    );
+  }
+
+  @NotNull
+  private static TextEdit newTextEdit(RenameParams params, Range range) {
+    return new TextEdit(range, params.getNewName());
+  }
+
 }
