@@ -381,8 +381,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    var edits = renameProvider.getPrepareRename(params, documentContext);
-    return CompletableFuture.completedFuture(Either.forLeft(edits));
+    return CompletableFuture.supplyAsync(() ->
+      Either.forLeft(renameProvider.getPrepareRename(params, documentContext)));
   }
 
   @Override
@@ -392,9 +392,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    var edits = renameProvider.getRename(params, documentContext);
-
-    return CompletableFuture.completedFuture(edits);
+    return CompletableFuture.supplyAsync(() -> renameProvider.getRename(params, documentContext));
   }
 
   public void reset() {
