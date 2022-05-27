@@ -233,7 +233,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (startWithIgnoreCase(groupingData.collectionNameWithDot, expressionWithDot)) {
       return true;
     }
-    return getAllInnerFirstParamIdentifiersWithDot(groupingData.firstParamContext).stream()
+    return getAllInnerIdentifiersWithDot(groupingData.firstParamContext).stream()
       .anyMatch(identifierWithDot ->
           startWithIgnoreCase(identifierWithDot, expressionWithDot)
         || startWithIgnoreCase(expressionWithDot, identifierWithDot)
@@ -266,19 +266,22 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private boolean usedAsFunctionParams(CallParamContext callParamContext, GroupingData groupingData) {
     return Optional.of(callParamContext)
       .map(CallParamContext::expression)
-      .filter(expression -> !expression.member().isEmpty())
       .map(BSLParser.ExpressionContext::member)
-      .filter(memberContexts -> memberContexts.stream()
-        .map(BSLParser.MemberContext::complexIdentifier)
-        .filter(Objects::nonNull)
-        .map(BSLParserRuleContext::getText)
-        .anyMatch(identifier -> usedIdentifiers(identifier, groupingData)))
+      .filter(memberContexts -> usedIdentifiers(memberContexts, groupingData))
       .isPresent();
   }
 
-  private void fireIssue(List<GroupingData> listOfDuplicatedData) {
-    final var dataForIssue = listOfDuplicatedData.get(1);
-    final var relatedInformationList = listOfDuplicatedData.stream()
+  private boolean usedIdentifiers(List<? extends BSLParser.MemberContext> memberContexts, GroupingData groupingData) {
+    return memberContexts.stream()
+      .map(BSLParser.MemberContext::complexIdentifier)
+      .filter(Objects::nonNull)
+      .map(BSLParserRuleContext::getText)
+      .anyMatch(identifier -> usedIdentifiers(identifier, groupingData));
+  }
+
+  private void fireIssue(List<GroupingData> duplicates) {
+    final var dataForIssue = duplicates.get(1);
+    final var relatedInformationList = duplicates.stream()
       .map(GroupingData::getCallStatement)
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
@@ -323,7 +326,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return blockCallParams;
   }
 
-  private List<String> getAllInnerFirstParamIdentifiersWithDot(CallParamContext param) {
+  private List<String> getAllInnerIdentifiersWithDot(CallParamContext param) {
     if (firstParamComplexIdentifiersStorage.isEmpty()) {
       final var complexIdentifierContexts =
         Trees.findAllRuleNodes(param, BSLParser.RULE_complexIdentifier).stream()
