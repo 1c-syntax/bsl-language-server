@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -42,6 +43,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -60,7 +62,8 @@ import java.util.stream.Stream;
 
 )
 public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern ADD_METHOD_PATTERN = CaseInsensitivePattern.compile("добавить|вставить|add|insert");
+  private static final Pattern INSERT_ADD_METHOD_PATTERN = CaseInsensitivePattern.compile("вставить|добавить|insert|add");
+  private static final Pattern INSERT_METHOD_PATTERN = CaseInsensitivePattern.compile("вставить|insert");
   private static final Pattern IGNORED_BSL_VALUES_PATTERN = CaseInsensitivePattern.compile(
     "неопределено|undefined|0|символы\\.[\\wа-яё]+|chars\\.[\\wа-яё]+");
 
@@ -70,7 +73,15 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     BSLParser.RULE_forEachStatement, BSLParser.RULE_forStatement, BSLParser.RULE_whileStatement,
     BSLParser.RULE_tryStatement);
 
-  public static final int LENGTH_OF_EMPTY_STRING_WITH_QUOTES = 2;
+  private static final int LENGTH_OF_EMPTY_STRING_WITH_QUOTES = 2;
+  private static final boolean IS_ALLOWED_METHOD_ADD = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + IS_ALLOWED_METHOD_ADD
+  )
+  private boolean isAllowedMethodADD = IS_ALLOWED_METHOD_ADD;
+  private Pattern methodPattern = INSERT_ADD_METHOD_PATTERN;
 
   // ленивое вычисление всех полей, только в нужный момент
   private BSLParser.CodeBlockContext codeBlock;
@@ -89,6 +100,15 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     String firstParamName;
     String firstParamNameWithDot;
     CallParamContext firstParamContext;
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
+
+    if (!isAllowedMethodADD){
+      methodPattern = INSERT_METHOD_PATTERN;
+    }
   }
 
   @Override
@@ -144,8 +164,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       firstParam, firstParam.concat("."), firstParamContext);
   }
 
-  private static boolean isAppropriateMethodCall(String methodName) {
-    return ADD_METHOD_PATTERN.matcher(methodName).matches();
+  private boolean isAppropriateMethodCall(String methodName) {
+    return methodPattern.matcher(methodName).matches();
   }
 
   private static boolean isBlankBSLString(String text) {

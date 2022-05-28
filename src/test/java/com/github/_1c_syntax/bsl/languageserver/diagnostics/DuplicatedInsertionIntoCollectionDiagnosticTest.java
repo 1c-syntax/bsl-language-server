@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -184,6 +185,81 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     );
 
     assertThat(diagnostics).hasSize(15);
+  }
+
+  @Test
+  void testWithoutAdd() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("isAllowedMethodADD", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    checkContent(
+      diagnostics.get(0),
+      Ranges.create(8, 4, 8, 34),
+      getMessage("\"Ключ1\"", "Коллекция"),
+      Arrays.asList(
+        Ranges.create(7, 4, 7, 34),
+        Ranges.create(8, 4, 8, 34))
+    );
+
+    checkContent(
+      diagnostics.get(1),
+      Ranges.create(12, 4, 12, 35),
+      getMessage("\"Ключ1\"", "Коллекция2"),
+      Arrays.asList(
+        Ranges.create(11, 4, 11, 35),
+        Ranges.create(12, 4, 12, 35))
+    );
+
+    checkContent(
+      diagnostics.get(2),
+      Ranges.create(22, 8, 22, 38),
+      getMessage("\"Ключ1\"", "Коллекция"),
+      Arrays.asList(
+        Ranges.create(21, 8, 21, 38),
+        Ranges.create(22, 8, 22, 38))
+    );
+
+    checkContent(
+      diagnostics.get(3),
+      Ranges.create(58, 12, 58, 76),
+      getMessage("ЭлементСтиля.Ключ", "ЭлементыСтиля"),
+      Arrays.asList(
+        Ranges.create(56, 12, 56, 87),
+        Ranges.create(58, 12, 58, 76))
+    );
+
+    checkContent(
+      diagnostics.get(4),
+      Ranges.create(119, 4, 119, 65),
+      getMessage("\"ДополнительныеРеквизиты\"", "ВидыСвойствНабора"),
+      Arrays.asList(
+        Ranges.create(112, 4, 112, 63),
+        Ranges.create(119, 4, 119, 65))
+    );
+
+    checkContent(
+      diagnostics.get(6),
+      Ranges.create(147, 8, 147, 90),
+      getMessage("Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2", "Данные2.ОбщаяКоллекция2"),
+      Arrays.asList(
+        Ranges.create(145, 8, 145, 90),
+        Ranges.create(147, 8, 147, 90))
+    );
+
+    checkContent(
+      diagnostics.get(5),
+      Ranges.create(151, 8, 151, 90),
+      getMessage("Данные3.Реквизит3.ПовторнаяСоздаваемаяКоллекция3", "Данные3.ОбщаяКоллекция3"),
+      Arrays.asList(
+        Ranges.create(149, 8, 149, 90),
+        Ranges.create(151, 8, 151, 90))
+    );
+
+    assertThat(diagnostics).hasSize(7);
   }
 
   private String getMessage(String keyName, String collectionName) {
