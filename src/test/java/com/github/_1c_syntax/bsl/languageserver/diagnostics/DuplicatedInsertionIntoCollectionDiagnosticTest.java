@@ -184,7 +184,17 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
       )
     );
 
-    assertThat(diagnostics).hasSize(15);
+    checkContent(
+      diagnostics.get(15),
+      Ranges.create(171, 4, 171, 65),
+      getMessage("ИмяКоманды", "Сведения2.ДобавленныеЭлементы"),
+      Arrays.asList(
+        Ranges.create(170, 4, 170, 57),
+        Ranges.create(171, 4, 171, 65)
+      )
+    );
+
+    assertThat(diagnostics).hasSize(16);
   }
 
   @Test
