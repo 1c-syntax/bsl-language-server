@@ -78,7 +78,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private List<AssignmentContext> blockAssignments;
   private List<BSLParserRuleContext> blockBreakers;
   private List<CallParamContext> blockCallParams;
-  private final List<List<String>> firstParamComplexIdentifiersStorage = new ArrayList<>(1);
+  private List<String> firstParamInnerIdentifiers;
 
   @Value
   private static class GroupingData {
@@ -189,7 +189,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         break;
       }
     }
-    firstParamComplexIdentifiersStorage.clear();
+    firstParamInnerIdentifiers = null;
     return result;
   }
 
@@ -240,6 +240,11 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       );
   }
 
+  private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
+    return identifier.length() >= textWithDot.length()
+      && identifier.substring(0, textWithDot.length()).equalsIgnoreCase(textWithDot);
+  }
+
   private boolean hasBreakersBetweenCalls(Range border) {
     return getBreakers().stream()
       .filter(bslParserRuleContext -> Ranges.containsRange(border, Ranges.create(bslParserRuleContext)))
@@ -275,6 +280,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return memberContexts.stream()
       .map(BSLParser.MemberContext::complexIdentifier)
       .filter(Objects::nonNull)
+      .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
       .map(BSLParserRuleContext::getText)
       .anyMatch(identifier -> usedIdentifiers(identifier, groupingData));
   }
@@ -327,18 +333,28 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   }
 
   private List<String> getAllInnerIdentifiersWithDot(CallParamContext param) {
-    if (firstParamComplexIdentifiersStorage.isEmpty()) {
-      final var complexIdentifierContexts =
-        Trees.findAllRuleNodes(param, BSLParser.RULE_complexIdentifier).stream()
-          .map(BSLParser.ComplexIdentifierContext.class::cast)
-          .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
-          .map(complexIdentifierContext ->
-            getFullIdentifier(complexIdentifierContext.IDENTIFIER().getText(), complexIdentifierContext.modifier()))
-          .map(text -> text.concat("."))
-          .collect(Collectors.toList());
-      firstParamComplexIdentifiersStorage.add(complexIdentifierContexts);
+    if (firstParamInnerIdentifiers == null) {
+      final var identifiers = Trees.findAllRuleNodes(param, BSLParser.RULE_complexIdentifier).stream()
+        .map(BSLParser.ComplexIdentifierContext.class::cast)
+        .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
+        .collect(Collectors.toList());
+      final var reducedIdentifiers = new ArrayList<String>();
+      for (BSLParser.ComplexIdentifierContext identifier : identifiers) {
+        final List<? extends BSLParser.ModifierContext> modifiers = identifier.modifier();
+        final var firstIdentifier = identifier.IDENTIFIER().getText();
+        var fullIdentifier = getFullIdentifier(firstIdentifier, modifiers);
+        reducedIdentifiers.add(fullIdentifier);
+
+        var reducedIdentifier = firstIdentifier;
+        for (BSLParser.ModifierContext modifier : modifiers) {
+          var modfifier = modifier.getText();
+          reducedIdentifier = reducedIdentifier.concat(".").concat(modfifier);
+          reducedIdentifiers.add(reducedIdentifier);
+        }
+      }
+      firstParamInnerIdentifiers = reducedIdentifiers;
     }
-    return firstParamComplexIdentifiersStorage.get(0);
+    return firstParamInnerIdentifiers;
   }
 
   private void clearCodeBlockFields() {
@@ -354,10 +370,5 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .map(BSLParserRuleContext::getText)
       .reduce(firstIdentifier, (x, y) -> x.concat(".").concat(y))
       .replace("..", ".");
-  }
-
-  private static boolean startWithIgnoreCase(String identifier, String textWithDot) {
-    return identifier.length() >= textWithDot.length()
-      && identifier.substring(0, textWithDot.length()).equalsIgnoreCase(textWithDot);
   }
 }

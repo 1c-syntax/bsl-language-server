@@ -144,8 +144,46 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
         Ranges.create(136, 4, 136, 58))
     );
 
-    assertThat(diagnostics).hasSize(11);
+    checkContent(
+      diagnostics.get(12),
+      Ranges.create(147, 8, 147, 90),
+      getMessage("Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2", "Данные2.ОбщаяКоллекция2"),
+      Arrays.asList(
+        Ranges.create(145, 8, 145, 90),
+        Ranges.create(147, 8, 147, 90))
+    );
 
+    checkContent(
+      diagnostics.get(11),
+      Ranges.create(151, 8, 151, 90),
+      getMessage("Данные3.Реквизит3.ПовторнаяСоздаваемаяКоллекция3", "Данные3.ОбщаяКоллекция3"),
+      Arrays.asList(
+        Ranges.create(149, 8, 149, 90),
+        Ranges.create(151, 8, 151, 90))
+    );
+
+    checkContent(
+      diagnostics.get(13),
+      Ranges.create(157, 4, 157, 27),
+      getMessage("Ключ", "Описания"),
+      Arrays.asList(
+        Ranges.create(155, 4, 155, 27),
+        Ranges.create(157, 4, 157, 27))
+    );
+
+    checkContent(
+      diagnostics.get(14),
+      Ranges.create(161, 4, 161, 37),
+      getMessage("Часть1.Часть2", "Описания2"),
+      Arrays.asList(
+        Ranges.create(159, 4, 159, 37),
+        Ranges.create(161, 4, 161, 37)
+//        ,
+//        Ranges.create(162, 4, 162, 37)
+      )
+    );
+
+    assertThat(diagnostics).hasSize(15);
   }
 
   private String getMessage(String keyName, String collectionName) {
@@ -223,6 +261,38 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void useIdentifierPart() {
+    var code =
+    "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2);\n" +
+    "        Реквизит2.ПовторнаяСоздаваемаяКоллекция2 = Новый Массив;\n" +
+    "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2); // не ошибка\n";
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void useEqualNameWithMethodAndKey() {
+    var code =
+//    "Процедура ОдинаковыеИменаКлючаИМетода(Описания)\n" +
+      "\tОписания.Добавить(Ключ);\n" +
+      "\tМетод(Ключ());\n" +
+      "\tОписания.Добавить(Ключ); // ошибка\n" +
+      ""
+//      "\n" +
+//      "\tОписания2.Добавить(Часть1.Часть2);\n" +
+//      "\tМетод(Часть1().Часть2());\n" +
+//      "\tОписания2.Добавить(Часть1.Часть2); // ошибка\n" +
+//      "КонецПроцедуры\n"
+      ;
+
+    var context = TestUtils.getDocumentContext(code);
+    var diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).hasSize(1);
   }
 
   // дубль следующих методов из кода FieldsFromJoinsWithoutIsNullDiagnosticTest
