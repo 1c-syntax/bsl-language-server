@@ -178,9 +178,8 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
       getMessage("Часть1.Часть2", "Описания2"),
       Arrays.asList(
         Ranges.create(159, 4, 159, 37),
-        Ranges.create(161, 4, 161, 37)
-//        ,
-//        Ranges.create(162, 4, 162, 37)
+        Ranges.create(161, 4, 161, 37),
+        Ranges.create(162, 4, 162, 37)
       )
     );
 
@@ -354,7 +353,9 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
     var code =
     "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2);\n" +
     "        Реквизит2.ПовторнаяСоздаваемаяКоллекция2 = Новый Массив;\n" +
-    "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2); // не ошибка\n";
+    "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2); // не ошибка\n" +
+    "        Данные2.ОбщаяКоллекция2.Вставить(Данные2.Реквизит2.ПовторнаяСоздаваемаяКоллекция2); // доп.данные\n" +
+      "";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);

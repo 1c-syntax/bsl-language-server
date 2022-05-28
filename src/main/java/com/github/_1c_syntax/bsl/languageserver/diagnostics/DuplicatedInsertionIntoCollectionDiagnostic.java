@@ -219,7 +219,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       return false;
     }
     final var first = duplicates.get(currIndex);
-    var alreadyAdd = false;
+    var alreadyAdd = !listForIssue.isEmpty() && listForIssue.get(listForIssue.size() - 1) == first;
     for (int i = currIndex + 1; i < duplicates.size(); i++) {
       final var next = duplicates.get(i);
       if (hasValidChange(first, next)) {
