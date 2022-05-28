@@ -1,4 +1,4 @@
-# <Diagnostic name> (DuplicatedInsertionIntoCollection)
+# Duplicate adding or pasting a value to a collection (DuplicatedInsertionIntoCollection)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

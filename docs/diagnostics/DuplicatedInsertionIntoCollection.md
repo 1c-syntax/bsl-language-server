@@ -1,4 +1,4 @@
-# <Diagnostic name> (DuplicatedInsertionIntoCollection)
+# Повторное добавление/вставка значений в коллекцию (DuplicatedInsertionIntoCollection)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
