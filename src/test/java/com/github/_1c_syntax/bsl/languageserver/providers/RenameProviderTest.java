@@ -87,11 +87,11 @@ class RenameProviderTest {
     assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
       .hasSize(2)
       .contains(new TextEdit(Ranges.create(0, 8, 18), newName))
-      .contains(new TextEdit(Ranges.create(5, 0, 10), newName));
+      .contains(new TextEdit(Ranges.create(6, 0, 10), newName));
   }
 
   @Test
-  void testRenameLocalVariable() {
+  void testRenameLocalVariableDeclaration() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var newName = "НовоеИмя";
 
@@ -106,7 +106,26 @@ class RenameProviderTest {
     assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
       .hasSize(2)
       .contains(new TextEdit(Ranges.create(1, 4, 14), newName))
-      .contains(new TextEdit(Ranges.create(2, 8, 18), newName));
+      .contains(new TextEdit(Ranges.create(2, 13, 23), newName));
+  }
+
+  @Test
+  void testRenameLocalVariableUse() {
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var newName = "НовоеИмя";
+
+    var params = new RenameParams();
+    params.setPosition(new Position(3, 5));
+    params.setNewName(newName);
+
+    // when
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
+
+    // then
+    assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
+      .hasSize(2)
+      .contains(new TextEdit(Ranges.create(2, 4, 10), newName))
+      .contains(new TextEdit(Ranges.create(3, 4, 10), newName));
   }
 
   @Test
