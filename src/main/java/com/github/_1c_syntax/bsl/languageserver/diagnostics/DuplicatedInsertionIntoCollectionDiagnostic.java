@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.eclipse.lsp4j.Range;
 
@@ -127,7 +128,6 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return codeBlock.statement().stream()
       .map(BSLParser.StatementContext::callStatement)
       .filter(Objects::nonNull)
-      .filter(callStatement -> callStatement.IDENTIFIER() != null)
       .filter(callStatement -> callStatement.accessCall() != null)
       .map(callStatement -> groupingCalls(callStatement, callStatement.accessCall()))
       .filter(Objects::nonNull)
@@ -137,9 +137,6 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private @Nullable
   GroupingData groupingCalls(BSLParser.CallStatementContext callStatement, BSLParser.AccessCallContext accessCallContext) {
     final var methodCallContext = accessCallContext.methodCall();
-    if (methodCallContext == null) {
-      return null;
-    }
     final var callParams = methodCallContext.doCall().callParamList().callParam();
     if (callParams.isEmpty()) {
       return null;
@@ -156,10 +153,18 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (isBlankBSLString(firstParam) || isIgnoredBSLValues(firstParam)) {
       return null;
     }
+    final TerminalNode identifierContext;
+    final String parens;
+    if (callStatement.IDENTIFIER() != null){
+      identifierContext = callStatement.IDENTIFIER();
+      parens = "";
+    } else {
+      identifierContext = callStatement.globalMethodCall().methodName().IDENTIFIER();
+      parens = "()";
+    }
+    final var collectionName = getFullIdentifier(identifierContext.getText().concat(parens), callStatement.modifier());
 
-    final var fullIdentifier = getFullIdentifier(callStatement.IDENTIFIER().getText(), callStatement.modifier());
-
-    return new GroupingData(callStatement, fullIdentifier, fullIdentifier.concat("."), methodName,
+    return new GroupingData(callStatement, collectionName, collectionName.concat("."), methodName,
       firstParam, firstParam.concat("."), firstParamContext);
   }
 
@@ -276,7 +281,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     final var rootParent = Trees.getRootParent(breakerContext, BREAKERS_ROOTS);
     if (rootParent == null) {
-      return true;
+      return true; // сюда должны попасть, только если модуль не по грамматике, но иначе ругань на возможный null
     }
     return !Ranges.containsRange(getBlockRange(), Ranges.create(rootParent));
   }
