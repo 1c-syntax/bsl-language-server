@@ -33,10 +33,8 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -77,15 +75,14 @@ public final class RenameProvider {
         .map(referenceIndex::getReferencesTo)
         .flatMap(Collection::stream),
       sourceDefinedSymbol
-        .stream().map(symbol -> referenceOf(documentContext.getUri(), symbol))
+        .stream().map(RenameProvider::referenceOf)
     ).collect(Collectors.groupingBy(ref -> ref.getUri().toString(), getTexEdits(params)));
 
     return new WorkspaceEdit(changes);
   }
 
-  @NotNull
-  private static Reference referenceOf(URI uri, SourceDefinedSymbol c) {
-    return Reference.of(c, c, new Location(uri.toString(), c.getSelectionRange()));
+  private static Reference referenceOf(SourceDefinedSymbol symbol) {
+    return Reference.of(symbol, symbol, new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange()));
   }
 
   /**
@@ -104,7 +101,6 @@ public final class RenameProvider {
       .orElse(null);
   }
 
-  @NotNull
   private static Collector<Reference, ?, List<TextEdit>> getTexEdits(RenameParams params) {
     return Collectors.mapping(
       Reference::getSelectionRange,
@@ -112,7 +108,6 @@ public final class RenameProvider {
     );
   }
 
-  @NotNull
   private static TextEdit newTextEdit(RenameParams params, Range range) {
     return new TextEdit(range, params.getNewName());
   }
