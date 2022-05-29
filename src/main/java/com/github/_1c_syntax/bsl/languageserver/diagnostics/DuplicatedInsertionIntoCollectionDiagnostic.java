@@ -138,9 +138,6 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   GroupingData groupingCalls(BSLParser.CallStatementContext callStatement, BSLParser.AccessCallContext accessCallContext) {
     final var methodCallContext = accessCallContext.methodCall();
     final var callParams = methodCallContext.doCall().callParamList().callParam();
-    if (callParams.isEmpty()) {
-      return null;
-    }
     final CallParamContext firstParamContext = callParams.get(0);
     if (firstParamContext.getChildCount() == 0) {
       return null;
