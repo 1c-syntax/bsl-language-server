@@ -69,9 +69,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private static final List<Integer> BREAKERS_INDEXES = Arrays.asList(BSLParser.RULE_returnStatement,
     BSLParser.RULE_breakStatement, BSLParser.RULE_continueStatement, BSLParser.RULE_raiseStatement);
-  private static final List<Integer> BREAKERS_ROOTS = Arrays.asList(BSLParser.RULE_subCodeBlock,
-    BSLParser.RULE_forEachStatement, BSLParser.RULE_forStatement, BSLParser.RULE_whileStatement,
-    BSLParser.RULE_tryStatement);
+  private static final List<Integer> BREAKERS_ROOTS = Arrays.asList(BSLParser.RULE_forEachStatement,
+    BSLParser.RULE_forStatement, BSLParser.RULE_whileStatement, BSLParser.RULE_tryStatement);
 
   private static final int LENGTH_OF_EMPTY_STRING_WITH_QUOTES = 2;
   private static final boolean IS_ALLOWED_METHOD_ADD = true;
@@ -268,15 +267,15 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private boolean hasBreakersBetweenCalls(Range border) {
     return getBreakers().stream()
       .filter(bslParserRuleContext -> Ranges.containsRange(border, Ranges.create(bslParserRuleContext)))
-      .anyMatch(this::hasBreakerFromCodeBlock);
+      .anyMatch(this::hasBreakerIntoCodeBlock);
   }
 
-  private boolean hasBreakerFromCodeBlock(BSLParserRuleContext breakerContext) {
+  private boolean hasBreakerIntoCodeBlock(BSLParserRuleContext breakerContext) {
     if (breakerContext.getRuleIndex() == BSLParser.RULE_returnStatement) {
       return true;
     }
     final var rootParent = Trees.getRootParent(breakerContext, BREAKERS_ROOTS);
-    if (rootParent == null || rootParent.getRuleIndex() == BSLParser.RULE_subCodeBlock) {
+    if (rootParent == null) {
       return true;
     }
     return !Ranges.containsRange(getBlockRange(), Ranges.create(rootParent));
