@@ -117,8 +117,9 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     final List<GroupingData> possibleDuplicateStatements = getPossibleDuplicates();
 
     if (!possibleDuplicateStatements.isEmpty()) {
-      final var duplicatesStream = explorePossibleDuplicateStatements(possibleDuplicateStatements);
-      duplicatesStream.forEach(this::fireIssue);
+      blockRange = Ranges.create(codeBlock);
+      explorePossibleDuplicateStatements(possibleDuplicateStatements)
+        .forEach(this::fireIssue);
     }
     clearCodeBlockFields();
     return super.visitCodeBlock(codeBlock);
@@ -280,7 +281,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (rootParent == null) {
       return true; // сюда должны попасть, только если модуль не по грамматике, но иначе ругань на возможный null
     }
-    return !Ranges.containsRange(getBlockRange(), Ranges.create(rootParent));
+    return !Ranges.containsRange(blockRange, Ranges.create(rootParent));
   }
 
   private boolean usedAsFunctionParamsBetweenCalls(Range border, GroupingData groupingData) {
@@ -317,13 +318,6 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       )).collect(Collectors.toList());
     final var message = info.getMessage(dataForIssue.firstParamName, dataForIssue.collectionName);
     diagnosticStorage.addDiagnostic(dataForIssue.callStatement, message, relatedInformationList);
-  }
-
-  private Range getBlockRange() {
-    if (blockRange == null) {
-      blockRange = Ranges.create(codeBlock);
-    }
-    return blockRange;
   }
 
   private List<AssignmentContext> getAssignments() {
