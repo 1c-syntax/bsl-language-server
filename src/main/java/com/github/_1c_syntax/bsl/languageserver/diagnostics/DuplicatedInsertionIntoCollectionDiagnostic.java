@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.CRITICAL,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.BRAINOVERLOAD,
