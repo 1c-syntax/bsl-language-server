@@ -44,6 +44,12 @@ public class AspectJConfiguration {
     return Aspects.aspectOf(EventPublisherAspect.class);
   }
 
+  @Bean
+  @Lazy(false)
+  public SentryAspect sentryAspect() {
+    return Aspects.aspectOf(SentryAspect.class);
+  }
+
   /**
    * @return Аспект выполнения замеров производительности.
    */

@@ -20,6 +20,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.12.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
+    id("com.gorylenko.gradle-git-properties") version "2.3.2"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
 
@@ -100,6 +101,10 @@ dependencies {
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
+
+    // Sentry
+    implementation("io.sentry", "sentry-spring-boot-starter", "5.7.4")
+    implementation("io.sentry", "sentry-logback", "5.7.4")
 
     // COMPILE
 
