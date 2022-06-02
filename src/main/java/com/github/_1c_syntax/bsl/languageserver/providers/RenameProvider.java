@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
@@ -82,7 +83,12 @@ public final class RenameProvider {
   }
 
   private static Reference referenceOf(SourceDefinedSymbol symbol) {
-    return Reference.of(symbol, symbol, new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange()));
+    return Reference.of(
+      symbol,
+      symbol,
+      new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange()),
+      OccurrenceType.DEFINITION
+    );
   }
 
   /**
