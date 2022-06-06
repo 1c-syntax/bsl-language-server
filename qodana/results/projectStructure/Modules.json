@@ -1,0 +1,1263 @@
+{
+  "modules": [
+    {
+      "name": "bsl-language-server",
+      "contentEntries": [
+        {
+          "path": "file://$PROJECT_DIR$",
+          "sourceFolders": []
+        }
+      ],
+      "orderEntries": [
+        {
+          "name": "jbr-11",
+          "type": "SDK"
+        },
+        {
+          "name": "<Module source>",
+          "type": "Own sources"
+        }
+      ]
+    },
+    {
+      "name": "bsl-language-server.test",
+      "contentEntries": [
+        {
+          "path": "file://$PROJECT_DIR$/src/test",
+          "sourceFolders": [
+            {
+              "path": "file://$PROJECT_DIR$/src/test/java",
+              "type": "TestSource",
+              "packagePrefix": ""
+            },
+            {
+              "path": "file://$PROJECT_DIR$/src/test/resources",
+              "type": "TestResource",
+              "packagePrefix": ""
+            }
+          ]
+        }
+      ],
+      "orderEntries": [
+        {
+          "name": "jbr-11",
+          "type": "SDK"
+        },
+        {
+          "name": "<Module source>",
+          "type": "Own sources"
+        },
+        {
+          "name": "bsl-language-server.main",
+          "type": "Module"
+        },
+        {
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.6.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:bsl-parser:0.21.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:utils:0.4.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:language-en:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:language-ru:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:languagetool-core:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-io:commons-io:2.11.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-beanutils:commons-beanutils:1.9.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-collections4:4.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: me.tongfei:progressbar:0.9.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.projectlombok:lombok:1.18.24",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.ginsberg:junit5-system-exit:1.1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.awaitility:awaitility:4.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: info.picocli:picocli:4.6.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-test:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-core:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.jayway.jsonpath:json-path:2.6.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:2.3.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.assertj:assertj-core:3.21.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.hamcrest:hamcrest:2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.jupiter:junit-jupiter:5.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.mockito:mockito-junit-jupiter:4.0.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.mockito:mockito-core:4.0.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.skyscreamer:jsonassert:1.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.xmlunit:xmlunit-core:2.8.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: jakarta.annotation:jakarta.annotation-api:1.3.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.yaml:snakeyaml:1.29",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.opennlp:opennlp-tools:1.9.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-tokenize-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-postag-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-chunk-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:openregex:1.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-text:1.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-validator:commons-validator:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-stub:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:guava:30.1-jre",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-fsa-builders:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-speller:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-stemming:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-fsa:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.carrotsearch:hppc:0.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.loomchild:segment:2.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.hankcs:aho-corasick-double-array-trie:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.optimaize.languagedetector:language-detector:0.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jetbrains:annotations:20.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.lucene:lucene-backward-codecs:5.5.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.lucene:lucene-core:5.5.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: tech.units:indriya:1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.measure:unit-api:1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.xml.bind:jaxb-api:2.3.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.activation:javax.activation-api:1.2.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.slf4j:slf4j-api:1.7.36",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.gitlab.dumonts:hunspell:1.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-logging:commons-logging:1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_guava:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.8.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-circuitbreaker:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-micrometer:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.annotation:javax.annotation-api:1.3.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-netty-shaded:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-protobuf:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-pool2:2.11.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jetbrains.intellij.deps:trove4j:1.0.20200330",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.vdurmont:emoji-java:5.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-collections:commons-collections:3.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jline:jline:3.20.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.2.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.codehaus.woodstox:stax2-api:4.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jheaps:jheaps:0.13",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-jcl:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.minidev:json-smart:2.4.8",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: jakarta.activation:jakarta.activation-api:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.bytebuddy:byte-buddy:1.11.22",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.11.22",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-context:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.qos.logback:logback-classic:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.slf4j:jul-to-slf4j:1.7.36",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.code.gson:gson:2.8.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4-runtime:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-digester:commons-digester:2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-api:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:failureaccess:1.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.checkerframework:checker-qual:3.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.3.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.j2objc:j2objc-annotations:1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.arnx:jsonic:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.intellij:annotations:12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: tech.uom.lib:uom-lib-common:1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.sun.istack:istack-commons-runtime:3.0.12",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.nativelibs4java:bridj:0.7.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_common:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.micrometer:micrometer-core:1.8.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_otel:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_otel_agent:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-core:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.vavr:vavr:0.10.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-core:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-protobuf-lite:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.api.grpc:proto-google-common-protos:2.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.protobuf:protobuf-java:3.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.json:json:20170516",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.minidev:accessors-smart:2.4.8",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.platform:junit-platform-commons:1.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-aop:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-beans:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-expression:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.qos.logback:logback-core:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-context:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.android.tools:dx:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.hdrhistogram:HdrHistogram:2.1.12",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_common:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.vavr:vavr-match:0.10.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.ow2.asm:asm:9.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.15",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.106",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.objenesis:objenesis:3.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xpp3:xpp3_min:1.1.4c",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.perfmark:perfmark-api:0.23.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.sun.activation:jakarta.activation:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.junit.platform:junit-platform-engine:1.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.android:annotations:4.1.1.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+          "type": "Library"
+        }
+      ]
+    },
+    {
+      "name": "bsl-language-server.main",
+      "contentEntries": [
+        {
+          "path": "file://$PROJECT_DIR$/src/main",
+          "sourceFolders": [
+            {
+              "path": "file://$PROJECT_DIR$/src/main/java",
+              "type": "Source",
+              "packagePrefix": ""
+            },
+            {
+              "path": "file://$PROJECT_DIR$/src/main/resources",
+              "type": "Resource",
+              "packagePrefix": ""
+            }
+          ]
+        }
+      ],
+      "orderEntries": [
+        {
+          "name": "jbr-11",
+          "type": "SDK"
+        },
+        {
+          "name": "<Module source>",
+          "type": "Own sources"
+        },
+        {
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.6.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:bsl-parser:0.21.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:utils:0.4.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:language-en:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:language-ru:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.languagetool:languagetool-core:5.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-io:commons-io:2.11.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-beanutils:commons-beanutils:1.9.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-collections4:4.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: me.tongfei:progressbar:0.9.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.projectlombok:lombok:1.18.24",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: info.picocli:picocli:4.6.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.6.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: jakarta.annotation:jakarta.annotation-api:1.3.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-core:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.yaml:snakeyaml:1.29",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.opennlp:opennlp-tools:1.9.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-tokenize-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-postag-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:opennlp-chunk-models:1.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: edu.washington.cs.knowitall:openregex:1.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-stub:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:guava:30.1-jre",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-protobuf:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-netty-shaded:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-text:1.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-validator:commons-validator:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-fsa-builders:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-speller:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-stemming:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.carrot2:morfologik-fsa:2.1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.carrotsearch:hppc:0.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.loomchild:segment:2.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.hankcs:aho-corasick-double-array-trie:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.optimaize.languagedetector:language-detector:0.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jetbrains:annotations:20.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.lucene:lucene-backward-codecs:5.5.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.lucene:lucene-core:5.5.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: tech.units:indriya:1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.measure:unit-api:1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.xml.bind:jaxb-api:2.3.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.activation:javax.activation-api:1.2.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.slf4j:slf4j-api:1.7.36",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.gitlab.dumonts:hunspell:1.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-logging:commons-logging:1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_guava:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.8.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-circuitbreaker:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-micrometer:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: javax.annotation:javax.annotation-api:1.3.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.commons:commons-pool2:2.11.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jetbrains.intellij.deps:trove4j:1.0.20200330",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.vdurmont:emoji-java:5.1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-collections:commons-collections:3.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jline:jline:3.20.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.13.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.2.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.codehaus.woodstox:stax2-api:4.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jheaps:jheaps:0.13",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-context:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.qos.logback:logback-classic:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.slf4j:jul-to-slf4j:1.7.36",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-jcl:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.code.gson:gson:2.8.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4-runtime:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-api:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:failureaccess:1.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.checkerframework:checker-qual:3.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.3.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.j2objc:j2objc-annotations:1.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-protobuf-lite:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.api.grpc:proto-google-common-protos:2.0.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.protobuf:protobuf-java:3.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-core:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-digester:commons-digester:2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: net.arnx:jsonic:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.intellij:annotations:12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: tech.uom.lib:uom-lib-common:1.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:2.3.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.sun.istack:istack-commons-runtime:3.0.12",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.nativelibs4java:bridj:0.7.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_common:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.micrometer:micrometer-core:1.8.5",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_otel:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_otel_agent:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.resilience4j:resilience4j-core:1.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.vavr:vavr:0.10.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.json:json:20170516",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-aop:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-beans:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-expression:5.3.19",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.qos.logback:logback-core:1.2.11",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.17.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.24.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.grpc:grpc-context:1.42.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.android.tools:dx:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.hdrhistogram:HdrHistogram:2.1.12",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.prometheus:simpleclient_tracer_common:0.12.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.vavr:vavr-match:0.10.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.15",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.106",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xpp3:xpp3_min:1.1.4c",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.perfmark:perfmark-api:0.23.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.sun.activation:jakarta.activation:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.google.android:annotations:4.1.1.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+          "type": "Library"
+        }
+      ]
+    }
+  ]
+}
