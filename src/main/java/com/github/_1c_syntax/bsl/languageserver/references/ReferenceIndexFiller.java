@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
@@ -46,6 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
@@ -79,6 +81,17 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
+
+    private final Pattern NOTIFY_DESCRIPTION = CaseInsensitivePattern.compile(
+      "^(ОписаниеОповещения|NotifyDescription)$");
+
+    private final Pattern THIS_OBJECT_PATTERN = CaseInsensitivePattern.compile(
+      "^(ЭтотОбъект|ThisObject)$"
+    );
+
+    private final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
+      "^\\s*(\")"
+    );
 
     @Override
     public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
@@ -124,9 +137,27 @@ public class ReferenceIndexFiller {
       return super.visitGlobalMethodCall(ctx);
     }
 
-    private void checkCall(String mdoRef, Token methodName) {
+    @Override
+    public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
+      if (isNotifyDescription(ctx)) {
+        var callParamList = ctx.doCall().callParamList().callParam();
 
-      String methodNameText = methodName.getText();
+        if (callParamList.size() > 1) {
+          addCallbackMethodCall(callParamList.get(0), callParamList.get(1));
+        }
+
+        if (callParamList.size() == 5) {
+          addCallbackMethodCall(callParamList.get(3), callParamList.get(4));
+        }
+
+        return ctx;
+      }
+
+      return super.visitNewExpression(ctx);
+    }
+
+    private void checkCall(String mdoRef, Token methodName) {
+      String methodNameText = trimQuotes(methodName.getText());
       Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
       for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
         ModuleType moduleType = e.getKey();
@@ -176,6 +207,85 @@ public class ReferenceIndexFiller {
         .map(this::getMethodName)
         .findFirst()
         .orElse(Optional.empty());
+    }
+
+    private boolean isNotifyDescription(BSLParser.NewExpressionContext newExpression) {
+      var result = Optional.of(newExpression)
+        .map(BSLParser.NewExpressionContext::typeName)
+        .map(BSLParser.TypeNameContext::getText)
+        .filter(t -> NOTIFY_DESCRIPTION.matcher(t).find());
+      return result.isPresent();
+    }
+
+    private void addCallbackMethodCall(BSLParser.CallParamContext methodName, BSLParser.CallParamContext module) {
+      getMethodName(methodName).ifPresent((Token methodNameToken) -> getModule(module).ifPresent(mdoRef -> {
+        if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
+          checkCall(mdoRef, methodNameToken);
+        }
+
+        addMethodCall(mdoRef, documentContext.getModuleType(), trimQuotes(methodName.getText()), Ranges.create(methodName));
+      }));
+    }
+
+    private Optional<Token> getMethodName(BSLParser.CallParamContext callParamContext) {
+      return getFirstMember(callParamContext)
+        .map(BSLParser.MemberContext::constValue)
+        .map(BSLParser.ConstValueContext::string)
+        .map(BSLParser.StringContext::getStart);
+    }
+
+    private Optional<BSLParser.MemberContext> getFirstMember(BSLParser.CallParamContext callParamContext) {
+      var expression = callParamContext.expression();
+      if (expression == null) {
+        return Optional.empty();
+      }
+
+      var member = expression.member();
+      if (member.size() == 0) {
+        return Optional.empty();
+      }
+
+      return Optional.of(member.get(0));
+    }
+
+    private Optional<String> getModule(BSLParser.CallParamContext callParamContext) {
+      return getFirstMember(callParamContext)
+        .map(BSLParser.MemberContext::complexIdentifier)
+        .map(complexIdentifier -> {
+          if (isThisObject(complexIdentifier)) {
+            return MdoRefBuilder.getMdoRef(documentContext);
+          }
+
+          return MdoRefBuilder.getMdoRef(documentContext, complexIdentifier);
+        });
+    }
+
+    private boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
+      return THIS_OBJECT_PATTERN.matcher(complexIdentifier.IDENTIFIER().getText()).find();
+    }
+
+    private String trimQuotes(String text) {
+      var matcher = FIRST_QUOTE_PATTERN.matcher(text);
+      if (matcher.find()) {
+        var newText = text.substring(0, matcher.start(1)) + " " + text.substring(matcher.end(1));
+        return trimLastQuote(newText).trim();
+      }
+
+      return text.trim();
+    }
+
+    private String trimLastQuote(String text) {
+      var quoteCount = text.length() - text.replace("\"", "").length();
+      if (quoteCount % 2 == 1) {
+        String newString;
+        var quotePosition = text.lastIndexOf("\"");
+        newString = text.substring(0, quotePosition) + " ";
+        if (quotePosition + 1 < text.length()) {
+          newString += text.substring(quotePosition + 1);
+        }
+        return newString;
+      }
+      return text;
     }
   }
 
