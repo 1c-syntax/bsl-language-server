@@ -107,7 +107,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
-      // добавляем часть строки только в случае находления ее на другой строке файла
+      // добавляем часть строки только в случае нахождения ее на другой строке файла
       if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
         strings.add(partString);
         partString = "";
