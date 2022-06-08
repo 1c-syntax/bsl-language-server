@@ -26,13 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
+import com.github._1c_syntax.bsl.languageserver.utils.Modules;
+import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
@@ -42,12 +45,10 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
 
 @Component
 @RequiredArgsConstructor
@@ -82,17 +83,6 @@ public class ReferenceIndexFiller {
 
     private final DocumentContext documentContext;
 
-    private final Pattern NOTIFY_DESCRIPTION = CaseInsensitivePattern.compile(
-      "^(ОписаниеОповещения|NotifyDescription)$");
-
-    private final Pattern THIS_OBJECT_PATTERN = CaseInsensitivePattern.compile(
-      "^(ЭтотОбъект|ThisObject)$"
-    );
-
-    private final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
-      "^\\s*(\")"
-    );
-
     @Override
     public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
 
@@ -106,7 +96,7 @@ public class ReferenceIndexFiller {
         return super.visitCallStatement(ctx);
       }
 
-      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
       return super.visitCallStatement(ctx);
     }
@@ -119,7 +109,7 @@ public class ReferenceIndexFiller {
         return super.visitComplexIdentifier(ctx);
       }
 
-      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
       return super.visitComplexIdentifier(ctx);
     }
@@ -139,15 +129,21 @@ public class ReferenceIndexFiller {
 
     @Override
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
-      if (isNotifyDescription(ctx)) {
+      if (NotifyDescription.isNotifyDescription(ctx)) {
         var callParamList = ctx.doCall().callParamList().callParam();
 
-        if (callParamList.size() > 1) {
-          addCallbackMethodCall(callParamList.get(0), callParamList.get(1));
+        if (NotifyDescription.notifyDescriptionContainsHandler(callParamList)) {
+          addCallbackMethodCall(
+            callParamList.get(NotifyDescription.HANDLER_INDEX),
+            getModule(callParamList.get(NotifyDescription.HANDLER_MODULE_INDEX))
+          );
         }
 
-        if (callParamList.size() == 5) {
-          addCallbackMethodCall(callParamList.get(3), callParamList.get(4));
+        if (NotifyDescription.notifyDescriptionContainsErrorHandler(callParamList)) {
+          addCallbackMethodCall(
+            callParamList.get(NotifyDescription.HANDLER_ERROR_INDEX),
+            getModule(callParamList.get(NotifyDescription.HANDLER_ERROR_MODULE_INDEX))
+          );
         }
 
         return ctx;
@@ -157,10 +153,9 @@ public class ReferenceIndexFiller {
     }
 
     private void checkCall(String mdoRef, Token methodName) {
-      String methodNameText = trimQuotes(methodName.getText());
+      String methodNameText = Strings.trimQuotes(methodName.getText());
       Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
-      for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
-        ModuleType moduleType = e.getKey();
+      for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
           continue;
         }
@@ -172,121 +167,29 @@ public class ReferenceIndexFiller {
       index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
     }
 
-    private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
-      var modifiers = ctx.modifier();
-      Optional<Token> methodName;
-      if (ctx.globalMethodCall() != null) {
-        methodName = getMethodName(ctx.globalMethodCall());
-      } else {
-        methodName = getMethodName(ctx.accessCall());
-      }
-
-      if (modifiers.isEmpty()) {
-        return methodName;
-      } else {
-        return getMethodName(modifiers).or(() -> methodName);
-      }
-    }
-
-    private Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
-      return Optional.of(ctx.methodName().getStart());
-    }
-
-    private Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
-      return Optional.of(ctx.methodCall().methodName().getStart());
-    }
-
-    private Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
-      return getMethodName(ctx.modifier());
-    }
-
-    private Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
-      return modifiers.stream()
-        .map(BSLParser.ModifierContext::accessCall)
-        .filter(Objects::nonNull)
-        .map(this::getMethodName)
-        .findFirst()
-        .orElse(Optional.empty());
-    }
-
-    private boolean isNotifyDescription(BSLParser.NewExpressionContext newExpression) {
-      var result = Optional.of(newExpression)
-        .map(BSLParser.NewExpressionContext::typeName)
-        .map(BSLParser.TypeNameContext::getText)
-        .filter(t -> NOTIFY_DESCRIPTION.matcher(t).find());
-      return result.isPresent();
-    }
-
-    private void addCallbackMethodCall(BSLParser.CallParamContext methodName, BSLParser.CallParamContext module) {
-      getMethodName(methodName).ifPresent((Token methodNameToken) -> getModule(module).ifPresent(mdoRef -> {
+    private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
+      Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
         if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
           checkCall(mdoRef, methodNameToken);
         }
 
-        addMethodCall(mdoRef, documentContext.getModuleType(), trimQuotes(methodName.getText()), Ranges.create(methodName));
-      }));
+        addMethodCall(
+          mdoRef,
+          documentContext.getModuleType(),
+          Strings.trimQuotes(methodName.getText()),
+          Ranges.create(methodName)
+        );
+      });
     }
 
-    private Optional<Token> getMethodName(BSLParser.CallParamContext callParamContext) {
-      return getFirstMember(callParamContext)
-        .map(BSLParser.MemberContext::constValue)
-        .map(BSLParser.ConstValueContext::string)
-        .map(BSLParser.StringContext::getStart);
-    }
-
-    private Optional<BSLParser.MemberContext> getFirstMember(BSLParser.CallParamContext callParamContext) {
-      var expression = callParamContext.expression();
-      if (expression == null) {
-        return Optional.empty();
-      }
-
-      var member = expression.member();
-      if (member.size() == 0) {
-        return Optional.empty();
-      }
-
-      return Optional.of(member.get(0));
-    }
-
-    private Optional<String> getModule(BSLParser.CallParamContext callParamContext) {
-      return getFirstMember(callParamContext)
+    private String getModule(BSLParser.CallParamContext callParamContext) {
+      return NotifyDescription.getFirstMember(callParamContext)
         .map(BSLParser.MemberContext::complexIdentifier)
-        .map(complexIdentifier -> {
-          if (isThisObject(complexIdentifier)) {
-            return MdoRefBuilder.getMdoRef(documentContext);
-          }
-
-          return MdoRefBuilder.getMdoRef(documentContext, complexIdentifier);
-        });
+        .filter(Predicate.not(Modules::isThisObject))
+        .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
+        .orElse(MdoRefBuilder.getMdoRef(documentContext));
     }
 
-    private boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
-      return THIS_OBJECT_PATTERN.matcher(complexIdentifier.IDENTIFIER().getText()).find();
-    }
-
-    private String trimQuotes(String text) {
-      var matcher = FIRST_QUOTE_PATTERN.matcher(text);
-      if (matcher.find()) {
-        var newText = text.substring(0, matcher.start(1)) + " " + text.substring(matcher.end(1));
-        return trimLastQuote(newText).trim();
-      }
-
-      return text.trim();
-    }
-
-    private String trimLastQuote(String text) {
-      var quoteCount = text.length() - text.replace("\"", "").length();
-      if (quoteCount % 2 == 1) {
-        String newString;
-        var quotePosition = text.lastIndexOf("\"");
-        newString = text.substring(0, quotePosition) + " ";
-        if (quotePosition + 1 < text.length()) {
-          newString += text.substring(quotePosition + 1);
-        }
-        return newString;
-      }
-      return text;
-    }
   }
 
   @RequiredArgsConstructor
