@@ -21,27 +21,26 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
-
-import java.util.regex.Pattern;
 
 @UtilityClass
 public class Strings {
+
+  private static final int MIN_TEXT_SIZE = 2;
 
   public static String trimQuotes(String text) {
     return trimLastQuote(trimFirstQuote(text)).strip();
   }
 
   private static String trimFirstQuote(String text) {
-    if (text.length() > 2 && text.charAt(0) == '\"') {
-      return text.substring(1, text.length());
+    if (text.length() > MIN_TEXT_SIZE && text.charAt(0) == '\"') {
+      return text.substring(1);
     }
     return text;
   }
 
   private static String trimLastQuote(String text) {
-    if (text.length() > 2 && text.charAt(text.length() - 1) == '\"') {
+    if (text.length() > MIN_TEXT_SIZE && text.charAt(text.length() - 1) == '\"') {
       return text.substring(0, text.length() - 1);
     }
     return text;

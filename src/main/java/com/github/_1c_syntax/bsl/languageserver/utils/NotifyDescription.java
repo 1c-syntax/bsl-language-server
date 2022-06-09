@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -52,11 +53,11 @@ public class NotifyDescription {
     return result.isPresent();
   }
 
-  public static boolean notifyDescriptionContainsHandler(List<? extends BSLParser.CallParamContext> callParamList) {
+  public static boolean notifyDescriptionContainsHandler(Collection<?> callParamList) {
     return callParamList.size() > MIN_PARAM_LIST_SIZE;
   }
 
-  public static boolean notifyDescriptionContainsErrorHandler(List<? extends BSLParser.CallParamContext> callParamList) {
+  public static boolean notifyDescriptionContainsErrorHandler(Collection<?> callParamList) {
     return callParamList.size() == FULL_PARAM_LIST_SIZE;
   }
 

@@ -153,7 +153,7 @@ public class ReferenceIndexFiller {
     }
 
     private void checkCall(String mdoRef, Token methodName) {
-      String methodNameText = Strings.trimQuotes(methodName.getText());
+      var methodNameText = Strings.trimQuotes(methodName.getText());
       Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
