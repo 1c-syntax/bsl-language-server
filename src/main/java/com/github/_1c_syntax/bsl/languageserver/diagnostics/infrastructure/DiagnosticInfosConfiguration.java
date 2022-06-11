@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -68,21 +69,28 @@ public class DiagnosticInfosConfiguration {
 
   @Bean("diagnosticInfosByDiagnosticClass")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass() {
-    return diagnosticInfosByCode().values().stream()
+  public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass(
+    @Qualifier("diagnosticInfosByCode") Map<String, DiagnosticInfo> diagnosticInfosByCode
+  ) {
+    return diagnosticInfosByCode.values().stream()
       .collect(Collectors.toMap(DiagnosticInfo::getDiagnosticClass, Function.identity()));
   }
 
   @Bean("diagnosticInfos")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  public Collection<DiagnosticInfo> diagnosticInfos() {
-    return diagnosticInfosByCode().values();
+  public Collection<DiagnosticInfo> diagnosticInfos(
+    @Qualifier("diagnosticInfosByCode") Map<String, DiagnosticInfo> diagnosticInfosByCode
+  ) {
+    return diagnosticInfosByCode.values();
   }
 
   @Bean
   @Scope("prototype")
-  public DiagnosticInfo diagnosticInfo(@Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass) {
-    return diagnosticInfosByDiagnosticClass().get(diagnosticClass);
+  public DiagnosticInfo diagnosticInfo(
+    @Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass,
+    Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass
+  ) {
+    return diagnosticInfosByDiagnosticClass.get(diagnosticClass);
   }
 
   private DiagnosticInfo createDiagnosticInfo(

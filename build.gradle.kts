@@ -17,6 +17,7 @@ plugins {
     id("me.qoomon.git-versioning") version "6.1.4"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.7"
+    id("org.springframework.experimental.aot") version "0.11.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
@@ -27,6 +28,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
+    maven(url = "https://repo.spring.io/release")
 }
 
 group = "io.github.1c-syntax"
@@ -81,6 +83,7 @@ dependencies {
 
     // AOP
     implementation("org.aspectj", "aspectjrt", "1.9.7")
+    aotMainImplementation("org.aspectj", "aspectjrt", "1.9.7")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -346,4 +349,14 @@ nexusStaging {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            sharedLibrary.set(false)
+            buildArgs.add("--trace-class-initialization=com.github._1c_syntax.mdclasses.common.CompatibilityMode")
+            buildArgs.add("--initialize-at-build-time=com.github._1c_syntax.mdclasses.common.CompatibilityMode")
+        }
+    }
 }

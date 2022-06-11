@@ -39,7 +39,8 @@ import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -54,16 +55,19 @@ import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor
-public abstract class DiagnosticsConfiguration {
+public class DiagnosticsConfiguration {
 
   private final LanguageServerConfiguration configuration;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
+
+  @Qualifier("diagnosticInfos")
+  private final ObjectProvider<Collection<DiagnosticInfo>> diagnosticInfosProvider;
 
   @Bean
   @Scope("prototype")
   public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
 
-    Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
+    Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfosProvider.getObject();
 
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
@@ -87,9 +91,6 @@ public abstract class DiagnosticsConfiguration {
       return Collections.emptyList();
     }
   }
-
-  @Lookup("diagnosticInfos")
-  protected abstract Collection<DiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,

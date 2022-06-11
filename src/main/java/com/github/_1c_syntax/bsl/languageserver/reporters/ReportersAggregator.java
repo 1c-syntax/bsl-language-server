@@ -23,9 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -36,13 +34,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReportersAggregator {
 
-  @Autowired
   private final List<DiagnosticReporter> reporters;
 
-  @Autowired
   @Qualifier("filteredReporters")
-  @Lazy
-  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
   private final List<DiagnosticReporter> filteredReporters;
 
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
