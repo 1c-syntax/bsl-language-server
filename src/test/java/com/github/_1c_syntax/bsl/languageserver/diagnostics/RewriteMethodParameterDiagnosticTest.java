@@ -43,7 +43,8 @@ class RewriteMethodParameterDiagnosticTest extends AbstractDiagnosticTest<Rewrit
       .hasRange(9, 4, 11)
       .hasRange(21, 4, 11)
       .hasRange(26, 4, 11)
-      .hasSize(4);
+      .hasRange(37, 4, 11)
+      .hasSize(6);
 
   }
 }

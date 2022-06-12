@@ -58,16 +58,14 @@ import java.util.stream.Stream;
   tags = {
     DiagnosticTag.SUSPICIOUS
   }
-
 )
 
 @RequiredArgsConstructor
 public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   public static final int RULE_ASSIGNMENT = BSLParser.RULE_assignment;
   private static final Set<Integer> ROOTS_OF_DEF_OR_REFS = Set.of(
-    RULE_ASSIGNMENT, BSLParser.RULE_statement, BSLParser.RULE_sub
+    RULE_ASSIGNMENT, BSLParser.RULE_statement, BSLParser.RULE_subCodeBlock, BSLParser.RULE_fileCodeBlock
   );
-  public static final int COUNT_OF_PAIR_FOR_SELF_ASSIGN = 2;
   private final ReferenceIndex referenceIndex;
 
   @Override
@@ -112,12 +110,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
         if (references.size() == 1) {
           return true;
         }
-        final var nextRef = references.get(1);
-        if (nextRef.getOccurrenceType() == OccurrenceType.REFERENCE
-          && isSelfAssign(firstDefIntoAssign, nextRef)) {
-          return references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN
-            && isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
-        }
+        return noneWritingToDefOrSelfAssign(firstDefIntoAssign, references.get(1));
       }
     }
     return false;
@@ -148,9 +141,9 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     // 1,9 1,4
   }
 
-  private boolean isSelfAssign(Reference firstDefIntoAssign, Reference reference) {
+  private boolean noneWritingToDefOrSelfAssign(Reference defRef, Reference nextRef) {
     final var defNode = Trees.findNodeContainsPosition(documentContext.getAst(),
-      firstDefIntoAssign.getSelectionRange().getStart());
+      defRef.getSelectionRange().getStart());
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
@@ -158,20 +151,27 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(context -> Trees.getRootParent(context, ROOTS_OF_DEF_OR_REFS))
       .filter(rootContext -> rootContext.getRuleIndex() == RULE_ASSIGNMENT);
     if (assignment.isEmpty()) {
-      return false;
+      return true;
     }
-    final var refContext = Trees.findNodeContainsPosition(assignment.get(), reference.getSelectionRange().getStart())
-      .map(TerminalNode::getParent);
 
+    final var refContext = Trees.findNodeContainsPosition(assignment.get(), nextRef.getSelectionRange().getStart())
+      .map(TerminalNode::getParent);
+    if (refContext.isEmpty()){
+      return true;
+    }
     return isVarNameOnlyIntoExpression(assignment.get(), refContext);
   }
 
   private static boolean isVarNameOnlyIntoExpression(BSLParserRuleContext assignment, Optional<RuleNode> refContext) {
     return refContext
       .filter(BSLParser.ComplexIdentifierContext.class::isInstance)
+      .map(BSLParser.ComplexIdentifierContext.class::cast)
+      .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
+      .filter(node -> node.getChildCount() == 1)
       .filter(BSLParser.MemberContext.class::isInstance)
       .map(RuleNode::getParent)
+      .filter(node -> node.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .map(RuleNode::getParent)
       .filter(ruleNode -> ruleNode == assignment)
@@ -191,6 +191,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       variable.getVariableNameRange(),
       "0"));
     resultRefs.addAll(refsForIssue);
+
     diagnosticStorage.addDiagnostic(references.get(0).getSelectionRange(), info.getMessage(variable.getName()), resultRefs);
   }
 }
