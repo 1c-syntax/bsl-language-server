@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -47,7 +46,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,10 +60,6 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
-  public static final int RULE_ASSIGNMENT = BSLParser.RULE_assignment;
-  private static final Set<Integer> ROOTS_OF_DEF_OR_REFS = Set.of(
-    RULE_ASSIGNMENT, BSLParser.RULE_statement, BSLParser.RULE_subCodeBlock, BSLParser.RULE_fileCodeBlock
-  );
   private final ReferenceIndex referenceIndex;
 
   @Override
@@ -147,9 +141,9 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
-      .map(BSLParser.LValueContext.class::cast)
-      .map(context -> Trees.getRootParent(context, ROOTS_OF_DEF_OR_REFS))
-      .filter(rootContext -> rootContext.getRuleIndex() == RULE_ASSIGNMENT);
+      .map(RuleNode::getParent)
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .map(BSLParser.AssignmentContext.class::cast);
     if (assignment.isEmpty()) {
       return true;
     }
@@ -159,22 +153,20 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     if (refContext.isEmpty()){
       return true;
     }
-    return isVarNameOnlyIntoExpression(assignment.get(), refContext);
+    return isVarNameOnlyIntoExpression(refContext);
   }
 
-  private static boolean isVarNameOnlyIntoExpression(BSLParserRuleContext assignment, Optional<RuleNode> refContext) {
+  private static boolean isVarNameOnlyIntoExpression(Optional<RuleNode> refContext) {
     return refContext
       .filter(BSLParser.ComplexIdentifierContext.class::isInstance)
       .map(BSLParser.ComplexIdentifierContext.class::cast)
       .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
-      .filter(node -> node.getChildCount() == 1)
+      .filter(memberContext -> memberContext.getChildCount() == 1)
       .filter(BSLParser.MemberContext.class::isInstance)
       .map(RuleNode::getParent)
-      .filter(node -> node.getChildCount() == 1)
+      .filter(expression -> expression.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
-      .map(RuleNode::getParent)
-      .filter(ruleNode -> ruleNode == assignment)
       .isPresent();
   }
 
