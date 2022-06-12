@@ -29,6 +29,8 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.util.Positions;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
@@ -409,6 +411,46 @@ public final class Trees {
   }
 
   /**
+   * Получение ноды в дереве по позиции в документе.
+   *
+   * @param tree - дерево, в котором ищем
+   * @param position - искомая позиция
+   * @return терминальная нода на указанной позиции, если есть
+   */
+  public static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+
+    if (tree.getTokens().isEmpty()) {
+      return Optional.empty();
+    }
+
+    var start = tree.getStart();
+    var stop = tree.getStop();
+
+    if (!(positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop))) {
+      return Optional.empty();
+    }
+
+    var children = Trees.getChildren(tree);
+
+    for (Tree child : children) {
+      if (child instanceof TerminalNode) {
+        var terminalNode = (TerminalNode) child;
+        var token = terminalNode.getSymbol();
+        if (tokenContainsPosition(token, position)) {
+          return Optional.of(terminalNode);
+        }
+      } else {
+        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
+        if (node.isPresent()) {
+          return node;
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  /**
    * @param tokens - список токенов из DocumentContext
    * @param token  - токен, на строке которого требуется найти висячий комментарий
    * @return - токен с комментарием, если он найден
@@ -493,5 +535,22 @@ public final class Trees {
     return recursive
       && ruleContext.children != null
       && ruleContext.children.stream().anyMatch(Trees::treeContainsErrors);
+  }
+
+  private static boolean tokenContainsPosition(Token token, Position position) {
+    var tokenRange = Ranges.create(token);
+    return Ranges.containsPosition(tokenRange, position);
+  }
+
+  private static boolean positionIsBeforeOrOnToken(Position position, Token token) {
+    var tokenRange = Ranges.create(token);
+    var end = tokenRange.getEnd();
+    return Positions.isBefore(position, end) || end.equals(position);
+  }
+
+  private static boolean positionIsAfterOrOnToken(Position position, Token token) {
+    var tokenRange = Ranges.create(token);
+    var start = tokenRange.getStart();
+    return Positions.isBefore(start, position) || start.equals(position);
   }
 }

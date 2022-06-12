@@ -91,7 +91,7 @@ public class SelectionRangeProvider {
 
     // Result must contains all elements from input
     return positions.stream()
-      .map(position -> findNodeContainsPosition(ast, position))
+      .map(position -> Trees.findNodeContainsPosition(ast, position))
       .map(terminalNode -> terminalNode.orElse(null))
       .map(SelectionRangeProvider::toSelectionRange)
       .collect(Collectors.toList());
@@ -214,56 +214,6 @@ public class SelectionRangeProvider {
     var ifBranch = (BSLParser.IfBranchContext) ctx;
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
-  }
-
-  private static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
-
-    if (tree.getTokens().isEmpty()) {
-      return Optional.empty();
-    }
-
-    var start = tree.getStart();
-    var stop = tree.getStop();
-
-    if (!(positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop))) {
-      return Optional.empty();
-    }
-
-    var children = Trees.getChildren(tree);
-
-    for (Tree child : children) {
-      if (child instanceof TerminalNode) {
-        var terminalNode = (TerminalNode) child;
-        var token = terminalNode.getSymbol();
-        if (tokenContainsPosition(token, position)) {
-          return Optional.of(terminalNode);
-        }
-      } else {
-        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
-        if (node.isPresent()) {
-          return node;
-        }
-      }
-    }
-
-    return Optional.empty();
-  }
-
-  private static boolean tokenContainsPosition(Token token, Position position) {
-    var tokenRange = Ranges.create(token);
-    return Ranges.containsPosition(tokenRange, position);
-  }
-
-  private static boolean positionIsBeforeOrOnToken(Position position, Token token) {
-    var tokenRange = Ranges.create(token);
-    var end = tokenRange.getEnd();
-    return Positions.isBefore(position, end) || end.equals(position);
-  }
-
-  private static boolean positionIsAfterOrOnToken(Position position, Token token) {
-    var tokenRange = Ranges.create(token);
-    var start = tokenRange.getStart();
-    return Positions.isBefore(start, position) || start.equals(position);
   }
 
 }
