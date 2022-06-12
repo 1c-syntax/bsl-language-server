@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.util.Positions;
 
 import java.util.ArrayList;
 import java.util.List;
