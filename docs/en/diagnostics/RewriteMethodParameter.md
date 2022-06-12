@@ -1,4 +1,4 @@
-# <Diagnostic name> (RewriteMethodParameter)
+# Rewrite method parameter (RewriteMethodParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

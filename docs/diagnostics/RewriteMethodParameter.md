@@ -1,4 +1,4 @@
-# <Diagnostic name> (RewriteMethodParameter)
+# Перезапись параметров метода (RewriteMethodParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
