@@ -38,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -60,6 +61,7 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
+  private static final int COUNT_OF_PAIR_FOR_SELF_ASSIGN = 2;
   private final ReferenceIndex referenceIndex;
 
   @Override
@@ -70,7 +72,9 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(this::isOverwrited)
       .filter(Optional::isPresent)
       .map(Optional::get)
-      .forEach(variableSymbolListPair -> fireIssue(variableSymbolListPair.getLeft(), variableSymbolListPair.getRight()));
+      .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
+        variableSymbolReferenceListTriple.getMiddle(),
+        variableSymbolReferenceListTriple.getRight()));
 
   }
 
@@ -89,25 +93,10 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .findFirst().stream();
   }
 
-  private Optional<Pair<VariableSymbol, List<Reference>>> isOverwrited(VariableSymbol variable) {
+  private Optional<Triple<VariableSymbol, Reference, List<Reference>>> isOverwrited(VariableSymbol variable) {
     final var references = getSortedReferencesByLocation(variable);
-    if (isOverwrited(references)) {
-      return Optional.of(Pair.of(variable, references));
-    }
-    return Optional.empty();
-  }
-
-  private boolean isOverwrited(List<Reference> references) {
-    if (!references.isEmpty()) {
-      final var firstDefIntoAssign = references.get(0);
-      if (firstDefIntoAssign.getOccurrenceType() == OccurrenceType.DEFINITION) {
-        if (references.size() == 1) {
-          return true;
-        }
-        return noneWritingToDefOrSelfAssign(firstDefIntoAssign, references.get(1));
-      }
-    }
-    return false;
+    return isOverwrited(references)
+      .map(defReference -> Triple.of(variable, defReference, references));
   }
 
   private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
@@ -135,7 +124,29 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     // 1,9 1,4
   }
 
-  private boolean noneWritingToDefOrSelfAssign(Reference defRef, Reference nextRef) {
+  private Optional<Reference> isOverwrited(List<Reference> references) {
+    if (!references.isEmpty()) {
+      final var firstDefIntoAssign = references.get(0);
+      if (firstDefIntoAssign.getOccurrenceType() == OccurrenceType.DEFINITION) {
+        if (references.size() == 1) {
+          return Optional.of(firstDefIntoAssign);
+        }
+        var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
+        if (refContextInsideDefAssign.isEmpty()){
+          return Optional.of(firstDefIntoAssign);
+        }
+        var isSelfAssign = Boolean.TRUE.equals(refContextInsideDefAssign
+          .map(RewriteMethodParameterDiagnostic::isVarNameOnlyIntoExpression)
+          .orElseThrow());
+        if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN){
+          return isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<RuleNode> getRefContextInsideDefAssign(Reference defRef, Reference nextRef) {
     final var defNode = Trees.findNodeContainsPosition(documentContext.getAst(),
       defRef.getSelectionRange().getStart());
     final var assignment = defNode
@@ -145,19 +156,15 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
     if (assignment.isEmpty()) {
-      return true;
+      return Optional.empty();
     }
 
-    final var refContext = Trees.findNodeContainsPosition(assignment.get(), nextRef.getSelectionRange().getStart())
+    return Trees.findNodeContainsPosition(assignment.get(), nextRef.getSelectionRange().getStart())
       .map(TerminalNode::getParent);
-    if (refContext.isEmpty()){
-      return true;
-    }
-    return isVarNameOnlyIntoExpression(refContext);
   }
 
-  private static boolean isVarNameOnlyIntoExpression(Optional<RuleNode> refContext) {
-    return refContext
+  private static boolean isVarNameOnlyIntoExpression(RuleNode refContext) {
+    return Optional.of(refContext)
       .filter(BSLParser.ComplexIdentifierContext.class::isInstance)
       .map(BSLParser.ComplexIdentifierContext.class::cast)
       .filter(node -> node.getChildCount() == 1)
@@ -170,7 +177,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .isPresent();
   }
 
-  private void fireIssue(VariableSymbol variable, List<Reference> references) {
+  private void fireIssue(VariableSymbol variable, Reference nodeForIssue, List<Reference> references) {
     var refsForIssue = references.stream()
       .map(reference -> RelatedInformation.create(
         documentContext.getUri(),
@@ -184,6 +191,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       "0"));
     resultRefs.addAll(refsForIssue);
 
-    diagnosticStorage.addDiagnostic(references.get(0).getSelectionRange(), info.getMessage(variable.getName()), resultRefs);
+    diagnosticStorage.addDiagnostic(nodeForIssue.getSelectionRange(), info.getMessage(variable.getName()), resultRefs);
   }
 }
