@@ -86,6 +86,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
 
   private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
+      // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
       .filter(variable -> parameterDefinition.getRange().getStart().equals(variable.getSelectionRange().getStart()))
       .filter(VariableSymbol.class::isInstance)
@@ -132,13 +133,13 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
           return Optional.of(firstDefIntoAssign);
         }
         var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
-        if (refContextInsideDefAssign.isEmpty()){
+        if (refContextInsideDefAssign.isEmpty()) {
           return Optional.of(firstDefIntoAssign);
         }
         var isSelfAssign = Boolean.TRUE.equals(refContextInsideDefAssign
           .map(RewriteMethodParameterDiagnostic::isVarNameOnlyIntoExpression)
           .orElseThrow());
-        if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN){
+        if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
           return isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
         }
       }
@@ -155,11 +156,9 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(RuleNode::getParent)
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
-    if (assignment.isEmpty()) {
-      return Optional.empty();
-    }
 
-    return Trees.findNodeContainsPosition(assignment.get(), nextRef.getSelectionRange().getStart())
+    return assignment.flatMap(assignContext ->
+        Trees.findNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
       .map(TerminalNode::getParent);
   }
 
@@ -169,7 +168,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(BSLParser.ComplexIdentifierContext.class::cast)
       .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
-      .filter(memberContext -> memberContext.getChildCount() == 1)
       .filter(BSLParser.MemberContext.class::isInstance)
       .map(RuleNode::getParent)
       .filter(expression -> expression.getChildCount() == 1)
