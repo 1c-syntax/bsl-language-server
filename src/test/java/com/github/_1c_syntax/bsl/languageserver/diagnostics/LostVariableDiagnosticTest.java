@@ -53,6 +53,6 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
 
   }
   String getMessage(String name){
-    return String.format("Предыдущее значение <%s> не используется", name);
+    return String.format("Значение <%s> не используется", name);
   }
 }
