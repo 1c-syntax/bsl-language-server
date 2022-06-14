@@ -246,6 +246,11 @@ public final class FormatProvider {
         newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine - 1));
       }
 
+      if (needNewLine && tokenType == BSLLexer.DOT && additionalIndentLevel < 0) {
+        currentIndentLevel++;
+        additionalIndentLevel = currentIndentLevel;
+      }
+
       // Decrement indent on operators ends and right paren.
       if (needDecrementIndent(tokenType)) {
         currentIndentLevel--;

@@ -232,6 +232,32 @@ class FormatProviderTest {
   }
 
   @Test
+  void testFormatFluent() throws IOException {
+    var originalFile = new File("./src/test/resources/providers/formatFluent.bsl");
+    var formattedFile = new File("./src/test/resources/providers/format_formattedFluent.bsl");
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(2, true));
+
+    String fileContent = FileUtils.readFileToString(originalFile, StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(formattedFile, StandardCharsets.UTF_8);
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+  }
+
+  @Test
   void testFormatUnaryMinus() {
 
     // given
