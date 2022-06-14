@@ -30,13 +30,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -63,7 +64,7 @@ import java.util.stream.Collectors;
 )
 
 @RequiredArgsConstructor
-public class LostVariableDiagnostic extends AbstractVisitorDiagnostic {
+public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private static final Set<VariableKind> CHECKING_VARIABLE_KINDS = EnumSet.of(
 //    VariableKind.MODULE,
@@ -71,6 +72,8 @@ public class LostVariableDiagnostic extends AbstractVisitorDiagnostic {
     VariableKind.DYNAMIC
   );
   private final ReferenceIndex referenceIndex;
+
+  // TODO нужна опция для возможности работы правила в модулях форм и модулях объектов, могут быть FP
 
   @Value
   private static class VarData implements Comparable<VarData> {
@@ -83,18 +86,15 @@ public class LostVariableDiagnostic extends AbstractVisitorDiagnostic {
     public int compareTo(@NotNull LostVariableDiagnostic.VarData o) {
       return compare(this.getDefRange(), o.getDefRange());
     }
-
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  protected void check() {
     documentContext.getSymbolTree().getVariables().stream()
       .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .flatMap(variable -> getVarData(variable).stream())
       .filter(this::isLostVariable)
       .forEach(this::fireIssue);
-
-    return defaultResult();
   }
 
   private List<VarData> getVarData(VariableSymbol variable) {
@@ -149,36 +149,114 @@ public class LostVariableDiagnostic extends AbstractVisitorDiagnostic {
     // TODO ? быстрее найти сначала метод в дереве, а потом уже переменную в дерере метода?
     //  чтобы постоянно не искать по всему дереву
     final var defNode = Trees.findNodeContainsPosition(documentContext.getAst(),
-      varData.getDefRange().getStart());
-    if (defNode.isEmpty()) {
-      return false; // вдруг каким-то чудом все-таки не найдем )
-    }
-    var defCodeBlock = getCodeBlock(defNode);
-    final var rewriteNodeInsideDefCodeBlock = defCodeBlock
-      .flatMap(context -> Trees.findNodeContainsPosition(context,
-        varData.rewriteRange.getStart()));
-    if (rewriteNodeInsideDefCodeBlock.isEmpty()) {
-      return false;
-    }
-    var rewriteCodeBlock = getCodeBlock(rewriteNodeInsideDefCodeBlock);
-    if (defCodeBlock.get() != rewriteCodeBlock.get() && varData.references.isEmpty()) {
-      return false;
-    }
-    return defCodeBlock.get() == rewriteCodeBlock.get()
-      || rewriteCodeBlock
-        .filter(codeBlock -> hasReferenceOutsideRewriteBlock(varData.references, codeBlock))
-        .isEmpty();
-  }
-
-  private static Optional<BSLParser.CodeBlockContext> getCodeBlock(Optional<TerminalNode> defNode) {
-    return defNode
+      varData.getDefRange().getStart())
       .map(TerminalNode::getParent)
-      .map(BSLParserRuleContext.class::cast)
-      .map(node -> Trees.getRootParent(node, BSLParser.RULE_codeBlock))
-      .filter(BSLParser.CodeBlockContext.class::isInstance)
-      .map(BSLParser.CodeBlockContext.class::cast);
+      .orElseThrow();
+//    if (defNode.isEmpty()) {
+//      return false; // вдруг каким-то чудом все-таки не найдем )
+//    }
+//    var defNode = defNode.orElseThrow();
+    var defCodeBlock = getCodeBlock(defNode);
+    final var rewriteNodeInsideDefCodeBlockOpt = defCodeBlock
+      .flatMap(context -> Trees.findNodeContainsPosition(context,
+        varData.rewriteRange.getStart()))
+      .map(TerminalNode::getParent);
+    if (rewriteNodeInsideDefCodeBlockOpt.isEmpty()) {
+      return false;
+    }
+    var rewriteNode = rewriteNodeInsideDefCodeBlockOpt.get();
+    var rewriteCodeBlock = getCodeBlock(rewriteNode).orElseThrow();
+
+    var insideOneBlock = defCodeBlock.get() == rewriteCodeBlock;
+    if (!insideOneBlock) {
+      if (varData.references.isEmpty()) {
+        return false;
+      }
+      var rewriteStatement = getRootStatement(rewriteNode);
+      if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
+        return false;
+      }
+//      return true;
+    }
+    if (insideOneBlock){
+      if (!varData.references.isEmpty()) {
+        var rewriteStatement = getRootStatement(rewriteNode);
+        if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
+          return false;
+        }
+      }
+//      //var defParentExpression = getParentExpression(defNode);
+//      var rewriteParentExpression = getParentExpression(rewriteNode);
+//      var noneSelfAssign = rewriteParentExpression.isEmpty();
+//      if (noneSelfAssign){
+//        return true;
+//      }
+//
+//      var defParentStatement = getRootStatement(defNode);
+//      var rewriteParentStatement = getRootStatement(rewriteParentExpression);
+//      if (defParentStatement != rewriteParentStatement){
+//        return true;
+//      }
+//      return !isVarNameOnlyIntoExpression(rewriteNode);
+    }
+    return insideOneBlock
+      || !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
+//      return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
   }
 
+  private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
+    return getRootNode(context, BSLParser.RULE_codeBlock, BSLParser.CodeBlockContext.class);
+//    return Optional.of(context)
+//      .map(BSLParserRuleContext.class::cast)
+//      .map(node -> Trees.getRootParent(node, BSLParser.RULE_codeBlock))
+//      .filter(BSLParser.CodeBlockContext.class::isInstance)
+//      .map(BSLParser.CodeBlockContext.class::cast);
+  }
+
+  private static Optional<BSLParser.ExpressionContext> getParentExpression(RuleNode context) {
+    return getRootNode(context, BSLParser.RULE_expression, BSLParser.ExpressionContext.class);
+//    return Optional.of(context)
+//      .map(BSLParserRuleContext.class::cast)
+//      .map(node -> Trees.getRootParent(node, BSLParser.RULE_expression))
+//      .filter(BSLParser.ExpressionContext.class::isInstance)
+//      .map(BSLParser.ExpressionContext.class::cast)
+//      .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
+  }
+
+  private static <T extends BSLParserRuleContext> Optional<T> getRootNode(RuleNode context, int index, Class<T> klass) {
+    return Optional.of(context)
+      .map(BSLParserRuleContext.class::cast)
+      .map(node -> Trees.getRootParent(node, index))
+      .filter(klass::isInstance)
+      .map(klass::cast);
+  }
+
+//  private BSLParser.StatementContext getRootStatement(TerminalNode terminalNode) {
+//    return getRootStatement(terminalNode.getParent());
+//  }
+
+  private static BSLParser.StatementContext getRootStatement(RuleNode node) {
+    return getRootNode(node, BSLParser.RULE_statement, BSLParser.StatementContext.class)
+//    return Optional.of(node)
+//      .map(BSLParserRuleContext.class::cast)
+//      .map(node1 -> Trees.getRootParent(node1, BSLParser.RULE_statement))
+//      .filter(BSLParser.StatementContext.class::isInstance)
+//      .map(BSLParser.StatementContext.class::cast)
+      .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
+  }
+
+  private static boolean isVarNameOnlyIntoExpression(RuleNode context) {
+    return Optional.of(context)
+      .filter(BSLParser.ComplexIdentifierContext.class::isInstance)
+      .map(BSLParser.ComplexIdentifierContext.class::cast)
+      .filter(node -> node.getChildCount() == 1)
+      .map(RuleNode::getParent)
+      .filter(BSLParser.MemberContext.class::isInstance)
+      .map(RuleNode::getParent)
+      .filter(expression -> expression.getChildCount() == 1)
+      .filter(BSLParser.ExpressionContext.class::isInstance)
+      .isPresent();
+  }
   private static boolean hasReferenceOutsideRewriteBlock(List<Reference> references, BSLParserRuleContext codeBlock) {
     return references.stream()
       .map(Reference::getSelectionRange)
