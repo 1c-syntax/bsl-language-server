@@ -66,11 +66,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LostVariableDiagnostic extends AbstractDiagnostic {
 
-  private static final Set<VariableKind> CHECKING_VARIABLE_KINDS = EnumSet.of(
-//    VariableKind.MODULE,
-//    VariableKind.LOCAL, // TODO учесть разные типы переменных
-    VariableKind.DYNAMIC
-  );
   private final ReferenceIndex referenceIndex;
 
   // TODO нужна опция для возможности работы правила в модулях форм и модулях объектов, могут быть FP
@@ -91,7 +86,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
     documentContext.getSymbolTree().getVariables().stream()
-      .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .flatMap(variable -> getVarData(variable).stream())
       .filter(this::isLostVariable)
       .forEach(this::fireIssue);
@@ -291,6 +285,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       )).collect(Collectors.toList());
     final var message = info.getMessage(varData.getName());
     diagnosticStorage.addDiagnostic(varData.getDefRange(), message);
-//    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
+//  TODO  diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
   }
 }
