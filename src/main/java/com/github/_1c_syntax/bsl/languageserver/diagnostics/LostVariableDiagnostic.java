@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -45,10 +44,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -58,7 +55,7 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.UNPREDICTABLE,
-    DiagnosticTag.ERROR
+    DiagnosticTag.BADPRACTICE
   }
 
 )
@@ -69,6 +66,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private final ReferenceIndex referenceIndex;
 
   // TODO нужна опция для возможности работы правила в модулях форм и модулях объектов, могут быть FP
+  // TODO нужна опция для возможности работы правила с переменными модуля и глобальными переменными, могут быть FP
 
   @Value
   private static class VarData implements Comparable<VarData> {
@@ -146,10 +144,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       varData.getDefRange().getStart())
       .map(TerminalNode::getParent)
       .orElseThrow();
-//    if (defNode.isEmpty()) {
-//      return false; // вдруг каким-то чудом все-таки не найдем )
-//    }
-//    var defNode = defNode.orElseThrow();
+
     var defCodeBlock = getCodeBlock(defNode);
     final var rewriteNodeInsideDefCodeBlockOpt = defCodeBlock
       .flatMap(context -> Trees.findNodeContainsPosition(context,
@@ -176,10 +171,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
         .dropWhile(statementContext -> statementContext != defStatement)
         .skip(1)
         .anyMatch(statementContext -> statementContext.preprocessor() != null);
-      if (hasPreprocessorBetween){
-        return false;
-      }
-      return true;
+      return !hasPreprocessorBetween;
 //      //var defParentExpression = getParentExpression(defNode);
 //      var rewriteParentExpression = getParentExpression(rewriteNode);
 //      var noneSelfAssign = rewriteParentExpression.isEmpty();
@@ -204,11 +196,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       return false;
     }
     return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
-//      return true;
-//    }
-//    return insideOneBlock
-//      || !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
-//      return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
   }
 
   private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
@@ -278,7 +265,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
         "+1"
       )).collect(Collectors.toList());
     final var message = info.getMessage(varData.getName());
-    diagnosticStorage.addDiagnostic(varData.getDefRange(), message);
-//  TODO  diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
+//    diagnosticStorage.addDiagnostic(varData.getDefRange(), message);
+    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
   }
 }
