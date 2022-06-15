@@ -162,23 +162,24 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     var rewriteCodeBlock = getCodeBlock(rewriteNode).orElseThrow();
 
     var insideOneBlock = defCodeBlock.get() == rewriteCodeBlock;
-    if (!insideOneBlock) {
-      if (varData.references.isEmpty()) {
-        return false;
-      }
-      var rewriteStatement = getRootStatement(rewriteNode);
-      if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
-        return false;
-      }
-//      return true;
-    }
-    if (insideOneBlock){
+    if (insideOneBlock) {
       if (!varData.references.isEmpty()) {
         var rewriteStatement = getRootStatement(rewriteNode);
         if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
           return false;
         }
       }
+      var defStatement = getRootStatement(defNode);
+      var hasPreprocessorBetween = defStatement.getParent().children.stream()
+        .filter(BSLParser.StatementContext.class::isInstance)
+        .map(BSLParser.StatementContext.class::cast)
+        .dropWhile(statementContext -> statementContext != defStatement)
+        .skip(1)
+        .anyMatch(statementContext -> statementContext.preprocessor() != null);
+      if (hasPreprocessorBetween){
+        return false;
+      }
+      return true;
 //      //var defParentExpression = getParentExpression(defNode);
 //      var rewriteParentExpression = getParentExpression(rewriteNode);
 //      var noneSelfAssign = rewriteParentExpression.isEmpty();
@@ -192,28 +193,30 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 //        return true;
 //      }
 //      return !isVarNameOnlyIntoExpression(rewriteNode);
+//    } else {
     }
-    return insideOneBlock
-      || !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
+
+    if (varData.references.isEmpty()) {
+      return false;
+    }
+    var rewriteStatement = getRootStatement(rewriteNode);
+    if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
+      return false;
+    }
+    return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
+//      return true;
+//    }
+//    return insideOneBlock
+//      || !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
 //      return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
   }
 
   private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
     return getRootNode(context, BSLParser.RULE_codeBlock, BSLParser.CodeBlockContext.class);
-//    return Optional.of(context)
-//      .map(BSLParserRuleContext.class::cast)
-//      .map(node -> Trees.getRootParent(node, BSLParser.RULE_codeBlock))
-//      .filter(BSLParser.CodeBlockContext.class::isInstance)
-//      .map(BSLParser.CodeBlockContext.class::cast);
   }
 
   private static Optional<BSLParser.ExpressionContext> getParentExpression(RuleNode context) {
     return getRootNode(context, BSLParser.RULE_expression, BSLParser.ExpressionContext.class);
-//    return Optional.of(context)
-//      .map(BSLParserRuleContext.class::cast)
-//      .map(node -> Trees.getRootParent(node, BSLParser.RULE_expression))
-//      .filter(BSLParser.ExpressionContext.class::isInstance)
-//      .map(BSLParser.ExpressionContext.class::cast)
 //      .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
   }
 
@@ -225,17 +228,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       .map(klass::cast);
   }
 
-//  private BSLParser.StatementContext getRootStatement(TerminalNode terminalNode) {
-//    return getRootStatement(terminalNode.getParent());
-//  }
-
   private static BSLParser.StatementContext getRootStatement(RuleNode node) {
     return getRootNode(node, BSLParser.RULE_statement, BSLParser.StatementContext.class)
-//    return Optional.of(node)
-//      .map(BSLParserRuleContext.class::cast)
-//      .map(node1 -> Trees.getRootParent(node1, BSLParser.RULE_statement))
-//      .filter(BSLParser.StatementContext.class::isInstance)
-//      .map(BSLParser.StatementContext.class::cast)
       .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
   }
 

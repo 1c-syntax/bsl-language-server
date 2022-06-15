@@ -48,7 +48,9 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 31, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 53, 7, 19)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 74, 2, 14)
-      .hasSize(7);
+      .hasMessageOnRange(getMessage("Файл"), 116, 4, 8)
+      .hasMessageOnRange(getMessage("ЭтоОшибкаБлокировки"), 195, 8, 27)
+      .hasSize(9);
     ;
 
   }
