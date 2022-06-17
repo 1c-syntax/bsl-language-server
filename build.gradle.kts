@@ -355,8 +355,14 @@ graalvmNative {
     binaries {
         named("main") {
             sharedLibrary.set(false)
+            buildArgs.add("--tool:lsp")
             buildArgs.add("--trace-class-initialization=com.github._1c_syntax.mdclasses.common.CompatibilityMode")
             buildArgs.add("--initialize-at-build-time=com.github._1c_syntax.mdclasses.common.CompatibilityMode")
+
+            buildArgs.add("-H:JNIConfigurationFiles=$rootDir/graalvm/jni-config.json")
+            buildArgs.add("-H:DynamicProxyConfigurationFiles=$rootDir/graalvm/proxy-config.json")
+            buildArgs.add("-H:ReflectionConfigurationFiles=$rootDir/graalvm/reflect-config.json")
+            buildArgs.add("-H:ResourceConfigurationFiles=$rootDir/graalvm/resource-config.json")
         }
     }
 }
