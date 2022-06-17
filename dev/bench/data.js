@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1655485316709,
+  "lastUpdate": 1655485587655,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -17918,6 +17918,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7736130169052349",
             "extra": "mean: 43.59377193450928 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb7ab57882e86f61dfe0495be59ef839ef89afb9",
+          "message": "Merge pull request #2812 from 1c-syntax/feature/formatFluent",
+          "timestamp": "2022-06-17T16:57:41Z",
+          "tree_id": "cafa260ca218265ad1ada8af571b42c026a20867",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cb7ab57882e86f61dfe0495be59ef839ef89afb9"
+        },
+        "date": 1655485585408,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 42.728244145711265,
+            "unit": "sec",
+            "range": "stddev: 0.5218983933900613",
+            "extra": "mean: 42.728244145711265 sec\nrounds: 3"
           }
         ]
       }
