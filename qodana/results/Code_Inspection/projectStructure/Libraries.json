@@ -13,9 +13,9 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.12.0/419b5181a4b2d054bf8ff764fceb67df09d87e7d/org.eclipse.lsp4j-0.12.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.14.0/5dc1057a78cce843523642df9de9bdc86b782eb9/org.eclipse.lsp4j-0.14.0.jar!/"
       ]
     },
     {
@@ -175,15 +175,15 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.12.0/80607078ceb77f92c6bfec3cdec050d3222efdff/org.eclipse.lsp4j.generator-0.12.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.14.0/ea21e3acbf5fda402531369e856bdc76d5ac6719/org.eclipse.lsp4j.generator-0.14.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.12.0/8a80d1368f19a2f6e328e41b9bc68e53c628c68b/org.eclipse.lsp4j.jsonrpc-0.12.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.14.0/159ed9db9c8a31b5ba1edaf2ae3548e875c7bf9c/org.eclipse.lsp4j.jsonrpc-0.14.0.jar!/"
       ]
     },
     {

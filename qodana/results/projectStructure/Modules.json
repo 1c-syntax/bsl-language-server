@@ -64,7 +64,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
           "type": "Library"
         },
         {
@@ -224,11 +224,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
           "type": "Library"
         },
         {
@@ -734,7 +734,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
           "type": "Library"
         },
         {
@@ -842,11 +842,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
           "type": "Library"
         },
         {

@@ -26,12 +26,12 @@
       "version": "2.6.7"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j",
-      "version": "0.12.0"
+      "version": "0.14.0"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:0.21.0",
@@ -346,20 +346,20 @@
       "version": "1.29"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.12.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.generator",
-      "version": "0.12.0"
+      "version": "0.14.0"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.jsonrpc",
-      "version": "0.12.0"
+      "version": "0.14.0"
     },
     {
       "ideaName": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
