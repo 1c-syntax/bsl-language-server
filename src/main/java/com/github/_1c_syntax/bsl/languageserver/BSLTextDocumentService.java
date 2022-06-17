@@ -145,6 +145,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
@@ -153,7 +154,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> documentSymbolProvider.getDocumentSymbols(documentContext));
+    return CompletableFuture.supplyAsync(() ->
+      documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+        .map(Either::<SymbolInformation, DocumentSymbol>forRight)
+        .collect(Collectors.toList())
+    );
   }
 
   @Override

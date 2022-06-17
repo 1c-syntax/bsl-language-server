@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -39,10 +37,9 @@ public final class DocumentSymbolProvider {
    */
   public static final String LABEL = "BSL Language Server";
 
-  public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+  public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .map(DocumentSymbolProvider::toDocumentSymbol)
-      .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());
   }
 

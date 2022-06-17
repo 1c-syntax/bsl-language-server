@@ -60,7 +60,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "0.21.0") {
