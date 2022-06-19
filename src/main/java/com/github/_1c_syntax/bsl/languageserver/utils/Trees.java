@@ -28,6 +28,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Predicate;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
@@ -103,7 +104,7 @@ public final class Trees {
     if ( t==null ) return null;
 
     int n = t.getChildCount();
-    for (int i = 0 ; i < n ; i++){
+    for (var i = 0 ; i < n ; i++){
       final var child = t.getChild(i);
       if (child instanceof BSLParserRuleContext) {
         BSLParserRuleContext u = _findNodeSuchThat((BSLParserRuleContext)child, pred);
@@ -335,6 +336,26 @@ public final class Trees {
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
    *
+   * @param context - нода, для которой ищем родителя
+   * @param index- BSLParser.RULE_*
+   * @param klass - класс типа
+   * @param <T> - тип
+   * @return - если родитель не найден, вернет пустой Optional
+   */
+  public static <T extends BSLParserRuleContext> Optional<T> getRootNode(RuleNode context, int index, Class<T> klass) {
+    if (klass.isInstance(context)){
+      return Optional.of(klass.cast(context));
+    }
+    return Optional.of(context)
+      .map(BSLParserRuleContext.class::cast)
+      .map(node -> Trees.getRootParent(node, index))
+      .filter(klass::isInstance)
+      .map(klass::cast);
+  }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
+   *
    * @param tnc       - нода, для которой ищем родителя
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
@@ -455,13 +476,13 @@ public final class Trees {
   }
 
   /**
-   * Получение ноды в дереве по позиции в документе.
+   * Получение терминальной ноды в дереве по позиции в документе.
    *
    * @param tree - дерево, в котором ищем
    * @param position - искомая позиция
    * @return терминальная нода на указанной позиции, если есть
    */
-  public static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+  public static Optional<TerminalNode> findTerminalNodeContainsPosition(BSLParserRuleContext tree, Position position) {
 
     if (tree.getTokens().isEmpty()) {
       return Optional.empty();
@@ -484,7 +505,7 @@ public final class Trees {
           return Optional.of(terminalNode);
         }
       } else {
-        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
+        Optional<TerminalNode> node = findTerminalNodeContainsPosition((BSLParserRuleContext) child, position);
         if (node.isPresent()) {
           return node;
         }
@@ -495,16 +516,16 @@ public final class Trees {
   }
 
   /**
-   * Возвращает true, если левый операнд строго слева или выше по тексту, чем правый
+   * Получение ноды в дереве по позиции в документе.
    *
-   * @param left узел еслева или впереди
-   * @param right узел справа или позади
-   * @return true, если левый операнд строго слева или выше по тексту, чем правый
+   * @param tree - дерево, в котором ищем
+   * @param position - искомая позиция
+   * @return нода на указанной позиции, если есть
    */
-  public boolean isBefore(BSLParserRuleContext left, BSLParserRuleContext right) {
-    final var leftPos = new Position(left.getStop().getLine(), left.getStop().getCharPositionInLine());
-    final var rightPos = new Position(right.getStart().getLine(), right.getStart().getCharPositionInLine());
-    return Positions.isBefore(leftPos, rightPos);
+  public static Optional<BSLParserRuleContext> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+    return findTerminalNodeContainsPosition(tree, position)
+      .map(TerminalNode::getParent)
+      .map(BSLParserRuleContext.class::cast);
   }
 
   /**
