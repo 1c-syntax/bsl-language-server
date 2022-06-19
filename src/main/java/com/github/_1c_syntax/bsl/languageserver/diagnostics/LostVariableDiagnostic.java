@@ -241,9 +241,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private static Stream<BSLParser.StatementContext> getStatementsBetween(BSLParser.CodeBlockContext defCodeBlock,
                                                                          BSLParser.StatementContext defStatement,
                                                                          BSLParser.StatementContext rewriteStatement) {
-    if (defStatement == rewriteStatement){
-      return Stream.empty();
-    }
     return defCodeBlock.children.stream()
       .filter(BSLParser.StatementContext.class::isInstance)
       .map(BSLParser.StatementContext.class::cast)
