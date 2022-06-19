@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Predicate;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -33,6 +34,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.util.Positions;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +69,48 @@ public final class Trees {
 
   public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
     return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
+  }
+
+  /**
+   /**
+   * Находит только первый элемент дерева, подходящий по типу элемента.
+   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
+   *
+   * @param t узел дерева
+   * @param ruleIndex искомый тип элемент
+   * @return первый подходящий узел, если он найден
+   */
+  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, int ruleIndex) {
+    return findNodeSuchThat(t, node -> node.getRuleIndex() == ruleIndex);
+  }
+
+  /**
+   * Находит только первый элемент дерева, подходящий по условию поиска.
+   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
+   *
+   * @param t узел дерева
+   * @param pred предикат-условие поиска
+   * @return первый подходящий узел, если он найден
+   */
+  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
+    return Optional.ofNullable(_findNodeSuchThat(t, pred));
+  }
+
+  @Nullable
+  private static BSLParserRuleContext _findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
+    if ( pred.eval(t) ) return t;
+
+    if ( t==null ) return null;
+
+    int n = t.getChildCount();
+    for (int i = 0 ; i < n ; i++){
+      final var child = t.getChild(i);
+      if (child instanceof BSLParserRuleContext) {
+        BSLParserRuleContext u = _findNodeSuchThat((BSLParserRuleContext)child, pred);
+        if ( u != null) return u;
+      }
+    }
+    return null;
   }
 
   public static List<Tree> getChildren(Tree t) {
@@ -448,6 +492,19 @@ public final class Trees {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Возвращает true, если левый операнд строго слева или выше по тексту, чем правый
+   *
+   * @param left узел еслева или впереди
+   * @param right узел справа или позади
+   * @return true, если левый операнд строго слева или выше по тексту, чем правый
+   */
+  public boolean isBefore(BSLParserRuleContext left, BSLParserRuleContext right) {
+    final var leftPos = new Position(left.getStop().getLine(), left.getStop().getCharPositionInLine());
+    final var rightPos = new Position(right.getStart().getLine(), right.getStart().getCharPositionInLine());
+    return Positions.isBefore(leftPos, rightPos);
   }
 
   /**
