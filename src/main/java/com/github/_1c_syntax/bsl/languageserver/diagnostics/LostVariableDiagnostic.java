@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -37,16 +38,19 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -64,9 +68,7 @@ import java.util.stream.Collectors;
 public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private final ReferenceIndex referenceIndex;
-
-  // TODO нужна опция для возможности работы правила в модулях форм и модулях объектов, могут быть FP
-  // TODO нужна опция для возможности работы правила с переменными модуля и глобальными переменными, могут быть FP
+  private final Map<MethodSymbol, BSLParser.SubContext> methodsAst = new HashMap<>();
 
   @Value
   private static class VarData implements Comparable<VarData> {
@@ -74,6 +76,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     Range defRange;
     Range rewriteRange;
     List<Reference> references;
+    MethodSymbol method;
 
     @Override
     public int compareTo(@NotNull LostVariableDiagnostic.VarData o) {
@@ -83,18 +86,33 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    documentContext.getSymbolTree().getVariables().stream()
-      .flatMap(variable -> getVarData(variable).stream())
+    documentContext.getSymbolTree().getMethods().stream()
+      .flatMap(methodSymbol -> getVarData(methodSymbol).stream())
       .filter(this::isLostVariable)
       .forEach(this::fireIssue);
+
+    methodsAst.clear();
   }
 
-  private List<VarData> getVarData(VariableSymbol variable) {
+  private List<VarData> getVarData(MethodSymbol methodSymbol) {
+    final var variables = methodSymbol.getChildren().stream()
+      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
+      .filter(VariableSymbol.class::isInstance)
+      .map(VariableSymbol.class::cast)
+      .flatMap(variable -> getVarData(variable, methodSymbol).stream())
+      .collect(Collectors.toList());
+    if (variables.isEmpty()){
+      return Collections.emptyList();
+    }
+    return variables;
+  }
+
+  private List<VarData> getVarData(VariableSymbol variable, MethodSymbol methodSymbol) {
     List<Reference> allReferences = getSortedReferencesByLocation(variable);
     if (allReferences.isEmpty()) {
       return Collections.emptyList();
     }
-    return getConsecutiveDefinitions(variable, allReferences);
+    return getConsecutiveDefinitions(variable, allReferences, methodSymbol);
   }
 
   private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
@@ -104,7 +122,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       .collect(Collectors.toList());
   }
 
-  private List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences) {
+  private List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences,
+                                                  MethodSymbol methodSymbol) {
     List<VarData> result = new ArrayList<>();
     Reference prev = null;
     if (allReferences.get(0).getOccurrenceType() == OccurrenceType.DEFINITION) {
@@ -112,7 +131,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
       var references = allReferences.subList(1, allReferences.size());
       var varData = new VarData(variable.getName(), variable.getVariableNameRange(),
-        allReferences.get(0).getSelectionRange(), references);
+        allReferences.get(0).getSelectionRange(), references, methodSymbol);
       result.add(varData);
     }
     for (var i = 1; i < allReferences.size(); i++) {
@@ -126,7 +145,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
             references = Collections.emptyList();
           }
           var varData = new VarData(variable.getName(), prev.getSelectionRange(),
-            next.getSelectionRange(), references);
+            next.getSelectionRange(), references, methodSymbol);
           result.add(varData);
         }
         prev = next;
@@ -138,104 +157,123 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean isLostVariable(VarData varData) {
-    // TODO ? быстрее найти сначала метод в дереве, а потом уже переменную в дерере метода?
-    //  чтобы постоянно не искать по всему дереву
-    final var defNode = Trees.findNodeContainsPosition(documentContext.getAst(),
-      varData.getDefRange().getStart())
-      .map(TerminalNode::getParent)
-      .orElseThrow();
+    final RuleNode defNode = findDefNode(varData);
 
-    var defCodeBlock = getCodeBlock(defNode);
-    final var rewriteNodeInsideDefCodeBlockOpt = defCodeBlock
+    if (isForInside(defNode)){
+      return false;
+    }
+
+    var defCodeBlockOpt = getCodeBlock(defNode);
+    final var rewriteNodeInsideDefCodeBlockOpt = defCodeBlockOpt
       .flatMap(context -> Trees.findNodeContainsPosition(context,
-        varData.rewriteRange.getStart()))
-      .map(TerminalNode::getParent);
+        varData.rewriteRange.getStart()));
     if (rewriteNodeInsideDefCodeBlockOpt.isEmpty()) {
       return false;
     }
-    var rewriteNode = rewriteNodeInsideDefCodeBlockOpt.get();
-    var rewriteCodeBlock = getCodeBlock(rewriteNode).orElseThrow();
 
-    var insideOneBlock = defCodeBlock.get() == rewriteCodeBlock;
-    if (insideOneBlock) {
-      if (!varData.references.isEmpty()) {
-        var rewriteStatement = getRootStatement(rewriteNode);
-        if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
-          return false;
-        }
-      }
-      var defStatement = getRootStatement(defNode);
-      var hasPreprocessorBetween = defStatement.getParent().children.stream()
-        .filter(BSLParser.StatementContext.class::isInstance)
-        .map(BSLParser.StatementContext.class::cast)
-        .dropWhile(statementContext -> statementContext != defStatement)
-        .skip(1)
-        .anyMatch(statementContext -> statementContext.preprocessor() != null);
-      return !hasPreprocessorBetween;
-//      //var defParentExpression = getParentExpression(defNode);
-//      var rewriteParentExpression = getParentExpression(rewriteNode);
-//      var noneSelfAssign = rewriteParentExpression.isEmpty();
-//      if (noneSelfAssign){
-//        return true;
-//      }
-//
-//      var defParentStatement = getRootStatement(defNode);
-//      var rewriteParentStatement = getRootStatement(rewriteParentExpression);
-//      if (defParentStatement != rewriteParentStatement){
-//        return true;
-//      }
-//      return !isVarNameOnlyIntoExpression(rewriteNode);
-//    } else {
+    var defCodeBlock = defCodeBlockOpt.orElseThrow();
+
+    var rewriteNode = rewriteNodeInsideDefCodeBlockOpt.get();
+    var rewriteStatement = getRootStatement(rewriteNode);
+    var rewriteCodeBlock = getCodeBlock(rewriteStatement).orElseThrow();
+
+    var isInsideSameBlock = defCodeBlock == rewriteCodeBlock;
+    if (isInsideSameBlock) {
+      return isLostVariableInSameBlock(varData, defNode, defCodeBlock, rewriteStatement);
     }
 
+    return isLostVariableInDifferentBlocks(varData, rewriteStatement, rewriteCodeBlock);
+  }
+
+  private RuleNode findDefNode(VarData varData) {
+    // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
+    // чтобы постоянно не искать по всему дереву файла
+    final var methodCodeBlockContext = getMethodCodeBlockContext(varData.method);
+    return Trees.findNodeContainsPosition(methodCodeBlockContext,
+      varData.getDefRange().getStart())
+      .orElseThrow();
+  }
+
+  private BSLParser.SubContext getMethodCodeBlockContext(MethodSymbol method) {
+    return methodsAst.computeIfAbsent(method, methodSymbol ->
+      Trees.findNodeContainsPosition(documentContext.getAst(),
+          methodSymbol.getRange().getStart())
+        .flatMap(node -> Trees.getRootNode(node, BSLParser.RULE_sub, BSLParser.SubContext.class))
+        .orElseThrow());
+  }
+
+  private static  boolean isForInside(RuleNode defNode) {
+    return defNode instanceof BSLParser.ForStatementContext || defNode instanceof BSLParser.ForEachStatementContext;
+  }
+
+  private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
+    return Trees.getRootNode(context, BSLParser.RULE_codeBlock, BSLParser.CodeBlockContext.class);
+  }
+
+  private static BSLParser.StatementContext getRootStatement(RuleNode node) {
+    return Trees.getRootNode(node, BSLParser.RULE_statement, BSLParser.StatementContext.class)
+      .orElseThrow();
+  }
+
+  private static boolean isLostVariableInSameBlock(VarData varData, RuleNode defNode,
+                                                   BSLParser.CodeBlockContext defCodeBlock,
+                                                   BSLParser.StatementContext rewriteStatement) {
+    if (!varData.references.isEmpty() && isRewriteAlreadyContainsFirstReference(varData, rewriteStatement)) {
+      return false;
+    }
+    var defStatement = getRootStatement(defNode);
+
+    var defAndRewriteIsInSameLine = defStatement == rewriteStatement;
+    if (defAndRewriteIsInSameLine){
+      return true;
+    }
+    var hasPreprocessorBetween = getStatementsBetween(defCodeBlock, defStatement, rewriteStatement)
+      .anyMatch(statementContext -> statementContext.preprocessor() != null);
+    if (hasPreprocessorBetween){
+      return false;
+    }
+    var hasReturnBetween = getStatementsBetween(defCodeBlock, defStatement, rewriteStatement)
+      .anyMatch(statementContext -> Trees.findNodeSuchThat(statementContext, BSLParser.RULE_returnStatement)
+        .isPresent());
+    return !hasReturnBetween;
+  }
+
+  private static Stream<BSLParser.StatementContext> getStatementsBetween(BSLParser.CodeBlockContext defCodeBlock,
+                                                                         BSLParser.StatementContext defStatement,
+                                                                         BSLParser.StatementContext rewriteStatement) {
+    if (defStatement == rewriteStatement){
+      return Stream.empty();
+    }
+    return defCodeBlock.children.stream()
+      .filter(BSLParser.StatementContext.class::isInstance)
+      .map(BSLParser.StatementContext.class::cast)
+      .dropWhile(statementContext -> statementContext != defStatement)
+      .skip(1)
+      .takeWhile(statementContext -> statementContext != rewriteStatement)
+      ;
+  }
+
+  private static boolean isLostVariableInDifferentBlocks(VarData varData,
+                                                         BSLParser.StatementContext rewriteStatement,
+                                                         BSLParser.CodeBlockContext rewriteCodeBlock) {
     if (varData.references.isEmpty()) {
       return false;
     }
-    var rewriteStatement = getRootStatement(rewriteNode);
-    if (Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange())) {
+    if (isRewriteAlreadyContainsFirstReference(varData, rewriteStatement)) {
       return false;
     }
     return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
   }
 
-  private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
-    return getRootNode(context, BSLParser.RULE_codeBlock, BSLParser.CodeBlockContext.class);
+  private static boolean isRewriteAlreadyContainsFirstReference(VarData varData,
+                                                                BSLParser.StatementContext rewriteStatement) {
+    return Ranges.containsRange(Ranges.create(rewriteStatement), varData.references.get(0).getSelectionRange());
   }
 
-  private static Optional<BSLParser.ExpressionContext> getParentExpression(RuleNode context) {
-    return getRootNode(context, BSLParser.RULE_expression, BSLParser.ExpressionContext.class);
-//      .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
-  }
-
-  private static <T extends BSLParserRuleContext> Optional<T> getRootNode(RuleNode context, int index, Class<T> klass) {
-    return Optional.of(context)
-      .map(BSLParserRuleContext.class::cast)
-      .map(node -> Trees.getRootParent(node, index))
-      .filter(klass::isInstance)
-      .map(klass::cast);
-  }
-
-  private static BSLParser.StatementContext getRootStatement(RuleNode node) {
-    return getRootNode(node, BSLParser.RULE_statement, BSLParser.StatementContext.class)
-      .orElseThrow();// TODO падает на Комментарий = 10;Комментарий = 20; (важно, что нет пробела после 10;)
-  }
-
-  private static boolean isVarNameOnlyIntoExpression(RuleNode context) {
-    return Optional.of(context)
-      .filter(BSLParser.ComplexIdentifierContext.class::isInstance)
-      .map(BSLParser.ComplexIdentifierContext.class::cast)
-      .filter(node -> node.getChildCount() == 1)
-      .map(RuleNode::getParent)
-      .filter(BSLParser.MemberContext.class::isInstance)
-      .map(RuleNode::getParent)
-      .filter(expression -> expression.getChildCount() == 1)
-      .filter(BSLParser.ExpressionContext.class::isInstance)
-      .isPresent();
-  }
   private static boolean hasReferenceOutsideRewriteBlock(List<Reference> references, BSLParserRuleContext codeBlock) {
     return references.stream()
       .map(Reference::getSelectionRange)
-      .anyMatch(range -> Trees.findNodeContainsPosition(codeBlock, range.getStart())
+      .anyMatch(range -> Trees.findTerminalNodeContainsPosition(codeBlock, range.getStart())
         .isEmpty());
   }
 
@@ -265,7 +303,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
         "+1"
       )).collect(Collectors.toList());
     final var message = info.getMessage(varData.getName());
-//    diagnosticStorage.addDiagnostic(varData.getDefRange(), message);
     diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
   }
 }

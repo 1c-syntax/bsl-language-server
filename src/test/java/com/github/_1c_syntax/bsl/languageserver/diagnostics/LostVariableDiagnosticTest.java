@@ -47,16 +47,19 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 23, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 31, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 53, 7, 19)
-      .hasMessageOnRange(getMessage("ТекстЗапроса"), 74, 2, 14)
-      .hasMessageOnRange(getMessage("Файл"), 116, 4, 8)
-      .hasMessageOnRange(getMessage("Комментарий"), 144, 4, 15)
-      .hasMessageOnRange(getMessage("ЭтоОшибкаБлокировки"), 195, 8, 27)
-      .hasMessageOnRange(getMessage("НомерЯчейки"), 236, 8, 19)
-      .hasSize(11);
+      .hasMessageOnRange(getMessage("ТекстЗапроса"), 69, 2, 14)
+      .hasMessageOnRange(getMessage("Файл"), 111, 4, 8)
+      .hasMessageOnRange(getMessage("Комментарий"), 139, 4, 15)
+      .hasMessageOnRange(getMessage("ВидПрава"), 159, 4, 12)
+      .hasMessageOnRange(getMessage("НовыйПереход"), 163, 4, 16)
+      .hasMessageOnRange(getMessage("ЭтоОшибкаБлокировки"), 188, 8, 27)
+      .hasMessageOnRange(getMessage("Представление"), 254, 4, 17)
+      .hasMessageOnRange(getMessage("ЛишниеТэги"), 275, 8, 18)
+      .hasSize(14);
     ;
 
   }
   String getMessage(String name){
-    return String.format("Значение <%s> не используется", name);
+    return String.format("Значение переменной <%s> не используется, переменная перезаписывается дальше по коду", name);
   }
 }
