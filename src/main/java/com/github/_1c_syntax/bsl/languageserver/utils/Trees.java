@@ -101,8 +101,6 @@ public final class Trees {
   private static BSLParserRuleContext _findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
     if ( pred.eval(t) ) return t;
 
-    if ( t==null ) return null;
-
     int n = t.getChildCount();
     for (var i = 0 ; i < n ; i++){
       final var child = t.getChild(i);
