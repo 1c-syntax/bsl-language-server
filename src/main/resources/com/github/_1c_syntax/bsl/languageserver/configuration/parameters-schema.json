@@ -962,6 +962,16 @@
             "title": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "$id": "#/definitions/LogicalOrInTheWhereSectionOfQuery"
         },
+        "LostVariable": {
+            "description": "Lost variable",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lost variable",
+            "$id": "#/definitions/LostVariable"
+        },
         "MagicDate": {
             "description": "Magic dates",
             "default": true,

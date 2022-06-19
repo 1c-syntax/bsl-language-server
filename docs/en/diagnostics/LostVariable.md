@@ -1,4 +1,4 @@
-# <Diagnostic name> (LostVariable)
+# Lost variable (LostVariable)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
