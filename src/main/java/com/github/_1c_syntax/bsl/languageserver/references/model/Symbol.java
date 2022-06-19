@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.

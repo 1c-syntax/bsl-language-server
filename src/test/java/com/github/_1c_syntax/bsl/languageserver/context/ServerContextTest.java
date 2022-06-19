@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
@@ -69,7 +68,8 @@ class ServerContextTest {
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    ModuleType type = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
+    var mdotype = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
+    var type = ModuleType.valueOf(mdotype.name());
     assertThat(type).isEqualTo(ModuleType.CommonModule);
 
   }

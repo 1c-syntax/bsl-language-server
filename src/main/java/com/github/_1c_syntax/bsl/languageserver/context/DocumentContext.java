@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ModuleTypeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -39,7 +40,6 @@ import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
@@ -344,7 +344,8 @@ public class DocumentContext {
 
 
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleType(uri);
+
+    return new ModuleTypeComputer(this).computeModuleType();
   }
 
   private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {

@@ -32,7 +32,7 @@ import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 import java.util.regex.Pattern;
