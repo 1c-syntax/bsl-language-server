@@ -146,16 +146,24 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   @Override
-  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
+  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+
+    var lValue = ctx.lValue();
+
     if (
-      ctx.getChildCount() > 1
-      || currentMethodVariables.containsKey(ctx.getText())
-      || moduleVariables.containsKey(ctx.getText())
+      lValue.getChildCount() > 1
+        || currentMethodVariables.containsKey(lValue.getText())
+        || moduleVariables.containsKey(lValue.getText())
     ) {
-      return ctx;
+      return lValue;
     }
 
-    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    var typeName = "";
+    var newCtx = Trees.getNextNode(ctx.expression(), ctx.expression(), BSLParser.RULE_newExpression);
+    if (newCtx instanceof BSLParser.NewExpressionContext) {
+      typeName = ((BSLParser.NewExpressionContext) newCtx).typeName().getText();
+    }
+    updateVariablesCache(lValue.IDENTIFIER(), createDescription(lValue), typeName);
     return ctx;
   }
 
@@ -239,7 +247,11 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   }
 
-  private void updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
+  private void updateVariablesCache(TerminalNode identifier, Optional<VariableDescription> description) {
+    updateVariablesCache(identifier, description, "");
+  }
+
+  private void updateVariablesCache(TerminalNode node, Optional<VariableDescription> description, String type) {
     var variable = VariableSymbol.builder()
       .name(node.getText().intern())
       .owner(documentContext)
@@ -249,6 +261,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .kind(VariableKind.DYNAMIC)
       .scope(currentMethod)
       .description(description)
+      .type(type)
       .build();
     variables.add(variable);
 

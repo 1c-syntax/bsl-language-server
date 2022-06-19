@@ -96,6 +96,9 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
    */
   Optional<VariableDescription> description;
 
+  @Builder.Default
+  String type = "";
+
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
