@@ -41,7 +41,6 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,17 +70,12 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private final Map<MethodSymbol, BSLParser.SubContext> methodsAst = new HashMap<>();
 
   @Value
-  private static class VarData implements Comparable<VarData> {
+  private static class VarData {
     String name;
     Range defRange;
     Range rewriteRange;
     List<Reference> references;
     MethodSymbol method;
-
-    @Override
-    public int compareTo(@NotNull LostVariableDiagnostic.VarData o) {
-      return compare(this.getDefRange(), o.getDefRange());
-    }
   }
 
   @Override
