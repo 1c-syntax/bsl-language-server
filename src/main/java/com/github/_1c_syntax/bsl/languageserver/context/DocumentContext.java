@@ -114,6 +114,7 @@ public class DocumentContext {
 
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private final Lazy<String> typeName = new Lazy<>(this::computeTypeName, computeLock);
   private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
@@ -234,6 +235,10 @@ public class DocumentContext {
     return moduleType.getOrCompute();
   }
 
+  public String getTypeName() {
+    return typeName.getOrCompute();
+  }
+
   public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
     return supportVariants.getOrCompute();
   }
@@ -342,10 +347,14 @@ public class DocumentContext {
     return new SymbolTreeComputer(this).compute();
   }
 
-
   private ModuleType computeModuleType() {
 
     return new ModuleTypeComputer(this).computeModuleType();
+  }
+
+  private String computeTypeName() {
+
+    return new ModuleTypeComputer(this).computeTypeName();
   }
 
   private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {

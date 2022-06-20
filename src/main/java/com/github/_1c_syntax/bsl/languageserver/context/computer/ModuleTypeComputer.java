@@ -24,6 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
+import org.apache.commons.io.FilenameUtils;
+
+import java.nio.file.Paths;
 
 public class ModuleTypeComputer {
 
@@ -61,6 +64,15 @@ public class ModuleTypeComputer {
     } else {
       return ModuleType.UNKNOWN;
     }
+  }
+
+  public String computeTypeName() {
+    if (documentContext.getModuleType() == ModuleType.Module
+      || documentContext.getModuleType() == ModuleType.Class) {
+      // to do убрать FilenameUtils
+      return FilenameUtils.getBaseName(Paths.get(documentContext.getUri()).toString());
+    }
+    return "";
   }
 }
 
