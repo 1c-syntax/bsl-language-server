@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +40,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class OSModulesReferenceFinder implements ReferenceFinder {
+public class OscriptReferenceFinder implements ReferenceFinder {
 
   private final ServerContext serverContext;
 
@@ -56,28 +58,33 @@ public class OSModulesReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
 
-    if (!(node.get().getParent() instanceof BSLParser.TypeNameContext)) {
-      return Optional.empty();
-    }
-
-    var className = node.get().getText();
-
-    var dd = serverContext.getDocuments().values().stream()
-      .filter(d -> d.getTypeName().equals(className))
-      .findFirst();
-
-    if (dd.isEmpty()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(new Reference(
-        dd.get().getSymbolTree().getModule(),
-        dd.get().getSymbolTree().getModule(),
-        dd.get().getUri(),
+    return serverContext.getDocuments().values().stream()
+      .filter(documentContext -> documentContext.getTypeName().equals(node.get().getText()))
+      .filter(d -> filterByType(node, d.getModuleType()))
+      .map(documentContext -> new Reference(
+        documentContext.getSymbolTree().getModule(),
+        documentContext.getSymbolTree().getModule(),
+        documentContext.getUri(),
         Ranges.create(0, 0, 0, 0),
-        OccurrenceType.DEFINITION
-      )
-    );
+        OccurrenceType.DEFINITION)
+      ).findAny();
 
   }
+
+  private boolean filterByType(Optional<TerminalNode> node, ModuleType moduleType) {
+
+    if (node.isEmpty()) {
+      return false;
+    }
+
+    if ((node.get().getParent() instanceof BSLParser.TypeNameContext)
+      && moduleType == ModuleType.Class) {
+      return true;
+    } else {
+      return (node.get().getParent() instanceof BSLParser.ComplexIdentifierContext)
+        && moduleType == ModuleType.Module;
+    }
+
+  }
+
 }

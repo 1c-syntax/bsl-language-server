@@ -32,10 +32,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class OSModulesReferenceFinderTest {
+class OscriptReferenceFinderTest {
 
   @Autowired
-  private OSModulesReferenceFinder referenceFinder;
+  private OscriptReferenceFinder referenceFinder;
 
   @Autowired
   private ServerContext serverContext;
@@ -45,21 +45,31 @@ class OSModulesReferenceFinderTest {
     // given
     serverContext.setConfigurationRoot(Absolute.path("src/test/resources/metadata/oscript"));
     serverContext.populateContext();
-    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/metadata/oscript/Классы/ТестовыйКласс.os");
     var mainOsContext = TestUtils.getDocumentContextFromFile("./src/test/resources/metadata/oscript/main.os");
 
     // when
-    var optionalReference = referenceFinder.findReference(
-      mainOsContext.getUri(),
-      new Position(1, 25)
-    );
+    var optionalReference = referenceFinder.findReference(mainOsContext.getUri(), new Position(1, 25));
 
     // then
-    assertThat(optionalReference)
-      .isPresent()
-//      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo())
-    ;
+    assertThat(optionalReference).isPresent();
   }
 
+  @Test
+  void testFindReferenceToModule() {
+    // given
+    serverContext.setConfigurationRoot(Absolute.path("src/test/resources/metadata/oscript"));
+    serverContext.populateContext();
+    var mainOsContext = TestUtils.getDocumentContextFromFile("./src/test/resources/metadata/oscript/main.os");
+
+    // when
+    var optionalReference = referenceFinder.findReference(mainOsContext.getUri(), new Position(3, 17));
+    // then
+    assertThat(optionalReference).isPresent();
+
+    // when
+    var variable = referenceFinder.findReference(mainOsContext.getUri(), new Position(3, 53));
+    // then
+    assertThat(variable).isEmpty();
+  }
 
 }
