@@ -216,7 +216,7 @@ public class SelectionRangeProvider {
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
 
-  private static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+  public static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
 
     if (tree.getTokens().isEmpty()) {
       return Optional.empty();
