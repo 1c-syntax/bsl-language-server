@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -54,6 +55,18 @@ public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
     if (this.equals(o)) {
       return 0;
     }
-    return hashCode() > o.hashCode() ? 1 : -1;
+    final var uriCompare = location.getUri().compareTo(o.location.getUri());
+    if (uriCompare != 0){
+      return uriCompare;
+    }
+    final var rangesCompare = Ranges.compare(location.getRange(), o.location.getRange());
+    if (rangesCompare != 0){
+      return rangesCompare;
+    }
+    final var occurenceCompare = occurrenceType.compareTo(o.occurrenceType);
+    if (occurenceCompare != 0){
+      return occurenceCompare;
+    }
+    return symbol.compareTo(o.symbol);
   }
 }
