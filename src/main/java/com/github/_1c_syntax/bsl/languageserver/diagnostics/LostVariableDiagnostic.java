@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -37,11 +38,12 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +70,8 @@ import java.util.stream.Stream;
 public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private final ReferenceIndex referenceIndex;
-  private final Map<MethodSymbol, BSLParser.SubContext> methodsAst = new HashMap<>();
+  private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
+  private Map<String, BSLParserRuleContext> methodContextsByMethodName = new CaseInsensitiveMap<>();
 
   @Value
   private static class VarData {
@@ -76,27 +79,73 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     Range defRange;
     Range rewriteRange;
     List<Reference> references;
-    MethodSymbol method;
+    SourceDefinedSymbol method;
+    boolean isMethod;
   }
 
   @Override
   protected void check() {
+    methodContextsByMethodName = getMethodContextsByMethodName();
+    getFileCodeBlock()
+      .ifPresent(fileCodeBlock -> methodContextsByMethodName.put("", fileCodeBlock));
+
     getVariables()
       .filter(this::isLostVariable)
       .forEach(this::fireIssue);
 
-    methodsAst.clear();
+    astBySymbol.clear();
+    methodContextsByMethodName.clear();
   }
 
-  @NotNull
+  private Map<String, BSLParserRuleContext> getMethodContextsByMethodName() {
+    return Optional.ofNullable(documentContext.getAst().subs())
+      .map(BSLParser.SubsContext::sub)
+      .map(subContexts -> subContexts.stream()
+        .map(LostVariableDiagnostic::getMethodNameAndContext)
+        .collect(Collectors.toMap(Pair::getLeft, Pair::getRight)))
+      .orElseGet(Collections::emptyMap);
+  }
+
+  private static Pair<String, BSLParserRuleContext> getMethodNameAndContext(BSLParser.SubContext subContext) {
+    final var subContextOpt = Optional.of(subContext);
+    final var subName = subContextOpt
+      .map(BSLParser.SubContext::function)
+//      .map(functionContext -> Pair.of(functionContext, functionContext.funcDeclaration().subName()))
+      .map(BSLParser.FunctionContext::funcDeclaration)
+      .map(BSLParser.FuncDeclarationContext::subName)
+      .map(BSLParser.SubNameContext::IDENTIFIER)
+      .map(ParseTree::getText)
+      .orElseGet(() -> subContextOpt
+        .map(BSLParser.SubContext::procedure)
+        .map(BSLParser.ProcedureContext::procDeclaration)
+        .map(BSLParser.ProcDeclarationContext::subName)
+        .map(BSLParser.SubNameContext::IDENTIFIER)
+        .map(ParseTree::getText)
+        .orElseThrow()
+      );
+    return Pair.of(subName, subContext);
+  }
+
+  private Optional<BSLParser.FileCodeBlockContext> getFileCodeBlock() {
+    return Optional.ofNullable(documentContext.getAst().fileCodeBlock());
+  }
+
   private Stream<VarData> getVariables() {
     return documentContext.getSymbolTree().getVariables().stream()
-      .map(variableSymbol -> Pair.of(variableSymbol.getRootParent(SymbolKind.Method), variableSymbol))
-      .filter(pair -> pair.getLeft().isPresent())
-      .flatMap(pair -> getVarData(pair.getRight(), (MethodSymbol)pair.getLeft().get()).stream());
+      .map(variableSymbol -> Pair.of(getRootSymbol(variableSymbol), variableSymbol))
+//      .filter(pair -> pair.getLeft().isPresent())
+//      .filter(pair -> pair.getLeft().get() instanceof MethodSymbol)
+//      .filter(pair -> MethodSymbol.class::isInstance(pair.getLeft().get()))
+      .flatMap(pair -> getVarData(pair.getRight(), pair.getLeft()).stream());
   }
 
-  private List<VarData> getVarData(VariableSymbol variable, MethodSymbol methodSymbol) {
+  private static SourceDefinedSymbol getRootSymbol(VariableSymbol variableSymbol) {
+    return variableSymbol.getRootParent(SymbolKind.Method)
+      .orElseGet(() -> variableSymbol.getRootParent(SymbolKind.Module)
+        .orElseThrow());
+  }
+
+  private List<VarData> getVarData(VariableSymbol variable, SourceDefinedSymbol methodSymbol) {
     List<Reference> allReferences = referenceIndex.getReferencesTo(variable);
     if (allReferences.isEmpty()) {
       return Collections.emptyList();
@@ -105,7 +154,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences,
-                                                  MethodSymbol methodSymbol) {
+                                                  SourceDefinedSymbol methodSymbol) {
     List<VarData> result = new ArrayList<>();
     Reference prev = null;
     if (allReferences.get(0).getOccurrenceType() == OccurrenceType.DEFINITION) {
@@ -113,7 +162,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
       var references = allReferences.subList(1, allReferences.size());
       var varData = new VarData(variable.getName(), variable.getVariableNameRange(),
-        allReferences.get(0).getSelectionRange(), references, methodSymbol);
+        allReferences.get(0).getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
       result.add(varData);
     }
     for (var i = 1; i < allReferences.size(); i++) {
@@ -127,7 +176,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
             references = Collections.emptyList();
           }
           var varData = new VarData(variable.getName(), prev.getSelectionRange(),
-            next.getSelectionRange(), references, methodSymbol);
+            next.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
           result.add(varData);
         }
         prev = next;
@@ -170,18 +219,20 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private RuleNode findDefNode(VarData varData) {
     // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
     // чтобы постоянно не искать по всему дереву файла
-    final var methodCodeBlockContext = getMethodCodeBlockContext(varData.method);
+    final var methodCodeBlockContext = getMethodCodeBlockContext(varData.method, varData.isMethod);
     return Trees.findNodeContainsPosition(methodCodeBlockContext,
       varData.getDefRange().getStart())
       .orElseThrow();
   }
 
-  private BSLParser.SubContext getMethodCodeBlockContext(MethodSymbol method) {
-    return methodsAst.computeIfAbsent(method, methodSymbol ->
-      Trees.findNodeContainsPosition(documentContext.getAst(),
-          methodSymbol.getRange().getStart())
-        .flatMap(node -> Trees.getRootNode(node, BSLParser.RULE_sub, BSLParser.SubContext.class))
-        .orElseThrow());
+  private BSLParserRuleContext getMethodCodeBlockContext(SourceDefinedSymbol method, boolean isMethod) {
+    if (isMethod) {
+      final var methodName = method.getName();
+      return astBySymbol.computeIfAbsent(method, methodSymbol ->
+          methodContextsByMethodName.get(methodName));
+    }
+    return astBySymbol.computeIfAbsent(method, methodSymbol ->
+      methodContextsByMethodName.get(""));
   }
 
   private static  boolean isForInside(RuleNode defNode) {
