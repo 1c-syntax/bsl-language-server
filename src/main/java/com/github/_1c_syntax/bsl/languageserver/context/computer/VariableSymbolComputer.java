@@ -158,12 +158,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return lValue;
     }
 
-    var typeName = "";
-    var newCtx = Trees.getNextNode(ctx.expression(), ctx.expression(), BSLParser.RULE_newExpression);
-    if (newCtx instanceof BSLParser.NewExpressionContext) {
-      typeName = ((BSLParser.NewExpressionContext) newCtx).typeName().getText();
-    }
-    updateVariablesCache(lValue.IDENTIFIER(), createDescription(lValue), typeName);
+    updateVariablesCache(lValue.IDENTIFIER(), createDescription(lValue), typeName(ctx));
     return ctx;
   }
 
@@ -272,6 +267,18 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     } else {
       currentMethodVariables.put(node.getText(), node.getText());
     }
+  }
+
+  private String typeName(BSLParser.AssignmentContext ctx) {
+    var typeName = "";
+    var newCtx = Trees.getNextNode(ctx.expression(), ctx.expression(), BSLParser.RULE_newExpression);
+    if (newCtx instanceof BSLParser.NewExpressionContext) {
+      var typeNamectx = ((BSLParser.NewExpressionContext) newCtx).typeName();
+      if (typeNamectx != null) {
+        typeName = typeNamectx.getText();
+      }
+    }
+    return typeName;
   }
 
 }
