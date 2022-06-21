@@ -38,8 +38,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.RuleNode;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,25 +81,19 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    documentContext.getSymbolTree().getMethods().stream()
-      .flatMap(methodSymbol -> getVarData(methodSymbol).stream())
+    getVariables()
       .filter(this::isLostVariable)
       .forEach(this::fireIssue);
 
     methodsAst.clear();
   }
 
-  private List<VarData> getVarData(MethodSymbol methodSymbol) {
-    final var variables = methodSymbol.getChildren().stream()
-      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .flatMap(variable -> getVarData(variable, methodSymbol).stream())
-      .collect(Collectors.toList());
-    if (variables.isEmpty()){
-      return Collections.emptyList();
-    }
-    return variables;
+  @NotNull
+  private Stream<VarData> getVariables() {
+    return documentContext.getSymbolTree().getVariables().stream()
+      .map(variableSymbol -> Pair.of(variableSymbol.getRootParent(SymbolKind.Method), variableSymbol))
+      .filter(pair -> pair.getLeft().isPresent())
+      .flatMap(pair -> getVarData(pair.getRight(), (MethodSymbol)pair.getLeft().get()).stream());
   }
 
   private List<VarData> getVarData(VariableSymbol variable, MethodSymbol methodSymbol) {
