@@ -156,7 +156,11 @@ public final class Ranges {
     if (o1.equals(o2)){
       return 0;
     }
-    return compare(o1.getStart(), o2.getStart());
+    final var startCompare = compare(o1.getStart(), o2.getStart());
+    if (startCompare != 0){
+      return startCompare;
+    }
+    return compare(o1.getEnd(), o2.getEnd());
   }
 
   /**
