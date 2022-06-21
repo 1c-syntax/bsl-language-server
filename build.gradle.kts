@@ -8,13 +8,13 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "3.3"
-    id("io.freefair.lombok") version "6.4.3"
-    id("io.freefair.javadoc-links") version "6.4.3"
-    id("io.freefair.javadoc-utf-8") version "6.4.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.4.3"
-    id("io.freefair.maven-central.validate-poms") version "6.4.3"
-    id("me.qoomon.git-versioning") version "6.1.1"
+    id("org.sonarqube") version "3.4.0.2513"
+    id("io.freefair.lombok") version "6.4.3.1"
+    id("io.freefair.javadoc-links") version "6.4.3.1"
+    id("io.freefair.javadoc-utf-8") version "6.4.3.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.4.3.1"
+    id("io.freefair.maven-central.validate-poms") version "6.4.3.1"
+    id("me.qoomon.git-versioning") version "6.1.4"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.7"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
@@ -60,7 +60,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "0.21.0") {

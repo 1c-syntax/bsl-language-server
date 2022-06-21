@@ -40,7 +40,8 @@ import java.util.Set;
   minutesToFix = 1,
   tags = {
     DiagnosticTag.BRAINOVERLOAD,
-    DiagnosticTag.BADPRACTICE
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.UNUSED
   },
   modules = {
     ModuleType.CommandModule,
