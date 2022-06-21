@@ -146,6 +146,49 @@ public final class Ranges {
   }
 
   /**
+   * Натуральный порядок сравнения Range
+   *
+   * @param o1 - левый\меньший операнд
+   * @param o2 - правый\больший операнд
+   * @return 0 - равно, 1 - больше, -1 - меньше
+   */
+  public int compare(Range o1, Range o2) {
+    if (o1.equals(o2)){
+      return 0;
+    }
+    final var startCompare = compare(o1.getStart(), o2.getStart());
+    if (startCompare != 0){
+      return startCompare;
+    }
+    return compare(o1.getEnd(), o2.getEnd());
+  }
+
+  /**
+   * Натуральный порядок сравнения Position
+   *
+   * @param pos1 - левый\меньший операнд
+   * @param pos2 - правый\больший операнд
+   * @return 0 - равно, 1 - больше, -1 - меньше
+   */
+  public int compare(Position pos1, Position pos2) {
+    if (pos1.equals(pos2)){
+      return 0;
+    }
+
+    // 1,1 10,10
+    if (pos1.getLine() < pos2.getLine()) {
+      return -1;
+    }
+    // 10,10 1,1
+    if (pos1.getLine() > pos2.getLine()) {
+      return 1;
+    }
+    // 1,4 1,9
+    return Integer.compare(pos1.getCharacter(), pos2.getCharacter());
+    // 1,9 1,4
+  }
+
+  /**
    * @deprecated Для совместимости метод оставлен, но будет удален в будущих версиях.
    * Вместо него стоит использовать метод {@link ModuleSymbol#getSelectionRange()}
    */
