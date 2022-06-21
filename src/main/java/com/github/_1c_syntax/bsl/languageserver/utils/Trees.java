@@ -94,19 +94,23 @@ public final class Trees {
    * @return первый подходящий узел, если он найден
    */
   public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
-    return Optional.ofNullable(_findNodeSuchThat(t, pred));
+    return Optional.ofNullable(findNodeSuchThatInner(t, pred));
   }
 
   @Nullable
-  private static BSLParserRuleContext _findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
-    if ( pred.eval(t) ) return t;
+  private static BSLParserRuleContext findNodeSuchThatInner(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
+    if ( pred.eval(t) ) {
+      return t;
+    }
 
     int n = t.getChildCount();
     for (var i = 0 ; i < n ; i++){
       final var child = t.getChild(i);
       if (child instanceof BSLParserRuleContext) {
-        BSLParserRuleContext u = _findNodeSuchThat((BSLParserRuleContext)child, pred);
-        if ( u != null) return u;
+        BSLParserRuleContext u = findNodeSuchThatInner((BSLParserRuleContext)child, pred);
+        if ( u != null) {
+          return u;
+        }
       }
     }
     return null;
