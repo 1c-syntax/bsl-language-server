@@ -24,9 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
-import org.apache.commons.io.FilenameUtils;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class ModuleTypeComputer {
 
@@ -57,9 +56,9 @@ public class ModuleTypeComputer {
   }
 
   private ModuleType computeOS() {
-    if (documentContext.getUri().toString().contains("Модули")) {
+    if (documentContext.getUri().getPath().contains("Модули")) {
       return ModuleType.Module;
-    } else if (documentContext.getUri().toString().contains("Классы")) {
+    } else if (documentContext.getUri().getPath().contains("Классы")) {
       return ModuleType.Class;
     } else {
       return ModuleType.UNKNOWN;
@@ -69,8 +68,7 @@ public class ModuleTypeComputer {
   public String computeTypeName() {
     if (documentContext.getModuleType() == ModuleType.Module
       || documentContext.getModuleType() == ModuleType.Class) {
-      // to do убрать FilenameUtils
-      return FilenameUtils.getBaseName(Paths.get(documentContext.getUri()).toString());
+      return Path.of(documentContext.getUri()).getFileName().toString().replace(".os", "");
     }
     return "";
   }
