@@ -417,7 +417,7 @@ public final class Trees {
    * @param position - искомая позиция
    * @return терминальная нода на указанной позиции, если есть
    */
-  public static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+  public static Optional<TerminalNode> findTerminalNodeContainsPosition(BSLParserRuleContext tree, Position position) {
 
     if (tree.getTokens().isEmpty()) {
       return Optional.empty();
@@ -440,7 +440,7 @@ public final class Trees {
           return Optional.of(terminalNode);
         }
       } else {
-        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
+        Optional<TerminalNode> node = findTerminalNodeContainsPosition((BSLParserRuleContext) child, position);
         if (node.isPresent()) {
           return node;
         }

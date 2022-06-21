@@ -148,7 +148,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   }
 
   private Optional<RuleNode> getRefContextInsideDefAssign(Reference defRef, Reference nextRef) {
-    final var defNode = Trees.findNodeContainsPosition(documentContext.getAst(),
+    final var defNode = Trees.findTerminalNodeContainsPosition(documentContext.getAst(),
       defRef.getSelectionRange().getStart());
     final var assignment = defNode
       .map(TerminalNode::getParent)
@@ -158,7 +158,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(BSLParser.AssignmentContext.class::cast);
 
     return assignment.flatMap(assignContext ->
-        Trees.findNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
+        Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
       .map(TerminalNode::getParent);
   }
 

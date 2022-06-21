@@ -86,7 +86,7 @@ public class SelectionRangeProvider {
 
     // Result must contains all elements from input
     return positions.stream()
-      .map(position -> Trees.findNodeContainsPosition(ast, position))
+      .map(position -> Trees.findTerminalNodeContainsPosition(ast, position))
       .map(terminalNode -> terminalNode.orElse(null))
       .map(SelectionRangeProvider::toSelectionRange)
       .collect(Collectors.toList());
