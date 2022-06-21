@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.RuleNode;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -102,18 +101,11 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private List<VarData> getVarData(VariableSymbol variable, MethodSymbol methodSymbol) {
-    List<Reference> allReferences = getSortedReferencesByLocation(variable);
+    List<Reference> allReferences = referenceIndex.getReferencesTo(variable);
     if (allReferences.isEmpty()) {
       return Collections.emptyList();
     }
     return getConsecutiveDefinitions(variable, allReferences, methodSymbol);
-  }
-
-  private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
-    final var references = referenceIndex.getReferencesTo(variable);
-    return references.stream()
-      .sorted((o1, o2) -> compare(o1.getSelectionRange(), o2.getSelectionRange()))
-      .collect(Collectors.toList());
   }
 
   private List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences,
@@ -266,24 +258,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       .map(Reference::getSelectionRange)
       .anyMatch(range -> Trees.findTerminalNodeContainsPosition(codeBlock, range.getStart())
         .isEmpty());
-  }
-
-  private static int compare(Range o1, Range o2) {
-    return compare(o1.getStart(), o2.getStart());
-  }
-
-  public static int compare(Position pos1, Position pos2) {
-    // 1,1 10,10
-    if (pos1.getLine() < pos2.getLine()) {
-      return -1;
-    }
-    // 10,10 1,1
-    if (pos1.getLine() > pos2.getLine()) {
-      return 1;
-    }
-    // 1,4 1,9
-    return Integer.compare(pos1.getCharacter(), pos2.getCharacter());
-    // 1,9 1,4
   }
 
   private void fireIssue(VarData varData) {
