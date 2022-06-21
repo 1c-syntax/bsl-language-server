@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -79,10 +80,23 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
-    return Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource).stream()
-      .map(SDBLParser.DataSourceContext.class::cast)
+    return findAllDataSourceWithoutInnerQueries(ctx)
       .collect(Collectors.toMap(RefOveruseDiagnostic::getTableNameOrAlias,
         RefOveruseDiagnostic::isTableWithTabularSection));
+  }
+
+  private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
+    SDBLParser.QueryContext ctx) {
+    if (ctx.from == null){
+      return Stream.empty();
+    }
+    return Stream.concat(
+      ctx.from.dataSource().stream(),
+      ctx.from.dataSource().stream()
+        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
+        .map(SDBLParser.JoinPartContext::dataSource)
+        .filter(Objects::nonNull)
+    );
   }
 
   private static String getTableNameOrAlias(SDBLParser.DataSourceContext dataSource) {

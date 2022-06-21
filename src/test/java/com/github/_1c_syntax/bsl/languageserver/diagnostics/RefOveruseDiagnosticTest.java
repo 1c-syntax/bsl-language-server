@@ -51,6 +51,9 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
       .hasRange(153, 13, 153, 41)
       .hasRange(164, 13, 164, 53)
       .hasRange(178, 13, 178, 35)
-      .hasSize(12);
+      .hasRange(216, 13, 37)
+      .hasRange(226, 13, 37)
+      .hasRange(238, 13, 38)
+      .hasSize(15);
   }
 }
