@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1655827208445,
+  "lastUpdate": 1655894507701,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18011,6 +18011,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.983990149428252",
             "extra": "mean: 44.44403584798177 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ec2ab9f7c8516444e7da9938bbf8898398d1c47",
+          "message": "Merge pull request #2808 from artbear/ref-overuse-fix\n\nFP в RefOveruse для для табличных частей",
+          "timestamp": "2022-06-22T10:37:10Z",
+          "tree_id": "62d5ee4c037f54cf73d0dfe804fc4915fa2ca5a0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1ec2ab9f7c8516444e7da9938bbf8898398d1c47"
+        },
+        "date": 1655894505048,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 43.40505202611288,
+            "unit": "sec",
+            "range": "stddev: 0.5688985044048269",
+            "extra": "mean: 43.40505202611288 sec\nrounds: 3"
           }
         ]
       }
