@@ -89,6 +89,13 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     SourceDefinedSymbol parentSymbol;
     boolean isMethod;
     boolean isGlobalOrModuleKind;
+
+    private static VarData of(VariableSymbol variable, Range defRange, Reference rewriteReference,
+                              SourceDefinedSymbol methodSymbol, List<Reference> references) {
+      return new VarData(variable, defRange,
+        rewriteReference.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol,
+        GlobalVariableKinds.contains(variable.getKind()));
+    }
   }
 
   @Override
@@ -161,7 +168,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     return getConsecutiveDefinitions(variable, allReferences, methodSymbol);
   }
 
-  private List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences,
+  private static List<VarData> getConsecutiveDefinitions(VariableSymbol variable, List<Reference> allReferences,
                                                   SourceDefinedSymbol methodSymbol) {
     List<VarData> result = new ArrayList<>();
     Reference prev = null;
@@ -170,9 +177,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       prev = allReferences.get(0);
 
       var references = allReferences.subList(1, allReferences.size());
-      var varData = new VarData(variable, variable.getVariableNameRange(),
-        allReferences.get(0).getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol,
-        false);
+      var varData = VarData.of(variable, variable.getVariableNameRange(), allReferences.get(0),
+                                                      methodSymbol, references);
       result.add(varData);
     }
     final int firstIndex;
@@ -191,8 +197,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
           } else {
             references = Collections.emptyList();
           }
-          var varData = new VarData(variable, prev.getSelectionRange(),
-            current.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol, isGlobalVar);
+          var varData = VarData.of(variable, prev.getSelectionRange(), current,
+                                                          methodSymbol, references);
           result.add(varData);
         }
         prev = current;
