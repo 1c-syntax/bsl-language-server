@@ -41,7 +41,7 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasMessageOnRange(getMessage("Значение"), 1, 4, 12)
+      .hasMessageOnRange(getMessage("Значение"), 2, 4, 12)
       .hasMessageOnRange(getMessage("МояПеременная"), 4, 4, 17)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 9, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 23, 4, 16)
@@ -56,8 +56,9 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("Представление"), 254, 4, 17)
       .hasMessageOnRange(getMessage("ЛишниеТэги"), 275, 8, 18)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 297, 4, 16)
-      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 304, 0, 18)
-      .hasSize(16);
+      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 305, 4, 18)
+      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 310, 0, 18)
+      .hasSize(17);
     ;
 
   }

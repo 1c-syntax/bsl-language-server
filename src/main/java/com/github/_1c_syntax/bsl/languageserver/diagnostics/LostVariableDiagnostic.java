@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -41,16 +42,20 @@ import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,17 +74,19 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class LostVariableDiagnostic extends AbstractDiagnostic {
 
+  private static final Set<VariableKind> GlobalVariableKinds = EnumSet.of(VariableKind.GLOBAL, VariableKind.MODULE);
+
   private final ReferenceIndex referenceIndex;
   private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
   private Map<String, BSLParserRuleContext> methodContextsByMethodName = new CaseInsensitiveMap<>();
 
   @Value
   private static class VarData {
-    String name;
+    VariableSymbol variable;
     Range defRange;
     Range rewriteRange;
     List<Reference> references;
-    SourceDefinedSymbol method;
+    SourceDefinedSymbol parentSymbol;
     boolean isMethod;
   }
 
@@ -133,9 +140,6 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private Stream<VarData> getVariables() {
     return documentContext.getSymbolTree().getVariables().stream()
       .map(variableSymbol -> Pair.of(getRootSymbol(variableSymbol), variableSymbol))
-//      .filter(pair -> pair.getLeft().isPresent())
-//      .filter(pair -> pair.getLeft().get() instanceof MethodSymbol)
-//      .filter(pair -> MethodSymbol.class::isInstance(pair.getLeft().get()))
       .flatMap(pair -> getVarData(pair.getRight(), pair.getLeft()).stream());
   }
 
@@ -157,17 +161,24 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
                                                   SourceDefinedSymbol methodSymbol) {
     List<VarData> result = new ArrayList<>();
     Reference prev = null;
-    if (allReferences.get(0).getOccurrenceType() == OccurrenceType.DEFINITION) {
+    final var isGlobalVar = GlobalVariableKinds.contains(variable.getKind());
+    if (!isGlobalVar && allReferences.get(0).getOccurrenceType() == OccurrenceType.DEFINITION) {
       prev = allReferences.get(0);
 
       var references = allReferences.subList(1, allReferences.size());
-      var varData = new VarData(variable.getName(), variable.getVariableNameRange(),
+      var varData = new VarData(variable, variable.getVariableNameRange(),
         allReferences.get(0).getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
       result.add(varData);
     }
-    for (var i = 1; i < allReferences.size(); i++) {
-      final var next = allReferences.get(i);
-      if (next.getOccurrenceType() == OccurrenceType.DEFINITION) {
+    final int firstIndex;
+    if (isGlobalVar){
+      firstIndex = 0;
+    } else {
+      firstIndex = 1;
+    }
+    for (var i = firstIndex; i < allReferences.size(); i++) {
+      final var current = allReferences.get(i);
+      if (current.getOccurrenceType() == OccurrenceType.DEFINITION) {
         if (prev != null) {
           final List<Reference> references;
           if (i < allReferences.size() - 1) {
@@ -175,11 +186,11 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
           } else {
             references = Collections.emptyList();
           }
-          var varData = new VarData(variable.getName(), prev.getSelectionRange(),
-            next.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
+          var varData = new VarData(variable, prev.getSelectionRange(),
+            current.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
           result.add(varData);
         }
-        prev = next;
+        prev = current;
         continue;
       }
       prev = null;
@@ -196,8 +207,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
     var defCodeBlockOpt = getCodeBlock(defNode);
     final var rewriteNodeInsideDefCodeBlockOpt = defCodeBlockOpt
-      .flatMap(context -> Trees.findNodeContainsPosition(context,
-        varData.rewriteRange.getStart()));
+      .flatMap(context -> Trees.findContextContainsPosition(context, varData.rewriteRange.getStart()));
     if (rewriteNodeInsideDefCodeBlockOpt.isEmpty()) {
       return false;
     }
@@ -219,20 +229,30 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private RuleNode findDefNode(VarData varData) {
     // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
     // чтобы постоянно не искать по всему дереву файла
-    final var methodCodeBlockContext = getMethodCodeBlockContext(varData.method, varData.isMethod);
-    return Trees.findNodeContainsPosition(methodCodeBlockContext,
-      varData.getDefRange().getStart())
-      .orElseThrow();
+    final var parentBlockContext = getMethodCodeBlockContext(varData.parentSymbol, varData.isMethod);
+
+    return Trees.findContextContainsPosition(parentBlockContext, varData.getDefRange().getStart())
+      .orElseGet(() -> findMethodByRange(varData.defRange));
   }
 
   private BSLParserRuleContext getMethodCodeBlockContext(SourceDefinedSymbol method, boolean isMethod) {
     if (isMethod) {
-      final var methodName = method.getName();
       return astBySymbol.computeIfAbsent(method, methodSymbol ->
-          methodContextsByMethodName.get(methodName));
+          methodContextsByMethodName.get(methodSymbol.getName()));
     }
     return astBySymbol.computeIfAbsent(method, methodSymbol ->
       methodContextsByMethodName.get(""));
+  }
+
+  private BSLParserRuleContext findMethodByRange(Range range) {
+    final var methodContext = documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), range))
+      .map(methodSymbol -> methodContextsByMethodName.get(methodSymbol.getName()))
+      .filter(Objects::nonNull)
+      .findFirst()
+      .orElseThrow();
+    return Trees.findContextContainsPosition(methodContext, range.getStart())
+      .orElseThrow();
   }
 
   private static  boolean isForInside(RuleNode defNode) {
@@ -308,13 +328,18 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private void fireIssue(VarData varData) {
-    final var relatedInformationList = varData.getReferences().stream()
+    var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
+    resultRefs.add(RelatedInformation.create(
+      documentContext.getUri(),
+      varData.rewriteRange,
+      "+1"));
+    resultRefs.addAll(varData.getReferences().stream()
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
         context.getSelectionRange(),
         "+1"
-      )).collect(Collectors.toList());
-    final var message = info.getMessage(varData.getName());
-    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, relatedInformationList);
+      )).collect(Collectors.toList()));
+    final var message = info.getMessage(varData.variable.getName());
+    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, resultRefs);
   }
 }

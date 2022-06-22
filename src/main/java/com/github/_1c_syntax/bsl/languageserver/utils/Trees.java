@@ -524,10 +524,39 @@ public final class Trees {
    * @param position - искомая позиция
    * @return нода на указанной позиции, если есть
    */
-  public static Optional<BSLParserRuleContext> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
-    return findTerminalNodeContainsPosition(tree, position)
-      .map(TerminalNode::getParent)
-      .map(BSLParserRuleContext.class::cast);
+  public static Optional<BSLParserRuleContext> findContextContainsPosition(BSLParserRuleContext tree, Position position) {
+    if (!nodeContainsPosition(tree, position)) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(findContextContainsPositionInner(tree, position));
+  }
+
+  private static @Nullable BSLParserRuleContext findContextContainsPositionInner(BSLParserRuleContext tree, Position position) {
+
+    var children = Trees.getChildren(tree);
+
+    var isOneElemSize = children.size() == 1;
+    for (Tree child : children) {
+      if ((child instanceof TerminalNode)
+        || (!isOneElemSize && !nodeContainsPosition((BSLParserRuleContext) child, position))) {
+        continue;
+      }
+      BSLParserRuleContext node = findContextContainsPositionInner((BSLParserRuleContext) child, position);
+      if (node != null) {
+        return node;
+      }
+    }
+    return tree;
+  }
+
+  private static boolean nodeContainsPosition(BSLParserRuleContext tree, Position position) {
+    var start = tree.getStart();
+    var stop = tree.getStop();
+    if (start == null || stop == null){
+      return false;
+    }
+
+    return positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop);
   }
 
   /**
