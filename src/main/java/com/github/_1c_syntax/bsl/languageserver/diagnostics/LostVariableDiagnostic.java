@@ -45,7 +45,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,7 +78,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private final ReferenceIndex referenceIndex;
   private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
-  private Map<String, BSLParserRuleContext> methodContextsByMethodName = new CaseInsensitiveMap<>();
+  private Map<String, BSLParserRuleContext> methodContextsByMethodName;
 
   @Value
   private static class VarData {
@@ -88,6 +88,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     List<Reference> references;
     SourceDefinedSymbol parentSymbol;
     boolean isMethod;
+    boolean isGlobalOrModuleKind;
   }
 
   @Override
@@ -105,12 +106,15 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private Map<String, BSLParserRuleContext> getMethodContextsByMethodName() {
+    if (documentContext.getSymbolTree().getMethods().isEmpty()){
+      return new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    }
     return Optional.ofNullable(documentContext.getAst().subs())
       .map(BSLParser.SubsContext::sub)
       .map(subContexts -> subContexts.stream()
         .map(LostVariableDiagnostic::getMethodNameAndContext)
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight)))
-      .orElseGet(Collections::emptyMap);
+      .orElseThrow();
   }
 
   private static Pair<String, BSLParserRuleContext> getMethodNameAndContext(BSLParser.SubContext subContext) {
@@ -167,7 +171,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
       var references = allReferences.subList(1, allReferences.size());
       var varData = new VarData(variable, variable.getVariableNameRange(),
-        allReferences.get(0).getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
+        allReferences.get(0).getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol,
+        false);
       result.add(varData);
     }
     final int firstIndex;
@@ -187,7 +192,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
             references = Collections.emptyList();
           }
           var varData = new VarData(variable, prev.getSelectionRange(),
-            current.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol);
+            current.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol, isGlobalVar);
           result.add(varData);
         }
         prev = current;
@@ -227,12 +232,14 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private RuleNode findDefNode(VarData varData) {
+    if (varData.isGlobalOrModuleKind) {
+      return findMethodByRange(varData.defRange);
+    }
     // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
     // чтобы постоянно не искать по всему дереву файла
     final var parentBlockContext = getMethodCodeBlockContext(varData.parentSymbol, varData.isMethod);
-
     return Trees.findContextContainsPosition(parentBlockContext, varData.getDefRange().getStart())
-      .orElseGet(() -> findMethodByRange(varData.defRange));
+      .orElseThrow();
   }
 
   private BSLParserRuleContext getMethodCodeBlockContext(SourceDefinedSymbol method, boolean isMethod) {
