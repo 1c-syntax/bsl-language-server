@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,7 +56,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
   private static final int BAD_CHILD_COUNT = 3;
-  public static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
+  private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
   private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
 
   @Override
@@ -81,8 +82,11 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
     return findAllDataSourceWithoutInnerQueries(ctx)
-      .collect(Collectors.toMap(RefOveruseDiagnostic::getTableNameOrAlias,
-        RefOveruseDiagnostic::isTableWithTabularSection));
+      .collect(Collectors.toMap(
+        RefOveruseDiagnostic::getTableNameOrAlias,
+        RefOveruseDiagnostic::isTableWithTabularSection,
+        (existing, replacement) -> existing,
+        HashMap::new));
   }
 
   private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
