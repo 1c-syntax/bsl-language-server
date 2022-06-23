@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1655894507701,
+  "lastUpdate": 1656005388815,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18042,6 +18042,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5688985044048269",
             "extra": "mean: 43.40505202611288 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aartbear@gmail.com",
+            "name": "Artur Ayukhanov",
+            "username": "artbear"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "46b07d221ac6e82e598eacffcb45566718807e7c",
+          "message": "исправил падение на дублях псевдонимов (#2822)\n\nRefOveruse - исправлено падение анализа на дублях псевдонимов",
+          "timestamp": "2022-06-23T17:25:09Z",
+          "tree_id": "61d597d35945cb1807c0c8f3aa7fb0201c3d1d05",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/46b07d221ac6e82e598eacffcb45566718807e7c"
+        },
+        "date": 1656005385201,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 43.732096115748085,
+            "unit": "sec",
+            "range": "stddev: 0.8209434343773139",
+            "extra": "mean: 43.732096115748085 sec\nrounds: 3"
           }
         ]
       }
