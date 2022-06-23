@@ -75,6 +75,7 @@ import java.util.stream.Stream;
 public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private static final Set<VariableKind> GlobalVariableKinds = EnumSet.of(VariableKind.GLOBAL, VariableKind.MODULE);
+  private static final String MODULE_SCOPE_NAME = "";
 
   private final ReferenceIndex referenceIndex;
   private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
@@ -102,7 +103,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   protected void check() {
     methodContextsByMethodName = getMethodContextsByMethodName();
     getFileCodeBlock()
-      .ifPresent(fileCodeBlock -> methodContextsByMethodName.put("", fileCodeBlock));
+      .ifPresent(fileCodeBlock -> methodContextsByMethodName.put(MODULE_SCOPE_NAME, fileCodeBlock));
 
     getVariables()
       .filter(this::isLostVariable)
@@ -238,34 +239,36 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private RuleNode findDefNode(VarData varData) {
+    final BSLParserRuleContext parentBlockContext;
     if (varData.isGlobalOrModuleKind) {
-      return findMethodByRange(varData.defRange);
+      parentBlockContext = findCodeBlockContextByRange(varData.defRange);
+    } else {
+      // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
+      // чтобы постоянно не искать по всему дереву файла
+      parentBlockContext = getCodeBlockContextBySymbol(varData.parentSymbol, varData.isMethod);
     }
-    // быстрее сначала найти узел метода в дереве, а потом уже узел переменной в дереве метода
-    // чтобы постоянно не искать по всему дереву файла
-    final var parentBlockContext = getMethodCodeBlockContext(varData.parentSymbol, varData.isMethod);
-    return Trees.findContextContainsPosition(parentBlockContext, varData.getDefRange().getStart())
+    return Trees.findContextContainsPosition(parentBlockContext, varData.defRange.getStart())
       .orElseThrow();
   }
 
-  private BSLParserRuleContext getMethodCodeBlockContext(SourceDefinedSymbol method, boolean isMethod) {
+  private BSLParserRuleContext findCodeBlockContextByRange(Range range) {
+    final var methodName = documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), range))
+      .map(MethodSymbol::getName)
+      .findFirst()
+      .orElse(MODULE_SCOPE_NAME);
+    return Optional.ofNullable(methodContextsByMethodName.get(methodName))
+      .filter(Objects::nonNull)
+      .orElseThrow();
+  }
+
+  private BSLParserRuleContext getCodeBlockContextBySymbol(SourceDefinedSymbol method, boolean isMethod) {
     if (isMethod) {
       return astBySymbol.computeIfAbsent(method, methodSymbol ->
           methodContextsByMethodName.get(methodSymbol.getName()));
     }
     return astBySymbol.computeIfAbsent(method, methodSymbol ->
-      methodContextsByMethodName.get(""));
-  }
-
-  private BSLParserRuleContext findMethodByRange(Range range) {
-    final var methodContext = documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), range))
-      .map(methodSymbol -> methodContextsByMethodName.get(methodSymbol.getName()))
-      .filter(Objects::nonNull)
-      .findFirst()
-      .orElseThrow();
-    return Trees.findContextContainsPosition(methodContext, range.getStart())
-      .orElseThrow();
+      methodContextsByMethodName.get(MODULE_SCOPE_NAME));
   }
 
   private static  boolean isForInside(RuleNode defNode) {
