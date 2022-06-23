@@ -46,6 +46,7 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -68,7 +69,6 @@ import java.util.stream.Stream;
     DiagnosticTag.UNPREDICTABLE,
     DiagnosticTag.BADPRACTICE
   }
-
 )
 
 @RequiredArgsConstructor
@@ -76,28 +76,11 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private static final Set<VariableKind> GlobalVariableKinds = EnumSet.of(VariableKind.GLOBAL, VariableKind.MODULE);
   private static final String MODULE_SCOPE_NAME = "";
+  private static final String UNUSED_MESSAGE = "unusedMessage";
 
   private final ReferenceIndex referenceIndex;
   private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
   private Map<String, BSLParserRuleContext> methodContextsByMethodName;
-
-  @Value
-  private static class VarData {
-    VariableSymbol variable;
-    Range defRange;
-    Range rewriteRange;
-    List<Reference> references;
-    SourceDefinedSymbol parentSymbol;
-    boolean isMethod;
-    boolean isGlobalOrModuleKind;
-
-    private static VarData of(VariableSymbol variable, Range defRange, Reference rewriteReference,
-                              SourceDefinedSymbol methodSymbol, List<Reference> references) {
-      return new VarData(variable, defRange,
-        rewriteReference.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol,
-        GlobalVariableKinds.contains(variable.getKind()));
-    }
-  }
 
   @Override
   protected void check() {
@@ -207,7 +190,26 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       }
       prev = null;
     }
+    if (!isGlobalVar && variable.getKind() != VariableKind.PARAMETER){
+      final var lastDefinition = getLastDefinition(allReferences);
+      if (lastDefinition != null){
+        result.add(VarData.ofFinished(variable, lastDefinition, methodSymbol));
+      }
+    }
     return result;
+  }
+
+  @Nullable
+  private static Reference getLastDefinition(List<Reference> referencesTo) {
+    var reverseIterator = referencesTo.listIterator(referencesTo.size());
+
+    if(reverseIterator.hasPrevious()) {
+      final var ref = reverseIterator.previous();
+      if (ref.getOccurrenceType() == OccurrenceType.DEFINITION){
+        return ref;
+      }
+    }
+    return null;
   }
 
   private boolean isLostVariable(VarData varData) {
@@ -215,6 +217,9 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
     if (isForInside(defNode)){
       return false;
+    }
+    if (varData.isFinished){
+      return true;
     }
 
     var defCodeBlockOpt = getCodeBlock(defNode);
@@ -344,18 +349,58 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private void fireIssue(VarData varData) {
-    var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
-    resultRefs.add(RelatedInformation.create(
-      documentContext.getUri(),
-      varData.rewriteRange,
-      "+1"));
-    resultRefs.addAll(varData.getReferences().stream()
+    final String message = getMessage(varData);
+    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, getDiagnosticReferences(varData));
+  }
+
+  private String getMessage(VarData varData) {
+    if (varData.isFinished){
+      return info.getResourceString(UNUSED_MESSAGE, varData.variable.getName());
+    }
+    return info.getMessage(varData.variable.getName());
+  }
+
+  private List<DiagnosticRelatedInformation> getDiagnosticReferences(VarData varData) {
+    final var references = varData.getReferences().stream()
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
         context.getSelectionRange(),
         "+1"
-      )).collect(Collectors.toList()));
-    final var message = info.getMessage(varData.variable.getName());
-    diagnosticStorage.addDiagnostic(varData.getDefRange(), message, resultRefs);
+      )).collect(Collectors.toList());
+    if (varData.isFinished) {
+      return references;
+    }
+    final var result = new ArrayList<DiagnosticRelatedInformation>();
+    result.add(RelatedInformation.create(
+      documentContext.getUri(),
+      varData.rewriteRange,
+      "+1"));
+    result.addAll(references);
+    return result;
+  }
+
+  @Value
+  private static class VarData {
+    VariableSymbol variable;
+    Range defRange;
+    Range rewriteRange;
+    List<Reference> references;
+    SourceDefinedSymbol parentSymbol;
+    boolean isMethod;
+    boolean isGlobalOrModuleKind;
+    boolean isFinished;
+
+    private static VarData of(VariableSymbol variable, Range defRange, Reference rewriteReference,
+                              SourceDefinedSymbol methodSymbol, List<Reference> references) {
+      return new VarData(variable, defRange,
+        rewriteReference.getSelectionRange(), references, methodSymbol, methodSymbol instanceof MethodSymbol,
+        GlobalVariableKinds.contains(variable.getKind()), false);
+    }
+
+    private static VarData ofFinished(VariableSymbol variable, Reference lastDefinition, SourceDefinedSymbol methodSymbol) {
+      return new VarData(variable, lastDefinition.getSelectionRange(), lastDefinition.getSelectionRange(),
+        Collections.emptyList(), methodSymbol, methodSymbol instanceof MethodSymbol,
+        GlobalVariableKinds.contains(variable.getKind()), true);
+    }
   }
 }

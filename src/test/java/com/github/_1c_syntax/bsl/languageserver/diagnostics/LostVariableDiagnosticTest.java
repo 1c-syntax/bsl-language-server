@@ -42,27 +42,48 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
 
     assertThat(diagnostics, true)
       .hasMessageOnRange(getMessage("Значение"), 2, 4, 12)
+      .hasMessageOnRange(getMessageUnused("Значение"), 3, 4, 12)
       .hasMessageOnRange(getMessage("МояПеременная"), 4, 4, 17)
+      .hasMessageOnRange(getMessageUnused("МояПеременная"), 5, 4, 17)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 9, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 23, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 31, 4, 16)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 53, 7, 19)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 69, 2, 14)
+      .hasMessageOnRange(getMessageUnused("Запрос"), 82, 2, 8)
+      .hasMessageOnRange(getMessageUnused("Запрос"), 95, 2, 8)
+      .hasMessageOnRange(getMessageUnused("ТекстЗапроса"), 101, 6, 18)
       .hasMessageOnRange(getMessage("Файл"), 111, 4, 8)
+      .hasMessageOnRange(getMessageUnused("Файл"), 116, 4, 8)
+      .hasMessageOnRange(getMessageUnused("ЛокальнаяПеременная"), 127, 8, 27)
       .hasMessageOnRange(getMessage("Комментарий"), 139, 4, 15)
+      .hasMessageOnRange(getMessageUnused("Комментарий"), 139, 21, 32)
       .hasMessageOnRange(getMessage("ВидПрава"), 159, 4, 12)
+      .hasMessageOnRange(getMessageUnused("ВидПрава"), 160, 4, 12)
       .hasMessageOnRange(getMessage("НовыйПереход"), 163, 4, 16)
+      .hasMessageOnRange(getMessageUnused("НовыйПереход"), 164, 4, 16)
       .hasMessageOnRange(getMessage("ЭтоОшибкаБлокировки"), 188, 8, 27)
+      .hasMessageOnRange(getMessageUnused("ЭтоОшибкаБлокировки"), 210, 8, 27)
+      .hasMessageOnRange(getMessageUnused("мСохраненныйДок"), 243, 4, 19)
       .hasMessageOnRange(getMessage("Представление"), 254, 4, 17)
       .hasMessageOnRange(getMessage("ЛишниеТэги"), 275, 8, 18)
+      .hasMessageOnRange(getMessageUnused("ЛишниеТэги"), 276, 8, 18)
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 297, 4, 16)
       .hasMessageOnRange(getMessage("ЗначениеМодуля"), 305, 4, 18)
-      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 310, 0, 18)
-      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 314, 0, 14)
-      .hasSize(18);
-
+      .hasMessageOnRange(getMessage("ТекстЗапроса"), 311, 4, 16)
+      .hasMessageOnRange(getMessageUnused("ТекстЗапроса"), 314, 4, 16)
+      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 318, 4, 18)
+//      .hasMessageOnRange(getMessageUnused("Значение"), 328, 8, 16)
+      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 332, 0, 18)
+      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 336, 0, 14)
+      .hasSize(34);
   }
+
   String getMessage(String name){
     return String.format("Значение переменной <%s> не используется, переменная перезаписывается дальше по коду", name);
+  }
+
+  String getMessageUnused(String name){
+    return String.format("Значение переменной <%s> не используется далее", name);
   }
 }
