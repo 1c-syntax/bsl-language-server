@@ -68,7 +68,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     checkQuery(ctx).forEach(diagnosticStorage::addDiagnostic);
-    return ctx;
+    return super.visitQuery(ctx);
   }
 
   private Stream<BSLParserRuleContext> checkQuery(SDBLParser.QueryContext ctx) {
