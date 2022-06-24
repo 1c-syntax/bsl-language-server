@@ -106,9 +106,6 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       ctx.from.dataSource().stream(),
       ctx.from.dataSource().stream()
         .flatMap(dataSourceContext -> getInnerDataSource(dataSourceContext).stream())
-//        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
-//        .map(SDBLParser.JoinPartContext::dataSource)
-//        .filter(Objects::nonNull)
     );
   }
 
@@ -190,7 +187,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     // that is why -3 must be an index of penultimate identifier
     var penultimateChild = ctx.getChild(childCount - BAD_CHILD_COUNT);
 
-    String penultimateIdentifierName = penultimateChild.getText();
+    var penultimateIdentifierName = penultimateChild.getText();
 
     if (REF_PATTERN.matcher(penultimateIdentifierName).matches()) {
       if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
@@ -199,10 +196,11 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
       return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
     }
-    var lastChild = ctx.getChild(childCount - 1);
-    String lastIdentifierName = lastChild.getText();
-    if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
-      return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
+    if (childCount > BAD_CHILD_COUNT) {
+      var lastIdentifierName = ctx.getChild(childCount - 1).getText();
+      if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
+        return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
+      }
     }
     return false;
   }
