@@ -29,15 +29,20 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParser.DataSourceContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,6 +62,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
   private static final int BAD_CHILD_COUNT = 3;
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
+  public static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
   private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
 
   @Override
@@ -66,18 +72,20 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   private Stream<BSLParserRuleContext> checkQuery(SDBLParser.QueryContext ctx) {
-    var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
+    var columns = Trees.findAllTopLevelRuleNodes(ctx, RULE_COLUMNS).stream()
+      .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
+      .collect(Collectors.toList());
 
-    if (columnsCollection.isEmpty()) {
+    if (columns.isEmpty()) {
       return Stream.empty();
     }
 
     dataSourcesWithTabularFlag = dataSourcesWithTabularSection(ctx);
     if (dataSourcesWithTabularFlag.isEmpty()) {
-      return getSimpleOverused(columnsCollection);
+      return getSimpleOverused(columns);
     }
 
-    return getOverused(columnsCollection);
+    return getOverused(columns);
   }
 
   private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
@@ -89,7 +97,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
         HashMap::new));
   }
 
-  private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
+  private static Stream<? extends DataSourceContext> findAllDataSourceWithoutInnerQueries(
     SDBLParser.QueryContext ctx) {
     if (ctx.from == null){
       return Stream.empty();
@@ -97,28 +105,50 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return Stream.concat(
       ctx.from.dataSource().stream(),
       ctx.from.dataSource().stream()
-        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
-        .map(SDBLParser.JoinPartContext::dataSource)
-        .filter(Objects::nonNull)
+        .flatMap(dataSourceContext -> getInnerDataSource(dataSourceContext).stream())
+//        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
+//        .map(SDBLParser.JoinPartContext::dataSource)
+//        .filter(Objects::nonNull)
     );
   }
 
-  private static String getTableNameOrAlias(SDBLParser.DataSourceContext dataSource) {
+  private static Collection<DataSourceContext> getInnerDataSource(DataSourceContext dataSourceContext) {
+    var result = new ArrayList<DataSourceContext>();
+    Optional.ofNullable(dataSourceContext.dataSource())
+        .map(RefOveruseDiagnostic::getInnerDataSource)
+        .ifPresent(result::addAll);
+
+    var joinDataSources = dataSourceContext.joinPart().stream()
+      .map(SDBLParser.JoinPartContext::dataSource)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+    result.addAll(joinDataSources);
+
+    var dataSourcesFromJoins = joinDataSources.stream()
+      .flatMap(dataSourceContext1 -> getInnerDataSource(dataSourceContext1).stream())
+      .collect(Collectors.toList());
+
+    result.addAll(dataSourcesFromJoins);
+    return result;
+  }
+
+
+  private static String getTableNameOrAlias(DataSourceContext dataSource) {
     final var value = Optional.of(dataSource);
     return value
-      .map(SDBLParser.DataSourceContext::alias)
+      .map(DataSourceContext::alias)
       .map(alias -> (ParseTree)alias.name)
       .or(() -> value
-        .map(SDBLParser.DataSourceContext::table)
+        .map(DataSourceContext::table)
         .map(tableContext -> (ParseTree)tableContext.tableName))
       .or(() -> value
-        .map(SDBLParser.DataSourceContext::parameterTable)
+        .map(DataSourceContext::parameterTable)
         .map(tableContext -> (ParseTree)tableContext.parameter()))
       .map(ParseTree::getText)
       .orElse("");
   }
 
-  private static boolean isTableWithTabularSection(SDBLParser.DataSourceContext dataSourceContext) {
+  private static boolean isTableWithTabularSection(DataSourceContext dataSourceContext) {
     final var table = dataSourceContext.table();
     if (table == null) {
       return dataSourceContext.virtualTable() != null;
@@ -126,7 +156,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return table.tableName != null || table.objectTableName != null;
   }
 
-  private static Stream<BSLParserRuleContext> getSimpleOverused(Collection<ParseTree> columnsCollection) {
+  private static Stream<BSLParserRuleContext> getSimpleOverused(List<ParserRuleContext> columnsCollection) {
     return columnsCollection.stream()
       .filter(columnNode -> columnNode.getChildCount() > BAD_CHILD_COUNT)
       .map(column -> column.getChild(column.getChildCount() - 1))
@@ -134,7 +164,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .map(BSLParserRuleContext.class::cast);
   }
 
-  private Stream<BSLParserRuleContext> getOverused(Collection<ParseTree> columnsCollection) {
+  private Stream<BSLParserRuleContext> getOverused(List<ParserRuleContext> columnsCollection) {
     return columnsCollection.stream()
       .map(SDBLParser.ColumnContext.class::cast)
       .filter(column -> column.getChildCount() >= BAD_CHILD_COUNT)
