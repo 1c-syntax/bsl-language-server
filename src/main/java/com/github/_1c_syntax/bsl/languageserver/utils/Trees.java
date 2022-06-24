@@ -360,21 +360,69 @@ public final class Trees {
 
   /**
    * Получает дочерние ноды с нужными типами
+   *
+   * @param t - начальный узел дерева
+   * @param index - массив индексов
+   * @return найденные узлы
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
-    List<ParserRuleContext> nodes = new ArrayList<>();
-    List<Integer> indexes = Arrays.asList(index);
+    return findAllRuleNodes(t, Arrays.asList(index));
+  }
+
+  /**
+   * Получает дочерние ноды с нужными типами
+   *
+   * @param t - начальный узел дерева
+   * @param indexes - коллекция индексов
+   * @return найденные узлы
+   */
+  public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Collection<Integer> indexes) {
+    List<ParserRuleContext> result = new ArrayList<>();
 
     if (t instanceof ParserRuleContext
       && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
-      nodes.add((ParserRuleContext) t);
+      result.add((ParserRuleContext) t);
     }
 
     IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllRuleNodes(t.getChild(i), index))
-      .forEachOrdered(nodes::addAll);
+      .mapToObj(i -> findAllRuleNodes(t.getChild(i), indexes))
+      .forEachOrdered(result::addAll);
 
-    return nodes;
+    return result;
+  }
+
+  /**
+   * Получает "первые" дочерние ноды с нужными типами
+   * ВАЖНО: поиск вглубь найденной ноды с нужными индексом не выполняется
+   * Например, если указать RULE_codeBlock, то найдется только первый код блока, все вложенные найдены не будут
+   * ВАЖНО: начальная нода не проверяется на условие, т.к. тогда она единственная и вернется в результате
+   *
+   * @param t - начальный узел дерева
+   * @param indexes - коллекция индексов
+   * @return найденные узлы
+   */
+  public static Collection<ParserRuleContext> findAllTopLevelRuleNodes(ParserRuleContext t, Collection<Integer> indexes) {
+    var result = new ArrayList<ParserRuleContext>();
+
+    t.children.stream()
+      .map(node -> findAllTopLevelRuleNodesInner(node, indexes))
+      .forEachOrdered(result::addAll);
+
+    return result;
+  }
+
+  private static Collection<ParserRuleContext> findAllTopLevelRuleNodesInner(ParseTree t, Collection<Integer> indexes) {
+    if (t instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
+      return List.of((ParserRuleContext) t);
+    }
+
+    List<ParserRuleContext> result = new ArrayList<>();
+    IntStream.range(0, t.getChildCount())
+      .mapToObj(i -> findAllTopLevelRuleNodesInner(t.getChild(i), indexes))
+      .forEachOrdered(result::addAll);
+
+    return result;
   }
 
   /**
