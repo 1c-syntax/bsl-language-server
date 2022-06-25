@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
@@ -33,7 +34,9 @@ import com.github._1c_syntax.bsl.parser.SDBLParser.DataSourceContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Range;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,8 +65,19 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
   private static final int BAD_CHILD_COUNT = 3;
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
-  public static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
+  private static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
   private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
+  private Map<String, Boolean> prevDataSourcesWithTabularFlag = Collections.emptyMap();
+  @Nullable private Range prevQueryRange;
+
+  @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    var result = super.visitQueryPackage(ctx);
+    prevQueryRange = null;
+    prevDataSourcesWithTabularFlag = Collections.emptyMap();
+    dataSourcesWithTabularFlag = Collections.emptyMap();
+    return result;
+  }
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
@@ -88,13 +102,26 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return getOverused(columns);
   }
 
-  private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
-    return findAllDataSourceWithoutInnerQueries(ctx)
+  private Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
+    var newResult = findAllDataSourceWithoutInnerQueries(ctx)
       .collect(Collectors.toMap(
         RefOveruseDiagnostic::getTableNameOrAlias,
         RefOveruseDiagnostic::isTableWithTabularSection,
         (existing, replacement) -> existing,
         HashMap::new));
+
+    var queryRange = Ranges.create(ctx);
+
+    final Map<String, Boolean> result;
+    if (prevQueryRange == null || !Ranges.containsRange(prevQueryRange, queryRange)){
+      result = newResult;
+      prevDataSourcesWithTabularFlag = result;
+      prevQueryRange = queryRange;
+    } else {
+      result = new HashMap<>(newResult);
+      result.putAll(prevDataSourcesWithTabularFlag);
+    }
+    return result;
   }
 
   private static Stream<? extends DataSourceContext> findAllDataSourceWithoutInnerQueries(
@@ -196,11 +223,9 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
       return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
     }
-    if (childCount > BAD_CHILD_COUNT) {
-      var lastIdentifierName = ctx.getChild(childCount - 1).getText();
-      if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
-        return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
-      }
+    var lastIdentifierName = ctx.getChild(childCount - 1).getText();
+    if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
+      return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
     }
     return false;
   }
