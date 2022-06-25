@@ -45,7 +45,13 @@ class MissingMethodOfCommonModuleDiagnosticTest extends AbstractDiagnosticTest<M
       .hasRange(3, 4, 44)
       .hasRange(4, 4, 48)
       .hasRange(5, 8, 54)
-      .hasSize(5);
+
+      .hasRange(11, 4, 56)
+      .hasRange(12, 8, 30)
+      .hasRange(13, 4, 26)
+      .hasRange(14, 4, 26)
+      .hasRange(15, 8, 30)
+      .hasSize(10);
   }
 
   @Test
