@@ -28,8 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
+import com.github._1c_syntax.mdclasses.mdo.MDO;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -131,7 +132,7 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
   private final LanguageServerConfiguration serverConfiguration;
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MDOBase mdo) {
 
     // проверка имени метаданного
     checkName(mdo.getName(), mdo.getMdoReference());

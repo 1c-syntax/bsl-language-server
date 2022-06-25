@@ -30,6 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDO;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
@@ -62,7 +64,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
   }
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MDOBase mdo) {
     if (mdo.getName().length() > maxMetadataObjectNameLength) {
       addAttributeDiagnostic(mdo);
     }
@@ -82,7 +84,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
     }
   }
 
-  private void addAttributeDiagnostic(AbstractMDObjectBase attribute) {
+  private void addAttributeDiagnostic(MDOBase attribute) {
     String mdoRef;
     if (serverConfiguration.getLanguage() == Language.RU) {
       mdoRef = attribute.getMdoReference().getMdoRefRu();

@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -93,8 +94,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     var typeModule = documentContext.getModuleType();
     if (typeModule == ModuleType.CommonModule || typeModule == ModuleType.ManagerModule) {
-      documentContext.getMdObject().ifPresent(mdObjectBase -> {
-
+      documentContext.getMdObject().ifPresent(mdObjectBase1 -> {
+        var mdObjectBase = (AbstractMDObjectBase) mdObjectBase1;
         needCheckName = !(mdObjectBase instanceof MDCommonModule)
           || ((MDCommonModule) mdObjectBase).getReturnValuesReuse() == ReturnValueReuse.DONT_USE;
 

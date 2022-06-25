@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOHasModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
@@ -53,7 +55,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
-  private AbstractMDObjectBase module;
+  private MDOHasModule module;
   private DocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {
@@ -103,7 +105,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
     // given
     when(module.getName()).thenReturn(LONG_NAME);
-    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+    when(documentContext.getMdObject()).thenReturn(Optional.of((MDOBase) module));
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -125,7 +127,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     // given
     when(module.getName()).thenReturn(LONG_NAME);
 
-    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+    when(documentContext.getMdObject()).thenReturn(Optional.of((MDOBase)module));
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);

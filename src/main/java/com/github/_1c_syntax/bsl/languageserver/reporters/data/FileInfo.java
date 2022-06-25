@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -50,7 +51,7 @@ public class FileInfo {
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
-    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
+    Optional<MDOBase> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
       mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     } else {

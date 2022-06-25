@@ -59,6 +59,7 @@ public class MdoRefBuilder {
 
   public static String getMdoRef(DocumentContext documentContext) {
     var mdoRef = documentContext.getMdObject()
+      .map(AbstractMDObjectBase.class::cast)
       .map(AbstractMDObjectBase::getMdoReference)
       .map(MDOReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());

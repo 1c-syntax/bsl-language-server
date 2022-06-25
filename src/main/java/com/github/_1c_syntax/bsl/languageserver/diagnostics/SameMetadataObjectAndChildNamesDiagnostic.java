@@ -28,8 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
+import com.github._1c_syntax.mdclasses.mdo.MDO;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.attributes.AbstractMDOAttribute;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
@@ -83,7 +84,7 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
   }
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MDOBase mdo) {
     if (!(mdo instanceof AbstractMDObjectComplex) || ((AbstractMDObjectComplex) mdo).getAttributes().isEmpty()) {
       return;
     }

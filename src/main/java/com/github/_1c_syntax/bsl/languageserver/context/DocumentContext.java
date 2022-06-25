@@ -38,7 +38,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOHasModule;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
 import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
@@ -238,8 +239,8 @@ public class DocumentContext {
     return supportVariants.getOrCompute();
   }
 
-  public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+  public Optional<MDOBase> getMdObject() {
+    return Optional.ofNullable((MDOBase)(getServerContext().getConfiguration().getModulesByObject().get(getUri())));
   }
 
   public List<SDBLTokenizer> getQueries() {

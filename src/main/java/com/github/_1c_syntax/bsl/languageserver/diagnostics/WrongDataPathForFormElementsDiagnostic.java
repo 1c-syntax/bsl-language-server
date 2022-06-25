@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -86,10 +87,11 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private void checkAllFormsWithoutModules() {
     checkMdoObjectStream(form -> !haveFormModules(form),
-      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream());
+      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream()
+        .map(abstractMDObjectBase -> (MDOBase)abstractMDObjectBase));
   }
 
-  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<AbstractMDObjectBase> stream) {
+  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<MDOBase> stream) {
 
     stream
       .filter(Form.class::isInstance)

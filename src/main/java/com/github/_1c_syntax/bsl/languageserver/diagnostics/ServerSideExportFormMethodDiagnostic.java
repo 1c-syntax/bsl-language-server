@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.support.FormType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 
@@ -52,7 +53,7 @@ public class ServerSideExportFormMethodDiagnostic extends AbstractSymbolTreeDiag
 
   @Override
   public void visitModule(ModuleSymbol module) {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
+    documentContext.getMdObject().ifPresent((MDOBase mdo) -> {
       // проверка актуальна только для управляемых форм
       if (mdo instanceof AbstractMDOForm && ((AbstractMDOForm) mdo).getFormType() != FormType.ORDINARY) {
         super.visitModule(module);

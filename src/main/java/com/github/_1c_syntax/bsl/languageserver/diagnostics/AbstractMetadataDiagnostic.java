@@ -23,7 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDO;
+import com.github._1c_syntax.mdclasses.mdo.MDOBase;
 import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -105,10 +106,10 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
-  protected abstract void checkMetadata(AbstractMDObjectBase mdo);
+  protected abstract void checkMetadata(MDOBase mdo);
 
   private void checkMetadataWithModules() {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
+    documentContext.getMdObject().ifPresent((MDOBase mdo) -> {
       if (mdo instanceof AbstractMDObjectBSL) {
         var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
           .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
