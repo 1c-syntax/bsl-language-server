@@ -21,26 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 
-class MissingMethodOfCommonModuleDiagnosticTest extends AbstractDiagnosticTest<MissingMethodOfCommonModuleDiagnostic> {
+class MissingCommonModuleMethodDiagnosticTest extends AbstractDiagnosticTest<MissingCommonModuleMethodDiagnostic> {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
-  MissingMethodOfCommonModuleDiagnosticTest() {
-    super(MissingMethodOfCommonModuleDiagnostic.class);
+  MissingCommonModuleMethodDiagnosticTest() {
+    super(MissingCommonModuleMethodDiagnostic.class);
   }
 
   @Test

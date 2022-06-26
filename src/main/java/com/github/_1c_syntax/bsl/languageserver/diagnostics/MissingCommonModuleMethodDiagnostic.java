@@ -50,7 +50,7 @@ import java.util.Optional;
   minutesToFix = 1
 )
 
-public class MissingMethodOfCommonModuleDiagnostic extends AbstractVisitorDiagnostic {
+public class MissingCommonModuleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   @Value
   @AllArgsConstructor
