@@ -1,7 +1,29 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -15,6 +37,7 @@ import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -116,10 +139,16 @@ public class MissingMethodOfCommonModuleDiagnostic extends AbstractVisitorDiagno
   private CallData checkNodeCombination(TerminalNode moduleNameNode, BSLParser.MethodNameContext methodNameContext) {
     final var moduleName = moduleNameNode.getText();
     final var methodName = methodNameContext.getText();
-    if (notExistModuleMethod(moduleName, methodName)){
+    if (!isVariableInCurrentModule(moduleName, moduleNameNode) && notExistModuleMethod(moduleName, methodName)){
       return new CallData(moduleName, methodName, getRange(moduleNameNode, methodNameContext));
     }
     return null;
+  }
+
+  private boolean isVariableInCurrentModule(String name, TerminalNode moduleNameNode) {
+    return documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), Ranges.create(moduleNameNode)))
+      .anyMatch(methodSymbol -> documentContext.getSymbolTree().getVariableSymbol(name, methodSymbol).isPresent());
   }
 
   private boolean notExistModuleMethod(String moduleName, String methodName) {
@@ -135,7 +164,7 @@ public class MissingMethodOfCommonModuleDiagnostic extends AbstractVisitorDiagno
       .map(serverContext::getDocument)
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(methodName))
-      .filter(MethodSymbol::isExport) // TODO нужно сделать специальное сообщение про обращение к приватному методу
+      .filter(MethodSymbol::isExport) // TODO нужно сделать отдельное сообщение про обращение к приватному методу
       .isEmpty();
   }
 
@@ -144,7 +173,7 @@ public class MissingMethodOfCommonModuleDiagnostic extends AbstractVisitorDiagno
   }
 
   private void fireIssue(CallData callData) {
-    final var message = info.getMessage(callData.moduleName, callData.methodName);
+    final var message = info.getMessage(callData.methodName, callData.moduleName);
     diagnosticStorage.addDiagnostic(callData.moduleMethodRange, message);
   }
 }
