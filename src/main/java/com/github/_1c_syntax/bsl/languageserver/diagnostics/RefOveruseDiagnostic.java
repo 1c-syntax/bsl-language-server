@@ -66,6 +66,25 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private static final int BAD_CHILD_COUNT = 3;
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
   private static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
+  private static final Set<Integer> METADATA_TYPES = Set.of(
+      SDBLParser.BUSINESS_PROCESS_TYPE,
+      SDBLParser.CATALOG_TYPE,
+      SDBLParser.DOCUMENT_TYPE,
+      SDBLParser.INFORMATION_REGISTER_TYPE,
+      SDBLParser.CONSTANT_TYPE,
+      SDBLParser.FILTER_CRITERION_TYPE,
+      SDBLParser.EXCHANGE_PLAN_TYPE,
+      SDBLParser.SEQUENCE_TYPE,
+      SDBLParser.DOCUMENT_JOURNAL_TYPE,
+      SDBLParser.ENUM_TYPE,
+      SDBLParser.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
+      SDBLParser.CHART_OF_ACCOUNTS_TYPE,
+      SDBLParser.CHART_OF_CALCULATION_TYPES_TYPE,
+      SDBLParser.ACCUMULATION_REGISTER_TYPE,
+      SDBLParser.ACCOUNTING_REGISTER_TYPE,
+      SDBLParser.CALCULATION_REGISTER_TYPE,
+      SDBLParser.TASK_TYPE,
+      SDBLParser.EXTERNAL_DATA_SOURCE_TYPE);
   private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
   private Map<String, Boolean> prevDataSourcesWithTabularFlag = Collections.emptyMap();
   @Nullable private Range prevQueryRange;
@@ -208,11 +227,12 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     //     ^     ^    ^
     //     0     1    2
 
-    final int childCount = ctx.children.size();
+    var children = extractFirstMetadataTypeName(ctx);
+    final int childCount = children.size();
 
     // dots are also children of ColumnContext,
     // that is why -3 must be an index of penultimate identifier
-    var penultimateChild = ctx.getChild(childCount - BAD_CHILD_COUNT);
+    var penultimateChild = children.get(childCount - BAD_CHILD_COUNT);
 
     var penultimateIdentifierName = penultimateChild.getText();
 
@@ -220,13 +240,23 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
         return true;
       }
-      var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
+      var prevChildID = children.get(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
       return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
     }
-    var lastIdentifierName = ctx.getChild(childCount - 1).getText();
+    var lastIdentifierName = children.get(childCount - 1).getText();
     if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
       return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
     }
     return false;
+  }
+
+  private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
+    final var mdoName = ctx.mdoName;
+    final var children = ctx.children;
+    if (mdoName == null || children.size() < COUNT_OF_TABLE_DOT_REF_DOT_REF
+        || !METADATA_TYPES.contains(ctx.mdoName.getStart().getType())){
+      return children;
+    }
+    return children.subList(1, children.size() - 1);
   }
 }
