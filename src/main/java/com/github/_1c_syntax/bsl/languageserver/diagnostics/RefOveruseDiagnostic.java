@@ -85,6 +85,8 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       SDBLParser.CALCULATION_REGISTER_TYPE,
       SDBLParser.TASK_TYPE,
       SDBLParser.EXTERNAL_DATA_SOURCE_TYPE);
+  private static final Collection<Integer> EXCLUDED_COLUMNS_ROOT =
+    Set.of(SDBLParser.RULE_inlineTableField, SDBLParser.RULE_query);
   private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
   private Map<String, Boolean> prevDataSourcesWithTabularFlag = Collections.emptyMap();
   @Nullable private Range prevQueryRange;
@@ -107,6 +109,8 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private Stream<BSLParserRuleContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columns = Trees.findAllTopLevelRuleNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
+      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
+        .getRuleIndex() == SDBLParser.RULE_query)
       .collect(Collectors.toList());
 
     if (columns.isEmpty()) {
