@@ -40,6 +40,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,18 @@ public class ReferenceIndexFiller {
       return super.visitGlobalMethodCall(ctx);
     }
 
+    @Override
+    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+      final var identifier = ctx.IDENTIFIER();
+      if (identifier != null){
+        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, Collections.emptyList());
+        if (!mdoRef.isEmpty()) {
+          getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+        }
+      }
+      return super.visitLValue(ctx);
+    }
+
     private void checkCall(String mdoRef, Token methodName) {
 
       String methodNameText = methodName.getText();
@@ -176,6 +189,12 @@ public class ReferenceIndexFiller {
         .map(this::getMethodName)
         .findFirst()
         .orElse(Optional.empty());
+    }
+
+    private Optional<Token> getMethodName(BSLParser.LValueContext lValueContext) {
+      return Optional.ofNullable(lValueContext.acceptor())
+        .map(BSLParser.AcceptorContext::modifier)
+        .flatMap(this::getMethodName);
     }
   }
 
