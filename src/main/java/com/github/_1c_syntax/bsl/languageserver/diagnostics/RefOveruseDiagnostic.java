@@ -63,7 +63,8 @@ import java.util.stream.Stream;
 public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
-  private static final int BAD_CHILD_COUNT = 3;
+  private static final int COUNT_OF_TABLE_DOT_REF = 3;
+  private static final int LAST_INDEX_OF_TABLE_DOT_REF = COUNT_OF_TABLE_DOT_REF - 1;
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
   private static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
   private static final Set<Integer> METADATA_TYPES = Set.of(
@@ -205,7 +206,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static Stream<BSLParserRuleContext> getSimpleOverused(List<ParserRuleContext> columnsCollection) {
     return columnsCollection.stream()
-      .filter(columnNode -> columnNode.getChildCount() > BAD_CHILD_COUNT)
+      .filter(columnNode -> columnNode.getChildCount() > COUNT_OF_TABLE_DOT_REF)
       .map(column -> column.getChild(column.getChildCount() - 1))
       .filter(lastChild -> REF_PATTERN.matcher(lastChild.getText()).matches())
       .map(BSLParserRuleContext.class::cast);
@@ -214,7 +215,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private Stream<BSLParserRuleContext> getOverused(List<ParserRuleContext> columnsCollection) {
     return columnsCollection.stream()
       .map(SDBLParser.ColumnContext.class::cast)
-      .filter(column -> column.getChildCount() >= BAD_CHILD_COUNT)
+      .filter(column -> column.getChildCount() >= COUNT_OF_TABLE_DOT_REF)
       .filter(this::isOveruse)
       .map(BSLParserRuleContext.class::cast);
   }
@@ -232,26 +233,33 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     //     0     1    2
 
     var children = extractFirstMetadataTypeName(ctx);
+    var refIndex = findLastRef(children);
+
     final int childCount = children.size();
-
-    // dots are also children of ColumnContext,
-    // that is why -3 must be an index of penultimate identifier
-    var penultimateChild = children.get(childCount - BAD_CHILD_COUNT);
-
-    var penultimateIdentifierName = penultimateChild.getText();
-
-    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()) {
-      if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
-        return true;
-      }
-      var prevChildID = children.get(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
-      return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
-    }
-    var lastIdentifierName = children.get(childCount - 1).getText();
-    if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
+    final var lastIndex = childCount - 1;
+    if (refIndex == lastIndex) {
+      var penultimateIdentifierName = children.get(lastIndex - LAST_INDEX_OF_TABLE_DOT_REF).getText();
       return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
     }
-    return false;
+    if (refIndex < LAST_INDEX_OF_TABLE_DOT_REF){
+      return false;
+    }
+    if (refIndex > LAST_INDEX_OF_TABLE_DOT_REF){
+      return true;
+    }
+    var tabName = children.get(0).getText();
+    return !dataSourcesWithTabularFlag.getOrDefault(tabName, false);
+  }
+
+  private static int findLastRef(List<ParseTree> children) {
+    for (int i = children.size() - 1; i >= 0 ; i--) {
+      final var child = children.get(i);
+      final var childText = child.getText();
+      if (REF_PATTERN.matcher(childText).matches()) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
