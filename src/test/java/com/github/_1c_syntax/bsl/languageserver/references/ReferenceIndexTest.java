@@ -36,6 +36,7 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import javax.annotation.PostConstruct;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -156,6 +157,46 @@ class ReferenceIndexTest {
     assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
     assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(2, 22, 41));
     assertThat(reference.getUri()).isEqualTo(uri);
+  }
+
+  // TODO еще нужен тест для параметра, совпадающего с именем общего модуля, ссылки на общий модуль при этом не должны получаться
+
+  @Test
+  void getReferencesToCommonModuleMethodFromAssignment() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_Присваивание").orElseThrow();
+    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
+
+    var uri = documentContext.getUri();
+    var position = new Position(9, 30);
+
+    // when
+    final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
+      .filter(reference -> reference.getUri().equals(uri))
+      .collect(Collectors.toList());
+
+    // then
+    var reference = referencesTo.get(0);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(8, 26, 45));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    reference = referencesTo.get(1);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(9, 26, 45));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    reference = referencesTo.get(2);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(10, 22, 41));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    assertThat(referencesTo).hasSize(3);
   }
 
   @Test
