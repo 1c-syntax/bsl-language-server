@@ -146,7 +146,10 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
       if (identifier != null){
-        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, Collections.emptyList());
+        final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
+          .map(BSLParser.AcceptorContext::modifier)
+          .orElseGet(Collections::emptyList);
+        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
         if (!mdoRef.isEmpty()) {
           getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
         }
