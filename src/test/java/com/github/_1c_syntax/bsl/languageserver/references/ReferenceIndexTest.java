@@ -173,6 +173,7 @@ class ReferenceIndexTest {
     // when
     final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
       .filter(reference -> reference.getUri().equals(uri))
+      .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.toLocation().getRange()))
       .collect(Collectors.toList());
 
     // then
@@ -192,6 +193,44 @@ class ReferenceIndexTest {
     assertThat(reference.getFrom()).isEqualTo(methodSymbol);
     assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
     assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(10, 22, 41));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    assertThat(referencesTo).hasSize(3);
+  }
+
+  @Test
+  void getReferencesToFullPathModuleMethodFromAssignment() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ВызовЧерезПолноеИмяОбъекта").orElseThrow();
+    var commonModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
+
+    var uri = documentContext.getUri();
+
+    // when
+    final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
+      .filter(reference -> reference.getUri().equals(uri))
+      .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.toLocation().getRange()))
+      .collect(Collectors.toList());
+
+    // then
+    var reference = referencesTo.get(0);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(22, 42, 61));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    reference = referencesTo.get(1);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(23, 42, 61));
+    assertThat(reference.getUri()).isEqualTo(uri);
+
+    reference = referencesTo.get(2);
+    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
+    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(24, 38, 57));
     assertThat(reference.getUri()).isEqualTo(uri);
 
     assertThat(referencesTo).hasSize(3);
