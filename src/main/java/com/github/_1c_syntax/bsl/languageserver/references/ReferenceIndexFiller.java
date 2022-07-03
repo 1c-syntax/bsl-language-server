@@ -35,6 +35,7 @@ import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
@@ -229,9 +230,9 @@ public class ReferenceIndexFiller {
         return Collections.emptyList();
       }
       return paramList.param().stream()
-        .map(paramContext -> paramContext.IDENTIFIER())
+        .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
-        .map(terminalNode -> terminalNode.getText())
+        .map(ParseTree::getText)
         .collect(Collectors.toList());
     }
   }
