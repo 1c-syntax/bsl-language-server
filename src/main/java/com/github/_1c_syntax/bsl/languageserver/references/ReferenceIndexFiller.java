@@ -229,7 +229,9 @@ public class ReferenceIndexFiller {
         return Collections.emptyList();
       }
       return paramList.param().stream()
-        .map(paramContext -> paramContext.IDENTIFIER().getText())
+        .map(paramContext -> paramContext.IDENTIFIER())
+        .filter(Objects::nonNull)
+        .map(terminalNode -> terminalNode.getText())
         .collect(Collectors.toList());
     }
   }
