@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -206,38 +205,20 @@ class ReferenceIndexTest {
 
   @Test
   void getReferencesToCommonModuleMethodWithEqualNameWitMethodParam() {
-    // given
+
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ИмяПараметр").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
-    var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
-
-    var uri = documentContext.getUri();
-
-    // when
-//    final var commonModuleCallCount = referenceIndex.getReferencesFrom(uri).stream()
-//      .filter(reference -> reference.getFrom().getName().equalsIgnoreCase("Тест_ИмяПараметр"))
-//      .filter(reference -> MethodSymbol.class.isInstance(reference.getSymbol()))
-//      .filter(reference -> reference.getSourceDefinedSymbol().get().getName().equalsIgnoreCase("ПервыйОбщийМодуль"))
-//      .count();
-//    final var referencesFromSymbolOccurrenceRepo = symbolOccurrenceRepository.occurrencesToSymbols.entrySet().stream()
-//      .filter(symbolSetEntry -> symbolSetEntry.getKey().getMdoRef().equalsIgnoreCase("CommonModule.ПервыйОбщийМодуль"))
-//      .filter(symbolSetEntry -> symbolSetEntry.getValue().stream()
-//        .filter(symbolOccurrence -> symbolOccurrence.getLocation().getUri() == uri)
-//        .anyMatch(symbolOccurrence -> Ranges.containsRange(methodSymbol.getRange(), symbolOccurrence.getLocation().getRange())))
-//      .collect(Collectors.toList());
-//
-//    // then
-//    assertThat(referencesFromSymbolOccurrenceRepo.size()).isEqualTo(0);
+    final var commonModuleMdoRef = serverContext.getConfiguration().getCommonModule("ПервыйОбщийМодуль").orElseThrow()
+      .getMdoReference().getMdoRef();
 
     final var referencesFromLocationRepo = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
-      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
+      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getMdoRef().equals(commonModuleMdoRef))
       .filter(symbolOccurrence -> Ranges.containsRange(methodSymbol.getRange(), symbolOccurrence.getLocation().getRange()))
       .collect(Collectors.toList());
 
-    assertThat(referencesFromLocationRepo.size()).isEqualTo(0);
+    assertThat(referencesFromLocationRepo).isEmpty();
   }
 
   @Test
