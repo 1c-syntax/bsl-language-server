@@ -22,13 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,6 +51,8 @@ class ReferenceIndexTest {
 
   @Autowired
   private ReferenceIndex referenceIndex;
+  @Autowired
+  private LocationRepository locationRepository;
 
   @Autowired
   private ServerContext serverContext;
@@ -159,8 +165,6 @@ class ReferenceIndexTest {
     assertThat(reference.getUri()).isEqualTo(uri);
   }
 
-  // TODO еще нужен тест для параметра, совпадающего с именем общего модуля, ссылки на общий модуль при этом не должны получаться
-
   @Test
   void getReferencesToCommonModuleMethodFromAssignment() {
     // given
@@ -170,7 +174,6 @@ class ReferenceIndexTest {
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
 
     var uri = documentContext.getUri();
-    var position = new Position(9, 30);
 
     // when
     final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
@@ -197,6 +200,44 @@ class ReferenceIndexTest {
     assertThat(reference.getUri()).isEqualTo(uri);
 
     assertThat(referencesTo).hasSize(3);
+  }
+
+  // TODO еще нужен тест для параметра, совпадающего с именем общего модуля, ссылки на общий модуль при этом не должны получаться
+
+  @Test
+  void getReferencesToCommonModuleMethodWithEqualNameWitMethodParam() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ИмяПараметр").orElseThrow();
+    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
+
+    var uri = documentContext.getUri();
+
+    // when
+//    final var commonModuleCallCount = referenceIndex.getReferencesFrom(uri).stream()
+//      .filter(reference -> reference.getFrom().getName().equalsIgnoreCase("Тест_ИмяПараметр"))
+//      .filter(reference -> MethodSymbol.class.isInstance(reference.getSymbol()))
+//      .filter(reference -> reference.getSourceDefinedSymbol().get().getName().equalsIgnoreCase("ПервыйОбщийМодуль"))
+//      .count();
+//    final var referencesFromSymbolOccurrenceRepo = symbolOccurrenceRepository.occurrencesToSymbols.entrySet().stream()
+//      .filter(symbolSetEntry -> symbolSetEntry.getKey().getMdoRef().equalsIgnoreCase("CommonModule.ПервыйОбщийМодуль"))
+//      .filter(symbolSetEntry -> symbolSetEntry.getValue().stream()
+//        .filter(symbolOccurrence -> symbolOccurrence.getLocation().getUri() == uri)
+//        .anyMatch(symbolOccurrence -> Ranges.containsRange(methodSymbol.getRange(), symbolOccurrence.getLocation().getRange())))
+//      .collect(Collectors.toList());
+//
+//    // then
+//    assertThat(referencesFromSymbolOccurrenceRepo.size()).isEqualTo(0);
+
+    final var referencesFromLocationRepo = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
+      .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
+      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
+      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
+      .filter(symbolOccurrence -> Ranges.containsRange(methodSymbol.getRange(), symbolOccurrence.getLocation().getRange()))
+      .collect(Collectors.toList());
+
+    assertThat(referencesFromLocationRepo.size()).isEqualTo(0);
   }
 
   @Test
