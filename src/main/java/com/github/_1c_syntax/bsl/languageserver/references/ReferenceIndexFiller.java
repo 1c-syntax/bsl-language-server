@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
@@ -85,17 +84,17 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private Collection<String> subParameters = Collections.emptyList();
+    private Collection<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
     public BSLParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
-      subParameters = calcParams(ctx.paramList());
+      commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitProcDeclaration(ctx);
     }
 
     @Override
     public BSLParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
-      subParameters = calcParams(ctx.paramList());
+      commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitFuncDeclaration(ctx);
     }
 
@@ -163,19 +162,11 @@ public class ReferenceIndexFiller {
       for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
         var moduleType = e.getKey();
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
-            || (moduleType == ModuleType.CommonModule && isParamNameEqualCommonModule(mdoRef, configuration))) {
+            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
-    }
-
-    private boolean isParamNameEqualCommonModule(String mdoRef, Configuration configuration) {
-      return subParameters.stream()
-        .map(configuration::getCommonModule)
-        .filter(Optional::isPresent)
-        .flatMap(Optional::stream)
-        .anyMatch(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef().equalsIgnoreCase(mdoRef));
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
@@ -225,15 +216,20 @@ public class ReferenceIndexFiller {
         .flatMap(this::getMethodName);
     }
 
-    private List<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
+    private Collection<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
       if (paramList == null) {
-        return Collections.emptyList();
+        return Collections.emptySet();
       }
+      final var configuration = documentContext.getServerContext().getConfiguration();
       return paramList.param().stream()
         .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
         .map(ParseTree::getText)
-        .collect(Collectors.toList());
+        .map(configuration::getCommonModule)
+        .filter(Optional::isPresent)
+        .flatMap(Optional::stream)
+        .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
+        .collect(Collectors.toSet());
     }
   }
 

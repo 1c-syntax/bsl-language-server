@@ -197,8 +197,6 @@ class ReferenceIndexTest {
     assertThat(referencesTo).hasSize(3);
   }
 
-  // TODO еще нужен тест для параметра, совпадающего с именем общего модуля, ссылки на общий модуль при этом не должны получаться
-
   @Test
   void getReferencesToCommonModuleMethodWithEqualNameWitMethodParam() {
 
