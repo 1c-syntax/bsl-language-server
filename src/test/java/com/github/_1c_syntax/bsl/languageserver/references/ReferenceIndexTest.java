@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -50,8 +48,6 @@ class ReferenceIndexTest {
 
   @Autowired
   private ReferenceIndex referenceIndex;
-  @Autowired
-  private LocationRepository locationRepository;
 
   @Autowired
   private ServerContext serverContext;
@@ -208,14 +204,9 @@ class ReferenceIndexTest {
 
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ИмяПараметр").orElseThrow();
-    final var commonModuleMdoRef = serverContext.getConfiguration().getCommonModule("ПервыйОбщийМодуль").orElseThrow()
-      .getMdoReference().getMdoRef();
 
-    final var referencesFromLocationRepo = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
-      .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
-      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
-      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getMdoRef().equals(commonModuleMdoRef))
-      .filter(symbolOccurrence -> Ranges.containsRange(methodSymbol.getRange(), symbolOccurrence.getLocation().getRange()))
+    final var referencesFromLocationRepo = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
+      .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.getSelectionRange()))
       .collect(Collectors.toList());
 
     assertThat(referencesFromLocationRepo).isEmpty();
