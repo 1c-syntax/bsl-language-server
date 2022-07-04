@@ -11,6 +11,10 @@
     {
       "name": "bsl-language-server.main",
       "languageLevel": 11
+    },
+    {
+      "name": "project",
+      "languageLevel": 11
     }
   ]
 }

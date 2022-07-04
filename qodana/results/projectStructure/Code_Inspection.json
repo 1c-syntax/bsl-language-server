@@ -704,13 +704,13 @@
           "path": "file://$PROJECT_DIR$/src/main",
           "sourceFolders": [
             {
-              "path": "file://$PROJECT_DIR$/src/main/java",
-              "type": "Source",
+              "path": "file://$PROJECT_DIR$/src/main/resources",
+              "type": "Resource",
               "packagePrefix": ""
             },
             {
-              "path": "file://$PROJECT_DIR$/src/main/resources",
-              "type": "Resource",
+              "path": "file://$PROJECT_DIR$/src/main/java",
+              "type": "Source",
               "packagePrefix": ""
             }
           ]
@@ -1256,6 +1256,25 @@
         {
           "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
           "type": "Library"
+        }
+      ]
+    },
+    {
+      "name": "project",
+      "contentEntries": [
+        {
+          "path": "file://$PROJECT_DIR$",
+          "sourceFolders": []
+        }
+      ],
+      "orderEntries": [
+        {
+          "name": "jbr-11",
+          "type": "SDK"
+        },
+        {
+          "name": "<Module source>",
+          "type": "Own sources"
         }
       ]
     }
