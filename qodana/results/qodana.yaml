@@ -1,7 +1,8 @@
 version: "1.0"
+linter: jetbrains/qodana-python:2022.1-eap
 profile:
   name: qodana.starter
-include:
-  - name: CheckDependencyLicenses
 exclude:
   - name: OptionalUsedAsFieldOrParameterType
+include:
+  - name: CheckDependencyLicenses

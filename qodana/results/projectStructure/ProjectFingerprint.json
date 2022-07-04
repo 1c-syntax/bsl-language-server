@@ -1,13 +1,12 @@
 {
   "languages": [
-    "Java",
+    "Plain text",
     "Properties",
     "JSON",
-    "Plain text",
     "XML",
+    "SVG",
+    "Python",
     ".gitignore (GitIgnore)",
-    "EditorConfig",
-    "Lombok.Config",
-    "Kotlin"
+    "EditorConfig"
   ]
 }

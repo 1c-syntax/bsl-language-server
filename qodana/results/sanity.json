@@ -1,0 +1,129 @@
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Python",
+  "type": "Unresolved references",
+  "tags": [
+    "Python",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unused import statement <code>import pytest</code>",
+  "detailsInfo": "Reports references in your code that cannot be resolved.\n\nIn a dynamically typed language, this is possible in a limited number of cases.\n\nIf a reference type is unknown, then its attributes are not highlighted as unresolved even if you know that they should be:\n\n```\ndef print_string(s):\n  print(s.abc())\n```\n\nIn this code fragment `s` is always a string and `abc` should be highlighted as unresolved. However, `s`\ntype is inferred as `Any` and no warning is reported.\n\nThe IDE provides quick-fix actions to add missing references on-the-fly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": ".github/scripts/benchmark.py",
+      "language": "Python",
+      "line": 1,
+      "offset": 0,
+      "length": 13,
+      "code": {
+        "startLine": 1,
+        "length": 13,
+        "offset": 0,
+        "surroundingCode": "import pytest\nimport os\nimport re\nimport ntpath"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "project",
+    "inspectionName": "PyUnresolvedReferencesInspection"
+  },
+  "hash": "-7945414628785350750"
+},{
+  "tool": "Code Inspection",
+  "category": "Python",
+  "type": "Unresolved references",
+  "tags": [
+    "Python",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "No module named 'pytest'",
+  "detailsInfo": "Reports references in your code that cannot be resolved.\n\nIn a dynamically typed language, this is possible in a limited number of cases.\n\nIf a reference type is unknown, then its attributes are not highlighted as unresolved even if you know that they should be:\n\n```\ndef print_string(s):\n  print(s.abc())\n```\n\nIn this code fragment `s` is always a string and `abc` should be highlighted as unresolved. However, `s`\ntype is inferred as `Any` and no warning is reported.\n\nThe IDE provides quick-fix actions to add missing references on-the-fly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": ".github/scripts/benchmark.py",
+      "language": "Python",
+      "line": 1,
+      "offset": 7,
+      "length": 6,
+      "code": {
+        "startLine": 1,
+        "length": 6,
+        "offset": 7,
+        "surroundingCode": "import pytest\nimport os\nimport re\nimport ntpath"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "project",
+    "inspectionName": "PyUnresolvedReferencesInspection"
+  },
+  "hash": "-5675735151732350759"
+},{
+  "tool": "Code Inspection",
+  "category": "Python",
+  "type": "Unresolved references",
+  "tags": [
+    "Python",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference 'pybadges'",
+  "detailsInfo": "Reports references in your code that cannot be resolved.\n\nIn a dynamically typed language, this is possible in a limited number of cases.\n\nIf a reference type is unknown, then its attributes are not highlighted as unresolved even if you know that they should be:\n\n```\ndef print_string(s):\n  print(s.abc())\n```\n\nIn this code fragment `s` is always a string and `abc` should be highlighted as unresolved. However, `s`\ntype is inferred as `Any` and no warning is reported.\n\nThe IDE provides quick-fix actions to add missing references on-the-fly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": ".github/scripts/gen-bandge.py",
+      "language": "Python",
+      "line": 2,
+      "offset": 5,
+      "length": 8,
+      "code": {
+        "startLine": 1,
+        "length": 8,
+        "offset": 17,
+        "surroundingCode": "import json\nfrom pybadges import badge\n\nvalue = '0'"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "project",
+    "inspectionName": "PyUnresolvedReferencesInspection"
+  },
+  "hash": "7761539947313489626"
+},{
+  "tool": "Code Inspection",
+  "category": "Python",
+  "type": "Unresolved references",
+  "tags": [
+    "Python",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference 'badge'",
+  "detailsInfo": "Reports references in your code that cannot be resolved.\n\nIn a dynamically typed language, this is possible in a limited number of cases.\n\nIf a reference type is unknown, then its attributes are not highlighted as unresolved even if you know that they should be:\n\n```\ndef print_string(s):\n  print(s.abc())\n```\n\nIn this code fragment `s` is always a string and `abc` should be highlighted as unresolved. However, `s`\ntype is inferred as `Any` and no warning is reported.\n\nThe IDE provides quick-fix actions to add missing references on-the-fly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": ".github/scripts/gen-bandge.py",
+      "language": "Python",
+      "line": 2,
+      "offset": 21,
+      "length": 5,
+      "code": {
+        "startLine": 1,
+        "length": 5,
+        "offset": 33,
+        "surroundingCode": "import json\nfrom pybadges import badge\n\nvalue = '0'\nwith open(\"output.json\", \"r\") as file:\n  data = json.load(file)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "project",
+    "inspectionName": "PyUnresolvedReferencesInspection"
+  },
+  "hash": "-747959695327218481"
+}]}
