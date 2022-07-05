@@ -181,7 +181,7 @@ public class ReferenceIndexFiller {
           .orElseGet(Collections::emptyList);
         String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
         if (!mdoRef.isEmpty()) {
-          getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+          Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
         }
       }
       return super.visitLValue(ctx);
@@ -226,49 +226,6 @@ public class ReferenceIndexFiller {
         .filter(Predicate.not(Modules::isThisObject))
         .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
         .orElse(MdoRefBuilder.getMdoRef(documentContext));
-    }
-
-    private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
-      var modifiers = ctx.modifier();
-      Optional<Token> methodName;
-      if (ctx.globalMethodCall() != null) {
-        methodName = getMethodName(ctx.globalMethodCall());
-      } else {
-        methodName = getMethodName(ctx.accessCall());
-      }
-
-      if (modifiers.isEmpty()) {
-        return methodName;
-      } else {
-        return getMethodName(modifiers).or(() -> methodName);
-      }
-    }
-
-    private Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
-      return Optional.of(ctx.methodName().getStart());
-    }
-
-    private Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
-      return Optional.of(ctx.methodCall().methodName().getStart());
-    }
-
-    private Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
-      return getMethodName(ctx.modifier());
-    }
-
-    private Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
-      return modifiers.stream()
-        .map(BSLParser.ModifierContext::accessCall)
-        .filter(Objects::nonNull)
-        .map(this::getMethodName)
-        .findFirst()
-        .orElse(Optional.empty());
-    }
-
-    private Optional<Token> getMethodName(BSLParser.LValueContext lValueContext) {
-      return Optional.ofNullable(lValueContext.acceptor())
-        .map(BSLParser.AcceptorContext::modifier)
-        .flatMap(this::getMethodName);
     }
 
     private Collection<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
