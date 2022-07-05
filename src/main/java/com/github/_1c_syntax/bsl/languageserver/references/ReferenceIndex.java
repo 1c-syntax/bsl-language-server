@@ -245,7 +245,8 @@ public class ReferenceIndex {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
-      .filter(ReferenceIndex::isReferenceAccessible);
+//      .filter(ReferenceIndex::isReferenceAccessible)
+      ;
   }
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {

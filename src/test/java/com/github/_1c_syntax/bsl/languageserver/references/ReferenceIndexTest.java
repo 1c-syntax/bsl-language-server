@@ -272,6 +272,7 @@ class ReferenceIndexTest {
 
     var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+    var commonModuleNonExportMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("Тест").orElseThrow();
 
     var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
@@ -280,16 +281,19 @@ class ReferenceIndexTest {
     var locationLocal = new Location(uri, Ranges.create(1, 4, 16));
     var locationCommonModule = new Location(uri, Ranges.create(2, 22, 41));
     var locationManagerModule = new Location(uri, Ranges.create(3, 38, 57));
+    // TODO временная переменная
+    var locationNonExportCommonModule = new Location(uri, Ranges.create(4, 22, 26));
 
     // when
     var references = referenceIndex.getReferencesFrom(localMethodSymbol);
 
     // then
     assertThat(references)
-      .hasSize(3)
+      .hasSize(4)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
       .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
       .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
+      .contains(Reference.of(localMethodSymbol, commonModuleNonExportMethodSymbol, locationNonExportCommonModule))
     ;
   }
 
