@@ -132,8 +132,10 @@ public final class Ranges {
       return Ranges.create((TerminalNode) tree);
     } else if (tree instanceof Token) {
       return Ranges.create((Token) tree);
-    } else {
+    } else if (tree instanceof ParserRuleContext) {
       return Ranges.create((ParserRuleContext) tree);
+    } else {
+      throw new IllegalArgumentException();
     }
   }
 

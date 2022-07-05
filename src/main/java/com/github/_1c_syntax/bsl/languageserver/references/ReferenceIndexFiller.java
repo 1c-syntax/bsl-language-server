@@ -26,7 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
+import com.github._1c_syntax.bsl.languageserver.utils.Modules;
+import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
@@ -45,12 +49,11 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 @Component
 @RequiredArgsConstructor
@@ -111,7 +114,7 @@ public class ReferenceIndexFiller {
         return super.visitCallStatement(ctx);
       }
 
-      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
       return super.visitCallStatement(ctx);
     }
@@ -124,7 +127,7 @@ public class ReferenceIndexFiller {
         return super.visitComplexIdentifier(ctx);
       }
 
-      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
       return super.visitComplexIdentifier(ctx);
     }
@@ -143,6 +146,31 @@ public class ReferenceIndexFiller {
     }
 
     @Override
+    public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
+      if (NotifyDescription.isNotifyDescription(ctx)) {
+        var callParamList = ctx.doCall().callParamList().callParam();
+
+        if (NotifyDescription.notifyDescriptionContainsHandler(callParamList)) {
+          addCallbackMethodCall(
+            callParamList.get(NotifyDescription.HANDLER_INDEX),
+            getModule(callParamList.get(NotifyDescription.HANDLER_MODULE_INDEX))
+          );
+        }
+
+        if (NotifyDescription.notifyDescriptionContainsErrorHandler(callParamList)) {
+          addCallbackMethodCall(
+            callParamList.get(NotifyDescription.HANDLER_ERROR_INDEX),
+            getModule(callParamList.get(NotifyDescription.HANDLER_ERROR_MODULE_INDEX))
+          );
+        }
+
+        return ctx;
+      }
+
+      return super.visitNewExpression(ctx);
+    }
+
+    @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
       if (identifier != null){
@@ -158,6 +186,10 @@ public class ReferenceIndexFiller {
     }
 
     private void checkCall(String mdoRef, Token methodName) {
+      var methodNameText = Strings.trimQuotes(methodName.getText());
+      Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
+      for (ModuleType moduleType : modules.keySet()) {
+        if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
 
       final var configuration = documentContext.getServerContext().getConfiguration();
       String methodNameText = methodName.getText();
