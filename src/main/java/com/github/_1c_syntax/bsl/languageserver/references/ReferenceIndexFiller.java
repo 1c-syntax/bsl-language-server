@@ -49,7 +49,9 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -187,12 +189,7 @@ public class ReferenceIndexFiller {
 
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
-      Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
-      for (ModuleType moduleType : modules.keySet()) {
-        if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
-
       final var configuration = documentContext.getServerContext().getConfiguration();
-      String methodNameText = methodName.getText();
       Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
       for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
         var moduleType = e.getKey();
@@ -206,6 +203,29 @@ public class ReferenceIndexFiller {
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
       index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+    }
+
+    private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
+      Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
+        if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
+          checkCall(mdoRef, methodNameToken);
+        }
+
+        addMethodCall(
+          mdoRef,
+          documentContext.getModuleType(),
+          Strings.trimQuotes(methodName.getText()),
+          Ranges.create(methodName)
+        );
+      });
+    }
+
+    private String getModule(BSLParser.CallParamContext callParamContext) {
+      return NotifyDescription.getFirstMember(callParamContext)
+        .map(BSLParser.MemberContext::complexIdentifier)
+        .filter(Predicate.not(Modules::isThisObject))
+        .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
+        .orElse(MdoRefBuilder.getMdoRef(documentContext));
     }
 
     private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
