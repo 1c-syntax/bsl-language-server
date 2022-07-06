@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 public class ReportersConfiguration {
 
   @Bean
-  @Lazy
   public List<DiagnosticReporter> filteredReporters(
     Collection<DiagnosticReporter> allReporters,
     AnalyzeCommand command

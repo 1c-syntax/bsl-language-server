@@ -32,7 +32,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
@@ -54,7 +54,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public abstract class ServerContext {
+public class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
@@ -64,6 +64,7 @@ public abstract class ServerContext {
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
+  private final ObjectProvider<DocumentContext> documentContextProvider;
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -162,9 +163,6 @@ public abstract class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
-  @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI);
-
   @SneakyThrows
   private DocumentContext createDocumentContext(File file, int version) {
     String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
@@ -174,7 +172,7 @@ public abstract class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
     URI absoluteURI = Absolute.uri(uri);
 
-    var documentContext = lookupDocumentContext(absoluteURI);
+    var documentContext = documentContextProvider.getObject(absoluteURI);
     documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);

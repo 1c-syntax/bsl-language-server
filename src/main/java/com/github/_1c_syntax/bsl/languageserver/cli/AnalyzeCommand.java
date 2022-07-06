@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -37,6 +38,8 @@ import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -141,7 +144,9 @@ public class AnalyzeCommand implements Callable<Integer> {
     description = "Silent mode")
   private boolean silentMode;
 
-  private final ReportersAggregator aggregator;
+  @Setter(onMethod = @__({@Autowired, @Lazy}))
+  private ReportersAggregator aggregator;
+
   private final LanguageServerConfiguration configuration;
   private final ServerContext context;
 
