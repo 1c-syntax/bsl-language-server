@@ -17,7 +17,7 @@ plugins {
     id("me.qoomon.git-versioning") version "6.1.6"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.7"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("io.spring.dependency-management") version "1.0.12.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
     id("io.codearte.nexus-staging") version "0.30.0"
