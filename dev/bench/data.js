@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1657359343876,
+  "lastUpdate": 1657359439180,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18228,6 +18228,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.44317905480317893",
             "extra": "mean: 6.491539239883423 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd723d674e0ba9a8ea70a562b261344b04363f9c",
+          "message": "Merge pull request #2816 from 1c-syntax/dependabot/gradle/io.freefair.maven-central.validate-poms-6.5.0.2\n\nbuild(deps): bump io.freefair.maven-central.validate-poms from 6.4.3.1 to 6.5.0.2",
+          "timestamp": "2022-07-09T09:34:24Z",
+          "tree_id": "3bb967226e19f51521d5dcee6523e2266bb26592",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cd723d674e0ba9a8ea70a562b261344b04363f9c"
+        },
+        "date": 1657359437312,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 6.262570142745972,
+            "unit": "sec",
+            "range": "stddev: 0.6028327414997976",
+            "extra": "mean: 6.262570142745972 sec\nrounds: 3"
           }
         ]
       }
