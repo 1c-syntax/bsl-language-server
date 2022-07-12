@@ -103,8 +103,8 @@ dependencies {
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // Sentry
-    implementation("io.sentry", "sentry-spring-boot-starter", "5.7.4")
-    implementation("io.sentry", "sentry-logback", "5.7.4")
+    implementation("io.sentry", "sentry-spring-boot-starter", "6.2.0")
+    implementation("io.sentry", "sentry-logback", "6.2.0")
 
     // COMPILE
 

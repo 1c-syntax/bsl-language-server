@@ -21,11 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum SendAnalyticsMode {
   @JsonProperty("send")
   SEND,
+
+  @JsonIgnore
+  SEND_ONCE,
+
   @JsonProperty("never")
   NEVER,
   @JsonProperty("ask")

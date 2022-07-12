@@ -22,8 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendAnalyticsMode;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +39,18 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class CustomBeforeSendCallback implements BeforeSendCallback {
+
+  private static final Map<Language, Map<String, SendAnalyticsMode>> answers = createAnswersMap();
 
   private final LanguageServerConfiguration configuration;
 
@@ -55,8 +60,29 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
 
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
+  private static Map<Language, Map<String, SendAnalyticsMode>> createAnswersMap() {
+    var en = Language.EN;
+    var ru = Language.RU;
+    var clazz = CustomBeforeSendCallback.class;
+
+    return Map.of(
+      en, Map.of(
+        Resources.getResourceString(en, clazz, "answer_send"), SendAnalyticsMode.SEND,
+        Resources.getResourceString(en, clazz, "answer_skip"), SendAnalyticsMode.ASK,
+        Resources.getResourceString(en, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
+        Resources.getResourceString(en, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
+      ),
+      ru, Map.of(
+        Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND,
+        Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK,
+        Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
+        Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
+      )
+    );
+  }
+
   @Override
-  public SentryEvent execute(@NotNull SentryEvent event, Object hint) {
+  public SentryEvent execute(@NotNull SentryEvent event, @NotNull Hint hint) {
     if (sendToSentry()) {
       event.setTag("server.version", serverInfo.getVersion());
       return event;
@@ -77,16 +103,10 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
         return false;
       }
 
-      var sendAnalytics = Map.of(
-        new MessageActionItem("Yes and always send"), SendAnalyticsMode.SEND,
-        new MessageActionItem("No and never ask"), SendAnalyticsMode.NEVER,
-        new MessageActionItem("Skip this error"), SendAnalyticsMode.ASK
-      );
-
       languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
         var sendQuestion = askUserForPermission(languageClient);
-        var answer = waitForPermission(sendQuestion);
-        var sendAnalyticsMode = sendAnalytics.get(answer);
+        var answer = waitForPermission(sendQuestion).getTitle();
+        var sendAnalyticsMode = answers.get(configuration.getLanguage()).get(answer);
         if (sendAnalyticsMode != null) {
           configuration.setSendAnalytics(sendAnalyticsMode);
         }
@@ -94,18 +114,26 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
       });
     }
 
-    return configuration.getSendAnalytics() == SendAnalyticsMode.SEND;
+    var currentAnalyticsMode = configuration.getSendAnalytics();
+    var result = currentAnalyticsMode == SendAnalyticsMode.SEND || currentAnalyticsMode == SendAnalyticsMode.SEND_ONCE;
+    if (currentAnalyticsMode == SendAnalyticsMode.SEND_ONCE) {
+      configuration.setSendAnalytics(SendAnalyticsMode.ASK);
+    }
+
+    return result;
   }
 
   private CompletableFuture<MessageActionItem> askUserForPermission(LanguageClient languageClient) {
-    var applicationName = serverInfo.getName();
-    var message = applicationName + " throws en exception. Do you agree to send details to developers?";
-
-    var actions = List.of(
-      new MessageActionItem("Yes and always send"),
-      new MessageActionItem("No and never ask"),
-      new MessageActionItem("Skip this error")
+    var message = Resources.getResourceString(
+      configuration.getLanguage(),
+      getClass(),
+      "question",
+      serverInfo.getName()
     );
+
+    var actions = answers.get(configuration.getLanguage()).keySet().stream()
+      .map(MessageActionItem::new)
+      .collect(Collectors.toList());
 
     var requestParams = new ShowMessageRequestParams();
     requestParams.setType(MessageType.Error);
@@ -129,4 +157,5 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
       throw new IllegalStateException(e);
     }
   }
+
 }
