@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @RequiredArgsConstructor
@@ -52,6 +53,8 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
 
   private final ServerInfo serverInfo;
 
+  private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
+
   @Override
   public SentryEvent execute(@NotNull SentryEvent event, Object hint) {
     if (sendToSentry()) {
@@ -62,20 +65,33 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
     return null;
   }
 
-
   private boolean sendToSentry() {
     if (configuration.getSendAnalytics() == SendAnalyticsMode.ASK) {
+      if (!languageClientHolder.isConnected()) {
+        return false;
+      }
+
+      // if CAS returns false then question was already sent but no answer has received yet.
+      // Otherwise, set atomic to true and send question.
+      if (!questionWasSend.compareAndSet(false, true)) {
+        return false;
+      }
+
       var sendAnalytics = Map.of(
         new MessageActionItem("Yes and always send"), SendAnalyticsMode.SEND,
         new MessageActionItem("No and never ask"), SendAnalyticsMode.NEVER,
         new MessageActionItem("Skip this error"), SendAnalyticsMode.ASK
       );
 
-      languageClientHolder.getClient()
-        .map(this::askUserForPermission)
-        .map(CustomBeforeSendCallback::waitForPermission)
-        .map(key -> sendAnalytics.getOrDefault(key, null))
-        .ifPresent(configuration::setSendAnalytics);
+      languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
+        var sendQuestion = askUserForPermission(languageClient);
+        var answer = waitForPermission(sendQuestion);
+        var sendAnalyticsMode = sendAnalytics.get(answer);
+        if (sendAnalyticsMode != null) {
+          configuration.setSendAnalytics(sendAnalyticsMode);
+        }
+        questionWasSend.set(false);
+      });
     }
 
     return configuration.getSendAnalytics() == SendAnalyticsMode.SEND;
@@ -95,20 +111,22 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
     requestParams.setType(MessageType.Error);
     requestParams.setMessage(message);
     requestParams.setActions(actions);
+
     return languageClient.showMessageRequest(requestParams);
   }
 
-  private static MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> messageActionItemCompletableFuture) {
+  private MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
     try {
-      return messageActionItemCompletableFuture.get();
+      return sendQuestion.get();
     } catch (InterruptedException e) {
       LOGGER.error("Can't wait for permission", e);
+      questionWasSend.set(false);
       Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     } catch (ExecutionException e) {
-      LOGGER.error("Can't wait for permission", e);
-      throw new RuntimeException(e);
+      LOGGER.error("Can't execute permission request", e);
+      questionWasSend.set(false);
+      throw new IllegalStateException(e);
     }
   }
-
 }
