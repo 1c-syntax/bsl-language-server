@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.lsp4j.Range;
 
@@ -131,7 +131,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private void checkMetadataWithoutModules() {
     documentContext.getServerContext().getConfiguration().getChildren().stream()
-      .filter(mdo -> filterMdoTypes.contains(mdo.getType()))
+      .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
       .filter(mdo -> !(mdo instanceof AbstractMDObjectBSL)
         || (((AbstractMDObjectBSL) mdo).getModules().stream()
         .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
