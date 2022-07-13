@@ -39,16 +39,22 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.CheckForNull;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+/**
+ * Перехватчик сообщения в Sentry, выполняющий проверку получения явного разрешения
+ * отправки данных в Sentry.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CustomBeforeSendCallback implements BeforeSendCallback {
+public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private static final Map<Language, Map<String, SendAnalyticsMode>> answers = createAnswersMap();
 
@@ -60,31 +66,11 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
 
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
-  private static Map<Language, Map<String, SendAnalyticsMode>> createAnswersMap() {
-    var en = Language.EN;
-    var ru = Language.RU;
-    var clazz = CustomBeforeSendCallback.class;
-
-    return Map.of(
-      en, Map.of(
-        Resources.getResourceString(en, clazz, "answer_send"), SendAnalyticsMode.SEND,
-        Resources.getResourceString(en, clazz, "answer_skip"), SendAnalyticsMode.ASK,
-        Resources.getResourceString(en, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
-        Resources.getResourceString(en, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
-      ),
-      ru, Map.of(
-        Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND,
-        Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK,
-        Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
-        Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
-      )
-    );
-  }
-
   @Override
   public SentryEvent execute(@NotNull SentryEvent event, @NotNull Hint hint) {
+    event.setTag("server.version", serverInfo.getVersion());
+
     if (sendToSentry()) {
-      event.setTag("server.version", serverInfo.getVersion());
       return event;
     }
 
@@ -105,11 +91,12 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
 
       languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
         var sendQuestion = askUserForPermission(languageClient);
-        var answer = waitForPermission(sendQuestion).getTitle();
-        var sendAnalyticsMode = answers.get(configuration.getLanguage()).get(answer);
-        if (sendAnalyticsMode != null) {
-          configuration.setSendAnalytics(sendAnalyticsMode);
-        }
+        var answerItem = waitForPermission(sendQuestion);
+        Optional.ofNullable(answerItem)
+          .map(MessageActionItem::getTitle)
+          .map(title -> answers.get(configuration.getLanguage()).get(title))
+          .ifPresent(configuration::setSendAnalytics);
+
         questionWasSend.set(false);
       });
     }
@@ -143,6 +130,7 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
     return languageClient.showMessageRequest(requestParams);
   }
 
+  @CheckForNull
   private MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
     try {
       return sendQuestion.get();
@@ -158,4 +146,25 @@ public class CustomBeforeSendCallback implements BeforeSendCallback {
     }
   }
 
+
+  private static Map<Language, Map<String, SendAnalyticsMode>> createAnswersMap() {
+    var en = Language.EN;
+    var ru = Language.RU;
+    var clazz = PermissionFilterBeforeSendCallback.class;
+
+    return Map.of(
+      en, Map.of(
+        Resources.getResourceString(en, clazz, "answer_send"), SendAnalyticsMode.SEND,
+        Resources.getResourceString(en, clazz, "answer_skip"), SendAnalyticsMode.ASK,
+        Resources.getResourceString(en, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
+        Resources.getResourceString(en, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
+      ),
+      ru, Map.of(
+        Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND,
+        Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK,
+        Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
+        Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
+      )
+    );
+  }
 }
