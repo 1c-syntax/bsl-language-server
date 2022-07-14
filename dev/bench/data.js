@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1657800150422,
+  "lastUpdate": 1657821105971,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18383,6 +18383,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.07175598558894064",
             "extra": "mean: 6.280338128407796 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9026afb8f7682b055e394ac96cd1dfbd3450e440",
+          "message": "Merge pull request #2842 from 1c-syntax/dependabot/gradle/io.freefair.javadoc-utf-8-6.5.0.3\n\nbuild(deps): bump io.freefair.javadoc-utf-8 from 6.5.0.2 to 6.5.0.3",
+          "timestamp": "2022-07-14T17:50:13Z",
+          "tree_id": "57fa8e8231243c260da0eaf7a1a895676708a141",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9026afb8f7682b055e394ac96cd1dfbd3450e440"
+        },
+        "date": 1657821103403,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 6.037265062332153,
+            "unit": "sec",
+            "range": "stddev: 0.44849702261448027",
+            "extra": "mean: 6.037265062332153 sec\nrounds: 3"
           }
         ]
       }
