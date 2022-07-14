@@ -68,8 +68,6 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   @Override
   public SentryEvent execute(@NotNull SentryEvent event, @NotNull Hint hint) {
-    event.setTag("server.version", serverInfo.getVersion());
-
     if (sendToSentry()) {
       return event;
     }
