@@ -52,6 +52,12 @@ val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.6"
 
+dependencyManagement {
+    imports {
+        mavenBom("io.sentry:sentry-bom:6.2.1")
+    }
+}
+
 dependencies {
 
     // RUNTIME
@@ -103,8 +109,8 @@ dependencies {
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // Sentry
-    implementation("io.sentry", "sentry-spring-boot-starter", "6.2.1")
-    implementation("io.sentry", "sentry-logback", "6.2.1")
+    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-logback")
 
     // COMPILE
 
