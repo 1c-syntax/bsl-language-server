@@ -27,6 +27,7 @@ import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,7 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
+@ConditionalOnBean(name = "sentryHub")
 @DependsOn("sentryHub")
 public class SentryScopeConfigurer {
 
