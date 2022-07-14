@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1657360281118,
+  "lastUpdate": 1657800150422,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18352,6 +18352,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.19906131517903403",
             "extra": "mean: 6.394060532251994 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "e8f6f3c592baee1b1e3b7e08ac1d0982fc6f85ff",
+          "message": "Fix #2845. Язык код-экшена теперь зависит от локали",
+          "timestamp": "2022-07-14T15:00:56+03:00",
+          "tree_id": "fbd6f8befdfc2730f274243f624a19331abd1f22",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e8f6f3c592baee1b1e3b7e08ac1d0982fc6f85ff"
+        },
+        "date": 1657800148575,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 6.280338128407796,
+            "unit": "sec",
+            "range": "stddev: 0.07175598558894064",
+            "extra": "mean: 6.280338128407796 sec\nrounds: 3"
           }
         ]
       }
