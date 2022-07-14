@@ -40,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -146,23 +147,21 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
 
   private static Map<Language, Map<String, SendAnalyticsMode>> createAnswersMap() {
-    var en = Language.EN;
-    var ru = Language.RU;
-    var clazz = PermissionFilterBeforeSendCallback.class;
-
     return Map.of(
-      en, Map.of(
-        Resources.getResourceString(en, clazz, "answer_send"), SendAnalyticsMode.SEND,
-        Resources.getResourceString(en, clazz, "answer_skip"), SendAnalyticsMode.ASK,
-        Resources.getResourceString(en, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
-        Resources.getResourceString(en, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
-      ),
-      ru, Map.of(
-        Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND,
-        Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK,
-        Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE,
-        Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER
-      )
+      Language.EN, getAnswersWithModes(Language.EN),
+      Language.RU, getAnswersWithModes(Language.RU)
     );
+  }
+
+  private static Map<String, SendAnalyticsMode> getAnswersWithModes(Language ru) {
+    var clazz = PermissionFilterBeforeSendCallback.class;
+    Map<String, SendAnalyticsMode> map = new LinkedHashMap<>();
+
+    map.put(Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE);
+    map.put(Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK);
+    map.put(Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND);
+    map.put(Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER);
+
+    return map;
   }
 }
