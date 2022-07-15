@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.SendAnalyticsMode;
+import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
-  private static final Map<Language, Map<String, SendAnalyticsMode>> answers = createAnswersMap();
+  private static final Map<Language, Map<String, SendErrorsMode>> answers = createAnswersMap();
 
   private final LanguageServerConfiguration configuration;
 
@@ -77,7 +77,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   }
 
   private boolean sendToSentry() {
-    if (configuration.getSendAnalytics() == SendAnalyticsMode.ASK) {
+    if (configuration.getSendErrors() == SendErrorsMode.ASK) {
       if (!languageClientHolder.isConnected()) {
         return false;
       }
@@ -94,16 +94,16 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
         Optional.ofNullable(answerItem)
           .map(MessageActionItem::getTitle)
           .map(title -> answers.get(configuration.getLanguage()).get(title))
-          .ifPresent(configuration::setSendAnalytics);
+          .ifPresent(configuration::setSendErrors);
 
         questionWasSend.set(false);
       });
     }
 
-    var currentAnalyticsMode = configuration.getSendAnalytics();
-    var result = currentAnalyticsMode == SendAnalyticsMode.SEND || currentAnalyticsMode == SendAnalyticsMode.SEND_ONCE;
-    if (currentAnalyticsMode == SendAnalyticsMode.SEND_ONCE) {
-      configuration.setSendAnalytics(SendAnalyticsMode.ASK);
+    var currentErrorsMode = configuration.getSendErrors();
+    var result = currentErrorsMode == SendErrorsMode.SEND || currentErrorsMode == SendErrorsMode.SEND_ONCE;
+    if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
+      configuration.setSendErrors(SendErrorsMode.ASK);
     }
 
     return result;
@@ -146,21 +146,21 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   }
 
 
-  private static Map<Language, Map<String, SendAnalyticsMode>> createAnswersMap() {
+  private static Map<Language, Map<String, SendErrorsMode>> createAnswersMap() {
     return Map.of(
       Language.EN, getAnswersWithModes(Language.EN),
       Language.RU, getAnswersWithModes(Language.RU)
     );
   }
 
-  private static Map<String, SendAnalyticsMode> getAnswersWithModes(Language ru) {
+  private static Map<String, SendErrorsMode> getAnswersWithModes(Language ru) {
     var clazz = PermissionFilterBeforeSendCallback.class;
-    Map<String, SendAnalyticsMode> map = new LinkedHashMap<>();
+    Map<String, SendErrorsMode> map = new LinkedHashMap<>();
 
-    map.put(Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendAnalyticsMode.SEND_ONCE);
-    map.put(Resources.getResourceString(ru, clazz, "answer_skip"), SendAnalyticsMode.ASK);
-    map.put(Resources.getResourceString(ru, clazz, "answer_send"), SendAnalyticsMode.SEND);
-    map.put(Resources.getResourceString(ru, clazz, "answer_dontSend"), SendAnalyticsMode.NEVER);
+    map.put(Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendErrorsMode.SEND_ONCE);
+    map.put(Resources.getResourceString(ru, clazz, "answer_skip"), SendErrorsMode.ASK);
+    map.put(Resources.getResourceString(ru, clazz, "answer_send"), SendErrorsMode.SEND);
+    map.put(Resources.getResourceString(ru, clazz, "answer_dontSend"), SendErrorsMode.NEVER);
 
     return map;
   }

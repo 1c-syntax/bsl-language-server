@@ -97,7 +97,7 @@ public class LanguageServerConfiguration {
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
-  private SendAnalyticsMode sendAnalytics = SendAnalyticsMode.DEFAULT;
+  private SendErrorsMode sendErrors = SendErrorsMode.DEFAULT;
 
   @Nullable
   private File traceLog;

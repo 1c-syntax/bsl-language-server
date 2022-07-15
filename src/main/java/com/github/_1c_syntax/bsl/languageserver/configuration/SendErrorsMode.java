@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum SendAnalyticsMode {
+public enum SendErrorsMode {
   @JsonProperty("send")
   SEND,
 
@@ -36,5 +36,5 @@ public enum SendAnalyticsMode {
   @JsonProperty("ask")
   ASK;
 
-  public static final SendAnalyticsMode DEFAULT = ASK;
+  public static final SendErrorsMode DEFAULT = ASK;
 }
