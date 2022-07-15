@@ -24,18 +24,36 @@ package com.github._1c_syntax.bsl.languageserver.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Режим отправки сообщений об ошибках разработчикам.
+ */
 public enum SendErrorsMode {
+  /**
+   * Отправлять всегда.
+   */
   @JsonProperty("send")
   SEND,
 
+  /**
+   * Отправить один раз, затем спросить.
+   */
   @JsonIgnore
   SEND_ONCE,
 
+  /**
+   * Никогда не отправлять.
+   */
   @JsonProperty("never")
   NEVER,
 
+  /**
+   * Спросить разрешения.
+   */
   @JsonProperty("ask")
   ASK;
 
+  /**
+   * Режим отправки ошибок по умолчанию.
+   */
   public static final SendErrorsMode DEFAULT = ASK;
 }
