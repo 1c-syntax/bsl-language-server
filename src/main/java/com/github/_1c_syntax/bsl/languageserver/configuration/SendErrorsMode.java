@@ -33,6 +33,7 @@ public enum SendErrorsMode {
 
   @JsonProperty("never")
   NEVER,
+
   @JsonProperty("ask")
   ASK;
 

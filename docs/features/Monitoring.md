@@ -21,13 +21,25 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
 подключенному language client (используемой IDE) отправляется вопрос о дальнейших действиях с ошибкой
 со следующими вариантами ответа:
 
-* не отправлять эту ошибку и больше не спрашивать;
-* отправить эту ошибку и больше не спрашивать;
 * отправить эту ошибку, но спросить снова;
 * не отправлять эту ошибку, но спросить снова.
+* отправить эту ошибку и больше не спрашивать;
+* не отправлять эту ошибку и больше не спрашивать;
 
 От ответа можно полностью отказаться (например, нажав на крестик у уведомления с вопросом).
 Отсутствие ответа воспринимается как "не отправлять эту ошибку, но спросить снова".
+
+Сообщение об ошибке не содержит идентификационных данных пользователя или рабочей станции 
+за исключением генерируемого UUID сессии для связывания ошибок, возникающих в течении одного
+запуска BSL Language Server.
+
+> Обратите внимание!
+
+Если вы включите отладочные логи (настроив `logback` или используя переменные среды), содержимое логов (последние 100 записей) приложится к отправляемому событию.
+
+Некоторые сообщения, пересылаемые между Language Client и BSL Language Server содержат фрагменты исходного кода
+или текст файла целиком.
+Эти фрагменты тоже могут быть приложены к отправляемому сообщению.
 
 Пример отправляемого события об ошибке:
 
@@ -35,13 +47,13 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
 
     ```json
     {
-        "event_id": "16884ea2625448f4b72d440ff2431859",
+        "event_id": "746e2e82f4c1499abcdd935bc4c26644",
         "project": 5790531,
-        "release": "00c4dbafc46d892196d8ce62ea0b08665dc72b93",
+        "release": "ae081de9d3c3496ddac1d176259365191966b0cd",
         "dist": null,
         "platform": "java",
         "message": "Internal error: java.lang.RuntimeException: psss",
-        "datetime": "2022-07-13T19:34:53.742000Z",
+        "datetime": "2022-07-14T11:07:57.875000Z",
         "tags": [
             [
                 "environment",
@@ -65,34 +77,20 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
             ],
             [
                 "release",
-                "00c4dbafc46d892196d8ce62ea0b08665dc72b93"
+                "ae081de9d3c3496ddac1d176259365191966b0cd"
+            ],
+            [
+                "user",
+                "id:49516eb9-2a0d-4a15-bd96-978b68d8d0df"
             ],
             [
                 "server.version",
-                "feature-sentry-00c4dba-DIRTY"
+                "feature-sentry-ae081de-DIRTY"
             ]
         ],
         "_metrics": {
-            "bytes.ingested.event": 3582,
-            "bytes.stored.event": 10144
-        },
-        "breadcrumbs": {
-            "values": [
-                {
-                    "timestamp": 1657740873.487,
-                    "type": "default",
-                    "category": "org.eclipse.lsp4j.jsonrpc.RemoteEndpoint",
-                    "level": "error",
-                    "message": "Internal error: java.lang.RuntimeException: psss"
-                },
-                {
-                    "timestamp": 1657740889.96,
-                    "type": "default",
-                    "category": "org.eclipse.lsp4j.jsonrpc.RemoteEndpoint",
-                    "level": "error",
-                    "message": "Internal error: java.lang.RuntimeException: psss"
-                }
-            ]
+            "bytes.ingested.event": 3289,
+            "bytes.stored.event": 9875
         },
         "contexts": {
             "runtime": {
@@ -151,7 +149,7 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
                                 "module": "com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService",
                                 "filename": "BSLTextDocumentService.java",
                                 "abs_path": "BSLTextDocumentService.java",
-                                "lineno": 230,
+                                "lineno": 234,
                                 "in_app": true
                             },
                             {
@@ -164,7 +162,7 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
                             }
                         ]
                     },
-                    "thread_id": 28
+                    "thread_id": 24
                 },
                 {
                     "type": "CompletionException",
@@ -219,12 +217,12 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
                             }
                         ]
                     },
-                    "thread_id": 28
+                    "thread_id": 24
                 }
             ]
         },
         "extra": {
-            "thread_name": "ForkJoinPool.commonPool-worker-27"
+            "thread_name": "ForkJoinPool.commonPool-worker-19"
         },
         "fingerprint": [
             "{{ default }}"
@@ -255,25 +253,28 @@ https://sentry.io/organizations/1c-syntax/projects/bsl-language-server
             "type": "CompletionException",
             "value": "java.lang.RuntimeException: psss"
         },
-        "nodestore_insert": 1657740907.677471,
-        "received": 1657740905.349647,
+        "nodestore_insert": 1657796884.036383,
+        "received": 1657796882.652077,
         "sdk": {
             "name": "sentry.java.spring-boot",
-            "version": "6.2.0",
+            "version": "6.2.1",
             "packages": [
                 {
                     "name": "maven:io.sentry:sentry",
-                    "version": "6.2.0"
+                    "version": "6.2.1"
                 },
                 {
                     "name": "maven:io.sentry:sentry-spring-boot-starter",
-                    "version": "6.2.0"
+                    "version": "6.2.1"
                 }
             ]
         },
-        "timestamp": 1657740893.742,
+        "timestamp": 1657796877.875,
         "title": "CompletionException: java.lang.RuntimeException: psss",
         "type": "error",
+        "user": {
+            "id": "49516eb9-2a0d-4a15-bd96-978b68d8d0df"
+        },
         "version": "7",
         "location": null
     }

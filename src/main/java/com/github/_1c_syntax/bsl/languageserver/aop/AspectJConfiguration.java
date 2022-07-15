@@ -44,6 +44,9 @@ public class AspectJConfiguration {
     return Aspects.aspectOf(EventPublisherAspect.class);
   }
 
+  /**
+   * @return Аспект перехвата ошибок и взаимодействия с Sentry.
+   */
   @Bean
   @Lazy(false)
   public SentryAspect sentryAspect() {

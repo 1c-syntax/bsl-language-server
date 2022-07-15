@@ -145,7 +145,6 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     }
   }
 
-
   private static Map<Language, Map<String, SendErrorsMode>> createAnswersMap() {
     return Map.of(
       Language.EN, getAnswersWithModes(Language.EN),

@@ -49,7 +49,6 @@ public class SentryScopeConfigurer {
 
   @PostConstruct
   public void init() {
-    // Set the current user in the scope.
     Sentry.configureScope((@NotNull Scope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());

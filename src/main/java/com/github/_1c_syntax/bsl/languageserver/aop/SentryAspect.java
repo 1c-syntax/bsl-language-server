@@ -27,15 +27,21 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Аспект перехвата исключений и регистрации их в Sentry.
+ */
 @Aspect
 @NoArgsConstructor
 public class SentryAspect {
 
+  private final ExecutorService executorService = Executors.newCachedThreadPool();
+
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
   public void logThrowingBSLDiagnosticGetDiagnostics(Throwable ex) {
-    CompletableFuture.runAsync(() -> Sentry.captureException(ex), Executors.newFixedThreadPool(4));
+    CompletableFuture.runAsync(() -> Sentry.captureException(ex), executorService);
   }
 
   @AfterThrowing(value =
@@ -43,7 +49,7 @@ public class SentryAspect {
     throwing = "ex"
   )
   public void logThrowingLSPCall(Throwable ex) {
-    CompletableFuture.runAsync(() -> Sentry.captureException(ex), Executors.newFixedThreadPool(4));
+    CompletableFuture.runAsync(() -> Sentry.captureException(ex), executorService);
   }
 
 }
