@@ -152,14 +152,14 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     );
   }
 
-  private static Map<String, SendErrorsMode> getAnswersWithModes(Language ru) {
+  private static Map<String, SendErrorsMode> getAnswersWithModes(Language language) {
     var clazz = PermissionFilterBeforeSendCallback.class;
     Map<String, SendErrorsMode> map = new LinkedHashMap<>();
 
-    map.put(Resources.getResourceString(ru, clazz, "answer_sendOnce"), SendErrorsMode.SEND_ONCE);
-    map.put(Resources.getResourceString(ru, clazz, "answer_skip"), SendErrorsMode.ASK);
-    map.put(Resources.getResourceString(ru, clazz, "answer_send"), SendErrorsMode.SEND);
-    map.put(Resources.getResourceString(ru, clazz, "answer_dontSend"), SendErrorsMode.NEVER);
+    map.put(Resources.getResourceString(language, clazz, "answer_sendOnce"), SendErrorsMode.SEND_ONCE);
+    map.put(Resources.getResourceString(language, clazz, "answer_skip"), SendErrorsMode.ASK);
+    map.put(Resources.getResourceString(language, clazz, "answer_send"), SendErrorsMode.SEND);
+    map.put(Resources.getResourceString(language, clazz, "answer_dontSend"), SendErrorsMode.NEVER);
 
     return map;
   }
