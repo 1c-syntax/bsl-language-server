@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
@@ -44,13 +45,17 @@ import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ReferenceOptions;
+import org.eclipse.lsp4j.RenameCapabilities;
+import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.WorkspaceSymbolOptions;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -62,6 +67,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -101,6 +107,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
+    capabilities.setRenameProvider(getRenameProvider(params));
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -273,4 +280,32 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     colorProviderOptions.setWorkDoneProgress(Boolean.FALSE);
     return colorProviderOptions;
   }
+
+  private static Either<Boolean, RenameOptions> getRenameProvider(InitializeParams params) {
+
+    if (Boolean.TRUE.equals(getRenamePrepareSupport(params))) {
+
+      var renameOptions = new RenameOptions();
+      renameOptions.setWorkDoneProgress(Boolean.FALSE);
+      renameOptions.setPrepareProvider(Boolean.TRUE);
+
+      return Either.forRight(renameOptions);
+
+    } else {
+
+      return Either.forLeft(Boolean.TRUE);
+
+    }
+
+  }
+
+  private static Boolean getRenamePrepareSupport(InitializeParams params) {
+    return Optional.of(params)
+      .map(InitializeParams::getCapabilities)
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getRename)
+      .map(RenameCapabilities::getPrepareSupport)
+      .orElse(false);
+  }
+
 }
