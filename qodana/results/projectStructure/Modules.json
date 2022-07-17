@@ -76,7 +76,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+          "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.1.1",
           "type": "Library"
         },
         {
@@ -648,11 +656,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.15",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.classgraph:classgraph:4.8.106",
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
           "type": "Library"
         },
         {
@@ -664,11 +672,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: xpp3:xpp3_min:1.1.4c",
+          "name": "Gradle: io.github.x-stream:mxparser:1.2.2",
           "type": "Library"
         },
         {
@@ -685,6 +689,10 @@
         },
         {
           "name": "Gradle: org.junit.platform:junit-platform-engine:1.8.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
           "type": "Library"
         },
         {
@@ -746,7 +754,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+          "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.1.1",
           "type": "Library"
         },
         {
@@ -1222,19 +1238,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.15",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.classgraph:classgraph:4.8.106",
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
           "type": "Library"
         },
         {
-          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: xpp3:xpp3_min:1.1.4c",
+          "name": "Gradle: io.github.x-stream:mxparser:1.2.2",
           "type": "Library"
         },
         {
@@ -1247,6 +1259,10 @@
         },
         {
           "name": "Gradle: com.sun.activation:jakarta.activation:1.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
           "type": "Library"
         },
         {

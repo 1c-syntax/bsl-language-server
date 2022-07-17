@@ -31,9 +31,21 @@
       ]
     },
     {
-      "name": "Gradle: com.github.1c-syntax:mdclasses:0.9.5",
+      "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.9.5/a5b8bb0dfc6976500c17f3d0100a44073a58c28c/mdclasses-0.9.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.10.0/d9d81c0ed7776093d478b299a2c8efe2485cba67/mdclasses-0.10.0.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-common-library/0.3.0/f4f28ce086280c787359a85f72585e99871a7c07/bsl-common-library-0.3.0.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: io.github.1c-syntax:supportconf:0.1.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/supportconf/0.1.1/26a4f721bad1a0d740383eedb5b82f047028e97b/supportconf-0.1.1.jar!/"
       ]
     },
     {
@@ -745,27 +757,21 @@
       ]
     },
     {
-      "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.15",
+      "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.15/1fe575549a9fb8b0024c011d6b9b6ebb0ba00066/xstream-1.4.15.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.19/e0e581d812aa92ae12f07234f3398e06af74b112/xstream-1.4.19.jar!/"
       ]
     },
     {
-      "name": "Gradle: io.github.classgraph:classgraph:4.8.106",
+      "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.classgraph/classgraph/4.8.106/fc1c1d6ef9471b77379084e85a5840146fc63f3f/classgraph-4.8.106.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.classgraph/classgraph/4.8.147/c9cc4804e9a9bfa45e62e96d0bb5cff17882e320/classgraph-4.8.147.jar!/"
       ]
     },
     {
-      "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
+      "name": "Gradle: io.github.x-stream:mxparser:1.2.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/xmlpull/xmlpull/1.1.3.1/2b8e230d2ab644e4ecaa94db7cdedbc40c805dfa/xmlpull-1.1.3.1.jar!/"
-      ]
-    },
-    {
-      "name": "Gradle: xpp3:xpp3_min:1.1.4c",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/xpp3/xpp3_min/1.1.4c/19d4e90b43059058f6e056f794f0ea4030d60b86/xpp3_min-1.1.4c.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.x-stream/mxparser/1.2.2/476fb3b3bb3716cad797cd054ce45f89445794e9/mxparser-1.2.2.jar!/"
       ]
     },
     {
@@ -784,6 +790,12 @@
       "name": "Gradle: com.sun.activation:jakarta.activation:1.2.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.sun.activation/jakarta.activation/1.2.2/74548703f9851017ce2f556066659438019e7eb5/jakarta.activation-1.2.2.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: xmlpull:xmlpull:1.1.3.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/xmlpull/xmlpull/1.1.3.1/2b8e230d2ab644e4ecaa94db7cdedbc40c805dfa/xmlpull-1.1.3.1.jar!/"
       ]
     },
     {

@@ -249,7 +249,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "NonSerializableFieldInSerializableClass"
   },
-  "hash": "e717666e46e191ad4105dd94fe13539a43e95b731c06c3b54656af8c4f11c5ea"
+  "hash": "9bd9720fd9fe1e4cf2bec3d06a245d8a9f9ec06aa56b941bb143d551ad027ef7"
 },{
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
@@ -361,7 +361,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "AbstractClassNeverImplemented"
   },
-  "hash": "709f6f42fba172a78e8cee60c6e5b3ec41d541434cab6e7f08cc9abd89363f06"
+  "hash": "60c0dd383319026f8df71068f01e75de21092891b93942241f4bbaa872fb62b6"
 },{
   "tool": "Code Inspection",
   "category": "Inheritance issues",
@@ -445,7 +445,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "AbstractClassNeverImplemented"
   },
-  "hash": "c665baeeba3ef4629c518838b3ae6bd1dbfbd01a56805005f0a93e2e22c50a88"
+  "hash": "a67ff196a0b72c5d0ef382444a7c0e9aee920ae3bf3bf5f3d34c6ad5c705fe30"
 },{
   "tool": "Code Inspection",
   "category": "Lombok",
@@ -641,7 +641,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "UnusedAssignment"
   },
-  "hash": "75fe57bbb1e4cf679e4bffcc2fd509812bc21d5ed63ebe41fc9a615d38331fd8"
+  "hash": "46a5fcc63943c33fd8806eeddb44324298a1d36de4c0544e14f9d314687a0f88"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
