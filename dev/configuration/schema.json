@@ -659,14 +659,14 @@
                             "$id": "#/properties/include",
                             "type": "array",
                             "items": {
-                              "type": "string"
+                                "type": "string"
                             }
                         },
                         "exclude": {
                             "$id": "#/properties/exclude",
                             "type": "array",
                             "items": {
-                              "type": "string"
+                                "type": "string"
                             }
                         }
                     }
