@@ -1,7 +1,7 @@
 # Multi-line literal in query (MultilineStringInQuery)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Multi-line literals are rarely used in query texts, mostly these are error results due to an incorrect number of double quotes.
