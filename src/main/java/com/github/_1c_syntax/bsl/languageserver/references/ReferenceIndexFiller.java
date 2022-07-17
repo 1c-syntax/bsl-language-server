@@ -130,6 +130,9 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
+        if (ctx.doCall() == null){
+          return ctx;
+        }
         var callParamList = ctx.doCall().callParamList().callParam();
 
         if (NotifyDescription.notifyDescriptionContainsHandler(callParamList)) {
