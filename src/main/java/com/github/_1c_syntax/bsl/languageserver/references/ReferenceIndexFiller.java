@@ -132,7 +132,7 @@ public class ReferenceIndexFiller {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
         if (doCallContext == null){
-          return ctx;
+          return super.visitNewExpression(ctx);
         }
         var callParamList = doCallContext.callParamList().callParam();
 
