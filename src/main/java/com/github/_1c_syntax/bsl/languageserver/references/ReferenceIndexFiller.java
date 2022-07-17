@@ -146,7 +146,7 @@ public class ReferenceIndexFiller {
           );
         }
 
-        return ctx;
+        return super.visitNewExpression(ctx);
       }
 
       return super.visitNewExpression(ctx);
