@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
@@ -28,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,9 @@ class PermissionFilterBeforeSendCallbackTest {
 
   @Autowired
   private LanguageClientHolder languageClientHolder;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @Test
   void sendOnlyOnSendMode() {
@@ -168,6 +173,7 @@ class PermissionFilterBeforeSendCallbackTest {
     when(languageClient.showMessageRequest(any())).thenReturn(CompletableFuture.completedFuture(answer));
 
     languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
 
     var event = new SentryEvent();
 
@@ -177,6 +183,35 @@ class PermissionFilterBeforeSendCallbackTest {
     // then
     assertThat(filteredEvent).isNotNull();
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.SEND);
+
+  }
+
+  @Test
+  void dontAskIfServerWasNotInitialized() {
+
+    // given
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    var languageClient = mock(LanguageClient.class);
+    var answerTitle = Resources.getResourceString(
+      configuration.getLanguage(),
+      PermissionFilterBeforeSendCallback.class,
+      "answer_send"
+    );
+    var answer = new MessageActionItem(answerTitle);
+    when(languageClient.showMessageRequest(any())).thenReturn(CompletableFuture.completedFuture(answer));
+
+    languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(null);
+
+    var event = new SentryEvent();
+
+    // when
+    var filteredEvent = permissionFilter.execute(event, mock(Hint.class));
+
+    // then
+    assertThat(filteredEvent).isNull();
+    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
 
   }
 
@@ -196,6 +231,7 @@ class PermissionFilterBeforeSendCallbackTest {
     when(languageClient.showMessageRequest(any())).thenReturn(CompletableFuture.completedFuture(answer));
 
     languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
 
     var event = new SentryEvent();
 

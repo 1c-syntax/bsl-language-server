@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
@@ -63,6 +64,8 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private final LanguageClientHolder languageClientHolder;
 
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
   private final ServerInfo serverInfo;
 
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
@@ -78,7 +81,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private boolean sendToSentry() {
     if (configuration.getSendErrors() == SendErrorsMode.ASK) {
-      if (!languageClientHolder.isConnected()) {
+      if (!languageClientHolder.isConnected() || clientCapabilitiesHolder.getCapabilities().isEmpty()) {
         return false;
       }
 
