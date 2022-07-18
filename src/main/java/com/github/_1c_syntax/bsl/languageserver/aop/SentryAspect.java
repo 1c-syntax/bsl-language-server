@@ -26,6 +26,7 @@ import lombok.NoArgsConstructor;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 
+import javax.annotation.PreDestroy;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,6 +39,11 @@ import java.util.concurrent.Executors;
 public class SentryAspect {
 
   private final ExecutorService executorService = Executors.newCachedThreadPool();
+
+  @PreDestroy
+  public void onDestroy() {
+    executorService.shutdown();
+  }
 
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
   public void logThrowingBSLDiagnosticGetDiagnostics(Throwable ex) {
