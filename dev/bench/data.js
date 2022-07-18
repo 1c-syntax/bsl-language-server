@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1658075456852,
+  "lastUpdate": 1658109257981,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18600,6 +18600,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.17609834975043656",
             "extra": "mean: 6.23124623298645 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3e796de1ab4af560bbb68f4713e7c004ddca767d",
+          "message": "Merge pull request #2850 from qtLex/fix/new-expresion-loop\n\nДобавлен обход по дереву для описаний оповещения.",
+          "timestamp": "2022-07-18T01:52:46Z",
+          "tree_id": "c2c68dcd99a2e0430046a129aa8abb70b720e631",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3e796de1ab4af560bbb68f4713e7c004ddca767d"
+        },
+        "date": 1658109256038,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 6.269990523656209,
+            "unit": "sec",
+            "range": "stddev: 0.36052873013145914",
+            "extra": "mean: 6.269990523656209 sec\nrounds: 3"
           }
         ]
       }
