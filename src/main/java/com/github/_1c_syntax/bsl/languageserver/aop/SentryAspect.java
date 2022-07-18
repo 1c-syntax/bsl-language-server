@@ -26,6 +26,7 @@ import lombok.NoArgsConstructor;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -38,10 +39,15 @@ import java.util.concurrent.Executors;
 @NoArgsConstructor
 public class SentryAspect {
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool();
+  private ExecutorService executorService;
+
+  @PostConstruct
+  private void init() {
+    executorService = Executors.newCachedThreadPool();
+  }
 
   @PreDestroy
-  public void onDestroy() {
+  private void onDestroy() {
     executorService.shutdown();
   }
 
