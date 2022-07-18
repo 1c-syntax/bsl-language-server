@@ -1,6 +1,7 @@
 com.github._1c_syntax.bsl.languageserver
 com.github._1c_syntax.bsl.languageserver.aop
 com.github._1c_syntax.bsl.languageserver.aop.measures
+com.github._1c_syntax.bsl.languageserver.aop.sentry
 com.github._1c_syntax.bsl.languageserver.cfg
 com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
