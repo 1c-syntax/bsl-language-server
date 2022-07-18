@@ -130,7 +130,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     var newResult = findAllDataSourceWithoutInnerQueries(ctx)
       .collect(Collectors.toMap(
         RefOveruseDiagnostic::getTableNameOrAlias,
-        RefOveruseDiagnostic::isTableWithTabularSection,
+        this::isTableWithTabularSection,
         (existing, replacement) -> existing,
         HashMap::new));
 
@@ -196,7 +196,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .orElse("");
   }
 
-  private static boolean isTableWithTabularSection(DataSourceContext dataSourceContext) {
+  private boolean isTableWithTabularSection(DataSourceContext dataSourceContext) {
     final var table = dataSourceContext.table();
     if (table == null) {
       return dataSourceContext.virtualTable() != null;
