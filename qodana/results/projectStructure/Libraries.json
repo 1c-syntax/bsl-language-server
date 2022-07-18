@@ -139,6 +139,18 @@
       ]
     },
     {
+      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.2.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.2.1/6e30f828133297eeaf10ac83d2f32ddd29d71e71/sentry-spring-boot-starter-6.2.1.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-logback:6.2.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.2.1/ebb34326b52016d54fe5ccbc0a1c9c5531ecb340/sentry-logback-6.2.1.jar!/"
+      ]
+    },
+    {
       "name": "Gradle: org.projectlombok:lombok:1.18.24",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.24/13a394eed5c4f9efb2a6d956e2086f1d81e857d9/lombok-1.18.24.jar!/"
@@ -484,6 +496,18 @@
       "name": "Gradle: org.jheaps:jheaps:0.13",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.jheaps/jheaps/0.13/b30f6a9c1e99b2e102126060195469ef7fd7211b/jheaps-0.13.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-spring:6.2.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.2.1/4e2d7cef240531943b71b9ba32fb43d625cc5889/sentry-spring-6.2.1.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: io.sentry:sentry:6.2.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.2.1/e457cc0598f6b4b4bb169be6536b22186b96122c/sentry-6.2.1.jar!/"
       ]
     },
     {

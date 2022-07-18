@@ -140,6 +140,14 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-logback:6.2.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.projectlombok:lombok:1.18.24",
           "type": "Library"
         },
@@ -429,6 +437,14 @@
         },
         {
           "name": "Gradle: org.jheaps:jheaps:0.13",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring:6.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry:6.2.1",
           "type": "Library"
         },
         {
@@ -826,6 +842,14 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-logback:6.2.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.projectlombok:lombok:1.18.24",
           "type": "Library"
         },
@@ -1055,6 +1079,14 @@
         },
         {
           "name": "Gradle: org.jheaps:jheaps:0.13",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring:6.2.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry:6.2.1",
           "type": "Library"
         },
         {
