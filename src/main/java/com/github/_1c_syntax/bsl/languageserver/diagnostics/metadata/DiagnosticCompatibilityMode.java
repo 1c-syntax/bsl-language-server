@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 
 public enum DiagnosticCompatibilityMode {
   UNDEFINED(0, 0),

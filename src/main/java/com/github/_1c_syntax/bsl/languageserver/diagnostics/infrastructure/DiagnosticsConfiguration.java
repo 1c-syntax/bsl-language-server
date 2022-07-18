@@ -31,12 +31,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDO;
+import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.support.SupportVariant;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -109,7 +109,7 @@ public abstract class DiagnosticsConfiguration {
     }
 
     var subsystemsNames = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
-      .map(AbstractMDO::getName)
+      .map(AbstractMDObjectBase::getName)
       .collect(Collectors.toList());
 
     var include = subsystemsFilter.getInclude().isEmpty()

@@ -50,6 +50,15 @@ public class LanguageClientHolder implements LanguageClientAware {
     return Optional.ofNullable(client);
   }
 
+  /**
+   * LanguageClient подключен.
+   *
+   * @return LanguageClient подключен.
+   */
+  public boolean isConnected() {
+    return client != null;
+  }
+
   public void execIfConnected(Consumer<LanguageClient> consumer) {
     getClient().ifPresent(consumer);
   }

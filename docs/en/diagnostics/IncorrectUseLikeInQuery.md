@@ -1,7 +1,7 @@
 # Incorrect use of 'LIKE' (IncorrectUseLikeInQuery)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When using the operator `LIKE` in the query text, it is allowed to use only

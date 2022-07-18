@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
@@ -39,7 +41,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterClass
 class GenerateStandardRegionsSupplierTest {
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Autowired
   private GenerateStandardRegionsSupplier codeActionSupplier;
@@ -48,6 +54,8 @@ class GenerateStandardRegionsSupplierTest {
   void testGetCodeActions() {
 
     // given
+    configuration.setLanguage(Language.EN);
+
     String filePath = "./src/test/resources/suppliers/generateRegion.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
