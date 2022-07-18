@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * Сборник общих Pointcut для AOP-слоя.
@@ -62,6 +64,22 @@ public class Pointcuts {
    */
   @Pointcut("within(org.eclipse.lsp4j.services.LanguageServer+)")
   public void isLanguageServer() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к реализации {@link TextDocumentService}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.TextDocumentService+)")
+  public void isTextDocumentService() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к реализации {@link WorkspaceService}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.WorkspaceService+)")
+  public void isWorkspaceService() {
     // no-op
   }
 
@@ -118,6 +136,14 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
   public void isInitializeCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов публичного метода.
+   */
+  @Pointcut("execution(public * com.github._1c_syntax.bsl.languageserver..*(..))")
+  public void isPublicMethodCall() {
     // no-op
   }
 }

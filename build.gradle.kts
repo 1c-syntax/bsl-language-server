@@ -20,6 +20,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.12.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
+    id("com.gorylenko.gradle-git-properties") version "2.3.2"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
 
@@ -50,6 +51,12 @@ gitVersioning.apply {
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.6"
+
+dependencyManagement {
+    imports {
+        mavenBom("io.sentry:sentry-bom:6.2.1")
+    }
+}
 
 dependencies {
 
@@ -102,6 +109,10 @@ dependencies {
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
+
+    // Sentry
+    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-logback")
 
     // COMPILE
 
