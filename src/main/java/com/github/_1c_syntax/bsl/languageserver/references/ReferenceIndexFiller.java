@@ -228,7 +228,7 @@ public class ReferenceIndexFiller {
         .orElse(MdoRefBuilder.getMdoRef(documentContext));
     }
 
-    private Collection<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
+    private Set<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
       if (paramList == null) {
         return Collections.emptySet();
       }
