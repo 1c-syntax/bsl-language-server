@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class MissingCommonModuleMethodDiagnosticTest extends AbstractDiagnosticTest<MissingCommonModuleMethodDiagnostic> {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
