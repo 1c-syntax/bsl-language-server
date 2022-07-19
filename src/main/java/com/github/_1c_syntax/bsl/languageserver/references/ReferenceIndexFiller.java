@@ -89,7 +89,7 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private Collection<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
+    private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
     public BSLParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
