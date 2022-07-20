@@ -98,6 +98,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
 
   private List<Reference> getRefCalls(MethodSymbol methodSymbol) {
     return referenceIndex.getReferencesTo(methodSymbol).stream()
+      // в будущем могут появиться и другие виды ссылок
       .filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE)
       .filter(TransferringParametersBetweenClientAndServerDiagnostic::isClientCall)
       .collect(Collectors.toUnmodifiableList());
