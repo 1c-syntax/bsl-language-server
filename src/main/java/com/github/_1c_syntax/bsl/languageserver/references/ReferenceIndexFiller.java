@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -150,7 +150,11 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
-        var callParamList = ctx.doCall().callParamList().callParam();
+        final var doCallContext = ctx.doCall();
+        if (doCallContext == null){
+          return super.visitNewExpression(ctx);
+        }
+        var callParamList = doCallContext.callParamList().callParam();
 
         if (NotifyDescription.notifyDescriptionContainsHandler(callParamList)) {
           addCallbackMethodCall(
@@ -166,7 +170,7 @@ public class ReferenceIndexFiller {
           );
         }
 
-        return ctx;
+        return super.visitNewExpression(ctx);
       }
 
       return super.visitNewExpression(ctx);
