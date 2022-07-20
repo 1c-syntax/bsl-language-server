@@ -206,6 +206,9 @@ public class ReferenceIndexFiller {
     }
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
+      if (mdoRef.isEmpty()){
+        return;
+      }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
         if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
           checkCall(mdoRef, methodNameToken);
@@ -221,8 +224,14 @@ public class ReferenceIndexFiller {
     }
 
     private String getModule(BSLParser.CallParamContext callParamContext) {
-      return NotifyDescription.getFirstMember(callParamContext)
+      final var complexIdentifierContext1 = NotifyDescription.getFirstMember(callParamContext)
         .map(BSLParser.MemberContext::complexIdentifier)
+        .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
+        .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
+      if (complexIdentifierContext1.isEmpty()){
+        return "";
+      }
+      return complexIdentifierContext1
         .filter(Predicate.not(Modules::isThisObject))
         .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
         .orElse(MdoRefBuilder.getMdoRef(documentContext));
