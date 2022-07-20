@@ -69,6 +69,9 @@ dependencies {
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
 
+    // lsp4j websocket
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.12.0")
+
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
@@ -83,8 +86,7 @@ dependencies {
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 
-    // lsp4j websocket
-    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.12.0")
+    // tyrus-server for websocket
     api("org.glassfish.tyrus:tyrus-server:1.8")
     api("org.glassfish.tyrus:tyrus-container-grizzly-server:1.8")
 

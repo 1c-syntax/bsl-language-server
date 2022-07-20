@@ -23,37 +23,30 @@ package com.github._1c_syntax.bsl.languageserver.websocket;
 
 import javax.websocket.DeploymentException;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.tyrus.server.Server;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class WebSocketRunner {
+public class WebSocketLauncher {
 
-  private final LanguageServerConfiguration configuration;
+  private Server server;
 
-  public void runWebSocketServer(String hostname, int port) {
+  public void startListening(String hostname, int port) {
 
-    String contextPath = "/";
-    var server = new Server(hostname, port, contextPath, null, BSLLSWebSocketServerConfigProvider.class);
-    Runtime.getRuntime().addShutdownHook(new Thread(server::stop, "bsl-websocket-server-shutdown-hook"));
+    server = new Server(hostname, port, null, null, BSLLSWebSocketServerConfigProvider.class);
 
     try {
       server.start();
       Thread.currentThread().join();
     } catch (InterruptedException e) {
-      LOGGER.error("BSL websocket server has been interrupted.", e);
-      Thread.currentThread().interrupt();
+      LOGGER.debug("BSL websocket server has been interrupted.");
+      server.stop();
     } catch (DeploymentException e) {
       LOGGER.error("Cannot start BSL websocket server.", e);
     } catch (Exception e) {
       LOGGER.error("Cannot start websocket server.", e);
-    } finally {
-      server.stop();
     }
   }
 }

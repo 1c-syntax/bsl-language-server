@@ -23,12 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.BSLLSBinding;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.websocket.BSLLSWebSocketServerConfigProvider;
-import com.github._1c_syntax.bsl.languageserver.websocket.WebSocketRunner;
+import com.github._1c_syntax.bsl.languageserver.websocket.WebSocketLauncher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -40,17 +37,17 @@ import static picocli.CommandLine.Option;
 /**
  * Запускает приложение в режиме Websocket Language Server
  * Ключ команды:
- * -w, (--websocket)
+ *  -w, (--websocket)
  * Параметры:
- * -c, (--configuration)      -  Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
- * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- * то будут использованы настройки по умолчанию.
- * Можно указать каталог, в котором будут найдены файлы для форматирования, либо один
- * файл для форматирования
- * -p, (--port)               -  Порт, на котором открывается соединение. Если параметр опущен, то будет использован
- * порт по умолчанию, а именно 8025
+ *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                      Возможно указывать как в абсолютном, так и относительном виде.
+ *                                      Если параметр опущен, то будут использованы настройки по умолчанию.
+ *  --host                            - Хост, на котором открывается соединение. Если параметр опущен,
+ *                                      то будет использован хост по умолчанию, а именно localhost
+ *  -p, (--port)                      - Порт, на котором открывается соединение. Если параметр опущен,
+ *                                      то будет использованпорт по умолчанию, а именно 8025
  * Выводимая информация:
- * Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket
+ *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket
  */
 @Slf4j
 @Command(
@@ -61,7 +58,7 @@ import static picocli.CommandLine.Option;
   footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
-public class WebsocketStartCommand implements Callable<Integer> {
+public class WebsocketCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
     usageHelp = true,
@@ -89,17 +86,17 @@ public class WebsocketStartCommand implements Callable<Integer> {
     defaultValue = "8025")
   private int websocketPort;
 
-  private final LanguageServerConfiguration configuration;
-  private final WebSocketRunner launcher;
+  private final WebSocketLauncher launcher;
 
   public Integer call() {
 
     var configurationFile = new File(configurationOption);
     if (configurationFile.exists()) {
+      LanguageServerConfiguration configuration = BSLLSBinding.getLanguageServerConfiguration();
       configuration.update(configurationFile);
     }
 
-    launcher.runWebSocketServer(websocketHost, websocketPort);
+    launcher.startListening(websocketHost, websocketPort);
     return -1;
 
   }
