@@ -195,8 +195,7 @@ public class ReferenceIndexFiller {
       var methodNameText = Strings.trimQuotes(methodName.getText());
       final var configuration = documentContext.getServerContext().getConfiguration();
       Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
-      for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
-        var moduleType = e.getKey();
+      for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
             || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
