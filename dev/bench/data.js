@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1658507796234,
+  "lastUpdate": 1658522572479,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -18910,6 +18910,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6350777372874293",
             "extra": "mean: 43.9050657749176 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1d57fdefd7aa68ed88c325df231e7c3f328a0a19",
+          "message": "Merge pull request #2833 from artbear/ref-index-fix-2832\n\nДоработка ReferenceIndex - Исправлен расчет ссылок на символы-методы + падение анализа",
+          "timestamp": "2022-07-22T20:33:41Z",
+          "tree_id": "5f1b27e7cf2d0c4cd1a849ff7cc9200149e26bcb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1d57fdefd7aa68ed88c325df231e7c3f328a0a19"
+        },
+        "date": 1658522569859,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 43.5687669912974,
+            "unit": "sec",
+            "range": "stddev: 0.5444650090652561",
+            "extra": "mean: 43.5687669912974 sec\nrounds: 3"
           }
         ]
       }
