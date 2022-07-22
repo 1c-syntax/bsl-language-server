@@ -31,11 +31,15 @@ import java.util.regex.Pattern;
 public class Modules {
 
   private static final Pattern THIS_OBJECT_PATTERN = CaseInsensitivePattern.compile(
-    "^(ЭтотОбъект|ThisObject)$"
+    "ЭтотОбъект|ThisObject"
   );
 
   public static boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
-    return THIS_OBJECT_PATTERN.matcher(complexIdentifier.IDENTIFIER().getText()).find();
+    final var identifier = complexIdentifier.IDENTIFIER();
+    if (identifier == null){
+      return false;
+    }
+    return THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();
   }
 
 }
