@@ -49,7 +49,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
   // check first symbol
   private static final boolean DEFAULT_CHECK_START = true;
   // forbidden characters at the beginning of the line
-  private static final String DEFAULT_LIST_FOR_CHECK_START = "\\)|;|,|\\);";
+  private static final String DEFAULT_LIST_FOR_CHECK_START = "\\)|;|,\\s*\\S+|\\);";
   // check last symbol
   private static final boolean DEFAULT_CHECK_END = true;
   // forbidden end-of-line characters
