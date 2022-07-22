@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/IncorrectLineBreak/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.11">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.2.11">
     
     
       
@@ -952,7 +952,7 @@
 <td align="center"><code>listOfIncorrectFirstSymbol</code></td>
 <td align="center"><code>Строка</code></td>
 <td align="center"><code>Символы через вертикальную черту, с которых не должна начинаться строка (специальные символы должны быть экранированы)</code></td>
-<td align="center"><code>\)|;|,|\);</code></td>
+<td align="center"><code>\)|;|,\s*\S+|\);</code></td>
 </tr>
 <tr>
 <td align="center"><code>checkLastSymbol</code></td>
@@ -988,6 +988,14 @@
 <li>логические операторы И, ИЛИ ставятся в начале строки, а не в конце предыдущей строки;</li>
 <li>все условия предваряются стандартным отступом, либо выравниваются по началу первого условия, без учета логического оператора (для выравнивания выражений относительно первой строки рекомендуется использовать пробелы).</li>
 </ul>
+<p><strong>Примеры настройки исключений:</strong></p>
+<ul>
+<li>Если стандарт вашей команды требует, чтобы закрывающая скобка и разделитель операторов ";" были написаны <em>после</em> строки, на которой указан последний параметр, нужно исправить настройку параметра <code>listOfIncorrectFirstSymbol</code></li>
+<li>вместо подстроки <code>|\);</code> (в конце настройки) нужно написать подстроку <code>|\)\s*;\s*\S+</code></li>
+<li>пример финальной строки <code>\)|;|,\s*\S+|\)s*;\s*\S+</code></li>
+<li>пример кода указан в секции примеров</li>
+</ul>
+<p>Без указанной настройки правило будет выдавать замечания на закрывающую скобка и разделитель операторов ";", если они на отдельной строке.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -1006,6 +1014,19 @@
                  <span class="o">+</span> <span class="nv">СуммаРучнойСкидки</span> 
                  <span class="o">+</span> <span class="nv">СуммаАвтоматическойСкидки</span><span class="p">;</span>
 </code></pre></div>
+<p>Пример возможного расположения параметров и закрывающей скобки с разделителем операторов ";"</p>
+<div class="highlight"><pre><span></span><code><span class="nv">ИменаДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">СписокЗначений</span><span class="p">;</span>
+<span class="nv">ИменаДокументов</span><span class="o">.</span><span class="nf">Добавить</span><span class="p">(</span><span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">Документы</span><span class="o">.</span><span class="nv">СтрокаВыпискиРасход</span><span class="o">.</span><span class="nv">Имя</span><span class="p">,</span> 
+                         <span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">Документы</span><span class="o">.</span><span class="nv">СтрокаВыпискиРасход</span><span class="o">.</span><span class="nv">Синоним</span><span class="p">);</span>
+</code></pre></div>
+<p>Пример возможного расположения закрывающей скобки с разделителем операторов ";" на отдельной строке:
+- без изменения параметра <code>listOfIncorrectFirstSymbol</code>, описанного выше, правило будет выдавать замечание на такой перенос выражений.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">ИменаДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">СписокЗначений</span><span class="p">;</span>
+<span class="nv">ИменаДокументов</span><span class="o">.</span><span class="nf">Добавить</span><span class="p">(</span>
+    <span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">Документы</span><span class="o">.</span><span class="nv">СтрокаВыпискиРасход</span><span class="o">.</span><span class="nv">Имя</span><span class="p">,</span> 
+    <span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">Документы</span><span class="o">.</span><span class="nv">СтрокаВыпискиРасход</span><span class="o">.</span><span class="nv">Синоним</span>
+<span class="p">);</span>
+</code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -1021,7 +1042,7 @@
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;IncorrectLineBreak&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;checkFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;listOfIncorrectFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\\)|;|,|\\);&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;listOfIncorrectFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\\)|;|,\\s*\\S+|\\);&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;checkLastSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;listOfIncorrectLastSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ИЛИ|И|OR|AND|\\+|-|/|%|\\*&quot;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>

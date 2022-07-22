@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/IncorrectLineBreak/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.11">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.2.11">
     
     
       
@@ -952,7 +952,7 @@
 <td align="center"><code>listOfIncorrectFirstSymbol</code></td>
 <td align="center"><code>String</code></td>
 <td align="center"><code>Vertical bar-separated characters that should not start the line (special characters must be escaped)</code></td>
-<td align="center"><code>\)|;|,|\);</code></td>
+<td align="center"><code>\)|;|,\s*\S+|\);</code></td>
 </tr>
 <tr>
 <td align="center"><code>checkLastSymbol</code></td>
@@ -1018,7 +1018,7 @@
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;IncorrectLineBreak&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;checkFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;listOfIncorrectFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\\)|;|,|\\);&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;listOfIncorrectFirstSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\\)|;|,\\s*\\S+|\\);&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;checkLastSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;listOfIncorrectLastSymbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ИЛИ|И|OR|AND|\\+|-|/|%|\\*&quot;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
