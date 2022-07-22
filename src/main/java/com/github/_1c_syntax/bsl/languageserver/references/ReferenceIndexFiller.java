@@ -209,6 +209,7 @@ public class ReferenceIndexFiller {
     }
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
+      // todo: move this out of method 
       if (mdoRef.isEmpty()){
         return;
       }
