@@ -64,12 +64,12 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
     final var commonModuleOptional = documentContext.getServerContext().getConfiguration().getCommonModule(moduleName);
     if (commonModuleOptional.isEmpty()){
-      addDiagnostic("nonExistingModule", scheduleJob, moduleName);// TODO тест
+      addDiagnostic("missingModule", scheduleJob, moduleName);
       return;
     }
     final var mdCommonModule = commonModuleOptional.orElseThrow();
     if (!mdCommonModule.isServer()){
-      addDiagnostic("nonServerModule", scheduleJob, moduleName);// TODO тест
+      addDiagnostic("nonServerModule", scheduleJob, moduleName);
       return;
     }
     checkMethod(scheduleJob, mdCommonModule, handler.getMethodName());
@@ -90,7 +90,8 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
           addDiagnostic("nonExportMethod", scheduleJob, getFullName(mdCommonModule, methodName));
         }
         // TODO проверить, что у метода есть реализация и он не пустой
-        // TODO проверить дубли обработчик у разных регл.заданий
+        // TODO проверить отсутствие параметров у метода-обработчика
+        // TODO проверить дубли обработчиков у разных регл.заданий
       });
   }
 
@@ -103,6 +104,6 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
   }
 
   private void addDiagnostic(MDScheduledJob scheduleJob) {
-    addDiagnostic(info.getMessage(scheduleJob.getName()));
+    addDiagnostic(info.getMessage("", scheduleJob.getName()));
   }
 }

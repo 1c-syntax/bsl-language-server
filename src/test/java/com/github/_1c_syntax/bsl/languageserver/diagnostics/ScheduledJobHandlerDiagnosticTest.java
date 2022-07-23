@@ -23,12 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.support.Handler;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDScheduledJob;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -55,11 +60,122 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 8)))
       .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Укажите существующий обработчик вместо несуществующего \"ПервыйОбщийМодуль.НесуществующийМетод\" регламентного задания \"РегламентноеЗаданиеНесуществующийМетод\""))
+        .equals("Укажите существующий обработчик вместо несуществующего \"ПервыйОбщийМодуль.НесуществующийМетод\" у регламентного задания \"РегламентноеЗаданиеНесуществующийМетод\""))
       .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Добавьте \"Экспорт\" методу \"ПервыйОбщийМодуль.Тест\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗаданиеПриватныйМетод\""))
       .hasSize(2)
     ;
 
+  }
+
+  @Test
+  void testEmptyHandler() {
+
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    Set<AbstractMDObjectBase> children = new HashSet<>();
+
+    context.getConfiguration().getChildren().forEach(mdo -> {
+      if (mdo instanceof MDScheduledJob) {
+        var spyMDO = spy(mdo);
+        when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler(""));
+
+        if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
+          children.add(spyMDO);
+        }
+      }
+    });
+
+    var configuration = spy(context.getConfiguration());
+    when(configuration.getChildren()).thenReturn(children);
+    var context = spy(documentContext.getServerContext());
+    when(context.getConfiguration()).thenReturn(configuration);
+    when(documentContext.getServerContext()).thenReturn(context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics, true)
+      .allMatch(
+        diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 8)))
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Укажите существующий обработчик вместо несуществующего \"\" у регламентного задания \"РегламентноеЗадание1\""))
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testMissingModule() {
+
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    Set<AbstractMDObjectBase> children = new HashSet<>();
+
+    context.getConfiguration().getChildren().forEach(mdo -> {
+      if (mdo instanceof MDScheduledJob) {
+        var spyMDO = spy(mdo);
+        when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler("ОбщийМодуль.НесуществующийМодуль.КакойТоМетод"));
+
+        if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
+          children.add(spyMDO);
+        }
+      }
+    });
+
+    var configuration = spy(context.getConfiguration());
+    when(configuration.getChildren()).thenReturn(children);
+    var context = spy(documentContext.getServerContext());
+    when(context.getConfiguration()).thenReturn(configuration);
+    when(documentContext.getServerContext()).thenReturn(context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics, true)
+      .allMatch(
+        diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 8)))
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Создайте общий модуль \"НесуществующийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testNonServerModule() {
+
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    Set<AbstractMDObjectBase> children = new HashSet<>();
+
+    context.getConfiguration().getChildren().forEach(mdo -> {
+      if (mdo instanceof MDScheduledJob) {
+        var spyMDO = spy(mdo);
+        when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler("ОбщийМодуль.КлиентскийОбщийМодуль.ОбработчикОписаниеОповещения"));
+
+        if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
+          children.add(spyMDO);
+        }
+      }
+    });
+
+    var configuration = spy(context.getConfiguration());
+    when(configuration.getChildren()).thenReturn(children);
+    var context = spy(documentContext.getServerContext());
+    when(context.getConfiguration()).thenReturn(configuration);
+    when(documentContext.getServerContext()).thenReturn(context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics, true)
+      .allMatch(
+        diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 8)))
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Установите флаг \"Сервер\" общему модулю \"КлиентскийОбщийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
+      .hasSize(1)
+    ;
   }
 }
