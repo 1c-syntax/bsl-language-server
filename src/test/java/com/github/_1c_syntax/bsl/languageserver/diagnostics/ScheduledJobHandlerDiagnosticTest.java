@@ -36,11 +36,11 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -141,22 +141,18 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     Set<AbstractMDObjectBase> children = new HashSet<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
+      var spyMDO = spy(mdo);
       if (mdo instanceof MDScheduledJob) {
-        var spyMDO = spy(mdo);
         when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler(methodPath));
 
         if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
           children.add(spyMDO);
         }
-        List<MDOModule> modules = new ArrayList<>();
-
-        ((AbstractMDObjectComplex) mdo).getModules().stream()
+      } else if (mdo instanceof AbstractMDObjectComplex) {
+        List<MDOModule> modules = ((AbstractMDObjectComplex) mdo).getModules().stream()
           .filter(mdoModule -> mdoModule.getModuleType() == ModuleType.ManagerModule)
-          .forEach(mdoModule -> {
-            var spyMdoModule = spy(mdoModule);
-            modules.add(spyMdoModule);
-          });
-        when(((AbstractMDObjectComplex) mdo).getModules()).thenReturn(modules);
+          .collect(Collectors.toList());
+        when(((AbstractMDObjectComplex) spyMDO).getModules()).thenReturn(modules);
       }
     });
 

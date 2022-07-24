@@ -108,7 +108,9 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   protected abstract void checkMetadata(AbstractMDObjectBase mdo);
 
   private void checkMetadataWithModules() {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
+    documentContext.getMdObject()
+      .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
+      .ifPresent((AbstractMDObjectBase mdo) -> {
       if (mdo instanceof AbstractMDObjectBSL) {
         var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
           .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
