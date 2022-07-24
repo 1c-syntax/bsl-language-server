@@ -96,7 +96,6 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     }
 
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
-    // https://github.com/1c-syntax/bsl-language-server/pull/2827#issuecomment-1173138191
     final var methodSymbol = document.orElseThrow()
       .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
     if (methodSymbol.isEmpty()){
