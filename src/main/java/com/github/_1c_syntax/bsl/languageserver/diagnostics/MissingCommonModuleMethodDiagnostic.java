@@ -80,15 +80,16 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
       // TODO какие еще типы модулей поддержать? модули менеджеров - путаница с платформенными методами, без контекста не решить
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
       .map(this::getReferenceToMethodCall)
-      .filter(Optional::isPresent)
-      .forEach(callData -> fireIssue(callData.orElseThrow()));
+      .flatMap(Optional::stream)
+      .forEach(this::fireIssue);
   }
 
   private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {
     final var symbol = symbolOccurrence.getSymbol();
     final var document = documentContext.getServerContext()
-      .getDocument(symbol.getMdoRef(), ModuleType.CommonModule);
+      .getDocument(symbol.getMdoRef(), symbol.getModuleType());
     final var mdObject = document
+      .filter(symbolDocumentContext -> !symbolDocumentContext.getUri().equals(documentContext.getUri()))
       .flatMap(DocumentContext::getMdObject);
     if (mdObject.isEmpty()){
       // это может быть просто вызов метода объекта, а не вызов метода общего модуля
@@ -111,9 +112,9 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   }
 
   private String getMethodNameByLocation(Range range) {
-    final var terminalNodeContainsPosition = Trees.findTerminalNodeContainsPosition(
-      documentContext.getAst(), range.getEnd());
-    return terminalNodeContainsPosition.map(ParseTree::getText).orElseThrow();
+    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), range.getEnd())
+      .map(ParseTree::getText)
+      .orElseThrow();
   }
 
   private void fireIssue(CallData callData) {
