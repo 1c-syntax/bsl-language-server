@@ -837,7 +837,7 @@
                 },
                 "listOfIncorrectFirstSymbol": {
                     "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
-                    "default": "\\)|;|,|\\);",
+                    "default": "\\)|;|,\\s*\\S+|\\);",
                     "type": "string",
                     "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
                 }
@@ -1533,6 +1533,16 @@
             ],
             "title": "Same metadata object and child name",
             "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
+        "ScheduledJobHandler": {
+            "description": "Scheduled job handler",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Scheduled job handler",
+            "$id": "#/definitions/ScheduledJobHandler"
         },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",

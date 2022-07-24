@@ -1,4 +1,4 @@
-# <Diagnostic name> (ScheduledJobHandler)
+# Scheduled job handler (ScheduledJobHandler)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
