@@ -28,12 +28,15 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
 import com.github._1c_syntax.mdclasses.mdo.MDScheduledJob;
+import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -145,6 +148,15 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
         if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
           children.add(spyMDO);
         }
+        List<MDOModule> modules = new ArrayList<>();
+
+        ((AbstractMDObjectComplex) mdo).getModules().stream()
+          .filter(mdoModule -> mdoModule.getModuleType() == ModuleType.ManagerModule)
+          .forEach(mdoModule -> {
+            var spyMdoModule = spy(mdoModule);
+            modules.add(spyMdoModule);
+          });
+        when(((AbstractMDObjectComplex) mdo).getModules()).thenReturn(modules);
       }
     });
 
