@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -32,24 +31,16 @@ import com.github._1c_syntax.bsl.languageserver.references.model.LocationReposit
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.children.Form;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
-import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -64,6 +55,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
+  public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
 
@@ -74,6 +66,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     String methodName;
     Range moduleMethodRange;
     boolean nonExport;
+    boolean exists;
   }
 
   @Override
@@ -84,169 +77,53 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
-      // TODO какие еще типы модулей поддержать? модули менеджеров - путаница с платформенными методами, без контекст не решить
+      // TODO какие еще типы модулей поддержать? модули менеджеров - путаница с платформенными методами, без контекста не решить
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
-      .map(symbolOccurrence -> getNormalMethodRef(symbolOccurrence))
+      .map(this::getReferenceToMethodCall)
       .filter(Optional::isPresent)
       .forEach(callData -> fireIssue(callData.orElseThrow()));
-//      .collect(Collectors.toList());
   }
 
-//  private void fireIssue(SymbolOccurrence symbolOccurrence) {
-////    symbolOccurrence.getSymbol().getSymbolName()
-//    final var message = info.getMessage(symbolOccurrence.getSymbol().getSymbolName(),
-//      symbolOccurrence.getSymbol().getSymbolName());
-//    diagnosticStorage.addDiagnostic(symbolOccurrence.getLocation().getRange(), message);
-//  }
+  private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {
+    final var symbol = symbolOccurrence.getSymbol();
+    final var document = documentContext.getServerContext()
+      .getDocument(symbol.getMdoRef(), ModuleType.CommonModule);
+    final var mdObject = document
+      .flatMap(DocumentContext::getMdObject);
+    if (mdObject.isEmpty()){
+      // это может быть просто вызов метода объекта, а не вызов метода общего модуля
+      return Optional.empty();
+    }
 
-  private Optional<CallData> getNormalMethodRef(SymbolOccurrence symbolOccurrence) {
-    // TODO если не нашли, что делать? или это невозможно и всегда должны найти? )
-    final var commonModuleDocument = documentContext.getServerContext().getDocument(symbolOccurrence.getSymbol().getMdoRef(), ModuleType.CommonModule);
-    if (commonModuleDocument.isEmpty()){
-      return Optional.empty();
-    }
-    final var mdoReference = commonModuleDocument
-      .flatMap(DocumentContext::getMdObject)
-      .map(AbstractMDObjectBase::getMdoReference)
-      .map(this::getMdoRef);
-    if (mdoReference.isEmpty()){
-      return Optional.empty();
-    }
-    // TODO нужно сделать отдельное сообщение про обращение к приватному методу
-    final var methodSymbol = commonModuleDocument
-      .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolOccurrence.getSymbol().getSymbolName()));
+    // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
+    // https://github.com/1c-syntax/bsl-language-server/pull/2827#issuecomment-1173138191
+    final var methodSymbol = document.orElseThrow()
+      .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
     if (methodSymbol.isEmpty()){
-      return Optional.of(new CallData(mdoReference.orElseThrow(), symbolOccurrence.getSymbol().getSymbolName(),
-        symbolOccurrence.getLocation().getRange(), false));
+      final var location = symbolOccurrence.getLocation();
+      // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
+      return Optional.of(new CallData(mdObject.orElseThrow().getName(), getMethodNameByLocation(location.getRange()),
+        location.getRange(), false, false));
     }
     return methodSymbol
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
-      .map(methodSymbol1 -> new CallData(mdoReference.orElseThrow(), symbolOccurrence.getSymbol().getSymbolName(),
-        symbolOccurrence.getLocation().getRange(), true));
+      .map(methodSymbol1 -> new CallData(mdObject.orElseThrow().getName(), methodSymbol1.getName(),
+        symbolOccurrence.getLocation().getRange(), true, true));
   }
 
-  private String getMdoRef(MDOReference mdoReference) {
-    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
-      return mdoReference.getMdoRef();
-    }
-    return mdoReference.getMdoRefRu();
+  private String getMethodNameByLocation(Range range) {
+    final var terminalNodeContainsPosition = Trees.findTerminalNodeContainsPosition(
+      documentContext.getAst(), range.getEnd());
+    return terminalNodeContainsPosition.map(ParseTree::getText).orElseThrow();
   }
-
-//  @Override
-//  public ParseTree visitFile(BSLParser.FileContext ctx) {
-//    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY){
-//      return ctx;
-//    }
-//    return super.visitFile(ctx);
-//  }
-//
-//  @Override
-//  public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
-//    final var moduleNameNode = ctx.IDENTIFIER();
-//    if (moduleNameNode != null){
-//      final var modifier = Optional.ofNullable(ctx.modifier());
-//      var accessCallContext = modifier
-//        .filter(List::isEmpty)
-//        .map(modifierContexts -> ctx.accessCall());
-//      if (accessCallContext.isEmpty()){
-//        accessCallContext = getAccessCallContext(modifier);
-//      }
-//      checkCombination(moduleNameNode, accessCallContext)
-//        .ifPresent(this::fireIssue);
-//    }
-//    return super.visitCallStatement(ctx);
-//  }
-//
-//  @Override
-//  public ParseTree visitMember(BSLParser.MemberContext ctx) {
-//    final var complexIdentifierContext = Optional.ofNullable(ctx.complexIdentifier());
-//    final var moduleNameNode = complexIdentifierContext
-//      .map(BSLParser.ComplexIdentifierContext::IDENTIFIER);
-//    if (moduleNameNode.isPresent()){
-//      final var modifierContexts = complexIdentifierContext
-//        .map(BSLParser.ComplexIdentifierContext::modifier);
-//      checkModifiers(moduleNameNode.orElseThrow(), modifierContexts)
-//        .ifPresent(this::fireIssue);
-//    }
-//
-//    return super.visitMember(ctx);
-//  }
-//
-//  @Override
-//  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
-//    final var moduleNameNode = Optional.ofNullable(ctx.IDENTIFIER());
-//    if (moduleNameNode.isPresent()){
-//      final var modifierContexts = Optional.ofNullable(ctx.acceptor())
-//        .map(BSLParser.AcceptorContext::modifier);
-//      checkModifiers(moduleNameNode.orElseThrow(), modifierContexts)
-//        .ifPresent(this::fireIssue);
-//    }
-//
-//    return super.visitLValue(ctx);
-//  }
-
-//  private static Optional<BSLParser.AccessCallContext> getAccessCallContext(
-//    Optional<? extends List<? extends BSLParser.ModifierContext>> modifierContexts) {
-//
-//    return modifierContexts
-//      .filter(list -> !list.isEmpty())
-//      .map(list -> list.get(0).accessCall());
-//  }
-//
-//  private Optional<CallData> checkModifiers(TerminalNode moduleNameNode,
-//                                            Optional<? extends List<? extends BSLParser.ModifierContext>> modifierContexts) {
-//    final var accessCallContext = getAccessCallContext(modifierContexts);
-//    return checkCombination(moduleNameNode, accessCallContext);
-//  }
-//
-//  private Optional<CallData> checkCombination(TerminalNode moduleNameNode,
-//                                              Optional<BSLParser.AccessCallContext> accessCallContext) {
-//    return accessCallContext
-//      .map(BSLParser.AccessCallContext::methodCall)
-//      .map(BSLParser.MethodCallContext::methodName)
-//      .map(methodNameContext1 -> checkNodeCombination(moduleNameNode, methodNameContext1));
-//  }
-//
-//  @Nullable
-//  private CallData checkNodeCombination(TerminalNode moduleNameNode, BSLParser.MethodNameContext methodNameContext) {
-//    final var moduleName = moduleNameNode.getText();
-//    final var methodName = methodNameContext.getText();
-//    if (!isVariableInCurrentModule(moduleName, moduleNameNode) && notExistModuleMethod(moduleName, methodName)){
-//      return new CallData(moduleName, methodName, getRange(moduleNameNode, methodNameContext));
-//    }
-//    return null;
-//  }
-//
-//  private boolean isVariableInCurrentModule(String name, TerminalNode moduleNameNode) {
-//    return documentContext.getSymbolTree().getMethods().stream()
-//      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), Ranges.create(moduleNameNode)))
-//      .anyMatch(methodSymbol -> documentContext.getSymbolTree().getVariableSymbol(name, methodSymbol).isPresent());
-//  }
-//
-//  private boolean notExistModuleMethod(String moduleName, String methodName) {
-//    final var serverContext = documentContext.getServerContext();
-//    final var commonModule = serverContext.getConfiguration().getCommonModule(moduleName);
-//    if (commonModule.isEmpty()) {
-//      return false;
-//    }
-//    return commonModule
-//      .map(AbstractMDObjectBSL::getModules)
-//      .filter(mdoModules -> !mdoModules.isEmpty())
-//      .map(mdoModules -> mdoModules.get(0).getUri())
-//      .map(serverContext::getDocument)
-//      .map(DocumentContext::getSymbolTree)
-//      .flatMap(symbolTree -> symbolTree.getMethodSymbol(methodName))
-//      .filter(MethodSymbol::isExport) // TODO нужно сделать отдельное сообщение про обращение к приватному методу
-//      .isEmpty();
-//  }
-//
-//  private static Range getRange(TerminalNode moduleNameNode, BSLParser.MethodNameContext methodNameContext) {
-//    return Ranges.create(moduleNameNode, methodNameContext.IDENTIFIER());
-//  }
 
   private void fireIssue(CallData callData) {
-    final var message = info.getMessage(callData.methodName, callData.moduleName);
+    final String message;
+    if (!callData.exists){
+      message = info.getMessage(callData.methodName, callData.moduleName);
+    } else {
+      message = info.getResourceString(PRIVATE_METHOD_MESSAGE, callData.methodName, callData.moduleName);
+    }
     diagnosticStorage.addDiagnostic(callData.moduleMethodRange, message);
   }
 }
