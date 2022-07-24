@@ -22,18 +22,24 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDScheduledJob;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -43,12 +49,53 @@ import java.util.List;
     DiagnosticTag.ERROR
   },
   scope = DiagnosticScope.BSL
-
 )
+
 public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
-  public ScheduledJobHandlerDiagnostic() {
+  public static final String DIAGNOSTIC_MESSAGE = "diagnosticMessage";
+  public static final String MISSING_MODULE_MESSAGE = "missingModule";
+  public static final String NON_SERVER_MODULE_MESSAGE = "nonServerModule";
+  public static final String NON_EXPORT_METHOD_MESSAGE = "nonExportMethod";
+  public static final String METHOD_WITH_PARAMETERS_MESSAGE = "methodWithParameters";
+  public static final String FUNCTION_METHOD_MESSAGE = "functionMethod";
+  public static final String EMPTY_METHOD_MESSAGE = "emptyMethod";
+  public static final String DOUBLE_MESSAGE = "doubleMessage";
+
+  private final ReferenceIndex referenceIndex;
+  private final Map<String, List<MDScheduledJob>> scheduledJobHandlers = new HashMap<>();
+
+  public ScheduledJobHandlerDiagnostic(ReferenceIndex referenceIndex) {
     super(List.of(MDOType.SCHEDULED_JOB));
+    this.referenceIndex = referenceIndex;
+  }
+
+  @Override
+  protected void check() {
+    super.check();
+    checkHandlerDoubles();
+  }
+
+  private void checkHandlerDoubles() {
+    scheduledJobHandlers.values().stream()
+      .filter(mdScheduledJobs -> mdScheduledJobs.size() > 1)
+      .map((List<MDScheduledJob> mdScheduledJobs) -> {
+        mdScheduledJobs.sort(Comparator.comparing(AbstractMDObjectBase::getName));
+        return mdScheduledJobs;
+      })
+      .forEach(this::fireIssueForDoubles);
+    scheduledJobHandlers.clear();
+  }
+
+  private void fireIssueForDoubles(List<MDScheduledJob> mdScheduledJobs) {
+    final var scheduleJobNames = mdScheduledJobs.stream()
+      .map(AbstractMDObjectBase::getName)
+      .reduce((s, s2) -> s.concat(", ").concat(s2))
+      .orElseThrow();
+    final var mdScheduledJob = mdScheduledJobs.get(0).getHandler();
+    final var methodPath = getFullName(mdScheduledJob.getModuleName(), mdScheduledJob.getMethodName());
+
+    addDiagnostic(info.getResourceString(DOUBLE_MESSAGE, methodPath, scheduleJobNames));
   }
 
   @Override
@@ -64,18 +111,21 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
     final var commonModuleOptional = documentContext.getServerContext().getConfiguration().getCommonModule(moduleName);
     if (commonModuleOptional.isEmpty()){
-      addDiagnostic("missingModule", scheduleJob, moduleName);
+      addDiagnostic(MISSING_MODULE_MESSAGE, scheduleJob, moduleName);
       return;
     }
     final var mdCommonModule = commonModuleOptional.orElseThrow();
     if (!mdCommonModule.isServer()){
-      addDiagnostic("nonServerModule", scheduleJob, moduleName);
+      addDiagnostic(NON_SERVER_MODULE_MESSAGE, scheduleJob, moduleName);
       return;
     }
     checkMethod(scheduleJob, mdCommonModule, handler.getMethodName());
   }
 
   private void checkMethod(MDScheduledJob scheduleJob, MDCommonModule mdCommonModule, String methodName) {
+    final var fullName = getFullName(mdCommonModule, methodName);
+    scheduledJobHandlers.computeIfAbsent(fullName, k -> new ArrayList<>()).add(scheduleJob);
+
     documentContext.getServerContext().getDocument(
       mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
@@ -83,20 +133,42 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
           .findFirst();
         if (method.isEmpty()) {
-          addDiagnostic("diagnosticMessage", scheduleJob, getFullName(mdCommonModule, methodName));
+          addDiagnostic(DIAGNOSTIC_MESSAGE, scheduleJob, fullName);
           return;
         }
-        if (!method.get().isExport()) {
-          addDiagnostic("nonExportMethod", scheduleJob, getFullName(mdCommonModule, methodName));
-        }
-        // TODO проверить, что у метода есть реализация и он не пустой
-        // TODO проверить отсутствие параметров у метода-обработчика
-        // TODO проверить дубли обработчиков у разных регл.заданий
+        method.ifPresent((MethodSymbol methodSymbol) -> checkMethod(scheduleJob, fullName, methodSymbol));
       });
   }
 
+  private void checkMethod(MDScheduledJob scheduleJob, String fullName, MethodSymbol methodSymbol) {
+    if (!methodSymbol.isExport()) {
+      addDiagnostic(NON_EXPORT_METHOD_MESSAGE, scheduleJob, fullName);
+    }
+    if (!methodSymbol.getParameters().isEmpty()) {
+      addDiagnostic(METHOD_WITH_PARAMETERS_MESSAGE, scheduleJob, fullName);
+    }
+    if (methodSymbol.isFunction()) {
+      addDiagnostic(FUNCTION_METHOD_MESSAGE, scheduleJob, fullName);
+    }
+    if (isEmptyMethodBody(methodSymbol)){
+      addDiagnostic(EMPTY_METHOD_MESSAGE, scheduleJob, fullName);
+    }
+  }
+
   private static String getFullName(MDCommonModule mdCommonModule, String methodName) {
-    return mdCommonModule.getName().concat(".").concat(methodName);
+    return getFullName(mdCommonModule.getName(), methodName);
+  }
+  private static String getFullName(String commonModuleName, String methodName) {
+    return commonModuleName.concat(".").concat(methodName);
+  }
+
+  private boolean isEmptyMethodBody(MethodSymbol methodSymbol) {
+    // В методе регламентного задания точно будут или переменные или вызов внешнего метода.
+    // Если их нет, значит, метод пустой
+    if (!methodSymbol.getChildren().isEmpty()){
+      return false;
+    }
+    return referenceIndex.getReferencesFrom(methodSymbol).isEmpty();
   }
 
   private void addDiagnostic(String messageString, MDScheduledJob scheduleJob, String text) {
