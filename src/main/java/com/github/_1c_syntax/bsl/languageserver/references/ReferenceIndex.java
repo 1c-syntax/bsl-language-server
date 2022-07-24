@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenc
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;

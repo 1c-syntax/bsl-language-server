@@ -210,4 +210,5 @@ public class SelectionRangeProvider {
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
+
 }

@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.MDHttpService;
 import com.github._1c_syntax.mdclasses.mdo.children.HTTPServiceMethod;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(

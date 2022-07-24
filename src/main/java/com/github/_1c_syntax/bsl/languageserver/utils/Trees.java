@@ -478,6 +478,46 @@ public final class Trees {
   }
 
   /**
+   * Получение ноды в дереве по позиции в документе.
+   *
+   * @param tree - дерево, в котором ищем
+   * @param position - искомая позиция
+   * @return терминальная нода на указанной позиции, если есть
+   */
+  public static Optional<TerminalNode> findTerminalNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+
+    if (tree.getTokens().isEmpty()) {
+      return Optional.empty();
+    }
+
+    var start = tree.getStart();
+    var stop = tree.getStop();
+
+    if (!(positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop))) {
+      return Optional.empty();
+    }
+
+    var children = Trees.getChildren(tree);
+
+    for (Tree child : children) {
+      if (child instanceof TerminalNode) {
+        var terminalNode = (TerminalNode) child;
+        var token = terminalNode.getSymbol();
+        if (tokenContainsPosition(token, position)) {
+          return Optional.of(terminalNode);
+        }
+      } else {
+        Optional<TerminalNode> node = findTerminalNodeContainsPosition((BSLParserRuleContext) child, position);
+        if (node.isPresent()) {
+          return node;
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  /**
    * Получение терминальной ноды в дереве по позиции в документе.
    *
    * @param tree - дерево, в котором ищем

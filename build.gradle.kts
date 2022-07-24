@@ -9,17 +9,18 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.4.0.2513"
-    id("io.freefair.lombok") version "6.4.3.1"
-    id("io.freefair.javadoc-links") version "6.4.3.1"
-    id("io.freefair.javadoc-utf-8") version "6.4.3.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.4.3.1"
-    id("io.freefair.maven-central.validate-poms") version "6.4.3.1"
-    id("me.qoomon.git-versioning") version "6.1.4"
+    id("io.freefair.lombok") version "6.5.0.3"
+    id("io.freefair.javadoc-links") version "6.5.0.3"
+    id("io.freefair.javadoc-utf-8") version "6.5.0.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.5.0.3"
+    id("io.freefair.maven-central.validate-poms") version "6.5.0.3"
+    id("me.qoomon.git-versioning") version "6.2.0"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("org.springframework.boot") version "2.6.7"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("io.spring.dependency-management") version "1.0.12.RELEASE"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
+    id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
 }
 
@@ -51,6 +52,12 @@ val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.6"
 
+dependencyManagement {
+    imports {
+        mavenBom("io.sentry:sentry-bom:6.3.0")
+    }
+}
+
 dependencies {
 
     // RUNTIME
@@ -72,7 +79,9 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.4.0")
-    api("com.github.1c-syntax", "mdclasses", "0.9.5")
+    api("com.github.1c-syntax", "mdclasses", "0.10.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
+    api("io.github.1c-syntax", "supportconf", "0.1.1")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -100,6 +109,10 @@ dependencies {
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
+
+    // Sentry
+    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-logback")
 
     // COMPILE
 
