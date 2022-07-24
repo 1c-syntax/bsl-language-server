@@ -99,6 +99,10 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
   @Override
   protected void checkMetadata(AbstractMDObjectBase mdo) {
+    // без проверки ниже анализ в командной строке падает
+    if (!(mdo instanceof MDScheduledJob)){
+      return;
+    }
     final var scheduleJob = (MDScheduledJob) mdo;
     final var handler = scheduleJob.getHandler();
     if (handler.isEmpty()) {
