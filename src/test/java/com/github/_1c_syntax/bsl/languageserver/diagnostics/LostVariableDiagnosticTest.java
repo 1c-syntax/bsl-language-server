@@ -73,7 +73,7 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 311, 4, 16)
       .hasMessageOnRange(getMessageUnused("ТекстЗапроса"), 314, 4, 16)
       .hasMessageOnRange(getMessage("ЗначениеМодуля"), 318, 4, 18)
-//      .hasMessageOnRange(getMessageUnused("Значение"), 328, 8, 16)
+//      .hasMessageOnRange(getMessageUnused("Значение"), 328, 8, 16) // TODO не должно быть ошибкой
       .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 332, 0, 18)
       .hasMessageOnRange(getMessage("ЗначениеМодуля"), 336, 0, 14)
       .hasSize(34);
