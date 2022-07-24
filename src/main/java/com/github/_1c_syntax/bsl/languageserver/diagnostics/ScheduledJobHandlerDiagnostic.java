@@ -58,7 +58,6 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
   public static final String NON_SERVER_MODULE_MESSAGE = "nonServerModule";
   public static final String NON_EXPORT_METHOD_MESSAGE = "nonExportMethod";
   public static final String METHOD_WITH_PARAMETERS_MESSAGE = "methodWithParameters";
-  public static final String FUNCTION_METHOD_MESSAGE = "functionMethod";
   public static final String EMPTY_METHOD_MESSAGE = "emptyMethod";
   public static final String DOUBLE_MESSAGE = "doubleMessage";
 
@@ -146,9 +145,6 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     }
     if (!methodSymbol.getParameters().isEmpty()) {
       addDiagnostic(METHOD_WITH_PARAMETERS_MESSAGE, scheduleJob, fullName);
-    }
-    if (methodSymbol.isFunction()) {
-      addDiagnostic(FUNCTION_METHOD_MESSAGE, scheduleJob, fullName);
     }
     if (isEmptyMethodBody(methodSymbol)){
       addDiagnostic(EMPTY_METHOD_MESSAGE, scheduleJob, fullName);

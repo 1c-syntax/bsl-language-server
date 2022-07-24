@@ -68,14 +68,12 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
       .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Добавьте \"Экспорт\" методу \"ПервыйОбщийМодуль.Тест\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗаданиеПриватныйМетод\""))
       .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Метод-обработчик \"ПервыйОбщийМодуль.Тест\" регламентного задания \"РегламентноеЗаданиеПриватныйМетод\" не должен быть функцией"))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание1\""))
       .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание2\""))
       .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Исправьте дубли использования одного обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" в разных регламентных заданиях. Задания: \"РегламентноеЗадание1, РегламентноеЗадание2\""))
-      .hasSize(6)
+      .hasSize(5)
     ;
 
   }
@@ -195,18 +193,6 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
 
     assertThat(diagnostics, true)
       .hasSize(0)
-    ;
-  }
-
-  @Test
-  void testFunctionHandler() {
-
-    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ФункцияОбработчик");
-
-    assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Метод-обработчик \"ПервыйОбщийМодуль.ФункцияОбработчик\" регламентного задания \"РегламентноеЗадание1\" не должен быть функцией"))
-      .hasSize(1)
     ;
   }
 
