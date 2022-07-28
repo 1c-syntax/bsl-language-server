@@ -361,7 +361,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "AbstractClassNeverImplemented"
   },
-  "hash": "60c0dd383319026f8df71068f01e75de21092891b93942241f4bbaa872fb62b6"
+  "hash": "ad0e7101efc0550c187172ef3eaf28d06e3a8a6d4fa974c31e7be3fef594b8e7"
 },{
   "tool": "Code Inspection",
   "category": "Inheritance issues",
