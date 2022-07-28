@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -67,10 +69,23 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   @EqualsAndHashCode.Include
   DocumentContext owner;
 
-  Range range;
+  @Getter(AccessLevel.NONE)
+  int startLine;
+  @Getter(AccessLevel.NONE)
+  int startCharacter;
+  @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
+  int endCharacter;
 
-  @EqualsAndHashCode.Include
-  Range variableNameRange;
+  @Getter(AccessLevel.NONE)
+  int variableNameStartLine;
+  @Getter(AccessLevel.NONE)
+  int variableNameStartCharacter;
+  @Getter(AccessLevel.NONE)
+  int variableNameEndLine;
+  @Getter(AccessLevel.NONE)
+  int variableNameEndCharacter;
 
   @Getter
   @Setter
@@ -97,6 +112,21 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   Optional<VariableDescription> description;
 
   @Override
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @EqualsAndHashCode.Include
+  public Range getVariableNameRange() {
+    return Ranges.create(
+      variableNameStartLine,
+      variableNameStartCharacter,
+      variableNameEndLine,
+      variableNameEndCharacter
+    );
+  }
+
+  @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
   }
@@ -104,6 +134,35 @@ public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describa
   @Override
   public Range getSelectionRange() {
     return getVariableNameRange();
+  }
+
+  public static VariableSymbolBuilder builder() {
+    return new VariableSymbolBuilder();
+  }
+
+  public static class VariableSymbolBuilder {
+
+    public VariableSymbolBuilder range(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      startLine = start.getLine();
+      startCharacter = start.getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
+
+      return this;
+    }
+
+    public VariableSymbolBuilder variableNameRange(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      variableNameStartLine = start.getLine();
+      variableNameStartCharacter = start.getCharacter();
+      variableNameEndLine = end.getLine();
+      variableNameEndCharacter = end.getCharacter();
+
+      return this;
+    }
   }
 
 }
