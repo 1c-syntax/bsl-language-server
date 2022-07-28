@@ -47,7 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -189,9 +189,9 @@ public abstract class ServerContext {
     }
 
     Configuration configuration;
-    var customThreadPool = new ForkJoinPool();
+    var executorService = Executors.newCachedThreadPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+      configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
@@ -200,7 +200,7 @@ public abstract class ServerContext {
       configuration = Configuration.create();
       Thread.currentThread().interrupt();
     } finally {
-      customThreadPool.shutdown();
+      executorService.shutdown();
     }
 
     return configuration;
