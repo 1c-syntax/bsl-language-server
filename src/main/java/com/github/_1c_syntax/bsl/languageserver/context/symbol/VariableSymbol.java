@@ -21,148 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
-@Value
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
-
-  /**
-   * Имя переменной.
-   */
-  @EqualsAndHashCode.Include
-  String name;
-
-  /**
-   * Область доступности символа. Метод или модуль.
-   */
-  SourceDefinedSymbol scope;
-
-  /**
-   * Тип символа. По умолчанию переменная.
-   */
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Variable;
-
-  /**
-   * Файл в котором располагается переменная.
-   */
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
-
-  @Getter(AccessLevel.NONE)
-  int startLine;
-  @Getter(AccessLevel.NONE)
-  int startCharacter;
-  @Getter(AccessLevel.NONE)
-  int endLine;
-  @Getter(AccessLevel.NONE)
-  int endCharacter;
-
-  @Getter(AccessLevel.NONE)
-  int variableNameStartLine;
-  @Getter(AccessLevel.NONE)
-  int variableNameStartCharacter;
-  @Getter(AccessLevel.NONE)
-  int variableNameEndLine;
-  @Getter(AccessLevel.NONE)
-  int variableNameEndCharacter;
-
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
-
-  @Builder.Default
-  List<SourceDefinedSymbol> children = Collections.emptyList();
-
-  /**
-   * Тип переменной.
-   */
-  VariableKind kind;
-
-  /**
-   * Признак экспортной переменной.
-   */
-  boolean export;
-
-  /**
-   * Описание переменной.
-   */
-  Optional<VariableDescription> description;
-
-  @Override
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
-  }
+public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  VariableKind getKind();
 
   @EqualsAndHashCode.Include
-  public Range getVariableNameRange() {
-    return Ranges.create(
-      variableNameStartLine,
-      variableNameStartCharacter,
-      variableNameEndLine,
-      variableNameEndCharacter
-    );
-  }
+  Range getVariableNameRange();
 
   @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitVariable(this);
-  }
+  Optional<VariableDescription> getDescription();
 
-  @Override
-  public Range getSelectionRange() {
-    return getVariableNameRange();
-  }
+  SourceDefinedSymbol getScope();
 
-  public static VariableSymbolBuilder builder() {
+  static VariableSymbolBuilder builder() {
     return new VariableSymbolBuilder();
   }
-
-  public static class VariableSymbolBuilder {
-
-    public VariableSymbolBuilder range(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      startLine = start.getLine();
-      startCharacter = start.getCharacter();
-      endLine = end.getLine();
-      endCharacter = end.getCharacter();
-
-      return this;
-    }
-
-    public VariableSymbolBuilder variableNameRange(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      variableNameStartLine = start.getLine();
-      variableNameStartCharacter = start.getCharacter();
-      variableNameEndLine = end.getLine();
-      variableNameEndCharacter = end.getCharacter();
-
-      return this;
-    }
-  }
-
 }
