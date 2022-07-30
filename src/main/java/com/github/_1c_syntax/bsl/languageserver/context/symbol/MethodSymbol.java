@@ -65,11 +65,9 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   int endCharacter;
 
   @Getter(AccessLevel.NONE)
-  int subNameStartLine;
+  int subNameLine;
   @Getter(AccessLevel.NONE)
   int subNameStartCharacter;
-  @Getter(AccessLevel.NONE)
-  int subNameEndLine;
   @Getter(AccessLevel.NONE)
   int subNameEndCharacter;
 
@@ -103,7 +101,7 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
 
   @EqualsAndHashCode.Include
   public Range getSubNameRange() {
-    return Ranges.create(subNameStartLine, subNameStartCharacter, subNameEndLine, subNameEndCharacter);
+    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
   }
 
   public Optional<RegionSymbol> getRegion() {
@@ -142,9 +140,8 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
     public MethodSymbolBuilder subNameRange(Range range) {
       var start = range.getStart();
       var end = range.getEnd();
-      subNameStartLine = start.getLine();
+      subNameLine = start.getLine();
       subNameStartCharacter = start.getCharacter();
-      subNameEndLine = end.getLine();
       subNameEndCharacter = end.getCharacter();
 
       return this;
