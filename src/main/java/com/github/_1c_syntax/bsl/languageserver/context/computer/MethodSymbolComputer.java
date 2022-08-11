@@ -90,6 +90,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
+      declaration.getStart(),
       startNode,
       stopNode,
       declaration.subName().getStart(),
@@ -120,6 +121,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
+      declaration.getStart(),
       startNode,
       stopNode,
       declaration.subName().getStart(),
@@ -180,6 +182,7 @@ public final class MethodSymbolComputer
   }
 
   private MethodSymbol createMethodSymbol(
+    Token startToken,
     TerminalNode startNode,
     TerminalNode stopNode,
     Token subName,
@@ -189,7 +192,7 @@ public final class MethodSymbolComputer
     Optional<CompilerDirectiveKind> compilerDirective,
     List<Annotation> annotations
   ) {
-    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    Optional<MethodDescription> description = createDescription(startToken);
     boolean deprecated = description
       .map(MethodDescription::isDeprecated)
       .orElse(false);

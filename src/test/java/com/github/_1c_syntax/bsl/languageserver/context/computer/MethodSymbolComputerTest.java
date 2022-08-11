@@ -192,6 +192,7 @@ class MethodSymbolComputerTest {
     // AROUND
     methodSymbol = methods.get(22);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Вместо");
+    assertThat(methodSymbol.getDescription()).isNotEmpty();
     assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Вместо");
     assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AROUND);
     assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).getValue()).isEqualTo("Вместо");

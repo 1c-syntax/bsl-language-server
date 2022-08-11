@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
@@ -49,16 +50,16 @@ import java.util.stream.Stream;
 public final class Trees {
 
   private static final Set<Integer> VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH = Set.of(
-    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
-    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
-    BSLParser.ANNOTATION_ATSERVER_SYMBOL,
-    BSLParser.ANNOTATION_CUSTOM_SYMBOL,
-    BSLParser.ANNOTATION_UNKNOWN,
-    BSLParser.LINE_COMMENT,
-    BSLParser.WHITE_SPACE,
-    BSLParser.AMPERSAND
+    BSLLexer.ANNOTATION_ATCLIENT_SYMBOL,
+    BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
+    BSLLexer.ANNOTATION_ATSERVER_SYMBOL,
+    BSLLexer.ANNOTATION_CUSTOM_SYMBOL,
+    BSLLexer.ANNOTATION_UNKNOWN,
+    BSLLexer.LINE_COMMENT,
+    BSLLexer.WHITE_SPACE,
+    BSLLexer.AMPERSAND
   );
 
   /**
