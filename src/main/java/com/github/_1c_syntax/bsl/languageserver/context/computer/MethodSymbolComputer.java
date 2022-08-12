@@ -78,6 +78,11 @@ public final class MethodSymbolComputer
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
+    var firstToken =
+      declaration.children.stream()
+        .filter(chld -> !(chld instanceof BSLParser.PreprocessorContext))
+        .findFirst().get();
+
     TerminalNode startNode = declaration.FUNCTION_KEYWORD();
     TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
 
@@ -90,7 +95,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
-      declaration.getStart(),
+      Trees.getTokens(firstToken).get(0),
       startNode,
       stopNode,
       declaration.subName().getStart(),
@@ -109,6 +114,11 @@ public final class MethodSymbolComputer
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
+    var firstToken =
+      declaration.children.stream()
+        .filter(chld -> !(chld instanceof BSLParser.PreprocessorContext))
+        .findFirst().get();
+
     TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
     TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
 
@@ -121,7 +131,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
-      declaration.getStart(),
+      Trees.getTokens(firstToken).get(0),
       startNode,
       stopNode,
       declaration.subName().getStart(),
