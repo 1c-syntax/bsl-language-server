@@ -59,12 +59,6 @@ public class IntBasedVariableSymbol implements VariableSymbol {
   SourceDefinedSymbol scope;
 
   /**
-   * Тип символа. По умолчанию переменная.
-   */
-  @Builder.Default
-  byte symbolKind = (byte) SymbolKind.Variable.ordinal();
-
-  /**
    * Файл в котором располагается переменная.
    */
   @EqualsAndHashCode.Include
@@ -111,7 +105,7 @@ public class IntBasedVariableSymbol implements VariableSymbol {
   Optional<VariableDescription> description;
 
   public SymbolKind getSymbolKind() {
-    return SymbolKind.values()[symbolKind];
+    return SymbolKind.Variable;
   }
 
   @Override

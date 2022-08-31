@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +41,6 @@ public class VariableSymbolBuilder {
   private VariableKind kind;
   private String name;
   private SourceDefinedSymbol scope;
-  private SymbolKind symbolKind = SymbolKind.Variable;
   private DocumentContext owner;
   private Optional<SourceDefinedSymbol> parent = Optional.empty();
   private List<SourceDefinedSymbol> children = Collections.emptyList();
@@ -85,11 +83,6 @@ public class VariableSymbolBuilder {
     return this;
   }
 
-  public VariableSymbolBuilder symbolKind(SymbolKind symbolKind) {
-    this.symbolKind = symbolKind;
-    return this;
-  }
-
   public VariableSymbolBuilder owner(DocumentContext owner) {
     this.owner = owner;
     return this;
@@ -127,7 +120,6 @@ public class VariableSymbolBuilder {
         return new ShortBasedVariableSymbol(
           name,
           scope,
-          (byte) symbolKind.ordinal(),
           owner,
           (short) startLine,
           (short) startCharacter,
@@ -147,7 +139,6 @@ public class VariableSymbolBuilder {
       return new IntBasedVariableSymbol(
         name,
         scope,
-        (byte) symbolKind.ordinal(),
         owner,
         startLine,
         startCharacter,
@@ -169,7 +160,6 @@ public class VariableSymbolBuilder {
     return new IntBasedVariableSymbol(
       name,
       scope,
-      (byte) symbolKind.ordinal(),
       owner,
       startLine,
       startCharacter,

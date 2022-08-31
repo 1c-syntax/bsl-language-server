@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
@@ -96,7 +95,6 @@ public class VariableSymbolCreate {
       .variableNameRange(variableNameRange)
       .export(true)
       .kind(VariableKind.MODULE)
-      .symbolKind(SymbolKind.Variable)
       .description(Optional.empty())
       .scope(null);
   }
