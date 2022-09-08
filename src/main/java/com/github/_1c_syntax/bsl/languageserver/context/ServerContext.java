@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
@@ -40,10 +41,10 @@ import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -55,6 +56,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Component
 @RequiredArgsConstructor
 public abstract class ServerContext {
+  private final WorkDoneProgressHelper workDoneProgressHelper;
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
@@ -70,20 +72,31 @@ public abstract class ServerContext {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
     }
+
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
+    workDoneProgressReporter.beginProgress("Finding files to populate context...");
+
     LOGGER.debug("Finding files to populate context...");
-    Collection<File> files = FileUtils.listFiles(
+    var files = (List<File>) FileUtils.listFiles(
       configurationRoot.toFile(),
       new String[]{"bsl", "os"},
       true
     );
+    workDoneProgressReporter.endProgress("");
     populateContext(files);
   }
 
-  public void populateContext(Collection<File> uris) {
+  public void populateContext(List<File> uris) {
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(uris.size(), " files");
+    workDoneProgressReporter.beginProgress("Populating context...");
+
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
+
+      workDoneProgressReporter.tick();
+
       var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
@@ -93,6 +106,8 @@ public abstract class ServerContext {
     });
 
     contextLock.writeLock().unlock();
+
+    workDoneProgressReporter.endProgress("Context populated.");
     LOGGER.debug("Context populated.");
   }
 
