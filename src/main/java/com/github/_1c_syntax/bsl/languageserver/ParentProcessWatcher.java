@@ -26,8 +26,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.CheckForNull;
+import java.util.Optional;
 
 /**
  * Наблюдатель за жизнью родительского процесса, запустившего Language Server.
@@ -38,7 +40,6 @@ import org.springframework.stereotype.Component;
 public class ParentProcessWatcher {
 
   private final LanguageServer languageServer;
-  private long parentProcessId;
 
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
@@ -49,29 +50,23 @@ public class ParentProcessWatcher {
    */
   @EventListener
   public void handleEvent(LanguageServerInitializeRequestReceivedEvent event) {
-    var processId = event.getParams().getProcessId();
+    @CheckForNull Integer processId = event.getParams().getProcessId();
     if (processId == null) {
       return;
     }
-    parentProcessId = processId;
-  }
 
-  /**
-   * Фоновая процедура, отслеживающая родительский процесс.
-   */
-  @Scheduled(fixedDelay = 30000L)
-  public void watch() {
-    if (parentProcessId == 0) {
+    // Can't register onExit callback on current process.
+    if (ProcessHandle.current().pid() == processId) {
       return;
     }
 
-    boolean processIsAlive = ProcessHandle.of(parentProcessId)
-      .map(ProcessHandle::isAlive)
-      .orElse(false);
-
-    if (!processIsAlive) {
-      LOGGER.error("Parent process with pid {} is not found. Closing application...", parentProcessId);
-      languageServer.exit();
-    }
+    Optional.of(processId)
+      .flatMap(ProcessHandle::of)
+      .map(ProcessHandle::onExit)
+      .ifPresent(onExitCallback -> onExitCallback.thenRun(() -> {
+        LOGGER.warn("Parent process with pid {} is not found. Closing application...", processId);
+        languageServer.exit();
+      }));
   }
+
 }
