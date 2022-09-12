@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1663009518613,
+  "lastUpdate": 1663010642854,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -19313,6 +19313,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.321662280919522",
             "extra": "mean: 49.30571142832438 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7857e75e59b23e22007253ef897f273761361713",
+          "message": "Merge pull request #2873 from qtLex/fix/IllegalStateExceptionInCreateVariablesByName\n\nFix/illegal state exception in create variables by name",
+          "timestamp": "2022-09-12T20:04:43+03:00",
+          "tree_id": "7235ceffc4dd03ab7b3a53d2248033d48b74dd7b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7857e75e59b23e22007253ef897f273761361713"
+        },
+        "date": 1663010636359,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 48.392024199167885,
+            "unit": "sec",
+            "range": "stddev: 0.3009418679113946",
+            "extra": "mean: 48.392024199167885 sec\nrounds: 3"
           }
         ]
       }
