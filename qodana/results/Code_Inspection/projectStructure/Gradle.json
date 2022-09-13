@@ -202,12 +202,12 @@
       "version": "1.18.24"
     },
     {
-      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",
-      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.1.3",
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.1",
       "unresolved": false,
       "groupId": "com.github.spotbugs",
       "artifactId": "spotbugs-annotations",
-      "version": "4.1.3"
+      "version": "4.7.1"
     },
     {
       "ideaName": "Gradle: com.ginsberg:junit5-system-exit:1.1.2",

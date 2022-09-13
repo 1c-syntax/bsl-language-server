@@ -152,7 +152,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
           "type": "Library"
         },
         {
@@ -782,7 +782,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.1.3",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
           "type": "Library"
         },
         {
