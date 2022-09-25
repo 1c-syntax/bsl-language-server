@@ -207,6 +207,7 @@
 			<ScheduledJob>РегламентноеЗадание2</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеНесуществующийМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПриватныйМетод</ScheduledJob>
+			<ScheduledJob>РегламентноеЗаданиеПредопределенноеНесколькоПараметров</ScheduledJob>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

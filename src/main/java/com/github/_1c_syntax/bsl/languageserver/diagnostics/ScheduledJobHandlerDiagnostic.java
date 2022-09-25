@@ -143,7 +143,7 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     if (!methodSymbol.isExport()) {
       addDiagnostic(NON_EXPORT_METHOD_MESSAGE, scheduleJob, fullName);
     }
-    if (!methodSymbol.getParameters().isEmpty()) {
+    if (scheduleJob.isPredefined() && !methodSymbol.getParameters().isEmpty()) {
       addDiagnostic(METHOD_WITH_PARAMETERS_MESSAGE, scheduleJob, fullName);
     }
     if (isEmptyMethodBody(methodSymbol)){

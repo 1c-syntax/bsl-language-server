@@ -76,7 +76,9 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание2\""))
       .anyMatch(diagnostic -> diagnostic.getMessage()
         .equals("Исправьте дубли использования одного обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" в разных регламентных заданиях. Задания: \"РегламентноеЗадание1, РегламентноеЗадание2\""))
-      .hasSize(5)
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Исправьте некорректный обработчик \"ПервыйОбщийМодуль.ВерсионированиеПриЗаписи\" регламентного задания \"РегламентноеЗаданиеПредопределенноеНесколькоПараметров\" - у метода не должно быть параметров"))
+      .hasSize(6)
     ;
 
   }
@@ -126,11 +128,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
 
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
-    assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Исправьте некорректный обработчик \"ПервыйОбщийМодуль.ОбработчикСПараметрами\" регламентного задания \"РегламентноеЗадание1\" - у метода не должно быть параметров"))
-      .hasSize(1)
-    ;
+    assertThat(diagnostics, true).isEmpty();
   }
 
   private List<Diagnostic> checkMockHandler(String methodPath) {
