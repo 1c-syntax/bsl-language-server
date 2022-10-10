@@ -25,53 +25,63 @@ import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeR
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.IOException;
+import java.time.Duration;
+
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@SpringBootTest
 class ParentProcessWatcherTest {
 
-  @InjectMocks
-  private ParentProcessWatcher parentProcessWatcher;
-
-  @Mock
-  private LanguageServer languageServer;
-
   @Test
-  void testParentProcessIsDead() {
+  void testParentProcessIsDead() throws IOException, InterruptedException {
     // given
+    var languageServer = mock(LanguageServer.class);
+    var parentProcessWatcher = new ParentProcessWatcher(languageServer);
+
     var params = new InitializeParams();
-    params.setProcessId(-1);
+    var process = new ProcessBuilder("timeout", "2").start();
+    var pid = process.pid();
+    params.setProcessId((int) pid);
 
     var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
     parentProcessWatcher.handleEvent(event);
 
     // when
-    parentProcessWatcher.watch();
+    process.waitFor();
 
     // then
-    verify(languageServer, times(1)).exit();
+    await()
+      .atMost(Duration.ofSeconds(1))
+      .untilAsserted(
+        () -> verify(languageServer, times(1)).exit()
+      );
   }
 
   @Test
   void testParentProcessIsAlive() {
     // given
+    var languageServer = mock(LanguageServer.class);
+    var parentProcessWatcher = new ParentProcessWatcher(languageServer);
+
     var params = new InitializeParams();
     params.setProcessId((int) ProcessHandle.current().pid());
 
     var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
-    parentProcessWatcher.handleEvent(event);
 
     // when
-    parentProcessWatcher.watch();
+    parentProcessWatcher.handleEvent(event);
 
     // then
-    verify(languageServer, never()).exit();
+    await()
+      .during(Duration.ofSeconds(1))
+      .untilAsserted(
+        () -> verify(languageServer, never()).exit()
+      );
   }
 
 }
