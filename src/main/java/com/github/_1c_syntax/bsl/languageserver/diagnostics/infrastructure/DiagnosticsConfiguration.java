@@ -77,11 +77,11 @@ public abstract class DiagnosticsConfiguration {
 
       return diagnosticInfos.stream()
         .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
-        .filter(info -> !info.isArturable())
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(DiagnosticInfo::getDiagnosticClass)
+        .filter(diagnostic -> !diagnostic.isAnnotationPresent(Disabled.class))
         .map(diagnosticObjectProvider::get)
         .collect(Collectors.toList());
     } else {

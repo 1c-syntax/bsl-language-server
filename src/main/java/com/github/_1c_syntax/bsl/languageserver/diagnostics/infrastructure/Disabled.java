@@ -19,39 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.types.ModuleType;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Component
-@Primary
-@Scope("prototype")
-public @interface DiagnosticMetadata {
-  DiagnosticType type() default DiagnosticType.ERROR;
-
-  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
-
-  DiagnosticScope scope() default DiagnosticScope.ALL;
-
-  ModuleType[] modules() default {};
-
-  int minutesToFix() default 0;
-
-  boolean activatedByDefault() default true;
-
-  DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
-
-  DiagnosticTag[] tags() default {};
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Disabled {
 }

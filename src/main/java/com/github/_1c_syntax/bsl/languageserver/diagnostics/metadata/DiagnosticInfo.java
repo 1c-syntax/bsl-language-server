@@ -199,10 +199,6 @@ public class DiagnosticInfo {
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
-  public boolean isArturable() {
-    return diagnosticMetadata.arturable();
-  }
-
   private DiagnosticCode createDiagnosticCode() {
     String simpleName = diagnosticClass.getSimpleName();
     if (simpleName.endsWith("Diagnostic")) {
