@@ -55,6 +55,6 @@ public @interface DiagnosticMetadata {
 
   DiagnosticTag[] tags() default {};
 
-  boolean deprecated() default false;
+  boolean arturable() default false;
 
 }

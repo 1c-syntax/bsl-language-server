@@ -199,8 +199,8 @@ public class DiagnosticInfo {
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
-  public boolean getDepreacated() {
-    return diagnosticMetadata.deprecated();
+  public boolean isArturable() {
+    return diagnosticMetadata.arturable();
   }
 
   private DiagnosticCode createDiagnosticCode() {
