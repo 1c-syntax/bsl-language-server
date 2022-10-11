@@ -55,7 +55,8 @@ import java.util.stream.Stream;
     DiagnosticTag.SQL,
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.UNPREDICTABLE
-  }
+  },
+  deprecated = true
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
