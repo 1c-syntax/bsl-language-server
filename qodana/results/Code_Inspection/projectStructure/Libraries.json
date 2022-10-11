@@ -31,9 +31,9 @@
       ]
     },
     {
-      "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.2",
+      "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.10.2/8b3abf56425428680ee54eca4cbebf6181675adc/mdclasses-0.10.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.10.3/e3d6cd3946b56b94abf075ed3411b440d41856d5/mdclasses-0.10.3.jar!/"
       ]
     },
     {
