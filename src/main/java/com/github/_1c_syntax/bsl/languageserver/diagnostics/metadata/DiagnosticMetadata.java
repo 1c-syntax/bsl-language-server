@@ -54,4 +54,7 @@ public @interface DiagnosticMetadata {
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
 
   DiagnosticTag[] tags() default {};
+
+  boolean deprecated() default false;
+
 }

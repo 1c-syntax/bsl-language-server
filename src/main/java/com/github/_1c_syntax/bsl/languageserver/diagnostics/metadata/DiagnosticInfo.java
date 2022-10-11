@@ -199,6 +199,10 @@ public class DiagnosticInfo {
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
+  public boolean getDepreacated() {
+    return diagnosticMetadata.deprecated();
+  }
+
   private DiagnosticCode createDiagnosticCode() {
     String simpleName = diagnosticClass.getSimpleName();
     if (simpleName.endsWith("Diagnostic")) {

@@ -77,6 +77,7 @@ public abstract class DiagnosticsConfiguration {
 
       return diagnosticInfos.stream()
         .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
+        .filter(info -> !info.getDepreacated())
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
