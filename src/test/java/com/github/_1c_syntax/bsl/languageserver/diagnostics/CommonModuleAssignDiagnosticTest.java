@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -35,6 +36,7 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModuleAssignDiagnostic> {
   CommonModuleAssignDiagnosticTest() {
     super(CommonModuleAssignDiagnostic.class);
