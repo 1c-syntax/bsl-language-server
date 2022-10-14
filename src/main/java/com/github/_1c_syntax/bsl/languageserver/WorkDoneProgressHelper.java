@@ -107,7 +107,12 @@ public class WorkDoneProgressHelper {
         languageClient.notifyProgress(params);
       });
     }
+
     public void tick() {
+      if (!isWorkDoneProgressSupported) {
+        return;
+      }
+
       var currentCounter = counter.incrementAndGet();
       var message = String.format("%d/%d%s", currentCounter, size, messagePostfix);
       var percentage = currentCounter / size;
