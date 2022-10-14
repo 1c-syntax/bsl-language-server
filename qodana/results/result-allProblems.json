@@ -430,11 +430,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/infrastructure/DiagnosticsConfiguration.java",
       "language": "JAVA",
-      "line": 57,
+      "line": 58,
       "offset": 23,
       "length": 24,
       "code": {
-        "startLine": 55,
+        "startLine": 56,
         "length": 24,
         "offset": 62,
         "surroundingCode": "@Configuration\n@RequiredArgsConstructor\npublic abstract class DiagnosticsConfiguration {\n\n  private final LanguageServerConfiguration configuration;"
@@ -445,7 +445,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "AbstractClassNeverImplemented"
   },
-  "hash": "a67ff196a0b72c5d0ef382444a7c0e9aee920ae3bf3bf5f3d34c6ad5c705fe30"
+  "hash": "bc7c46b00be2e5d3ce721f09cbec59e932434e4f4c7229773a703574bd1139a4"
 },{
   "tool": "Code Inspection",
   "category": "Lombok",
