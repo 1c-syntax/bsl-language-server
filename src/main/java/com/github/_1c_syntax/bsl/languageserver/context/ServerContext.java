@@ -86,20 +86,20 @@ public abstract class ServerContext {
     populateContext(files);
   }
 
-  public void populateContext(List<File> uris) {
-    var workDoneProgressReporter = workDoneProgressHelper.createProgress(uris.size(), " files");
+  public void populateContext(List<File> files) {
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(files.size(), " files");
     workDoneProgressReporter.beginProgress("Populating context...");
 
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
-    uris.parallelStream().forEach((File file) -> {
+    files.parallelStream().forEach((File file) -> {
 
       workDoneProgressReporter.tick();
 
       var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = createDocumentContext(file, 0);
+        documentContext = createDocumentContext(file);
         documentContext.freezeComputedData();
         documentContext.clearSecondaryData();
       }
@@ -181,9 +181,9 @@ public abstract class ServerContext {
   protected abstract DocumentContext lookupDocumentContext(URI absoluteURI);
 
   @SneakyThrows
-  private DocumentContext createDocumentContext(File file, int version) {
+  private DocumentContext createDocumentContext(File file) {
     String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return createDocumentContext(file.toURI(), content, version);
+    return createDocumentContext(file.toURI(), content, 0);
   }
 
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
