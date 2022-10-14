@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Disabled;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -46,6 +47,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Disabled
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
