@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1665777976399,
+  "lastUpdate": 1665835001285,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -19623,6 +19623,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8746521007076982",
             "extra": "mean: 48.069797356923424 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b708cf848e2eb0f984ca893c229139384a7b9cef",
+          "message": "Merge pull request #2902 from EightM/feature/spring-up\n\nПоднятие зависимости спринга",
+          "timestamp": "2022-10-15T15:38:54+04:00",
+          "tree_id": "3e116d4d0205e36047dd8525cf636d91dcf81665",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b708cf848e2eb0f984ca893c229139384a7b9cef"
+        },
+        "date": 1665834995357,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 48.22304550806681,
+            "unit": "sec",
+            "range": "stddev: 1.1274874668235202",
+            "extra": "mean: 48.22304550806681 sec\nrounds: 3"
           }
         ]
       }
