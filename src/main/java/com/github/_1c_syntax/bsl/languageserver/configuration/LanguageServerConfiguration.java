@@ -109,11 +109,11 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile;
 
-  @Value("${app.configuration.path}:.bsl-language-server.json")
+  @Value("${app.configuration.path:.bsl-language-server.json}")
   @JsonIgnore
   private String configurationFilePath;
 
-  @Value(("${app.globalConfiguration.path}:${user.home}/.bsl-language-server.json"))
+  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
   @JsonIgnore
   private String globalConfigPath;
 
