@@ -144,7 +144,7 @@
   "type": "Redundant character escape",
   "severity": "High",
   "comment": "Redundant character escape '*' in RegExp",
-  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are redundant inside square brackets `[]` of a character class are necessary outside of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
+  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
   "sources": [
     {
       "type": "file",
@@ -530,118 +530,6 @@
     "inspectionName": "CastConflictsWithInstanceof"
   },
   "hash": "0cd24cca234dcb0132ce8680a983be3892b65a8ba87c03fdc2f96441359eac8c"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Unused assignment",
-  "severity": "High",
-  "comment": "Variable 'parent' initializer 'Optional.empty()' is redundant",
-  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/RegionSymbol.java",
-      "language": "JAVA",
-      "line": 60,
-      "offset": 42,
-      "length": 16,
-      "code": {
-        "startLine": 58,
-        "length": 16,
-        "offset": 72,
-        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UnusedAssignment"
-  },
-  "hash": "7858ceef9af3c64af41eb6576d742722144e74deddc4fedf5ed350652ecf92ce"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Unused assignment",
-  "severity": "High",
-  "comment": "Variable 'parent' initializer 'Optional.empty()' is redundant",
-  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/VariableSymbol.java",
-      "language": "JAVA",
-      "line": 79,
-      "offset": 42,
-      "length": 16,
-      "code": {
-        "startLine": 77,
-        "length": 16,
-        "offset": 72,
-        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UnusedAssignment"
-  },
-  "hash": "bbc70d2d5000ceb1810bc87284af435da9dfd167f4e9e4b9de0a70de140a0f18"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Unused assignment",
-  "severity": "High",
-  "comment": "Variable 'parent' initializer 'Optional.empty()' is redundant",
-  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/MethodSymbol.java",
-      "language": "JAVA",
-      "line": 63,
-      "offset": 42,
-      "length": 16,
-      "code": {
-        "startLine": 61,
-        "length": 16,
-        "offset": 72,
-        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UnusedAssignment"
-  },
-  "hash": "3f701da4d6eb3cc20cd22fb7bb716c282ccccac508cee3bc13b07e90164dc9e7"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Unused assignment",
-  "severity": "High",
-  "comment": "Variable 'parent' initializer 'Optional.empty()' is redundant",
-  "detailsInfo": "Reports assignment values that are not used after the assignment. If the assignment value is unused, it's better to remove the assignment to shorten the code and avoid redundant allocations.\n\nThe following cases are reported:\n\n* The variable never gets read after the assignment.\n* The variable is always overwritten with a new value before it is read.\n* The variable initializer is redundant (for one of the two reasons above).\n\nConfigure the inspection:\n\n\nUse the **Report redundant initializers** option to report redundant initializers:\n\n\n      int getI() {\n        int i = 0; // redundant initialization\n        i = 2;\n        return i;\n      }\n\n\nUse the **Report ++i when may be replaced with (i + 1)** option to report the cases when `++i` expression\nmay be replaced with `i + 1`:\n\n\n      int preInc(int i) {\n        int res = i;\n        return ++res;\n      }\n\n\nUse the **Report i++ when changed value is not used afterwards** option to report the cases when the result of `i++` expression\nis not used later:\n\n\n      int postInc(int i) {\n        int res = i;\n        return res++;\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/ModuleSymbol.java",
-      "language": "JAVA",
-      "line": 73,
-      "offset": 42,
-      "length": 16,
-      "code": {
-        "startLine": 71,
-        "length": 16,
-        "offset": 72,
-        "surroundingCode": "  @Builder.Default\n  @NonFinal\n  Optional<SourceDefinedSymbol> parent = Optional.empty();\n\n  @Builder.Default"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UnusedAssignment"
-  },
-  "hash": "46a5fcc63943c33fd8806eeddb44324298a1d36de4c0544e14f9d314687a0f88"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",

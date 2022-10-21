@@ -7,9 +7,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.7.4/5fe2fed415877251263ebfac15efde59b1ea5913/spring-boot-starter-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.7.5/c28e1546461803490588085345ba5d2897d232bc/spring-boot-starter-2.7.5.jar!/"
       ]
     },
     {
@@ -163,21 +163,21 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.7.4/1848e5e8e474cc880a7708f03f750736665d4157/spring-boot-autoconfigure-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.7.5/96646e63a2296d0a3209383e81cdb8c87ab2f913/spring-boot-autoconfigure-2.7.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.7.4/8a6aeb18645a6191dc957b023907f8511dabffd1/spring-boot-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.7.5/fd04e228e6e21b7ad13c10ae29afd31868d842e5/spring-boot-2.7.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.7.4/d510acb9842471be5d08373b1d38073a48ffe957/spring-boot-starter-logging-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.7.5/61f4c53e35baa31a269bbeb7bb9d5e781448feef/spring-boot-starter-logging-2.7.5.jar!/"
       ]
     },
     {
@@ -283,9 +283,9 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.4/98b0edfa8e4084078f10b7b356c300ded4a71491/jackson-databind-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.4.2/325c06bdfeb628cfb80ebaaf1a26cc1eb558a585/jackson-databind-2.13.4.2.jar!/"
       ]
     },
     {
@@ -373,9 +373,9 @@
       ]
     },
     {
-      "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
+      "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.7",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/jaxb-runtime/2.3.6/1e6cd0e5d9f9919c8c8824fb4d310b09a978a60e/jaxb-runtime-2.3.6.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/jaxb-runtime/2.3.7/ebcde6a44159eb9e3db721dfe6b45f26e6272341/jaxb-runtime-2.3.7.jar!/"
       ]
     },
     {
@@ -409,9 +409,9 @@
       ]
     },
     {
-      "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.4",
+      "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-registry-prometheus/1.9.4/6f9c4fa47bd16610363db7f1d924d768b5a45223/micrometer-registry-prometheus-1.9.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-registry-prometheus/1.9.5/f3a7fd8df8740b34602e191efafc4a0dc83c2a40/micrometer-registry-prometheus-1.9.5.jar!/"
       ]
     },
     {
@@ -649,9 +649,9 @@
       ]
     },
     {
-      "name": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
+      "name": "Gradle: org.glassfish.jaxb:txw2:2.3.7",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/txw2/2.3.6/45db7b69a8f1ec2c21eb7d4fc0ee729f53c1addc/txw2-2.3.6.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/txw2/2.3.7/55cddcac1945150e09b09b0f89d86799652eee82/txw2-2.3.7.jar!/"
       ]
     },
     {
@@ -673,9 +673,9 @@
       ]
     },
     {
-      "name": "Gradle: io.micrometer:micrometer-core:1.9.4",
+      "name": "Gradle: io.micrometer:micrometer-core:1.9.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-core/1.9.4/ad91abf3998b9d9f741800eeca9309eea2e331b/micrometer-core-1.9.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-core/1.9.5/927ffd91d36d5c743e2a67d3c8cb320790ee1e34/micrometer-core-1.9.5.jar!/"
       ]
     },
     {
@@ -835,9 +835,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.7.4/6ffe636eb08825712c6ea24d2351888eaf626485/spring-boot-starter-test-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.7.5/f52fd19eda97bb76bb304f4734c3d654ecca0666/spring-boot-starter-test-2.7.5.jar!/"
       ]
     },
     {
@@ -853,15 +853,15 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.7.4/6bd903d21c38bbb7ee1910e9cfb891f7313538c3/spring-boot-test-autoconfigure-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.7.5/b01668d3ed2d5d9e56072108f04030cd2caceb0e/spring-boot-test-autoconfigure-2.7.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.4",
+      "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.7.4/74acf474c32288f9b43caba92ade37abfe390317/spring-boot-test-2.7.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.7.5/2db591bb7568aa41795d595cabf99ef837b860c0/spring-boot-test-2.7.5.jar!/"
       ]
     },
     {
@@ -943,15 +943,15 @@
       ]
     },
     {
-      "name": "Gradle: net.bytebuddy:byte-buddy:1.12.17",
+      "name": "Gradle: net.bytebuddy:byte-buddy:1.12.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.12.17/66a8f90cd6f93073ad2d1cc00649b3872330f927/byte-buddy-1.12.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.12.18/875a9c3f29d2f6f499dfd60d76e97a343f9b1233/byte-buddy-1.12.18.jar!/"
       ]
     },
     {
-      "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.17",
+      "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.18",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.12.17/ef83de389c64e83e3b5b7613756605764e507e8/byte-buddy-agent-1.12.17.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.12.18/417a7310a7bf1c1aae5ca502d26515f9c2f94396/byte-buddy-agent-1.12.18.jar!/"
       ]
     },
     {

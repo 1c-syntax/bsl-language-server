@@ -56,11 +56,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
           "type": "Library"
         },
         {
@@ -168,11 +168,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.5",
           "type": "Library"
         },
         {
@@ -220,15 +220,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.5",
           "type": "Library"
         },
         {
@@ -280,7 +280,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
           "type": "Library"
         },
         {
@@ -348,7 +348,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.7",
           "type": "Library"
         },
         {
@@ -372,7 +372,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.4",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.5",
           "type": "Library"
         },
         {
@@ -472,11 +472,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy:1.12.17",
+          "name": "Gradle: net.bytebuddy:byte-buddy:1.12.18",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.17",
+          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.18",
           "type": "Library"
         },
         {
@@ -548,7 +548,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
+          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.7",
           "type": "Library"
         },
         {
@@ -564,7 +564,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.4",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.5",
           "type": "Library"
         },
         {
@@ -728,13 +728,13 @@
           "path": "file://$PROJECT_DIR$/src/main",
           "sourceFolders": [
             {
-              "path": "file://$PROJECT_DIR$/src/main/resources",
-              "type": "Resource",
+              "path": "file://$PROJECT_DIR$/src/main/java",
+              "type": "Source",
               "packagePrefix": ""
             },
             {
-              "path": "file://$PROJECT_DIR$/src/main/java",
-              "type": "Source",
+              "path": "file://$PROJECT_DIR$/src/main/resources",
+              "type": "Resource",
               "packagePrefix": ""
             }
           ]
@@ -754,7 +754,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
           "type": "Library"
         },
         {
@@ -858,15 +858,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.5",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.4",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.5",
           "type": "Library"
         },
         {
@@ -938,7 +938,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
           "type": "Library"
         },
         {
@@ -998,7 +998,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.6",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.7",
           "type": "Library"
         },
         {
@@ -1022,7 +1022,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.4",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.5",
           "type": "Library"
         },
         {
@@ -1182,7 +1182,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.6",
+          "name": "Gradle: org.glassfish.jaxb:txw2:2.3.7",
           "type": "Library"
         },
         {
@@ -1198,7 +1198,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.4",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.5",
           "type": "Library"
         },
         {
