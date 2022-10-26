@@ -21,32 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
-import javax.websocket.DeploymentException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+import org.springframework.web.socket.server.standard.ServerEndpointRegistration;
 
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.tyrus.server.Server;
-import org.springframework.stereotype.Component;
+import javax.websocket.server.ServerEndpointConfig;
 
-@Slf4j
-@Component
-public class WebSocketLauncher {
+@Configuration
+@ConditionalOnWebApplication
+@EnableWebSocket
+public class WebSocketConfiguration {
 
-  private Server server;
-
-  public void startListening(String hostname, int port) {
-
-    server = new Server(hostname, port, null, null, BSLLSWebSocketServerConfigProvider.class);
-
-    try {
-      server.start();
-      Thread.currentThread().join();
-    } catch (InterruptedException e) {
-      LOGGER.debug("BSL websocket server has been interrupted.");
-      server.stop();
-    } catch (DeploymentException e) {
-      LOGGER.error("Cannot start BSL websocket server.", e);
-    } catch (Exception e) {
-      LOGGER.error("Cannot start websocket server.", e);
-    }
+  @Bean
+  public ServerEndpointConfig serverEndpointConfig() {
+    return new ServerEndpointRegistration("/bsl-language-server", BSLLSWebSocketEndpoint.class);
   }
+
+  @Bean
+  public ServerEndpointExporter serverEndpointExporter(){
+    return new ServerEndpointExporter();
+  }
+
 }

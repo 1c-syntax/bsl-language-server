@@ -32,8 +32,10 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -102,7 +104,9 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private int exitCode;
 
   public static void main(String[] args) {
-    var applicationContext = SpringApplication.run(BSLLSPLauncher.class, args);
+    var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
+      .web(getWebApplicationType(args))
+      .run(args);
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
     if (launcher.getExitCode() >= 0) {
       System.exit(
@@ -159,5 +163,16 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   public Integer call() {
     // заглушка, командой как таковой не пользуемся
     return 0;
+  }
+
+  private static WebApplicationType getWebApplicationType(String[] args) {
+    WebApplicationType webApplicationType;
+    var argsList = Arrays.asList(args);
+    if (argsList.contains("-w") || argsList.contains("--websocket")) {
+      webApplicationType = WebApplicationType.SERVLET;
+    } else {
+      webApplicationType = WebApplicationType.NONE;
+    }
+    return webApplicationType;
   }
 }

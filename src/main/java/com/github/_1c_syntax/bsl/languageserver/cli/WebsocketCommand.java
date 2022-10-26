@@ -21,9 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLSBinding;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.websocket.WebSocketLauncher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -42,10 +40,8 @@ import static picocli.CommandLine.Option;
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
  *                                      Возможно указывать как в абсолютном, так и относительном виде.
  *                                      Если параметр опущен, то будут использованы настройки по умолчанию.
- *  --host                            - Хост, на котором открывается соединение. Если параметр опущен,
- *                                      то будет использован хост по умолчанию, а именно localhost
- *  -p, (--port)                      - Порт, на котором открывается соединение. Если параметр опущен,
- *                                      то будет использованпорт по умолчанию, а именно 8025
+ *  --server.port                     - Порт, на котором открывается соединение. Если параметр опущен,
+ *                                      то будет использован порт по умолчанию, а именно 8025.
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket
  */
@@ -72,33 +68,15 @@ public class WebsocketCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
-  @Option(
-    names = {"--host"},
-    description = "Hostname to open websocket",
-    paramLabel = "<host>",
-    defaultValue = "localhost")
-  private String websocketHost;
-
-  @Option(
-    names = {"-p", "--port"},
-    description = "Listening port",
-    paramLabel = "<port>",
-    defaultValue = "8025")
-  private int websocketPort;
-
-  private final WebSocketLauncher launcher;
+  private final LanguageServerConfiguration configuration;
 
   public Integer call() {
-
     var configurationFile = new File(configurationOption);
     if (configurationFile.exists()) {
-      LanguageServerConfiguration configuration = BSLLSBinding.getLanguageServerConfiguration();
       configuration.update(configurationFile);
     }
 
-    launcher.startListening(websocketHost, websocketPort);
     return -1;
-
   }
 
 }

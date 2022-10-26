@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLSBinding;
 import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.Launcher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
@@ -32,18 +32,21 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 
 @Component
+@RequiredArgsConstructor
 public class BSLLSWebSocketEndpoint extends WebSocketEndpoint<LanguageClient> {
+
+  private final BSLLanguageServer languageServer;
+  private final LanguageClientHolder languageClientHolder;
 
   @Override
   protected void configure(Builder<LanguageClient> builder) {
-    builder.setLocalService(BSLLSBinding.getApplicationContext().getBean(BSLLanguageServer.class));
+    builder.setLocalService(languageServer);
     builder.setRemoteInterface(LanguageClient.class);
   }
 
   @Override
   protected void connect(Collection<Object> localServices, LanguageClient remoteProxy) {
-    LanguageClientHolder clientHolder = BSLLSBinding.getApplicationContext().getBean(LanguageClientHolder.class);
-    clientHolder.connect(remoteProxy);
+    languageClientHolder.connect(remoteProxy);
   }
 
 }

@@ -64,13 +64,12 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-websocket")
     api("info.picocli:picocli-spring-boot-starter:4.6.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
-
-    // lsp4j websocket
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.12.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.17.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.17.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
@@ -85,10 +84,6 @@ dependencies {
     api("com.github.1c-syntax", "mdclasses", "0.10.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")
-
-    // tyrus-server for websocket
-    api("org.glassfish.tyrus:tyrus-server:1.8")
-    api("org.glassfish.tyrus:tyrus-container-grizzly-server:1.8")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)

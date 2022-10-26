@@ -21,19 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import org.glassfish.tyrus.client.ClientManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 
-import javax.websocket.ClientEndpointConfig;
+import javax.websocket.ClientEndpoint;
+import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
-import javax.websocket.Endpoint;
-import javax.websocket.EndpointConfig;
+import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
 import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -45,18 +46,29 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ActiveProfiles("websocket")
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class WebsocketLauncherTest {
 
+  @LocalServerPort
+  private int port;
+
   private CountDownLatch latch;
-  private Thread thread;
   private ByteArrayOutputStream outContent;
   private ByteArrayOutputStream errContent;
 
+  private WebSocketContainer webSocketContainer;
+  private TestWebSocketClient client;
+  private Session session;
+
   @BeforeEach
   void setUpStreams() {
+    webSocketContainer = ContainerProvider.getWebSocketContainer();
+    client = new TestWebSocketClient();
+
     outContent = new ByteArrayOutputStream();
     errContent = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outContent));
@@ -75,39 +87,18 @@ class WebsocketLauncherTest {
   }
 
   @AfterEach
-  public void killThread() {
-    if (thread != null) {
-      thread.interrupt();
+  public void killThread() throws IOException {
+    if (session != null) {
+      session.close();
     }
   }
 
-  void startWebsocketServer(String[] arguments) {
-    thread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        BSLLSPLauncher.main(arguments);
-      }
-    });
-    thread.start();
-  }
-
   void connectClientToServer(int websocketPort) throws URISyntaxException, DeploymentException, IOException {
-    final ClientEndpointConfig endPoint = ClientEndpointConfig.Builder.create().build();
-
-    ClientManager client = ClientManager.createClient();
-    client.connectToServer(new Endpoint() {
-
-      @Override
-      public void onOpen(Session session, EndpointConfig config) {
-        latch.countDown();
-      }
-
-    }, endPoint, new URI("ws://localhost:" + websocketPort + BSLLSWebSocketServerConfigProvider.WEBSOCKET_SERVER_PATH));
+    session = webSocketContainer.connectToServer(client, new URI("ws://localhost:" + websocketPort + "/bsl-language-server"));
   }
 
-  void testWebsocketServer(String[] args, int websocketPort) {
+  void testWebsocketServer(int websocketPort) {
     try {
-      startWebsocketServer(args);
       latch.await(1, TimeUnit.SECONDS);
       connectClientToServer(websocketPort);
     } catch (Exception error) {
@@ -117,46 +108,36 @@ class WebsocketLauncherTest {
 
   @Test
   void testWebsocketDefaultMode() {
-    // given
-    String[] args = "-w ".split(" ");
-
     // when
-    testWebsocketServer(args, 8025);
+    testWebsocketServer(port);
 
     // then
-    assertThat(latch.getCount()).isEqualTo(0);
-    assertThat(outContent.toString()).contains("start with ws://localhost:8025");
-    assertThat(outContent.toString()).contains("server started");
+    assertThat(latch.getCount()).isZero();
+    assertThat(outContent.toString()).contains("localhost");
+    assertThat(outContent.toString()).contains("Completed initialization");
     assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
   void testWebsocketConnectionError() {
-    // given
-    String[] args = "-w ".split(" ");
-
     // when
-    testWebsocketServer(args, 8026);
+    testWebsocketServer(port + 1);
 
     // then
     assertThat(latch.getCount()).isEqualTo(1);
-    assertThat(errContent.toString()).contains("Connection refused");
+    var errorMessage = String.format(
+      "The HTTP request to initiate the WebSocket connection to [ws://localhost:%d/bsl-language-server] failed",
+      port + 1
+    );
+    assertThat(errContent.toString()).contains(errorMessage);
   }
 
-  @Test
-  void testWebsocketOnSpecifiedPort() {
-    // given
-    String[] args = "-w -p 8026".split(" ");
-    latch = new CountDownLatch(1);
+  @ClientEndpoint
+  public class TestWebSocketClient {
 
-    // when
-    testWebsocketServer(args, 8026);
-
-    // then
-    assertThat(latch.getCount()).isEqualTo(0);
-    assertThat(outContent.toString()).contains("start with ws://localhost:8026");
-    assertThat(outContent.toString()).contains("server started");
-    assertThat(errContent.toString()).isEmpty();
+    @OnOpen
+    public void onOpen(){
+      latch.countDown();
+    }
   }
-
 }
