@@ -53,7 +53,7 @@ public class VariableSymbolBuilder {
     startLine = start.getLine();
     startCharacter = start.getCharacter();
     endLine = end.getLine();
-    endCharacter =  end.getCharacter();
+    endCharacter = end.getCharacter();
 
     return this;
   }
@@ -110,32 +110,33 @@ public class VariableSymbolBuilder {
 
   public VariableSymbol build() {
 
-    if (startLine <= Short.MAX_VALUE
+    var shortBased = startLine <= Short.MAX_VALUE
       && endLine <= Short.MAX_VALUE
       && startCharacter <= Short.MAX_VALUE
       && endCharacter <= Short.MAX_VALUE
       && variableNameLine <= Short.MAX_VALUE
       && variableNameStartCharacter <= Short.MAX_VALUE
-      && variableNameEndCharacter <= Short.MAX_VALUE) {
-        return new ShortBasedVariableSymbol(
-          name,
-          scope,
-          owner,
-          (short) startLine,
-          (short) startCharacter,
-          (short) endLine,
-          (short) endCharacter,
-          (short) variableNameLine,
-          (short) variableNameStartCharacter,
-          (short) variableNameEndCharacter,
-          parent,
-          children,
-          (byte) kind.ordinal(),
-          export,
-          description
-        );
-      } else {
+      && variableNameEndCharacter <= Short.MAX_VALUE;
 
+    if (shortBased) {
+      return new ShortBasedVariableSymbol(
+        name,
+        scope,
+        owner,
+        (short) startLine,
+        (short) startCharacter,
+        (short) endLine,
+        (short) endCharacter,
+        (short) variableNameLine,
+        (short) variableNameStartCharacter,
+        (short) variableNameEndCharacter,
+        parent,
+        children,
+        (byte) kind.ordinal(),
+        export,
+        description
+      );
+    } else {
       return new IntBasedVariableSymbol(
         name,
         scope,
