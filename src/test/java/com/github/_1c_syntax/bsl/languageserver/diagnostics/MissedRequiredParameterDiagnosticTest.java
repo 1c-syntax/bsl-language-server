@@ -17,10 +17,10 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
-      .hasRange(8, 16, 8, 27);
-
+      .hasRange(8, 16, 8, 27)
+      .hasRange(14, 16, 14, 26);
   }
 }

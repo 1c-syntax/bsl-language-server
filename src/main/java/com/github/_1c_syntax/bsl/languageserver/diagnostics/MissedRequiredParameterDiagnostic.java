@@ -1,6 +1,5 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,10 +36,9 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       if (methodParameter.isOptional()) {
         continue;
       }
-      if (callParametersCount <= i) {
-        diagnosticStorage.addDiagnostic(ctx, "Не указан обязательный параметр " + methodParameter.getName());
-      } else if (callParameters.get(i).expression() == null) {
-        diagnosticStorage.addDiagnostic(ctx, "Пропущен обязательный параметры " + methodParameter.getName());
+
+      if (callParametersCount <= i || callParameters.get(i).expression() == null) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(methodParameter.getName()));
       }
     }
 
