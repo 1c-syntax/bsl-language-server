@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666780828227,
+  "lastUpdate": 1666799721011,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -19902,6 +19902,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.34142634859219606",
             "extra": "mean: 47.549078146616615 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7258d25c69c645a9ced85b8f9f5362760e3b9686",
+          "message": "Merge pull request #2917 from bia-technologies/feature/CommentedCodeDiagnostic_exclusionPrefixes\n\nНастройка исключений для диагностики CommentedCodeDiagnostic",
+          "timestamp": "2022-10-26T19:48:58+04:00",
+          "tree_id": "104238ed29c211771f8f2251c88fb9c69faf899e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7258d25c69c645a9ced85b8f9f5362760e3b9686"
+        },
+        "date": 1666799718128,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 48.864864110946655,
+            "unit": "sec",
+            "range": "stddev: 0.7714192107547473",
+            "extra": "mean: 48.864864110946655 sec\nrounds: 3"
           }
         ]
       }
