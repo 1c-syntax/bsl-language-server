@@ -62,7 +62,7 @@ import static picocli.CommandLine.Command;
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2020|@",
+  footer = "@|green Copyright(c) 2018-2022|@",
   header = "@|green BSL language server|@")
 @SpringBootApplication
 @Component
@@ -168,7 +168,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private static WebApplicationType getWebApplicationType(String[] args) {
     WebApplicationType webApplicationType;
     var argsList = Arrays.asList(args);
-    if (argsList.contains("-w") || argsList.contains("--websocket")) {
+    if (argsList.contains("-w") || argsList.contains("websocket")) {
       webApplicationType = WebApplicationType.SERVLET;
     } else {
       webApplicationType = WebApplicationType.NONE;

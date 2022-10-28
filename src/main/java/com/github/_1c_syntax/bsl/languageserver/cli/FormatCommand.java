@@ -69,7 +69,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
