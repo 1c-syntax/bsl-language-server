@@ -53,8 +53,7 @@ import java.util.Map;
 public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private final ReferenceIndex referenceIndex;
-
-  Map<Range, MethodCall> calls = new HashMap<>();
+  private final Map<Range, MethodCall> calls = new HashMap<>();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
