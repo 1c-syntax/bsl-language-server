@@ -430,6 +430,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#Запуск-в-режиме-websocket" class="md-nav__link">
+    Запуск в режиме websocket
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Запуск-в-режиме-анализатора" class="md-nav__link">
     Запуск в режиме анализатора
   </a>
@@ -1013,6 +1020,7 @@
 <li><a href="contributing/">Руководство контрибьютора</a></li>
 <li><a href="#capabilities">Возможности</a></li>
 <li><a href="#cli">Запуск из командной строки</a></li>
+<li><a href="#websocket">Запуск в режиме websocket</a></li>
 <li><a href="#analyze">Запуск в режиме анализатора</a></li>
 <li><a href="#format">Запуск в режиме форматтера</a></li>
 <li><a href="#configuration">Конфигурационный файл</a></li>
@@ -1368,13 +1376,43 @@ Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <s
                Path to language server configuration file
   -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span>
 Commands:
-  analyze, -a, --analyze  Run analysis and get diagnostic info
-  format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory
-  version, -v, --version  Print version
-  lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
+  analyze, -a, --analyze      Run analysis and get diagnostic info
+  format, -f, --format        Format files <span class="k">in</span> <span class="nb">source</span> directory
+  version, -v, --version      Print version
+  lsp, --lsp                  LSP server mode <span class="o">(</span>default<span class="o">)</span>
+  websocket, -w, --websocket  Websocket server mode
 </code></pre></div>
 <p>При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. Для взаимодействия используются stdin и stdout.</p>
 <p>По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр <code>language</code> в конфигурационном файле или вызвав событие <code>workspace/didChangeConfiguration</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<p><a id="websocket"></a></p>
+<h2 id="Запуск-в-режиме-websocket">Запуск в режиме websocket<a class="headerlink" href="#Запуск-в-режиме-websocket" title="Permanent link">&para;</a></h2>
+<p>По умолчанию взаимодействие с сервером идет через стандартные потоки ввода/вывода. 
+Но вы можете запустить BSL Language Server со встроенным веб-сервером и взаимодействовать с ним через websocket.</p>
+<p>Для этого необходимо запустить BSL Language Server с ключом <code>--websocket</code> или <code>-w</code>:</p>
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server websocket <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+                                     <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>--server.port<span class="o">=</span>&lt;port&gt;<span class="o">]</span>
+Websocket server mode
+      --app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;
+                             Path to LSP endpoint. Default is /lsp
+  -c, --configuration<span class="o">=</span>&lt;path&gt; Path to language server configuration file
+  -h, --help                 Show this <span class="nb">help</span> message and <span class="nb">exit</span>
+      --server.port<span class="o">=</span>&lt;port&gt;   Port to listen. Default is <span class="m">8025</span>
+</code></pre></div>
+<p>После запуска BSL Language Server будет доступен по адресу <code>ws://localhost:8025/lsp</code>.</p>
+<p>Для переопределения порта к LSP-серверу необходимо использовать параметр <code>--server.port</code>, за которым следует номер желаемого порта.
+Для переопределения пути к LSP-серверу необходимо использовать параметр <code>--app.websocket.lsp-path</code>, за которым следует желаемый путь, начинающийся с <code>/</code>.</p>
+<p>Пример строки запуска BSL Language Server в режиме websocket с указанием порта 8080:</p>
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --websocket --server.port<span class="o">=</span><span class="m">8080</span>
+</code></pre></div>
+<blockquote>
+<p>При работе с большим проектом рекомендуется дополнительно указывать параметр -Xmx, отвечающий за предел оперативной памяти для java процесса. Размер выделяемой памяти зависит от размера анализируемой кодовой базы.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+</code></pre></div>
 <p><a id="analyze"></a></p>
 <h2 id="Запуск-в-режиме-анализатора">Запуск в режиме анализатора<a class="headerlink" href="#Запуск-в-режиме-анализатора" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме анализа используется параметр <code>--analyze</code> (сокращенно <code>-a</code>). </p>
