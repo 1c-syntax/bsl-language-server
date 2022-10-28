@@ -33,7 +33,7 @@ import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
 
 /**
- * Запускает приложение в режиме Websocket Language Server
+ * Запускает приложение в режиме Websocket Language Server.
  * Ключ команды:
  *  -w, (--websocket)
  * Параметры:
@@ -42,8 +42,11 @@ import static picocli.CommandLine.Option;
  *                                      Если параметр опущен, то будут использованы настройки по умолчанию.
  *  --server.port                     - Порт, на котором открывается соединение. Если параметр опущен,
  *                                      то будет использован порт по умолчанию, а именно 8025.
+ *  --app.websocket.lsp-path          - Адрес, по которому открывается соединение. Если параметр опущен,
+ *                                      то будет использован адрес по умолчанию, а именно /lsp.
  * Выводимая информация:
- *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket
+ *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket.
+ *
  */
 @Slf4j
 @Command(
@@ -67,6 +70,20 @@ public class WebsocketCommand implements Callable<Integer> {
     paramLabel = "<path>",
     defaultValue = "")
   private String configurationOption;
+
+  @Option(
+    names = {"--server.port"},
+    description = "Port to listen. Default is 8025",
+    paramLabel = "<port>",
+    defaultValue = "8025")
+  private int serverPort;
+
+  @Option(
+    names = {"--app.websocket.lsp-path"},
+    description = "Path to LSP endpoint. Default is /lsp",
+    paramLabel = "<path>",
+    defaultValue = "/lsp")
+  private String endpointPath;
 
   private final LanguageServerConfiguration configuration;
 
