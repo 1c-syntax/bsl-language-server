@@ -18,6 +18,14 @@
       "version": "2.7.5"
     },
     {
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.5",
+      "gradleName": "org.springframework.boot:spring-boot-starter-websocket:2.7.5",
+      "unresolved": false,
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-websocket",
+      "version": "2.7.5"
+    },
+    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
       "gradleName": "org.springframework.boot:spring-boot-starter:2.7.5",
       "unresolved": false,
@@ -26,12 +34,20 @@
       "version": "2.7.5"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j",
-      "version": "0.14.0"
+      "version": "0.17.0"
+    },
+    {
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+      "unresolved": false,
+      "groupId": "org.eclipse.lsp4j",
+      "artifactId": "org.eclipse.lsp4j.websocket",
+      "version": "0.17.0"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:167aaad827322e09ccde4658a71152dad234de4b",
@@ -338,6 +354,30 @@
       "version": "2.9.0"
     },
     {
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.5",
+      "gradleName": "org.springframework.boot:spring-boot-starter-web:2.7.5",
+      "unresolved": false,
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-web",
+      "version": "2.7.5"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-messaging:5.3.23",
+      "gradleName": "org.springframework:spring-messaging:5.3.23",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-messaging",
+      "version": "5.3.23"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-websocket:5.3.23",
+      "gradleName": "org.springframework:spring-websocket:5.3.23",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-websocket",
+      "version": "5.3.23"
+    },
+    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
       "gradleName": "org.springframework.boot:spring-boot-autoconfigure:2.7.5",
       "unresolved": false,
@@ -378,20 +418,28 @@
       "version": "1.30"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.generator",
-      "version": "0.14.0"
+      "version": "0.17.0"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.jsonrpc",
-      "version": "0.14.0"
+      "version": "0.17.0"
+    },
+    {
+      "ideaName": "Gradle: javax.websocket:javax.websocket-api:1.1",
+      "gradleName": "javax.websocket:javax.websocket-api:1.1",
+      "unresolved": false,
+      "groupId": "javax.websocket",
+      "artifactId": "javax.websocket-api",
+      "version": "1.1"
     },
     {
       "ideaName": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
@@ -858,6 +906,46 @@
       "version": "1.12.18"
     },
     {
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.5",
+      "gradleName": "org.springframework.boot:spring-boot-starter-json:2.7.5",
+      "unresolved": false,
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-json",
+      "version": "2.7.5"
+    },
+    {
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.5",
+      "gradleName": "org.springframework.boot:spring-boot-starter-tomcat:2.7.5",
+      "unresolved": false,
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-tomcat",
+      "version": "2.7.5"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-webmvc:5.3.23",
+      "gradleName": "org.springframework:spring-webmvc:5.3.23",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-webmvc",
+      "version": "5.3.23"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-web:5.3.23",
+      "gradleName": "org.springframework:spring-web:5.3.23",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-web",
+      "version": "5.3.23"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-beans:5.3.23",
+      "gradleName": "org.springframework:spring-beans:5.3.23",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-beans",
+      "version": "5.3.23"
+    },
+    {
       "ideaName": "Gradle: org.springframework:spring-context:5.3.23",
       "gradleName": "org.springframework:spring-context:5.3.23",
       "unresolved": false,
@@ -890,12 +978,12 @@
       "version": "1.7.36"
     },
     {
-      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
-      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
+      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
+      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
       "unresolved": false,
       "groupId": "org.eclipse.xtend",
       "artifactId": "org.eclipse.xtend.lib",
-      "version": "2.24.0"
+      "version": "2.28.0"
     },
     {
       "ideaName": "Gradle: com.google.code.gson:gson:2.9.1",
@@ -1138,19 +1226,51 @@
       "version": "1.2.0"
     },
     {
+      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4",
+      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4",
+      "unresolved": false,
+      "groupId": "com.fasterxml.jackson.datatype",
+      "artifactId": "jackson-datatype-jdk8",
+      "version": "2.13.4"
+    },
+    {
+      "ideaName": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.13.4",
+      "gradleName": "com.fasterxml.jackson.module:jackson-module-parameter-names:2.13.4",
+      "unresolved": false,
+      "groupId": "com.fasterxml.jackson.module",
+      "artifactId": "jackson-module-parameter-names",
+      "version": "2.13.4"
+    },
+    {
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.68",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-websocket:9.0.68",
+      "unresolved": false,
+      "groupId": "org.apache.tomcat.embed",
+      "artifactId": "tomcat-embed-websocket",
+      "version": "9.0.68"
+    },
+    {
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.68",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-core:9.0.68",
+      "unresolved": false,
+      "groupId": "org.apache.tomcat.embed",
+      "artifactId": "tomcat-embed-core",
+      "version": "9.0.68"
+    },
+    {
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.68",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-el:9.0.68",
+      "unresolved": false,
+      "groupId": "org.apache.tomcat.embed",
+      "artifactId": "tomcat-embed-el",
+      "version": "9.0.68"
+    },
+    {
       "ideaName": "Gradle: org.springframework:spring-aop:5.3.23",
       "gradleName": "org.springframework:spring-aop:5.3.23",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-aop",
-      "version": "5.3.23"
-    },
-    {
-      "ideaName": "Gradle: org.springframework:spring-beans:5.3.23",
-      "gradleName": "org.springframework:spring-beans:5.3.23",
-      "unresolved": false,
-      "groupId": "org.springframework",
-      "artifactId": "spring-beans",
       "version": "5.3.23"
     },
     {
@@ -1178,20 +1298,20 @@
       "version": "2.17.2"
     },
     {
-      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.24.0",
-      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.24.0",
+      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
+      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
       "unresolved": false,
       "groupId": "org.eclipse.xtend",
       "artifactId": "org.eclipse.xtend.lib.macro",
-      "version": "2.24.0"
+      "version": "2.28.0"
     },
     {
-      "ideaName": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.24.0",
-      "gradleName": "org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.24.0",
+      "ideaName": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
+      "gradleName": "org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
       "unresolved": false,
       "groupId": "org.eclipse.xtext",
       "artifactId": "org.eclipse.xtext.xbase.lib",
-      "version": "2.24.0"
+      "version": "2.28.0"
     },
     {
       "ideaName": "Gradle: io.grpc:grpc-context:1.42.1",

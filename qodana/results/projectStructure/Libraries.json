@@ -7,15 +7,27 @@
       ]
     },
     {
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.5",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-websocket/2.7.5/fef1dcd9a493c2453a6b0a17bec0141a855fb93/spring-boot-starter-websocket-2.7.5.jar!/"
+      ]
+    },
+    {
       "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.7.5/c28e1546461803490588085345ba5d2897d232bc/spring-boot-starter-2.7.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.14.0/5dc1057a78cce843523642df9de9bdc86b782eb9/org.eclipse.lsp4j-0.14.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.17.0/5c968221667bcacd66694dbb85f26bd270d2a022/org.eclipse.lsp4j-0.17.0.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.websocket/0.17.0/1e2dd5ddd46fe3590a75149925f41eee11f3d5ab/org.eclipse.lsp4j.websocket-0.17.0.jar!/"
       ]
     },
     {
@@ -163,6 +175,24 @@
       ]
     },
     {
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.5",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-web/2.7.5/bb4099d0466a62c3b11ab9323babca13bb430a2e/spring-boot-starter-web-2.7.5.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-messaging:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-messaging/5.3.23/ba45e1d5cbafca683baa5d801b779eba1f4adaee/spring-messaging-5.3.23.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-websocket:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-websocket/5.3.23/28c5d2ab4ab1f0fec2ca68c502576a91d552c356/spring-websocket-5.3.23.jar!/"
+      ]
+    },
+    {
       "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.7.5/96646e63a2296d0a3209383e81cdb8c87ab2f913/spring-boot-autoconfigure-2.7.5.jar!/"
@@ -199,15 +229,21 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.14.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.14.0/ea21e3acbf5fda402531369e856bdc76d5ac6719/org.eclipse.lsp4j.generator-0.14.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.17.0/900f81877a1b884aa0407e528fe16f6cd33a1f72/org.eclipse.lsp4j.generator-0.17.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.14.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.14.0/159ed9db9c8a31b5ba1edaf2ae3548e875c7bf9c/org.eclipse.lsp4j.jsonrpc-0.14.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.17.0/b187d24b950dd9da8126a2ccc12a7291bc64d459/org.eclipse.lsp4j.jsonrpc-0.17.0.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: javax.websocket:javax.websocket-api:1.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/javax.websocket/javax.websocket-api/1.1/eeeb68631711256418dfbb47b11c731b6c8f6235/javax.websocket-api-1.1.jar!/"
       ]
     },
     {
@@ -511,6 +547,36 @@
       ]
     },
     {
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.5",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-json/2.7.5/9c7df04ff37b2e7471632ddeb4a296c5fb6bddee/spring-boot-starter-json-2.7.5.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.5",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/2.7.5/eb7849c52953de44d9712adf45398ccb1a7d4295/spring-boot-starter-tomcat-2.7.5.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-webmvc:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-webmvc/5.3.23/b163527c275b0374371890c0b76c2a2a09f9804b/spring-webmvc-5.3.23.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-web:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-web/5.3.23/193f5276092d9cbe3222c63885b47ca7b2cce97/spring-web-5.3.23.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-beans:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.23/3bdefbf6042ed742cbe16f27d2d14cca9096a606/spring-beans-5.3.23.jar!/"
+      ]
+    },
+    {
       "name": "Gradle: org.springframework:spring-context:5.3.23",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-context/5.3.23/530b36b2ce2c9e471c6a260c3f181bcd20325a58/spring-context-5.3.23.jar!/"
@@ -541,9 +607,9 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.24.0",
+      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib/2.24.0/a57306d5d523a4750fa09b2708062ea4972afea2/org.eclipse.xtend.lib-2.24.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib/2.28.0/b2119c6c7f87783cdf3b422c1901db03fe5fe2d3/org.eclipse.xtend.lib-2.28.0.jar!/"
       ]
     },
     {
@@ -709,15 +775,39 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-aop:5.3.23",
+      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.23/30d0034ba29178e98781d85f51a7eb709a628e9b/spring-aop-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.13.4/557dbba5d8dfc7b7f944c58fe084109afcb5670b/jackson-datatype-jdk8-2.13.4.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-beans:5.3.23",
+      "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.13.4",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.23/3bdefbf6042ed742cbe16f27d2d14cca9096a606/spring-beans-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.13.4/858ccf6624b5fac6044813e845063edb6a62cf37/jackson-module-parameter-names-2.13.4.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.68",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-websocket/9.0.68/15fc94001bb916a808631422a6488a678496ef94/tomcat-embed-websocket-9.0.68.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.68",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/9.0.68/caafeb87d6ff30adda888049c9b81591c7cc20d1/tomcat-embed-core-9.0.68.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.68",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-el/9.0.68/296afe7483256960d7ebdd8dcb4b49775d7cb85f/tomcat-embed-el-9.0.68.jar!/"
+      ]
+    },
+    {
+      "name": "Gradle: org.springframework:spring-aop:5.3.23",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.23/30d0034ba29178e98781d85f51a7eb709a628e9b/spring-aop-5.3.23.jar!/"
       ]
     },
     {
@@ -739,15 +829,15 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.24.0",
+      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib.macro/2.24.0/d8f5566ba67748ed9e91856e077ee99f00e86653/org.eclipse.xtend.lib.macro-2.24.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib.macro/2.28.0/b7201908e9108ed1babd784b53208c7c22d2fe11/org.eclipse.xtend.lib.macro-2.28.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.24.0",
+      "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtext/org.eclipse.xtext.xbase.lib/2.24.0/53fbd66084b08850258e61c838cc1fb94335e718/org.eclipse.xtext.xbase.lib-2.24.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtext/org.eclipse.xtext.xbase.lib/2.28.0/44245e49dc576cf0b912e423af52bd52f104061a/org.eclipse.xtext.xbase.lib-2.28.0.jar!/"
       ]
     },
     {
