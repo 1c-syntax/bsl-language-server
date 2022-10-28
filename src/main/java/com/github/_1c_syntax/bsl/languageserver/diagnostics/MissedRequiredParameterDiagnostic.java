@@ -9,6 +9,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -53,7 +54,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().IDENTIFIER().getText();
     if (documentContext.getSymbolTree().getMethodSymbol(methodName).isPresent()) {
-      appendMethodCall(ctx.methodName().getStart(), ctx.doCall());
+      appendMethodCall(ctx.methodName().getStart(), ctx.doCall(), ctx);
     }
 
     return super.visitGlobalMethodCall(ctx);
@@ -61,11 +62,11 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    appendMethodCall(ctx.methodName().getStart(), ctx.doCall());
+    appendMethodCall(ctx.methodName().getStart(), ctx.doCall(), ctx);
     return super.visitMethodCall(ctx);
   }
 
-  void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext) {
+  void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, BSLParserRuleContext node) {
     var parameters = doCallContext.callParamList().callParam();
     MethodCall methodCall = new MethodCall();
     methodCall.parameters = new Boolean[parameters.size()];
@@ -74,8 +75,8 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       methodCall.parameters[i] = parameters.get(i).expression() != null;
     }
 
-    methodCall.range = Ranges.create(methodName);
-    calls.put(methodCall.range, methodCall);
+    methodCall.range = Ranges.create(node);
+    calls.put(Ranges.create(methodName), methodCall);
   }
 
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {

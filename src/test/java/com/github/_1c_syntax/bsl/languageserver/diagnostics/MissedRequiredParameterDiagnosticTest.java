@@ -17,6 +17,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
   MissedRequiredParameterDiagnosticTest() {
     super(MissedRequiredParameterDiagnostic.class);
   }
+
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @Test
@@ -24,21 +25,32 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)
-      .hasRange(14, 16, 14, 26);
+      .hasRange(14, 16, 14, 26)
+      .hasRange(17, 13, 17, 24)
+    ;
   }
 
   @Test
   void testSideMethod() {
+
     initServerContext(Absolute.path(PATH_TO_METADATA));
+
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(4);
+
+    assertThat(diagnostics).hasSize(11);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)
-      .hasRange(14, 16, 14, 26);
+      .hasRange(14, 16, 14, 26)
+      .hasRange(17, 13, 17, 24)
+      .hasRange(25, 22, 25, 50)
+      .hasRange(24, 22, 24, 49)
+      .hasRange(26, 22, 26, 48)
+      .hasRange(27, 31, 27, 57)
+    ;
   }
 }
