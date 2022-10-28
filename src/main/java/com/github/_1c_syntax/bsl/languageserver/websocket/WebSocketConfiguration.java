@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,14 +33,20 @@ import org.springframework.web.socket.server.standard.ServerEndpointRegistration
 
 import javax.websocket.server.ServerEndpointConfig;
 
+/**
+ * Конфигурация модуля веб-сокетов.
+ */
 @Configuration
 @ConditionalOnWebApplication
 @EnableWebSocket
 public class WebSocketConfiguration {
 
+  @Value("${app.websocket.lsp-path}")
+  private String endpointPath = "";
+
   @Bean
-  public ServerEndpointConfig serverEndpointConfig() {
-    return new ServerEndpointRegistration("/bsl-language-server", BSLLSWebSocketEndpoint.class);
+  public ServerEndpointConfig serverEndpointConfig(WebSocketEndpoint<LanguageClient> endpoint) {
+    return new ServerEndpointRegistration(endpointPath, endpoint);
   }
 
   @Bean

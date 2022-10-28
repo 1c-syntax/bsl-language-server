@@ -21,22 +21,26 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
-import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.Launcher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
 
+/**
+ * Конечная точка для подключения к Language Server через websocket.
+ */
 @Component
 @RequiredArgsConstructor
-public class BSLLSWebSocketEndpoint extends WebSocketEndpoint<LanguageClient> {
+public class LSPWebSocketEndpoint extends WebSocketEndpoint<LanguageClient> {
 
-  private final BSLLanguageServer languageServer;
-  private final LanguageClientHolder languageClientHolder;
+  private final LanguageServer languageServer;
+  private final List<LanguageClientAware> languageClientAwares;
 
   @Override
   protected void configure(Builder<LanguageClient> builder) {
@@ -46,7 +50,7 @@ public class BSLLSWebSocketEndpoint extends WebSocketEndpoint<LanguageClient> {
 
   @Override
   protected void connect(Collection<Object> localServices, LanguageClient remoteProxy) {
-    languageClientHolder.connect(remoteProxy);
+    languageClientAwares.forEach(languageClientAware -> languageClientAware.connect(remoteProxy));
   }
 
 }

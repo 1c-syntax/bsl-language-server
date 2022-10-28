@@ -20,6 +20,6 @@
  * License along with BSL Language Server.
  */
 /**
- * Пакет предназначен для реализации работы BSL Language Server через websocket.
+ * Пакет предназначен для реализации подключения к Language Server через websocket.
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
