@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -81,6 +82,7 @@ public abstract class DiagnosticsConfiguration {
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(DiagnosticInfo::getDiagnosticClass)
+        .filter(diagnostic -> AnnotationUtils.findAnnotation(diagnostic, Disabled.class) == null)
         .map(diagnosticObjectProvider::get)
         .collect(Collectors.toList());
     } else {

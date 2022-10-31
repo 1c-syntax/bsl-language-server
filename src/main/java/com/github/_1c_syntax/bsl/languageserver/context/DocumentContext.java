@@ -239,7 +239,8 @@ public class DocumentContext {
   }
 
   public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+    return Optional
+      .ofNullable((AbstractMDObjectBase) getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
   public List<SDBLTokenizer> getQueries() {

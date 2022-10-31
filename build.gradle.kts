@@ -8,16 +8,16 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "3.4.0.2513"
+    id("org.sonarqube") version "3.5.0.2730"
     id("io.freefair.lombok") version "6.5.1"
     id("io.freefair.javadoc-links") version "6.5.1"
     id("io.freefair.javadoc-utf-8") version "6.5.1"
     id("io.freefair.aspectj.post-compile-weaving") version "6.5.1"
     id("io.freefair.maven-central.validate-poms") version "6.5.1"
-    id("me.qoomon.git-versioning") version "6.3.0"
-    id("com.github.ben-manes.versions") version "0.42.0"
-    id("org.springframework.boot") version "2.6.7"
-    id("io.spring.dependency-management") version "1.0.14.RELEASE"
+    id("me.qoomon.git-versioning") version "6.3.5"
+    id("com.github.ben-manes.versions") version "0.43.0"
+    id("org.springframework.boot") version "2.7.5"
+    id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
     id("ru.vyarus.pom") version "2.2.1"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
@@ -54,7 +54,7 @@ val languageToolVersion = "5.6"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.4.2")
+        mavenBom("io.sentry:sentry-bom:6.6.0")
     }
 }
 
@@ -64,13 +64,15 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-websocket")
     api("info.picocli:picocli-spring-boot-starter:4.6.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.17.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.17.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.21.0") {
+    api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -79,7 +81,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.4.0")
-    api("com.github.1c-syntax", "mdclasses", "0.10.2")
+    api("com.github.1c-syntax", "mdclasses", "0.10.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 

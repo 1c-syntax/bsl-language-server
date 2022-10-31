@@ -167,6 +167,12 @@
             ],
             "title": "Commented out code",
             "properties": {
+                "exclusionPrefixes": {
+                    "description": "Exclusion prefixes",
+                    "default": "",
+                    "type": "string",
+                    "title": "Exclusion prefixes"
+                },
                 "threshold": {
                     "description": "Threshold",
                     "default": 0.9,
