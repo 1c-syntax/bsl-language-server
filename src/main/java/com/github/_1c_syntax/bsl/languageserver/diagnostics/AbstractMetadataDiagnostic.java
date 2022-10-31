@@ -110,18 +110,18 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   private void checkMetadataWithModules() {
     documentContext.getMdObject()
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
-      .ifPresent((AbstractMDObjectBase mdo) -> {
-      if (mdo instanceof AbstractMDObjectBSL) {
-        var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-          .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-          .collect(Collectors.toList());
+      .filter(AbstractMDObjectBSL.class::isInstance)
+      .filter(this::haveMatchingModule)
+      .ifPresent(this::checkMetadata);
+  }
 
-        // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-        if (modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule) {
-          checkMetadata(mdo);
-        }
-      }
-    });
+  private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
+    var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
+      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
+      .collect(Collectors.toList());
+
+    // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
+    return modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule;
   }
 
   /**

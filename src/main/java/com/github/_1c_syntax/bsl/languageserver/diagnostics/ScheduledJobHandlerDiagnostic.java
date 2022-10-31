@@ -43,7 +43,7 @@ import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.BLOCKER,
+  severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 5,
   tags = {
     DiagnosticTag.ERROR
@@ -53,16 +53,24 @@ import java.util.Map;
 
 public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
-  public static final String DIAGNOSTIC_MESSAGE = "diagnosticMessage";
-  public static final String MISSING_MODULE_MESSAGE = "missingModule";
-  public static final String NON_SERVER_MODULE_MESSAGE = "nonServerModule";
-  public static final String NON_EXPORT_METHOD_MESSAGE = "nonExportMethod";
-  public static final String METHOD_WITH_PARAMETERS_MESSAGE = "methodWithParameters";
-  public static final String EMPTY_METHOD_MESSAGE = "emptyMethod";
-  public static final String DOUBLE_MESSAGE = "doubleMessage";
+  private static final String DIAGNOSTIC_MESSAGE = "diagnosticMessage";
+  private static final String MISSING_MODULE_MESSAGE = "missingModule";
+  private static final String NON_SERVER_MODULE_MESSAGE = "nonServerModule";
+  private static final String NON_EXPORT_METHOD_MESSAGE = "nonExportMethod";
+  private static final String METHOD_WITH_PARAMETERS_MESSAGE = "methodWithParameters";
+  private static final String EMPTY_METHOD_MESSAGE = "emptyMethod";
+  private static final String DOUBLE_MESSAGE = "doubleMessage";
 
   private final ReferenceIndex referenceIndex;
   private final Map<String, List<MDScheduledJob>> scheduledJobHandlers = new HashMap<>();
+
+  private static String getFullName(MDCommonModule mdCommonModule, String methodName) {
+    return getFullName(mdCommonModule.getName(), methodName);
+  }
+
+  private static String getFullName(String commonModuleName, String methodName) {
+    return commonModuleName.concat(".").concat(methodName);
+  }
 
   public ScheduledJobHandlerDiagnostic(ReferenceIndex referenceIndex) {
     super(List.of(MDOType.SCHEDULED_JOB));
@@ -109,12 +117,12 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     final var moduleName = handler.getModuleName();
 
     final var commonModuleOptional = documentContext.getServerContext().getConfiguration().getCommonModule(moduleName);
-    if (commonModuleOptional.isEmpty()){
+    if (commonModuleOptional.isEmpty()) {
       addDiagnostic(MISSING_MODULE_MESSAGE, scheduleJob, moduleName);
       return;
     }
     final var mdCommonModule = commonModuleOptional.orElseThrow();
-    if (!mdCommonModule.isServer()){
+    if (!mdCommonModule.isServer()) {
       addDiagnostic(NON_SERVER_MODULE_MESSAGE, scheduleJob, moduleName);
       return;
     }
@@ -126,7 +134,7 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     scheduledJobHandlers.computeIfAbsent(fullName, k -> new ArrayList<>()).add(scheduleJob);
 
     documentContext.getServerContext().getDocument(
-      mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
+        mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
@@ -146,22 +154,15 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     if (scheduleJob.isPredefined() && !methodSymbol.getParameters().isEmpty()) {
       addDiagnostic(METHOD_WITH_PARAMETERS_MESSAGE, scheduleJob, fullName);
     }
-    if (isEmptyMethodBody(methodSymbol)){
+    if (isEmptyMethodBody(methodSymbol)) {
       addDiagnostic(EMPTY_METHOD_MESSAGE, scheduleJob, fullName);
     }
-  }
-
-  private static String getFullName(MDCommonModule mdCommonModule, String methodName) {
-    return getFullName(mdCommonModule.getName(), methodName);
-  }
-  private static String getFullName(String commonModuleName, String methodName) {
-    return commonModuleName.concat(".").concat(methodName);
   }
 
   private boolean isEmptyMethodBody(MethodSymbol methodSymbol) {
     // В методе регламентного задания точно будут или переменные или вызов внешнего метода.
     // Если их нет, значит, метод пустой
-    if (!methodSymbol.getChildren().isEmpty()){
+    if (!methodSymbol.getChildren().isEmpty()) {
       return false;
     }
     return referenceIndex.getReferencesFrom(methodSymbol).isEmpty();

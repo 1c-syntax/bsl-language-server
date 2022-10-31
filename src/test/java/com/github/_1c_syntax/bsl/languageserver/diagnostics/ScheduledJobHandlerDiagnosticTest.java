@@ -131,6 +131,38 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     assertThat(diagnostics, true).isEmpty();
   }
 
+  @Test
+  void testEmptyMethodContent() {
+
+    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикБезТела");
+
+    assertThat(diagnostics, true)
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.ОбработчикБезТела\" регламентного задания \"РегламентноеЗадание1\""))
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testNonEmptyMethodContent_Variable() {
+
+    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикСТелом1");
+
+    assertThat(diagnostics, true)
+      .hasSize(0)
+    ;
+  }
+
+  @Test
+  void testNonEmptyMethodContent_HasCall() {
+
+    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикСТелом2");
+
+    assertThat(diagnostics, true)
+      .hasSize(0)
+    ;
+  }
+
   private List<Diagnostic> checkMockHandler(String methodPath) {
     initServerContext(Absolute.path(PATH_TO_METADATA));
     var documentContext = spy(getDocumentContext());
@@ -168,38 +200,6 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
         diagnostic -> diagnostic.getRange().equals(getRange()));
 
     return diagnostics;
-  }
-
-  @Test
-  void testEmptyMethodContent() {
-
-    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикБезТела");
-
-    assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.ОбработчикБезТела\" регламентного задания \"РегламентноеЗадание1\""))
-      .hasSize(1)
-    ;
-  }
-
-  @Test
-  void testNonEmptyMethodContent_Variable() {
-
-    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикСТелом1");
-
-    assertThat(diagnostics, true)
-      .hasSize(0)
-    ;
-  }
-
-  @Test
-  void testNonEmptyMethodContent_HasCall() {
-
-    List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикСТелом2");
-
-    assertThat(diagnostics, true)
-      .hasSize(0)
-    ;
   }
 
   private static Range getRange() {
