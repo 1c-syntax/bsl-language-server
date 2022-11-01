@@ -39,6 +39,7 @@ import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -58,10 +59,10 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     super.visitFile(ctx);
-
     for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
-      if (calls.containsKey(reference.getSelectionRange())) {
-        checkMethod((MethodSymbol) reference.getSymbol(), calls.get(reference.getSelectionRange()));
+      var call = calls.get(reference.getSelectionRange());
+      if (call != null) {
+        checkMethod((MethodSymbol) reference.getSymbol(), call);
       }
     }
     return ctx;
@@ -99,10 +100,8 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
     var callParametersCount = callInfo.parameters.length;
 
-    ParameterDefinition methodParameter;
     for (int i = 0; i < methodDefinition.getParameters().size(); i++) {
-
-      methodParameter = methodDefinition.getParameters().get(i);
+      var methodParameter = methodDefinition.getParameters().get(i);
       if (methodParameter.isOptional()) {
         continue;
       }
