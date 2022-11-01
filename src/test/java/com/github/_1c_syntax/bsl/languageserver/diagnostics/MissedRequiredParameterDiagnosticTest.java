@@ -43,12 +43,13 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)
       .hasRange(14, 16, 14, 26)
       .hasRange(17, 13, 17, 24)
+      .hasRange(29, 27, 29, 40)
     ;
   }
 
@@ -59,7 +60,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)
@@ -69,6 +70,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
       .hasRange(25, 22, 25, 50)
       .hasRange(26, 22, 26, 48)
       .hasRange(27, 31, 27, 57)
+      .hasRange(29, 27, 29, 40)
     ;
   }
 }

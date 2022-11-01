@@ -69,7 +69,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    String methodName = ctx.methodName().IDENTIFIER().getText();
+    var methodName = ctx.methodName().IDENTIFIER().getText();
     if (documentContext.getSymbolTree().getMethodSymbol(methodName).isPresent()) {
       appendMethodCall(ctx.methodName().getStart(), ctx.doCall(), ctx);
     }
@@ -85,7 +85,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, BSLParserRuleContext node) {
     var parameters = doCallContext.callParamList().callParam();
-    MethodCall methodCall = new MethodCall();
+    var methodCall = new MethodCall();
     methodCall.parameters = new Boolean[parameters.size()];
 
     for (int i = 0; i < methodCall.parameters.length; i++) {
@@ -97,7 +97,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   }
 
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
-    int callParametersCount = callInfo.parameters.length;
+    var callParametersCount = callInfo.parameters.length;
 
     ParameterDefinition methodParameter;
     for (int i = 0; i < methodDefinition.getParameters().size(); i++) {

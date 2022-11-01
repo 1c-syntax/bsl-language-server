@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.function.Predicate;
 
@@ -87,6 +88,11 @@ public class ReferenceIndexFiller {
 
   @RequiredArgsConstructor
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+    private final Set<String> THIS_OBJECT_IDENTIFIER = new TreeSet<>(String.CASE_INSENSITIVE_ORDER) {{
+      add("ЭтотОбъект");
+      add("ThisObject");
+    }};
+
 
     private final DocumentContext documentContext;
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
@@ -124,26 +130,23 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
 
-      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
-      if (mdoRef.isEmpty()) {
-        return super.visitComplexIdentifier(ctx);
+      if (ctx.IDENTIFIER() != null && THIS_OBJECT_IDENTIFIER.contains(ctx.IDENTIFIER().getText())) {
+        // TODO реализовать контексно зависимую проверку (добавить ЭтаФорма, разные версии платформы, oscript)
+        Methods.getMethodName(ctx).ifPresent(this::checkLocalMethod);
+      } else {
+        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+        if (mdoRef.isEmpty()) {
+          return super.visitComplexIdentifier(ctx);
+        }
+
+        Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
       }
-
-      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
-
       return super.visitComplexIdentifier(ctx);
     }
 
     @Override
     public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-      var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
-      var moduleType = documentContext.getModuleType();
-      var methodName = ctx.methodName().getStart();
-      var methodNameText = methodName.getText();
-
-      documentContext.getSymbolTree().getMethodSymbol(methodNameText)
-        .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
-
+      checkLocalMethod(ctx.getStart());
       return super.visitGlobalMethodCall(ctx);
     }
 
@@ -151,7 +154,7 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
-        if (doCallContext == null){
+        if (doCallContext == null) {
           return super.visitNewExpression(ctx);
         }
         var callParamList = doCallContext.callParamList().callParam();
@@ -179,7 +182,7 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
-      if (identifier != null){
+      if (identifier != null) {
         final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
           .map(BSLParser.AcceptorContext::modifier)
           .orElseGet(Collections::emptyList);
@@ -197,7 +200,7 @@ public class ReferenceIndexFiller {
       Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
-            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
+          || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
@@ -210,7 +213,7 @@ public class ReferenceIndexFiller {
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
       // todo: move this out of method 
-      if (mdoRef.isEmpty()){
+      if (mdoRef.isEmpty()) {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
@@ -232,7 +235,7 @@ public class ReferenceIndexFiller {
         .map(BSLParser.MemberContext::complexIdentifier)
         .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
         .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
-      if (complexIdentifierContext1.isEmpty()){
+      if (complexIdentifierContext1.isEmpty()) {
         return "";
       }
       return complexIdentifierContext1
@@ -255,6 +258,15 @@ public class ReferenceIndexFiller {
         .flatMap(Optional::stream)
         .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
         .collect(Collectors.toSet());
+    }
+
+    private void checkLocalMethod(Token methodName) {
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+      var moduleType = documentContext.getModuleType();
+      var methodNameText = methodName.getText();
+
+      documentContext.getSymbolTree().getMethodSymbol(methodNameText)
+        .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
     }
   }
 
