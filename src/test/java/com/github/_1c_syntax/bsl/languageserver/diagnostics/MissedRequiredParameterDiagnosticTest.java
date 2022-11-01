@@ -43,8 +43,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(7); // Есть дубли диагностик,
-    // если пропущено несколько параметров, то на каждый пропуск будет создано уведомление и повешено на один вызов
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)
@@ -61,8 +60,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(13);// Есть дубли диагностик,
-    // если пропущено несколько параметров, то на каждый пропуск будет создано уведомление и повешено на один вызов
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(2, 16, 2, 29)
       .hasRange(8, 16, 8, 27)

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,9 +36,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -100,6 +99,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
     var callParametersCount = callInfo.parameters.length;
 
+    var missedParameters = new ArrayList<String>();
     for (int i = 0; i < methodDefinition.getParameters().size(); i++) {
       var methodParameter = methodDefinition.getParameters().get(i);
       if (methodParameter.isOptional()) {
@@ -107,8 +107,12 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       }
 
       if (callParametersCount <= i || !callInfo.parameters[i]) {
-        diagnosticStorage.addDiagnostic(callInfo.range, info.getMessage(methodParameter.getName()));
+        missedParameters.add(methodParameter.getName());
       }
+    }
+    if (!missedParameters.isEmpty()) {
+      var message = info.getMessage('\'' + String.join("', '", missedParameters) + '\'');
+      diagnosticStorage.addDiagnostic(callInfo.range, message);
     }
   }
 
