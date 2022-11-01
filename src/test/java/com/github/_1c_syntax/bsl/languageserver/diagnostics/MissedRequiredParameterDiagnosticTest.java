@@ -32,11 +32,11 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<MissedRequiredParameterDiagnostic> {
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+
   MissedRequiredParameterDiagnosticTest() {
     super(MissedRequiredParameterDiagnostic.class);
   }
-
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @Test
   void testLocalMethod() {
@@ -65,8 +65,8 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
       .hasRange(8, 16, 8, 27)
       .hasRange(14, 16, 14, 26)
       .hasRange(17, 13, 17, 24)
-      .hasRange(25, 22, 25, 50)
       .hasRange(24, 22, 24, 49)
+      .hasRange(25, 22, 25, 50)
       .hasRange(26, 22, 26, 48)
       .hasRange(27, 31, 27, 57)
     ;

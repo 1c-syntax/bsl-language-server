@@ -41,8 +41,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.ERROR
@@ -57,7 +57,6 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    calls.clear();
     super.visitFile(ctx);
 
     for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
@@ -65,8 +64,6 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
         checkMethod((MethodSymbol) reference.getSymbol(), calls.get(reference.getSelectionRange()));
       }
     }
-
-    calls.clear();
     return ctx;
   }
 
@@ -86,7 +83,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     return super.visitMethodCall(ctx);
   }
 
-  void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, BSLParserRuleContext node) {
+  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, BSLParserRuleContext node) {
     var parameters = doCallContext.callParamList().callParam();
     MethodCall methodCall = new MethodCall();
     methodCall.parameters = new Boolean[parameters.size()];
