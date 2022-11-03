@@ -24,39 +24,40 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
 
 /**
- * Запускает приложение в режиме Language Server
+ * Запускает приложение в режиме Websocket Language Server.
  * Ключ команды:
- *  без ключа
+ *  -w, (--websocket)
  * Параметры:
- * -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
- *                                     Возможно указывать как в абсолютном, так и относительном виде.
- *                                     Если параметр опущен, то будут использованы настройки по умолчанию.
+ *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                      Возможно указывать как в абсолютном, так и относительном виде.
+ *                                      Если параметр опущен, то будут использованы настройки по умолчанию.
+ *  --server.port                     - Порт, на котором открывается соединение. Если параметр опущен,
+ *                                      то будет использован порт по умолчанию, а именно 8025.
+ *  --app.websocket.lsp-path          - Адрес, по которому открывается соединение. Если параметр опущен,
+ *                                      то будет использован адрес по умолчанию, а именно /lsp.
  * Выводимая информация:
- *  Данный режим используется для взаимодействия с клиентом по протоколу LSP.
+ *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket.
+ *
  */
 @Slf4j
 @Command(
-  name = "lsp",
-  aliases = {"--lsp"},
-  description = "LSP server mode (default)",
+  name = "websocket",
+  aliases = {"-w", "--websocket"},
+  description = "Websocket server mode",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
-public class LanguageServerStartCommand implements Callable<Integer> {
+public class WebsocketCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
     usageHelp = true,
@@ -70,22 +71,28 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  @Option(
+    names = {"--server.port"},
+    description = "Port to listen. Default is 8025",
+    paramLabel = "<port>",
+    defaultValue = "8025")
+  private int serverPort;
+
+  @Option(
+    names = {"--app.websocket.lsp-path"},
+    description = "Path to LSP endpoint. Default is /lsp",
+    paramLabel = "<path>",
+    defaultValue = "/lsp")
+  private String endpointPath;
+
   private final LanguageServerConfiguration configuration;
-  private final Launcher<LanguageClient> launcher;
-  private final List<LanguageClientAware> languageClientAwares;
 
   public Integer call() {
-
     var configurationFile = new File(configurationOption);
     if (configurationFile.exists()) {
       configuration.update(configurationFile);
     }
 
-    var languageClient = launcher.getRemoteProxy();
-
-    languageClientAwares.forEach(languageClientAware -> languageClientAware.connect(languageClient));
-
-    launcher.startListening();
     return -1;
   }
 

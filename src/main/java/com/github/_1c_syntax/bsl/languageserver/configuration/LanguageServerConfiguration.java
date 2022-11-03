@@ -89,7 +89,7 @@ public class LanguageServerConfiguration {
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
-  
+
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
   private FormattingOptions formattingOptions = new FormattingOptions();
@@ -109,11 +109,11 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile;
 
-  @Value("${app.configuration.path}")
+  @Value("${app.configuration.path:.bsl-language-server.json}")
   @JsonIgnore
   private String configurationFilePath;
 
-  @Value(("${app.globalConfiguration.path}"))
+  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
   @JsonIgnore
   private String globalConfigPath;
 
