@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666981724622,
+  "lastUpdate": 1667486613569,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -19995,6 +19995,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5967773453377792",
             "extra": "mean: 48.93563755353292 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aartbear@gmail.com",
+            "name": "Artur Ayukhanov",
+            "username": "artbear"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9cc70e51783f5f7499aca1f7c3454bd3c3cfb445",
+          "message": "feat(diagnostic): #2861 Реализовано правило \"Обработчик регламентного задания\"",
+          "timestamp": "2022-11-03T21:31:53+07:00",
+          "tree_id": "53f876c789f5dcbc355b6ff6d5203b1e9084134c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9cc70e51783f5f7499aca1f7c3454bd3c3cfb445"
+        },
+        "date": 1667486606520,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 48.20593579610189,
+            "unit": "sec",
+            "range": "stddev: 0.13206715586562226",
+            "extra": "mean: 48.20593579610189 sec\nrounds: 3"
           }
         ]
       }
