@@ -116,7 +116,8 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
     final var moduleName = handler.getModuleName();
 
-    final var commonModuleOptional = documentContext.getServerContext().getConfiguration().getCommonModule(moduleName);
+    final var commonModuleOptional =
+      documentContext.getServerContext().getConfiguration().getCommonModule(moduleName);
     if (commonModuleOptional.isEmpty()) {
       addDiagnostic(MISSING_MODULE_MESSAGE, scheduleJob, moduleName);
       return;
