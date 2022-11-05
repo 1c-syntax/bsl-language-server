@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -81,29 +80,28 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {
     final var symbol = symbolOccurrence.getSymbol();
     final var document = documentContext.getServerContext()
-      .getDocument(symbol.getMdoRef(), symbol.getModuleType());
-    final var mdObject = document
-      .filter(symbolDocumentContext -> !symbolDocumentContext.getUri().equals(documentContext.getUri()))
-      .flatMap(DocumentContext::getMdObject);
-    if (mdObject.isEmpty()){
-      // это может быть просто вызов метода объекта, а не вызов метода общего модуля
-      return Optional.empty();
-    }
+      .getDocument(symbol.getMdoRef(), symbol.getModuleType())
+      .orElseThrow();
+    final var mdObject = document.getMdObject().orElseThrow();
 
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
-    final var methodSymbol = document.orElseThrow()
+    final var methodSymbol = document
       .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
     if (methodSymbol.isEmpty()){
       final var location = symbolOccurrence.getLocation();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(
-        new CallData(mdObject.orElseThrow().getName(),
+        new CallData(mdObject.getName(),
           getMethodNameByLocation(documentContext.getAst(), location.getRange()),
           location.getRange(), false, false));
     }
+    // вызовы приватных методов внутри самого модуля пропускаем
+    if (document.getUri().equals(documentContext.getUri())){
+      return Optional.empty();
+    }
     return methodSymbol
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
-      .map(methodSymbol1 -> new CallData(mdObject.orElseThrow().getName(),
+      .map(methodSymbol1 -> new CallData(mdObject.getName(),
         methodSymbol1.getName(),
         symbolOccurrence.getLocation().getRange(), true, true));
   }
