@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
-import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AllArgsConstructor;
@@ -57,7 +57,12 @@ import java.util.Optional;
 public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
-  private final SymbolOccurrenceRepository symbolOccurrenceRepository;
+
+  private static String getMethodNameByLocation(BSLParserRuleContext node, Range range) {
+    return Trees.findTerminalNodeContainsPosition(node, range.getEnd())
+      .map(ParseTree::getText)
+      .orElseThrow();
+  }
 
   @Override
   protected void check() {
@@ -67,7 +72,6 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
-      // TODO какие еще типы модулей поддержать? модули менеджеров - путаница с платформенными методами, без контекста не решить
       .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
       .map(this::getReferenceToMethodCall)
       .flatMap(Optional::stream)
@@ -92,19 +96,16 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     if (methodSymbol.isEmpty()){
       final var location = symbolOccurrence.getLocation();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
-      return Optional.of(new CallData(mdObject.orElseThrow().getName(), getMethodNameByLocation(location.getRange()),
-        location.getRange(), false, false));
+      return Optional.of(
+        new CallData(mdObject.orElseThrow().getName(),
+          getMethodNameByLocation(documentContext.getAst(), location.getRange()),
+          location.getRange(), false, false));
     }
     return methodSymbol
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
-      .map(methodSymbol1 -> new CallData(mdObject.orElseThrow().getName(), methodSymbol1.getName(),
+      .map(methodSymbol1 -> new CallData(mdObject.orElseThrow().getName(),
+        methodSymbol1.getName(),
         symbolOccurrence.getLocation().getRange(), true, true));
-  }
-
-  private String getMethodNameByLocation(Range range) {
-    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), range.getEnd())
-      .map(ParseTree::getText)
-      .orElseThrow();
   }
 
   private void fireIssue(CallData callData) {
