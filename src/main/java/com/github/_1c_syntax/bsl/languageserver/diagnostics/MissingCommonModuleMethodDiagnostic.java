@@ -47,7 +47,7 @@ import java.util.Optional;
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 1,
+  minutesToFix = 5,
   tags = {
     DiagnosticTag.ERROR
   }
@@ -58,16 +58,6 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
-
-  @Value
-  @AllArgsConstructor
-  private static class CallData {
-    String moduleName;
-    String methodName;
-    Range moduleMethodRange;
-    boolean nonExport;
-    boolean exists;
-  }
 
   @Override
   protected void check() {
@@ -125,5 +115,15 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
       message = info.getResourceString(PRIVATE_METHOD_MESSAGE, callData.methodName, callData.moduleName);
     }
     diagnosticStorage.addDiagnostic(callData.moduleMethodRange, message);
+  }
+
+  @Value
+  @AllArgsConstructor
+  private static class CallData {
+    String moduleName;
+    String methodName;
+    Range moduleMethodRange;
+    boolean nonExport;
+    boolean exists;
   }
 }
