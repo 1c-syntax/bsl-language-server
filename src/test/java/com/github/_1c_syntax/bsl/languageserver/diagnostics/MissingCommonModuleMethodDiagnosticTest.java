@@ -65,6 +65,6 @@ class MissingCommonModuleMethodDiagnosticTest extends AbstractDiagnosticTest<Mis
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   }
 }
