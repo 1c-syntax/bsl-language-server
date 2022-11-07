@@ -88,7 +88,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     var methodCall = new MethodCall();
     methodCall.parameters = new Boolean[parameters.size()];
 
-    for (int i = 0; i < methodCall.parameters.length; i++) {
+    for (var i = 0; i < methodCall.parameters.length; i++) {
       methodCall.parameters[i] = parameters.get(i).expression() != null;
     }
 
@@ -100,7 +100,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     var callParametersCount = callInfo.parameters.length;
 
     var missedParameters = new ArrayList<String>();
-    for (int i = 0; i < methodDefinition.getParameters().size(); i++) {
+    for (var i = 0; i < methodDefinition.getParameters().size(); i++) {
       var methodParameter = methodDefinition.getParameters().get(i);
       if (methodParameter.isOptional()) {
         continue;
@@ -111,7 +111,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       }
     }
     if (!missedParameters.isEmpty()) {
-      var message = info.getMessage('\'' + String.join("', '", missedParameters) + '\'');
+      var message = info.getMessage(String.format("'%s'", String.join("', '", missedParameters)));
       diagnosticStorage.addDiagnostic(callInfo.range, message);
     }
   }
