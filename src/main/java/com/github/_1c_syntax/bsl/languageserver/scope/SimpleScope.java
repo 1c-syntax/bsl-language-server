@@ -4,17 +4,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
-public class AbstractContext implements IScope {
+public class SimpleScope extends BaseScope {
   protected final CaseInsensitiveMap<String, MethodSymbol> methods = new CaseInsensitiveMap<>();
   protected final CaseInsensitiveMap<String, IScopeOwner> properties = new CaseInsensitiveMap<>();
-
-  @Override
-  public Set<Capability> getCapabilities() {
-    return null;
-  }
 
   @Override
   public Stream<MethodSymbol> getMethods() {
@@ -32,7 +26,7 @@ public class AbstractContext implements IScope {
   }
 
   @Override
-  public IScopeOwner getProperty(String name) {
-    return properties.get(name);
+  public Optional<IScopeOwner> getProperty(String name) {
+    return Optional.ofNullable(properties.get(name));
   }
 }

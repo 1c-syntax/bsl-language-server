@@ -1,24 +1,17 @@
 package com.github._1c_syntax.bsl.languageserver.scope;
 
-import com.github._1c_syntax.bsl.mdo.MDObject;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 
-public interface IScopeOwner {
+public class IScopeOwner {
 
-  static IScopeOwner create(MDObject object, IScope scope) {
-    return new MDObjectScopeOwner(object, scope);
+  public static IScopeOwner create(Object owner) {
+    return new IScopeOwner(owner);
   }
 
-  IScope getScope();
-
-  @RequiredArgsConstructor
-  class MDObjectScopeOwner implements IScopeOwner {
-    private final MDObject owner;
-    private final IScope scope;
-
-    @Override
-    public IScope getScope() {
-      return scope;
-    }
+  private IScopeOwner(Object owner) {
+    this.owner = owner;
   }
+
+  @Getter
+  private final Object owner;
 }

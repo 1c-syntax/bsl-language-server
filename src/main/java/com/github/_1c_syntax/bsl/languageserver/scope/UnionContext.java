@@ -6,36 +6,41 @@ import lombok.Singular;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Builder
-public class UnionContext implements IScope{
-  @Singular
-  private Collection<IScope>innerScopes;
+public class UnionContext extends BaseScope {
 
-  @Override
-  public Set<Capability> getCapabilities() {
-    return null;
-  }
+  @Singular
+  private Collection<IScope> innerScopes;
 
   @Override
   public Stream<MethodSymbol> getMethods() {
-    return null;
+    return innerScopes.stream()
+      .flatMap(IScope::getMethods);
   }
 
   @Override
   public Stream<IScopeOwner> getProperties() {
-    return null;
+    return innerScopes.stream()
+      .flatMap(IScope::getProperties);
   }
 
   @Override
   public Optional<MethodSymbol> getMethod(String name) {
-    return Optional.empty();
+    return innerScopes.stream()
+      .map(it -> it.getMethod(name))
+      .filter(Optional::isPresent)
+      .findFirst()
+      .orElseGet(Optional::empty);
   }
 
   @Override
-  public IScopeOwner getProperty(String name) {
-    return null;
+  public Optional<IScopeOwner> getProperty(String name) {
+    return innerScopes.stream()
+      .map(it -> it.getProperty(name))
+      .filter(Optional::isPresent)
+      .findFirst()
+      .orElseGet(Optional::empty);
   }
 }
