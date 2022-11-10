@@ -22,30 +22,46 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.RuleContext;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Набор методов для работы с конструкторами объектов 1С
+ */
+@UtilityClass
 public class Constructors {
 
+  /**
+   * Вычисляет имя типа создаваемого объекта, работает с
+   *  Новый ТипОбъекта;
+   *  Новый("ТипОбъекта")
+   * @param newExpression контекст выражения
+   * @return имя типа объекта
+   */
   public static Optional<String> typeName(BSLParser.NewExpressionContext newExpression) {
     return Optional.ofNullable(newExpression.typeName())
       .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .map(BSLParser.CallParamListContext::callParam)
-        .flatMap(Constructors::first)
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(Constructors::first)
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> constValue.string() != null)
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1)));
+      .or(() -> getTypeNameFromArgs(newExpression));
   }
 
-  static private <T> Optional<T> first(List<T> list) {
+  private static Optional<String> getTypeNameFromArgs(BSLParser.NewExpressionContext newExpression){
+    return Optional.ofNullable(newExpression.doCall())
+      .map(BSLParser.DoCallContext::callParamList)
+      .map(BSLParser.CallParamListContext::callParam)
+      .flatMap(Constructors::first)
+      .map(BSLParser.CallParamContext::expression)
+      .map(BSLParser.ExpressionContext::member)
+      .flatMap(Constructors::first)
+      .map(BSLParser.MemberContext::constValue)
+      .filter(constValue -> constValue.string() != null)
+      .map(RuleContext::getText)
+      .map(Strings::trimQuotes);
+  }
+
+  private static <T> Optional<T> first(List<T> list) {
     if (list.isEmpty()) {
       return Optional.empty();
     } else {
