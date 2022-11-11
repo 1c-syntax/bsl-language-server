@@ -67,6 +67,7 @@ public class Preprocessor {
 
   /**
    * Вычисляет результат условия препроцессора
+   *
    * @param expression условие препроцессора
    * @return результирующий набор контекстов
    */
@@ -78,7 +79,8 @@ public class Preprocessor {
 
     } else if (expression instanceof UnaryOperationNode && ((UnaryOperationNode) expression).getOperator() == BslOperator.NOT) {
 
-      return getInventorySet(calculatePreprocessorConstraints(((UnaryOperationNode) expression).getOperand()));
+      var subset = calculatePreprocessorConstraints(((UnaryOperationNode) expression).getOperand());
+      return getInventorySet(subset);
 
     } else if (expression instanceof BinaryOperationNode) {
 
@@ -86,12 +88,14 @@ public class Preprocessor {
 
       if (operation.getOperator() == BslOperator.AND) {
 
-        return retainSets(calculatePreprocessorConstraints(operation.getLeft()),
+        return retainSets(
+          calculatePreprocessorConstraints(operation.getLeft()),
           calculatePreprocessorConstraints(operation.getRight()));
 
       } else if (operation.getOperator() == BslOperator.OR) {
 
-        return joinSets(calculatePreprocessorConstraints(operation.getLeft()),
+        return joinSets(
+          calculatePreprocessorConstraints(operation.getLeft()),
           calculatePreprocessorConstraints(operation.getRight()));
 
       }
@@ -102,14 +106,14 @@ public class Preprocessor {
 
   private static EnumSet<PreprocessorConstraints> getConstraintSet(PreprocessorConstraints constraint) {
     if (constraint == PreprocessorConstraints.CLIENT) {
-      return PreprocessorConstraints.CLIENT_CONSTRAINTS;
+      return EnumSet.copyOf(PreprocessorConstraints.CLIENT_CONSTRAINTS);
     } else {
       return EnumSet.of(constraint);
     }
   }
 
   private static EnumSet<PreprocessorConstraints> getInventorySet(EnumSet<PreprocessorConstraints> set) {
-    var resultSet = EnumSet.allOf(PreprocessorConstraints.class);
+    var resultSet = EnumSet.copyOf(PreprocessorConstraints.DEFAULT_CONSTRAINTS);
     resultSet.removeAll(set);
     return resultSet;
   }
