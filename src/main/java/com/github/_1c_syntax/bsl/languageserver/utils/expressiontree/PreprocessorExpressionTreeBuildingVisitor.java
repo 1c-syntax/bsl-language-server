@@ -10,10 +10,8 @@ import java.util.Deque;
 class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   private BslExpression resultExpression;
-  private int recursionLevel = -1;
 
-  private final Deque<BslExpression> operands = new ArrayDeque<>();
-  private final Deque<BslOperator> operators = new ArrayDeque<>();
+  private final Deque<State> states = new ArrayDeque<>();
 
   BslExpression getExpressionTree() {
     return resultExpression;
@@ -21,31 +19,37 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
 
   @Override
   public ParseTree visitPreproc_expression(BSLParser.Preproc_expressionContext ctx) {
-    return super.visitPreproc_expression(ctx);
+    super.visitPreproc_expression(ctx);
+
+    return ctx;
   }
 
   @Override
   public ParseTree visitPreproc_logicalExpression(BSLParser.Preproc_logicalExpressionContext ctx) {
-    var nestingCount = operators.size();
-    recursionLevel++;
-    var addToOperands = recursionLevel > 0;
+
+    boolean isRoot = states.isEmpty();
+    var currentState = new State();
+    states.push(currentState);
 
     super.visitPreproc_logicalExpression(ctx);
 
-    while (nestingCount < operators.size()) {
+    while (!currentState.operators.isEmpty()) {
       buildOperation(ctx);
     }
 
-    if (!addToOperands) {
-      resultExpression = operands.pop();
-    }
+    states.remove();
 
-    recursionLevel--;
+    if (isRoot) {
+      resultExpression = currentState.operands.pop();
+    } else {
+      getOperands().push(currentState.operands.pop());
+    }
     return ctx;
   }
 
   @Override
   public ParseTree visitPreproc_logicalOperand(BSLParser.Preproc_logicalOperandContext ctx) {
+    var operands = getOperands();
 
     if (ctx.preproc_symbol() != null) {
       operands.push(new PreprocessorSymbolNode(ctx.preproc_symbol()));
@@ -54,6 +58,7 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
     }
 
     if (ctx.PREPROC_NOT_KEYWORD() != null) {
+      var operators = getOperators();
       operators.push(BslOperator.NOT);
       buildOperation(ctx);
     }
@@ -72,6 +77,7 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
   }
 
   private void processOperation(BslOperator operator, ParseTree ctx) {
+    var operators = getOperators();
     if (operators.isEmpty()) {
       operators.push(operator);
       return;
@@ -86,10 +92,12 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
   }
 
   private void buildOperation(ParseTree ctx) {
+    var operators = getOperators();
     if (operators.isEmpty()) {
       return;
     }
 
+    var operands = getOperands();
     var operator = operators.pop();
     if (operator == BslOperator.NOT) {
       var operand = operands.pop();
@@ -101,5 +109,25 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
       var binaryOp = BinaryOperationNode.create(operator, left, right, ctx);
       operands.push(binaryOp);
     }
+  }
+
+  private Deque<BslExpression> getOperands() {
+    if (states.isEmpty()) {
+      throw new IllegalStateException();
+    }
+    return states.peek().operands;
+  }
+
+  private Deque<BslOperator> getOperators() {
+    if (states.isEmpty()) {
+      throw new IllegalStateException();
+    }
+    return states.peek().operators;
+  }
+
+  private static class State {
+    private final Deque<BslExpression> operands = new ArrayDeque<>();
+    private final Deque<BslOperator> operators = new ArrayDeque<>();
+
   }
 }
