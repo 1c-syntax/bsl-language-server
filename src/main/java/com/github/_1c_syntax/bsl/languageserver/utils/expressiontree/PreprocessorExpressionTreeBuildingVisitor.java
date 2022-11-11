@@ -19,7 +19,23 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
 
   @Override
   public ParseTree visitPreproc_expression(BSLParser.Preproc_expressionContext ctx) {
+
+    boolean isRoot = states.isEmpty();
+    var currentState = new State();
+    states.push(currentState);
+
     super.visitPreproc_expression(ctx);
+
+    if (ctx.PREPROC_NOT_KEYWORD() != null) {
+      pushNot(ctx);
+    }
+    states.remove();
+
+    if (isRoot) {
+      resultExpression = currentState.operands.pop();
+    } else {
+      getOperands().push(currentState.operands.pop());
+    }
 
     return ctx;
   }
@@ -27,7 +43,6 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
   @Override
   public ParseTree visitPreproc_logicalExpression(BSLParser.Preproc_logicalExpressionContext ctx) {
 
-    boolean isRoot = states.isEmpty();
     var currentState = new State();
     states.push(currentState);
 
@@ -38,12 +53,8 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
     }
 
     states.remove();
+    getOperands().push(currentState.operands.pop());
 
-    if (isRoot) {
-      resultExpression = currentState.operands.pop();
-    } else {
-      getOperands().push(currentState.operands.pop());
-    }
     return ctx;
   }
 
@@ -58,9 +69,7 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
     }
 
     if (ctx.PREPROC_NOT_KEYWORD() != null) {
-      var operators = getOperators();
-      operators.push(BslOperator.NOT);
-      buildOperation(ctx);
+      pushNot(ctx);
     }
 
     return ctx;
@@ -123,6 +132,12 @@ class PreprocessorExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Par
       throw new IllegalStateException();
     }
     return states.peek().operators;
+  }
+
+  private void pushNot(ParseTree ctx) {
+    var operators = getOperators();
+    operators.push(BslOperator.NOT);
+    buildOperation(ctx);
   }
 
   private static class State {

@@ -359,23 +359,6 @@ class ExpressionParseTreeRewriterTest {
   }
 
   @Test
-  void preprocessorNot() {
-    var variants = Map.of(
-      "Not Клиент", PreprocessorConstraints.CLIENT,
-      "Не Server", PreprocessorConstraints.SERVER
-    );
-
-    for (var variant : variants.entrySet()) {
-      var expression = getPreprocessorExpressionTree(variant.getKey());
-      assertThat(expression).isInstanceOf(UnaryOperationNode.class);
-      var operation = (UnaryOperationNode) expression;
-      assertThat(operation.getOperator()).isEqualTo(BslOperator.NOT);
-      assertThat(operation.getOperand()).isInstanceOf(PreprocessorSymbolNode.class);
-      assertThat(((PreprocessorSymbolNode) operation.getOperand()).getSymbol()).isEqualTo(variant.getValue());
-    }
-  }
-
-  @Test
   void preprocessorAND() {
     var expression = getPreprocessorExpressionTree("Сервер И Клиент");
     assertThat(expression).isInstanceOf(BinaryOperationNode.class);
@@ -418,6 +401,26 @@ class ExpressionParseTreeRewriterTest {
     assertThat(operation.getLeft()).isInstanceOf(PreprocessorSymbolNode.class)
       .extracting("symbol").isEqualTo(PreprocessorConstraints.CLIENT);
     assertThat(operation.getRight()).isInstanceOf(BinaryOperationNode.class);
+  }
+
+  @Test
+  void preprocessorNot() {
+    var expression = getPreprocessorExpressionTree("Not Клиент");
+    assertThat(expression).isInstanceOf(UnaryOperationNode.class)
+      .extracting("operator", "operand.symbol")
+      .containsExactly(BslOperator.NOT, PreprocessorConstraints.CLIENT);
+
+    expression = getPreprocessorExpressionTree("Не AtServer");
+    assertThat(expression)
+      .extracting("operator", "operand.symbol")
+      .containsExactly(BslOperator.NOT, PreprocessorConstraints.SERVER);
+    expression = getPreprocessorExpressionTree("НЕ (Сервер ИЛИ Клиент)");
+    assertThat(expression)
+      .isInstanceOf(UnaryOperationNode.class)
+      .extracting("operand")
+      .isInstanceOf(BinaryOperationNode.class)
+      .extracting("left.symbol", "operator", "right.symbol")
+      .containsExactly(PreprocessorConstraints.SERVER, BslOperator.OR, PreprocessorConstraints.CLIENT);
   }
 
   @Test
