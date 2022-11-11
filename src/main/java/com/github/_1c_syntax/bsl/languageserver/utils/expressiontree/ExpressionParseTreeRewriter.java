@@ -41,4 +41,14 @@ public final class ExpressionParseTreeRewriter {
     return visitor.getExpressionTree();
   }
 
+  /**
+   * Строит дерево выражений для условия препроцессора
+   * @param expression ast дерево выражения
+   * @return результирующее выражение в виде дерева вычисления операций
+   */
+  public static BslExpression buildExpressionTree(BSLParser.Preproc_expressionContext expression) {
+    var visitor = new PreprocessorExpressionTreeBuildingVisitor();
+    visitor.visitPreproc_expression(expression);
+    return visitor.getExpressionTree();
+  }
 }
