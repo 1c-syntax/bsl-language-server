@@ -23,7 +23,7 @@ public class Preprocessor {
    * @return ограничение препроцессора
    */
   public static PreprocessorConstraints getPreprocessorConstraint(BSLParser.Preproc_symbolContext ctx) {
-    PreprocessorConstraints symbol = PreprocessorConstraints.NON_STANDARD;
+    PreprocessorConstraints symbol;
 
     switch (((TerminalNode) ctx.getChild(0)).getSymbol().getType()) {
       case BSLParser.PREPROC_ATSERVER_SYMBOL:
@@ -60,6 +60,9 @@ public class Preprocessor {
         break;
       case BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL:
         symbol = PreprocessorConstraints.MOBILE_APP_SERVER;
+        break;
+      default:
+        symbol = PreprocessorConstraints.NON_STANDARD;
         break;
     }
     return symbol;
