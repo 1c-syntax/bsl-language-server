@@ -166,7 +166,7 @@ public class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
     removeDocumentMdoRefByUri(absoluteURI);
     documents.remove(absoluteURI);
   }
@@ -184,12 +184,12 @@ public class ServerContext {
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    var content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     return createDocumentContext(file.toURI(), content, 0);
   }
 
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
 
     var documentContext = documentContextProvider.getObject(absoluteURI);
     documentContext.rebuild(content, version);
