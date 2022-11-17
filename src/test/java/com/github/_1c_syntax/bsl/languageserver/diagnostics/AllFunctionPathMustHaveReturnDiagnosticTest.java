@@ -105,7 +105,7 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   void testExitByRaiseException() {
     var sample =
       "Функция Тест()\n" +
-      "Если Не ВебКлиент Тогда\n" +
+      "#Если Не ВебКлиент Тогда\n" +
       "  Массив = Новый Массив;\n" +
       "  Если Условие Тогда\n" +
       "  Возврат Массив;\n" +
