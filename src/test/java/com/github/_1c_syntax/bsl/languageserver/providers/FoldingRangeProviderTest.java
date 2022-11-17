@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -42,7 +42,7 @@ class FoldingRangeProviderTest {
   @Test
   void testFoldingRange() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
@@ -81,7 +81,7 @@ class FoldingRangeProviderTest {
   @Test
   void testFoldingRangeParseError() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     assertThat(foldingRanges).isEmpty();

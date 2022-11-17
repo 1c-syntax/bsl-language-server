@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",
@@ -38,6 +38,24 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -67,6 +85,16 @@
             ],
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
+        },
+        "CodeAfterAsyncCall": {
+            "description": "Lines of code after the asynchronous method call",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lines of code after the asynchronous method call",
+            "$id": "#/definitions/CodeAfterAsyncCall"
         },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
@@ -139,6 +167,12 @@
             ],
             "title": "Commented out code",
             "properties": {
+                "exclusionPrefixes": {
+                    "description": "Exclusion prefixes",
+                    "default": "",
+                    "type": "string",
+                    "title": "Exclusion prefixes"
+                },
                 "threshold": {
                     "description": "Threshold",
                     "default": 0.9,
@@ -476,6 +510,42 @@
             "title": "Duplicate regions",
             "$id": "#/definitions/DuplicateRegion"
         },
+        "DuplicateStringLiteral": {
+            "description": "Duplicate string literal",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate string literal",
+            "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
+                "allowedNumberCopies": {
+                    "description": "Allowed number of copies string literals",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Allowed number of copies string literals"
+                },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
+                "analyzeFile": {
+                    "description": "Analyze file",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Analyze file"
+                }
+            },
+            "$id": "#/definitions/DuplicateStringLiteral"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
@@ -563,6 +633,26 @@
             ],
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
+        },
+        "FieldsFromJoinsWithoutIsNull": {
+            "description": "No NULL checks for fields from joined tables",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "No NULL checks for fields from joined tables",
+            "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
+        },
+        "ForbiddenMetadataName": {
+            "description": "Metadata object has a forbidden name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object has a forbidden name",
+            "$id": "#/definitions/ForbiddenMetadataName"
         },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
@@ -753,7 +843,7 @@
                 },
                 "listOfIncorrectFirstSymbol": {
                     "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
-                    "default": "\\)|;|,|\\);",
+                    "default": "\\)|;|,\\s*\\S+|\\);",
                     "type": "string",
                     "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
                 }
@@ -858,6 +948,12 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -996,6 +1092,14 @@
                 "object"
             ],
             "title": "Function returned values description is missing",
+            "properties": {
+                "allowShortDescriptionReturnValues": {
+                    "description": "Allow short description of return values",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow short description of return values"
+                }
+            },
             "$id": "#/definitions/MissingReturnedValueDescription"
         },
         "MissingSpace": {
@@ -1039,6 +1143,16 @@
                 }
             },
             "$id": "#/definitions/MissingSpace"
+        },
+        "MissingTempStorageDeletion": {
+            "description": "Missing temporary storage data deletion after using",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing temporary storage data deletion after using",
+            "$id": "#/definitions/MissingTempStorageDeletion"
         },
         "MissingTemporaryFileDeletion": {
             "description": "Missing temporary file deletion after using",
@@ -1132,6 +1246,20 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                },
+                "allowedMethodNames": {
+                    "description": "Names of methods that are allowed to be used to initialize parameters",
+                    "default": "\u041d\u0421\u0442\u0440,NStr,\u041f\u0440\u0435\u0434\u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u043d\u043e\u0435\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435,PredefinedValue",
+                    "type": "string",
+                    "title": "Names of methods that are allowed to be used to initialize parameters"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
@@ -1170,6 +1298,14 @@
                 "object"
             ],
             "title": "Non export methods in API regions",
+            "properties": {
+                "skipAnnotatedMethods": {
+                    "description": "Skip extension annotated methods",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Skip extension annotated methods"
+                }
+            },
             "$id": "#/definitions/NonExportMethodsInApiRegion"
         },
         "NonStandardRegion": {
@@ -1324,6 +1460,26 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
+        "QueryToMissingMetadata": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/QueryToMissingMetadata"
+        },
         "RedundantAccessToObject": {
             "description": "Redundant access to an object",
             "default": true,
@@ -1363,6 +1519,36 @@
             ],
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
+        },
+        "RewriteMethodParameter": {
+            "description": "Rewrite method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Rewrite method parameter",
+            "$id": "#/definitions/RewriteMethodParameter"
+        },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
+        "ScheduledJobHandler": {
+            "description": "Scheduled job handler",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Scheduled job handler",
+            "$id": "#/definitions/ScheduledJobHandler"
         },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",
@@ -1412,6 +1598,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
         "SetPermissionsForNewObjects": {
             "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
             "default": true,
@@ -1454,6 +1650,12 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -1636,6 +1838,16 @@
             },
             "$id": "#/definitions/UnusedLocalMethod"
         },
+        "UnusedLocalVariable": {
+            "description": "Unused local variable",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local variable",
+            "$id": "#/definitions/UnusedLocalVariable"
+        },
         "UnusedParameters": {
             "description": "Unused parameter",
             "default": true,
@@ -1647,13 +1859,13 @@
             "$id": "#/definitions/UnusedParameters"
         },
         "UsageWriteLogEvent": {
-            "description": "Incorrect use of the method",
+            "description": "Incorrect use of the method \"WriteLogEvent\"",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Incorrect use of the method",
+            "title": "Incorrect use of the method \"WriteLogEvent\"",
             "$id": "#/definitions/UsageWriteLogEvent"
         },
         "UseLessForEach": {
@@ -1852,6 +2064,26 @@
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
+        "WrongDataPathForFormElements": {
+            "description": "Form fields do not have a data path",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Form fields do not have a data path",
+            "$id": "#/definitions/WrongDataPathForFormElements"
+        },
+        "WrongHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/WrongHttpServiceHandler"
+        },
         "WrongUseFunctionProceedWithCall": {
             "description": "Wrong use of ProceedWithCall function",
             "default": true,
@@ -1871,6 +2103,16 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
+        "WrongWebServiceHandler": {
+            "description": "Wrong handler for web service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong handler for web service",
+            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",

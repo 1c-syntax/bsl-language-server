@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -30,14 +30,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 
 import java.util.Set;
 import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR,
+  severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
   modules = {
     ModuleType.CommonModule
@@ -72,6 +72,11 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       return;
     }
 
+    var range = symbolTree.getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
     var isModuleWithoutExportSub = moduleMethods
       .stream()
       .noneMatch(MethodSymbol::isExport);
@@ -82,8 +87,7 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       .noneMatch(REGION_NAME::contains);
 
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
-      Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-        .ifPresent(diagnosticStorage::addDiagnostic);
+      diagnosticStorage.addDiagnostic(range);
     }
 
   }

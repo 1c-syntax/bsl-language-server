@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -28,9 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
@@ -91,11 +94,14 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     var typeModule = documentContext.getModuleType();
     if (typeModule == ModuleType.CommonModule || typeModule == ModuleType.ManagerModule) {
-      documentContext.getMdObject().ifPresent(mdObjectBase -> {
-        needCheckName = true;
+      documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdObjectBase) -> {
+
+        needCheckName = !(mdObjectBase instanceof MDCommonModule)
+          || ((MDCommonModule) mdObjectBase).getReturnValuesReuse() == ReturnValueReuse.DONT_USE;
+
         skipLValue = true;
         namePatternWithDot = CaseInsensitivePattern.compile(
-          String.format(getManagerModuleName(mdObjectBase.getType()), mdObjectBase.getName())
+          String.format(getManagerModuleName(mdObjectBase.getMdoType()), mdObjectBase.getName())
         );
       });
     }
@@ -128,7 +134,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     var identifier = ctx.IDENTIFIER();
     var modifiers = ctx.modifier();
 
-    if (identifier == null || modifiers.size() == 0) {
+    if (identifier == null || modifiers.isEmpty()) {
       return ctx;
     }
 
@@ -194,7 +200,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   private static boolean notHasAccessIndex(BSLParser.AcceptorContext acceptor) {
     var modifiers = acceptor.modifier();
     return modifiers == null
-      || modifiers.size() == 0
+      || modifiers.isEmpty()
       || modifiers.get(0) == null
       || modifiers.get(0).accessIndex() == null;
   }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -39,13 +39,15 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRange(6, 29, 6, 62)
-      .hasRange(19, 30, 19, 63)
-      .hasRange(25, 30, 25, 63)
+      .hasRange(6, 29, 62)
+      .hasRange(19, 30, 63)
+      .hasRange(25, 30, 63)
       .hasRange(45, 29, 62)
       .hasRange(49, 30, 63)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(7)
     ;
 
   }
@@ -60,7 +62,7 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(7);
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put(
@@ -70,11 +72,13 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(6, 29, 6, 62)
-      .hasRange(25, 30, 25, 63)
+      .hasRange(6, 29, 62)
+      .hasRange(25, 30, 63)
       .hasRange(49, 30, 63)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(5)
     ;
   }
 
@@ -89,7 +93,6 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     var diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(6, 29, 62)
       .hasRange(9, 30, 63)
@@ -100,6 +103,10 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
       .hasRange(34, 16, 38)
       .hasRange(45, 29, 62)
       .hasRange(49, 30, 63)
+      .hasRange(60, 29, 57)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(12)
     ;
   }
 }

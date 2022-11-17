@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,17 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 import java.util.regex.Pattern;
@@ -61,23 +62,20 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
   @Override
   protected void check() {
 
-    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
-      .ifPresent(range -> diagnosticRange = range);
-
-    if (diagnosticRange == null) {
-      // нет ренджа - нет и диагностик :)
-      return;
-    }
-
     var configuration = documentContext.getServerContext().getConfiguration();
     if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
 
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(diagnosticRange)) {
+      return;
+    }
+
     // для анализа выбираются все имеющиеся подписки на события
     configuration.getChildren().stream()
-      .filter(mdo -> mdo.getType() == MDOType.EVENT_SUBSCRIPTION)
-      .map(mdo -> (MDEventSubscription) mdo)
+      .filter(mdo -> mdo.getMdoType() == MDOType.EVENT_SUBSCRIPTION)
+      .map(MDEventSubscription.class::cast)
       .forEach((MDEventSubscription eventSubs) -> {
         // проверка на пустой обработчик
         if (eventSubs.getHandler().isEmpty()) {
@@ -118,7 +116,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
   private void checkMethod(MDEventSubscription eventSubs, String methodName, MDCommonModule commonModule) {
     documentContext.getServerContext()
       .getDocument(commonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
-      .ifPresent(commonModuleContext -> {
+      .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
           .findFirst();

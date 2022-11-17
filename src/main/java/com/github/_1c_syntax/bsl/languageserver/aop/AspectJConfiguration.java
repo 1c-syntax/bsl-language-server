@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -42,6 +42,15 @@ public class AspectJConfiguration {
   @Lazy(false)
   public EventPublisherAspect eventPublisherAspect() {
     return Aspects.aspectOf(EventPublisherAspect.class);
+  }
+
+  /**
+   * @return Аспект перехвата ошибок и взаимодействия с Sentry.
+   */
+  @Bean
+  @Lazy(false)
+  public SentryAspect sentryAspect() {
+    return Aspects.aspectOf(SentryAspect.class);
   }
 
   /**

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -226,8 +226,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
-    Optional.of(ctx)
+  private void visitDescendantCodeBlock(@CheckForNull BSLParser.CodeBlockContext ctx) {
+    Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
       .flatMap(Collection::stream)

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,8 +24,11 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.RenameCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +62,28 @@ class BSLLanguageServerTest {
 
     // then
     assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
+  }
+
+  @Test
+  void initializeRename() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
+    params.setWorkspaceFolders(workspaceFolders);
+
+    var capabilities = new ClientCapabilities();
+    params.setCapabilities(capabilities);
+    capabilities.setTextDocument(new TextDocumentClientCapabilities());
+    var textDocument = capabilities.getTextDocument();
+    textDocument.setRename(new RenameCapabilities());
+    textDocument.getRename().setPrepareSupport(true);
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getRenameProvider().isRight()).isTrue();
   }
 
   @Test

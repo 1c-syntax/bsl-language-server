@@ -1,16 +1,5 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `25`           | `brainoverload` |
-
-## Parameters 
-
-
-|         Name          |   Type    |      Description       | Default value |
-|:---------------------:|:---------:|:----------------------:|:-------------:|
-| `complexityThreshold` | `Integer` | `Complexity threshold` |     `20`      |
-|   `checkModuleBody`   | `Boolean` |  `Check module body`   |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -79,22 +68,3 @@ EndFunction                                                                     
 
 * [Cyclomatic Complexity PHP](https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html)
 * [Cyclomatic Complexity (RU)](https://ru.wikipedia.org/wiki/%D0%A6%D0%B8%D0%BA%D0%BB%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D1%81%D0%BB%D0%BE%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D1%8C)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CyclomaticComplexity-off
-// BSLLS:CyclomaticComplexity-on
-```
-
-### Parameter for config
-
-```json
-"CyclomaticComplexity": {
-    "complexityThreshold": 20,
-    "checkModuleBody": true
-}
-```

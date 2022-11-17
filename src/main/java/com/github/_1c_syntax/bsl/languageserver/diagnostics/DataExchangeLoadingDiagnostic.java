@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,13 +30,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -76,39 +79,34 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
     Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::subName)
-      .filter(subName ->
-        searchSubNames.matcher(subName.getText()).find()
-          && !checkPassed(ctx)
-      )
-      .flatMap(context ->
-        Optional.of(documentContext.getSymbolTree())
-          .flatMap(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx))))
+      .filter(subName -> searchSubNames.matcher(subName.getText()).find())
+      .filter(Predicate.not(subNameContext -> checkPassed(ctx)))
+      .flatMap(context -> methodSymbol(ctx))
       .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange()));
     return ctx;
   }
 
   private boolean checkPassed(BSLParser.ProcDeclarationContext ctx) {
-    var orderStatement = new AtomicInteger();
     return Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::getParent)
       .map(BSLParser.ProcedureContext.class::cast)
       .map(BSLParser.ProcedureContext::subCodeBlock)
       .map(BSLParser.SubCodeBlockContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
-      // FIXME: сделай этот фрагмент кода проще и лучше
-      .flatMap(context -> context.stream()
-        .filter((BSLParser.StatementContext statement) -> {
-          orderStatement.getAndIncrement();
-          if (findFirst && orderStatement.get() > 1) {
-            return false;
-          }
-          return foundLoadConditionWithReturn(statement);
-        })
-        .findFirst())
+      .flatMap(this::searchStatementWithCorrectLoadCondition)
       .isPresent();
   }
 
-  private static boolean foundLoadConditionWithReturn(BSLParser.StatementContext ctx) {
+  @NotNull
+  private Optional<BSLParser.StatementContext> searchStatementWithCorrectLoadCondition(List<? extends BSLParser.StatementContext> context) {
+    return context.stream()
+      .limit(calculateStatementLimit(context.size()))
+      .map(BSLParser.StatementContext.class::cast)
+      .filter(this::foundLoadConditionWithReturn)
+      .findFirst();
+  }
+
+  private boolean foundLoadConditionWithReturn(BSLParser.StatementContext ctx) {
     return Optional.of(ctx)
       .map(BSLParser.StatementContext::compoundStatement)
       .map(BSLParser.CompoundStatementContext::ifStatement)
@@ -119,7 +117,13 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
+  @NotNull
+  private Optional<MethodSymbol> methodSymbol(BSLParser.ProcDeclarationContext ctx) {
+    return Optional.of(documentContext.getSymbolTree())
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)));
+  }
+
+  private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
 
     return Optional.ofNullable(ifBranch.codeBlock())
       .map(codeBlockContext -> Trees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
@@ -127,7 +131,11 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .orElse(false);
   }
 
-  private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
+  private ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
     return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
+  }
+
+  private long calculateStatementLimit(int statementsSize) {
+    return findFirst ? 1 : statementsSize;
   }
 }

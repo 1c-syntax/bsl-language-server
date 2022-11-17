@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -37,22 +37,24 @@ import java.util.regex.Pattern;
 
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
-  private final DocumentContext documentContext;
-  private final List<SDBLTokenizer> queries = new ArrayList<>();
-
   /**
    * Ключевые слова для поиска потенциально запросных строк
    */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
-    "(?:[\\s\";]|^)(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
+    "(?:^|[\"\\|;][\\s\\|]*)\\s*" +
+      "(?:(?:(?:select|выбрать)[\\s\\|]+[\\w\\W]+[\\s\\|]+" +
+      "(?:как|as|из|from|где|where|соединение|join|объединить|union" +
+      "|сгруппировать|group|упорядочить|order|итоги|totals)(?:\\s|$))" +
+      "|" +
+      "(?:(?:уничтожить|drop)[\\s\\|]*.+))");
 
   private static final Pattern NON_QUERIES_START = CaseInsensitivePattern.compile(
-    "(?:^\\s*(?:(?:\\|)|(?:\"\")))");
+    "(?:^\\s*(?:\\||\"\"|\\/{2,}))");
 
   /**
    * Минимальная строка для анализа
    */
-  private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
+  private static final int MINIMAL_QUERY_STRING_LENGTH = 12;
 
   /**
    * Поиск сдвоенных кавычек
@@ -65,6 +67,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
    */
   private static final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
     "^\\s*(\")");
+
+  private final DocumentContext documentContext;
+  private final List<SDBLTokenizer> queries = new ArrayList<>();
 
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -85,23 +90,24 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       return ctx;
     }
 
-    int startLine = 0;
+    var startLine = 0;
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
       startEmptyLines = "\n".repeat(startLine - 1);
     }
 
-    boolean isQuery = false;
+    var isQuery = false;
 
     // конкатенация строк в одну
     int prevTokenLine = -1;
-    String partString = "";
+    var partString = "";
     var strings = new StringJoiner("\n");
+    var stringsBuff = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
-      // добавляем часть строки только в случае находления ее на другой строке файла
+      // добавляем часть строки только в случае нахождения ее на другой строке файла
       if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
         strings.add(partString);
         partString = "";
@@ -109,16 +115,16 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
-        String newString = getString(startLine, token);
+        var newString = getString(startLine, token);
         partString = newString.substring(partString.length());
       } else {
         partString = getString(startLine, token);
       }
 
       // проверяем подстроку на вероятность запроса
-      if (!isQuery) {
-        isQuery = QUERIES_ROOT_KEY.matcher(partString).find()
-          && !NON_QUERIES_START.matcher(partString).find();
+      if (!isQuery && !NON_QUERIES_START.matcher(partString).find()) {
+        stringsBuff.add(partString);
+        isQuery = QUERIES_ROOT_KEY.matcher(stringsBuff.toString()).find();
       }
 
       startLine = token.getLine();
@@ -187,7 +193,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var strings = new StringJoiner("");
     while (matcher.find()) {
       var quotesLineLength = matcher.group(0).length();
-      var emptyString = (" ".repeat(quotesLineLength / 2)).intern();
+      var emptyString = (" ".repeat(quotesLineLength / 2));
       strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
         + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
 

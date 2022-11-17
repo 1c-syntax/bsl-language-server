@@ -1,24 +1,16 @@
 # Using 'SELECT TOP' without 'ORDER BY' (SelectTopWithoutOrderBy)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                      Tags                       |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:-----------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`sql`<br>`suspicious`       |
-
-## Parameters 
-
-
-|        Name        |   Type    |                Description                | Default value |
-|:------------------:|:---------:|:-----------------------------------------:|:-------------:|
-| `skipSelectTopOne` | `Boolean` | `Skip 'SELECT TOP 1' if there is 'WHERE'` |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 Using the `TOP N` construct without specifying the sort order in `ORDER BY` or conditions in the `WHERE` section is fraught with unexpected results:
+
 - The order of the returned results may differ in different DBMSs
 - The order in different copies of information security will differ from the order expected by the developer
 
 According to the standard, the absence of the sentence `ORDER BY` is justified only in cases where
+
 - the algorithm for processing query results does not rely on a specific order of records
 - the result of processing the executed request is not shown to the user
 - query result - obviously one record
@@ -27,7 +19,8 @@ In the above cases, it is recommended not to add the clause `ORDER BY` to the re
 
 ### Diagnostic ignorance in code
 
-During the analysis, constructions are considered erroneous
+During the analysis, constructions are considered erroneous:
+
 - Using `TOP N` in the union regardless of the presence of `ORDER BY` because ordering occurs after the union
 - Using `TOP N` where `N> 1` if missing `ORDER BY`
 - Using `TOP 1`, if there is no `ORDER BY` and conditions in `WHERE`. This rule is disabled by default by a diagnostic option
@@ -73,22 +66,4 @@ SORT BY
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard: Ordering Query Results](https://its.1c.ru/db/v8std#content:412:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:SelectTopWithoutOrderBy-off
-// BSLLS:SelectTopWithoutOrderBy-on
-```
-
-### Parameter for config
-
-```json
-"SelectTopWithoutOrderBy": {
-    "skipSelectTopOne": true
-}
-```
+- [Standard: Ordering Query Results (RU)](https://its.1c.ru/db/v8std#content:412:hdoc)

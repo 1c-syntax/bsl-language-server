@@ -11,7 +11,7 @@ This article contains rules of diagnostics usage, creation and information about
     - [Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics test class](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
     - [Diagnostics test](#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-    - [Test of configuration method for parametrized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
+    - [Test of configuration method for parameterized diagnostics](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
     - [Quick fixes test **(Work in progress)**](#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Diagnostics resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
   - [Diagnostics test resources](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
@@ -19,13 +19,13 @@ This article contains rules of diagnostics usage, creation and information about
 
 ## Diagnostics structure
 
-Diagnostics consists of a set of files, which are described in detail in the sections below.   
+Diagnostics consists of a set of files, which are described in detail in the sections below.  
 The required set of files as part of the diagnostics at the time of this writing and the rules for their naming
 
-- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic.java `
-- Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key% ` + ` DiagnoscticTest.java `
-- Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
-- Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
+- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key%` + `Diagnosctic.java`
+- Diagnostics test class.                      The file name is generated according to the principle `%DiagnosticKey%` + `DiagnoscticTest.java`
+- Diagnostic resource file in Russian.    The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic_en.properties`
+- Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic_en.properties`
 - Resource file (fixture) test.                The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic.bsl`
 - Diagnostic description file in Russian.   The file name is formed according to the principle `%DiagnosticKey%` + `.md`
 - Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `.md`
@@ -37,20 +37,20 @@ To create necessary files in right places, should run command `gradlew newDiagno
 
 Diagnostics is implemented by adding a java class to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/main/java` directory.
 
-In the body of the file, you need to specify the package to which the class and the import block_ are added (when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _ (if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
+In the body of the file, you need to specify the package to which the class and the import block are added _(when using ide, the import list is updated automatically)_. It is necessary to ensure that **only** is imported that is necessary for implementation, everything unused should be **removed** _(if [settings](EnvironmentSetting.md) are correct, then ide will do everything automatically)_.
 
 Each diagnostic must have a `@DiagnosticMetadata`, class annotation containing diagnostic metadata. The actual content can always be obtained by examining the [file](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
-На момент написания статьи имеются следующие свойства:
+At the time of this writing, the following properties are available:
 
-- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к [статье](DiagnosticTypeAndSeverity.md).
-- Время на исправление замечания `minutesToFix` (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.
-- Набор тэгов `tag` диагностики, указывающих группы, к котором она относится. Read more about tags in the [article](DiagnosticTag.md).
-- Границы применимости `scope` (по умолчанию `ALL`, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.
-- Default diagnostic active `activatedByDefault` (default `True`). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.
-- Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. The default is `UNDEFINED`.
+- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to [article](DiagnosticTypeAndSeverity.md).
+- Time to fix issue `minutesToFix` (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.
+- A set of diagnostics tags `tag` that indicate the group to which it belongs. Read more about tags in the [article](DiagnosticTag.md).
+- Applicability limit `scope` (by default `ALL`, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.
+- Default diagnostic active `activatedByDefault` (default `True`). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.
+- Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 
-Последние два могут быть опущены.
+The last two can be omitted.
 
 Annotation example
 
@@ -68,11 +68,11 @@ Annotation example
 )
 ```
 
-Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
+Class should implement the interface `BSLDiagnostic`. If diagnostic bases on AST, that class should extends at one of classes, that implement `BSLDiagnostic` below:
 
-- для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
-- при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
-- в остальных случаях нужно использовать стратегию `визитера` и
+- for simple diagnostics (module context checking) it is worth using inheritance `AbstractVisitor` with the implementation of a single `check` method
+- if you need to analyze a visit to a node / sequence of nodes, use the `listener` strategy, you need to inherit the class from `AbstractListenerDiagnostic`
+- in other cases, you need to use the strategy `visitor` and
   - `AbstractVisitorDiagnostic` for diagnostics of 1C code
   - `AbstractSDBLVisitorDiagnostic` for diagnostics of 1C query
 
@@ -98,7 +98,11 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
-Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic
+```
+
+Diagnostic may provide so-called `quick fixes`. In order to provide quick fixes the diagnostic class must implement `QuickFixProvider` interface. See this [article](DiagnosticQuickFix.md) on adding a `quick fix` to diagnostic.
 
 Examples
 
@@ -122,13 +126,17 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
 ```
 
-После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в [статье](DiagnostcAddSettings.md).
+```java
+public class TemplateDiagnostic extends AbstractSDBLListenerDiagnostic implements QuickFixProvider
+```
 
-Ниже приведены отличия в реализации классов диагностик.
+After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the [article](DiagnostcAddSettings.md).
+
+Below are the differences in the implementation of diagnostic classes.
 
 ### Diagnostics class, implements BSLDiagnostic interface
 
-В классе необходимо определить приватное поле `diagnosticStorage` типа `DiagnosticStorage`, которое будет хранилищем обнаруженных замечаний, и приватное свойство `info` типа `DiagnosticInfo`, которое будет предоставлять доступ к данным диагностики.
+In the class, you need to define a private field `diagnosticStorage` of type `DiagnosticStorage` to store detected diagnostics, and a private property `info` of type `DiagnosticInfo`, for access to diagnostic data.
 
 ```java
  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
@@ -137,11 +145,11 @@ private final DiagnosticInfo info;
 
 In the class, you need to implement:
 
-- метод `getDiagnostics` принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний `List<Diagnostic>`
-- метод `getInfo`, возвращающий значение свойства `info`
-- метод `setInfo`, для установки значения свойства `info`
+- method `getDiagnostics` accepting the context of the file being analyzed and returning a list of detected diagnostics `List<Diagnostic>`
+- getter `getInfo`
+- setter `setInfo`
 
-Ниже приведена общая структура метода `getDiagnostics`
+Method structure `getDiagnostics`
 
 ```java
   @Override
@@ -164,7 +172,7 @@ In the class, you need to implement:
 
 ### Diagnostics class, inherits from AbstractDiagnostic
 
-Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. В классе диагностики необходимо реализовать метод `check` - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в `diagnosticStorage`.
+For simple diagnostics, you should inherit your class from the AbstractDiagnostic class. In the diagnostic class, you need to implement the `check` method. The method should analyze the context of the document and, if noted, add diagnostics to `diagnosticStorage`.
 
 Example:
 
@@ -183,11 +191,11 @@ Example:
 
 ### Diagnostics class, inherits from AbstractVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4).  Полный список существующих методов-визитеров находится в классе `BSLParserBaseVisitor`. Необходимо обратить внимание, что для упрощения добавлены `обобщенные` визитеры, например вместо реализации `visitFunction` для функции и `visitProcedure` для процедуры можно использовать `visitSub`, обобщающий работу с методами.
+In the diagnostic class, it is necessary to implement the methods of all necessary `AST visitors`, in accordance with the language grammar described in the [ BSLParser ](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4) project.  A complete list of existing visitor methods can be found in the `BSLParserBaseVisitor` class. Please note: for simplicity, `generalized` visitors have been created, for example, instead of two `visitFunction` for a function and `visitProcedure` for a procedure, you can use `visitSub`.
 
-В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище `diagnosticStorage` _(поле уже определено в абстрактном классе)_. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.
+As a parameter, an AST node of the corresponding type is passed to each method of the visitor. In the body of the method, it is necessary to analyze the node and / or its child nodes and decide if there is an error. When a problem is found, it must be added to `diagnosticStorage` _(the field is already defined in the abstract class)_. An error note can be attached to the passed node or to its child or parent nodes, to the desired block of code.
 
-Примерная структура метода
+Method structure
 
 ```java
   @Override
@@ -199,32 +207,31 @@ Example:
   }
 ```
 
-Если диагностика **не предусматривает** анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный `super-метод`.  
-Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.
+If the diagnostics **does not provide** analysis of nested nodes, then it must return the passed input node, otherwise it is necessary to call the `super-method` of the same name.   
+This rule will save application resources without making a meaningless call.
 
 Examples:
 
-- Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
-- Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
+- Diagnostics for a method or file must immediately return a value, because nested methods/files do not exist
+- Diagnostics for a condition or region block must call the `super-method`, as they exist and are used (e.g. `return super.visitSub(ctx)` for methods)
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка запросов, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4).  Полный список существующих методов-визитеров находится в классе `SDBLParserBaseVisitor`.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
-Остальные правила использования идентичны `AbstractVisitorDiagnostic`.
+The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<В разработке>**_
+_**<Work in Progress>**_
 
 ## Diagnostics test class
 
-При написании тестов используется фреймворк [JUnit5](https://junit.org/junit5/), для утверждений - библиотека [AssertJ](https://joel-costigliola.github.io/assertj/), предоставляющая [текучий/fluent-интерфейс](https://ru.wikipedia.org/wiki/Fluent_interface) "ожиданий", подобно привычной многим библиотеке [asserts](https://github.com/oscript-library/asserts) для [OneScript](http://oscript.io/).
+The tests use the [JUnit5 framework](https://junit.org/junit5/) and the [AssertJ assertion library](https://joel-costigliola.github.io/assertj/) providing a [fluent interface](https://ru.wikipedia.org/wiki/Fluent_interface) "expectations", like the familiar [asserts](https://github.com/oscript-library/asserts) library for [OneScript](http://oscript.io/).
 
-Теста реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/test/java`.
+A test is a java class added to the `com.github._1c_syntax.bsl.languageserver.diagnostics` package in the `src/test/java` directory.
 
-В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(аналогично классу реализации диагностики)_.  
-В файле необходимо создать одноименный файлу класс, унаследованый от класса `AbstractDiagnosticTest` для созданного класса диагностики.
+In the file, you need to specify the package in which the class and the import block _(similar to the diagnostic implementation class)_ are added, then you need to create a class of the same name to the file, inherited from the `AbstractDiagnosticTest` class for the created diagnostic class.
 
 Test class example
 
@@ -247,26 +254,26 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 }
 ```
 
-Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест `@Test`.
+To add a new test to the created class, you need to add a method with the `@Test` annotation.
 
-В тестовом классе обязательно должны присутствовать методы для тестирования
+The test class must contain methods for testing.
 
-- тест диагностики, самой по себе
-- тест метода конфигурирования для параметризованных диагностик
-- тест "быстрых замен" при их наличии
+- diagnostic test itself
+- test of configuration method for parameterized diagnostics
+- test "quick fixes" if available
 
 ### Diagnostics test
 
-Упрощенно, тест диагностики состоит из следующих шагов
+Simplified, the diagnostic test contains the steps
 
-- получение списка замечаний диагностики
-- проверка количества срабатываний
-- проверка местоположения срабатываний
+- getting a list of diagnostics
+- checking the number of items found
+- checking the location of detected items
 
-Первый шагом необходимо получить список замечаний диагностики вызовом метода `getDiagnostics()` _(реализован в классе `AbstractDiagnosticTest`)_. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.  
-Следующим шагом необходимо, с помощью утверждения `hasSize()` убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.  
-После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом `getRange()`, с ожидаемой областью _(стоит использовать класс `RangeHelper` для упрощения формирования контрольнх значений)_.  
-В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом `getMessage()` диагностики.
+The first step is to get the list of notes by calling the `getDiagnostics()` method _(implemented in the `AbstractDiagnosticTest` class)_. Calling this method will parse the diagnostics resource file and return a list of remarks in it.
+The next step is to use the `hasSize()` statement to make sure that the number of diagnostics is fixed as much as allowed in the fixtures.
+After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the `getRange()` method with the expected area _(you should use the `RangeHelper` class to simplify the formation of control values)_.
+If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the `getMessage()` method of diagnostics.
 
 Test method example
 
@@ -284,7 +291,7 @@ Test method example
     }
 ```
 
-Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер `util.Assertions.assertThat` и тогда пример выше будет выглядеть следующим образом:
+To reduce the amount of test code, you can use the `util.Assertions.assertThat` helper, then the example above will look like this:
 
 ```java
     @Test
@@ -293,34 +300,34 @@ Test method example
 
       assertThat(diagnostics).hasSize(2);                // checking the number of errors found
 
-      // проверка частных случаев
+      // verification of special cases
       assertThat(diagnostics, true)
         .hasRange(27, 4, 27, 29)
         .hasRange(40, 4, 40, 29);
     }
 ```
 
-### Test of configuration method for parametrized diagnostics
+### Test of configuration method for parameterized diagnostics
 
-Тесты для метода конфигурирования должны покрывать все возможные варианты настроек и их комбинаций. Тест имеет практически ту же структуру, что и тест диагностики, за исключение установки параметров диагностики перед получением спсика замечаний.  
-Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом `getDefaultDiagnosticConfiguration()`, используя информацию текущего объекта диагностики `diagnosticInstance.getInfo()`. Полученный результат представляет собой соответствие, в котором, методом `put`, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом `configure()` текущего объекта диагностики `diagnosticInstance`.
+Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test.
+Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the `getDefaultDiagnosticConfiguration()` method using the information of the current diagnostic object `diagnosticInstance.getInfo()`. The result is a map in which the `put` method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the `configure()` method of the current diagnostic object `diagnosticInstance`.
 
 Test method example
 
 ```java
     @Test
     void testConfigure() {
-        // получение настроек диагностики по умолчанию
+        // getting default diagnostic settings
         Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
 
-        configuration.put("templateParem", "newValue");     // установка параметру "templateParem" значения "newValue"
-        diagnosticInstance.configure(configuration);        // применение настроек
+        configuration.put("templateParem", "newValue");     // setting "templateParem" to "newValue"
+        diagnosticInstance.configure(configuration);        // applying settings
 
-        List<Diagnostic> diagnostics = getDiagnostics();    // получение списка замечаний диагностики
+        List<Diagnostic> diagnostics = getDiagnostics();    // getting a list of diagnostics
 
-        assertThat(diagnostics).hasSize(2);                 // проверка количества обнаруженных замечаний
+        assertThat(diagnostics).hasSize(2);                 // checking the number of detected
 
-        // проверка частных случаев
+        // special case check
         assertThat(diagnostics, true)
           .hasRange(27, 4, 27, 29)
           .hasRange(40, 4, 40, 29);
@@ -329,35 +336,33 @@ Test method example
 
 ### Quick fixes test **(Work in progress)**
 
-_**<В разработке>**_
+_**<Work in Progress>**_
 
 ## Diagnostics resources
 
-BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге `src/main/resources` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics`, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".
+BSL LS supports two languages ​​in diagnostics: Russian and English, so the diagnostics includes two resource files located in the `src/main/resources` directory in the `com.github._1c_syntax.bsl.languageserver.diagnostics` package, one for each language. The file structure is the same: it is a text file in UTF-8 encoding, each line of which contains a "Key=Value" pair.
 
-Обязательные параметры, используемые при добавлении замечания по диагностике методам `diagnosticStorage.addDiagnostic`
+Required parameters used when adding diagnostics using the `diagnosticStorage.addDiagnostic` method
 
-- diagnosticMessage - diagnostic message. Значение поддерживает параметризацию (см `String.format`)
+- diagnosticMessage - diagnostic message. Value supports parameterization (see `String.format`)
 - diagnosticName - Diagnostic name, human-readable
 
-Для `быстрых исправлений` применяется параметр `quickFixMessage`, содержащий описание действия-исправления.
+For `quick fixes`, the `quickFixMessage` parameter is used, which contains a description of the fix action.
 
 ## Diagnostics test resources
 
-В качестве фикстур используется содержимое ресурсного файла теста, расположенного в каталоге `src/test/resources` в пакете `diagnostics`. Файл должен содержать необходимые примеры кода на языке 1С _(или oscript)_.  
-Необходимо добавлять как ошиочный, так и корректный код, **помечая с помощью комментариев места, где диагностика должна зафиксировать замечания, а где нет**. Лукчше всего, если тестовые примеры будут `реальиными`, из практики, а не синтетическими, придуманными `под диагностику`.
+The fixtures are the contents of the test resource file located in the `src/test/resources` directory in the `diagnostics` package. The file must contain the necessary code examples in 1C language _(or oscript language)_. 
+
+It is necessary to add both erroneous and correct code, **marking the places of errors with comments**. It is best if the test cases are `real`, from practice, and not synthetic, invented `for diagnostics`.
 
 ## Diagnostics description
 
-Описание диагностики создается в формате [Markdown](https://ru.wikipedia.org/wiki/Markdown) в двух вариантах - для русского и английчского языков. Файлы с описанием располагаются в каталоге `docs/diagnostics` для русского языка, для английского в `docs/diagnostics`.  
-Файл в общем случае описания имеет следующую структуру
+The diagnostic description is created in the [Markdown](https://ru.wikipedia.org/wiki/Markdown) format in two versions - for Russian and English. The files are located in the `docs/diagnostics` directory for Russian, for English in `docs/en/diagnostics`. 
+The file has the structure
 
-- Заголовок, равный значению `diagnosticName` из файла ресурса диагностики соответствующего языка
-- Описание параметров диагностики при их наличии
-- Тело с описанием диагностики, указанием "почему так плохо"
-- Исключительные ситуации, когда диагностика не детектирует замечание
+- Header equal to the value of `diagnosticName` from the corresponding language's diagnostic resource file
+- A block with a description of the diagnostics, indicating "why it is so bad"
+- List of exceptions that diagnostics do not detect
 - Examples of good and bad code
-- Algorithm of diagnostics for complex
-- Ссылки на источники, если диагностика является реализацией стандарта (например на [ИТС](https://its.1c.ru)).
-
-Кроме непосредственно создания файлов описания диагностики, необходимо обновлять индекс-файлы `index.md` для каждого языка, добавляя диагностику в таблицу реализованных.
+- The diagnostic algorithm, if it is not obvious
+- If diagnostics is an implementation of the standard, then links to sources (for example, to [ITS](https://its.1c.ru)).

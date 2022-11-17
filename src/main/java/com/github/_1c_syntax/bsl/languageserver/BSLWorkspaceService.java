@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -28,7 +28,9 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.springframework.stereotype.Component;
 
@@ -44,8 +46,9 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final SymbolProvider symbolProvider;
 
   @Override
-  public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
-    return CompletableFuture.supplyAsync(() -> symbolProvider.getSymbols(params));
+  @SuppressWarnings("deprecation")
+  public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
+    return CompletableFuture.supplyAsync(() -> Either.forRight(symbolProvider.getSymbols(params)));
   }
 
   @Override

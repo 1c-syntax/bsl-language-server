@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -102,11 +102,11 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
     // then
     assertThat(documentLinks)
       .isNotEmpty()
-      .hasSize(8)
+      .hasSizeGreaterThanOrEqualTo(6)
       .allMatch(documentLink -> documentLink.getTarget()
         .startsWith(SITE_EN_URL))
       .filteredOn(documentLink -> !documentLink.getTarget().endsWith(DIAGNOSTIC_CODE))
-      .hasSize(4);
+      .hasSizeGreaterThanOrEqualTo(2);
   }
 
   @Test

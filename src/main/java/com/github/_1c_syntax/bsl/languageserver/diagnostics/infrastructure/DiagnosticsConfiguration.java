@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -31,16 +31,19 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.mdclasses.common.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
+import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.support.SupportVariant;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +51,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor
@@ -78,6 +82,7 @@ public abstract class DiagnosticsConfiguration {
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(DiagnosticInfo::getDiagnosticClass)
+        .filter(diagnostic -> AnnotationUtils.findAnnotation(diagnostic, Disabled.class) == null)
         .map(diagnosticObjectProvider::get)
         .collect(Collectors.toList());
     } else {
@@ -92,6 +97,35 @@ public abstract class DiagnosticsConfiguration {
     DocumentContext documentContext,
     DiagnosticsOptions diagnosticsOptions
   ) {
+    return checkSupport(documentContext, diagnosticsOptions)
+      && filterSubsystems(documentContext, diagnosticsOptions);
+  }
+
+  private static boolean filterSubsystems(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
+    var mdoObject = documentContext.getMdObject();
+    var subsystemsFilter = diagnosticsOptions.getSubsystemsFilter();
+
+    if (mdoObject.isEmpty()
+      || (subsystemsFilter.getInclude().isEmpty() && subsystemsFilter.getExclude().isEmpty())) {
+      return true;
+    }
+
+    var subsystemsNames = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
+      .map(AbstractMDObjectBase::getName)
+      .collect(Collectors.toList());
+
+    var include = subsystemsFilter.getInclude().isEmpty()
+      || subsystemsNames.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getInclude().contains(mdoSystemName));
+
+    var exclude = !subsystemsFilter.getExclude().isEmpty()
+      && subsystemsNames.stream()
+      .anyMatch(mdoSystemName -> subsystemsFilter.getExclude().contains(mdoSystemName));
+
+    return include && !exclude;
+  }
+
+  private static boolean checkSupport(DocumentContext documentContext, DiagnosticsOptions diagnosticsOptions) {
     var configuredMode = diagnosticsOptions.getMode();
 
     if (configuredMode == Mode.OFF) {
@@ -197,6 +231,13 @@ public abstract class DiagnosticsConfiguration {
     }
 
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
+  }
+
+  // перенести в mdClasses
+  private static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
+    return subsystems.stream()
+      .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
+      .collect(Collectors.toList());
   }
 
 }

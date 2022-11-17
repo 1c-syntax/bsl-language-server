@@ -1,9 +1,5 @@
 # "goto" statement should not be used (UsingGoto)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -40,19 +36,3 @@ EndDo;
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 * [Standard: Using Goto (RU)](https://its.1c.ru/db/v8std/content/547/hdoc/_top/)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:UsingGoto-off
-// BSLLS:UsingGoto-on
-```
-
-### Parameter for config
-
-```json
-"UsingGoto": false
-```

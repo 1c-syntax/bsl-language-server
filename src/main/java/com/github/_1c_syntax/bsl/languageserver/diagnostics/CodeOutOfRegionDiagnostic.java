@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -44,6 +44,8 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -145,7 +147,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
         && !(node instanceof TerminalNode))
       .findFirst()
       .ifPresent((Tree node) -> {
-          Range ctxRange = Ranges.create((BSLParserRuleContext) node);
+          var ctxRange = Ranges.create((BSLParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic(ctx);
@@ -182,14 +184,26 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node -> node.getParent().getParent() == ctx)
       .forEach((ParseTree child) -> {
-        if (child.getChildCount() > 1
-          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext)) {
-          Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
+        if ((child.getChildCount() > 1
+          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext))
+          && !isRaiseStatement(child)) {
+
+          var ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic((BSLParser.StatementContext) child);
           }
         }
       });
+  }
+
+  private static boolean isRaiseStatement(ParseTree child) {
+    return Optional.of(child).stream()
+      .filter(BSLParser.StatementContext.class::isInstance)
+      .map(BSLParser.StatementContext.class::cast)
+      .map(BSLParser.StatementContext::compoundStatement)
+      .filter(Objects::nonNull)
+      .map(BSLParser.CompoundStatementContext::raiseStatement)
+      .anyMatch(Objects::nonNull);
   }
 }

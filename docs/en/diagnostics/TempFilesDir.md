@@ -1,9 +1,5 @@
 # TempFilesDir() method call (TempFilesDir)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |               Tags                |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |    `standard`<br>`badpractice`    |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -13,7 +9,7 @@ If a temporary file name is generated otherwise, and the application code fails 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Wrong:
+Incorrect:
 
 ```bsl
 Catalog = TempFilesDir();
@@ -31,7 +27,7 @@ Data.Write(TempFile);
 
 To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).
 
-Wrong:
+Incorrect:
 
 ```bsl
 ArchFile = New ZipFileReader(FileName);
@@ -52,19 +48,3 @@ ArchFile.ExtractAll(ArchCatalog);
 ## Sources
 
 * Source: [Standard: Temporary Files and Directories](https://its.1c.ru/db/v8std#content:542:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:TempFilesDir-off
-// BSLLS:TempFilesDir-on
-```
-
-### Parameter for config
-
-```json
-"TempFilesDir": false
-```

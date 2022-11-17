@@ -1,9 +1,5 @@
 # Missed postfix "ClientServer" (CommonModuleNameClientServer)
 
-|     Type     | Scope | Severity |    Activated<br>by default    |    Minutes<br>to fix    |                            Tags                            |
-|:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------------:|
-| `Code smell` | `BSL` | `Major`  |             `Yes`             |           `5`           |       `standard`<br>`badpractice`<br>`unpredictable`       |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,19 +23,3 @@ FilesClientServer, CommonClientServer, UsersClientServer
 
 
 [Standard: Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:2.4)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CommonModuleNameClientServer-off
-// BSLLS:CommonModuleNameClientServer-on
-```
-
-### Parameter for config
-
-```json
-"CommonModuleNameClientServer": false
-```

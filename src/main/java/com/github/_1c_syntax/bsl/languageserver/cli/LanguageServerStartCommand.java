@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -53,7 +53,7 @@ import static picocli.CommandLine.Option;
   aliases = {"--lsp"},
   description = "LSP server mode (default)",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
 public class LanguageServerStartCommand implements Callable<Integer> {
@@ -76,8 +76,10 @@ public class LanguageServerStartCommand implements Callable<Integer> {
 
   public Integer call() {
 
-    File configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
+    var configurationFile = new File(configurationOption);
+    if (configurationFile.exists()) {
+      configuration.update(configurationFile);
+    }
 
     var languageClient = launcher.getRemoteProxy();
 

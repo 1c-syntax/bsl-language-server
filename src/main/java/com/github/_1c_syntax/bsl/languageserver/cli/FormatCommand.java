@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
@@ -41,10 +40,10 @@ import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -70,11 +69,12 @@ import static picocli.CommandLine.Option;
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
 
+  private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private final ServerContext serverContext;
   private final FormatProvider formatProvider;
 
@@ -99,18 +99,12 @@ public class FormatCommand implements Callable<Integer> {
   public Integer call() {
     serverContext.clear();
 
-    Path srcDir = Absolute.path(srcDirOption);
-    if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir);
+    String[] filePaths = COMMA_PATTERN.split(srcDirOption);
+
+    List<File> files = findFilesForFormatting(filePaths);
+
+    if (files.isEmpty()) {
       return 1;
-    }
-
-    Collection<File> files;
-
-    if(srcDir.toFile().isDirectory()) {
-      files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
-    } else {
-      files = Collections.singletonList(srcDir.toFile());
     }
 
     if (silentMode) {
@@ -132,12 +126,31 @@ public class FormatCommand implements Callable<Integer> {
     return 0;
   }
 
+  private List<File> findFilesForFormatting(String[] filePaths) {
+    List<File> files = new ArrayList<>();
+    for (String filePath : filePaths) {
+      Path srcDir = Absolute.path(filePath);
+      if (!srcDir.toFile().exists()) {
+        LOGGER.error("Source dir `{}` is not exists", srcDir);
+        continue;
+      }
+
+      if(srcDir.toFile().isDirectory()) {
+        files.addAll(FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true));
+      } else {
+        files.add(srcDir.toFile());
+      }
+    }
+
+    return files;
+  }
+
   @SneakyThrows
   private void formatFile(File file) {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final URI uri = file.toURI();
 
-    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
+    var documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();

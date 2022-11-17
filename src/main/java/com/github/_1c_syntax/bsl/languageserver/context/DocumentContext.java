@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -33,16 +33,16 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeCompu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
+import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
+import com.github._1c_syntax.bsl.support.SupportVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +52,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -65,6 +66,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -75,6 +77,9 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @RequiredArgsConstructor
 public class DocumentContext {
 
+  private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+
+  @Getter
   private final URI uri;
 
   @Nullable
@@ -89,8 +94,20 @@ public class DocumentContext {
   @Setter(onMethod = @__({@Autowired}))
   private LanguageServerConfiguration configuration;
 
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
+
+  @Getter
   private FileType fileType;
+  @Getter
   private BSLTokenizer tokenizer;
+  @Getter
+  private SymbolTree symbolTree;
+
+  @Getter
+  private boolean isComputedDataFrozen;
 
   private final ReentrantLock computeLock = new ReentrantLock();
   private final ReentrantLock diagnosticsLock = new ReentrantLock();
@@ -99,7 +116,6 @@ public class DocumentContext {
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -134,10 +150,6 @@ public class DocumentContext {
     return tokenizer.getAst();
   }
 
-  public SymbolTree getSymbolTree() {
-    return symbolTree.getOrCompute();
-  }
-
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
@@ -163,8 +175,8 @@ public class DocumentContext {
       throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
-    String startString = contentListUnboxed[start.getLine()];
-    StringBuilder sb = new StringBuilder();
+    var startString = contentListUnboxed[start.getLine()];
+    var sb = new StringBuilder();
 
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
@@ -206,14 +218,6 @@ public class DocumentContext {
     return metrics.getOrCompute();
   }
 
-  public URI getUri() {
-    return uri;
-  }
-
-  public FileType getFileType() {
-    return fileType;
-  }
-
   public ComplexityData getCognitiveComplexityData() {
     return cognitiveComplexityData.getOrCompute();
   }
@@ -235,7 +239,8 @@ public class DocumentContext {
   }
 
   public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+    return Optional
+      .ofNullable((AbstractMDObjectBase) getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -252,6 +257,14 @@ public class DocumentContext {
       .orElseGet(Collections::emptyList);
   }
 
+  public void freezeComputedData() {
+    isComputedDataFrozen = true;
+  }
+
+  public void unfreezeComputedData() {
+    isComputedDataFrozen = false;
+  }
+
   public void rebuild(String content, int version) {
     computeLock.lock();
 
@@ -264,25 +277,33 @@ public class DocumentContext {
       return;
     }
 
-    clearSecondaryData();
-    symbolTree.clear();
+    if (!isComputedDataFrozen) {
+      clearSecondaryData();
+    }
+
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
+    symbolTree = computeSymbolTree();
+
     computeLock.unlock();
   }
 
   public void clearSecondaryData() {
     computeLock.lock();
+
     content = null;
     contentList.clear();
     tokenizer = null;
-    cognitiveComplexityData.clear();
-    cyclomaticComplexityData.clear();
-    metrics.clear();
-    diagnosticIgnoranceData.clear();
     queries.clear();
     clearDependantData();
+
+    if (!isComputedDataFrozen) {
+      cognitiveComplexityData.clear();
+      cyclomaticComplexityData.clear();
+      metrics.clear();
+      diagnosticIgnoranceData.clear();
+    }
     computeLock.unlock();
   }
 
@@ -315,7 +336,7 @@ public class DocumentContext {
   }
 
   private String[] computeContentList() {
-    return getContent().split("\n", -1);
+    return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
   }
 
   private SymbolTree computeSymbolTree() {
@@ -332,18 +353,18 @@ public class DocumentContext {
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
     return cognitiveComplexityComputer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
     return cyclomaticComplexityComputer.compute();
   }
 
   private MetricStorage computeMetrics() {
-    MetricStorage metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
+    var metricsTemp = new MetricStorage();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());

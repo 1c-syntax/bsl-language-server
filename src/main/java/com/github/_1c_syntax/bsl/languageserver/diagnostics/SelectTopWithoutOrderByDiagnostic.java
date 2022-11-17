@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -31,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.Nullable;
+
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -43,8 +45,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
   scope = DiagnosticScope.BSL
 )
 public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagnostic {
-
-  private static final String TOP_ONE_STRING = "1";
 
   // for skip queries with 'TOP 1' limitation without 'ORDER BY'
   private static final boolean SKIP_SELECT_TOP_ONE = true;
@@ -62,30 +62,36 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
       ctx.union().forEach(unionCtx -> checkQuery(unionCtx.query(), false));
     } else {
       // missing order by
-      if (!Trees.nodeContains(ctx.getParent(), SDBLParser.RULE_orders)) {
+      if (!Trees.nodeContains(ctx.getParent(), SDBLParser.RULE_orderBy)) {
         checkQuery(ctx.query(), skipSelectTopOne);
       }
     }
     return super.visitSubquery(ctx);
   }
 
-  private void checkQuery(SDBLParser.QueryContext ctx, boolean canTopOne) {
+  private void checkQuery(@Nullable SDBLParser.QueryContext ctx, boolean canTopOne) {
+
+    if (ctx == null) {
+      // для битых запросов, чтобы не ронять
+      return;
+    }
 
     SDBLParser.LimitationsContext limitations = ctx.limitations();
 
-    //limitations or top is missing
+    // limitations or top is missing
     if (limitations == null || limitations.top() == null) {
       return;
     }
 
     var topCtx = ctx.limitations().top();
-    if (topCtx.DECIMAL().isEmpty()) {
+    if (topCtx.DECIMAL() == null) {
       // why? it's error!
       return;
     }
 
-    var topLimit = topCtx.DECIMAL().get(0).getText();
-    if (!(TOP_ONE_STRING.equals(topLimit) && (canTopOne || ctx.where().WHERE() != null))) {
+    var topLimit = topCtx.DECIMAL().getText();
+    boolean allowedTopNumber = "1".equals(topLimit) || "0".equals(topLimit);
+    if (!(allowedTopNumber && (canTopOne || ctx.where != null))) {
       diagnosticStorage.addDiagnostic(topCtx);
     }
   }

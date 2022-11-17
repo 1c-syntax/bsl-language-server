@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2021
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2022
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
-import com.github._1c_syntax.mdclasses.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -51,8 +51,8 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   private MDCommonModule module;
   private DocumentContext documentContext;
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_MODULE_CONTENT = "src/test/resources/diagnostics/CachedPublicDiagnostic.bsl";
   private static final String PATH_TO_MODULE_EMPTY_CONTENT = "src/test/resources/diagnostics/CachedPublicDiagnosticEmpty.bsl";
 

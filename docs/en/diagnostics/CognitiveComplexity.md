@@ -1,16 +1,5 @@
 # Cognitive complexity (CognitiveComplexity)
 
-|     Type     |        Scope        |  Severity  |    Activated<br>by default    |    Minutes<br>to fix    |      Tags       |
-|:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
-| `Code smell` |    `BSL`<br>`OS`    | `Critical` |             `Yes`             |          `15`           | `brainoverload` |
-
-## Parameters 
-
-
-|         Name          |   Type    |      Description       | Default value |
-|:---------------------:|:---------:|:----------------------:|:-------------:|
-| `complexityThreshold` | `Integer` | `Complexity threshold` |     `15`      |
-|   `checkModuleBody`   | `Boolean` |  `Check module body`   |    `true`     |
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -216,22 +205,3 @@ EndFunction
 ## Sources
 
 * [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CognitiveComplexity-off
-// BSLLS:CognitiveComplexity-on
-```
-
-### Parameter for config
-
-```json
-"CognitiveComplexity": {
-    "complexityThreshold": 15,
-    "checkModuleBody": true
-}
-```
