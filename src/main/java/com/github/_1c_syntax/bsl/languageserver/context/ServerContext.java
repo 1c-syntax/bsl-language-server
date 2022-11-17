@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
@@ -58,6 +60,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ServerContext {
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final LanguageServerConfiguration languageServerConfiguration;
+
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
@@ -75,7 +79,7 @@ public class ServerContext {
     }
 
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
-    workDoneProgressReporter.beginProgress("Finding files to populate context...");
+    workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
 
     LOGGER.debug("Finding files to populate context...");
     var files = (List<File>) FileUtils.listFiles(
@@ -89,7 +93,7 @@ public class ServerContext {
 
   public void populateContext(List<File> files) {
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(files.size(), " files");
-    workDoneProgressReporter.beginProgress("Populating context...");
+    workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
@@ -108,7 +112,7 @@ public class ServerContext {
 
     contextLock.writeLock().unlock();
 
-    workDoneProgressReporter.endProgress("Context populated.");
+    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
   }
 
@@ -201,6 +205,9 @@ public class ServerContext {
       return Configuration.create();
     }
 
+    var progress = workDoneProgressHelper.createProgress(0, "");
+    progress.beginProgress(getMessage("computeConfigurationMetadata"));
+
     Configuration configuration;
     var executorService = Executors.newCachedThreadPool();
     try {
@@ -215,6 +222,8 @@ public class ServerContext {
     } finally {
       executorService.shutdown();
     }
+
+    progress.endProgress(getMessage("computeConfigurationMetadataDone"));
 
     return configuration;
   }
@@ -241,5 +250,9 @@ public class ServerContext {
       }
       mdoRefs.remove(uri);
     }
+  }
+
+  private String getMessage(String key) {
+    return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
   }
 }

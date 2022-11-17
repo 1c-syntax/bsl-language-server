@@ -48,7 +48,6 @@ public class WorkDoneProgressHelper {
   private boolean isWorkDoneProgressSupported;
 
   public WorkDoneProgressReporter createProgress(int size, String messagePostfix) {
-
     isWorkDoneProgressSupported = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWindow)
       .map(WindowClientCapabilities::getWorkDoneProgress)
