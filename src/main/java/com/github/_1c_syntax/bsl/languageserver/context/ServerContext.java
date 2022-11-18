@@ -92,7 +92,7 @@ public class ServerContext {
   }
 
   public void populateContext(List<File> files) {
-    var workDoneProgressReporter = workDoneProgressHelper.createProgress(files.size(), " files");
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(files.size(), getMessage("populateFilesPostfix"));
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
