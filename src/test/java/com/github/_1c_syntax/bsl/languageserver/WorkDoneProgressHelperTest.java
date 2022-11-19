@@ -141,6 +141,8 @@ class WorkDoneProgressHelperTest {
 
     // then
     report.setMessage("2/2 files");
+    report.setPercentage(100);
+
     progressParams = new ProgressParams(Either.forLeft("token"), Either.forLeft(report));
 
     verify(languageClient, times(1))
