@@ -33,9 +33,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
-import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 class WorkDoneProgressHelperTest {
@@ -51,38 +51,38 @@ class WorkDoneProgressHelperTest {
 
     // when
     var progress = workDoneProgressHelper.createProgress(1, "");
+    progress.beginProgress("test");
+    progress.tick();
+    progress.endProgress("");
 
     // then
     verify(languageClient, never()).createProgress(any());
+    verify(languageClient, never()).notifyProgress(any());
   }
 
   @Test
   void createProgressWithWorkDoneSupport() {
     // given
-    var languageClient = mock(LanguageClient.class);
-    var languageClientHolder = new LanguageClientHolder();
-    languageClientHolder.connect(languageClient);
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
 
-    var clientCapabilitiesHolder = new ClientCapabilitiesHolder();
-
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
 
     // when
-    var progress = workDoneProgressHelper.createProgress(1, "");
+    workDoneProgressHelper.createProgress(1, "");
 
     // then
-    verify(languageClient, atMostOnce()).createProgress(any());
+    verify(languageClient, times(1)).createProgress(any());
   }
 
   @Test
   void beginProgress() {
     // given
-    var languageClient = mock(LanguageClient.class);
-    var languageClientHolder = new LanguageClientHolder();
-    languageClientHolder.connect(languageClient);
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
 
-    var clientCapabilitiesHolder = new ClientCapabilitiesHolder();
-
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
 
     var progress = workDoneProgressHelper.createProgress(1, "");
@@ -95,7 +95,7 @@ class WorkDoneProgressHelperTest {
     begin.setTitle("test");
     var progressParams = new ProgressParams(Either.forLeft("token"), Either.forLeft(begin));
 
-    verify(languageClient, atMostOnce())
+    verify(languageClient, times(1))
       .notifyProgress(
         refEq(
           progressParams,
@@ -107,15 +107,13 @@ class WorkDoneProgressHelperTest {
   @Test
   void tick() {
     // given
-    var languageClient = mock(LanguageClient.class);
-    var languageClientHolder = new LanguageClientHolder();
-    languageClientHolder.connect(languageClient);
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
 
-    var clientCapabilitiesHolder = new ClientCapabilitiesHolder();
-
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
 
-    var progress = workDoneProgressHelper.createProgress(2, "files");
+    var progress = workDoneProgressHelper.createProgress(2, " files");
     progress.beginProgress("test");
 
     // when
@@ -129,7 +127,7 @@ class WorkDoneProgressHelperTest {
 
     var progressParams = new ProgressParams(Either.forLeft("token"), Either.forLeft(report));
 
-    verify(languageClient, atMostOnce())
+    verify(languageClient, times(1))
       .notifyProgress(
         refEq(
           progressParams,
@@ -145,7 +143,7 @@ class WorkDoneProgressHelperTest {
     report.setMessage("2/2 files");
     progressParams = new ProgressParams(Either.forLeft("token"), Either.forLeft(report));
 
-    verify(languageClient, atMostOnce())
+    verify(languageClient, times(1))
       .notifyProgress(
         refEq(
           progressParams,
@@ -157,12 +155,10 @@ class WorkDoneProgressHelperTest {
   @Test
   void endProgress() {
     // given
-    var languageClient = mock(LanguageClient.class);
-    var languageClientHolder = new LanguageClientHolder();
-    languageClientHolder.connect(languageClient);
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
 
-    var clientCapabilitiesHolder = new ClientCapabilitiesHolder();
-
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
 
     var progress = workDoneProgressHelper.createProgress(1, "");
@@ -177,7 +173,7 @@ class WorkDoneProgressHelperTest {
     end.setMessage("end");
     var progressParams = new ProgressParams(Either.forLeft("token"), Either.forLeft(end));
 
-    verify(languageClient, atMostOnce())
+    verify(languageClient, times(1))
       .notifyProgress(
         refEq(
           progressParams,
