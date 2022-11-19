@@ -38,11 +38,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/AnalyzeCommand.java",
       "language": "JAVA",
-      "line": 137,
+      "line": 136,
       "offset": 20,
       "length": 16,
       "code": {
-        "startLine": 135,
+        "startLine": 134,
         "length": 16,
         "offset": 128,
         "surroundingCode": "    completionCandidates = ReportersKeys.class,\n    description = \"Reporter key (${COMPLETION-CANDIDATES})\")\n  private String[] reportersOptions = {};\n\n  @Option("
@@ -53,7 +53,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "MismatchedArrayReadWrite"
   },
-  "hash": "e23dc253d61398ae5cac8d40ded5019138a68b672262b608bb6c606167416647"
+  "hash": "11292e2ae064d18dbd23a5d221d71547d28dabb408ffaaab5745670fbfddb0c5"
 },{
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
@@ -362,34 +362,6 @@
     "inspectionName": "AbstractClassNeverImplemented"
   },
   "hash": "250f295ed1d99a3e34b62c1608641577216dc19ed5ba5ceeb0c3a1651a20a4ab"
-},{
-  "tool": "Code Inspection",
-  "category": "Inheritance issues",
-  "type": "Abstract class which has no concrete subclass",
-  "severity": "High",
-  "comment": "Abstract class 'ServerContext' has no concrete subclass",
-  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/ServerContext.java",
-      "language": "JAVA",
-      "line": 57,
-      "offset": 23,
-      "length": 13,
-      "code": {
-        "startLine": 55,
-        "length": 13,
-        "offset": 58,
-        "surroundingCode": "@Component\n@RequiredArgsConstructor\npublic abstract class ServerContext {\n  private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());\n  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AbstractClassNeverImplemented"
-  },
-  "hash": "ad0e7101efc0550c187172ef3eaf28d06e3a8a6d4fa974c31e7be3fef594b8e7"
 },{
   "tool": "Code Inspection",
   "category": "Inheritance issues",
