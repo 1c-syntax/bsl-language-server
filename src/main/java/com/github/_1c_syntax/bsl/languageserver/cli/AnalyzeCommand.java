@@ -45,7 +45,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -167,7 +166,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
     context.populateContext(files);
 
