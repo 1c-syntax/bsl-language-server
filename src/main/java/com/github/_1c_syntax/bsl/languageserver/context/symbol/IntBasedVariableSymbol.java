@@ -23,46 +23,26 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Реализация символа переменной, хранящая позицию в виде int.
+ */
 @Value
 @NonFinal
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
-public class IntBasedVariableSymbol implements VariableSymbol {
-
-  /**
-   * Имя переменной.
-   */
-  @EqualsAndHashCode.Include
-  String name;
-
-  /**
-   * Область доступности символа. Метод или модуль.
-   */
-  SourceDefinedSymbol scope;
-
-  /**
-   * Файл в котором располагается переменная.
-   */
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
+@ToString(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+public class IntBasedVariableSymbol extends AbstractVariableSymbol {
 
   @Getter(AccessLevel.NONE)
   int startLine;
@@ -80,37 +60,32 @@ public class IntBasedVariableSymbol implements VariableSymbol {
   @Getter(AccessLevel.NONE)
   int variableNameEndCharacter;
 
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
+  public IntBasedVariableSymbol(
+    String name,
+    SourceDefinedSymbol scope,
+    DocumentContext owner,
+    Optional<SourceDefinedSymbol> parent,
+    List<SourceDefinedSymbol> children,
+    byte kind,
+    boolean export,
+    Optional<VariableDescription> description,
+    int startLine,
+    int startCharacter,
+    int endLine,
+    int endCharacter,
+    int variableNameLine,
+    int variableNameStartCharacter,
+    int variableNameEndCharacter
+  ) {
+    super(name, scope, owner, parent, children, kind, export, description);
 
-  @Builder.Default
-  List<SourceDefinedSymbol> children = Collections.emptyList();
-
-  /**
-   * Тип переменной.
-   */
-  byte kind;
-
-  /**
-   * Признак экспортной переменной.
-   */
-  boolean export;
-
-  /**
-   * Описание переменной.
-   */
-  Optional<VariableDescription> description;
-
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Variable;
-  }
-
-  @Override
-  public VariableKind getKind() {
-    return VariableKind.values()[kind];
+    this.startLine = startLine;
+    this.startCharacter = startCharacter;
+    this.endLine = endLine;
+    this.endCharacter = endCharacter;
+    this.variableNameLine = variableNameLine;
+    this.variableNameStartCharacter = variableNameStartCharacter;
+    this.variableNameEndCharacter = variableNameEndCharacter;
   }
 
   @Override
@@ -127,16 +102,6 @@ public class IntBasedVariableSymbol implements VariableSymbol {
       variableNameLine,
       variableNameEndCharacter
     );
-  }
-
-  @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitVariable(this);
-  }
-
-  @Override
-  public Range getSelectionRange() {
-    return getVariableNameRange();
   }
 
 }

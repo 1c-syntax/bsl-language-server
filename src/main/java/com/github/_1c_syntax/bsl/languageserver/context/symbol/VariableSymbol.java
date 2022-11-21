@@ -28,18 +28,30 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
 
+/**
+ * Информация о символе, представляющем собой переменную.
+ */
 public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  /**
+   * @return Вид переменной
+   */
   VariableKind getKind();
 
+  /**
+   * @return Диапазон, в котором определено имя переменной.
+   */
   @EqualsAndHashCode.Include
   Range getVariableNameRange();
 
   @Override
   Optional<VariableDescription> getDescription();
 
+  /**
+   * @return Область объявления переменной.
+   */
   SourceDefinedSymbol getScope();
 
-  static VariableSymbolBuilder builder() {
-    return new VariableSymbolBuilder();
+  static AbstractVariableSymbol.Builder builder() {
+    return AbstractVariableSymbol.builder();
   }
 }

@@ -54,13 +54,7 @@ public class VariableSymbolCreate {
   @Fork(value = 2, warmups = 2)
   @Warmup(time = 5, iterations = 3)
   public void createVariableSymbols(Blackhole bh) {
-    var test = getVariableSymbolBuilder().build();
-
-    bh.consume(test);
-  }
-
-  private VariableSymbolBuilder getVariableSymbolBuilder() {
-    return VariableSymbol.builder()
+    var test = VariableSymbol.builder()
       .name("test")
       .owner(null)
       .range(range)
@@ -68,7 +62,9 @@ public class VariableSymbolCreate {
       .export(true)
       .kind(VariableKind.MODULE)
       .description(Optional.empty())
-      .scope(null);
+      .scope(null).build();
+
+    bh.consume(test);
   }
 
 }
