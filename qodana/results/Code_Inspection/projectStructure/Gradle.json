@@ -194,20 +194,20 @@
       "version": "1.5.1"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter:6.7.1",
-      "gradleName": "io.sentry:sentry-spring-boot-starter:6.7.1",
+      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter:6.8.0",
+      "gradleName": "io.sentry:sentry-spring-boot-starter:6.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring-boot-starter",
-      "version": "6.7.1"
+      "version": "6.8.0"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-logback:6.7.1",
-      "gradleName": "io.sentry:sentry-logback:6.7.1",
+      "ideaName": "Gradle: io.sentry:sentry-logback:6.8.0",
+      "gradleName": "io.sentry:sentry-logback:6.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-logback",
-      "version": "6.7.1"
+      "version": "6.8.0"
     },
     {
       "ideaName": "Gradle: org.projectlombok:lombok:1.18.24",
@@ -826,20 +826,20 @@
       "version": "0.13"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring:6.7.1",
-      "gradleName": "io.sentry:sentry-spring:6.7.1",
+      "ideaName": "Gradle: io.sentry:sentry-spring:6.8.0",
+      "gradleName": "io.sentry:sentry-spring:6.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring",
-      "version": "6.7.1"
+      "version": "6.8.0"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry:6.7.1",
-      "gradleName": "io.sentry:sentry:6.7.1",
+      "ideaName": "Gradle: io.sentry:sentry:6.8.0",
+      "gradleName": "io.sentry:sentry:6.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry",
-      "version": "6.7.1"
+      "version": "6.8.0"
     },
     {
       "ideaName": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
