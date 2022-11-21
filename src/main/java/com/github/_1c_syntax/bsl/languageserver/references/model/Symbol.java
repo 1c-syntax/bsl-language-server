@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import com.github._1c_syntax.bsl.languageserver.references.GenericInterner;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
