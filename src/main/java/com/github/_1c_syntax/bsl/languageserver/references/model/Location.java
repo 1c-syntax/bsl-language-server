@@ -42,9 +42,24 @@ public class Location {
    */
   URI uri;
 
+  /**
+   * Строка, в которой начинается символ.
+   */
   int startLine;
+
+  /**
+   * Столбец, в котором начинается символ.
+   */
   int startCharacter;
+
+  /**
+   * Строка, в которой заканчивается символ.
+   */
   int endLine;
+
+  /**
+   * Столбец, в котором заканчивается символ.
+   */
   int endCharacter;
 
   public Location(URI uri, Range range) {
