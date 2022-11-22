@@ -64,7 +64,7 @@ import static picocli.CommandLine.Command;
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2022|@",
   header = "@|green BSL language server|@")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackageClasses = BSLLSPLauncher.class)
 @Component
 @ConditionalOnProperty(
   prefix = "app.command.line.runner",
