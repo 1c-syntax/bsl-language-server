@@ -64,6 +64,8 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
       currentParent = placeSymbol(topLevelSymbols, currentParent, symbol);
     }
 
+    collapseChildrenCollection(moduleSymbol);
+
     return new SymbolTree(moduleSymbol);
   }
 
@@ -89,4 +91,12 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     return placeSymbol(topLevelSymbols, maybeParent.get(), symbol);
   }
 
+  private static void collapseChildrenCollection(SourceDefinedSymbol symbol) {
+    var children = symbol.getChildren();
+    if (children instanceof ArrayList) {
+      ((ArrayList<SourceDefinedSymbol>) children).trimToSize();
+    }
+
+    children.forEach(SymbolTreeComputer::collapseChildrenCollection);
+  }
 }

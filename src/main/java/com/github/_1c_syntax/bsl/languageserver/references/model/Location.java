@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -42,8 +43,37 @@ public class Location {
   URI uri;
 
   /**
-   * Диапазон, в котором расположен символ.
+   * Строка, в которой начинается символ.
    */
-  Range range;
+  int startLine;
 
+  /**
+   * Столбец, в котором начинается символ.
+   */
+  int startCharacter;
+
+  /**
+   * Строка, в которой заканчивается символ.
+   */
+  int endLine;
+
+  /**
+   * Столбец, в котором заканчивается символ.
+   */
+  int endCharacter;
+
+  public Location(URI uri, Range range) {
+    this.uri = uri;
+    var start = range.getStart();
+    var end = range.getEnd();
+    startLine = start.getLine();
+    startCharacter = start.getCharacter();
+    endLine = end.getLine();
+    endCharacter = end.getCharacter();
+
+  }
+  
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
 }
