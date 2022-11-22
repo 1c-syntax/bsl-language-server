@@ -218,20 +218,20 @@
       "version": "6.8.0"
     },
     {
-      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.29",
-      "gradleName": "org.openjdk.jmh:jmh-generator-bytecode:1.29",
+      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.35",
+      "gradleName": "org.openjdk.jmh:jmh-generator-bytecode:1.35",
       "unresolved": false,
       "groupId": "org.openjdk.jmh",
       "artifactId": "jmh-generator-bytecode",
-      "version": "1.29"
+      "version": "1.35"
     },
     {
-      "ideaName": "Gradle: org.openjdk.jmh:jmh-core:1.29",
-      "gradleName": "org.openjdk.jmh:jmh-core:1.29",
+      "ideaName": "Gradle: org.openjdk.jmh:jmh-core:1.35",
+      "gradleName": "org.openjdk.jmh:jmh-core:1.35",
       "unresolved": false,
       "groupId": "org.openjdk.jmh",
       "artifactId": "jmh-core",
-      "version": "1.29"
+      "version": "1.35"
     },
     {
       "ideaName": "Gradle: org.projectlombok:lombok:1.18.24",
@@ -746,28 +746,28 @@
       "version": "6.8.0"
     },
     {
-      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-asm:1.29",
-      "gradleName": "org.openjdk.jmh:jmh-generator-asm:1.29",
+      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-asm:1.35",
+      "gradleName": "org.openjdk.jmh:jmh-generator-asm:1.35",
       "unresolved": false,
       "groupId": "org.openjdk.jmh",
       "artifactId": "jmh-generator-asm",
-      "version": "1.29"
+      "version": "1.35"
     },
     {
-      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-reflection:1.29",
-      "gradleName": "org.openjdk.jmh:jmh-generator-reflection:1.29",
+      "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-reflection:1.35",
+      "gradleName": "org.openjdk.jmh:jmh-generator-reflection:1.35",
       "unresolved": false,
       "groupId": "org.openjdk.jmh",
       "artifactId": "jmh-generator-reflection",
-      "version": "1.29"
+      "version": "1.35"
     },
     {
-      "ideaName": "Gradle: net.sf.jopt-simple:jopt-simple:4.6",
-      "gradleName": "net.sf.jopt-simple:jopt-simple:4.6",
+      "ideaName": "Gradle: net.sf.jopt-simple:jopt-simple:5.0.4",
+      "gradleName": "net.sf.jopt-simple:jopt-simple:5.0.4",
       "unresolved": false,
       "groupId": "net.sf.jopt-simple",
       "artifactId": "jopt-simple",
-      "version": "4.6"
+      "version": "5.0.4"
     },
     {
       "ideaName": "Gradle: org.apache.commons:commons-math3:3.2",
