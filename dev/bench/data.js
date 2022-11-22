@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1669112892304,
+  "lastUpdate": 1669117635564,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -20367,6 +20367,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0589912805728936",
             "extra": "mean: 48.793240785598755 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "6c493fb2e2c234e69a2312417848548454b1832f",
+          "message": "Безопасное указание базового каталога\n\nБольше для подавления ругани от сонара/сонарлинта, чем для реальной пользы.",
+          "timestamp": "2022-11-22T14:37:39+03:00",
+          "tree_id": "f635c759754dcfa83c3a2a6317c93099f317b748",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6c493fb2e2c234e69a2312417848548454b1832f"
+        },
+        "date": 1669117628905,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 49.052636543909706,
+            "unit": "sec",
+            "range": "stddev: 1.6214295972706527",
+            "extra": "mean: 49.052636543909706 sec\nrounds: 3"
           }
         ]
       }
