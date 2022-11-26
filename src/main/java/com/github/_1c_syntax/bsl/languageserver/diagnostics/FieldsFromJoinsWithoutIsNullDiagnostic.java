@@ -64,15 +64,16 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   // для оптимизации ищем вверх не до начального узла всего дерева, а до узла, в котором искать уже нет смысла
 
   private static final Integer EXCLUDED_TOP_RULE_FOR_SELECT = SDBLParser.RULE_selectedField;
-  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_SELECT, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_SELECT,
+    SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
 
   private static final Integer EXCLUDED_TOP_RULE_FOR_WHERE = SDBLParser.RULE_query;
-  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_WHERE, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_WHERE,
+    SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
 
   private static final Integer EXCLUDED_TOP_RULE_FOR_JOIN = SDBLParser.RULE_joinPart;
-  private static final Collection<Integer> JOIN_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_JOIN, SDBLParser.RULE_builtInFunctions);
+  private static final Collection<Integer> JOIN_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_JOIN,
+    SDBLParser.RULE_builtInFunctions);
 
   public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(SDBLParser.RULE_predicate,
     SDBLParser.RULE_query);
