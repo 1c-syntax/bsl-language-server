@@ -52,6 +52,7 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 69, 2, 14)
       .hasMessageOnRange(getMessageUnused("Запрос"), 82, 2, 8)
       .hasMessageOnRange(getMessageUnused("Запрос"), 95, 2, 8)
+      .hasMessageOnRange(getMessage("ТекстЗапроса"), 99, 2, 14)
       .hasMessageOnRange(getMessageUnused("ТекстЗапроса"), 101, 6, 18)
       .hasMessageOnRange(getMessage("Файл"), 111, 4, 8)
       .hasMessageOnRange(getMessageUnused("Файл"), 116, 4, 8)
@@ -73,10 +74,11 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
       .hasMessageOnRange(getMessage("ТекстЗапроса"), 311, 4, 16)
       .hasMessageOnRange(getMessageUnused("ТекстЗапроса"), 314, 4, 16)
       .hasMessageOnRange(getMessage("ЗначениеМодуля"), 318, 4, 18)
-//      .hasMessageOnRange(getMessageUnused("Значение"), 328, 8, 16) // TODO не должно быть ошибкой
-      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 332, 0, 18)
-      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 336, 0, 14)
-      .hasSize(34);
+      .hasMessageOnRange(getMessageUnused("Значение"), 328, 8, 16)
+      .hasMessageOnRange(getMessage("Элем22"), 333, 16, 22)
+      .hasMessageOnRange(getMessage("ТекстЗапросаВБлоке"), 339, 0, 18)
+      .hasMessageOnRange(getMessage("ЗначениеМодуля"), 343, 0, 14)
+      .hasSize(37);
   }
 
   String getMessage(String name){

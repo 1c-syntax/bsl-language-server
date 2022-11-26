@@ -215,10 +215,14 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private boolean isLostVariable(VarData varData) {
     final RuleNode defNode = findDefNode(varData);
 
-    if (isForInside(defNode)){
-      return false;
-    }
-    if (varData.isFinished){
+    final var codeBlockForLoopIndex = codeBlockForLoopIndex(defNode);
+    if (codeBlockForLoopIndex.isPresent()) {
+      // пропускаю неиспользуемый итератор или счетчик цикла, т.е. есть существующее правило
+      if (Ranges.compare(varData.defRange, varData.rewriteRange) == 0 && varData.references.isEmpty()
+        || !Ranges.containsRange(Ranges.create(codeBlockForLoopIndex.get()), varData.rewriteRange)) {
+        return false;
+      }
+    } else if (varData.isFinished()){
       return true;
     }
 
@@ -232,6 +236,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     var defCodeBlock = defCodeBlockOpt.orElseThrow();
 
     var rewriteNode = rewriteNodeInsideDefCodeBlockOpt.get();
+
     var rewriteStatement = getRootStatement(rewriteNode);
     var rewriteCodeBlock = getCodeBlock(rewriteStatement).orElseThrow();
 
@@ -276,8 +281,15 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       methodContextsByMethodName.get(MODULE_SCOPE_NAME));
   }
 
-  private static  boolean isForInside(RuleNode defNode) {
-    return defNode instanceof BSLParser.ForStatementContext || defNode instanceof BSLParser.ForEachStatementContext;
+  private static Optional<BSLParser.CodeBlockContext> codeBlockForLoopIndex(RuleNode defNode) {
+    if (defNode instanceof BSLParser.ForStatementContext){
+      return Optional.of(((BSLParser.ForStatementContext) defNode)
+        .codeBlock());
+    } else if (defNode instanceof BSLParser.ForEachStatementContext){
+      return Optional.of(((BSLParser.ForEachStatementContext) defNode)
+        .codeBlock());
+    }
+    return Optional.empty();
   }
 
   private static Optional<BSLParser.CodeBlockContext> getCodeBlock(RuleNode context) {
@@ -327,10 +339,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   private static boolean isLostVariableInDifferentBlocks(VarData varData,
                                                          BSLParser.StatementContext rewriteStatement,
                                                          BSLParser.CodeBlockContext rewriteCodeBlock) {
-    if (varData.references.isEmpty()) {
-      return false;
-    }
-    if (isRewriteAlreadyContainsFirstReference(varData, rewriteStatement)) {
+    if (!varData.references.isEmpty() && isRewriteAlreadyContainsFirstReference(varData, rewriteStatement)) {
       return false;
     }
     return !hasReferenceOutsideRewriteBlock(varData.references, rewriteCodeBlock);
