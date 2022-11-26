@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.SymbolKind;
 
 /**
  * Интерфейс построителя контента для всплывающего окна на основе символа.
@@ -41,7 +42,7 @@ public interface MarkupContentBuilder<T extends Symbol> {
   /**
    * Тип символа, на основе которого работает данный построитель.
    *
-   * @return тип символа (см. {@link Symbol})
+   * @return тип символа.
    */
-  Class<T> getType();
+  SymbolKind getSymbolKind();
 }

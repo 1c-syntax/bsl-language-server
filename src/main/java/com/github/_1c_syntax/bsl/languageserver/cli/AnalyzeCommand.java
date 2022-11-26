@@ -45,7 +45,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -84,7 +83,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-a", "--analyze"},
   description = "Run analysis and get diagnostic info",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2022|@")
 @Component
 @RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {
@@ -167,7 +166,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
     context.populateContext(files);
 

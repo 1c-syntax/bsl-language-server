@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
@@ -32,7 +35,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
@@ -40,21 +43,25 @@ import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public abstract class ServerContext {
+public class ServerContext {
+  private final ObjectProvider<DocumentContext> documentContextProvider;
+  private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final LanguageServerConfiguration languageServerConfiguration;
+
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
@@ -70,29 +77,42 @@ public abstract class ServerContext {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
     }
+
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
+    workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
+
     LOGGER.debug("Finding files to populate context...");
-    Collection<File> files = FileUtils.listFiles(
+    var files = (List<File>) FileUtils.listFiles(
       configurationRoot.toFile(),
       new String[]{"bsl", "os"},
       true
     );
+    workDoneProgressReporter.endProgress("");
     populateContext(files);
   }
 
-  public void populateContext(Collection<File> uris) {
+  public void populateContext(List<File> files) {
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(files.size(), getMessage("populateFilesPostfix"));
+    workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
+
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
-    uris.parallelStream().forEach((File file) -> {
+    files.parallelStream().forEach((File file) -> {
+
+      workDoneProgressReporter.tick();
+
       var documentContext = getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = createDocumentContext(file, 0);
+        documentContext = createDocumentContext(file);
         documentContext.freezeComputedData();
         documentContext.clearSecondaryData();
       }
     });
 
     contextLock.writeLock().unlock();
+
+    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
   }
 
@@ -146,7 +166,7 @@ public abstract class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
     removeDocumentMdoRefByUri(absoluteURI);
     documents.remove(absoluteURI);
   }
@@ -162,19 +182,16 @@ public abstract class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
-  @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI);
-
   @SneakyThrows
-  private DocumentContext createDocumentContext(File file, int version) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return createDocumentContext(file.toURI(), content, version);
+  private DocumentContext createDocumentContext(File file) {
+    var content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return createDocumentContext(file.toURI(), content, 0);
   }
 
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
 
-    var documentContext = lookupDocumentContext(absoluteURI);
+    var documentContext = documentContextProvider.getObject(absoluteURI);
     documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);
@@ -188,10 +205,13 @@ public abstract class ServerContext {
       return Configuration.create();
     }
 
+    var progress = workDoneProgressHelper.createProgress(0, "");
+    progress.beginProgress(getMessage("computeConfigurationMetadata"));
+
     Configuration configuration;
-    var customThreadPool = new ForkJoinPool();
+    var executorService = Executors.newCachedThreadPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+      configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
@@ -200,8 +220,10 @@ public abstract class ServerContext {
       configuration = Configuration.create();
       Thread.currentThread().interrupt();
     } finally {
-      customThreadPool.shutdown();
+      executorService.shutdown();
     }
+
+    progress.endProgress(getMessage("computeConfigurationMetadataDone"));
 
     return configuration;
   }
@@ -228,5 +250,9 @@ public abstract class ServerContext {
       }
       mdoRefs.remove(uri);
     }
+  }
+
+  private String getMessage(String key) {
+    return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
   }
 }
