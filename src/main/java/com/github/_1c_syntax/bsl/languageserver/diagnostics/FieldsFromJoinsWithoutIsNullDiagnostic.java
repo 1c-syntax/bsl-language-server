@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Disabled;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -47,7 +46,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Disabled
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
@@ -61,11 +59,15 @@ import java.util.stream.Stream;
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
+  // схема расчета - находится поле из соединения,
+  // далее идет поиск вверх по родительским узлам для проверки вхождения в разных вариациях ЕСТЬNULL или ЕСТЬ NULL
+  // для оптимизации ищем вверх не до начального узла всего дерева, а до узла, в котором искать уже нет смысла
+
   private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
   private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions,
     SDBLParser.RULE_isNullPredicate);
 
-  private static final Integer WHERE_ROOT = SDBLParser.RULE_predicate;
+  private static final Integer WHERE_ROOT = SDBLParser.RULE_query;
   private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, SDBLParser.RULE_builtInFunctions,
     SDBLParser.RULE_isNullPredicate);
 
