@@ -111,6 +111,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     type = String.class
   )
   private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
+  @DiagnosticParameter(
+    type = Boolean.class
+  )
+  private Boolean caseInsensitive = false;
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -123,6 +127,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
       exceptions = exceptions + delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
+    }
+
+    if (caseInsensitive) {
+      exceptions = exceptions.toLowerCase();
     }
 
     return Arrays.stream(exceptions.split(delimiter))
@@ -150,9 +158,16 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
-          String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
+          String[] camelCaseSplitWords = StringUtils.splitByCharacterTypeCamelCase(curText);
 
-          Arrays.stream(camelCaseSplitedWords)
+          if (caseInsensitive) {
+            camelCaseSplitWords = Arrays.stream(camelCaseSplitWords)
+              .map(String::toLowerCase)
+              .toArray(String[]::new);
+          }
+
+          Arrays.stream(camelCaseSplitWords)
+            .distinct()
             .filter(Predicate.not(String::isBlank))
             .filter(element -> element.length() >= minWordLength)
             .filter(Predicate.not(wordsToIgnore::contains))

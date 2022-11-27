@@ -1766,6 +1766,12 @@
                     "default": 3,
                     "type": "integer",
                     "title": "Minimum length for checked words"
+                },
+                "caseInsensitive": {
+                    "description": "Excluded words are case-insensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Excluded words are case-insensitive"
                 }
             },
             "$id": "#/definitions/Typo"

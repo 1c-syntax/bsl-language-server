@@ -84,6 +84,22 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
   }
 
   @Test
+  void testConfigureUserWordsToIgnoreCaseInsensitive() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("userWordsToIgnore", "ваРинаты");
+    configuration.put("caseInsensitive", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(8, 13, 8, 18);
+  }
+
+  @Test
   void testConfigureUserWordsToIgnoreWithSpaces() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
