@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -68,6 +69,15 @@ import java.util.stream.Stream;
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.UNPREDICTABLE,
     DiagnosticTag.BADPRACTICE
+  },
+  // TODO сделать флаг для управления работой в модулях объектов и форм? ведь в них могут быть FP
+  modules = {
+    ModuleType.CommandModule,
+    ModuleType.CommonModule,
+    ModuleType.ManagerModule,
+    ModuleType.ValueManagerModule,
+    ModuleType.SessionModule,
+    ModuleType.UNKNOWN
   }
 )
 
@@ -218,8 +228,9 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     final var codeBlockForLoopIndex = codeBlockForLoopIndex(defNode);
     if (codeBlockForLoopIndex.isPresent()) {
       // пропускаю неиспользуемый итератор или счетчик цикла, т.е. есть существующее правило
-      if (Ranges.compare(varData.defRange, varData.rewriteRange) == 0 && varData.references.isEmpty()
-        || !Ranges.containsRange(Ranges.create(codeBlockForLoopIndex.get()), varData.rewriteRange)) {
+      final var isSameLoop = Ranges.compare(varData.defRange, varData.rewriteRange) == 0 && varData.references.isEmpty();
+      final var isInnerLoop = Ranges.containsRange(Ranges.create(codeBlockForLoopIndex.get()), varData.rewriteRange);
+      if (isSameLoop || !isInnerLoop) {
         return false;
       }
     } else if (varData.isFinished()){
