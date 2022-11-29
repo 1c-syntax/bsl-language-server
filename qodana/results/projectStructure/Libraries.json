@@ -151,15 +151,15 @@
       ]
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.8.0",
+      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.9.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.8.0/b0c923f2ac57f373a672fad1a256698801f9ce12/sentry-spring-boot-starter-6.8.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.9.0/b4fe9e0bda991a1b2d739b26a86fb9b020becc6b/sentry-spring-boot-starter-6.9.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: io.sentry:sentry-logback:6.8.0",
+      "name": "Gradle: io.sentry:sentry-logback:6.9.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.8.0/f4686833722456099ea6bac46e6bf2d404fe092c/sentry-logback-6.8.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.9.0/36d5e044463397cc47a34c14c8328ca9d1603574/sentry-logback-6.9.0.jar!/"
       ]
     },
     {
@@ -535,15 +535,15 @@
       ]
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring:6.8.0",
+      "name": "Gradle: io.sentry:sentry-spring:6.9.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.8.0/fb0e6f656a105e2fca8c7d6d49b7f0e4efd236d6/sentry-spring-6.8.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.9.0/8f95d2fb7b763e8edb97440690bcc5f2d161a5fa/sentry-spring-6.9.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: io.sentry:sentry:6.8.0",
+      "name": "Gradle: io.sentry:sentry:6.9.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.8.0/e59c05480099f6d3094c518c2e6095d03a1eb73e/sentry-6.8.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.9.0/4286cf15d00f3e66280a28f0d407fb8a244300b4/sentry-6.9.0.jar!/"
       ]
     },
     {
