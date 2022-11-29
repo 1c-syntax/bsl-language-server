@@ -28,7 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -42,6 +46,7 @@ public class AnalyzeProjectOnStart {
   private final WorkDoneProgressHelper workDoneProgressHelper;
 
   @EventListener
+  @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
       return;
@@ -53,16 +58,28 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
-    documentContexts.forEach((DocumentContext documentContext) -> {
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
 
-      progress.tick();
+    try {
+      executorService.submit(() ->
+        documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
+          progress.tick();
 
-      serverContext.rebuildDocument(documentContext);
-      diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+          serverContext.rebuildDocument(documentContext);
+          diagnosticProvider.computeAndPublishDiagnostics(documentContext);
 
-      serverContext.tryClearDocument(documentContext);
+          serverContext.tryClearDocument(documentContext);
+        })
+      ).get();
 
-    });
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Can't analyze project on start", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Interrupted while analyzing project on start", e);
+    } finally {
+      executorService.shutdown();
+    }
 
     progress.endProgress(getMessage("projectAnalyzed"));
   }

@@ -50,7 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -245,7 +245,7 @@ public class ServerContext {
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
     Configuration configuration;
-    var executorService = Executors.newCachedThreadPool();
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
     try {
       configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
     } catch (ExecutionException e) {
