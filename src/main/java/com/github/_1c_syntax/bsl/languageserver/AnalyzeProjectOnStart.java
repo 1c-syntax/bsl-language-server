@@ -25,10 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
+ */
 @Component
 @RequiredArgsConstructor
 public class AnalyzeProjectOnStart {
@@ -46,8 +50,8 @@ public class AnalyzeProjectOnStart {
     var serverContext = event.getSource();
 
     var documentContexts = serverContext.getDocuments().values();
-    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), " files");
-    progress.beginProgress("Analyzing project");
+    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
+    progress.beginProgress(getMessage("analyzeProject"));
 
     documentContexts.forEach((DocumentContext documentContext) -> {
 
@@ -60,6 +64,11 @@ public class AnalyzeProjectOnStart {
 
     });
 
-    progress.endProgress("Project analyzed");
+    progress.endProgress(getMessage("projectAnalyzed"));
   }
+
+  private String getMessage(String key) {
+    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
+  }
+
 }
