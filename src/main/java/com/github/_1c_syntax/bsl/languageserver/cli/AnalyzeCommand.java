@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +42,10 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -202,23 +201,21 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   @SneakyThrows
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
-    var textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-
-    var documentContext = context.addDocument(file.toURI(), textDocumentContent, 1);
+    var documentContext = context.addDocument(file.toURI());
+    context.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
-    var mdoRef = "";
-    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
-    if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
-    }
+    var mdoRef = documentContext.getMdObject()
+      .map(AbstractMDObjectBase::getMdoReference)
+      .map(MdoReference::getMdoRef)
+      .orElse("");
 
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
-    documentContext.clearSecondaryData();
+    context.tryClearDocument(documentContext);
 
     return fileInfo;
   }

@@ -87,7 +87,7 @@ class BSLLSPLauncherTest {
     }
 
     // then
-    // main-method should runs without exceptions
+    // main-method should run without exceptions
     assertThat(outContent.toString()).isEmpty();
     // assertThat(errContent.toString()).contains("100%");
     assertThat(errContent.toString()).doesNotContain("ERROR");

@@ -93,9 +93,6 @@ public class DocumentContext {
   @Getter
   private int version;
 
-  @Getter
-  private boolean withContent;
-
   @Setter(onMethod = @__({@Autowired}))
   private ServerContext context;
   @Setter(onMethod = @__({@Autowired}))
@@ -274,12 +271,12 @@ public class DocumentContext {
     isComputedDataFrozen = false;
   }
 
-  public void rebuild(String content, int version) {
+  protected void rebuild(String content, int version) {
     computeLock.lock();
 
     boolean versionMatches = version == this.version && version != 0;
 
-    if (versionMatches && withContent) {
+    if (versionMatches && (this.content != null)) {
       clearDependantData();
       computeLock.unlock();
       return;
@@ -293,12 +290,11 @@ public class DocumentContext {
     tokenizer = new BSLTokenizer(content);
     this.version = version;
     symbolTree = computeSymbolTree();
-    withContent = true;
 
     computeLock.unlock();
   }
 
-  public void rebuild() {
+  protected void rebuild() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
@@ -307,10 +303,9 @@ public class DocumentContext {
     }
   }
 
-  public void clearSecondaryData() {
+  protected void clearSecondaryData() {
     computeLock.lock();
 
-    withContent = false;
     content = null;
     contentList.clear();
     tokenizer = null;

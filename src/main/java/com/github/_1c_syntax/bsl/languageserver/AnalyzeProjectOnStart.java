@@ -53,14 +53,10 @@ public class AnalyzeProjectOnStart {
 
       progress.tick();
 
-      var withContent = documentContext.isWithContent();
-      if (!withContent) {
-        documentContext.rebuild();
-      }
+      serverContext.rebuildDocument(documentContext);
       diagnosticProvider.computeAndPublishDiagnostics(documentContext);
-      if (!withContent) {
-        documentContext.clearSecondaryData();
-      }
+
+      serverContext.tryClearDocument(documentContext);
 
     });
 

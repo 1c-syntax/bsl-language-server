@@ -37,7 +37,6 @@ import org.eclipse.lsp4j.TextEdit;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -147,13 +146,13 @@ public class FormatCommand implements Callable<Integer> {
 
   @SneakyThrows
   private void formatFile(File file) {
-    String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    final URI uri = file.toURI();
+    var uri = file.toURI();
 
-    var documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
 
-    DocumentFormattingParams params = new DocumentFormattingParams();
-    FormattingOptions options = new FormattingOptions();
+    var params = new DocumentFormattingParams();
+    var options = new FormattingOptions();
     options.setInsertSpaces(false);
 
     params.setOptions(options);
