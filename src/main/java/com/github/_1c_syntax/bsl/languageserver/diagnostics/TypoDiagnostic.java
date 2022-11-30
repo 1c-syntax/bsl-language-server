@@ -160,14 +160,15 @@ public class TypoDiagnostic extends AbstractDiagnostic {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
           String[] camelCaseSplitWords = StringUtils.splitByCharacterTypeCamelCase(curText);
 
-          if (caseInsensitive) {
-            camelCaseSplitWords = Arrays.stream(camelCaseSplitWords)
-              .map(String::toLowerCase)
-              .toArray(String[]::new);
-          }
+        var camelCaseSplitWordsStream = Arrays.stream(camelCaseSplitWords);
 
-          Arrays.stream(camelCaseSplitWords)
+        if (caseInsensitive) {
+          camelCaseSplitWordsStream = camelCaseSplitWordsStream
             .distinct()
+            .map(String::toLowerCase);
+        }
+
+        camelCaseSplitWordsStream
             .filter(Predicate.not(String::isBlank))
             .filter(element -> element.length() >= minWordLength)
             .filter(Predicate.not(wordsToIgnore::contains))
