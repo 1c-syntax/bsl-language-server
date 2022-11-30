@@ -43,12 +43,17 @@ public class AnalyzeProjectOnStart {
 
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
+  private final LanguageClientHolder languageClientHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
 
   @EventListener
   @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
+      return;
+    }
+
+    if (!languageClientHolder.isConnected()) {
       return;
     }
 
