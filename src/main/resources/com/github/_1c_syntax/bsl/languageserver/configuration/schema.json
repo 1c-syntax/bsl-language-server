@@ -670,6 +670,22 @@
                             }
                         }
                     }
+                },
+                "analyzeOnStart": {
+                    "$id": "#/properties/analyzeOnStart",
+                    "type": "boolean",
+                    "title": "Analyze project and push computed diagnostics to client on server start.",
+                    "default": false,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Analyze project on start."
+                        },
+                        {
+                            "const": false,
+                            "description": "Don't analyze project on start. (default)."
+                        }
+                    ]
                 }
             }
         },
