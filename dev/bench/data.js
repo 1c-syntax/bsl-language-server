@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1669896890484,
+  "lastUpdate": 1669999347848,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -20522,6 +20522,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3914212812361344",
             "extra": "mean: 48.785829385121666 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ebc311d4b01993e6734f701ea194a49d7e4841bf",
+          "message": "Merge pull request #2952 from ovcharenko-di/issue/2951\n\nИсправление FP QueryToMissingMetadata (поиск метаданных без учета регистра)",
+          "timestamp": "2022-12-02T19:35:18+03:00",
+          "tree_id": "39d8a11716a68c6ad5fc73d2924dbd16b59feb17",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ebc311d4b01993e6734f701ea194a49d7e4841bf"
+        },
+        "date": 1669999341564,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 47.972781817118324,
+            "unit": "sec",
+            "range": "stddev: 0.558944227931541",
+            "extra": "mean: 47.972781817118324 sec\nrounds: 3"
           }
         ]
       }
