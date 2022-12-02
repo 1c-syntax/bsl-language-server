@@ -45,6 +45,9 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
+      .hasSize(2);
+
+    assertThat(diagnostics, true)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УстаревшееИмяРегистра\" в запросе",
         4, 18, 55)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УдалитьИмяРегистра\" в запросе",
