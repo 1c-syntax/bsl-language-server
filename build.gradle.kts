@@ -9,7 +9,7 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.5.0.2730"
-    id("io.freefair.lombok") version "6.5.1"
+    id("io.freefair.lombok") version "6.6"
     id("io.freefair.javadoc-links") version "6.5.1"
     id("io.freefair.javadoc-utf-8") version "6.6"
     id("io.freefair.aspectj.post-compile-weaving") version "6.5.1"
