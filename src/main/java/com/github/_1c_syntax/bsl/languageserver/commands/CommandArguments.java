@@ -19,22 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.commands;
 
-import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.net.URI;
 
-/**
- * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
- */
-@Value
-@NonFinal
-public class DefaultCodeLensData implements CodeLensData {
-  @JsonAdapter(URITypeAdapter.class)
-  URI uri;
-  String id;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
+public interface CommandArguments {
+  URI getUri();
+  String getId();
 }

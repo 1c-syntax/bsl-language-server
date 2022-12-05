@@ -19,33 +19,51 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
+package com.github._1c_syntax.bsl.languageserver.databind;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
-import org.springframework.stereotype.Component;
+import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
+import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Преднастроенный экземпляр {@link ObjectMapper} для десериализации {@link CodeLensData}.
- */
-@Component
-public class CodeLensDataObjectMapper extends ObjectMapper {
+@Configuration
+public class ObjectMapperConfiguration  {
 
-  private static final long serialVersionUID = 8904131809077953315L;
+  @Bean
+  public ObjectMapper objectMapper(
+    List<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
+    List<CommandSupplier<? extends CommandArguments>> commandSuppliers
+  ) {
 
-  public CodeLensDataObjectMapper(List<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers) {
-    super();
-
+    var namedTypes = new ArrayList<NamedType>();
     codeLensResolvers.stream()
-      .map(CodeLensDataObjectMapper::toNamedType)
-      .forEach(this::registerSubtypes);
+      .map(ObjectMapperConfiguration::toNamedType)
+      .collect(Collectors.toCollection(() -> namedTypes));
+    commandSuppliers.stream()
+      .map(ObjectMapperConfiguration::toNamedType)
+      .collect(Collectors.toCollection(() -> namedTypes));
+
+    var objectMapperBuilder = JsonMapper.builder();
+
+    namedTypes.forEach(objectMapperBuilder::registerSubtypes);
+
+    return objectMapperBuilder.build();
   }
 
   private static NamedType toNamedType(CodeLensSupplier<? extends CodeLensData> codeLensSupplier) {
     return new NamedType(codeLensSupplier.getCodeLensDataClass(), codeLensSupplier.getId());
+  }
+
+  private static NamedType toNamedType(CommandSupplier<? extends CommandArguments> commandSupplier) {
+    return new NamedType(commandSupplier.getCommandArgumentsClass(), commandSupplier.getId());
   }
 }

@@ -19,11 +19,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-/**
- * Сериализация и десериализация классов пакета
- * {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
- */
-@ParametersAreNonnullByDefault
-package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
+package com.github._1c_syntax.bsl.languageserver.commands;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+
+import java.net.URI;
+
+@Value
+@NonFinal
+public class DefaultCommandArguments implements CommandArguments {
+  @JsonAdapter(URITypeAdapter.class)
+  URI uri;
+  String id;
+
+}

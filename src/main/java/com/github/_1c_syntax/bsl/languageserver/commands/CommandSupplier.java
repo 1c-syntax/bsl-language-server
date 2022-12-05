@@ -19,22 +19,35 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.commands;
 
-import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Command;
 
-import java.net.URI;
+import java.beans.Introspector;
+import java.util.Optional;
 
-/**
- * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
- */
-@Value
-@NonFinal
-public class DefaultCodeLensData implements CodeLensData {
-  @JsonAdapter(URITypeAdapter.class)
-  URI uri;
-  String id;
+public interface CommandSupplier<T extends CommandArguments> {
+
+  default String getId() {
+    String simpleName = getClass().getSimpleName();
+    if (simpleName.endsWith("CommandSupplier")) {
+      simpleName = simpleName.substring(0, simpleName.length() - "CommandSupplier".length());
+      simpleName = Introspector.decapitalize(simpleName);
+    }
+
+    return simpleName;
+  }
+
+  default Command createCommand(String title) {
+    return new Command(title, getId());
+  }
+
+  Class<T> getCommandArgumentsClass();
+
+  Optional<Object> execute(T arguments);
+  
+  default boolean refreshCodeLensesAfterExecuteCommand() {
+    return false;
+  }
+
 }
