@@ -208,6 +208,7 @@
 			<ScheduledJob>РегламентноеЗаданиеНесуществующийМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПриватныйМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПредопределенноеНесколькоПараметров</ScheduledJob>
+			<ExternalDataSource>ВнешнийИсточникДанных1</ExternalDataSource>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

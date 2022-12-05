@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+	<Table uuid="ed664505-7033-43c4-a844-242010a82c23">
+		<InternalInfo>
+			<xr:GeneratedType name="ExternalDataSourceTableManager.ВнешнийИсточникДанных1.Таблица1" category="Manager">
+				<xr:TypeId>f293cd9a-813b-4871-b1e7-5219e98cc704</xr:TypeId>
+				<xr:ValueId>3b51e46e-d56b-489e-a480-2c6a40e61c7f</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableObject.ВнешнийИсточникДанных1.Таблица1" category="Object">
+				<xr:TypeId>45681edf-cf03-457a-91ec-900dcaf93300</xr:TypeId>
+				<xr:ValueId>a1a09e26-2a36-4025-b5cf-4584c6a2cb13</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableRef.ВнешнийИсточникДанных1.Таблица1" category="Ref">
+				<xr:TypeId>46034421-e7c6-473e-a719-7d83872ca163</xr:TypeId>
+				<xr:ValueId>6cd2a74a-68a2-4ae0-a868-8f30c483568d</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableList.ВнешнийИсточникДанных1.Таблица1" category="List">
+				<xr:TypeId>0fa79f74-4bbd-4656-b60c-37f7d59bce79</xr:TypeId>
+				<xr:ValueId>ba936a9a-d60a-4f7a-8478-e7725727e77d</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableRecord.ВнешнийИсточникДанных1.Таблица1" category="Record">
+				<xr:TypeId>c947c4fd-75cf-4b61-9202-12e3e22f4c1b</xr:TypeId>
+				<xr:ValueId>22aab3a5-a132-40a7-aa20-42ecad0184eb</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableRecordSet.ВнешнийИсточникДанных1.Таблица1" category="RecordSet">
+				<xr:TypeId>c498636f-11f4-40f4-bddf-498f85534a1c</xr:TypeId>
+				<xr:ValueId>42911c5b-d9a1-4197-9b32-95e57d930c01</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableRecordKey.ВнешнийИсточникДанных1.Таблица1" category="RecordKey">
+				<xr:TypeId>e6512286-f03c-4e75-86a1-5ab626774f61</xr:TypeId>
+				<xr:ValueId>c8e6130a-8a0c-4755-9fb1-7a21bb2da092</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceTableRecordManager.ВнешнийИсточникДанных1.Таблица1" category="RecordManager">
+				<xr:TypeId>dd315100-5cfd-4a58-9326-11829b89d62e</xr:TypeId>
+				<xr:ValueId>3296cfea-a9c6-45cf-8b32-8e48e2b1fe4b</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>Таблица1</Name>
+			<Synonym/>
+			<Comment/>
+			<TableType>Table</TableType>
+			<NameInDataSource/>
+			<ExpressionInDataSource/>
+			<TableDataType>ObjectData</TableDataType>
+			<KeyFields>
+				<xr:Field>ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица1.Field.Поле1</xr:Field>
+			</KeyFields>
+			<PresentationField/>
+			<ParentField/>
+			<UnfilledParentValue xsi:nil="true"/>
+			<Characteristics/>
+			<UseStandardCommands>true</UseStandardCommands>
+			<QuickChoice>false</QuickChoice>
+			<InputByString>
+				<xr:Field>ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица1.Field.Поле1</xr:Field>
+			</InputByString>
+			<CreateOnInput>Auto</CreateOnInput>
+			<SearchStringModeOnInputByString>Begin</SearchStringModeOnInputByString>
+			<ChoiceDataGetModeOnInputByString>Directly</ChoiceDataGetModeOnInputByString>
+			<ChoiceHistoryOnInput>Auto</ChoiceHistoryOnInput>
+			<DefaultObjectForm/>
+			<DefaultRecordForm/>
+			<DefaultListForm/>
+			<DefaultChoiceForm/>
+			<ObjectPresentation/>
+			<ExtendedObjectPresentation/>
+			<RecordPresentation/>
+			<ExtendedRecordPresentation/>
+			<ListPresentation/>
+			<ExtendedListPresentation/>
+			<Explanation/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<ReadOnly>false</ReadOnly>
+			<TransactionsIsolationLevel>Auto</TransactionsIsolationLevel>
+			<DataVersionField/>
+			<EditType>InDialog</EditType>
+			<BasedOn/>
+			<DataLockFields/>
+			<DataLockControlMode>Automatic</DataLockControlMode>
+		</Properties>
+		<ChildObjects>
+			<Field uuid="464b186e-c14b-4e7e-858b-139594f7e723">
+				<Properties>
+					<Name>Поле1</Name>
+					<Synonym/>
+					<Comment/>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>10</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+					<PasswordMode>false</PasswordMode>
+					<Format/>
+					<EditFormat/>
+					<ToolTip/>
+					<MarkNegatives>false</MarkNegatives>
+					<Mask/>
+					<MultiLine>false</MultiLine>
+					<ExtendedEdit>false</ExtendedEdit>
+					<MinValue xsi:nil="true"/>
+					<MaxValue xsi:nil="true"/>
+					<FillFromFillingValue>false</FillFromFillingValue>
+					<FillValue xsi:type="xs:string"/>
+					<FillChecking>DontCheck</FillChecking>
+					<ChoiceParameterLinks/>
+					<ChoiceParameters/>
+					<QuickChoice>Auto</QuickChoice>
+					<CreateOnInput>Auto</CreateOnInput>
+					<ChoiceHistoryOnInput>Auto</ChoiceHistoryOnInput>
+					<ChoiceForm/>
+					<NameInDataSource/>
+					<ReadOnly>false</ReadOnly>
+					<AllowNull>false</AllowNull>
+				</Properties>
+			</Field>
+		</ChildObjects>
+	</Table>
+</MetaDataObject>
