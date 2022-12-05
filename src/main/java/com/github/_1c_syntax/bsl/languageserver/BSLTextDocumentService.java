@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
@@ -74,6 +75,8 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
@@ -118,6 +121,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
+  private final InlayHintProvider inlayHintProvider;
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -302,6 +306,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     return CompletableFuture.supplyAsync(() -> colorProvider.getColorPresentation(documentContext, params));
+  }
+
+  @Override
+  public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> inlayHintProvider.getInlayHint(documentContext, params));
   }
 
   @Override

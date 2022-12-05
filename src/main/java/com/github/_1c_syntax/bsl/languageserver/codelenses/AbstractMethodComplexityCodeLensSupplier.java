@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.AbstractToggleComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -30,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.beans.ConstructorProperties;
@@ -52,6 +52,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   protected final LanguageServerConfiguration configuration;
+  private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
@@ -70,7 +71,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
-      var command = new Command(title, "");
+      var command = commandSupplier.createCommand(title);
+      // todo: refactor
+      var arguments = new AbstractToggleComplexityInlayHintsCommandSupplier.ToggleComplexityInlayHintsCommandArguments(
+        commandSupplier.getId(),
+        data
+      );
+      command.setArguments(List.of(arguments));
 
       unresolved.setCommand(command);
     });

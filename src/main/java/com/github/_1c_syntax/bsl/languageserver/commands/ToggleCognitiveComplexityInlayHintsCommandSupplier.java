@@ -21,37 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.commands;
 
-import org.eclipse.lsp4j.Command;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.CognitiveComplexityInlayHintSupplier;
+import org.springframework.stereotype.Component;
 
-import java.beans.Introspector;
-import java.util.Optional;
+@Component
+public class ToggleCognitiveComplexityInlayHintsCommandSupplier
+  extends AbstractToggleComplexityInlayHintsCommandSupplier {
 
-public interface CommandSupplier<T extends CommandArguments> {
-
-  default String getId() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("CommandSupplier")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "CommandSupplier".length());
-      simpleName = Introspector.decapitalize(simpleName);
-    }
-
-    return simpleName;
+  public ToggleCognitiveComplexityInlayHintsCommandSupplier(
+    CognitiveComplexityInlayHintSupplier complexityInlayHintSupplier
+  ) {
+    super(complexityInlayHintSupplier);
   }
-
-  default Command createCommand(String title) {
-    return new Command(title, getId());
-  }
-
-  Class<T> getCommandArgumentsClass();
-
-  Optional<Object> execute(T arguments);
-
-  default boolean refreshInlayHintsAfterExecuteCommand() {
-    return false;
-  }
-
-  default boolean refreshCodeLensesAfterExecuteCommand() {
-    return false;
-  }
-
 }

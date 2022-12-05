@@ -62,6 +62,113 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private final LanguageServerConfiguration configuration;
 
+  private static void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
+    if (!newContent.isEmpty()) {
+      markupBuilder.add(newContent);
+      markupBuilder.add("");
+      markupBuilder.add("---");
+    }
+  }
+
+  private static String getPurposeSection(MethodSymbol methodSymbol) {
+    return methodSymbol.getDescription()
+      .map(MethodDescription::getPurposeDescription)
+      .orElse("");
+  }
+
+  private static String getLocation(MethodSymbol symbol) {
+    var documentContext = symbol.getOwner();
+    var startPosition = symbol.getSelectionRange().getStart();
+    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+
+    return String.format(
+      "[%s](%s#%d)",
+      mdoRef,
+      documentContext.getUri(),
+      startPosition.getLine() + 1
+    );
+  }
+
+  private static String getTypes(List<TypeDescription> typeDescriptions) {
+    return typeDescriptions.stream()
+      .map(TypeDescription::getName)
+      .flatMap(parameterType -> Stream.of(parameterType.split(",")))
+      .map(String::trim)
+      .collect(Collectors.joining(" | "));
+  }
+
+  public static String parameterToString(ParameterDescription parameter, int level) {
+    var result = new StringJoiner("  \n"); // два пробела
+    Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
+    var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
+
+    if (typesMap.size() == 1) {
+      result.add(String.format(parameterTemplate,
+        parameter.getName(),
+        typesMapToString(typesMap, 0)));
+    } else {
+      result.add(String.format(parameterTemplate, parameter.getName(), ""));
+      result.add(typesMapToString(typesMap, level + 1));
+    }
+    return result.toString();
+  }
+
+  public static String parameterToString(ParameterDefinition parameterDefinition) {
+    int level = 0;
+    if (parameterDefinition.getDescription().isPresent()) {
+      return parameterToString(parameterDefinition.getDescription().get(), level);
+    }
+
+    return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
+  }
+
+  private static Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
+    Map<String, String> types = new HashMap<>();
+
+    parameterTypes.forEach((TypeDescription type) -> {
+      var typeDescription = typeToString(type, level);
+      String typeName;
+      if (type.isHyperlink()) {
+        typeName = String.format("[%s](%s)", type.getName(), type.getLink());
+      } else {
+        typeName = String.format("`%s`", type.getName());
+      }
+
+      types.merge(typeDescription, typeName, (oldValue, newValue) -> String.format("%s | %s", oldValue, newValue));
+    });
+    return types;
+  }
+
+  private static String typesMapToString(Map<String, String> types, int level) {
+    var result = new StringJoiner("  \n"); // два пробела
+    var indent = "&nbsp;&nbsp;".repeat(level);
+    types.forEach((String key, String value) -> {
+      if (key.isBlank()) {
+        result.add(value);
+      } else {
+        result.add(String.format("%s%s %s", indent, value, key));
+      }
+    });
+    return result.toString();
+  }
+
+  private static String typeToString(TypeDescription type, int level) {
+    var result = new StringJoiner("  \n"); // два пробела
+    var description = type.getDescription().replace("\n", "<br>" + "&nbsp;&nbsp;".repeat(level + 1));
+
+    if (!description.isBlank()) {
+      description = "- " + description;
+    }
+    if (!type.getParameters().isEmpty()) {
+      description += ":";
+    }
+
+    result.add(description);
+    type.getParameters().forEach((ParameterDescription parameter) ->
+      result.add(parameterToString(parameter, level + 1)));
+    return result.toString();
+  }
+
   @Override
   public MarkupContent getContent(MethodSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
@@ -112,29 +219,10 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return SymbolKind.Method;
   }
 
-  private static void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
-    if (!newContent.isEmpty()) {
-      markupBuilder.add(newContent);
-      markupBuilder.add("");
-      markupBuilder.add("---");
-    }
-  }
-
-  private static String getPurposeSection(MethodSymbol methodSymbol) {
-    return methodSymbol.getDescription()
-      .map(MethodDescription::getPurposeDescription)
-      .orElse("");
-  }
-
   private String getParametersSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
-    var level = 0;
     methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-        if (parameterDefinition.getDescription().isPresent()) {
-          result.add(parameterToString(parameterDefinition.getDescription().get(), level));
-        } else {
-          result.add(parameterToString(parameterDefinition));
-        }
+        result.add(parameterToString(parameterDefinition));
       }
     );
 
@@ -193,19 +281,6 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     }
 
     return codeFences;
-  }
-
-  private static String getLocation(MethodSymbol symbol) {
-    var documentContext = symbol.getOwner();
-    var startPosition = symbol.getSelectionRange().getStart();
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
-
-    return String.format(
-      "[%s](%s#%d)",
-      mdoRef,
-      documentContext.getUri(),
-      startPosition.getLine() + 1
-    );
   }
 
   private String getSignature(MethodSymbol methodSymbol) {
@@ -267,82 +342,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     );
   }
 
-  private static String getTypes(List<TypeDescription> typeDescriptions) {
-    return typeDescriptions.stream()
-      .map(TypeDescription::getName)
-      .flatMap(parameterType -> Stream.of(parameterType.split(",")))
-      .map(String::trim)
-      .collect(Collectors.joining(" | "));
-  }
-
   private String getResourceString(String key) {
     return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
-  }
-
-  private static String parameterToString(ParameterDescription parameter, int level) {
-    var result = new StringJoiner("  \n"); // два пробела
-    Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
-    var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
-
-    if (typesMap.size() == 1) {
-      result.add(String.format(parameterTemplate,
-        parameter.getName(),
-        typesMapToString(typesMap, 0)));
-    } else {
-      result.add(String.format(parameterTemplate, parameter.getName(), ""));
-      result.add(typesMapToString(typesMap, level + 1));
-    }
-    return result.toString();
-  }
-
-  private static String parameterToString(ParameterDefinition parameterDefinition) {
-    return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
-  }
-
-  private static Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
-    Map<String, String> types = new HashMap<>();
-
-    parameterTypes.forEach((TypeDescription type) -> {
-      var typeDescription = typeToString(type, level);
-      String typeName;
-      if (type.isHyperlink()) {
-        typeName = String.format("[%s](%s)", type.getName(), type.getLink());
-      } else {
-        typeName = String.format("`%s`", type.getName());
-      }
-
-      types.merge(typeDescription, typeName, (oldValue, newValue) -> String.format("%s | %s", oldValue, newValue));
-    });
-    return types;
-  }
-
-  private static String typesMapToString(Map<String, String> types, int level) {
-    var result = new StringJoiner("  \n"); // два пробела
-    var indent = "&nbsp;&nbsp;".repeat(level);
-    types.forEach((String key, String value) -> {
-      if (key.isBlank()) {
-        result.add(value);
-      } else {
-        result.add(String.format("%s%s %s", indent, value, key));
-      }
-    });
-    return result.toString();
-  }
-
-  private static String typeToString(TypeDescription type, int level) {
-    var result = new StringJoiner("  \n"); // два пробела
-    var description = type.getDescription().replace("\n", "<br>" + "&nbsp;&nbsp;".repeat(level + 1));
-
-    if (!description.isBlank()) {
-      description = "- " + description;
-    }
-    if (!type.getParameters().isEmpty()) {
-      description += ":";
-    }
-
-    result.add(description);
-    type.getParameters().forEach((ParameterDescription parameter) ->
-      result.add(parameterToString(parameter, level + 1)));
-    return result.toString();
   }
 }

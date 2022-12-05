@@ -39,7 +39,9 @@ public class CommandProvider {
 
   private final Map<String, CommandSupplier<CommandArguments>> commandSuppliersById;
   private final ObjectMapper objectMapper;
+
   private final CodeLensProvider codeLensProvider;
+  private final InlayHintProvider inlayHintProvider;
 
   public Object executeCommand(CommandArguments arguments) {
     var commandId = arguments.getId();
@@ -54,6 +56,9 @@ public class CommandProvider {
       .orElse(null);
 
     CompletableFuture.runAsync(() -> {
+      if (commandSupplier.refreshInlayHintsAfterExecuteCommand()) {
+        inlayHintProvider.refreshInlayHints();
+      }
       if (commandSupplier.refreshCodeLensesAfterExecuteCommand()) {
         codeLensProvider.refreshCodeLenses();
       }
