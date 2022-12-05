@@ -38,11 +38,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/AnalyzeCommand.java",
       "language": "JAVA",
-      "line": 136,
+      "line": 135,
       "offset": 20,
       "length": 16,
       "code": {
-        "startLine": 134,
+        "startLine": 133,
         "length": 16,
         "offset": 128,
         "surroundingCode": "    completionCandidates = ReportersKeys.class,\n    description = \"Reporter key (${COMPLETION-CANDIDATES})\")\n  private String[] reportersOptions = {};\n\n  @Option("
@@ -53,7 +53,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "MismatchedArrayReadWrite"
   },
-  "hash": "11292e2ae064d18dbd23a5d221d71547d28dabb408ffaaab5745670fbfddb0c5"
+  "hash": "d6a3fbf64869f3fa53973788f8e84f715402af0e5176613516f554bac3c9c5a1"
 },{
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
