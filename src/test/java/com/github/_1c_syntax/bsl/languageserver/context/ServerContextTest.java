@@ -27,14 +27,12 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -132,10 +130,12 @@ class ServerContextTest {
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
   }
 
-  private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
+  private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
+    return documentContext;
   }
 
 }
