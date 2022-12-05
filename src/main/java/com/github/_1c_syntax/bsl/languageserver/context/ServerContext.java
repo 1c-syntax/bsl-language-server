@@ -31,7 +31,6 @@ import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.ObjectProvider;
@@ -183,15 +182,31 @@ public class ServerContext {
     configurationMetadata.clear();
   }
 
+  /**
+   * Помечает документ как открытый и перестраивает его содержимое
+   * <p/>
+   * Документы, помеченные как открытые, не будут удаляться из контекста сервера при вызове {@link #removeDocument(URI)},
+   * а так же не будут очищаться при вызове {@link #tryClearDocument(DocumentContext)}.
+   * <p/>
+   * Если вспомогательные данные документа был в "замороженном" состоянии, то перед перестроением документа
+   * они будут разморожены.
+   *
+   * @param documentContext документ, который необходимо открыть.
+   * @param content         новое содержимое документа.
+   * @param version         версия документа.
+   */
   public void openDocument(DocumentContext documentContext, String content, Integer version) {
     openedDocuments.add(documentContext);
-    rebuildDocument(documentContext, content, version);
-
-    // under control?
     documentContext.unfreezeComputedData();
+    rebuildDocument(documentContext, content, version);
   }
 
-  @SneakyThrows
+  /**
+   * Перестроить документ. В качестве содержимого будут использоваться данные,
+   * прочитанные из файла, с которым связан документ.
+   *
+   * @param documentContext документ, который необходимо перестроить.
+   */
   public void rebuildDocument(DocumentContext documentContext) {
     if (states.get(documentContext) == State.WITH_CONTENT) {
       return;
@@ -200,24 +215,41 @@ public class ServerContext {
     documentContext.rebuild();
     states.put(documentContext, State.WITH_CONTENT);
   }
+
+  /**
+   * Перестроить документ, используя новое содержимое.
+   *
+   * @param documentContext документ, который необходимо перестроить.
+   * @param content         новое содержимое документа.
+   * @param version         версия документа.
+   */
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
     states.put(documentContext, State.WITH_CONTENT);
   }
 
+  /**
+   * Попытаться очистить документ, если он не открыт.
+   *
+   * @param documentContext документ, который необходимо попытаться закрыть.
+   */
   public void tryClearDocument(DocumentContext documentContext) {
     if (openedDocuments.contains(documentContext)) {
       return;
     }
 
-    states.put(documentContext, State.CREATED);
+    states.put(documentContext, State.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
   }
 
+  /**
+   * Закрыть документ и очистить его содержимое.
+   *
+   * @param documentContext документ, который необходимо закрыть.
+   */
   public void closeDocument(DocumentContext documentContext) {
     openedDocuments.remove(documentContext);
-    states.put(documentContext, State.CREATED);
-    documentContext.unfreezeComputedData();
+    states.put(documentContext, State.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
   }
 
@@ -292,9 +324,17 @@ public class ServerContext {
     return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
   }
 
+  /**
+   * Состояние документа в контексте.
+   */
   private enum State {
-    CREATED,
-    FROZEN,
+    /**
+     * В документе отсутствует контент или он был очищен.
+     */
+    WITHOUT_CONTENT,
+    /**
+     * В документе присутствует контент.
+     */
     WITH_CONTENT
   }
 
