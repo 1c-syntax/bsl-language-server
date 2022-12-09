@@ -108,6 +108,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода populateContext.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* populateContext(..))")
+  public void isPopulateContextCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода update.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* update(..))")

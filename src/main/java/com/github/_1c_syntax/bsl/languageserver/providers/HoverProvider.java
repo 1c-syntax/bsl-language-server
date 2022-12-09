@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -40,7 +41,7 @@ import java.util.Optional;
 public final class HoverProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final Map<Class<Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
+  private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
     Position position = params.getPosition();
@@ -50,7 +51,7 @@ public final class HoverProvider {
         var symbol = reference.getSymbol();
         var range = reference.getSelectionRange();
 
-        return Optional.ofNullable(markupContentBuilders.get(symbol.getClass()))
+        return Optional.ofNullable(markupContentBuilders.get(symbol.getSymbolKind()))
           .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
           .map(content -> new Hover(content, range));
       });

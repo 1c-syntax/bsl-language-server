@@ -9,19 +9,20 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.5.0.2730"
-    id("io.freefair.lombok") version "6.5.1"
-    id("io.freefair.javadoc-links") version "6.5.1"
-    id("io.freefair.javadoc-utf-8") version "6.5.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.5.1"
-    id("io.freefair.maven-central.validate-poms") version "6.5.1"
-    id("me.qoomon.git-versioning") version "6.3.5"
-    id("com.github.ben-manes.versions") version "0.43.0"
+    id("io.freefair.lombok") version "6.6"
+    id("io.freefair.javadoc-links") version "6.6"
+    id("io.freefair.javadoc-utf-8") version "6.6"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
+    id("io.freefair.maven-central.validate-poms") version "6.6"
+    id("me.qoomon.git-versioning") version "6.3.7"
+    id("com.github.ben-manes.versions") version "0.44.0"
     id("org.springframework.boot") version "2.7.5"
     id("io.spring.dependency-management") version "1.1.0"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
-    id("ru.vyarus.pom") version "2.2.1"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.1"
+    id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
+    id("me.champeau.jmh") version "0.6.8"
 }
 
 repositories {
@@ -54,7 +55,7 @@ val languageToolVersion = "5.6"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.6.0")
+        mavenBom("io.sentry:sentry-bom:6.9.2")
     }
 }
 
@@ -65,7 +66,7 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.6.3")
+    api("info.picocli:picocli-spring-boot-starter:4.7.0")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.17.0")
@@ -80,7 +81,7 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.4.0")
+    api("com.github.1c-syntax", "utils", "f1694d9c")
     api("com.github.1c-syntax", "mdclasses", "0.10.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")

@@ -21,89 +21,37 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
-@Value
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
+/**
+ * Информация о символе, представляющем собой переменную.
+ */
+public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  /**
+   * @return Вид переменной
+   */
+  VariableKind getKind();
 
   /**
-   * Имя переменной.
+   * @return Диапазон, в котором определено имя переменной.
    */
   @EqualsAndHashCode.Include
-  String name;
-
-  /**
-   * Область доступности символа. Метод или модуль.
-   */
-  SourceDefinedSymbol scope;
-
-  /**
-   * Тип символа. По умолчанию переменная.
-   */
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Variable;
-
-  /**
-   * Файл в котором располагается переменная.
-   */
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
-
-  Range range;
-
-  @EqualsAndHashCode.Include
-  Range variableNameRange;
-
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
-
-  @Builder.Default
-  List<SourceDefinedSymbol> children = Collections.emptyList();
-
-  /**
-   * Тип переменной.
-   */
-  VariableKind kind;
-
-  /**
-   * Признак экспортной переменной.
-   */
-  boolean export;
-
-  /**
-   * Описание переменной.
-   */
-  Optional<VariableDescription> description;
+  Range getVariableNameRange();
 
   @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitVariable(this);
-  }
+  Optional<VariableDescription> getDescription();
 
-  @Override
-  public Range getSelectionRange() {
-    return getVariableNameRange();
-  }
+  /**
+   * @return Область объявления переменной.
+   */
+  SourceDefinedSymbol getScope();
 
+  static AbstractVariableSymbol.Builder builder() {
+    return AbstractVariableSymbol.builder();
+  }
 }

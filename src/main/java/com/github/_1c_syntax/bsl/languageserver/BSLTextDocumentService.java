@@ -92,6 +92,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -305,7 +306,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    var documentContext = context.addDocument(params.getTextDocument());
+    var textDocumentItem = params.getTextDocument();
+    var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+
+    context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
@@ -320,7 +325,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.rebuild(params.getContentChanges().get(0).getText(), params.getTextDocument().getVersion());
+    context.rebuildDocument(
+      documentContext,
+      params.getContentChanges().get(0).getText(),
+      params.getTextDocument().getVersion()
+    );
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -334,7 +343,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.clearSecondaryData();
+    context.closeDocument(documentContext);
 
     diagnosticProvider.publishEmptyDiagnosticList(documentContext);
   }

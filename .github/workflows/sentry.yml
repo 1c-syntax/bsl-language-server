@@ -4,6 +4,7 @@ on:
     branches-ignore:
       - "translations_*"
 jobs:
+
   sentry:
     name: Sentry
     runs-on: ubuntu-latest
