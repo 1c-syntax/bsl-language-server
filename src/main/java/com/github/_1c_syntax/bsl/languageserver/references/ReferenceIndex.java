@@ -178,7 +178,8 @@ public class ReferenceIndex {
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build();
+      .build()
+      .intern();
 
     var location = new Location(uri, range);
     var symbolOccurrence = SymbolOccurrence.builder()
@@ -218,7 +219,8 @@ public class ReferenceIndex {
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build();
+      .build()
+      .intern();
 
     var location = new Location(uri, range);
 

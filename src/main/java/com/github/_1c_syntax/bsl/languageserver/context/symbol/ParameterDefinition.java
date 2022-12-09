@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
@@ -55,13 +58,28 @@ public class ParameterDefinition {
    */
   DefaultValue defaultValue;
 
+  @Getter(AccessLevel.NONE)
+  int startLine;
+  @Getter(AccessLevel.NONE)
+  int startCharacter;
+  @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
+  int endCharacter;
+
   /**
    * Место объявления параметра.
    */
-  Range range;
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
 
   public boolean isOptional() {
     return !DefaultValue.EMPTY.equals(defaultValue);
+  }
+
+  public static ParameterDefinitionBuilder builder() {
+    return new ParameterDefinitionBuilder();
   }
 
   public enum ParameterType {
@@ -80,5 +98,19 @@ public class ParameterDefinition {
 
     ParameterType type;
     String value;
+  }
+
+  public static class ParameterDefinitionBuilder {
+
+    public ParameterDefinitionBuilder range(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      startLine = start.getLine();
+      startCharacter = start.getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
+
+      return this;
+    }
   }
 }
