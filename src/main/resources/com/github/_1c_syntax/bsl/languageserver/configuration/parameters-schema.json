@@ -1047,13 +1047,13 @@
             "$id": "#/definitions/MethodSize"
         },
         "MissedRequiredParameter": {
-            "description": "Missed required parameter",
+            "description": "Missed a required method parameter",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missed required parameter",
+            "title": "Missed a required method parameter",
             "$id": "#/definitions/MissedRequiredParameter"
         },
         "MissingCodeTryCatchEx": {

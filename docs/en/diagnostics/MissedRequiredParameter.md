@@ -1,4 +1,4 @@
-# Missed required parameter (MissedRequiredParameter)
+# Missed a required method parameter (MissedRequiredParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
