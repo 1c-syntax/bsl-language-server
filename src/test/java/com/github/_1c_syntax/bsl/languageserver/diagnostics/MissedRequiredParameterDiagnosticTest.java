@@ -49,7 +49,7 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
       .hasRange(8, 16, 8, 27)
       .hasRange(14, 16, 14, 26)
       .hasRange(17, 13, 17, 24)
-      .hasRange(29, 27, 29, 40)
+      .hasRange(18, 13, 18, 35)
     ;
   }
 
@@ -66,11 +66,11 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
       .hasRange(8, 16, 8, 27)
       .hasRange(14, 16, 14, 26)
       .hasRange(17, 13, 17, 24)
+      .hasRange(18, 13, 18, 35)
       .hasRange(24, 22, 24, 49)
       .hasRange(25, 22, 25, 50)
       .hasRange(26, 22, 26, 48)
       .hasRange(27, 31, 27, 57)
-      .hasRange(29, 27, 29, 40)
     ;
   }
 }
