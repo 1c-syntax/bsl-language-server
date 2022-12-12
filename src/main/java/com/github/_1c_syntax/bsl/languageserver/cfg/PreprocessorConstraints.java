@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import com.google.common.collect.Sets;
+
+import java.util.Set;
+
 public enum PreprocessorConstraints {
   SERVER,
   CLIENT,
@@ -30,9 +34,28 @@ public enum PreprocessorConstraints {
   WEB_CLIENT,
   MOBILE_CLIENT,
   MOBILE_APP_CLIENT,
+  MOBILE_STANDALONE_SERVER,
   MOBILE_APP_SERVER,
   EXTERNAL_CONNECTION,
 
-  NON_STANDARD
+  NON_STANDARD;
 
+  public static final Set<PreprocessorConstraints> CLIENT_CONSTRAINTS = Sets.immutableEnumSet(
+    ORDINARY_THICK_CLIENT,
+    MANAGED_THICK_CLIENT,
+    MOBILE_CLIENT,
+    THIN_CLIENT,
+    WEB_CLIENT);
+
+  public static final Set<PreprocessorConstraints> DEFAULT_CONSTRAINTS = Sets.immutableEnumSet(
+    SERVER,
+    THIN_CLIENT,
+    MANAGED_THICK_CLIENT,
+    ORDINARY_THICK_CLIENT,
+    WEB_CLIENT,
+    MOBILE_CLIENT,
+    MOBILE_APP_CLIENT,
+    MOBILE_STANDALONE_SERVER,
+    MOBILE_APP_SERVER,
+    EXTERNAL_CONNECTION);
 }

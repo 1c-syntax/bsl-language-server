@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorConstraints;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -30,11 +31,14 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.Constructor
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.PreprocessorSymbolNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -315,6 +319,130 @@ class ExpressionParseTreeRewriterTest {
     assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
     assertThat(binary.getLeft().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
     assertThat(binary.getRight().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
+  }
+
+  @Test
+  void preprocessorUno() {
+    var variants = Map.ofEntries(
+      Map.entry("Клиент", PreprocessorConstraints.CLIENT),
+      Map.entry("Client", PreprocessorConstraints.CLIENT),
+      Map.entry("НаКлиенте", PreprocessorConstraints.CLIENT),
+      Map.entry("AtClient", PreprocessorConstraints.CLIENT),
+      Map.entry("НаСервере", PreprocessorConstraints.SERVER),
+      Map.entry("AtServer", PreprocessorConstraints.SERVER),
+      Map.entry("Сервер", PreprocessorConstraints.SERVER),
+      Map.entry("Server", PreprocessorConstraints.SERVER),
+      Map.entry("ТонкийКлиент", PreprocessorConstraints.THIN_CLIENT),
+      Map.entry("ThinClient", PreprocessorConstraints.THIN_CLIENT),
+      Map.entry("ВебКлиент", PreprocessorConstraints.WEB_CLIENT),
+      Map.entry("WebClient", PreprocessorConstraints.WEB_CLIENT),
+      Map.entry("МобильныйАвтономныйСервер", PreprocessorConstraints.MOBILE_STANDALONE_SERVER),
+      Map.entry("MobileStandaloneServer", PreprocessorConstraints.MOBILE_STANDALONE_SERVER),
+      Map.entry("МобильноеПриложениеКлиент", PreprocessorConstraints.MOBILE_APP_CLIENT),
+      Map.entry("MobileAppClient", PreprocessorConstraints.MOBILE_APP_CLIENT),
+      Map.entry("МобильноеПриложениеСервер", PreprocessorConstraints.MOBILE_APP_SERVER),
+      Map.entry("MobileAppServer", PreprocessorConstraints.MOBILE_APP_SERVER),
+      Map.entry("МобильныйКлиент", PreprocessorConstraints.MOBILE_CLIENT),
+      Map.entry("MobileClient", PreprocessorConstraints.MOBILE_CLIENT),
+      Map.entry("ТолстыйКлиентОбычноеПриложение", PreprocessorConstraints.ORDINARY_THICK_CLIENT),
+      Map.entry("ThickClientOrdinaryApplication", PreprocessorConstraints.ORDINARY_THICK_CLIENT),
+      Map.entry("ТолстыйКлиентУправляемоеПриложение", PreprocessorConstraints.MANAGED_THICK_CLIENT),
+      Map.entry("ThickClientManagedApplication", PreprocessorConstraints.MANAGED_THICK_CLIENT),
+      Map.entry("ВнешнееСоединение", PreprocessorConstraints.EXTERNAL_CONNECTION),
+      Map.entry("ExternalConnection", PreprocessorConstraints.EXTERNAL_CONNECTION));
+
+    for (var variant : variants.entrySet()) {
+      var expression = getPreprocessorExpressionTree(variant.getKey());
+      assertThat(expression).isInstanceOf(PreprocessorSymbolNode.class);
+      assertThat(((PreprocessorSymbolNode) expression).getSymbol()).isEqualTo(variant.getValue());
+    }
+  }
+
+  @Test
+  void preprocessorAND() {
+    var expression = getPreprocessorExpressionTree("Сервер И Клиент");
+    assertThat(expression).isInstanceOf(BinaryOperationNode.class);
+    var operation = (BinaryOperationNode) expression;
+    assertThat(operation.getOperator()).isEqualTo(BslOperator.AND);
+    assertThat(operation.getLeft())
+      .isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.SERVER)
+    ;
+    assertThat(operation.getRight())
+      .isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.CLIENT)
+    ;
+    expression = getPreprocessorExpressionTree("НЕ Сервер И Клиент");
+    assertThat(expression)
+      .extracting("left").isInstanceOf(UnaryOperationNode.class)
+      .extracting("operand")
+      .isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.SERVER)
+    ;
+    expression = getPreprocessorExpressionTree("Клиент AND Server AND MobileAppClient");
+    operation = (BinaryOperationNode) expression;
+    assertThat(operation.getLeft()).isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.CLIENT);
+    assertThat(operation.getRight()).isInstanceOf(BinaryOperationNode.class);
+  }
+
+  @Test
+  void preprocessorOR() {
+    var expression = getPreprocessorExpressionTree("Сервер ИЛИ Клиент");
+    assertThat(expression).isInstanceOf(BinaryOperationNode.class);
+    var operation = (BinaryOperationNode) expression;
+    assertThat(operation.getOperator()).isEqualTo(BslOperator.OR);
+    assertThat(operation.getLeft())
+      .isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.SERVER)
+    ;
+    expression = getPreprocessorExpressionTree("Клиент OR Server OR MobileAppClient");
+    operation = (BinaryOperationNode) expression;
+    assertThat(operation.getLeft()).isInstanceOf(PreprocessorSymbolNode.class)
+      .extracting("symbol").isEqualTo(PreprocessorConstraints.CLIENT);
+    assertThat(operation.getRight()).isInstanceOf(BinaryOperationNode.class);
+  }
+
+  @Test
+  void preprocessorNot() {
+    var expression = getPreprocessorExpressionTree("Not Клиент");
+    assertThat(expression).isInstanceOf(UnaryOperationNode.class)
+      .extracting("operator", "operand.symbol")
+      .containsExactly(BslOperator.NOT, PreprocessorConstraints.CLIENT);
+
+    expression = getPreprocessorExpressionTree("Не AtServer");
+    assertThat(expression)
+      .extracting("operator", "operand.symbol")
+      .containsExactly(BslOperator.NOT, PreprocessorConstraints.SERVER);
+    expression = getPreprocessorExpressionTree("НЕ (Сервер ИЛИ Клиент)");
+    assertThat(expression)
+      .isInstanceOf(UnaryOperationNode.class)
+      .extracting("operand")
+      .isInstanceOf(BinaryOperationNode.class)
+      .extracting("left.symbol", "operator", "right.symbol")
+      .containsExactly(PreprocessorConstraints.SERVER, BslOperator.OR, PreprocessorConstraints.CLIENT);
+  }
+
+  @Test
+  void preprocessorComplex() {
+    var expression = getPreprocessorExpressionTree("Client AND Not MobileClient OR Server И (ExternalConnection ИЛИ Клиент)");
+    var operation = (BinaryOperationNode) expression;
+    assertThat(operation.getOperator()).isEqualTo(BslOperator.OR);
+    assertThat(operation.getLeft())
+      .extracting("left.symbol", "operator", "right.operator", "right.operand.symbol")
+      .containsExactly(PreprocessorConstraints.CLIENT, BslOperator.AND, BslOperator.NOT, PreprocessorConstraints.MOBILE_CLIENT)
+    ;
+    assertThat(operation.getRight())
+      .extracting("left.symbol", "operator", "right.left.symbol", "right.operator", "right.right.symbol")
+      .containsExactly(PreprocessorConstraints.SERVER, BslOperator.AND, PreprocessorConstraints.EXTERNAL_CONNECTION, BslOperator.OR, PreprocessorConstraints.CLIENT)
+    ;
+  }
+
+  BslExpression getPreprocessorExpressionTree(String code) {
+    var preprocessorPredicate = String.format("#Если %s Тогда\n#КонецЕсли", code);
+    var dContext = TestUtils.getDocumentContext(preprocessorPredicate);
+    var expression = dContext.getAst().preprocessor(0).preproc_if().preproc_expression();
+    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
   }
 
   BslExpression getExpressionTree(String code) {
