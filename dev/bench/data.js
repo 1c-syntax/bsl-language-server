@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670417276831,
+  "lastUpdate": 1670874631248,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -20863,6 +20863,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2442679147446458",
             "extra": "mean: 49.92533755302429 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "19bea198d84e4daa7bfa5dfa6208a8f33e2b0ad4",
+          "message": "Merge pull request #2789 from artbear/dual-insert-1551\n\nПравило Повторное добавление\\вставка значений в коллекцию - DuplicatedInsertionIntoCollectionDiagnostic",
+          "timestamp": "2022-12-12T22:40:13+03:00",
+          "tree_id": "edd9f3359e8d666dedc49fe78e5635a520567f59",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/19bea198d84e4daa7bfa5dfa6208a8f33e2b0ad4"
+        },
+        "date": 1670874624142,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 50.538897355397545,
+            "unit": "sec",
+            "range": "stddev: 0.8557331948713066",
+            "extra": "mean: 50.538897355397545 sec\nrounds: 3"
           }
         ]
       }
