@@ -18,7 +18,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.44.0"
     id("org.springframework.boot") version "2.7.5"
     id("io.spring.dependency-management") version "1.1.0"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.1"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
@@ -69,8 +69,8 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.0")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.17.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.17.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.19.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
@@ -92,7 +92,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.7")
+    implementation("org.aspectj", "aspectjrt", "1.9.9.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -101,7 +101,7 @@ dependencies {
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.2")
+    implementation("me.tongfei", "progressbar", "0.9.5")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -131,7 +131,7 @@ dependencies {
 
     // test utils
     testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
-    testImplementation("org.awaitility", "awaitility", "4.1.1")
+    testImplementation("org.awaitility", "awaitility", "4.2.0")
 }
 
 java {
