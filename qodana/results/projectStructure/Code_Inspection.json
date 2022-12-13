@@ -44,11 +44,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
           "type": "Library"
         },
         {
@@ -92,7 +92,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
           "type": "Library"
         },
         {
@@ -112,7 +112,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: me.tongfei:progressbar:0.9.2",
+          "name": "Gradle: me.tongfei:progressbar:0.9.5",
           "type": "Library"
         },
         {
@@ -192,11 +192,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
           "type": "Library"
         },
         {
@@ -372,7 +372,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jline:jline:3.20.0",
+          "name": "Gradle: org.jline:jline:3.21.0",
           "type": "Library"
         },
         {
@@ -648,7 +648,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.awaitility:awaitility:4.1.1",
+          "name": "Gradle: org.awaitility:awaitility:4.2.0",
           "type": "Library"
         },
         {
@@ -857,11 +857,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
           "type": "Library"
         },
         {
@@ -897,7 +897,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
           "type": "Library"
         },
         {
@@ -917,7 +917,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: me.tongfei:progressbar:0.9.2",
+          "name": "Gradle: me.tongfei:progressbar:0.9.5",
           "type": "Library"
         },
         {
@@ -957,7 +957,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.awaitility:awaitility:4.1.1",
+          "name": "Gradle: org.awaitility:awaitility:4.2.0",
           "type": "Library"
         },
         {
@@ -1049,11 +1049,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
           "type": "Library"
         },
         {
@@ -1229,7 +1229,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jline:jline:3.20.0",
+          "name": "Gradle: org.jline:jline:3.21.0",
           "type": "Library"
         },
         {
@@ -1611,11 +1611,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
           "type": "Library"
         },
         {
@@ -1659,7 +1659,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
           "type": "Library"
         },
         {
@@ -1679,7 +1679,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: me.tongfei:progressbar:0.9.2",
+          "name": "Gradle: me.tongfei:progressbar:0.9.5",
           "type": "Library"
         },
         {
@@ -1751,11 +1751,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
           "type": "Library"
         },
         {
@@ -1931,7 +1931,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jline:jline:3.20.0",
+          "name": "Gradle: org.jline:jline:3.21.0",
           "type": "Library"
         },
         {

@@ -19,15 +19,15 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.17.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.17.0/5c968221667bcacd66694dbb85f26bd270d2a022/org.eclipse.lsp4j-0.17.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.19.0/aa73e1c6873c85369cd72d89a94e1493ce5e610a/org.eclipse.lsp4j-0.19.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.17.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.websocket/0.17.0/1e2dd5ddd46fe3590a75149925f41eee11f3d5ab/org.eclipse.lsp4j.websocket-0.17.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.websocket/0.19.0/c3429a11d3742f2fce8a9a70d2dc5d5c9416cca0/org.eclipse.lsp4j.websocket-0.19.0.jar!/"
       ]
     },
     {
@@ -91,9 +91,9 @@
       ]
     },
     {
-      "name": "Gradle: org.aspectj:aspectjrt:1.9.7",
+      "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.aspectj/aspectjrt/1.9.7/ac42a7759a685a098b182bc0a39747f32f00adb0/aspectjrt-1.9.7.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.aspectj/aspectjrt/1.9.9.1/7ec5a0f90bdf08bada28fee52f97164c124ad5ff/aspectjrt-1.9.9.1.jar!/"
       ]
     },
     {
@@ -121,9 +121,9 @@
       ]
     },
     {
-      "name": "Gradle: me.tongfei:progressbar:0.9.2",
+      "name": "Gradle: me.tongfei:progressbar:0.9.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/me.tongfei/progressbar/0.9.2/1307ebd1f3473c00d8d52560a41e9a46f9bd6b19/progressbar-0.9.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/me.tongfei/progressbar/0.9.5/aaf7a04a9e9e6bd0aa03268cfcd6168e903bcf2d/progressbar-0.9.5.jar!/"
       ]
     },
     {
@@ -229,15 +229,15 @@
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.17.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.17.0/900f81877a1b884aa0407e528fe16f6cd33a1f72/org.eclipse.lsp4j.generator-0.17.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.19.0/7d3d3deea4e8062a3ea76f08e4eacbad0b0813cf/org.eclipse.lsp4j.generator-0.19.0.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.17.0",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.17.0/b187d24b950dd9da8126a2ccc12a7291bc64d459/org.eclipse.lsp4j.jsonrpc-0.17.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.19.0/4096302e8fc7c55e85bb2825261320bdfc015f30/org.eclipse.lsp4j.jsonrpc-0.19.0.jar!/"
       ]
     },
     {
@@ -499,9 +499,9 @@
       ]
     },
     {
-      "name": "Gradle: org.jline:jline:3.20.0",
+      "name": "Gradle: org.jline:jline:3.21.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.jline/jline/3.20.0/a4a525d57dc97ed6c059c7cb0f07e720ccb1880f/jline-3.20.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.jline/jline/3.21.0/2bf6f2311356f309fda0412e9389d2499346b5a1/jline-3.21.0.jar!/"
       ]
     },
     {
@@ -937,9 +937,9 @@
       ]
     },
     {
-      "name": "Gradle: org.awaitility:awaitility:4.1.1",
+      "name": "Gradle: org.awaitility:awaitility:4.2.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.awaitility/awaitility/4.1.1/6475db6694a81dfad967169f1561efa93fa92b84/awaitility-4.1.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.awaitility/awaitility/4.2.0/2c39784846001a9cffd6c6b89c78de62c0d80fb8/awaitility-4.2.0.jar!/"
       ]
     },
     {
