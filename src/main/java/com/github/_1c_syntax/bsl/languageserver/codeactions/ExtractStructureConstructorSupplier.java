@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -101,11 +102,11 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     }
 
     var assignment = (BSLParser.AssignmentContext) Trees.getAncestorByRuleIndex(doCall, BSLParser.RULE_assignment);
-    if (assignment == null) {
+    if (assignment == null || isParentAssignment(doCall, assignment)) {
       return Collections.emptyList();
     }
 
-    var lValue = assignment.lValue().IDENTIFIER();
+    var lValue = assignment.lValue();
     if (lValue == null) {
       return Collections.emptyList();
     }
@@ -147,11 +148,19 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
 
     var codeAction = new CodeAction();
     codeAction.setEdit(workspaceEdit);
-    codeAction.setKind(CodeActionKind.RefactorExtract);
+    codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setIsPreferred(Boolean.TRUE);
     codeAction.setTitle(Resources.getResourceString(configuration.getLanguage(), getClass(), "title"));
 
     return Collections.singletonList(codeAction);
 
+  }
+
+  private static boolean isParentAssignment(BSLParser.DoCallContext doCall, BSLParser.AssignmentContext assignment) {
+    return assignment.expression().member().stream()
+      .map(BSLParser.MemberContext::complexIdentifier)
+      .map(BSLParser.ComplexIdentifierContext::newExpression)
+      .filter(newExpressionContext -> newExpressionContext == doCall.getParent())
+      .findAny().isEmpty();
   }
 }
