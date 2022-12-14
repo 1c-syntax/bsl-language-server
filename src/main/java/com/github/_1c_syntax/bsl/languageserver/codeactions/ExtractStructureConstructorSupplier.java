@@ -61,6 +61,10 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
 
     var start = params.getRange().getStart();
+    if (start == null) {
+      return Collections.emptyList();
+    }
+
     var parseTree = documentContext.getAst();
 
     var maybeDoCall = Trees.findTerminalNodeContainsPosition(parseTree, start)
