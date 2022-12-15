@@ -26,7 +26,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
+import org.eclipse.lsp4j.websocket.jakarta.WebSocketEndpoint;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;

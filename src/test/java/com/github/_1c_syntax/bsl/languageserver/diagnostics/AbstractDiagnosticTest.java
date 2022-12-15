@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -39,7 +40,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;

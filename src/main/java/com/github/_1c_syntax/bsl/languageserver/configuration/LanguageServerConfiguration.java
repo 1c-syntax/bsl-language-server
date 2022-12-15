@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.Docum
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.utils.Absolute;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,7 +46,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -175,6 +175,10 @@ public class LanguageServerConfiguration {
 
   }
 
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "False positive"
+  )
   private static File getConfigurationFile(Path rootPath) {
     File configurationFile = null;
     List<Path> listPath = new ArrayList<>();
