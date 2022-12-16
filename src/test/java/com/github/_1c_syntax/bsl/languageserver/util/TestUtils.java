@@ -24,10 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.util;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;

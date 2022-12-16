@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import mockit.Mock;
+import mockit.MockUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -44,6 +46,13 @@ class BSLLSPLauncherTest {
 
   @BeforeEach
   void setUpStreams() {
+    new MockUp<System>() {
+      @Mock
+      public void exit(int value) {
+        throw new RuntimeException(String.valueOf(value));
+      }
+    };
+
     outContent = new ByteArrayOutputStream();
     errContent = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outContent));
@@ -57,34 +66,28 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(2)
-  void testParseError() {
+  void testParseError() throws Exception {
     // given
     String[] args = new String[]{"--error"};
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("2");
 
     // then
     assertThat(errContent.toString()).containsIgnoringCase("Unknown option: '--error'");
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testAnalyze() {
     // given
     String[] args = "--analyze --srcDir ./src/test/resources/cli".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should run without exceptions
@@ -94,17 +97,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testAnalyzeSilent() {
     // given
     String[] args = "--analyze --srcDir ./src/test/resources/cli --silent".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -113,17 +113,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(1)
   void testAnalyzeError() {
     // given
     String[] args = "--analyze --srcDir fake-dir".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("1");
 
     // then
     // main-method should runs without exceptions
@@ -132,17 +129,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
     String[] args = "--format --src ./src/test/resources/cli".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -152,17 +146,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testFormatOneFile() {
     // given
     String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -172,17 +163,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testFormatTwoFiles() {
     // given
     String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt,./src/test/resources/cli/test.bsl".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -192,17 +180,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
     String[] args = "--format --src ./src/test/resources/cli --silent".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -211,17 +196,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(1)
   void testFormatError() {
     // given
     String[] args = "--format --src fake-dir".split(" ");
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("1");
 
     // then
     // main-method should runs without exceptions
@@ -230,17 +212,14 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testVersion() {
     // given
     String[] args = {"-v"};
 
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
     // then
     // main-method should runs without exceptions
@@ -270,11 +249,7 @@ class BSLLSPLauncherTest {
     String[] args = "-c .".split(" ");
 
     // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    BSLLSPLauncher.main(args);
 
     // then
     assertThat(outContent.toString()).contains("LanguageServerStartCommand");

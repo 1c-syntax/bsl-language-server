@@ -26,7 +26,6 @@ import io.sentry.Sentry;
 import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -49,7 +48,7 @@ public class SentryScopeConfigurer {
 
   @PostConstruct
   public void init() {
-    Sentry.configureScope((@NotNull Scope scope) -> {
+    Sentry.configureScope((Scope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
       scope.setUser(user);

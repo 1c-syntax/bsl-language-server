@@ -118,9 +118,7 @@ dependencies {
     implementation("io.sentry:sentry-logback")
 
     // COMPILE
-
-    // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     // TEST
 
@@ -130,7 +128,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
+    testImplementation("org.jmockit", "jmockit", "1.49")
     testImplementation("org.awaitility", "awaitility", "4.2.0")
 }
 
@@ -177,6 +175,9 @@ tasks.test {
     reports {
         html.required.set(true)
     }
+
+    val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {

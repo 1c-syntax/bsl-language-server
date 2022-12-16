@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -59,7 +60,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -274,24 +274,29 @@ public class DocumentContext {
   protected void rebuild(String content, int version) {
     computeLock.lock();
 
-    boolean versionMatches = version == this.version && version != 0;
+    try {
 
-    if (versionMatches && (this.content != null)) {
-      clearDependantData();
+      boolean versionMatches = version == this.version && version != 0;
+
+      if (versionMatches && (this.content != null)) {
+        clearDependantData();
+        computeLock.unlock();
+        return;
+      }
+
+      if (!isComputedDataFrozen) {
+        clearSecondaryData();
+      }
+
+      this.content = content;
+      tokenizer = new BSLTokenizer(content);
+      this.version = version;
+      symbolTree = computeSymbolTree();
+
+    } finally {
       computeLock.unlock();
-      return;
     }
 
-    if (!isComputedDataFrozen) {
-      clearSecondaryData();
-    }
-
-    this.content = content;
-    tokenizer = new BSLTokenizer(content);
-    this.version = version;
-    symbolTree = computeSymbolTree();
-
-    computeLock.unlock();
   }
 
   protected void rebuild() {
@@ -306,29 +311,36 @@ public class DocumentContext {
   protected void clearSecondaryData() {
     computeLock.lock();
 
-    content = null;
-    contentList.clear();
-    tokenizer = null;
-    queries.clear();
-    clearDependantData();
+    try {
 
-    if (!isComputedDataFrozen) {
-      cognitiveComplexityData.clear();
-      cyclomaticComplexityData.clear();
-      metrics.clear();
-      diagnosticIgnoranceData.clear();
+      content = null;
+      contentList.clear();
+      tokenizer = null;
+      queries.clear();
+      clearDependantData();
+
+      if (!isComputedDataFrozen) {
+        cognitiveComplexityData.clear();
+        cyclomaticComplexityData.clear();
+        metrics.clear();
+        diagnosticIgnoranceData.clear();
+      }
+    } finally {
+      computeLock.unlock();
     }
-    computeLock.unlock();
   }
 
   private void clearDependantData() {
     computeLock.lock();
     diagnosticsLock.lock();
 
-    diagnostics.clear();
+    try {
+      diagnostics.clear();
+    } finally {
+      diagnosticsLock.unlock();
+      computeLock.unlock();
+    }
 
-    diagnosticsLock.unlock();
-    computeLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {
