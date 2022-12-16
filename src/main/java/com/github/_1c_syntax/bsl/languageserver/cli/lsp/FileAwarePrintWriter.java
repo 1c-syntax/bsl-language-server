@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -59,7 +59,7 @@ public class FileAwarePrintWriter extends PrintWriter {
   /**
    * @param file Файл, в который отныне нужно перенаправлять вывод PrintWriter
    */
-  public void setFile(@CheckForNull File file) {
+  public void setFile(@Nullable File file) {
 
     // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.
     synchronized (lock) {

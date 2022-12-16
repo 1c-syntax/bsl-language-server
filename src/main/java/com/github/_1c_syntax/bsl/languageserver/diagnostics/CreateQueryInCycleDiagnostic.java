@@ -29,12 +29,12 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -145,7 +145,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getComplexPathName(
     BSLParser.ComplexIdentifierContext ci,
-    @CheckForNull BSLParser.ModifierContext to
+    @Nullable BSLParser.ModifierContext to
   ) {
 
     return ci.modifier().stream()
@@ -226,7 +226,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(@CheckForNull BSLParser.CodeBlockContext ctx) {
+  private void visitDescendantCodeBlock(@Nullable BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
@@ -369,7 +369,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return flowType == CodeFlowType.CYCLE;
     }
 
-    public Optional<VariableDefinition> getVariableByName(@CheckForNull String variableName) {
+    public Optional<VariableDefinition> getVariableByName(@Nullable String variableName) {
       return Optional.ofNullable(current().variables.get(variableName));
     }
 

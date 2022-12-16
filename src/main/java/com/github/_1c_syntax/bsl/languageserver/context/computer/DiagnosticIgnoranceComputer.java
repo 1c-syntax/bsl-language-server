@@ -28,12 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,7 +182,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     return true;
   }
 
-  @CheckForNull
+  @Nullable
   private DiagnosticCode checkIgnoreOff(
     Pattern ignoreOff,
     Token comment

@@ -118,9 +118,7 @@ dependencies {
     implementation("io.sentry:sentry-logback")
 
     // COMPILE
-
-    // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     // TEST
 

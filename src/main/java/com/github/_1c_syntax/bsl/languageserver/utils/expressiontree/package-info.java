@@ -22,7 +22,8 @@
 /**
  * Преобразователь дерева разбора в берево вычисления выражений с учетом приоритетов операций
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.EqualsAndHashCode;
+
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)

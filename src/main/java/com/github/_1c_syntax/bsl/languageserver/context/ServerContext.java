@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,6 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
@@ -63,7 +63,7 @@ public class ServerContext {
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
-  @CheckForNull
+  @Nullable
   @Setter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
@@ -127,7 +127,7 @@ public class ServerContext {
     return Collections.unmodifiableMap(documents);
   }
 
-  @CheckForNull
+  @Nullable
   public DocumentContext getDocument(String uri) {
     return getDocument(URI.create(uri));
   }
@@ -140,7 +140,7 @@ public class ServerContext {
     return Optional.empty();
   }
 
-  @CheckForNull
+  @Nullable
   public DocumentContext getDocument(URI uri) {
     return documents.get(Absolute.uri(uri));
   }

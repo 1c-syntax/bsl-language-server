@@ -34,7 +34,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -205,7 +204,6 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     return Collections.singletonList(textEdit);
   }
 
-  @NotNull
   private CodeAction createCodeAction(String title, List<TextEdit> edits, DocumentContext documentContext) {
     Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), edits);
     WorkspaceEdit edit = new WorkspaceEdit();
