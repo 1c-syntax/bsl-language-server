@@ -103,21 +103,25 @@ public class ServerContext {
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
-    files.parallelStream().forEach((File file) -> {
+    try {
 
-      workDoneProgressReporter.tick();
+      files.parallelStream().forEach((File file) -> {
 
-      var uri = file.toURI();
-      var documentContext = getDocument(uri);
-      if (documentContext == null) {
-        documentContext = createDocumentContext(uri);
-        rebuildDocument(documentContext);
-        documentContext.freezeComputedData();
-        tryClearDocument(documentContext);
-      }
-    });
+        workDoneProgressReporter.tick();
 
-    contextLock.writeLock().unlock();
+        var uri = file.toURI();
+        var documentContext = getDocument(uri);
+        if (documentContext == null) {
+          documentContext = createDocumentContext(uri);
+          rebuildDocument(documentContext);
+          documentContext.freezeComputedData();
+          tryClearDocument(documentContext);
+        }
+      });
+
+    } finally {
+      contextLock.writeLock().unlock();
+    }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");

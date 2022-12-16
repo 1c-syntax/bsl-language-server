@@ -59,41 +59,38 @@ public class FileAwarePrintWriter extends PrintWriter {
   /**
    * @param file Файл, в который отныне нужно перенаправлять вывод PrintWriter
    */
-  public void setFile(@Nullable File file) {
+  public synchronized void setFile(@Nullable File file) {
 
-    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.
-    synchronized (lock) {
-      if (Objects.equals(file, this.file)) {
-        return;
-      }
-
-      this.file = file;
-
-      if (file == null) {
-        closeOutputStream();
-        return;
-      }
-
-      if (file.isDirectory()) {
-        LOGGER.error("Trace log setting must lead to file, not directory! {}", file.getAbsolutePath());
-        return;
-      }
-
-      FileOutputStream fileOutputStream;
-      try {
-        // stream is not closed, cause it used as output stream in writer. See this#out field.
-        fileOutputStream = new FileOutputStream(file);
-      } catch (FileNotFoundException e) {
-        LOGGER.error("Can't create LSP trace file", e);
-        return;
-      }
-
-      closeOutputStream();
-
-      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));
-      this.lock = this.out;
-      this.isEmpty = false;
+    if (Objects.equals(file, this.file)) {
+      return;
     }
+
+    this.file = file;
+
+    if (file == null) {
+      closeOutputStream();
+      return;
+    }
+
+    if (file.isDirectory()) {
+      LOGGER.error("Trace log setting must lead to file, not directory! {}", file.getAbsolutePath());
+      return;
+    }
+
+    FileOutputStream fileOutputStream;
+    try {
+      // stream is not closed, cause it used as output stream in writer. See this#out field.
+      fileOutputStream = new FileOutputStream(file);
+    } catch (FileNotFoundException e) {
+      LOGGER.error("Can't create LSP trace file", e);
+      return;
+    }
+
+    closeOutputStream();
+
+    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));
+    this.lock = this.out;
+    this.isEmpty = false;
 
   }
 

@@ -154,7 +154,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static String trimLastQuote(String text) {
     var quoteCount = text.length() - text.replace("\"", "").length();
-    if (quoteCount % 2 == 1) {
+    if (quoteCount % 2 != 0) {
       String newString;
       var quotePosition = text.lastIndexOf("\"");
       newString = text.substring(0, quotePosition) + " ";
