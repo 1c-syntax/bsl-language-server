@@ -82,12 +82,12 @@
       "version": "0.1.1"
     },
     {
-      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
-      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.3",
       "unresolved": false,
       "groupId": "com.github.spotbugs",
       "artifactId": "spotbugs-annotations",
-      "version": "4.7.1"
+      "version": "4.7.3"
     },
     {
       "ideaName": "Gradle: org.languagetool:language-en:5.6",
@@ -112,14 +112,6 @@
       "groupId": "org.languagetool",
       "artifactId": "languagetool-core",
       "version": "5.6"
-    },
-    {
-      "ideaName": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
-      "gradleName": "com.google.code.findbugs:jsr305:3.0.2",
-      "unresolved": false,
-      "groupId": "com.google.code.findbugs",
-      "artifactId": "jsr305",
-      "version": "3.0.2"
     },
     {
       "ideaName": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
@@ -354,6 +346,14 @@
       "version": "4.9.0"
     },
     {
+      "ideaName": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+      "gradleName": "com.google.code.findbugs:jsr305:3.0.2",
+      "unresolved": false,
+      "groupId": "com.google.code.findbugs",
+      "artifactId": "jsr305",
+      "version": "3.0.2"
+    },
+    {
       "ideaName": "Gradle: org.apache.opennlp:opennlp-tools:1.9.4",
       "gradleName": "org.apache.opennlp:opennlp-tools:1.9.4",
       "unresolved": false,
@@ -394,6 +394,30 @@
       "version": "1.1.1"
     },
     {
+      "ideaName": "Gradle: org.apache.commons:commons-text:1.9",
+      "gradleName": "org.apache.commons:commons-text:1.9",
+      "unresolved": false,
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-text",
+      "version": "1.9"
+    },
+    {
+      "ideaName": "Gradle: commons-validator:commons-validator:1.7",
+      "gradleName": "commons-validator:commons-validator:1.7",
+      "unresolved": false,
+      "groupId": "commons-validator",
+      "artifactId": "commons-validator",
+      "version": "1.7"
+    },
+    {
+      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+      "unresolved": false,
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-databind",
+      "version": "2.13.4.2"
+    },
+    {
       "ideaName": "Gradle: io.grpc:grpc-stub:1.42.1",
       "gradleName": "io.grpc:grpc-stub:1.42.1",
       "unresolved": false,
@@ -424,30 +448,6 @@
       "groupId": "io.grpc",
       "artifactId": "grpc-netty-shaded",
       "version": "1.42.1"
-    },
-    {
-      "ideaName": "Gradle: org.apache.commons:commons-text:1.9",
-      "gradleName": "org.apache.commons:commons-text:1.9",
-      "unresolved": false,
-      "groupId": "org.apache.commons",
-      "artifactId": "commons-text",
-      "version": "1.9"
-    },
-    {
-      "ideaName": "Gradle: commons-validator:commons-validator:1.7",
-      "gradleName": "commons-validator:commons-validator:1.7",
-      "unresolved": false,
-      "groupId": "commons-validator",
-      "artifactId": "commons-validator",
-      "version": "1.7"
-    },
-    {
-      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
-      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
-      "unresolved": false,
-      "groupId": "com.fasterxml.jackson.core",
-      "artifactId": "jackson-databind",
-      "version": "2.13.4.2"
     },
     {
       "ideaName": "Gradle: org.carrot2:morfologik-fsa-builders:2.1.7",
@@ -882,6 +882,14 @@
       "version": "4.9.0"
     },
     {
+      "ideaName": "Gradle: commons-digester:commons-digester:2.1",
+      "gradleName": "commons-digester:commons-digester:2.1",
+      "unresolved": false,
+      "groupId": "commons-digester",
+      "artifactId": "commons-digester",
+      "version": "2.1"
+    },
+    {
       "ideaName": "Gradle: io.grpc:grpc-api:1.42.1",
       "gradleName": "io.grpc:grpc-api:1.42.1",
       "unresolved": false,
@@ -960,14 +968,6 @@
       "groupId": "io.grpc",
       "artifactId": "grpc-core",
       "version": "1.42.1"
-    },
-    {
-      "ideaName": "Gradle: commons-digester:commons-digester:2.1",
-      "gradleName": "commons-digester:commons-digester:2.1",
-      "unresolved": false,
-      "groupId": "commons-digester",
-      "artifactId": "commons-digester",
-      "version": "2.1"
     },
     {
       "ideaName": "Gradle: net.arnx:jsonic:1.2.11",
@@ -1226,12 +1226,20 @@
       "version": "2.7.5"
     },
     {
-      "ideaName": "Gradle: com.ginsberg:junit5-system-exit:1.1.2",
-      "gradleName": "com.ginsberg:junit5-system-exit:1.1.2",
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.1",
       "unresolved": false,
-      "groupId": "com.ginsberg",
-      "artifactId": "junit5-system-exit",
-      "version": "1.1.2"
+      "groupId": "com.github.spotbugs",
+      "artifactId": "spotbugs-annotations",
+      "version": "4.7.1"
+    },
+    {
+      "ideaName": "Gradle: org.jmockit:jmockit:1.49",
+      "gradleName": "org.jmockit:jmockit:1.49",
+      "unresolved": false,
+      "groupId": "org.jmockit",
+      "artifactId": "jmockit",
+      "version": "1.49"
     },
     {
       "ideaName": "Gradle: org.awaitility:awaitility:4.2.0",

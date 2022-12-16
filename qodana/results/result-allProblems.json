@@ -1,35 +1,10 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Synchronization on a non-final field",
-  "severity": "High",
-  "comment": "Synchronization on a non-final field 'lock'",
-  "detailsInfo": "Reports `synchronized` statement lock expressions that consist of a non-`final` field reference. Such statements are unlikely to have useful semantics, as different threads may acquire different locks even when operating on the same object.\n\n**Example:**\n\n\n      private Object o;\n      public void foo() {\n        synchronized (o) // synchronization on a non-final field\n        { }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
-      "language": "JAVA",
-      "line": 65,
-      "offset": 19,
-      "length": 4,
-      "code": {
-        "startLine": 63,
-        "length": 4,
-        "offset": 131,
-        "surroundingCode": "\n    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.\n    synchronized (lock) {\n      if (Objects.equals(file, this.file)) {\n        return;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "SynchronizeOnNonFinalField"
-  },
-  "hash": "71510b63c026228016296af8bcabeb9928d46981295b1743fabe674d359834ff"
-},{
-  "tool": "Code Inspection",
   "category": "Probable bugs",
   "type": "Mismatched read and write of array",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Contents of array 'reportersOptions' are read, but never written to",
   "detailsInfo": "Reports arrays whose contents are read but not updated, or updated but not read. Such inconsistent reads and writes are pointless and probably indicate dead, incomplete or erroneous code.\n\n**Example:**\n\n\n      final int[] bar = new int[3];\n      bar[2] = 3;\n",
@@ -58,6 +33,9 @@
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
   "type": "Default annotation parameter value",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Redundant default parameter value assignment",
   "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
@@ -86,6 +64,9 @@
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
   "type": "Default annotation parameter value",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Redundant default parameter value assignment",
   "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
@@ -94,11 +75,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
       "language": "JAVA",
-      "line": 51,
+      "line": 50,
       "offset": 20,
       "length": 17,
       "code": {
-        "startLine": 49,
+        "startLine": 48,
         "length": 17,
         "offset": 68,
         "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
@@ -109,11 +90,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "DefaultAnnotationParam"
   },
-  "hash": "1cd580b858af24ae77df398d6173b43754b59023573376c9b9a35badfef2b455"
+  "hash": "0075b5ac0f587a18b42ec66d5835585bd8dd59fe5399780ae701a882e27920e2"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
   "type": "Stream API call chain can be simplified",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Can be replaced with 'peek'",
   "detailsInfo": "Reports stream API call chains that can be simplified. Simplification will often avoid some temporary object creation during collection traversal.\n\n\nThe inspection replaces the following call chains:\n\n* `collection.stream().forEach()` → `collection.forEach()`\n* `collection.stream().collect(toList/toSet/toCollection())` → `new CollectionType<>(collection)`\n* `collection.stream().toArray()` → `collection.toArray()`\n* `Arrays.asList().stream()` → `Arrays.stream()` or `Stream.of()`\n* `IntStream.range(0, array.length).mapToObj(idx -> array[idx])` → `Arrays.stream(array)`\n* `IntStream.range(0, list.size()).mapToObj(idx -> list.get(idx))` → `list.stream()`\n* `Collections.singleton().stream()` → `Stream.of()`\n* `Collections.emptyList().stream()` → `Stream.empty()`\n* `stream.filter().findFirst().isPresent()` → `stream.anyMatch()`\n* `stream.collect(counting())` → `stream.count()`\n* `stream.collect(maxBy())` → `stream.max()`\n* `stream.collect(mapping())` → `stream.map().collect()`\n* `stream.collect(reducing())` → `stream.reduce()`\n* `stream.collect(summingInt())` → `stream.mapToInt().sum()`\n* `stream.mapToObj(x -> x)` → `stream.boxed()`\n* `stream.map(x -> {...; return x;})` → `stream.peek(x -> ...)`\n* `!stream.anyMatch()` → `stream.noneMatch()`\n* `!stream.anyMatch(x -> !(...))` → `stream.allMatch()`\n* `stream.map().anyMatch(Boolean::booleanValue)` → `stream.anyMatch()`\n* `IntStream.range(expr1, expr2).mapToObj(x -> array[x])` → `Arrays.stream(array, expr1, expr2)`\n* `Collection.nCopies(count, ...)` → `Stream.generate().limit(count)`\n* `stream.sorted(comparator).findFirst()` → `Stream.min(comparator)`\n* `optional.orElseGet(() -> { throw new ...; })` → `optional.orElseThrow()`\n\n\nNote that the replacement semantics may have minor differences in some cases. For example,\n`Collections.synchronizedList(...).stream().forEach()` is not synchronized while\n`Collections.synchronizedList(...).forEach()` is synchronized.\nAlso, `collect(Collectors.maxBy())` returns an empty `Optional` if the resulting element is\n`null` while `Stream.max()` throws `NullPointerException` in this case.",
@@ -142,6 +126,9 @@
   "tool": "Code Inspection",
   "category": "Threading issues",
   "type": "Field accessed in both 'synchronized' and unsynchronized contexts",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Field 'isEmpty' is accessed in both synchronized and unsynchronized contexts",
   "detailsInfo": "Reports non-final fields that are accessed in both `synchronized` and non-`synchronized` contexts. `volatile` fields as well as accesses in constructors and initializers are ignored by this inspection.\n\n\nSuch \"partially synchronized\" access is often the result of a coding oversight\nand may lead to unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      public class Program {\n        Console console; // warning: Field 'console' is accessed in both synchronized and unsynchronized contexts\n\n        public synchronized void execute() {\n          console.print(\"running\");\n        }\n\n        public void check() {\n          console.check();\n        }\n      }\n\n\nUse the option to specify if simple getters and setters are counted as accesses too.",
@@ -165,11 +152,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldAccessedSynchronizedAndUnsynchronized"
   },
-  "hash": "8780740d1a34a0b0b9829350c1581750574ec4414f1b32654c87c25b0744da64"
+  "hash": "b78db030a52c7835b5d3c32304045f5ab114d0f2ce89399bbefc5817bd4d13ae"
 },{
   "tool": "Code Inspection",
   "category": "RegExp",
   "type": "Redundant character escape",
+  "tags": [
+    "RegExp"
+  ],
   "severity": "High",
   "comment": "Redundant character escape '*' in RegExp",
   "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
@@ -198,6 +188,9 @@
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
   "type": "Unnecessary 'continue' statement",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "'continue' is unnecessary as the last statement in a loop",
   "detailsInfo": "Reports `continue` statements if they are the last reachable statements in the loop. These `continue` statements are unnecessary and can be safely removed.\n\nExample:\n\n\n      for (String element: elements) {\n        System.out.println();\n        continue;\n      }\n\nAfter the quick-fix is applied:\n\n\n      for (String element: elements) {\n        System.out.println();\n      }\n\nThe inspection doesn't analyze JSP files.\n\n\nUse the **Ignore in then branch of 'if' statement with 'else' branch** option to ignore\n`continue` statements when they are placed in a `then` branch of a complete\n`if`-`else` statement.\n\nExample:\n\n\n      for (String element: elements) {\n        if(element.isEmpty()) {\n          continue;\n        } else {\n          //...\n        }\n      }\n",
@@ -226,6 +219,9 @@
   "tool": "Code Inspection",
   "category": "Serialization issues",
   "type": "Non-serializable field in a 'Serializable' class",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Non-serializable field 'exitPoint' in a Serializable class",
   "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
@@ -254,6 +250,9 @@
   "tool": "Code Inspection",
   "category": "Serialization issues",
   "type": "Non-serializable field in a 'Serializable' class",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Non-serializable field 'compatibilityMode' in a Serializable class",
   "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
@@ -282,6 +281,9 @@
   "tool": "Code Inspection",
   "category": "Declaration redundancy",
   "type": "'protected' member in 'final' class",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Class member declared 'protected' in 'final' class",
   "detailsInfo": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly.",
@@ -308,36 +310,11 @@
   "hash": "a6d80b534536073a4fb6262653b6f6d1e410126df2120e0d92bcc01ec12c4b9c"
 },{
   "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Constant conditions & exceptions",
-  "severity": "High",
-  "comment": "Condition 'identifier != null' is always 'true'",
-  "detailsInfo": "Reports code constructs that always produce the same result, may throw exceptions, or violates nullability contracts.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when reading a value guaranteed to be constant** option to add warnings on reading variables that contain some constant values, for example: `true`, `false`, or `null`.\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingExternalCodeToolsDiagnostic.java",
-      "language": "JAVA",
-      "line": 72,
-      "offset": 9,
-      "length": 18,
-      "code": {
-        "startLine": 70,
-        "length": 18,
-        "offset": 103,
-        "surroundingCode": "\n  private void checkUseExternalCodeTools(BSLParserRuleContext ctx, TerminalNode identifier) {\n    if (identifier != null\n      && externalCodeToolsName.matcher(identifier.getText()).matches()\n      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_methodCall)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "ConstantConditions"
-  },
-  "hash": "d3ae4f93d4a8a5344d8bc2d79c218c4459e69a26c9c7d8b3a3f8ba9c7670702c"
-},{
-  "tool": "Code Inspection",
   "category": "Inheritance issues",
   "type": "Abstract class which has no concrete subclass",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Abstract class 'AbstractCfgVisitor' has no concrete subclass",
   "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
@@ -366,6 +343,9 @@
   "tool": "Code Inspection",
   "category": "Inheritance issues",
   "type": "Abstract class which has no concrete subclass",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Abstract class 'DiagnosticComputer' has no concrete subclass",
   "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
@@ -394,6 +374,9 @@
   "tool": "Code Inspection",
   "category": "Inheritance issues",
   "type": "Abstract class which has no concrete subclass",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Abstract class 'DiagnosticMixIn' has no concrete subclass",
   "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
@@ -422,6 +405,9 @@
   "tool": "Code Inspection",
   "category": "Inheritance issues",
   "type": "Abstract class which has no concrete subclass",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Abstract class 'DiagnosticsConfiguration' has no concrete subclass",
   "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
@@ -450,6 +436,9 @@
   "tool": "Code Inspection",
   "category": "Lombok",
   "type": "@Qualifier not copyable by lombok",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Lombok does not copy the annotation 'org.springframework.beans.factory.annotation.Qualifier' into the constructor",
   "detailsInfo": "Reports Spring `@Qualifier` annotations on class fields that are ignored by the corresponding Lombok `@RequiredArgsConstructor` and `@AllArgsConstructor` annotations. The generated constructors will not receive the `@Qualifier` annotation without a `lombok.copyableAnnotations` definition inside the `lombok.config` file.",
@@ -478,6 +467,9 @@
   "tool": "Code Inspection",
   "category": "Probable bugs",
   "type": "Cast conflicts with 'instanceof'",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Cast to 'BSLParser.NewExpressionContext' type conflicts with preceding 'instanceof ParserRuleContext' check",
   "detailsInfo": "Reports type cast expressions that are preceded by an `instanceof` check for a different type.\n\n\nAlthough this might be intended, such a construct is most likely an error, and will\nresult in a `java.lang.ClassCastException` at runtime.\n\n**Example:**\n\n\n      class Main {\n        int whenCharSequenceCastToNumber(Object o){\n          if (o instanceof CharSequence) {\n            return ((Number) o).intValue();\n          }\n          return 0;\n        }\n\n        int earlyReturnWhenNotCharSequence(Object o){\n          if (!(o instanceof CharSequence)) return 0;\n          return ((Number)o).intValue();\n        }\n      }\n",
@@ -501,11 +493,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "CastConflictsWithInstanceof"
   },
-  "hash": "0a0da7fe1a6ed00365236044c5fbc049dae5efa5f00a853f80e3d8d65529c400"
+  "hash": "0ec6b57b6fde6b520ba45a4b32d10fd824ac61a69016a64a1de73ece03f80b71"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
   "type": "Cast conflicts with 'instanceof'",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Cast to 'BSLParser.GlobalMethodCallContext' type conflicts with preceding 'instanceof ParserRuleContext' check",
   "detailsInfo": "Reports type cast expressions that are preceded by an `instanceof` check for a different type.\n\n\nAlthough this might be intended, such a construct is most likely an error, and will\nresult in a `java.lang.ClassCastException` at runtime.\n\n**Example:**\n\n\n      class Main {\n        int whenCharSequenceCastToNumber(Object o){\n          if (o instanceof CharSequence) {\n            return ((Number) o).intValue();\n          }\n          return 0;\n        }\n\n        int earlyReturnWhenNotCharSequence(Object o){\n          if (!(o instanceof CharSequence)) return 0;\n          return ((Number)o).intValue();\n        }\n      }\n",
@@ -529,39 +524,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "CastConflictsWithInstanceof"
   },
-  "hash": "0cd24cca234dcb0132ce8680a983be3892b65a8ba87c03fdc2f96441359eac8c"
+  "hash": "eb7e5d91d62cae0911e19809f43f952ba9068b18112f8b4bba2e027c635278fc"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
   "type": "Non-private field accessed in 'synchronized' context",
-  "severity": "High",
-  "comment": "Non-private field 'lock' accessed in synchronized context",
-  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
-      "language": "JAVA",
-      "line": 65,
-      "offset": 19,
-      "length": 4,
-      "code": {
-        "startLine": 63,
-        "length": 4,
-        "offset": 131,
-        "surroundingCode": "\n    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.\n    synchronized (lock) {\n      if (Objects.equals(file, this.file)) {\n        return;"
-      }
-    }
+  "tags": [
+    "JAVA"
   ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
-  },
-  "hash": "b9cd696aed6a19477e5750c6176339b1e8882c3ae315fec182787d6f68688f9d"
-},{
-  "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Non-private field accessed in 'synchronized' context",
   "severity": "High",
   "comment": "Non-private field 'this.out' accessed in synchronized context",
   "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
@@ -570,14 +540,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
       "language": "JAVA",
-      "line": 93,
-      "offset": 7,
+      "line": 91,
+      "offset": 5,
       "length": 8,
       "code": {
-        "startLine": 91,
+        "startLine": 89,
         "length": 8,
-        "offset": 34,
-        "surroundingCode": "      closeOutputStream();\n\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;"
+        "offset": 30,
+        "surroundingCode": "    closeOutputStream();\n\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;"
       }
     }
   ],
@@ -585,11 +555,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "PublicFieldAccessedInSynchronizedContext"
   },
-  "hash": "b1fafb47d0d71b5a92a9523f880ea3fc5c41fb8cf8b85817f944b3772350c09d"
+  "hash": "0ccd0f1dfb2755ed9a5c2b636ad341d7859d728e17008dc8976913cc78380fce"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
   "type": "Non-private field accessed in 'synchronized' context",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Non-private field 'this.lock' accessed in synchronized context",
   "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
@@ -598,14 +571,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
       "language": "JAVA",
-      "line": 94,
-      "offset": 7,
+      "line": 92,
+      "offset": 5,
       "length": 9,
       "code": {
-        "startLine": 92,
+        "startLine": 90,
         "length": 9,
-        "offset": 110,
-        "surroundingCode": "\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;\n    }"
+        "offset": 106,
+        "surroundingCode": "\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;\n"
       }
     }
   ],
@@ -613,11 +586,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "PublicFieldAccessedInSynchronizedContext"
   },
-  "hash": "13f8a0c6fc69d593f935abf1b0b692d43b50cf16caff6898ed66510718171085"
+  "hash": "39a4f87131c4f867445fb0b7be71b54fd52580f469490b4db6d9111cac05ac8f"
 },{
   "tool": "Code Inspection",
   "category": "Threading issues",
   "type": "Non-private field accessed in 'synchronized' context",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Non-private field 'this.out' accessed in synchronized context",
   "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
@@ -626,14 +602,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
       "language": "JAVA",
-      "line": 94,
-      "offset": 19,
+      "line": 92,
+      "offset": 17,
       "length": 8,
       "code": {
-        "startLine": 92,
+        "startLine": 90,
         "length": 8,
-        "offset": 122,
-        "surroundingCode": "\n      this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n      this.lock = this.out;\n      this.isEmpty = false;\n    }"
+        "offset": 118,
+        "surroundingCode": "\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;\n"
       }
     }
   ],
@@ -641,11 +617,14 @@
     "module": "bsl-language-server.main",
     "inspectionName": "PublicFieldAccessedInSynchronizedContext"
   },
-  "hash": "f111af7068dfc76ca7c9d16705fc326b4ea11cea756d746bf7a54199352e8268"
+  "hash": "a342c69e069ab0f17aea25348a1e79ddce1a3e70499abd1c56e771f18738e016"
 },{
   "tool": "Code Inspection",
   "category": "Class structure",
   "type": "Utility class with 'public' constructor",
+  "tags": [
+    "JAVA"
+  ],
   "severity": "High",
   "comment": "Class 'BSLLSBinding' has only 'static' members, and a 'public' constructor",
   "detailsInfo": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.",

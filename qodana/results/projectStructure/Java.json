@@ -1,11 +1,11 @@
 {
   "modules": [
     {
-      "name": "bsl-language-server.jmh",
+      "name": "bsl-language-server",
       "languageLevel": 11
     },
     {
-      "name": "bsl-language-server",
+      "name": "bsl-language-server.jmh",
       "languageLevel": 11
     },
     {

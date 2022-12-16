@@ -1,6 +1,25 @@
 {
   "modules": [
     {
+      "name": "bsl-language-server",
+      "contentEntries": [
+        {
+          "path": "file://$PROJECT_DIR$",
+          "sourceFolders": []
+        }
+      ],
+      "orderEntries": [
+        {
+          "name": "17",
+          "type": "SDK"
+        },
+        {
+          "name": "<Module source>",
+          "type": "Own sources"
+        }
+      ]
+    },
+    {
       "name": "bsl-language-server.jmh",
       "contentEntries": [
         {
@@ -16,7 +35,7 @@
       ],
       "orderEntries": [
         {
-          "name": "jbr-11",
+          "name": "17",
           "type": "SDK"
         },
         {
@@ -72,7 +91,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
           "type": "Library"
         },
         {
@@ -85,10 +104,6 @@
         },
         {
           "name": "Gradle: org.languagetool:languagetool-core:5.6",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
           "type": "Library"
         },
         {
@@ -208,6 +223,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.apache.opennlp:opennlp-tools:1.9.4",
           "type": "Library"
         },
@@ -228,6 +247,18 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: org.apache.commons:commons-text:1.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-validator:commons-validator:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-stub:1.42.1",
           "type": "Library"
         },
@@ -241,18 +272,6 @@
         },
         {
           "name": "Gradle: io.grpc:grpc-netty-shaded:1.42.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.apache.commons:commons-text:1.9",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: commons-validator:commons-validator:1.7",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
           "type": "Library"
         },
         {
@@ -472,6 +491,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: commons-digester:commons-digester:2.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-api:1.42.1",
           "type": "Library"
         },
@@ -509,10 +532,6 @@
         },
         {
           "name": "Gradle: io.grpc:grpc-core:1.42.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: commons-digester:commons-digester:2.1",
           "type": "Library"
         },
         {
@@ -644,7 +663,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.ginsberg:junit5-system-exit:1.1.2",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jmockit:jmockit:1.49",
           "type": "Library"
         },
         {
@@ -790,25 +813,6 @@
       ]
     },
     {
-      "name": "bsl-language-server",
-      "contentEntries": [
-        {
-          "path": "file://$PROJECT_DIR$",
-          "sourceFolders": []
-        }
-      ],
-      "orderEntries": [
-        {
-          "name": "jbr-11",
-          "type": "SDK"
-        },
-        {
-          "name": "<Module source>",
-          "type": "Own sources"
-        }
-      ]
-    },
-    {
       "name": "bsl-language-server.test",
       "contentEntries": [
         {
@@ -829,7 +833,7 @@
       ],
       "orderEntries": [
         {
-          "name": "jbr-11",
+          "name": "17",
           "type": "SDK"
         },
         {
@@ -953,7 +957,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.ginsberg:junit5-system-exit:1.1.2",
+          "name": "Gradle: org.jmockit:jmockit:1.49",
           "type": "Library"
         },
         {
@@ -1591,7 +1595,7 @@
       ],
       "orderEntries": [
         {
-          "name": "jbr-11",
+          "name": "17",
           "type": "SDK"
         },
         {
@@ -1652,10 +1656,6 @@
         },
         {
           "name": "Gradle: org.languagetool:languagetool-core:5.6",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
           "type": "Library"
         },
         {
@@ -1767,6 +1767,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.apache.opennlp:opennlp-tools:1.9.4",
           "type": "Library"
         },
@@ -1787,6 +1791,18 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: org.apache.commons:commons-text:1.9",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: commons-validator:commons-validator:1.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-stub:1.42.1",
           "type": "Library"
         },
@@ -1800,18 +1816,6 @@
         },
         {
           "name": "Gradle: io.grpc:grpc-netty-shaded:1.42.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.apache.commons:commons-text:1.9",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: commons-validator:commons-validator:1.7",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
           "type": "Library"
         },
         {
@@ -2015,6 +2019,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: commons-digester:commons-digester:2.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-api:1.42.1",
           "type": "Library"
         },
@@ -2052,10 +2060,6 @@
         },
         {
           "name": "Gradle: io.grpc:grpc-core:1.42.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: commons-digester:commons-digester:2.1",
           "type": "Library"
         },
         {
