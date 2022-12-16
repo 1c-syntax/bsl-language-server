@@ -21,15 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import mockit.Mock;
+import mockit.MockUp;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -47,6 +50,16 @@ class BSLLanguageServerTest {
 
   @Autowired
   private BSLLanguageServer server;
+
+  @BeforeEach
+  void setUp() {
+    new MockUp<System>() {
+      @Mock
+      public void exit(int value) {
+        throw new RuntimeException(String.valueOf(value));
+      }
+    };
+  }
 
   @Test
   void initialize() throws ExecutionException, InterruptedException {
@@ -94,24 +107,22 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(1)
   void exitWithoutShutdown() {
-    // when
-    server.exit();
-
-    // then ExpectSystemExitWithStatus should not throw exception
+    // when-then
+    assertThatThrownBy(() -> server.exit())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("1");
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void exitWithShutdown() {
     // given
     server.shutdown();
 
-    // when
-    server.exit();
-
-    // then ExpectSystemExitWithStatus should not throw exception
+    // when-then
+    assertThatThrownBy(() -> server.exit())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
   }
 
 }
