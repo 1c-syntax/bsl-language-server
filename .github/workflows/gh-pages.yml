@@ -31,7 +31,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.6.15'
+        python-version: '3.7.15'
         architecture: 'x64'
 
     - name: Install dependencies
