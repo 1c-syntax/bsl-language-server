@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -29,9 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import mockit.Mock;
+import mockit.MockUp;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,6 +48,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @Slf4j
@@ -58,18 +61,27 @@ class SmokyTest {
   @Autowired
   private Collection<DiagnosticInfo> diagnosticInfos;
 
+  @BeforeEach
+  void setUpStreams() {
+    new MockUp<System>() {
+      @Mock
+      public void exit(int value) {
+        throw new RuntimeException(String.valueOf(value));
+      }
+    };
+  }
+
   @Test
-  @ExpectSystemExitWithStatus(0)
-  void test() {
+  void test() throws Exception {
 
     // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
-    // when
-    BSLLSPLauncher.main(args);
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
-    // then
-    assertThat(true).isTrue();
   }
 
   @Test

@@ -22,7 +22,8 @@
 /**
  * Классы для хранения информации, прочитанной из комментариев-описаний
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

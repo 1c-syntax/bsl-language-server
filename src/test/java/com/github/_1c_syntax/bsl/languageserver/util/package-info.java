@@ -19,6 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-@ParametersAreNonnullByDefault package com.github._1c_syntax.bsl.languageserver.util;
+@DefaultAnnotation(NonNull.class)
+package com.github._1c_syntax.bsl.languageserver.util;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

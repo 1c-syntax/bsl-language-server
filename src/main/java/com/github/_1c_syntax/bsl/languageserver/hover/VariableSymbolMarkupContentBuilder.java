@@ -75,8 +75,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   }
 
   @Override
-  public Class<VariableSymbol> getType() {
-    return VariableSymbol.class;
+  public SymbolKind getSymbolKind() {
+    return SymbolKind.Variable;
   }
 
   private String getSignature(VariableSymbol symbol) {

@@ -4,11 +4,12 @@ on:
     branches-ignore:
       - "translations_*"
 jobs:
+
   sentry:
     name: Sentry
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Create Sentry release
         uses: getsentry/action-release@v1
         env:

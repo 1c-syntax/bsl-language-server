@@ -22,7 +22,8 @@
 /**
  * Формирование всплывающего окна.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

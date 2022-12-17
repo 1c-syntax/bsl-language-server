@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,7 +45,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class LanguageServerConfiguration {
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
-  
+
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
   private FormattingOptions formattingOptions = new FormattingOptions();
@@ -109,11 +109,11 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private File configurationFile;
 
-  @Value("${app.configuration.path}")
+  @Value("${app.configuration.path:.bsl-language-server.json}")
   @JsonIgnore
   private String configurationFilePath;
 
-  @Value(("${app.globalConfiguration.path}"))
+  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
   @JsonIgnore
   private String globalConfigPath;
 

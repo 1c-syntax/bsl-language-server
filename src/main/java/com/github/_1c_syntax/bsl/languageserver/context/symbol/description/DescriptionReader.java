@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;

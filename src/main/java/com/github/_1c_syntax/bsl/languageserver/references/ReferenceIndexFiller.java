@@ -36,19 +36,25 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -82,6 +88,19 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
+
+    @Override
+    public BSLParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
+      commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
+      return super.visitProcDeclaration(ctx);
+    }
+
+    @Override
+    public BSLParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
+      commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
+      return super.visitFuncDeclaration(ctx);
+    }
 
     @Override
     public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
@@ -130,7 +149,11 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
-        var callParamList = ctx.doCall().callParamList().callParam();
+        final var doCallContext = ctx.doCall();
+        if (doCallContext == null){
+          return super.visitNewExpression(ctx);
+        }
+        var callParamList = doCallContext.callParamList().callParam();
 
         if (NotifyDescription.notifyDescriptionContainsHandler(callParamList)) {
           addCallbackMethodCall(
@@ -152,11 +175,28 @@ public class ReferenceIndexFiller {
       return super.visitNewExpression(ctx);
     }
 
+    @Override
+    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+      final var identifier = ctx.IDENTIFIER();
+      if (identifier != null){
+        final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
+          .map(BSLParser.AcceptorContext::modifier)
+          .orElseGet(Collections::emptyList);
+        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
+        if (!mdoRef.isEmpty()) {
+          Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+        }
+      }
+      return super.visitLValue(ctx);
+    }
+
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
-      Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
+      final var configuration = documentContext.getServerContext().getConfiguration();
+      Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
-        if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
+        if (!DEFAULT_MODULE_TYPES.contains(moduleType)
+            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
@@ -168,6 +208,10 @@ public class ReferenceIndexFiller {
     }
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
+      // todo: move this out of method 
+      if (mdoRef.isEmpty()){
+        return;
+      }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
         if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
           checkCall(mdoRef, methodNameToken);
@@ -183,13 +227,34 @@ public class ReferenceIndexFiller {
     }
 
     private String getModule(BSLParser.CallParamContext callParamContext) {
-      return NotifyDescription.getFirstMember(callParamContext)
+      final var complexIdentifierContext1 = NotifyDescription.getFirstMember(callParamContext)
         .map(BSLParser.MemberContext::complexIdentifier)
+        .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
+        .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
+      if (complexIdentifierContext1.isEmpty()){
+        return "";
+      }
+      return complexIdentifierContext1
         .filter(Predicate.not(Modules::isThisObject))
         .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
         .orElse(MdoRefBuilder.getMdoRef(documentContext));
     }
 
+    private Set<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
+      if (paramList == null) {
+        return Collections.emptySet();
+      }
+      final var configuration = documentContext.getServerContext().getConfiguration();
+      return paramList.param().stream()
+        .map(BSLParser.ParamContext::IDENTIFIER)
+        .filter(Objects::nonNull)
+        .map(ParseTree::getText)
+        .map(configuration::getCommonModule)
+        .filter(Optional::isPresent)
+        .flatMap(Optional::stream)
+        .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
+        .collect(Collectors.toSet());
+    }
   }
 
   @RequiredArgsConstructor

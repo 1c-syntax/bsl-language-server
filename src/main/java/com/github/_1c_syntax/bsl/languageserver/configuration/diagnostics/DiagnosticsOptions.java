@@ -42,6 +42,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DiagnosticsOptions {
   private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
+  private boolean analyzeOnStart;
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
   private boolean ordinaryAppSupport = true;

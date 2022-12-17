@@ -40,8 +40,23 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   @Test
   void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
+    check(diagnostics, false);
+  }
 
-    assertThat(diagnostics).hasSize(11);
+  @Test
+  void exclusionPrefixesTest(){
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("exclusionPrefixes", "<code>");
+    diagnosticInstance.configure(configuration);
+
+    var diagnostics = getDiagnostics();
+    check(diagnostics, true);
+  }
+
+  void check(List<Diagnostic> diagnostics, boolean excludePrefixes){
+    int expectedSize = excludePrefixes?11:12;
+
+    assertThat(diagnostics).hasSize(expectedSize);
     assertThat(diagnostics, true)
       .hasRange(0, 0, 6, 81)
       .hasRange(16, 4, 34, 16)
@@ -54,6 +69,10 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
       .hasRange(117, 0, 118, 24)
       .hasRange(203, 0, 203, 32)
       .hasRange(244, 0, 264, 152);
+
+    if(!excludePrefixes){
+      assertThat(diagnostics, true).hasRange(268, 4, 270, 22);
+    }
   }
 
   @Test

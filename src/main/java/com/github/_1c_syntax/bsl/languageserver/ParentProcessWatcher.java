@@ -70,7 +70,7 @@ public class ParentProcessWatcher {
       .orElse(false);
 
     if (!processIsAlive) {
-      LOGGER.error("Parent process with pid {} is not found. Closing application...", parentProcessId);
+      LOGGER.info("Parent process with pid {} is not found. Closing application...", parentProcessId);
       languageServer.exit();
     }
   }

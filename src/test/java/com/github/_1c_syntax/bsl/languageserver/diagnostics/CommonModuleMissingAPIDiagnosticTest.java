@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
@@ -32,6 +33,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<CommonModuleMissingAPIDiagnostic> {
   CommonModuleMissingAPIDiagnosticTest() {
     super(CommonModuleMissingAPIDiagnostic.class);

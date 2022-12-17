@@ -76,4 +76,10 @@ public class Methods {
       .map(BSLParser.StringContext::getStart);
   }
 
+  public static Optional<Token> getMethodName(BSLParser.LValueContext lValueContext) {
+    return Optional.ofNullable(lValueContext.acceptor())
+      .map(BSLParser.AcceptorContext::modifier)
+      .flatMap(Methods::getMethodName);
+  }
+
 }
