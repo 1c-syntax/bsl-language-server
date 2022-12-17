@@ -49,9 +49,11 @@ import org.eclipse.lsp4j.SymbolKind;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -86,11 +88,20 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
 
   private static final Set<VariableKind> GlobalVariableKinds = EnumSet.of(VariableKind.GLOBAL, VariableKind.MODULE);
   private static final String MODULE_SCOPE_NAME = "";
-  private static final String UNUSED_MESSAGE = "unusedMessage";
+  private static final String UNUSEDAFTER_MESSAGE = "unusedAfterMessage";
+
+  private static final Collection<Integer> EXCLUDED_TOP_RULE_FOR_LOOP = Set.of(BSLParser.RULE_subCodeBlock, BSLParser.RULE_fileCodeBlock);
+  private static final Collection<Integer> LOOPS;
 
   private final ReferenceIndex referenceIndex;
   private final Map<SourceDefinedSymbol, BSLParserRuleContext> astBySymbol = new HashMap<>();
   private Map<String, BSLParserRuleContext> methodContextsByMethodName;
+
+  static {
+    final var loops = new HashSet<>(EXCLUDED_TOP_RULE_FOR_LOOP);
+    loops.addAll(Set.of(BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement, BSLParser.RULE_whileStatement));
+    LOOPS = Set.copyOf(loops);
+  }
 
   @Override
   protected void check() {
@@ -233,7 +244,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
       if (isSameLoop || !isInnerLoop) {
         return false;
       }
-    } else if (varData.isFinished()){
+    } else if (varData.unusedAfter){
       return true;
     }
 
@@ -374,8 +385,8 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
   }
 
   private String getMessage(VarData varData) {
-    if (varData.isFinished){
-      return info.getResourceString(UNUSED_MESSAGE, varData.variable.getName());
+    if (varData.unusedAfter){
+      return info.getResourceString(UNUSEDAFTER_MESSAGE, varData.variable.getName());
     }
     return info.getMessage(varData.variable.getName());
   }
@@ -387,7 +398,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
         context.getSelectionRange(),
         "+1"
       )).collect(Collectors.toList());
-    if (varData.isFinished) {
+    if (varData.unusedAfter) {
       return references;
     }
     final var result = new ArrayList<DiagnosticRelatedInformation>();
@@ -408,7 +419,7 @@ public class LostVariableDiagnostic extends AbstractDiagnostic {
     SourceDefinedSymbol parentSymbol;
     boolean isMethod;
     boolean isGlobalOrModuleKind;
-    boolean isFinished;
+    boolean unusedAfter;
 
     private static VarData of(VariableSymbol variable, Range defRange, Reference rewriteReference,
                               SourceDefinedSymbol methodSymbol, List<Reference> references) {
