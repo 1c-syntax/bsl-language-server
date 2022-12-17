@@ -546,6 +546,24 @@
             },
             "$id": "#/definitions/DuplicateStringLiteral"
         },
+        "DuplicatedInsertionIntoCollection": {
+            "description": "Duplicate adding or pasting a value to a collection",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate adding or pasting a value to a collection",
+            "properties": {
+                "isAllowedMethodADD": {
+                    "description": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear"
+                }
+            },
+            "$id": "#/definitions/DuplicatedInsertionIntoCollection"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Disabled;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -31,11 +30,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +46,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Disabled
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
@@ -61,16 +59,21 @@ import java.util.stream.Stream;
 )
 public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final Integer SELECT_ROOT = SDBLParser.RULE_selectedField;
-  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(SELECT_ROOT, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  // схема расчета - находится поле из соединения,
+  // далее идет поиск вверх по родительским узлам для проверки вхождения в разных вариациях ЕСТЬNULL или ЕСТЬ NULL
+  // для оптимизации ищем вверх не до начального узла всего дерева, а до узла, в котором искать уже нет смысла
 
-  private static final Integer WHERE_ROOT = SDBLParser.RULE_predicate;
-  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(WHERE_ROOT, SDBLParser.RULE_builtInFunctions,
-    SDBLParser.RULE_isNullPredicate);
+  private static final Integer EXCLUDED_TOP_RULE_FOR_SELECT = SDBLParser.RULE_selectedField;
+  private static final Collection<Integer> SELECT_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_SELECT,
+    SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
 
-  private static final Integer JOIN_ROOT = SDBLParser.RULE_joinPart;
-  private static final Collection<Integer> JOIN_STATEMENTS = Set.of(JOIN_ROOT, SDBLParser.RULE_builtInFunctions);
+  private static final Integer EXCLUDED_TOP_RULE_FOR_WHERE = SDBLParser.RULE_query;
+  private static final Collection<Integer> WHERE_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_WHERE,
+    SDBLParser.RULE_builtInFunctions, SDBLParser.RULE_isNullPredicate);
+
+  private static final Integer EXCLUDED_TOP_RULE_FOR_JOIN = SDBLParser.RULE_joinPart;
+  private static final Collection<Integer> JOIN_STATEMENTS = Set.of(EXCLUDED_TOP_RULE_FOR_JOIN,
+    SDBLParser.RULE_builtInFunctions);
 
   public static final Collection<Integer> RULES_OF_PARENT_FOR_SEARCH_CONDITION = Set.of(SDBLParser.RULE_predicate,
     SDBLParser.RULE_query);
@@ -165,7 +168,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkSelect(String tableName, SDBLParser.SelectedFieldsContext columns) {
-    checkStatements(tableName, columns, SELECT_STATEMENTS, SELECT_ROOT, true);
+    checkStatements(tableName, columns, SELECT_STATEMENTS, EXCLUDED_TOP_RULE_FOR_SELECT, true);
   }
 
   private void checkStatements(String tableName, BSLParserRuleContext expression, Collection<Integer> statements,
@@ -223,7 +226,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
     Optional.ofNullable(where)
       .stream().flatMap(searchConditionsContext -> searchConditionsContext.condidions.stream())
       .forEach(searchConditionContext -> checkStatements(tableName, searchConditionContext,
-        WHERE_STATEMENTS, WHERE_ROOT, true));
+        WHERE_STATEMENTS, EXCLUDED_TOP_RULE_FOR_WHERE, true));
   }
 
   private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
@@ -233,7 +236,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .filter(joinPartContext -> joinPartContext != currentJoinPart)
       .map(SDBLParser.JoinPartContext::logicalExpression)
       .forEach(searchConditionsContext -> checkStatements(tableName, searchConditionsContext,
-        JOIN_STATEMENTS, JOIN_ROOT, false));
+        JOIN_STATEMENTS, EXCLUDED_TOP_RULE_FOR_JOIN, false));
   }
 
   private List<DiagnosticRelatedInformation> getRelatedInformation(SDBLParser.JoinPartContext self) {

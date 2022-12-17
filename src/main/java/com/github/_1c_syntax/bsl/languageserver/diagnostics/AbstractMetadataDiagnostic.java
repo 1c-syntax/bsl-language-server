@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -60,7 +59,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private Range diagnosticRange;
 
-  protected AbstractMetadataDiagnostic(@NonNull List<MDOType> types) {
+  protected AbstractMetadataDiagnostic(List<MDOType> types) {
     filterMdoTypes = new ArrayList<>(types);
   }
 

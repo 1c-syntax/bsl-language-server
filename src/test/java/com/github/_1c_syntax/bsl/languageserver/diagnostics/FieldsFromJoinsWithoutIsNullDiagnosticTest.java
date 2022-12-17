@@ -26,7 +26,6 @@ import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -41,7 +40,6 @@ class FieldsFromJoinsWithoutIsNullDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   @Test
-  @Disabled
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();

@@ -23,7 +23,8 @@
  * Пакет предназначен для реализации различных ссылок на внешние источники информации ("documentLink"),
  * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 package com.github._1c_syntax.bsl.languageserver.documentlink;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;
