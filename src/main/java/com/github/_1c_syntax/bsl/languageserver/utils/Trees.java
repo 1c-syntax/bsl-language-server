@@ -431,8 +431,14 @@ public final class Trees {
    * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
+    return findAllRuleNodes(t, Arrays.asList(index));
+  }
+
+  /**
+   * Получает дочерние ноды с нужными типами
+   */
+  public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Collection<Integer> indexes) {
     List<ParserRuleContext> nodes = new ArrayList<>();
-    List<Integer> indexes = Arrays.asList(index);
 
     if (t instanceof ParserRuleContext
       && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
@@ -440,7 +446,7 @@ public final class Trees {
     }
 
     IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllRuleNodes(t.getChild(i), index))
+      .mapToObj(i -> findAllRuleNodes(t.getChild(i), indexes))
       .forEachOrdered(nodes::addAll);
 
     return nodes;
