@@ -963,11 +963,11 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>161</strong></p>
+<p>Общее количество: <strong>162</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>4</strong></li>
 <li>Уязвимость: <strong>4</strong></li>
-<li>Ошибка: <strong>53</strong></li>
+<li>Ошибка: <strong>54</strong></li>
 <li>Дефект кода: <strong>100</strong></li>
 </ul>
 <table>
@@ -1629,6 +1629,14 @@
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="MissingCommonModuleMethod/">MissingCommonModuleMethod</a></td>
+<td>Обращение к отсутствующему методу общего модуля</td>
+<td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="MissingEventSubscriptionHandler/">MissingEventSubscriptionHandler</a></td>

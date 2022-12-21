@@ -1082,6 +1082,16 @@
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
         },
+        "MissingCommonModuleMethod": {
+            "description": "Referencing a missing common module method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referencing a missing common module method",
+            "$id": "#/definitions/MissingCommonModuleMethod"
+        },
         "MissingEventSubscriptionHandler": {
             "description": "Event subscription handler missing",
             "default": true,
