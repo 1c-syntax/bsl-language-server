@@ -486,6 +486,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/MissedRequiredParameter/</loc>
+         <lastmod>2022-12-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/MissingCodeTryCatchEx/</loc>
          <lastmod>2022-12-21</lastmod>
          <changefreq>daily</changefreq>
@@ -792,6 +797,11 @@
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UseLessForEach/</loc>
+         <lastmod>2022-12-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UseSystemInformation/</loc>
          <lastmod>2022-12-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
