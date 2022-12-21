@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1671605005394,
+  "lastUpdate": 1671636202861,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -20987,6 +20987,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3055298826094388",
             "extra": "mean: 49.70271452267965 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0da61d08e78d625b388327a08097c7f91ece8dff",
+          "message": "Merge pull request #2922 from bia-technologies/feature/missedRequiredParameter\n\nНовая диагностика \"Не указан обязательный параметр метода\"",
+          "timestamp": "2022-12-21T18:13:44+03:00",
+          "tree_id": "d3324e33ac715152f0cebfa702ffdc5b1e11e440",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0da61d08e78d625b388327a08097c7f91ece8dff"
+        },
+        "date": 1671636194011,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.60943833986918,
+            "unit": "sec",
+            "range": "stddev: 1.529583844466017",
+            "extra": "mean: 53.60943833986918 sec\nrounds: 3"
           }
         ]
       }
