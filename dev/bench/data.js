@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1671218164765,
+  "lastUpdate": 1671605005394,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -20956,6 +20956,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4579692149850394",
             "extra": "mean: 50.80655781428019 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aartbear@gmail.com",
+            "name": "Artur Ayukhanov",
+            "username": "artbear"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "85d0907f45181570406f73deac4e556d18841d3d",
+          "message": "feat(diagnostic): Новое правило \"Обращение к отсутствующему методу общего модуля MissingCommonModuleMethod \"-  ГОТОВО (#2827)\n\n* Реализация правила\r\n\r\n* Обращение к приватным методам\r\n\r\n* Исключил ФП параметры с именами общих модулей\r\n\r\n* переименовал правило\r\n\r\n* документация + настройка правила\r\n\r\n* добавил тег правила\r\n\r\n* уточнил сообщения правила\r\n\r\n* использован символьный репозиторий\r\n\r\nвместо работы с аст-деревом\r\n\r\n* @CleanupContextBeforeClassAndAfterEachTestMethod\r\n\r\n* реализованы недостающие кейсы\r\n\r\n* убрал комментарий\r\n\r\n* комментарий про приватные методы\r\n\r\nисключил срабатывание на внутренних вызовах внутри общих модулей\r\n\r\n* Поправил текст сообщения\r\n\r\nисправил замечания из ПР\r\n\r\n* исправил замечания из ПР\r\n\r\n* кейс для покрытия\r\n\r\n* уточнил проверку приватных методов\r\n\r\n* замечание СонарЛинт",
+          "timestamp": "2022-12-21T13:35:06+07:00",
+          "tree_id": "e429c7afb944a0c456dbb9af900cc2bc11e8a541",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/85d0907f45181570406f73deac4e556d18841d3d"
+        },
+        "date": 1671604999387,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 49.70271452267965,
+            "unit": "sec",
+            "range": "stddev: 1.3055298826094388",
+            "extra": "mean: 49.70271452267965 sec\nrounds: 3"
           }
         ]
       }
