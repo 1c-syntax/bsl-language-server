@@ -1064,6 +1064,16 @@
             },
             "$id": "#/definitions/MethodSize"
         },
+        "MissedRequiredParameter": {
+            "description": "Missed a required method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed a required method parameter",
+            "$id": "#/definitions/MissedRequiredParameter"
+        },
         "MissingCodeTryCatchEx": {
             "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "default": true,
