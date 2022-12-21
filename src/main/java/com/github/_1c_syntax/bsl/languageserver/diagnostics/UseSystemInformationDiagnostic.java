@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -34,24 +33,25 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.MINOR,
-  scope = DiagnosticScope.BSL,
+  type = DiagnosticType.SECURITY_HOTSPOT,
+  severity = DiagnosticSeverity.CRITICAL,
+  activatedByDefault = false,
   minutesToFix = 5,
   tags = {
-    DiagnosticTag.STANDARD,
-    DiagnosticTag.BADPRACTICE
+    DiagnosticTag.SUSPICIOUS
   }
-)
-public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
+)
+public class UseSystemInformationDiagnostic extends AbstractVisitorDiagnostic {
+
+  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(СистемнаяИнформация|SystemInfo)$");
+
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
     Constructors.typeName(ctx)
       .filter(it -> PATTERN.matcher(it).matches())
-      .ifPresent(name -> diagnosticStorage.addDiagnostic(ctx, info.getMessage(name)));
+      .ifPresent(it -> diagnosticStorage.addDiagnostic(ctx));
 
     return super.visitNewExpression(ctx);
   }

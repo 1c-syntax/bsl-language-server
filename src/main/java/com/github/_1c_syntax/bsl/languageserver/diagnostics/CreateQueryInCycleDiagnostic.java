@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -98,19 +99,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
 
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
+    String typeName = Constructors.typeName(newExpression)
       .orElse(UNDEFINED_TYPE);
 
     if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
