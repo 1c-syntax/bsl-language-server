@@ -44,6 +44,5 @@ com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind
 com.github._1c_syntax.bsl.languageserver.reporters.infrastructure
 com.github._1c_syntax.bsl.languageserver.utils
-com.github._1c_syntax.bsl.languageserver.utils.bsl
 com.github._1c_syntax.bsl.languageserver.utils.expressiontree
 com.github._1c_syntax.bsl.languageserver.websocket

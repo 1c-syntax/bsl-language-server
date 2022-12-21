@@ -1916,16 +1916,6 @@
             "title": "Useless collection iteration",
             "$id": "#/definitions/UseLessForEach"
         },
-        "UseSystemInformation": {
-            "description": "Use of system information",
-            "default": false,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Use of system information",
-            "$id": "#/definitions/UseSystemInformation"
-        },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",
             "default": true,
