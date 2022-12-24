@@ -93,6 +93,12 @@ class ReferenceIndexFillerTest {
     assertThat(method).isPresent();
     references = referenceIndex.getReferencesTo(method.get());
     assertThat(references).hasSize(1);
+
+    // Проверяем обход дерева в глубину для NewExpression если это описание оповещения
+    method = documentContext.getSymbolTree().getMethodSymbol("ДополнительныеПараметрыОповещения");
+    assertThat(method).isPresent();
+    references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
   }
 
   @Test

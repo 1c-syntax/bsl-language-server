@@ -8,19 +8,21 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "3.4.0.2513"
-    id("io.freefair.lombok") version "6.5.0.3"
-    id("io.freefair.javadoc-links") version "6.5.0.3"
-    id("io.freefair.javadoc-utf-8") version "6.5.0.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.5.0.3"
-    id("io.freefair.maven-central.validate-poms") version "6.5.0.3"
-    id("me.qoomon.git-versioning") version "6.1.6"
-    id("com.github.ben-manes.versions") version "0.42.0"
-    id("org.springframework.boot") version "2.6.7"
-    id("io.spring.dependency-management") version "1.0.12.RELEASE"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
-    id("ru.vyarus.pom") version "2.2.1"
+    id("org.sonarqube") version "3.5.0.2730"
+    id("io.freefair.lombok") version "6.6"
+    id("io.freefair.javadoc-links") version "6.6"
+    id("io.freefair.javadoc-utf-8") version "6.6"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
+    id("io.freefair.maven-central.validate-poms") version "6.6"
+    id("me.qoomon.git-versioning") version "6.3.7"
+    id("com.github.ben-manes.versions") version "0.44.0"
+    id("org.springframework.boot") version "2.7.5"
+    id("io.spring.dependency-management") version "1.1.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
+    id("ru.vyarus.pom") version "2.2.2"
+    id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
+    id("me.champeau.jmh") version "0.6.8"
 }
 
 repositories {
@@ -51,19 +53,27 @@ val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "5.6"
 
+dependencyManagement {
+    imports {
+        mavenBom("io.sentry:sentry-bom:6.9.2")
+    }
+}
+
 dependencies {
 
     // RUNTIME
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.6.3")
+    api("org.springframework.boot:spring-boot-starter-websocket")
+    api("info.picocli:picocli-spring-boot-starter:4.7.0")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.14.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.19.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.21.0") {
+    api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -71,8 +81,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.4.0")
-    api("com.github.1c-syntax", "mdclasses", "0.10.0")
+    api("com.github.1c-syntax", "utils", "f1694d9c")
+    api("com.github.1c-syntax", "mdclasses", "0.10.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 
@@ -82,7 +92,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.7")
+    implementation("org.aspectj", "aspectjrt", "1.9.9.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -91,7 +101,7 @@ dependencies {
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.2")
+    implementation("me.tongfei", "progressbar", "0.9.5")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -103,10 +113,12 @@ dependencies {
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
-    // COMPILE
+    // Sentry
+    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-logback")
 
-    // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    // COMPILE
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     // TEST
 
@@ -116,8 +128,8 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
-    testImplementation("org.awaitility", "awaitility", "4.1.1")
+    testImplementation("org.jmockit", "jmockit", "1.49")
+    testImplementation("org.awaitility", "awaitility", "4.2.0")
 }
 
 java {
@@ -163,6 +175,9 @@ tasks.test {
     reports {
         html.required.set(true)
     }
+
+    val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {

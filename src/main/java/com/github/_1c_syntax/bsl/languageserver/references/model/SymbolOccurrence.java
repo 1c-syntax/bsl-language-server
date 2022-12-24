@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Обращение к символу в файле.
@@ -51,7 +50,7 @@ public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
   Location location;
 
   @Override
-  public int compareTo(@NotNull SymbolOccurrence o) {
+  public int compareTo(SymbolOccurrence o) {
     if (this.equals(o)) {
       return 0;
     }

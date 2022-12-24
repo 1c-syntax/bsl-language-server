@@ -167,6 +167,12 @@
             ],
             "title": "Commented out code",
             "properties": {
+                "exclusionPrefixes": {
+                    "description": "Exclusion prefixes",
+                    "default": "",
+                    "type": "string",
+                    "title": "Exclusion prefixes"
+                },
                 "threshold": {
                     "description": "Threshold",
                     "default": 0.9,
@@ -540,6 +546,24 @@
             },
             "$id": "#/definitions/DuplicateStringLiteral"
         },
+        "DuplicatedInsertionIntoCollection": {
+            "description": "Duplicate adding or pasting a value to a collection",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate adding or pasting a value to a collection",
+            "properties": {
+                "isAllowedMethodADD": {
+                    "description": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear"
+                }
+            },
+            "$id": "#/definitions/DuplicatedInsertionIntoCollection"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
@@ -837,7 +861,7 @@
                 },
                 "listOfIncorrectFirstSymbol": {
                     "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
-                    "default": "\\)|;|,|\\);",
+                    "default": "\\)|;|,\\s*\\S+|\\);",
                     "type": "string",
                     "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
                 }
@@ -1040,6 +1064,16 @@
             },
             "$id": "#/definitions/MethodSize"
         },
+        "MissedRequiredParameter": {
+            "description": "Missed a required method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed a required method parameter",
+            "$id": "#/definitions/MissedRequiredParameter"
+        },
         "MissingCodeTryCatchEx": {
             "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "default": true,
@@ -1057,6 +1091,16 @@
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
+        },
+        "MissingCommonModuleMethod": {
+            "description": "Referencing a missing common module method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referencing a missing common module method",
+            "$id": "#/definitions/MissingCommonModuleMethod"
         },
         "MissingEventSubscriptionHandler": {
             "description": "Event subscription handler missing",
@@ -1514,6 +1558,16 @@
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
         },
+        "RewriteMethodParameter": {
+            "description": "Rewrite method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Rewrite method parameter",
+            "$id": "#/definitions/RewriteMethodParameter"
+        },
         "SameMetadataObjectAndChildNames": {
             "description": "Same metadata object and child name",
             "default": true,
@@ -1523,6 +1577,16 @@
             ],
             "title": "Same metadata object and child name",
             "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
+        "ScheduledJobHandler": {
+            "description": "Scheduled job handler",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Scheduled job handler",
+            "$id": "#/definitions/ScheduledJobHandler"
         },
         "SelectTopWithoutOrderBy": {
             "description": "Using 'SELECT TOP' without 'ORDER BY'",
@@ -1851,6 +1915,16 @@
             ],
             "title": "Useless collection iteration",
             "$id": "#/definitions/UseLessForEach"
+        },
+        "UseSystemInformation": {
+            "description": "Use of system information",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Use of system information",
+            "$id": "#/definitions/UseSystemInformation"
         },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",

@@ -37,7 +37,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -130,7 +129,6 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     return regionsLanguage;
   }
 
-  @NotNull
   private ScriptVariant getScriptVariantFromConfigLanguage() {
     ScriptVariant regionsLanguage;
     if (languageServerConfiguration.getLanguage() == Language.EN) {

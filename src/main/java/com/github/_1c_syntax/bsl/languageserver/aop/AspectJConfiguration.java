@@ -45,6 +45,15 @@ public class AspectJConfiguration {
   }
 
   /**
+   * @return Аспект перехвата ошибок и взаимодействия с Sentry.
+   */
+  @Bean
+  @Lazy(false)
+  public SentryAspect sentryAspect() {
+    return Aspects.aspectOf(SentryAspect.class);
+  }
+
+  /**
    * @return Аспект выполнения замеров производительности.
    */
   @Bean

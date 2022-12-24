@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -140,7 +139,7 @@ public final class DiagnosticHelper {
    * @param words Строка со словами
    * @return Созданный паттерн
    */
-  public static Pattern createPatternFromString(@NotNull String words) {
+  public static Pattern createPatternFromString(String words) {
     return createPatternFromString(words, ",");
   }
 
@@ -151,7 +150,7 @@ public final class DiagnosticHelper {
    * @param words Строка со словами
    * @return Созданный паттерн
    */
-  public static Pattern createPatternFromString(@NotNull String words, String delimiter) {
+  public static Pattern createPatternFromString(String words, String delimiter) {
     StringJoiner stringJoiner = new StringJoiner("|");
     for (String elem : words.split(delimiter)) {
       stringJoiner.add(Pattern.quote(elem.trim()));

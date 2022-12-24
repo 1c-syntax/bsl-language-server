@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.assertj.core.api.AbstractListAssert;
 import org.assertj.core.util.Lists;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 
@@ -79,6 +81,41 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
   public DiagnosticsAssert hasMessageOnRange(String message, int lineNo, int startChar, int endChar) {
     return anySatisfy(diagnostic ->
       assertFactory.createAssert(diagnostic).hasMessageOnRange(message, lineNo, startChar, lineNo, endChar)
+    );
+  }
+
+  /**
+   * Ассерт для проверки совпадения диапазона-строки и сообщения
+   *
+   * @param lineNo    Номер строки диапазона
+   * @param startChar Первый символ диапазона
+   * @param endChar   Последний символ диапазона
+   * @param message   Сообщение диагностики
+   * @param relatedLocationRanges   Список связанных диапазонов
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticsAssert hasIssueOnRange(int lineNo, int startChar, int endChar, String message,
+                                           List<Range> relatedLocationRanges) {
+    return hasIssueOnRange(lineNo, startChar, lineNo, endChar,
+        message, relatedLocationRanges);
+  }
+
+  /**
+   * Ассерт для проверки совпадения диапазона-строки и сообщения
+   *
+   * @param startLine    Номер строки диапазона
+   * @param startChar Первый символ диапазона
+   * @param endLine   Последняя строка диапазона
+   * @param endChar   Последний символ диапазона
+   * @param message   Сообщение диагностики
+   * @param relatedLocationRanges   Список связанных диапазонов
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticsAssert hasIssueOnRange(int startLine, int startChar, int endLine, int endChar, String message,
+                                           List<Range> relatedLocationRanges) {
+    return anySatisfy(diagnostic ->
+      assertFactory.createAssert(diagnostic).hasIssueOnRange(Ranges.create(startLine, startChar, endLine, endChar),
+        message, relatedLocationRanges)
     );
   }
 

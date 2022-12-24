@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -45,29 +46,13 @@ import java.util.regex.Pattern;
 public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
-  private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    var ctxTypeName = typeName(ctx);
-
-    if (PATTERN.matcher(ctxTypeName).find()) {
-      diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctxTypeName));
-    }
+    Constructors.typeName(ctx)
+      .filter(it -> PATTERN.matcher(it).matches())
+      .ifPresent(name -> diagnosticStorage.addDiagnostic(ctx, info.getMessage(name)));
 
     return super.visitNewExpression(ctx);
   }
-
-  private static String typeName(BSLParser.NewExpressionContext ctx) {
-    if (ctx.typeName() != null) {
-      return ctx.typeName().getText();
-    }
-
-    if (ctx.doCall().callParamList().isEmpty()) {
-      return "";
-    }
-
-    return QUOTE_PATTERN.matcher(ctx.doCall().callParamList().callParam(0).getText()).replaceAll("");
-  }
-
 }

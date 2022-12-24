@@ -21,31 +21,33 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.TextDocumentItem;
-import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -54,10 +56,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public abstract class ServerContext {
+public class ServerContext {
+  private final ObjectProvider<DocumentContext> documentContextProvider;
+  private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final LanguageServerConfiguration languageServerConfiguration;
+
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
-  @CheckForNull
+  @Nullable
   @Setter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
@@ -65,34 +71,59 @@ public abstract class ServerContext {
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
+  private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
+  private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
+
   public void populateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
     }
+
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
+    workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
+
     LOGGER.debug("Finding files to populate context...");
-    Collection<File> files = FileUtils.listFiles(
+    var files = (List<File>) FileUtils.listFiles(
       configurationRoot.toFile(),
       new String[]{"bsl", "os"},
       true
     );
+    workDoneProgressReporter.endProgress("");
     populateContext(files);
   }
 
-  public void populateContext(Collection<File> uris) {
+  public void populateContext(List<File> files) {
+    var workDoneProgressReporter = workDoneProgressHelper.createProgress(
+      files.size(),
+      getMessage("populateFilesPostfix")
+    );
+    workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
+
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
-    uris.parallelStream().forEach((File file) -> {
-      var documentContext = getDocument(file.toURI());
-      if (documentContext == null) {
-        documentContext = createDocumentContext(file, 0);
-        documentContext.freezeComputedData();
-        documentContext.clearSecondaryData();
-      }
-    });
+    try {
 
-    contextLock.writeLock().unlock();
+      files.parallelStream().forEach((File file) -> {
+
+        workDoneProgressReporter.tick();
+
+        var uri = file.toURI();
+        var documentContext = getDocument(uri);
+        if (documentContext == null) {
+          documentContext = createDocumentContext(uri);
+          rebuildDocument(documentContext);
+          documentContext.freezeComputedData();
+          tryClearDocument(documentContext);
+        }
+      });
+
+    } finally {
+      contextLock.writeLock().unlock();
+    }
+
+    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
   }
 
@@ -100,7 +131,7 @@ public abstract class ServerContext {
     return Collections.unmodifiableMap(documents);
   }
 
-  @CheckForNull
+  @Nullable
   public DocumentContext getDocument(String uri) {
     return getDocument(URI.create(uri));
   }
@@ -113,7 +144,7 @@ public abstract class ServerContext {
     return Optional.empty();
   }
 
-  @CheckForNull
+  @Nullable
   public DocumentContext getDocument(URI uri) {
     return documents.get(Absolute.uri(uri));
   }
@@ -122,60 +153,118 @@ public abstract class ServerContext {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
-  public DocumentContext addDocument(URI uri, String content, int version) {
+  public DocumentContext addDocument(URI uri) {
     contextLock.readLock().lock();
 
     var documentContext = getDocument(uri);
     if (documentContext == null) {
-      documentContext = createDocumentContext(uri, content, version);
-    } else {
-      documentContext.rebuild(content, version);
-      documentContext.unfreezeComputedData();
+      documentContext = createDocumentContext(uri);
     }
 
     contextLock.readLock().unlock();
     return documentContext;
   }
 
-  public DocumentContext addDocument(TextDocumentItem textDocumentItem) {
-    return addDocument(
-      URI.create(textDocumentItem.getUri()),
-      textDocumentItem.getText(),
-      textDocumentItem.getVersion()
-    );
-  }
-
   public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
+    var documentContext = documents.get(absoluteURI);
+    if (openedDocuments.contains(documentContext)) {
+      throw new IllegalStateException(String.format("Document %s is opened", absoluteURI));
+    }
+
     removeDocumentMdoRefByUri(absoluteURI);
+    states.remove(documentContext);
     documents.remove(absoluteURI);
   }
 
   public void clear() {
     documents.clear();
+    openedDocuments.clear();
+    states.clear();
     documentsByMDORef.clear();
     mdoRefs.clear();
     configurationMetadata.clear();
+  }
+
+  /**
+   * Помечает документ как открытый и перестраивает его содержимое
+   * <p>
+   * Документы, помеченные как открытые, не будут удаляться из контекста сервера при вызове {@link #removeDocument(URI)},
+   * а так же не будут очищаться при вызове {@link #tryClearDocument(DocumentContext)}.
+   * <p>
+   * Если вспомогательные данные документа был в "замороженном" состоянии, то перед перестроением документа
+   * они будут разморожены.
+   *
+   * @param documentContext документ, который необходимо открыть.
+   * @param content         новое содержимое документа.
+   * @param version         версия документа.
+   */
+  public void openDocument(DocumentContext documentContext, String content, Integer version) {
+    openedDocuments.add(documentContext);
+    documentContext.unfreezeComputedData();
+    rebuildDocument(documentContext, content, version);
+  }
+
+  /**
+   * Перестроить документ. В качестве содержимого будут использоваться данные,
+   * прочитанные из файла, с которым связан документ.
+   *
+   * @param documentContext документ, который необходимо перестроить.
+   */
+  public void rebuildDocument(DocumentContext documentContext) {
+    if (states.get(documentContext) == State.WITH_CONTENT) {
+      return;
+    }
+
+    documentContext.rebuild();
+    states.put(documentContext, State.WITH_CONTENT);
+  }
+
+  /**
+   * Перестроить документ, используя новое содержимое.
+   *
+   * @param documentContext документ, который необходимо перестроить.
+   * @param content         новое содержимое документа.
+   * @param version         версия документа.
+   */
+  public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
+    documentContext.rebuild(content, version);
+    states.put(documentContext, State.WITH_CONTENT);
+  }
+
+  /**
+   * Попытаться очистить документ, если он не открыт.
+   *
+   * @param documentContext документ, который необходимо попытаться закрыть.
+   */
+  public void tryClearDocument(DocumentContext documentContext) {
+    if (openedDocuments.contains(documentContext)) {
+      return;
+    }
+
+    states.put(documentContext, State.WITHOUT_CONTENT);
+    documentContext.clearSecondaryData();
+  }
+
+  /**
+   * Закрыть документ и очистить его содержимое.
+   *
+   * @param documentContext документ, который необходимо закрыть.
+   */
+  public void closeDocument(DocumentContext documentContext) {
+    openedDocuments.remove(documentContext);
+    states.put(documentContext, State.WITHOUT_CONTENT);
+    documentContext.clearSecondaryData();
   }
 
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
-  @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI);
+  private DocumentContext createDocumentContext(URI uri) {
+    var absoluteURI = Absolute.uri(uri);
 
-  @SneakyThrows
-  private DocumentContext createDocumentContext(File file, int version) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return createDocumentContext(file.toURI(), content, version);
-  }
-
-  private DocumentContext createDocumentContext(URI uri, String content, int version) {
-    URI absoluteURI = Absolute.uri(uri);
-
-    var documentContext = lookupDocumentContext(absoluteURI);
-    documentContext.rebuild(content, version);
+    var documentContext = documentContextProvider.getObject(absoluteURI);
 
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
@@ -188,10 +277,13 @@ public abstract class ServerContext {
       return Configuration.create();
     }
 
+    var progress = workDoneProgressHelper.createProgress(0, "");
+    progress.beginProgress(getMessage("computeConfigurationMetadata"));
+
     Configuration configuration;
-    var customThreadPool = new ForkJoinPool();
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+      configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
@@ -200,8 +292,10 @@ public abstract class ServerContext {
       configuration = Configuration.create();
       Thread.currentThread().interrupt();
     } finally {
-      customThreadPool.shutdown();
+      executorService.shutdown();
     }
+
+    progress.endProgress(getMessage("computeConfigurationMetadataDone"));
 
     return configuration;
   }
@@ -229,4 +323,23 @@ public abstract class ServerContext {
       mdoRefs.remove(uri);
     }
   }
+
+  private String getMessage(String key) {
+    return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
+  }
+
+  /**
+   * Состояние документа в контексте.
+   */
+  private enum State {
+    /**
+     * В документе отсутствует контент или он был очищен.
+     */
+    WITHOUT_CONTENT,
+    /**
+     * В документе присутствует контент.
+     */
+    WITH_CONTENT
+  }
+
 }

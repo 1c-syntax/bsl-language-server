@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 @NoArgsConstructor
 public class LanguageClientHolder implements LanguageClientAware {
 
-  @CheckForNull
+  @Nullable
   private LanguageClient client;
 
   /**
@@ -48,6 +48,15 @@ public class LanguageClientHolder implements LanguageClientAware {
    */
   public Optional<LanguageClient> getClient() {
     return Optional.ofNullable(client);
+  }
+
+  /**
+   * LanguageClient подключен.
+   *
+   * @return LanguageClient подключен.
+   */
+  public boolean isConnected() {
+    return client != null;
   }
 
   public void execIfConnected(Consumer<LanguageClient> consumer) {

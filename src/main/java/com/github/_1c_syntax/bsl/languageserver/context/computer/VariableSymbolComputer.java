@@ -37,6 +37,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -129,6 +130,11 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return ctx;
     }
 
+    // При ошибках в разборе может получиться, что два параметра с одним именем в модуле
+    if (currentMethod.getSymbolKind() == SymbolKind.Module && moduleVariables.containsKey(ctx.IDENTIFIER().getText())) {
+      return ctx;
+    }
+
     var variable = VariableSymbol.builder()
       .name(ctx.IDENTIFIER().getText().intern())
       .scope(currentMethod)
@@ -141,7 +147,11 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .build();
     variables.add(variable);
 
-    currentMethodVariables.put(ctx.IDENTIFIER().getText(), ctx.IDENTIFIER().getText());
+    if (currentMethod.getSymbolKind() == SymbolKind.Module) {
+      moduleVariables.put(ctx.IDENTIFIER().getText(), ctx.IDENTIFIER().getText());
+    } else {
+      currentMethodVariables.put(ctx.IDENTIFIER().getText(), ctx.IDENTIFIER().getText());
+    }
     return ctx;
   }
 

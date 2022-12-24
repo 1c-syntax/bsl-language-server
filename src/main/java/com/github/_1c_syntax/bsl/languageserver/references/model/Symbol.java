@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 import org.eclipse.lsp4j.SymbolKind;
 
 /**
@@ -37,6 +37,8 @@ import org.eclipse.lsp4j.SymbolKind;
 @AllArgsConstructor
 @Builder
 public class Symbol implements Comparable<Symbol> {
+
+  private static GenericInterner<Symbol> interner = new GenericInterner<>();
 
   /**
    * Cсылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
@@ -63,8 +65,12 @@ public class Symbol implements Comparable<Symbol> {
    */
   String symbolName;
 
+  public Symbol intern() {
+    return interner.intern(this);
+  }
+
   @Override
-  public int compareTo(@NotNull Symbol o) {
+  public int compareTo(Symbol o) {
     if (this.equals(o)) {
       return 0;
     }

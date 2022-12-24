@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,8 +30,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-
-import javax.annotation.Nullable;
 
 /**
  * Параметры запроса <code>textDocument/x-diagnostics</code>.
