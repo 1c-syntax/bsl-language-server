@@ -76,8 +76,8 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
       .map(pair -> Triple.of(pair.getLeft(),
         pair.getRight(),
         getRefCalls(pair.getLeft())))
-      .filter(triple ->  !triple.getRight().isEmpty())
-      .map(triple ->  Triple.of(triple.getLeft(),
+      .filter(triple -> !triple.getRight().isEmpty())
+      .map(triple -> Triple.of(triple.getLeft(),
         notAssignedParams(triple.getLeft(), triple.getMiddle()),
         triple.getRight()))
       .forEach(triple -> triple.getMiddle().forEach(parameterDefinition ->
@@ -135,15 +135,15 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
       .findFirst().stream();
   }
 
-  private static boolean isEqualCompilerDirective(MethodSymbol method, Collection<CompilerDirectiveKind> compilerDirectiveKinds){
+  private static boolean isEqualCompilerDirective(MethodSymbol method, Collection<CompilerDirectiveKind> compilerDirectiveKinds) {
     return method.getCompilerDirectiveKind()
       .filter(compilerDirectiveKinds::contains)
       .isPresent();
   }
 
-  private static boolean isEqualCompilerDirective(MethodSymbol method, CompilerDirectiveKind compilerDirectiveKind){
+  private static boolean isEqualCompilerDirective(MethodSymbol method, CompilerDirectiveKind compilerDirectiveKind) {
     return method.getCompilerDirectiveKind()
-      .filter(compilerDirective ->  compilerDirective == compilerDirectiveKind)
+      .filter(compilerDirective -> compilerDirective == compilerDirectiveKind)
       .isPresent();
   }
 }
