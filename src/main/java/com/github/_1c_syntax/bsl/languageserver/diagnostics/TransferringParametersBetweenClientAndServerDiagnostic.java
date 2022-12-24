@@ -32,12 +32,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
+import lombok.Value;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +64,6 @@ import java.util.stream.Stream;
 public class TransferringParametersBetweenClientAndServerDiagnostic extends AbstractDiagnostic {
   private static final Set<CompilerDirectiveKind> SERVER_COMPILER_DIRECTIVE_KINDS = EnumSet.of(
     CompilerDirectiveKind.AT_SERVER,
-//    CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT,
     CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
   );
   private final ReferenceIndex referenceIndex;
@@ -70,59 +72,51 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
 
   @Override
   protected void check() {
-    getMethodParamsStream()
-      // сначала получаю вызовы из клиентских методов, а уже потом проверяю использование параметров внутри метода,
-      // чтобы исключить лишний анализ серверных методов, которые вызываются из серверных методов
-      .map(pair -> Triple.of(pair.getLeft(),
-        pair.getRight(),
-        getRefCalls(pair.getLeft())))
-      .filter(triple -> !triple.getRight().isEmpty())
-      .map(triple -> Triple.of(triple.getLeft(),
-        notAssignedParams(triple.getLeft(), triple.getMiddle()),
-        triple.getRight()))
-      .forEach(triple -> triple.getMiddle().forEach(parameterDefinition ->
+    calcIssues()
+      .forEach(paramReference -> paramReference.getParameterDefinitions().forEach(parameterDefinition ->
         diagnosticStorage.addDiagnostic(parameterDefinition.getRange(),
-          info.getMessage(parameterDefinition.getName(), triple.getLeft().getName())))
-      ); // TODO добавить места вызовов как связанную информацию
+          info.getMessage(parameterDefinition.getName(), paramReference.getMethodSymbol().getName()),
+          getRelatedInformation(paramReference.getReferences())))
+      );
   }
 
-  private Stream<Pair<MethodSymbol, List<ParameterDefinition>>> getMethodParamsStream() {
+  private Stream<ParamReference> calcIssues() {
     return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> isEqualCompilerDirective(methodSymbol, SERVER_COMPILER_DIRECTIVE_KINDS))
-      .map(methodSymbol -> Pair.of(methodSymbol,
-        methodSymbol.getParameters().stream()
-          .filter(parameterDefinition -> !parameterDefinition.isByValue())
-          .collect(Collectors.toUnmodifiableList())))
-      .filter(pair -> !pair.getRight().isEmpty());
+      .filter(TransferringParametersBetweenClientAndServerDiagnostic::isEqualCompilerDirectives)
+      .flatMap(methodSymbol -> getParamReference(methodSymbol).stream());
   }
 
-  private List<Reference> getRefCalls(MethodSymbol methodSymbol) {
-    return referenceIndex.getReferencesTo(methodSymbol).stream()
-      // в будущем могут появиться и другие виды ссылок
-      .filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE)
-      .filter(TransferringParametersBetweenClientAndServerDiagnostic::isClientCall)
-      .collect(Collectors.toUnmodifiableList());
+  private Optional<ParamReference> getParamReference(MethodSymbol method) {
+    List<ParameterDefinition> parameterDefinitions = calcNotAssignedParams(method);
+    if (parameterDefinitions.isEmpty()) {
+      return Optional.empty();
+    }
+    final var refsFromClientCalls = getRefsFromClientCalls(method);
+    if (refsFromClientCalls.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(new ParamReference(method, parameterDefinitions,
+      refsFromClientCalls));
   }
 
-  private static boolean isClientCall(Reference ref) {
-    // TODO учесть возможность вызова из клиентского модуля, в котором не нужны\не указаны директивы компиляции
-    return Optional.of(ref.getFrom())
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .filter(methodSymbol -> isEqualCompilerDirective(methodSymbol, CompilerDirectiveKind.AT_CLIENT))
-      .isPresent();
+  private List<ParameterDefinition> calcNotAssignedParams(MethodSymbol method) {
+    List<ParameterDefinition> parameterDefinitions = getMethodParamsByRef(method);
+    if (parameterDefinitions.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return calcNotAssignedParams(method, parameterDefinitions);
   }
 
-  private List<ParameterDefinition> notAssignedParams(MethodSymbol method, List<ParameterDefinition> parameterDefinitions) {
+  private List<ParameterDefinition> calcNotAssignedParams(MethodSymbol method, List<ParameterDefinition> parameterDefinitions) {
     return parameterDefinitions.stream()
-      .filter(parameterDefinition -> nonAssignedParam(method, parameterDefinition))
+      .filter(parameterDefinition -> isAssignedParam(method, parameterDefinition))
       .collect(Collectors.toUnmodifiableList());
   }
 
-  private boolean nonAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private boolean isAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
     return getVariableByParameter(method, parameterDefinition)
-      .anyMatch(variableSymbol -> referenceIndex.getReferencesTo(variableSymbol).stream()
-        .noneMatch(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION));
+      .noneMatch(variableSymbol -> referenceIndex.getReferencesTo(variableSymbol).stream()
+        .anyMatch(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION));
   }
 
   private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
@@ -135,15 +129,52 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
       .findFirst().stream();
   }
 
-  private static boolean isEqualCompilerDirective(MethodSymbol method, Collection<CompilerDirectiveKind> compilerDirectiveKinds) {
-    return method.getCompilerDirectiveKind()
-      .filter(compilerDirectiveKinds::contains)
+  private List<Reference> getRefsFromClientCalls(MethodSymbol method) {
+    return referenceIndex.getReferencesTo(method).stream()
+      // в будущем могут появиться и другие виды ссылок
+      .filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE)
+      .filter(TransferringParametersBetweenClientAndServerDiagnostic::isClientCall)
+      .collect(Collectors.toUnmodifiableList());
+  }
+
+  private static boolean isClientCall(Reference ref) {
+    // TODO учесть возможность вызова из клиентского модуля, в котором не нужны\не указаны директивы компиляции
+    return Optional.of(ref.getFrom())
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .filter(TransferringParametersBetweenClientAndServerDiagnostic::isEqualCompilerDirective)
       .isPresent();
   }
 
-  private static boolean isEqualCompilerDirective(MethodSymbol method, CompilerDirectiveKind compilerDirectiveKind) {
+  private static boolean isEqualCompilerDirectives(MethodSymbol method) {
     return method.getCompilerDirectiveKind()
-      .filter(compilerDirective -> compilerDirective == compilerDirectiveKind)
+      .filter(((Collection<CompilerDirectiveKind>) SERVER_COMPILER_DIRECTIVE_KINDS)::contains)
       .isPresent();
+  }
+
+  private static boolean isEqualCompilerDirective(MethodSymbol method) {
+    return method.getCompilerDirectiveKind()
+      .filter(compilerDirective -> compilerDirective == CompilerDirectiveKind.AT_CLIENT)
+      .isPresent();
+  }
+
+  private static List<ParameterDefinition> getMethodParamsByRef(MethodSymbol methodSymbol) {
+    return methodSymbol.getParameters().stream()
+      .filter(parameterDefinition -> !parameterDefinition.isByValue())
+      .collect(Collectors.toUnmodifiableList());
+  }
+
+  private static List<DiagnosticRelatedInformation> getRelatedInformation(List<Reference> references) {
+    return references.stream()
+      .map(reference -> RelatedInformation.create(reference.getUri(), reference.getSelectionRange(), "+1"))
+      .collect(Collectors.toList());
+  }
+
+  @Value
+  @AllArgsConstructor
+  private static class ParamReference {
+    MethodSymbol methodSymbol;
+    List<ParameterDefinition> parameterDefinitions;
+    List<Reference> references;
   }
 }
