@@ -201,13 +201,13 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     if (table == null) {
       return dataSourceContext.virtualTable() != null;
     }
-    final var mdo = dataSourceContext.table().mdo();
-    if (mdo != null){
-      return METADATA_TYPES.contains(mdo.type.getType());// TODO
-//      if (!METADATA_TYPES.contains(mdo.type.getType())){
-//        return false;
-//      }
-    }
+//    final var mdo = dataSourceContext.table().mdo();
+//    if (mdo != null){
+//      return METADATA_TYPES.contains(mdo.type.getType());// TODO
+////      if (!METADATA_TYPES.contains(mdo.type.getType())){
+////        return false;
+////      }
+//    }
     return table.tableName != null || table.objectTableName != null;
   }
 

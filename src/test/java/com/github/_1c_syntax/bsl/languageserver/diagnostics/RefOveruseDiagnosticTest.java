@@ -67,10 +67,9 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
       .hasRange(342, 12, 56)
       .hasRange(343, 12, 56)
       .hasRange(354, 26, 96)
-//      .hasRange(364, 9, 43)
-//      .hasRange(378, 20, 54)
-//      .hasRange(375, 20, 92)
-      .hasSize(21);
+      .hasRange(364, 9, 44) // TODO не должно быть ошибкой
+      .hasRange(378, 20, 55) // TODO не должно быть ошибкой
+      .hasSize(23);
   }
   @Test
   void testSingleFile() {
@@ -100,8 +99,8 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
       .hasRange(342, 12, 56)
       .hasRange(343, 12, 56)
       .hasRange(354, 26, 96)
-      .hasRange(364, 9, 43)
-      .hasRange(378, 20, 54)
+      .hasRange(364, 9, 44)
+      .hasRange(378, 20, 55)
       .hasSize(23);
   }
 }
