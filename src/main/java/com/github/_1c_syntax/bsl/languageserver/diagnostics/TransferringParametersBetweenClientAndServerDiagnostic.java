@@ -57,7 +57,6 @@ import java.util.stream.Stream;
     DiagnosticTag.PERFORMANCE,
     DiagnosticTag.STANDARD
   }
-  // TODO учесть подходящие типы модулей - только клиентские, только серверные или все?
 )
 
 @RequiredArgsConstructor
@@ -138,7 +137,6 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   }
 
   private static boolean isClientCall(Reference ref) {
-    // TODO учесть возможность вызова из клиентского модуля, в котором не нужны\не указаны директивы компиляции
     return Optional.of(ref.getFrom())
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)
