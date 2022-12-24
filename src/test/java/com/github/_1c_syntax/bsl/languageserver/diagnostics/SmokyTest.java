@@ -61,28 +61,28 @@ class SmokyTest {
   @Autowired
   private Collection<DiagnosticInfo> diagnosticInfos;
 
-  @BeforeEach
-  void setUpStreams() {
-    new MockUp<System>() {
-      @Mock
-      public void exit(int value) {
-        throw new RuntimeException(String.valueOf(value));
-      }
-    };
-  }
+//  @BeforeEach
+//  void setUpStreams() {
+//    new MockUp<System>() {
+//      @Mock
+//      public void exit(int value) {
+//        throw new RuntimeException(String.valueOf(value));
+//      }
+//    };
+//  }
 
-  @Test
-  void test() throws Exception {
-
-    // given
-    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
-
-    // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
-      .isInstanceOf(RuntimeException.class)
-      .hasMessage("0");
-
-  }
+//  @Test
+//  void test() throws Exception {
+//
+//    // given
+//    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
+//
+//    // when-then
+//    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+//      .isInstanceOf(RuntimeException.class)
+//      .hasMessage("0");
+//
+//  }
 
   @Test
   void testIdenticalRanges() {
