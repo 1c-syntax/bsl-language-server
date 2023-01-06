@@ -28,7 +28,7 @@ jobs:
           sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3.9.0
+        uses: peaceiris/actions-gh-pages@v3.9.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ${{ runner.temp }}/qodana/results/report

@@ -145,7 +145,7 @@ jobs:
         cp -R temp/site/. public/dev/en
         
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3.9.0
+      uses: peaceiris/actions-gh-pages@v3.9.1
       with:
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
         publish_branch: gh-pages
