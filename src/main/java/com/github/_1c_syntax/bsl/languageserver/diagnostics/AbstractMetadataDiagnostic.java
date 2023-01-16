@@ -30,10 +30,9 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Базовый класс для анализа объектов метаданных, когда диагностика региструется на первый токен модуля
+ * Базовый класс для анализа объектов метаданных, когда диагностика регистрируется на первый токен модуля
  */
 public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
 
@@ -115,12 +114,13 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
-    var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-      .collect(Collectors.toList());
-
     // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-    return modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule;
+    if (documentContext.getModuleType() == ModuleType.ManagerModule){
+      return true;
+    }
+
+    return ((AbstractMDObjectBSL) mdo).getModules().stream()
+      .anyMatch(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()));
   }
 
   /**
