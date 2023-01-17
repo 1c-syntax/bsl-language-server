@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
+  activatedByDefault = false,
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
