@@ -114,13 +114,15 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
-    // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
+    // чтобы не анализировать несколько раз и не выдавать одинаковые результаты для разных модулей,
+    // выберем только один модуль, например модуль менеджера
     if (documentContext.getModuleType() == ModuleType.ManagerModule){
       return true;
     }
 
     return ((AbstractMDObjectBSL) mdo).getModules().stream()
-      .anyMatch(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()));
+      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
+      .count() == 1;
   }
 
   /**
