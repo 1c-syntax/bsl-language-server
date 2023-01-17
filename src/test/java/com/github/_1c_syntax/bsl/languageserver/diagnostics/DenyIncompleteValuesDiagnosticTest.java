@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
@@ -30,6 +32,7 @@ import com.github._1c_syntax.mdclasses.mdo.MDInformationRegister;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -45,15 +48,36 @@ class DenyIncompleteValuesDiagnosticTest extends AbstractDiagnosticTest<DenyInco
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
-
-  @Test
-  void testMdoWithModule() {
-    checkMockHandler(ModuleType.RecordSetModule, false);
-  }
+  private static final String PATH_TO_MANAGER_MODULE_FILE = "InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl";
+  private static final String PATH_TO_OBJECT_MODULE_FILE = "InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl";
 
   @Test
   void testMdoWithoutModule() {
     checkMockHandler(ModuleType.SessionModule, true);
+  }
+
+  @Test
+  void testMdoWithOneModule() {
+    checkMockHandler(ModuleType.ManagerModule, false);
+  }
+
+  @Test
+  void testMdoWithModules() {
+    var path = Absolute.path(PATH_TO_METADATA);
+    context.setConfigurationRoot(path);
+
+    var managerDocumentContext = addDocumentContext(context, PATH_TO_MANAGER_MODULE_FILE);
+    var recordSetDocumentContext = addDocumentContext(context, PATH_TO_OBJECT_MODULE_FILE);
+
+    final var diagnostics = getDiagnostics(managerDocumentContext);
+
+    assertThat(diagnostics, true)
+      .hasMessageOnRange("Не указан флаг \"Запрет незаполненных значений\" у измерения \"Справочник1\" метаданного \"РегистрСведений.РегистрСведений1\"",
+        0, 0, 9)
+      .hasSize(1);
+
+    final var diagnostics2 = getDiagnostics(recordSetDocumentContext);
+    assertThat(diagnostics2, true).isEmpty();
   }
 
   private void checkMockHandler(ModuleType type, boolean noneModules) {
@@ -87,5 +111,13 @@ class DenyIncompleteValuesDiagnosticTest extends AbstractDiagnosticTest<DenyInco
       .hasMessageOnRange("Не указан флаг \"Запрет незаполненных значений\" у измерения \"Справочник1\" метаданного \"РегистрСведений.РегистрСведений1\"",
         0, 0, 9)
       .hasSize(1);
+  }
+
+  private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
+    var file = new File(PATH_TO_METADATA, path);
+    var uri = Absolute.uri(file);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
+    return documentContext;
   }
 }
