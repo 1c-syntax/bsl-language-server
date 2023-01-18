@@ -10,8 +10,14 @@
       
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticExample/">
       
+      
+        <link rel="prev" href="../DiagnosticDevWorkFlow/">
+      
+      
+        <link rel="next" href="../DiagnosticStructure/">
+      
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.10">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.5">
     
     
       
@@ -19,11 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.975780f9.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
-        
       
       
 
@@ -112,8 +117,6 @@
       <form class="md-header__option" data-md-component="palette">
         
           
-          
-          
           <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -121,8 +124,6 @@
             </label>
           
         
-          
-          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -187,7 +188,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -355,12 +356,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_1">
+        <label class="md-nav__link" for="__nav_1" tabindex="0" aria-expanded="false">
           Home
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -433,12 +435,13 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2">
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="true">
           Contributing
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -473,12 +476,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_2">
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
           Start
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -564,12 +568,13 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_3">
+        <label class="md-nav__link" for="__nav_2_3" tabindex="0" aria-expanded="true">
           Diagnostics development
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -758,12 +763,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_3">
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
           Reporters
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -891,12 +897,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_5">
+        <label class="md-nav__link" for="__nav_5" tabindex="0" aria-expanded="false">
           Features
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -970,10 +977,9 @@
                 
                   
 
-  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticExample.md" title="Edit this page" class="md-content__button md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
-  </a>
+  
+  
+
 
 
 <h1 id="An-example-of-creating-a-new-diagnostic">An example of creating a new diagnostic<a class="headerlink" href="#An-example-of-creating-a-new-diagnostic" title="Permanent link">&para;</a></h1>
@@ -996,36 +1002,36 @@ The next step is to come up with a unique diagnostic key, under which it will be
 <h3 id="Diagnostic-implementation-class">Diagnostic implementation class<a class="headerlink" href="#Diagnostic-implementation-class" title="Permanent link">&para;</a></h3>
 <p>In the directory <code>src/main/java</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code>, create the <code>SemicolonPresenceDiagnostic.java</code> diagnostic class file.<br />
 In the file, create the class of the same name, inherited from the <code>AbstractVisitorDiagnostic</code> class. The result will be</p>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. Details on annotations in [article][DiagnosticStructure]. In the example, we implement diagnostics related to the quality of the code (<code>CODE_SMELL</code>), low priority (<code>MINOR</code>), which requires 1 minute to fix and related to the 1C standard. The resulting annotated class</p>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="nd">@DiagnosticMetadata</span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
-<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span>
+<span class="p">}</span>
 </code></pre></div>
 <h3 id="Class-resources">Class resources<a class="headerlink" href="#Class-resources" title="Permanent link">&para;</a></h3>
 <p>In the directory <code>src/main/resources</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create 2 diagnostic resource files. In our example, these will be files <code>SemicolonPresenceDiagnostic_ru.properties</code> and <code>SemicolonPresenceDiagnostic_en.properties</code>.<br />
 Save the name (parameter <code>diagnosticName</code>) and message (<code>diagnosticMessage</code>) of the diagnostic in the created files.<br />
 In our example, the contents of the files will be like this</p>
 <p>File <code>SemicolonPresenceDiagnostic_ru.properties</code></p>
-<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="w"> </span><span class="o">=</span><span class="s">Missing semicolon at end of expression</span><span class="w"></span>
-<span class="na">diagnosticName</span><span class="w"> </span><span class="o">=</span><span class="s">Expression must end with &quot;;&quot;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="w"> </span><span class="o">=</span><span class="s">Missing semicolon at end of expression</span>
+<span class="na">diagnosticName</span><span class="w"> </span><span class="o">=</span><span class="s">Expression must end with &quot;;&quot;</span>
 </code></pre></div>
 <p>File <code>SemicolonPresenceDiagnostic_en.properties</code></p>
-<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Missed semicolon at the end of statement</span><span class="w"></span>
-<span class="na">diagnosticName</span><span class="o">=</span><span class="s">Statement should end with &quot;;&quot;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Missed semicolon at the end of statement</span>
+<span class="na">diagnosticName</span><span class="o">=</span><span class="s">Statement should end with &quot;;&quot;</span>
 </code></pre></div>
 <h3 id="Test-fixtures">Test fixtures<a class="headerlink" href="#Test-fixtures" title="Permanent link">&para;</a></h3>
 <p>For testing purposes, let's add a file to the project containing examples of both erroneous and correct code. We will place the <code>SemicolonPresenceDiagnostic.bsl</code> file with fixtures in the <code>src/test/resources</code> resources directory in the <code>diagnostics</code> package.<br />
@@ -1042,13 +1048,13 @@ It is necessary to mark with comments the places where the diagnostics should wo
 <p>In the directory <code>src/test/java</code> in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create a file <code>SemicolonPresenceDiagnosticTest.java</code> for the test diagnostic class.<br />
 In the file, create a class of the same name inherited from the <code>AbstractDiagnosticTest</code> class for the created diagnostic class. <br />
 As a result, we get</p>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">    </span><span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Simplified basic test consists of the steps</p>
 <ul>
@@ -1063,48 +1069,48 @@ As a result, we get</p>
 <li>To check for each error, it is necessary to compare the error range with the expected range.</li>
 </ul>
 <p>The resulting test class</p>
-<div class="highlight"><pre><span></span><code><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 
-<span class="w">  </span><span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
 
-<span class="w">  </span><span class="nd">@Test</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w"></span>
+<span class="w">  </span><span class="nd">@Test</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span>
 
-<span class="w">    </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostic-algorithm-implementation">Diagnostic algorithm implementation<a class="headerlink" href="#Diagnostic-algorithm-implementation" title="Permanent link">&para;</a></h3>
 <p>According to the rules of the grammar of the language, described in the project <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>, for our example, it is necessary to analyze nodes with the type <code>statement</code>. Need to use visitor <code>visitStatement</code>. Each selected node of the AST-tree must contain an ending "semicolon" represented by node <code>SEMICOLON</code>.</p>
 <p>Thus, the check will be to find the <code>SEMICOLON</code> token in each <code>statement</code> node. If the token is not found, then an error must be added.<br />
 After implementation of the check, the file will take the form</p>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="nd">@DiagnosticMetadata</span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
-<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nd">@Override</span><span class="w"></span>
-<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ParseTree</span><span class="w"> </span><span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// selected visitor</span><span class="w"></span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                                </span><span class="c1">// getting child node SEMICOLON</span><span class="w"></span>
-<span class="w">            </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w">                     </span><span class="c1">// adding error</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="c1">// For non-terminal expressions, the super method must be</span><span class="w"></span>
-<span class="w">        </span><span class="c1">//  called as the return value.</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kd">super</span><span class="p">.</span><span class="na">visitStatement</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Override</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ParseTree</span><span class="w"> </span><span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// selected visitor</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                                </span><span class="c1">// getting child node SEMICOLON</span>
+<span class="w">            </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w">                     </span><span class="c1">// adding error</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// For non-terminal expressions, the super method must be</span>
+<span class="w">        </span><span class="c1">//  called as the return value.</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kd">super</span><span class="p">.</span><span class="na">visitStatement</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>It is necessary to run a diagnostic test and make sure that it works correctly.</p>
 <h3 id="Creating-a-diagnostic-description">Creating a diagnostic description<a class="headerlink" href="#Creating-a-diagnostic-description" title="Permanent link">&para;</a></h3>
@@ -1127,42 +1133,6 @@ After implementation of the check, the file will take the form</p>
       </main>
       
         <footer class="md-footer">
-  
-    
-    <nav class="md-footer__inner md-grid" aria-label="Footer" >
-      
-        
-        <a href="../DiagnosticDevWorkFlow/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Diagnostic development workflow" rel="prev">
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-          </div>
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              Diagnostic development workflow
-            </div>
-          </div>
-        </a>
-      
-      
-        
-        <a href="../DiagnosticStructure/" class="md-footer__link md-footer__link--next" aria-label="Next: Diagnostics structure, files contents and purpose" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Diagnostics structure, files contents and purpose
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1207,16 +1177,15 @@ After implementation of the check, the file will take the form</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
         <script src="../../assets/javascripts/tables.js"></script>
       
-    
     
   </body>
 </html>

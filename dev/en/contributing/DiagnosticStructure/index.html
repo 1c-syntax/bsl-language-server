@@ -10,8 +10,14 @@
       
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticStructure/">
       
+      
+        <link rel="prev" href="../DiagnosticExample/">
+      
+      
+        <link rel="next" href="../DiagnosticTypeAndSeverity/">
+      
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.10">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.5">
     
     
       
@@ -19,11 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.975780f9.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
-        
       
       
 
@@ -112,8 +117,6 @@
       <form class="md-header__option" data-md-component="palette">
         
           
-          
-          
           <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
@@ -121,8 +124,6 @@
             </label>
           
         
-          
-          
           
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
@@ -187,7 +188,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -355,12 +356,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_1">
+        <label class="md-nav__link" for="__nav_1" tabindex="0" aria-expanded="false">
           Home
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -433,12 +435,13 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2">
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="true">
           Contributing
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -473,12 +476,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_2">
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
           Start
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -564,12 +568,13 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_3">
+        <label class="md-nav__link" for="__nav_2_3" tabindex="0" aria-expanded="true">
           Diagnostics development
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -779,12 +784,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_3">
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
           Reporters
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -912,12 +918,13 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_5">
+        <label class="md-nav__link" for="__nav_5" tabindex="0" aria-expanded="false">
           Features
           <span class="md-nav__icon md-icon"></span>
         </label>
@@ -991,10 +998,9 @@
                 
                   
 
-  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticStructure.md" title="Edit this page" class="md-content__button md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
-  </a>
+  
+  
+
 
 
 <h1 id="Diagnostics-structure-files-contents-and-purpose">Diagnostics structure, files contents and purpose<a class="headerlink" href="#Diagnostics-structure-files-contents-and-purpose" title="Permanent link">&para;</a></h1>
@@ -1048,17 +1054,17 @@ To create necessary files in right places, should run command <code>gradlew newD
 </ul>
 <p>The last two can be omitted.</p>
 <p>Annotation example</p>
-<div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span><span class="w"></span>
-<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span><span class="c1">// Deactivated by default</span><span class="w"></span>
-<span class="w">  </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span><span class="w">         </span><span class="c1">// Applicable only for BSL</span><span class="w"></span>
-<span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span><span class="c1">// 8.3.3 compatibility mode</span><span class="w"></span>
-<span class="w">  </span><span class="n">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span><span class="c1">// This is a diagnosis for violation of the 1C standard</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span><span class="c1">// Deactivated by default</span>
+<span class="w">  </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span><span class="w">         </span><span class="c1">// Applicable only for BSL</span>
+<span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span><span class="c1">// 8.3.3 compatibility mode</span>
+<span class="w">  </span><span class="n">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span><span class="c1">// This is a diagnosis for violation of the 1C standard</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>Class should implement the interface <code>BSLDiagnostic</code>. If diagnostic bases on AST, that class should extends at one of classes, that implement <code>BSLDiagnostic</code> below:</p>
 <ul>
@@ -1069,38 +1075,38 @@ To create necessary files in right places, should run command <code>gradlew newD
 <li><code>AbstractSDBLVisitorDiagnostic</code> for diagnostics of 1C query</li>
 </ul>
 <p>Examples</p>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">BSLDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">BSLDiagnostic</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnostic</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractListenerDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractListenerDiagnostic</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLVisitorDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLVisitorDiagnostic</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLListenerDiagnostic</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLListenerDiagnostic</span>
 </code></pre></div>
 <p>Diagnostic may provide so-called <code>quick fixes</code>. In order to provide quick fixes the diagnostic class must implement <code>QuickFixProvider</code> interface. See this <a href="../DiagnosticQuickFix/">article</a> on adding a <code>quick fix</code> to diagnostic.</p>
 <p>Examples</p>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">BSLDiagnostic</span><span class="p">,</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">BSLDiagnostic</span><span class="p">,</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractVisitorDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractListenerDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractListenerDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLVisitorDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLVisitorDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLListenerDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TemplateDiagnostic</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractSDBLListenerDiagnostic</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">QuickFixProvider</span>
 </code></pre></div>
 <p>After the declaration of the class, a block with their parameters is located for parameterizable diagnostics. For details on the diagnostic parameters, see the <a href="../DiagnostcAddSettings/">article</a>.</p>
 <p>Below are the differences in the implementation of diagnostic classes.</p>
 <h3 id="Diagnostics-class-implements-BSLDiagnostic-interface">Diagnostics class, implements BSLDiagnostic interface<a class="headerlink" href="#Diagnostics-class-implements-BSLDiagnostic-interface" title="Permanent link">&para;</a></h3>
 <p>In the class, you need to define a private field <code>diagnosticStorage</code> of type <code>DiagnosticStorage</code> to store detected diagnostics, and a private property <code>info</code> of type <code>DiagnosticInfo</code>, for access to diagnostic data.</p>
-<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="n">DiagnosticStorage</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
-<span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">DiagnosticInfo</span><span class="w"> </span><span class="n">info</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="n">DiagnosticStorage</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">DiagnosticInfo</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
 </code></pre></div>
 <p>In the class, you need to implement:</p>
 <ul>
@@ -1109,47 +1115,47 @@ To create necessary files in right places, should run command <code>gradlew newD
 <li>setter <code>setInfo</code></li>
 </ul>
 <p>Method structure <code>getDiagnostics</code></p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span><span class="w"></span>
-<span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span><span class="w"> </span><span class="n">documentContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="c1">// Clearing diagnostics storage</span><span class="w"></span>
-<span class="w">    </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">clearDiagnostics</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span>
+<span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span><span class="w"> </span><span class="n">documentContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Clearing diagnostics storage</span>
+<span class="w">    </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">clearDiagnostics</span><span class="p">();</span>
 
-<span class="w">    </span><span class="n">documentContext</span><span class="p">.</span><span class="na">getComments</span><span class="p">()</span><span class="w">  </span><span class="c1">// Getting the collection of tokens, here comments</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">         </span><span class="c1">// Search for &quot;necessary&quot; - those that the diagnostics is aimed at detecting</span><span class="w"></span>
-<span class="w">        </span><span class="o">!</span><span class="n">goodCommentPattern</span><span class="p">.</span><span class="na">matcher</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">()).</span><span class="na">matches</span><span class="p">())</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">sequential</span><span class="p">()</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">forEach</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">        </span><span class="c1">// Adding errors, here for each token a separate error</span><span class="w"></span>
-<span class="w">        </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">t</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">documentContext</span><span class="p">.</span><span class="na">getComments</span><span class="p">()</span><span class="w">  </span><span class="c1">// Getting the collection of tokens, here comments</span>
+<span class="w">      </span><span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+<span class="w">      </span><span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">         </span><span class="c1">// Search for &quot;necessary&quot; - those that the diagnostics is aimed at detecting</span>
+<span class="w">        </span><span class="o">!</span><span class="n">goodCommentPattern</span><span class="p">.</span><span class="na">matcher</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">()).</span><span class="na">matches</span><span class="p">())</span>
+<span class="w">      </span><span class="p">.</span><span class="na">sequential</span><span class="p">()</span>
+<span class="w">      </span><span class="p">.</span><span class="na">forEach</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">        </span><span class="c1">// Adding errors, here for each token a separate error</span>
+<span class="w">        </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
 
-<span class="w">    </span><span class="c1">// Return of found</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">();</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// Return of found</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractDiagnostic">Diagnostics class, inherits from AbstractDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractDiagnostic" title="Permanent link">&para;</a></h3>
 <p>For simple diagnostics, you should inherit your class from the AbstractDiagnostic class. In the diagnostic class, you need to implement the <code>check</code> method. The method should analyze the context of the document and, if noted, add diagnostics to <code>diagnosticStorage</code>.</p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span><span class="w"></span>
-<span class="w">  </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">check</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"></span>
-<span class="w">        </span><span class="n">t</span><span class="p">.</span><span class="na">getType</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">BSLParser</span><span class="p">.</span><span class="na">IDENTIFIER</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"></span>
-<span class="w">          </span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toUpperCase</span><span class="p">(</span><span class="n">Locale</span><span class="p">.</span><span class="na">ENGLISH</span><span class="p">).</span><span class="na">contains</span><span class="p">(</span><span class="s">&quot;Ё&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="w">      </span><span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">token</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">token</span><span class="p">));</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span>
+<span class="w">  </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">check</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span>
+<span class="w">      </span><span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+<span class="w">      </span><span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">        </span><span class="n">t</span><span class="p">.</span><span class="na">getType</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">BSLParser</span><span class="p">.</span><span class="na">IDENTIFIER</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">          </span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toUpperCase</span><span class="p">(</span><span class="n">Locale</span><span class="p">.</span><span class="na">ENGLISH</span><span class="p">).</span><span class="na">contains</span><span class="p">(</span><span class="s">&quot;Ё&quot;</span><span class="p">))</span>
+<span class="w">      </span><span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">token</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">token</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre></div>
 <h3 id="Diagnostics-class-inherits-from-AbstractVisitorDiagnostic">Diagnostics class, inherits from AbstractVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractVisitorDiagnostic" title="Permanent link">&para;</a></h3>
 <p>In the diagnostic class, it is necessary to implement the methods of all necessary <code>AST visitors</code>, in accordance with the language grammar described in the <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4"> BSLParser </a> project.  A complete list of existing visitor methods can be found in the <code>BSLParserBaseVisitor</code> class. Please note: for simplicity, <code>generalized</code> visitors have been created, for example, instead of two <code>visitFunction</code> for a function and <code>visitProcedure</code> for a procedure, you can use <code>visitSub</code>.</p>
 <p>As a parameter, an AST node of the corresponding type is passed to each method of the visitor. In the body of the method, it is necessary to analyze the node and / or its child nodes and decide if there is an error. When a problem is found, it must be added to <code>diagnosticStorage</code> <em>(the field is already defined in the abstract class)</em>. An error note can be attached to the passed node or to its child or parent nodes, to the desired block of code.</p>
 <p>Method structure</p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span><span class="w"></span>
-<span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="n">ParseTree</span><span class="w"> </span><span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                 </span><span class="c1">// Visitor for module variables</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// Finding child nodes</span><span class="w"></span>
-<span class="w">      </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w">                                         </span><span class="c1">// Adding a error to the entire site</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ctx</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nd">@Override</span>
+<span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="n">ParseTree</span><span class="w"> </span><span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                 </span><span class="c1">// Visitor for module variables</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// Finding child nodes</span>
+<span class="w">      </span><span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w">                                         </span><span class="c1">// Adding a error to the entire site</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ctx</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre></div>
 <p>If the diagnostics <strong>does not provide</strong> analysis of nested nodes, then it must return the passed input node, otherwise it is necessary to call the <code>super-method</code> of the same name. <br />
 This rule will save application resources without making a meaningless call.</p>
@@ -1168,22 +1174,22 @@ This rule will save application resources without making a meaningless call.</p>
 <p>A test is a java class added to the <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> package in the <code>src/test/java</code> directory.</p>
 <p>In the file, you need to specify the package in which the class and the import block <em>(similar to the diagnostic implementation class)</em> are added, then you need to create a class of the same name to the file, inherited from the <code>AbstractDiagnosticTest</code> class for the created diagnostic class.</p>
 <p>Test class example</p>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">org.eclipse.lsp4j.Diagnostic</span><span class="p">;</span><span class="w"></span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.utils.Ranges</span><span class="p">;</span><span class="w"></span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">org.junit.jupiter.api.Test</span><span class="p">;</span><span class="w"></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.eclipse.lsp4j.Diagnostic</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver.utils.Ranges</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.junit.jupiter.api.Test</span><span class="p">;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w"></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span>
 
-<span class="kn">import static</span><span class="w"> </span><span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="p">;</span><span class="w"></span>
+<span class="kn">import static</span><span class="w"> </span><span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="p">;</span>
 
-<span class="kd">class</span> <span class="nc">TemplateDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">TemplateDiagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="kd">class</span> <span class="nc">TemplateDiagnosticTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">TemplateDiagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 
-<span class="w">    </span><span class="n">TemplateDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">TemplateDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">TemplateDiagnosticTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">TemplateDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>To add a new test to the created class, you need to add a method with the <code>@Test</code> annotation.</p>
 <p>The test class must contain methods for testing.</p>
@@ -1204,52 +1210,52 @@ The next step is to use the <code>hasSize()</code> statement to make sure that t
 After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the <code>getRange()</code> method with the expected area <em>(you should use the <code>RangeHelper</code> class to simplify the formation of control values)</em>.
 If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the <code>getMessage()</code> method of diagnostics.</p>
 <p>Test method example</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">   </span><span class="c1">// getting a list of diagnostics</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">   </span><span class="c1">// getting a list of diagnostics</span>
 
-<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                </span><span class="c1">// checking the number of errors found</span><span class="w"></span>
+<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                </span><span class="c1">// checking the number of errors found</span>
 
-<span class="w">      </span><span class="c1">// verification of special cases</span><span class="w"></span>
-<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)))</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)));</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">      </span><span class="c1">// verification of special cases</span>
+<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)));</span>
+<span class="w">    </span><span class="p">}</span>
 </code></pre></div>
 <p>To reduce the amount of test code, you can use the <code>util.Assertions.assertThat</code> helper, then the example above will look like this:</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">   </span><span class="c1">// getting a list of diagnostics</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">   </span><span class="c1">// getting a list of diagnostics</span>
 
-<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                </span><span class="c1">// checking the number of errors found</span><span class="w"></span>
+<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                </span><span class="c1">// checking the number of errors found</span>
 
-<span class="w">      </span><span class="c1">// verification of special cases</span><span class="w"></span>
-<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">      </span><span class="c1">// verification of special cases</span>
+<span class="w">      </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 </code></pre></div>
 <h3 id="Test-of-configuration-method-for-parameterized-diagnostics">Test of configuration method for parameterized diagnostics<a class="headerlink" href="#Test-of-configuration-method-for-parameterized-diagnostics" title="Permanent link">&para;</a></h3>
 <p>Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test.
 Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the <code>getDefaultDiagnosticConfiguration()</code> method using the information of the current diagnostic object <code>diagnosticInstance.getInfo()</code>. The result is a map in which the <code>put</code> method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the <code>configure()</code> method of the current diagnostic object <code>diagnosticInstance</code>.</p>
 <p>Test method example</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">testConfigure</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="c1">// getting default diagnostic settings</span><span class="w"></span>
-<span class="w">        </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Object</span><span class="o">&gt;</span><span class="w"> </span><span class="n">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">testConfigure</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// getting default diagnostic settings</span>
+<span class="w">        </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Object</span><span class="o">&gt;</span><span class="w"> </span><span class="n">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
 
-<span class="w">        </span><span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;newValue&quot;</span><span class="p">);</span><span class="w">     </span><span class="c1">// setting &quot;templateParem&quot; to &quot;newValue&quot;</span><span class="w"></span>
-<span class="w">        </span><span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span><span class="w">        </span><span class="c1">// applying settings</span><span class="w"></span>
+<span class="w">        </span><span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;newValue&quot;</span><span class="p">);</span><span class="w">     </span><span class="c1">// setting &quot;templateParem&quot; to &quot;newValue&quot;</span>
+<span class="w">        </span><span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span><span class="w">        </span><span class="c1">// applying settings</span>
 
-<span class="w">        </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">    </span><span class="c1">// getting a list of diagnostics</span><span class="w"></span>
+<span class="w">        </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diagnostics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDiagnostics</span><span class="p">();</span><span class="w">    </span><span class="c1">// getting a list of diagnostics</span>
 
-<span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                 </span><span class="c1">// checking the number of detected</span><span class="w"></span>
+<span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w">                 </span><span class="c1">// checking the number of detected</span>
 
-<span class="w">        </span><span class="c1">// special case check</span><span class="w"></span>
-<span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w">          </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)</span><span class="w"></span>
-<span class="w">          </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// special case check</span>
+<span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">          </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">)</span>
+<span class="w">          </span><span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">29</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 </code></pre></div>
 <h3 id="Quick-fixes-test-Work-in-progress">Quick fixes test <strong>(Work in progress)</strong><a class="headerlink" href="#Quick-fixes-test-Work-in-progress" title="Permanent link">&para;</a></h3>
 <p><em><strong><Work in Progress></strong></em></p>
@@ -1290,42 +1296,6 @@ The file has the structure</p>
       </main>
       
         <footer class="md-footer">
-  
-    
-    <nav class="md-footer__inner md-grid" aria-label="Footer" >
-      
-        
-        <a href="../DiagnosticExample/" class="md-footer__link md-footer__link--prev" aria-label="Previous: An example of creating a new diagnostic" rel="prev">
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-          </div>
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              An example of creating a new diagnostic
-            </div>
-          </div>
-        </a>
-      
-      
-        
-        <a href="../DiagnosticTypeAndSeverity/" class="md-footer__link md-footer__link--next" aria-label="Next: Diagnostics types and severity" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Diagnostics types and severity
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1370,16 +1340,15 @@ The file has the structure</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
         <script src="../../assets/javascripts/tables.js"></script>
       
-    
     
   </body>
 </html>
