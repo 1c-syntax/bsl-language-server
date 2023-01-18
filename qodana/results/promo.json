@@ -1,1 +1,85 @@
-{"version":"3","listProblem":[]}
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Code maturity",
+  "type": "Use of 'System.out' or 'System.err'",
+  "severity": "High",
+  "comment": "Uses of 'System.out' should probably be replaced with more robust logging",
+  "detailsInfo": "Reports usages of `System.out` or `System.err`.\n\nSuch statements are often used for temporary debugging and should be either removed from the production code, or replaced by a more robust\nlogging facility.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/VersionCommand.java",
+      "language": "JAVA",
+      "line": 56,
+      "offset": 5,
+      "length": 10,
+      "code": {
+        "startLine": 54,
+        "length": 10,
+        "offset": 11,
+        "surroundingCode": "    }\n\n    System.out.printf(\n      \"version: %s%n\",\n      version"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SystemOutErr"
+  },
+  "hash": "393acf3614c69a1405b75f22fe7de0fa55fa891ab64f7fa436f05966837649c2"
+},{
+  "tool": "Code Inspection",
+  "category": "Code maturity",
+  "type": "Use of 'System.out' or 'System.err'",
+  "severity": "High",
+  "comment": "Uses of 'System.out' should probably be replaced with more robust logging",
+  "detailsInfo": "Reports usages of `System.out` or `System.err`.\n\nSuch statements are often used for temporary debugging and should be either removed from the production code, or replaced by a more robust\nlogging facility.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/LanguageServerLauncherConfiguration.java",
+      "language": "JAVA",
+      "line": 48,
+      "offset": 24,
+      "length": 10,
+      "code": {
+        "startLine": 46,
+        "length": 10,
+        "offset": 61,
+        "surroundingCode": "  ) {\n    InputStream in = System.in;\n    OutputStream out = System.out;\n\n    return LSPLauncher.createServerLauncher(server, in, out, false, printWriter);"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SystemOutErr"
+  },
+  "hash": "6a624fe9943466cdc9a1368cbd37d9c97d51e03853abb7e7c6eef6829faacbcf"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Regular expression can be simplified",
+  "severity": "High",
+  "comment": "'[*]' can be simplified to '*'",
+  "detailsInfo": "Reports regular expressions that can be simplified.\n\n**Example:**\n\n\n      [a] xx* [ah-hz]\n\nAfter the quick-fix is applied:\n\n\n      a x+ [ahz]\n\nNew in 2022.1",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "language": "RegExp",
+      "line": 67,
+      "offset": 75,
+      "length": 5,
+      "code": {
+        "startLine": 65,
+        "length": 5,
+        "offset": 80,
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpSimplifiable"
+  },
+  "hash": "71340859aaa634a7436637ac31b215a4ec2cb5ab9376bb6a2eba5a45dfff2c41"
+}]}

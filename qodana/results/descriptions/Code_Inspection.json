@@ -331,16 +331,16 @@
           "description": "Reports `if-then` expressions that can be folded into elvis (`?:`) expressions.\n\n**Example:**\n\n\n      fun maybeFoo(): String? = \"foo\"\n\n      var foo = maybeFoo()\n      val bar = if (foo == null) \"hello\" else foo\n\nThe quick fix converts the `if-then` expression into an elvis (`?:`) expression:\n\n\n      fun maybeFoo(): String? = \"foo\"\n\n      var foo = maybeFoo()\n      val bar = foo ?: \"hello\"\n"
         },
         {
-          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
-          "displayName": "Not-null assertion can be replaced with 'return'",
-          "enabled": false,
-          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
-        },
-        {
           "shortName": "ReplaceStringFormatWithLiteral",
           "displayName": "'String.format' call can be replaced with string templates",
           "enabled": false,
           "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
+        },
+        {
+          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
+          "displayName": "Not-null assertion can be replaced with 'return'",
+          "enabled": false,
+          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
         },
         {
           "shortName": "ReplaceSubstringWithSubstringBefore",
@@ -505,16 +505,16 @@
           "description": "Reports `isEmpty`, `isBlank`, `isNotEmpty`, or `isNotBlank` calls in an `if` statement to assign a default value.\n\nThe quick-fix replaces the `if` condition with `ifEmpty` or `ifBlank` calls.\n\n**Example:**\n\n\n      fun test(list: List<Int>): List<Int> {\n          return if (list.isEmpty()) {\n              println()\n              foo()\n          } else {\n              list\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(list: List<Int>): List<Int> {\n          return list.ifEmpty {\n              println()\n              foo()\n          }\n      }\n\nThis inspection only reports if the Kotlin language version of the project or module is 1.3 or higher."
         },
         {
-          "shortName": "ReplaceNegatedIsEmptyWithIsNotEmpty",
-          "displayName": "Negated call can be simplified",
-          "enabled": false,
-          "description": "Reports negation `isEmpty()` and `isNotEmpty()` for collections and `String`, or `isBlank()` and `isNotBlank()` for `String`.\n\nUsing corresponding functions makes your code simpler.\n\nThe quick-fix replaces the negation call with the corresponding call from the Standard Library.\n\n**Example:**\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (!list.isEmpty()) {\n              // do smth\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (list.isNotEmpty()) {\n              // do smth\n          }\n      }\n"
-        },
-        {
           "shortName": "ReplaceWithImportAlias",
           "displayName": "Fully qualified name can be replaced with existing import alias",
           "enabled": false,
           "description": "Reports fully qualified names that can be replaced with an existing import alias.\n\n**Example:**\n\n\n    import foo.Foo as Bar\n    fun main() {\n        foo.Foo()\n    }\n\nAfter the quick-fix is applied:\n\n\n    import foo.Foo as Bar\n    fun main() {\n        Bar()\n    }\n"
+        },
+        {
+          "shortName": "ReplaceNegatedIsEmptyWithIsNotEmpty",
+          "displayName": "Negated call can be simplified",
+          "enabled": false,
+          "description": "Reports negation `isEmpty()` and `isNotEmpty()` for collections and `String`, or `isBlank()` and `isNotBlank()` for `String`.\n\nUsing corresponding functions makes your code simpler.\n\nThe quick-fix replaces the negation call with the corresponding call from the Standard Library.\n\n**Example:**\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (!list.isEmpty()) {\n              // do smth\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (list.isNotEmpty()) {\n              // do smth\n          }\n      }\n"
         },
         {
           "shortName": "SimplifyBooleanWithConstants",
@@ -1617,16 +1617,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "UnnecessaryUnicodeEscape",
-          "displayName": "Unnecessary unicode escape sequence",
-          "enabled": false,
-          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
-        },
-        {
           "shortName": "StringTokenizer",
           "displayName": "Use of 'StringTokenizer'",
           "enabled": false,
           "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
+        },
+        {
+          "shortName": "UnnecessaryUnicodeEscape",
+          "displayName": "Unnecessary unicode escape sequence",
+          "enabled": false,
+          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
         },
         {
           "shortName": "NumericToString",
@@ -2017,16 +2017,16 @@
           "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
         },
         {
-          "shortName": "NonFinalUtilityClass",
-          "displayName": "Utility class is not 'final'",
-          "enabled": false,
-          "description": "Reports utility classes that aren't `final`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed."
-        },
-        {
           "shortName": "Singleton",
           "displayName": "Singleton",
           "enabled": false,
           "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
+        },
+        {
+          "shortName": "NonFinalUtilityClass",
+          "displayName": "Utility class is not 'final'",
+          "enabled": false,
+          "description": "Reports utility classes that aren't `final`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed."
         },
         {
           "shortName": "StaticNonFinalField",
@@ -3053,10 +3053,10 @@
           "description": "Reports suspicious indentation of statements after a control statement without braces.\n\n\nSuch indentation can make it look like the statement is inside the control statement,\nwhen in fact it will be executed unconditionally after the control statement.\n\n**Example:**\n\n\n      class Bar {\n          void foo(int i) {\n              if (i == 0)\n                  System.out.println(\"foo\");\n                  System.out.println(\"bar\"); // warning\n              if (i == 1);\n                  System.out.println(\"great\"); // warning\n              if (i == 42)\n                  System.out.println(\"answer\");\n                      System.out.println(\"question\"); // warning\n          }\n      }\n"
         },
         {
-          "shortName": "MagicConstant",
-          "displayName": "Magic Constant",
+          "shortName": "SuspiciousDateFormat",
+          "displayName": "Suspicious date format pattern",
           "enabled": true,
-          "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
+          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
         },
         {
           "shortName": "ClassNewInstance",
@@ -3065,10 +3065,10 @@
           "description": "Reports calls to `java.lang.Class.newInstance()`.\n\n\nThis method propagates exceptions thrown by\nthe no-arguments constructor, including checked exceptions. Usages of this method\neffectively bypass the compile-time exception checking that would\notherwise be performed by the compiler.\n\n\nA quick-fix is suggested to replace the call with a call to the\n`java.lang.reflect.Constructor.newInstance()` method, which\navoids this problem by wrapping any exception thrown by the constructor in a\n(checked) `java.lang.reflect.InvocationTargetException`.\n\n**Example:**\n\n\n      clazz.newInstance()\n\nAfter the quick-fix is applied:\n\n\n      clazz.getConstructor().newInstance();\n"
         },
         {
-          "shortName": "SuspiciousDateFormat",
-          "displayName": "Suspicious date format pattern",
+          "shortName": "MagicConstant",
+          "displayName": "Magic Constant",
           "enabled": true,
-          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
+          "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
         },
         {
           "shortName": "StaticFieldReferenceOnSubclass",
@@ -3167,16 +3167,16 @@
           "description": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files."
         },
         {
-          "shortName": "IteratorHasNextCallsIteratorNext",
-          "displayName": "'Iterator.hasNext()' which calls 'next()'",
-          "enabled": true,
-          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
-        },
-        {
           "shortName": "EqualsAndHashcode",
           "displayName": "'equals()' and 'hashCode()' not paired",
           "enabled": true,
           "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
+        },
+        {
+          "shortName": "IteratorHasNextCallsIteratorNext",
+          "displayName": "'Iterator.hasNext()' which calls 'next()'",
+          "enabled": true,
+          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
         },
         {
           "shortName": "CastConflictsWithInstanceof",
@@ -3221,16 +3221,16 @@
           "description": "Reports `instanceof` expressions where the compared type is an interface, and the compared expression has a class type that neither implements the compared interface, nor has any visible subclasses which implement the compared interface.\n\n\nAlthough that might be intended, normally such a construct is most likely an error, where\nthe resulting `instanceof` expression always evaluates to `false`.\n\n**Example:**\n\n\n      interface I1 {}\n\n      interface I2 {}\n\n      interface I3 extends I1 {}\n\n      static class Sub1 implements I1 {}\n\n      static class Sub2 extends Sub1 implements I2 {\n        void test(Sub1 sub1) {\n          if (sub1 instanceof I3) { // here 'I3' is incompatible interface\n          }\n        }\n      }\n"
         },
         {
-          "shortName": "NullArgumentToVariableArgMethod",
-          "displayName": "Confusing argument to varargs method",
-          "enabled": true,
-          "description": "Reports calls to variable arity methods that have a single argument in the vararg parameter position, which is either a `null` or an array of a subtype of the vararg parameter. Such an argument may be confusing as it is unclear if a varargs or non-varargs call is desired.\n\n**Example:**\n\n\n      String[] ss = new String[]{\"foo\", \"bar\"};\n      System.out.printf(\"%s\", ss);\n\nIn this example only the first element of the array will be printed, not the entire array."
-        },
-        {
           "shortName": "InfiniteRecursion",
           "displayName": "Infinite recursion",
           "enabled": true,
           "description": "Reports methods that call themselves infinitely unless an exception is thrown.\n\n\nMethods reported by this inspection cannot return normally.\nWhile such behavior may be intended, in many cases this is just an oversight.\n\n**Example:**\n\n      int baz() {\n          return baz();\n      }\n"
+        },
+        {
+          "shortName": "NullArgumentToVariableArgMethod",
+          "displayName": "Confusing argument to varargs method",
+          "enabled": true,
+          "description": "Reports calls to variable arity methods that have a single argument in the vararg parameter position, which is either a `null` or an array of a subtype of the vararg parameter. Such an argument may be confusing as it is unclear if a varargs or non-varargs call is desired.\n\n**Example:**\n\n\n      String[] ss = new String[]{\"foo\", \"bar\"};\n      System.out.printf(\"%s\", ss);\n\nIn this example only the first element of the array will be printed, not the entire array."
         },
         {
           "shortName": "VariableNotUsedInsideIf",
@@ -4298,35 +4298,6 @@
       ]
     },
     {
-      "name": "GPath",
-      "inspections": [
-        {
-          "shortName": "GroovyListSetCanBeKeyedAccess",
-          "displayName": "Call to List.set can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapPutCanBeKeyedAccess",
-          "displayName": "Call to Map.put can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapGetCanBeKeyedAccess",
-          "displayName": "Call to Map.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
-        },
-        {
-          "shortName": "GroovyListGetCanBeKeyedAccess",
-          "displayName": "Call to List.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
-        }
-      ]
-    },
-    {
       "name": "Embedded",
       "inspections": [
         {
@@ -4394,6 +4365,35 @@
           "displayName": "Large array allocation with no OutOfMemoryError check",
           "enabled": false,
           "description": "Reports large array allocations which do not check for `java.lang.OutOfMemoryError`. In memory constrained environments, allocations of large data objects should probably be checked for memory depletion.\n\n\nThis inspection is intended for Java ME and other highly resource constrained environments.\nApplying the results of this inspection without consideration might have negative effects on code clarity and design.\n\n\nUse the option to specify the maximum number of elements to allow in unchecked array allocations."
+        }
+      ]
+    },
+    {
+      "name": "GPath",
+      "inspections": [
+        {
+          "shortName": "GroovyListSetCanBeKeyedAccess",
+          "displayName": "Call to List.set can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapPutCanBeKeyedAccess",
+          "displayName": "Call to Map.put can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapGetCanBeKeyedAccess",
+          "displayName": "Call to Map.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
+        },
+        {
+          "shortName": "GroovyListGetCanBeKeyedAccess",
+          "displayName": "Call to List.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
         }
       ]
     },
@@ -4656,16 +4656,16 @@
           "description": "Reports equality expressions which are negated by a prefix expression.\n\nSuch expressions can be simplified using the `!=` operator.\n\nExample:\n\n\n      !(i == 1)\n\nAfter the quick-fix is applied:\n\n\n      i != 1\n"
         },
         {
-          "shortName": "DoubleNegation",
-          "displayName": "Double negation",
-          "enabled": true,
-          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
-        },
-        {
           "shortName": "AssertionCanBeIf",
           "displayName": "Assertion can be replaced with 'if' statement",
           "enabled": false,
           "description": "Reports `assert` statements and suggests replacing them with `if` statements that throw `java.lang.AssertionError`.\n\nExample:\n\n\n      assert param != null;\n\nAfter the quick-fix is applied:\n\n\n      if (param == null) throw new AssertionError();\n"
+        },
+        {
+          "shortName": "DoubleNegation",
+          "displayName": "Double negation",
+          "enabled": true,
+          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
         },
         {
           "shortName": "BreakStatement",
@@ -5464,71 +5464,6 @@
       ]
     },
     {
-      "name": "Properties files",
-      "inspections": [
-        {
-          "shortName": "UnusedMessageFormatParameter",
-          "displayName": "Missing message format parameter",
-          "enabled": false,
-          "description": "Reports properties values that look like `java.text.MessageFormat` format strings but do not use some the parameters of the `{xx}` kind.\n\nExample:\n\n\n    # parameter {0} is not used\n    error.message=Something happened in line {1}\n      \n"
-        },
-        {
-          "shortName": "InconsistentResourceBundle",
-          "displayName": "Inconsistent resource bundle",
-          "enabled": false,
-          "description": "Reports problems in the properties files contained in the resource bundle.\n\n* **Report missing translation**\n\noption controls search for an untranslated properties.   \nIt reports properties contained in parent properties file that are missing in inherited (unless it's a language dialect).   \nE.g. having this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : empty   \nProperty **abc** will be reported as untranslated.\n\n* **Report inconsistent properties**\n\noption controls invalid resource bundle structure inspection.   \nIt reports properties contained in inherited properties file that are missing in parent (or in sibling if there is no parent).   \nE.g. having this resource bundle:   \n**messages.properties** : empty   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** translation here is not available for any language except French, and, thus, will be reported as missing in the (default) properties file **messages.properties** .\n\n* **Report properties overridden with the same value**\n\noption checks for properties which are copy-pasted into several properties files verbatim.   \nE.g. in this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** will be reported as unnecessarily inherited in the file **messages_fr.properties** .   \n\n* **Report properties overridden with different placeholders**\n\noption checks for properties which are overridden for placeholder consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**qwe={0}xxx{1}**   \n**abc={0}yyy{1}**   \n**messages_fr.properties** :   \n**qwe={0}xxx{0}xxx{1}**   \n**abc={0}yyy**   \nProperty **abc** will be reported as property contains message format placeholders with value not corresponding to **messages.properties** .   \n\n* **Report properties overridden with different values endings**\n\noption checks for properties which are overridden for ending consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**abc=xxxzzz**   \n**messages_fr.properties** :   \n**abc=xxx;**   \nProperty **abc** will be reported as property contains special signs ( **'!'** , **'?'** , **'.'** , **':'** or **';'** ) at the end of value but value in **messages.properties** doesn't.   "
-        },
-        {
-          "shortName": "SuspiciousLocalesLanguages",
-          "displayName": "Suspicious resource bundle locale languages",
-          "enabled": false,
-          "description": "Reports locales with language codes that are not supported by Java."
-        },
-        {
-          "shortName": "UseEllipsisInPropertyInspection",
-          "displayName": "Three dot characters instead of the ellipsis",
-          "enabled": false,
-          "description": "Reports three \"dot\" characters which are used instead of the ellipsis character for UTF-8 properties files."
-        },
-        {
-          "shortName": "AlphaUnsortedPropertiesFile",
-          "displayName": "Properties file or resource bundle is alphabetically unsorted",
-          "enabled": false,
-          "description": "Reports alphabetically unsorted resource bundles or .properties files."
-        },
-        {
-          "shortName": "TrailingSpacesInProperty",
-          "displayName": "Trailing spaces in property",
-          "enabled": false,
-          "description": "Reports properties whose keys or values end with a whitespace."
-        },
-        {
-          "shortName": "UnusedProperty",
-          "displayName": "Unused property",
-          "enabled": false,
-          "description": "Reports properties that are not referenced outside of the .properties file they are contained in."
-        },
-        {
-          "shortName": "WrongPropertyKeyValueDelimiter",
-          "displayName": "Property key/value delimiter doesn't match code style settings",
-          "enabled": false,
-          "description": "Reports properties in which key or value delimiters do not match code style settings."
-        },
-        {
-          "shortName": "DuplicatePropertyInspection",
-          "displayName": "Duplicate property",
-          "enabled": false,
-          "description": "Reports duplicate property keys with different values, duplicate keys, or duplicate property values.\n\nExample:\n\n\n    property1=value;\n    property2=value;\n\nThe **Options** list allows selecting the area in which the inspection should search for duplicates."
-        },
-        {
-          "shortName": "UnresolvedPropertyKey",
-          "displayName": "Invalid property key",
-          "enabled": true,
-          "description": "Reports invalid arguments that are passed to methods with parameters annotated as `@PropertyKey`.\n\nThese arguments should be valid property keys in corresponding properties files.\nAlso, the inspection verifies that the `resourceBundle`\nargument of the `@PropertyKey` annotation is an existing resource bundle.\n\n\nUse the quick-fix to create a new property or to select an existing one.\n\nExample:\n\n\n      @PropertyKey(resourceBundle = \"myBundle\") String value = \"invalid.key\";\n"
-        }
-      ]
-    },
-    {
       "name": "EditorConfig",
       "inspections": [
         {
@@ -5698,6 +5633,71 @@
           "displayName": "Unused declaration",
           "enabled": false,
           "description": "Reports unused declarations. Such declarations can be removed."
+        }
+      ]
+    },
+    {
+      "name": "Properties files",
+      "inspections": [
+        {
+          "shortName": "UnusedMessageFormatParameter",
+          "displayName": "Missing message format parameter",
+          "enabled": false,
+          "description": "Reports properties values that look like `java.text.MessageFormat` format strings but do not use some the parameters of the `{xx}` kind.\n\nExample:\n\n\n    # parameter {0} is not used\n    error.message=Something happened in line {1}\n      \n"
+        },
+        {
+          "shortName": "InconsistentResourceBundle",
+          "displayName": "Inconsistent resource bundle",
+          "enabled": false,
+          "description": "Reports problems in the properties files contained in the resource bundle.\n\n* **Report missing translation**\n\noption controls search for an untranslated properties.   \nIt reports properties contained in parent properties file that are missing in inherited (unless it's a language dialect).   \nE.g. having this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : empty   \nProperty **abc** will be reported as untranslated.\n\n* **Report inconsistent properties**\n\noption controls invalid resource bundle structure inspection.   \nIt reports properties contained in inherited properties file that are missing in parent (or in sibling if there is no parent).   \nE.g. having this resource bundle:   \n**messages.properties** : empty   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** translation here is not available for any language except French, and, thus, will be reported as missing in the (default) properties file **messages.properties** .\n\n* **Report properties overridden with the same value**\n\noption checks for properties which are copy-pasted into several properties files verbatim.   \nE.g. in this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** will be reported as unnecessarily inherited in the file **messages_fr.properties** .   \n\n* **Report properties overridden with different placeholders**\n\noption checks for properties which are overridden for placeholder consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**qwe={0}xxx{1}**   \n**abc={0}yyy{1}**   \n**messages_fr.properties** :   \n**qwe={0}xxx{0}xxx{1}**   \n**abc={0}yyy**   \nProperty **abc** will be reported as property contains message format placeholders with value not corresponding to **messages.properties** .   \n\n* **Report properties overridden with different values endings**\n\noption checks for properties which are overridden for ending consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**abc=xxxzzz**   \n**messages_fr.properties** :   \n**abc=xxx;**   \nProperty **abc** will be reported as property contains special signs ( **'!'** , **'?'** , **'.'** , **':'** or **';'** ) at the end of value but value in **messages.properties** doesn't.   "
+        },
+        {
+          "shortName": "SuspiciousLocalesLanguages",
+          "displayName": "Suspicious resource bundle locale languages",
+          "enabled": false,
+          "description": "Reports locales with language codes that are not supported by Java."
+        },
+        {
+          "shortName": "UseEllipsisInPropertyInspection",
+          "displayName": "Three dot characters instead of the ellipsis",
+          "enabled": false,
+          "description": "Reports three \"dot\" characters which are used instead of the ellipsis character for UTF-8 properties files."
+        },
+        {
+          "shortName": "AlphaUnsortedPropertiesFile",
+          "displayName": "Properties file or resource bundle is alphabetically unsorted",
+          "enabled": false,
+          "description": "Reports alphabetically unsorted resource bundles or .properties files."
+        },
+        {
+          "shortName": "TrailingSpacesInProperty",
+          "displayName": "Trailing spaces in property",
+          "enabled": false,
+          "description": "Reports properties whose keys or values end with a whitespace."
+        },
+        {
+          "shortName": "UnusedProperty",
+          "displayName": "Unused property",
+          "enabled": false,
+          "description": "Reports properties that are not referenced outside of the .properties file they are contained in."
+        },
+        {
+          "shortName": "WrongPropertyKeyValueDelimiter",
+          "displayName": "Property key/value delimiter doesn't match code style settings",
+          "enabled": false,
+          "description": "Reports properties in which key or value delimiters do not match code style settings."
+        },
+        {
+          "shortName": "DuplicatePropertyInspection",
+          "displayName": "Duplicate property",
+          "enabled": false,
+          "description": "Reports duplicate property keys with different values, duplicate keys, or duplicate property values.\n\nExample:\n\n\n    property1=value;\n    property2=value;\n\nThe **Options** list allows selecting the area in which the inspection should search for duplicates."
+        },
+        {
+          "shortName": "UnresolvedPropertyKey",
+          "displayName": "Invalid property key",
+          "enabled": true,
+          "description": "Reports invalid arguments that are passed to methods with parameters annotated as `@PropertyKey`.\n\nThese arguments should be valid property keys in corresponding properties files.\nAlso, the inspection verifies that the `resourceBundle`\nargument of the `@PropertyKey` annotation is an existing resource bundle.\n\n\nUse the quick-fix to create a new property or to select an existing one.\n\nExample:\n\n\n      @PropertyKey(resourceBundle = \"myBundle\") String value = \"invalid.key\";\n"
         }
       ]
     },
