@@ -7,12 +7,12 @@
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server",
-        "revisionId": "b4c9bd101a654fabcc6f967192b7ca04a13d3149",
+        "revisionId": "50fac98882a9943534739be4abc72718c22f810e",
         "branch": "develop"
       }
     },
     "deviceId": "200820300000000-b1e0-16a1-bac0-af3b5dba5b3d",
-    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/3951797039",
+    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/3975191137",
     "repoUrl": "https://github.com/1c-syntax/bsl-language-server"
   }
 }
