@@ -12,7 +12,7 @@ plugins {
     id("io.freefair.lombok") version "6.6.1"
     id("io.freefair.javadoc-links") version "6.6.1"
     id("io.freefair.javadoc-utf-8") version "6.6.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
     id("io.freefair.maven-central.validate-poms") version "6.6.1"
     id("me.qoomon.git-versioning") version "6.4.0"
     id("com.github.ben-manes.versions") version "0.44.0"
