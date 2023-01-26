@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1674713501680,
+  "lastUpdate": 1674715417517,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21111,6 +21111,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7809558740595496",
             "extra": "mean: 52.47366897265116 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9734e87809eeb0d0f5f5a87e0a62f172edd8a10b",
+          "message": "Merge pull request #2968 from 1c-syntax/dependabot/gradle/io.freefair.lombok-6.6.1\n\nbuild(deps): bump io.freefair.lombok from 6.6 to 6.6.1",
+          "timestamp": "2023-01-26T09:03:08+03:00",
+          "tree_id": "7119324e36899d7ddd67bc5db4817f5f3bc7c51f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9734e87809eeb0d0f5f5a87e0a62f172edd8a10b"
+        },
+        "date": 1674715410976,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.01268227895101,
+            "unit": "sec",
+            "range": "stddev: 0.4603644877804103",
+            "extra": "mean: 53.01268227895101 sec\nrounds: 3"
           }
         ]
       }
