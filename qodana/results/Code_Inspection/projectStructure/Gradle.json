@@ -194,20 +194,20 @@
       "version": "1.5.1"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter:6.9.2",
-      "gradleName": "io.sentry:sentry-spring-boot-starter:6.9.2",
+      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter:6.13.0",
+      "gradleName": "io.sentry:sentry-spring-boot-starter:6.13.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring-boot-starter",
-      "version": "6.9.2"
+      "version": "6.13.0"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-logback:6.9.2",
-      "gradleName": "io.sentry:sentry-logback:6.9.2",
+      "ideaName": "Gradle: io.sentry:sentry-logback:6.13.0",
+      "gradleName": "io.sentry:sentry-logback:6.13.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-logback",
-      "version": "6.9.2"
+      "version": "6.13.0"
     },
     {
       "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.35",
@@ -730,20 +730,20 @@
       "version": "0.13"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring:6.9.2",
-      "gradleName": "io.sentry:sentry-spring:6.9.2",
+      "ideaName": "Gradle: io.sentry:sentry-spring:6.13.0",
+      "gradleName": "io.sentry:sentry-spring:6.13.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring",
-      "version": "6.9.2"
+      "version": "6.13.0"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry:6.9.2",
-      "gradleName": "io.sentry:sentry:6.9.2",
+      "ideaName": "Gradle: io.sentry:sentry:6.13.0",
+      "gradleName": "io.sentry:sentry:6.13.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry",
-      "version": "6.9.2"
+      "version": "6.13.0"
     },
     {
       "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-asm:1.35",
