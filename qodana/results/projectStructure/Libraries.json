@@ -1,9 +1,9 @@
 {
   "libraries": [
     {
-      "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.0",
+      "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli-spring-boot-starter/4.7.0/1270197930d1b8abbb312359567d53e229ccdd16/picocli-spring-boot-starter-4.7.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli-spring-boot-starter/4.7.1/9a8a598a8b75be7ebebfaeca6b58efd049361b78/picocli-spring-boot-starter-4.7.1.jar!/"
       ]
     },
     {
@@ -163,9 +163,9 @@
       ]
     },
     {
-      "name": "Gradle: info.picocli:picocli:4.7.0",
+      "name": "Gradle: info.picocli:picocli:4.7.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.0/dcdde55edcb523af7814ba47e57a8a097daa208d/picocli-4.7.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.1/7ac5efc1f895a237eb3d8e77375d7c7a7dbbaae7/picocli-4.7.1.jar!/"
       ]
     },
     {

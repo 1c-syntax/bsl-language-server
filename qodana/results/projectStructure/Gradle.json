@@ -2,12 +2,12 @@
   "gradleJvm": "#JAVA_HOME",
   "libraries": [
     {
-      "ideaName": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.0",
-      "gradleName": "info.picocli:picocli-spring-boot-starter:4.7.0",
+      "ideaName": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.1",
+      "gradleName": "info.picocli:picocli-spring-boot-starter:4.7.1",
       "unresolved": false,
       "groupId": "info.picocli",
       "artifactId": "picocli-spring-boot-starter",
-      "version": "4.7.0"
+      "version": "4.7.1"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.5",
@@ -234,12 +234,12 @@
       "version": "1.18.24"
     },
     {
-      "ideaName": "Gradle: info.picocli:picocli:4.7.0",
-      "gradleName": "info.picocli:picocli:4.7.0",
+      "ideaName": "Gradle: info.picocli:picocli:4.7.1",
+      "gradleName": "info.picocli:picocli:4.7.1",
       "unresolved": false,
       "groupId": "info.picocli",
       "artifactId": "picocli",
-      "version": "4.7.0"
+      "version": "4.7.1"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.5",
