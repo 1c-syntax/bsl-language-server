@@ -63,7 +63,7 @@
         "jrt:///opt/idea/jbr!/jogl.all"
       ],
       "sdkType": "JavaSDK",
-      "sdkVersion": "java version \"17.0.5\""
+      "sdkVersion": "java version \"17.0.6\""
     }
   ]
 }
