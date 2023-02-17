@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TestRunnerAdapter {
 
-  private static final Pattern TEST_NAME_PATTERN = CaseInsensitivePattern.compile("^[^<]*<([^>]+)>.*");
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\r?\n");
   private static final Map<Pair<DocumentContext, Integer>, List<String>> CACHE = new WeakHashMap<>();
 

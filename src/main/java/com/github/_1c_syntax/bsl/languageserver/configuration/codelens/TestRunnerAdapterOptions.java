@@ -37,7 +37,7 @@ public class TestRunnerAdapterOptions {
   private String executable = "1testrunner";
   private String executableWin = "1testrunner.bat";
   private String getTestsArguments = "-show %s";
-  private String getTestsResultPattern = "^[^<]*<([^>]+)>.*";
+  private String getTestsResultPattern = "^[^<]*Имя\\sтеста\\s<([^>]+)>.*";
   private String runTestArguments = "-run %s %s";
   private String runAllTestsArguments = "-run %s";
 
