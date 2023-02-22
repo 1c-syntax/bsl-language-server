@@ -85,9 +85,9 @@ public class RunAllTestsCodeLensSupplier
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
 
-    var testNames = testRunnerAdapter.getTestNames(documentContext);
+    var testIds = testRunnerAdapter.getTestIds(documentContext);
 
-    if (testNames.isEmpty()) {
+    if (testIds.isEmpty()) {
       return Collections.emptyList();
     }
 

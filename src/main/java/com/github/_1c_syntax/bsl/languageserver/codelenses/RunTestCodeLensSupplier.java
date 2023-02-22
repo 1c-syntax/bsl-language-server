@@ -95,10 +95,10 @@ public class RunTestCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var testNames = testRunnerAdapter.getTestNames(documentContext);
+    var testIds = testRunnerAdapter.getTestIds(documentContext);
     var symbolTree = documentContext.getSymbolTree();
 
-    return testNames.stream()
+    return testIds.stream()
       .map(symbolTree::getMethodSymbol)
       .flatMap(Optional::stream)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
@@ -114,12 +114,12 @@ public class RunTestCodeLensSupplier
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
 
     var path = Paths.get(documentContext.getUri());
-    var testName = data.getTestName();
+    var testId = data.getTestId();
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunTestArguments();
-    runText = String.format(runText, path, testName);
+    runText = String.format(runText, path, testId);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runTest"));
@@ -132,8 +132,8 @@ public class RunTestCodeLensSupplier
   }
 
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
-    var testName = method.getName();
-    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testName);
+    var testId = method.getName();
+    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);
@@ -151,12 +151,12 @@ public class RunTestCodeLensSupplier
     /**
      * Имя метода.
      */
-    String testName;
+    String testId;
 
-    @ConstructorProperties({"uri", "id", "testName"})
-    public RunTestCodeLensData(URI uri, String id, String testName) {
+    @ConstructorProperties({"uri", "id", "testId"})
+    public RunTestCodeLensData(URI uri, String id, String testId) {
       super(uri, id);
-      this.testName = testName;
+      this.testId = testId;
     }
   }
 }

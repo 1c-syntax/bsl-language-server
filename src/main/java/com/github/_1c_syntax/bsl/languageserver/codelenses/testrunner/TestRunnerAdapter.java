@@ -57,13 +57,13 @@ public class TestRunnerAdapter {
 
   private final LanguageServerConfiguration configuration;
 
-  public List<String> getTestNames(DocumentContext documentContext) {
+  public List<String> getTestIds(DocumentContext documentContext) {
     var cacheKey = Pair.of(documentContext, documentContext.getVersion());
 
-    return CACHE.computeIfAbsent(cacheKey, pair -> computeTestNames(documentContext));
+    return CACHE.computeIfAbsent(cacheKey, pair -> computeTestIds(documentContext));
   }
 
-  private List<String> computeTestNames(DocumentContext documentContext) {
+  private List<String> computeTestIds(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
