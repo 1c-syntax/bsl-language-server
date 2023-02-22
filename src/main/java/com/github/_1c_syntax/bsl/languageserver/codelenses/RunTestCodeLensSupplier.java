@@ -79,6 +79,11 @@ public class RunTestCodeLensSupplier
   }
 
   @Override
+  public String getId() {
+    return "language-1c-bsl.languageServer.runTest";
+  }
+
+  @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS && clientIsSupported;
   }
@@ -113,12 +118,12 @@ public class RunTestCodeLensSupplier
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
-    String runText = executable + " " + options.getRunTestArguments() + "\n";
+    String runText = executable + " " + options.getRunTestArguments();
     runText = String.format(runText, path, testName);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runTest"));
-    command.setCommand(getCommandId());
+    command.setCommand(getId());
     command.setArguments(List.of(Map.of("text", runText)));
 
     unresolved.setCommand(command);
@@ -134,11 +139,6 @@ public class RunTestCodeLensSupplier
     codeLens.setData(codeLensData);
 
     return codeLens;
-  }
-
-  private static String getCommandId() {
-    // todo: try to find other IDEs commandId
-    return "workbench.action.terminal.sendSequence";
   }
 
   /**

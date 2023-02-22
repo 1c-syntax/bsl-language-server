@@ -73,6 +73,11 @@ public class RunAllTestsCodeLensSupplier
   }
 
   @Override
+  public String getId() {
+    return "language-1c-bsl.languageServer.runAllTests";
+  }
+
+  @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS && clientIsSupported;
   }
@@ -98,12 +103,12 @@ public class RunAllTestsCodeLensSupplier
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
-    String runText = executable + " " + options.getRunAllTestsArguments() + "\n";
+    String runText = executable + " " + options.getRunAllTestsArguments();
     runText = String.format(runText, path);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runAllTests"));
-    command.setCommand(getCommandId());
+    command.setCommand(getId());
     command.setArguments(List.of(Map.of("text", runText)));
 
     unresolved.setCommand(command);
@@ -126,9 +131,4 @@ public class RunAllTestsCodeLensSupplier
     return codeLens;
   }
 
-  private static String getCommandId() {
-    // todo: check if client is VSCode
-    // todo: try to find other IDEs commandId
-    return "workbench.action.terminal.sendSequence";
-  }
 }
