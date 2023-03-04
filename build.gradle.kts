@@ -225,7 +225,7 @@ tasks.javadoc {
         links(
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://javadoc.io/doc/org.apache.logging.log4j/log4j-to-slf4j/2.19.0",
+            "https://javadoc.io/doc/org.apache.logging.log4j/log4j-to-slf4j/2.19.0/index.html",
             "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
         )
     }
