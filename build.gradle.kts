@@ -9,13 +9,13 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.5.0.2730"
-    id("io.freefair.lombok") version "6.6"
-    id("io.freefair.javadoc-links") version "6.6"
-    id("io.freefair.javadoc-utf-8") version "6.6"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
-    id("io.freefair.maven-central.validate-poms") version "6.6"
-    id("me.qoomon.git-versioning") version "6.3.7"
-    id("com.github.ben-manes.versions") version "0.44.0"
+    id("io.freefair.lombok") version "6.6.1"
+    id("io.freefair.javadoc-links") version "6.6.1"
+    id("io.freefair.javadoc-utf-8") version "6.6.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
+    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("me.qoomon.git-versioning") version "6.4.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
     id("org.springframework.boot") version "2.7.5"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
@@ -55,7 +55,7 @@ val languageToolVersion = "5.6"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.9.2")
+        mavenBom("io.sentry:sentry-bom:6.13.1")
     }
 }
 
@@ -66,7 +66,7 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.0")
+    api("info.picocli:picocli-spring-boot-starter:4.7.1")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
