@@ -1,4 +1,4 @@
-# <Diagnostic name> (SetPrivilegedMode)
+# Using privileged mode (SetPrivilegedMode)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
