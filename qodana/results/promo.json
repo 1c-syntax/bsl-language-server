@@ -1,57 +1,29 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Assignment issues",
-  "type": "Assignment can be replaced with operator assignment",
+  "category": "Code maturity",
+  "type": "Use of 'System.out' or 'System.err'",
   "severity": "High",
-  "comment": "'tokenIndex = tokenIndex - 1' could be simplified to 'tokenIndex -= 1'",
-  "detailsInfo": "Reports assignment operations which can be replaced by operator-assignment.\n\nCode using operator assignment is shorter and may be clearer.\n\n**Example:**\n\n      x = x + 3;\n      x = x / 3;\n\nAfter the quick fix is applied:\n\n      x += 3;\n      x /= 3;\n\n\nUse the **Ignore conditional operators** option to ignore `&&`\nand `||`. Replacing conditional operators with operator\nassignment would change the evaluation from lazy to eager, which may change the semantics of the expression.\n\n\nUse the **Ignore obscure operators** option to ignore `^` and `%`, which are less known.",
+  "comment": "Uses of 'System.out' should probably be replaced with more robust logging",
+  "detailsInfo": "Reports usages of `System.out` or `System.err`.\n\nSuch statements are often used for temporary debugging and should be either removed from the production code, or replaced by a more robust\nlogging facility.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Trees.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/VersionCommand.java",
       "language": "JAVA",
-      "line": 232,
-      "offset": 9,
-      "length": 27,
+      "line": 56,
+      "offset": 5,
+      "length": 10,
       "code": {
-        "startLine": 230,
-        "length": 27,
-        "offset": 105,
-        "surroundingCode": "      if (token.getChannel() != Token.DEFAULT_CHANNEL\n        || token.getType() != tokenType) {\n        tokenIndex = tokenIndex - 1;\n        continue;\n      }"
+        "startLine": 54,
+        "length": 10,
+        "offset": 11,
+        "surroundingCode": "    }\n\n    System.out.printf(\n      \"version: %s%n\",\n      version"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "ReplaceAssignmentWithOperatorAssignment"
+    "inspectionName": "SystemOutErr"
   },
-  "hash": "272193a0368b996be05cf6f0027e8a737eb375b4b2829a15e873d275c3b06c8a"
-},{
-  "tool": "Code Inspection",
-  "category": "Assignment issues",
-  "type": "Assignment can be replaced with operator assignment",
-  "severity": "High",
-  "comment": "'tokenIndex = tokenIndex - 1' could be simplified to 'tokenIndex -= 1'",
-  "detailsInfo": "Reports assignment operations which can be replaced by operator-assignment.\n\nCode using operator assignment is shorter and may be clearer.\n\n**Example:**\n\n      x = x + 3;\n      x = x / 3;\n\nAfter the quick fix is applied:\n\n      x += 3;\n      x /= 3;\n\n\nUse the **Ignore conditional operators** option to ignore `&&`\nand `||`. Replacing conditional operators with operator\nassignment would change the evaluation from lazy to eager, which may change the semantics of the expression.\n\n\nUse the **Ignore obscure operators** option to ignore `^` and `%`, which are less known.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Trees.java",
-      "language": "JAVA",
-      "line": 252,
-      "offset": 9,
-      "length": 27,
-      "code": {
-        "startLine": 250,
-        "length": 27,
-        "offset": 107,
-        "surroundingCode": "      var token = tokens.get(tokenIndex);\n      if (token.getChannel() != Token.DEFAULT_CHANNEL) {\n        tokenIndex = tokenIndex - 1;\n        continue;\n      }"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "ReplaceAssignmentWithOperatorAssignment"
-  },
-  "hash": "05bc3706f6bf9dc7b1c3c6d047d76ff73a2564b4a57229bcc14ea3760f9e4cc6"
+  "hash": "393acf3614c69a1405b75f22fe7de0fa55fa891ab64f7fa436f05966837649c2"
 }]}
