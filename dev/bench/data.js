@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1679395964495,
+  "lastUpdate": 1679581304361,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21421,6 +21421,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8165761382959902",
             "extra": "mean: 53.75846449534098 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7775eb3a516029fae7a2049a6f5370b8674142df",
+          "message": "Merge pull request #3009 from EightM/bugfix/javadoc\n\nfeat: disabled failing build on javadoc errors",
+          "timestamp": "2023-03-23T17:10:29+03:00",
+          "tree_id": "9b446028827a4d8071b84a761c066fa543109f20",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7775eb3a516029fae7a2049a6f5370b8674142df"
+        },
+        "date": 1679581295803,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.19856778780619,
+            "unit": "sec",
+            "range": "stddev: 0.8751686153239218",
+            "extra": "mean: 53.19856778780619 sec\nrounds: 3"
           }
         ]
       }
