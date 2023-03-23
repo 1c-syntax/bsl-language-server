@@ -220,6 +220,7 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    isFailOnError = false
     options {
         this as StandardJavadocDocletOptions
         links(
