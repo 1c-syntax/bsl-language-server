@@ -931,6 +931,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/features/Monitoring/</loc>
+         <lastmod>2023-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/</loc>
          <lastmod>2023-03-27</lastmod>
          <changefreq>daily</changefreq>
