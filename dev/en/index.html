@@ -414,8 +414,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#Capabilities" class="md-nav__link">
-    Capabilities
+  <a href="#Features" class="md-nav__link">
+    Features
   </a>
   
 </li>
@@ -430,6 +430,13 @@
         <li class="md-nav__item">
   <a href="#Run-from-command-line" class="md-nav__link">
     Run from command line
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Run-in-websocket-mode" class="md-nav__link">
+    Run in websocket mode
   </a>
   
 </li>
@@ -1023,6 +1030,7 @@
 <li><a href="contributing/">Contributing guidelines</a></li>
 <li><a href="#capabilities">Capabilities</a></li>
 <li><a href="#cli">Run from command line</a></li>
+<li><a href="#websocket">Run in websocket mode</a></li>
 <li><a href="#analyze">Run in analyzer mode</a></li>
 <li><a href="#format">Run in formatter mode</a></li>
 <li><a href="#configuration">Configuration file</a></li>
@@ -1035,7 +1043,7 @@
 </ul>
 <p><a id="capabilities"></a></p>
 <p>Perfomance measurement - <a href="../bench/index.html">SSL 3.1</a></p>
-<h2 id="Capabilities">Capabilities<a class="headerlink" href="#Capabilities" title="Permanent link">&para;</a></h2>
+<h2 id="Features">Features<a class="headerlink" href="#Features" title="Permanent link">&para;</a></h2>
 <ul>
 <li>File formatting</li>
 <li>Selected region formatting</li>
@@ -1049,10 +1057,10 @@
 <li>Expand selection</li>
 <li>Display color representation and convert between <code>Color</code> and <code>WebColors</code></li>
 <li>Diagnostics</li>
-<li>Quick fixes for several diagnostics</li>
+<li>Quick fixes and code actions for several diagnostics</li>
 <li>Run diagnostics engine from command line</li>
 <li>Run formatter engine from command line</li>
-<li>Rename symbol</li>
+<li>Renaming Symbols</li>
 </ul>
 <h2 id="Supported-protocol-operations">Supported protocol operations<a class="headerlink" href="#Supported-protocol-operations" title="Permanent link">&para;</a></h2>
 <details class="workspace">
@@ -1150,7 +1158,6 @@
 </table>
 <details class="textdocument">
 <summary>Textdocument</summary>
-</details>
 <table>
 <thead>
 <tr>
@@ -1164,7 +1171,7 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">publishDiagnostics</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">список диагностик</a></td>
+<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">diagnostics</a></td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1249,17 +1256,17 @@
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td>resolveProvider = false</td>
-<td>да</td>
+<td>yes</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">codeLens/refresh</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
@@ -1367,6 +1374,7 @@
 </tr>
 </tbody>
 </table>
+</details>
 <p><a id="cli"></a></p>
 <h2 id="Run-from-command-line">Run from command line<a class="headerlink" href="#Run-from-command-line" title="Permanent link">&para;</a></h2>
 <p>jar-files run through <code>java -jar path/to/file.jar</code>.</p>
@@ -1378,13 +1386,43 @@ Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span><span c
 <span class="w">               </span>Path<span class="w"> </span>to<span class="w"> </span>language<span class="w"> </span>server<span class="w"> </span>configuration<span class="w"> </span>file
 <span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">   </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
 Commands:
-<span class="w">  </span>analyze,<span class="w"> </span>-a,<span class="w"> </span>--analyze<span class="w">  </span>Run<span class="w"> </span>analysis<span class="w"> </span>and<span class="w"> </span>get<span class="w"> </span>diagnostic<span class="w"> </span>info
-<span class="w">  </span>format,<span class="w"> </span>-f,<span class="w"> </span>--format<span class="w">    </span>Format<span class="w"> </span>files<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>directory
-<span class="w">  </span>version,<span class="w"> </span>-v,<span class="w"> </span>--version<span class="w">  </span>Print<span class="w"> </span>version
-<span class="w">  </span>lsp,<span class="w"> </span>--lsp<span class="w">              </span>LSP<span class="w"> </span>server<span class="w"> </span>mode<span class="w"> </span><span class="o">(</span>default<span class="o">)</span>
+<span class="w">  </span>analyze,<span class="w"> </span>-a,<span class="w"> </span>--analyze<span class="w">      </span>Run<span class="w"> </span>analysis<span class="w"> </span>and<span class="w"> </span>get<span class="w"> </span>diagnostic<span class="w"> </span>info
+<span class="w">  </span>format,<span class="w"> </span>-f,<span class="w"> </span>--format<span class="w">        </span>Format<span class="w"> </span>files<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>directory
+<span class="w">  </span>version,<span class="w"> </span>-v,<span class="w"> </span>--version<span class="w">      </span>Print<span class="w"> </span>version
+<span class="w">  </span>lsp,<span class="w"> </span>--lsp<span class="w">                  </span>LSP<span class="w"> </span>server<span class="w"> </span>mode<span class="w"> </span><span class="o">(</span>default<span class="o">)</span>
+<span class="w">  </span>websocket,<span class="w"> </span>-w,<span class="w"> </span>--websocket<span class="w">  </span>Websocket<span class="w"> </span>server<span class="w"> </span>mode
 </code></pre></div>
 <p>Starting BSL Language Server in standard mode will run the Language Server communicating via <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. stdin and stdout are used for communication.</p>
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a id="websocket"></a></p>
+<h2 id="Run-in-websocket-mode">Run in websocket mode<a class="headerlink" href="#Run-in-websocket-mode" title="Permanent link">&para;</a></h2>
+<p>By default, interaction with the server goes through standard input / output streams. 
+But you can run BSL Language Server with a built-in web server and interact with it via websocket.</p>
+<p>To do this, start the BSL Language Server with the <code>--websocket</code> or <code>-w</code> option:</p>
+<div class="highlight"><pre><span></span><code>Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span>websocket<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>--app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<span class="w">                                     </span><span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--server.port<span class="o">=</span>&lt;port&gt;<span class="o">]</span>
+Websocket<span class="w"> </span>server<span class="w"> </span>mode
+<span class="w">      </span>--app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;
+<span class="w">                             </span>Path<span class="w"> </span>to<span class="w"> </span>LSP<span class="w"> </span>endpoint.<span class="w"> </span>Default<span class="w"> </span>is<span class="w"> </span>/lsp
+<span class="w">  </span>-c,<span class="w"> </span>--configuration<span class="o">=</span>&lt;path&gt;<span class="w"> </span>Path<span class="w"> </span>to<span class="w"> </span>language<span class="w"> </span>server<span class="w"> </span>configuration<span class="w"> </span>file
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">                 </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">      </span>--server.port<span class="o">=</span>&lt;port&gt;<span class="w">   </span>Port<span class="w"> </span>to<span class="w"> </span>listen.<span class="w"> </span>Default<span class="w"> </span>is<span class="w"> </span><span class="m">8025</span>
+</code></pre></div>
+<p>Once started, BSL Language Server will be available at <code>ws://localhost:8025/lsp</code>.</p>
+<p>To redefine the port to the LSP server, you must use the <code>--server.port</code> option and the port number.
+To redefine the path to the LSP server, you must use the <code>--app.websocket.lsp-path</code> option and a path starting with <code>/</code>.</p>
+<p>An example of running BSL Language Server in websocket mode with port 8080:</p>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>--websocket<span class="w"> </span>--server.port<span class="o">=</span><span class="m">8080</span>
+</code></pre></div>
+<blockquote>
+<p>For large projects, it is recommended to specify the -Xmx parameter, which is responsible for the RAM limit for the java process. The amount of allocated memory depends on the size of the analyzed codebase.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...<span class="w"> </span>other<span class="w"> </span>parameters
+</code></pre></div>
 <p><a id="analyze"></a></p>
 <h2 id="Run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#Run-in-analyzer-mode" title="Permanent link">&para;</a></h2>
 <p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>
