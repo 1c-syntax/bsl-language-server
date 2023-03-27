@@ -1023,7 +1023,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 </tr>
 <tr>
 <td align="left">⤷&nbsp;&nbsp;&nbsp;<code>ordinaryAppSupport</code></td>
-<td align="center"><code>Boolean&gt;</code></td>
+<td align="center"><code>Boolean</code></td>
 <td align="left">Ordinary client support. Diagnostics will require taking into account the features of a ordinary application. Values:<br/><em> <code>true</code> - the configuration uses ordinary application </em>(default)<em> <br/></em> <code>false</code> - ignore ordinary application warnings</td>
 </tr>
 <tr>
@@ -1040,6 +1040,26 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
 <td align="center"><code>JSON-Object</code></td>
 <td align="left">Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is diagnostic key<br/></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
+</tr>
+<tr>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Filter by configuration subsystems</td>
+</tr>
+<tr>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left">Starting the analysis of the entire project at server startup. If enabled, after the context is built on the client, information about diagnostics in all project files will be sent.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
+<td align="center"><code>Array</code> <code>String</code></td>
+<td align="left">List of names of subsystems for which objects the analysis is performed, including child subsystems</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
+<td align="center"><code>Array</code> <code>String</code></td>
+<td align="left">List of names of subsystems excluded from analysis, including child subsystems</td>
 </tr>
 <tr>
 <td align="left"><code>documentLink</code></td>
@@ -1071,6 +1091,11 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td align="center"><code>String</code></td>
 <td align="left">This parameter is intended to indicate the root directory the 1C configuration files are located in the project directory. It can be useful if there are several configuration directories in the same project directory or when the structure of the project directory is so complex. By default, the parameter is empty and <code>BSL Language Server</code> determines the location of the configuration root directory independently</td>
 </tr>
+<tr>
+<td align="left"><code>sendErrors</code></td>
+<td align="center"><code>String</code></td>
+<td align="left">Mode for sending error messages to BSL Language Server developers. More <a href="Monitoring.md">Monitoring</a>.Possible values:<br/><em> <code>ask</code> - ask permission on every error </em>(set by default)<em>. <br/></em> <code>send</code> - always send error messages.<br/>* <code>never</code> - never send error messages.</td>
+</tr>
 </tbody>
 </table>
 <p>You can use the following JSON schema to make it easier to compile and edit a configuration file:</p>
@@ -1083,6 +1108,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 <li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>
 <li>Disable <a href="../../diagnostics/MethodSize/">MethodSize - Method size restriction diagnostic</a>.</li>
 <li>Enables the calculation of diagnostics in continuous mode (<code>computeTrigger = onType</code>)</li>
+<li>Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "VersioningObjects"</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
@@ -1094,6 +1120,10 @@ The created file must be specified using the key <code>--configuration</code> <e
 <span class="w">        </span><span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">140</span>
 <span class="w">      </span><span class="p">},</span>
 <span class="w">      </span><span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;subsystemsFilter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;StandardSubsystems&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ReportVariants&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;VersioningObjects&quot;</span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
