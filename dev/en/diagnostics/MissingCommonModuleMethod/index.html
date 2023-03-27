@@ -942,7 +942,13 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>Diagnostics detects erroneous calls to methods of common modules.
+Detects the following errors
+- method does not exist in the specified common module
+- method is in the common module, but it is not exported
+- if a common module has no source code, then all calls to its methods are marked as erroneous</p>
+<p>Excluded
+- the variable name is the same as the common module name</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
