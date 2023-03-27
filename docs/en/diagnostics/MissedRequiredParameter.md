@@ -2,15 +2,32 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+Required parameters must not be omitted when calling methods, otherwise the value `Undefined` will be passed to the parameter, which the method often cannot process.
+If the value `Undefined` is valid, then you need to
+- explicitly pass a value
+- or make the parameter optional with a default value of `Undefined`.
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+For example
+
+```bsl
+Procedure ChangeFormFieldColor(Form, FiledName, Color)
+```
+
+Incorrect:
+
+```bsl
+ChangeFormFieldColor(,"Result", StyleColors.JustColor); // missing first parameter Form
+ChangeFormFieldColor(,,); // missing all required parameters
+```
+
+Correct:
+
+```bsl
+ChangeFormFieldColor(ThisObject, "Result", Color); // all required parameters are specified
+```
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+[Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
