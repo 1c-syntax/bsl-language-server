@@ -1664,6 +1664,16 @@
             },
             "$id": "#/definitions/SetPermissionsForNewObjects"
         },
+        "SetPrivilegedMode": {
+            "description": "Using privileged mode",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using privileged mode",
+            "$id": "#/definitions/SetPrivilegedMode"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
