@@ -942,18 +942,61 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<p>Diagnostic finds Privileged mode setup code.
+For external code, such as code from external reports/data processors, this action may not be safe.</p>
+<p>The found sections of the code must be analyzed, a manual audit of the code must be performed for its correctness and safety.</p>
+<p>Правило находит вызовы метода The diagnostic finds calls to the <code>SetPrivilegedMode</code> method
+call to <code>SetPrivilegedMode(False)</code> is ignored</p>
+<p>Any export procedures and functions that perform any actions on the server with the privileged mode set unconditionally beforehand are potentially dangerous, as this disables checking the access rights of the current user. The export procedures and functions of the client API of the 1C:Enterprise server require special attention.</p>
+<p>For example, wrong:
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
 
+<span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span> <span class="c c-Singleline">// Disable permission check</span>
+<span class="c c-Singleline">// Change data in privileged mode</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div>
+Correct:
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
+
+<span class="c c-Singleline">// Changing data</span>
+<span class="c c-Singleline">// (at the same time, if the user does not have enough rights to perform an operation on the data, an exception will be raised)</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div>
+The exception is when the action performed by the procedure must be allowed (or the return value of the function must be available) to absolutely all categories of users.</p>
+<p>If you still need to use privileged mode within a method, you must use manual access control using the <code>VerifyAccessRights</code> method.</p>
+<p>An example of pre-checking before performing actions in privileged mode:
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
+
+<span class="nb">VerifyAccessRights</span><span class="p">(</span><span class="o">...</span><span class="p">);</span> <span class="c c-Singleline">// If the user has insufficient rights, an exception will be thrown</span>
+<span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span> <span class="c c-Singleline">// Disable permission check</span>
+
+<span class="c c-Singleline">// Change data in privileged mode</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div></p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<div class="highlight"><pre><span></span><code>    <span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span> <span class="c c-Singleline">// error</span>
 
+    <span class="nv">Value</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>
+    <span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="nv">Value</span><span class="p">);</span> <span class="c c-Singleline">// error</span>
+
+    <span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">False</span><span class="p">);</span> <span class="c c-Singleline">// no error</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<ul>
+<li>Standard: <a href="https://its.1c.ru/db/v8std/content/485/hdoc">Using Privileged Mode (RU)</a></li>
+<li>Standard: <a href="https://its.1c.ru/db/v8std#content:678:hdoc">Server API Security (RU)</a></li>
+<li>Standard: <a href="https://its.1c.ru/db/v8std/content/669/hdoc">Restriction on the execution of "external" code (RU)</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
