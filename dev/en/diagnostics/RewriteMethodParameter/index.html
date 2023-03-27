@@ -942,19 +942,41 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>It is wrong to write methods in which their arguments are overwritten immediately on entry.</p>
+<p>It is necessary to correct this deficiency by removing the parameters, converting them to local variables.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<p>Suspicious code
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Configor</span><span class="p">(</span><span class="k">Val</span> <span class="nv">ConnectionString</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">User</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">Pass</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Export</span>
+  <span class="nv">ConnectionString</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">DataBaseDir</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span> <span class="c c-Singleline">// Error</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div></p>
+<p>Сorrected:
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Configor</span><span class="p">(</span><span class="k">Val</span> <span class="nv">DataBaseDir</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">User</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">Pass</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Export</span>
+<span class="nv">ConnectionString</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">DataBaseDir</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span> <span class="c c-Singleline">// No error</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div>
+or
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Configor</span><span class="p">(</span><span class="k">Val</span> <span class="nv">DataBaseDir</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">User</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">Pass</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Export</span>
+ <span class="k">If</span> <span class="k">Not</span> <span class="nf">EmpyString</span><span class="p">(</span><span class="nv">DataBaseDir</span><span class="p">)</span> <span class="k">Then</span>
+<span class="nv">NewConnectionString</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">DataBaseDir</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span>
+<span class="k">Else</span>
+<span class="nv">NewConnectionString</span> <span class="o">=</span> <span class="nv">ConnectionString</span><span class="p">;</span> <span class="c c-Singleline">// Hmm, where is this from?</span>
+<span class="k">EndIf</span><span class="p">;</span>
 
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* [PVS-Studio V763. Parameter is always rewritten in function body before being used](https://pvs-studio.com/ru/docs/warnings/v6023)
 
-<h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
+## Snippets
+
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:RewriteMethodParameter-off</span>

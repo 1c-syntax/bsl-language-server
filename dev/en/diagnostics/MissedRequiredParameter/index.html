@@ -941,19 +941,23 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>Required parameters must not be omitted when calling methods, otherwise the value <code>Undefined</code> will be passed to the parameter, which the method often cannot process.
+If the value <code>Undefined</code> is valid, then you need to
+- explicitly pass a value
+- or make the parameter optional with a default value of <code>Undefined</code>.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
+<p>For example</p>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeFormFieldColor</span><span class="p">(</span><span class="nv">Form</span><span class="p">,</span> <span class="nv">FiledName</span><span class="p">,</span> <span class="nv">Color</span><span class="p">)</span>
+</code></pre></div>
+<p>Incorrect:</p>
+<div class="highlight"><pre><span></span><code><span class="nf">ChangeFormFieldColor</span><span class="p">(,</span><span class="s">&quot;Result&quot;</span><span class="p">,</span> <span class="nv">StyleColors</span><span class="o">.</span><span class="nv">ArthursShirtColor</span><span class="p">);</span> <span class="c c-Singleline">// missing first parameter Form</span>
+<span class="nf">ChangeFormFieldColor</span><span class="p">(,,);</span> <span class="c c-Singleline">// missing all required parameters</span>
+</code></pre></div>
+<p>Correct:</p>
+<div class="highlight"><pre><span></span><code><span class="nf">ChangeFormFieldColor</span><span class="p">(</span><span class="nv">ThisObject</span><span class="p">,</span> <span class="s">&quot;Result&quot;</span><span class="p">,</span> <span class="nv">Color</span><span class="p">);</span> <span class="c c-Singleline">// all required parameters are specified</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<p><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Parameters of procedures and functions (RU)</a></p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
