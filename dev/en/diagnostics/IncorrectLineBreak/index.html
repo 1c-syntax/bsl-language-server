@@ -993,6 +993,14 @@
 <li>logical operators AND, OR are placed at the beginning of a line, and not at the end of the previous line;</li>
 <li>all conditions are preceded by the standard first indent, or they are aligned at the start of work without taking into account the logical operator (it is recommended to use spaces to align expressions relative to the first line).</li>
 </ul>
+<p><strong>Examples of configuring exclusions:</strong></p>
+<ul>
+<li>If your design standard requires a closing brace and statement separator ";" were written <em>after</em> the line containing the last parameter, then you need to change the <code>listOfIncorrectFirstSymbol</code> parameter</li>
+<li>instead of the substring <code>|\);</code> (at the end of the setting) you need to write the substring <code>|\)\s*;\s*\S+</code></li>
+<li>final version <code>\)|;|,\s*\S+|\)s*;\s*\S+</code></li>
+<li>code example is listed in the examples section</li>
+</ul>
+<p>Without the specified setting, the rule will issue notes on the closing bracket and the operator separator ";", located on a separate line</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -1010,6 +1018,19 @@
 <div class="highlight"><pre><span></span><code><span class="nv">AmountDocument</span> <span class="o">=</span> <span class="nv">AmountWithoutDiscount</span> 
                  <span class="o">+</span> <span class="nv">AmountManualDiscounts</span> 
                  <span class="o">+</span> <span class="nv">AmountAutomaticDiscount</span><span class="p">;</span>
+</code></pre></div>
+<p>An example of a possible arrangement of parameters and a closing bracket with the operator separator ";"</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Names</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ValueList</span><span class="p">;</span>
+<span class="nv">Names</span><span class="o">.</span><span class="nf">Add</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> 
+                         <span class="nv">Synonym</span><span class="p">);</span>
+</code></pre></div>
+<p>An example of a possible location of the closing bracket with the operator separator ";" on a separate line:
+- without changing the <code>listOfIncorrectFirstSymbol</code> parameter (see above), the diagnostics will generate a issue for such expression wrapping.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Names</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ValueList</span><span class="p">;</span>
+<span class="nv">Names</span><span class="o">.</span><span class="nf">Add</span><span class="p">(</span>
+    <span class="nv">Name</span><span class="p">,</span> 
+    <span class="nv">Synonym</span>
+<span class="p">);</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
