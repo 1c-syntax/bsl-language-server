@@ -28,11 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 
@@ -151,7 +151,7 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
     }
   }
 
-  private void checkName(String name, MDOReference mdoReference) {
+  private void checkName(String name, MdoReference mdoReference) {
     if (FORBIDDEN_NAMES_PATTERN.matcher(name).matches()) {
       String mdoRef;
       if (serverConfiguration.getLanguage() == Language.RU) {

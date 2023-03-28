@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 
 import java.nio.file.Path;
 
@@ -50,24 +50,24 @@ public class ModuleTypeComputer {
   }
 
   private ModuleType computeBSL() {
-    com.github._1c_syntax.mdclasses.mdo.support.ModuleType type = documentContext.getServerContext()
+    var type = documentContext.getServerContext()
       .getConfiguration().getModuleType(documentContext.getUri());
     return ModuleType.valueOf(type.name());
   }
 
   private ModuleType computeOS() {
     if (documentContext.getUri().getPath().contains("Модули")) {
-      return ModuleType.Module;
+      return ModuleType.OScriptModule;
     } else if (documentContext.getUri().getPath().contains("Классы")) {
-      return ModuleType.Class;
+      return ModuleType.OScriptClass;
     } else {
       return ModuleType.UNKNOWN;
     }
   }
 
   public String computeTypeName() {
-    if (documentContext.getModuleType() == ModuleType.Module
-      || documentContext.getModuleType() == ModuleType.Class) {
+    if (documentContext.getModuleType() == ModuleType.OScriptModule
+      || documentContext.getModuleType() == ModuleType.OScriptClass) {
       return Path.of(documentContext.getUri()).getFileName().toString().replace(".os", "");
     }
     return "";

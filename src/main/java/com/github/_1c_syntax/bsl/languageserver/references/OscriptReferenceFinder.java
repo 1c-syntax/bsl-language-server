@@ -22,13 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -78,11 +78,11 @@ public class OscriptReferenceFinder implements ReferenceFinder {
     }
 
     if ((node.get().getParent() instanceof BSLParser.TypeNameContext)
-      && moduleType == ModuleType.Class) {
+      && moduleType == ModuleType.OScriptClass) {
       return true;
     } else {
       return (node.get().getParent() instanceof BSLParser.ComplexIdentifierContext)
-        && moduleType == ModuleType.Module;
+        && moduleType == ModuleType.OScriptModule;
     }
 
   }

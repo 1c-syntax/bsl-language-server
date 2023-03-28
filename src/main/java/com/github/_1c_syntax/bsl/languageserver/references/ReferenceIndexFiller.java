@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -32,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
@@ -128,12 +128,12 @@ public class ReferenceIndexFiller {
     private void checkCall(String mdoRef, Token methodName) {
 
       String methodNameText = methodName.getText();
-      Map<com.github._1c_syntax.mdclasses.mdo.support.ModuleType, URI> modulesMDO = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
+      Map<ModuleType, URI> modulesMDO = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
       Map<ModuleType, URI> modules = modulesMDO.entrySet().stream()
         .collect(Collectors.toMap(m -> ModuleType.valueOf(m.getKey().name()), Map.Entry::getValue));
 
       for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
-        ModuleType moduleType = e.getKey();
+        var moduleType = e.getKey();
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
           continue;
         }

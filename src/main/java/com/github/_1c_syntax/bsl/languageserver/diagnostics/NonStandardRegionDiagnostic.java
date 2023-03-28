@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 
 import java.util.Collections;
 import java.util.EnumMap;

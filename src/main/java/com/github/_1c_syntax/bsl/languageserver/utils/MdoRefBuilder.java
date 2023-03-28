@@ -23,11 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOReference;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.mdclasses.utils.MDOUtils;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.experimental.UtilityClass;
@@ -56,7 +56,7 @@ public class MdoRefBuilder {
   public static String getMdoRef(DocumentContext documentContext) {
     var mdoRef = documentContext.getMdObject()
       .map(AbstractMDObjectBase::getMdoReference)
-      .map(MDOReference::getMdoRef)
+      .map(MdoReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
     return stringInterner.intern(mdoRef);
   }
@@ -68,7 +68,7 @@ public class MdoRefBuilder {
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
-      TerminalNode identifier,
+    TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
 
@@ -96,7 +96,7 @@ public class MdoRefBuilder {
       .getConfiguration()
       .getCommonModule(commonModuleName)
       .map(MDCommonModule::getMdoReference)
-      .map(MDOReference::getMdoRef);
+      .map(MdoReference::getMdoRef);
   }
 
   private String getMdoRef(MDOType mdoType, String identifier) {

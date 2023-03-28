@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
@@ -145,7 +146,7 @@ public abstract class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
     removeDocumentMdoRefByUri(absoluteURI);
     documents.remove(absoluteURI);
   }
@@ -166,12 +167,12 @@ public abstract class ServerContext {
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file, int version) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    var content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     return createDocumentContext(file.toURI(), content, version);
   }
 
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
-    URI absoluteURI = Absolute.uri(uri);
+    var absoluteURI = Absolute.uri(uri);
 
     var documentContext = lookupDocumentContext(absoluteURI);
     documentContext.rebuild(content, version);

@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.ModuleType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.lsp4j.Range;
 
@@ -111,7 +111,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
       if (mdo instanceof AbstractMDObjectBSL) {
         var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-          .filter(mdoModule -> OBJECT_MODULES.contains(ModuleType.valueOf(mdoModule.getModuleType())))
+          .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
           .collect(Collectors.toList());
 
         // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
@@ -131,10 +131,10 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private void checkMetadataWithoutModules() {
     documentContext.getServerContext().getConfiguration().getChildren().stream()
-      .filter(mdo -> filterMdoTypes.contains(mdo.getType()))
+      .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
       .filter(mdo -> !(mdo instanceof AbstractMDObjectBSL)
         || (((AbstractMDObjectBSL) mdo).getModules().stream()
-        .noneMatch(module -> OBJECT_MODULES.contains(ModuleType.valueOf(module.getModuleType())))))
+        .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
       .forEach(this::checkMetadata);
   }
 }
