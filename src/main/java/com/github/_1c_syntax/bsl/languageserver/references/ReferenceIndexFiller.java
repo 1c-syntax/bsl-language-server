@@ -150,7 +150,7 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
-        if (doCallContext == null){
+        if (doCallContext == null) {
           return super.visitNewExpression(ctx);
         }
         var callParamList = doCallContext.callParamList().callParam();
@@ -178,7 +178,7 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
-      if (identifier != null){
+      if (identifier != null) {
         final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
           .map(BSLParser.AcceptorContext::modifier)
           .orElseGet(Collections::emptyList);
@@ -196,7 +196,7 @@ public class ReferenceIndexFiller {
       Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
-            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
+          || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
@@ -209,7 +209,7 @@ public class ReferenceIndexFiller {
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
       // todo: move this out of method 
-      if (mdoRef.isEmpty()){
+      if (mdoRef.isEmpty()) {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
@@ -231,7 +231,7 @@ public class ReferenceIndexFiller {
         .map(BSLParser.MemberContext::complexIdentifier)
         .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
         .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
-      if (complexIdentifierContext1.isEmpty()){
+      if (complexIdentifierContext1.isEmpty()) {
         return "";
       }
       return complexIdentifierContext1

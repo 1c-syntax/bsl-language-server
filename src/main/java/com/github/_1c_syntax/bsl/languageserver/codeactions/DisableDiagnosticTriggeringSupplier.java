@@ -84,13 +84,13 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
           .filter(token -> token.getLine() == selectedLineNumber)
           .max(Comparator.comparingInt(Token::getCharPositionInLine))
           .ifPresent(token -> {
-            if (params.getRange().getStart().getLine() == params.getRange().getEnd().getLine()) {
-              result.addAll(getDisableActionForLine(params, documentContext, token));
-            } else {
-              result.addAll(getDisableActionForRange(params, documentContext, token));
+              if (params.getRange().getStart().getLine() == params.getRange().getEnd().getLine()) {
+                result.addAll(getDisableActionForLine(params, documentContext, token));
+              } else {
+                result.addAll(getDisableActionForRange(params, documentContext, token));
+              }
             }
-          }
-        );
+          );
       }
 
       result.addAll(

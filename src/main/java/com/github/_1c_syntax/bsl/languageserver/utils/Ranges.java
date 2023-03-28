@@ -155,11 +155,11 @@ public final class Ranges {
    * @return 0 - равно, 1 - больше, -1 - меньше
    */
   public int compare(Range o1, Range o2) {
-    if (o1.equals(o2)){
+    if (o1.equals(o2)) {
       return 0;
     }
     final var startCompare = compare(o1.getStart(), o2.getStart());
-    if (startCompare != 0){
+    if (startCompare != 0) {
       return startCompare;
     }
     return compare(o1.getEnd(), o2.getEnd());
@@ -173,7 +173,7 @@ public final class Ranges {
    * @return 0 - равно, 1 - больше, -1 - меньше
    */
   public int compare(Position pos1, Position pos2) {
-    if (pos1.equals(pos2)){
+    if (pos1.equals(pos2)) {
       return 0;
     }
 

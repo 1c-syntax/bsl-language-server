@@ -134,7 +134,7 @@ public class FormatCommand implements Callable<Integer> {
         continue;
       }
 
-      if(srcDir.toFile().isDirectory()) {
+      if (srcDir.toFile().isDirectory()) {
         files.addAll(FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true));
       } else {
         files.add(srcDir.toFile());

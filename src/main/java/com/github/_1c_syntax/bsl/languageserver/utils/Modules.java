@@ -36,7 +36,7 @@ public class Modules {
 
   public static boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
     final var identifier = complexIdentifier.IDENTIFIER();
-    if (identifier == null){
+    if (identifier == null) {
       return false;
     }
     return THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();

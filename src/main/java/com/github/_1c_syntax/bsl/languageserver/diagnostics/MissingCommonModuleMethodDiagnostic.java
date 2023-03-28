@@ -65,7 +65,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY){
+    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
     locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
@@ -87,7 +87,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
     final var methodSymbol = document
       .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
-    if (methodSymbol.isEmpty()){
+    if (methodSymbol.isEmpty()) {
       final var location = symbolOccurrence.getLocation();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(
@@ -96,7 +96,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
           location.getRange(), false, false));
     }
     // вызовы приватных методов внутри самого модуля пропускаем
-    if (document.getUri().equals(documentContext.getUri())){
+    if (document.getUri().equals(documentContext.getUri())) {
       return Optional.empty();
     }
     return methodSymbol
@@ -108,7 +108,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
 
   private void fireIssue(CallData callData) {
     final String message;
-    if (!callData.exists){
+    if (!callData.exists) {
       message = info.getMessage(callData.methodName, callData.moduleName);
     } else {
       message = info.getResourceString(PRIVATE_METHOD_MESSAGE, callData.methodName, callData.moduleName);

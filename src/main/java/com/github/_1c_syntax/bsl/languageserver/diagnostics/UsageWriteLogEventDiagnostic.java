@@ -93,7 +93,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private void checkParams(BSLParser.GlobalMethodCallContext context) {
     final var callParams = context.doCall().callParamList().callParam();
-    if (!checkFirstParams(context, callParams)){
+    if (!checkFirstParams(context, callParams)) {
       return;
     }
 

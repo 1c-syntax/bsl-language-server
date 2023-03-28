@@ -20,6 +20,7 @@
  * License along with BSL Language Server.
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
+
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;

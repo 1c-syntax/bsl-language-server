@@ -27,7 +27,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.

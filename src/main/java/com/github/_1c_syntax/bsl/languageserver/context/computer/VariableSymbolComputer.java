@@ -62,7 +62,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private SourceDefinedSymbol currentMethod;
 
-  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<MethodSymbol> methods) {
+  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module, List<MethodSymbol> methods) {
     this.documentContext = documentContext;
     this.module = module;
     this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));
@@ -176,7 +176,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+        || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForStatement(ctx);
     }
@@ -189,7 +189,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+        || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForEachStatement(ctx);
     }
@@ -208,16 +208,16 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubContext ctx) {
-      BSLParserRuleContext subNameNode;
-      if (Trees.nodeContainsErrors(ctx)) {
-        return module;
-      } else if (ctx.function() != null) {
-        subNameNode = ctx.function().funcDeclaration().subName();
-      } else {
-        subNameNode = ctx.procedure().procDeclaration().subName();
-      }
+    BSLParserRuleContext subNameNode;
+    if (Trees.nodeContainsErrors(ctx)) {
+      return module;
+    } else if (ctx.function() != null) {
+      subNameNode = ctx.function().funcDeclaration().subName();
+    } else {
+      subNameNode = ctx.procedure().procDeclaration().subName();
+    }
 
-      return methods.getOrDefault(Ranges.create(subNameNode), module);
+    return methods.getOrDefault(Ranges.create(subNameNode), module);
   }
 
   private Optional<VariableDescription> createDescription(BSLParser.LValueContext ctx) {

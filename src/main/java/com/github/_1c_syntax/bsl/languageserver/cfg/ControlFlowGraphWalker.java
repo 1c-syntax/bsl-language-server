@@ -60,7 +60,7 @@ public class ControlFlowGraphWalker {
       .filter(x -> x.getType() == edgeType)
       .findAny();
 
-    if(edgeOrNot.isPresent()) {
+    if (edgeOrNot.isPresent()) {
       currentNode = graph.getEdgeTarget(edgeOrNot.get());
       return edgeOrNot.get();
     }

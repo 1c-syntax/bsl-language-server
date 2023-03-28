@@ -91,7 +91,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
     SDBLParser.QueryContext ctx) {
-    if (ctx.from == null){
+    if (ctx.from == null) {
       return Stream.empty();
     }
     return Stream.concat(
@@ -107,13 +107,13 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     final var value = Optional.of(dataSource);
     return value
       .map(SDBLParser.DataSourceContext::alias)
-      .map(alias -> (ParseTree)alias.name)
+      .map(alias -> (ParseTree) alias.name)
       .or(() -> value
         .map(SDBLParser.DataSourceContext::table)
-        .map(tableContext -> (ParseTree)tableContext.tableName))
+        .map(tableContext -> (ParseTree) tableContext.tableName))
       .or(() -> value
         .map(SDBLParser.DataSourceContext::parameterTable)
-        .map(tableContext -> (ParseTree)tableContext.parameter()))
+        .map(tableContext -> (ParseTree) tableContext.parameter()))
       .map(ParseTree::getText)
       .orElse("");
   }
@@ -163,7 +163,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     String penultimateIdentifierName = penultimateChild.getText();
 
     if (REF_PATTERN.matcher(penultimateIdentifierName).matches()) {
-      if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
+      if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF) {
         return true;
       }
       var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
