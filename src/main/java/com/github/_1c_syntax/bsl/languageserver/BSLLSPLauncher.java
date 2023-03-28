@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,14 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -54,13 +56,14 @@ import static picocli.CommandLine.Command;
     AnalyzeCommand.class,
     FormatCommand.class,
     VersionCommand.class,
-    LanguageServerStartCommand.class
+    LanguageServerStartCommand.class,
+    WebsocketCommand.class
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2020|@",
+  footer = "@|green Copyright(c) 2018-2022|@",
   header = "@|green BSL language server|@")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackageClasses = BSLLSPLauncher.class)
 @Component
 @ConditionalOnProperty(
   prefix = "app.command.line.runner",
@@ -100,7 +103,9 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private int exitCode;
 
   public static void main(String[] args) {
-    var applicationContext = SpringApplication.run(BSLLSPLauncher.class, args);
+    var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
+      .web(getWebApplicationType(args))
+      .run(args);
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
     if (launcher.getExitCode() >= 0) {
       System.exit(
@@ -141,7 +146,6 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
 
   }
 
-  @NotNull
   private static String[] addDefaultCommand(String[] args) {
     List<String> tmpList = new ArrayList<>(Arrays.asList(args));
     tmpList.add(0, DEFAULT_COMMAND);
@@ -157,5 +161,16 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   public Integer call() {
     // заглушка, командой как таковой не пользуемся
     return 0;
+  }
+
+  private static WebApplicationType getWebApplicationType(String[] args) {
+    WebApplicationType webApplicationType;
+    var argsList = Arrays.asList(args);
+    if (argsList.contains("-w") || argsList.contains("websocket")) {
+      webApplicationType = WebApplicationType.SERVLET;
+    } else {
+      webApplicationType = WebApplicationType.NONE;
+    }
+    return webApplicationType;
   }
 }

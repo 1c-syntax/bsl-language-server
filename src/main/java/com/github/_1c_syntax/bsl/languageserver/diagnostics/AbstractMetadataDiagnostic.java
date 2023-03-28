@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -60,7 +59,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private Range diagnosticRange;
 
-  protected AbstractMetadataDiagnostic(@NonNull List<MDOType> types) {
+  protected AbstractMetadataDiagnostic(List<MDOType> types) {
     filterMdoTypes = new ArrayList<>(types);
   }
 
@@ -108,18 +107,20 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   protected abstract void checkMetadata(AbstractMDObjectBase mdo);
 
   private void checkMetadataWithModules() {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
-      if (mdo instanceof AbstractMDObjectBSL) {
-        var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-          .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-          .collect(Collectors.toList());
+    documentContext.getMdObject()
+      .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
+      .filter(AbstractMDObjectBSL.class::isInstance)
+      .filter(this::haveMatchingModule)
+      .ifPresent(this::checkMetadata);
+  }
 
-        // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-        if (modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule) {
-          checkMetadata(mdo);
-        }
-      }
-    });
+  private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
+    var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
+      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
+      .collect(Collectors.toList());
+
+    // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
+    return modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule;
   }
 
   /**

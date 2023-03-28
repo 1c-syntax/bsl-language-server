@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 public final class FormatProvider {
   
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
-  private final Map<Locale, Map<Integer, String>> keywordCanonText;
+
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.LPAREN,
     BSLLexer.PROCEDURE_KEYWORD,
@@ -88,7 +88,9 @@ public final class FormatProvider {
     BSLLexer.FLOAT,
     BSLLexer.STRING
   ));
-  
+
+  private final Map<Locale, Map<Integer, String>> keywordCanonText;
+
   private final LanguageServerConfiguration languageServerConfiguration;
 
   public FormatProvider(LanguageServerConfiguration languageServerConfiguration) {
@@ -101,8 +103,8 @@ public final class FormatProvider {
     if (tokens.isEmpty()) {
       return Collections.emptyList();
     }
-    Token firstToken = tokens.get(0);
-    Token lastToken = tokens.get(tokens.size() - 1);
+    var firstToken = tokens.get(0);
+    var lastToken = tokens.get(tokens.size() - 1);
 
     var locale = documentContext.getScriptVariantLocale();
     return getTextEdits(
@@ -141,12 +143,12 @@ public final class FormatProvider {
     putLogicalNotOrKeywords(keywordCanonText);
   }
 
-  private boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
+  private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
     return tokenCharacter >= startCharacter
       && tokenCharacter < endCharacter;
   }
 
-  private boolean inLineRange(int startLine, int endLine, int tokenLine) {
+  private static boolean inLineRange(int startLine, int endLine, int tokenLine) {
     return tokenLine >= startLine
       && tokenLine < endLine;
   }
@@ -223,6 +225,7 @@ public final class FormatProvider {
         case BSLLexer.WHILE_KEYWORD:
         case BSLLexer.FOR_KEYWORD:
           insideOperator = true;
+          break;
         default:
           // no-op
       }
@@ -231,6 +234,7 @@ public final class FormatProvider {
           case BSLLexer.THEN_KEYWORD:
           case BSLLexer.DO_KEYWORD:
             insideOperator = false;
+            break;
           default:
             // no-op
         }
@@ -332,14 +336,14 @@ public final class FormatProvider {
     return token.getText();
   }
 
-  private List<Token> filteredTokens(List<Token> tokens) {
+  private static List<Token> filteredTokens(List<Token> tokens) {
     return tokens.stream()
       .filter(token -> token.getChannel() == Token.DEFAULT_CHANNEL
         || token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
   }
 
-  private boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
+  private static boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
 
     if (previousIsUnary) {
       return false;
@@ -391,7 +395,7 @@ public final class FormatProvider {
     }
   }
 
-  private boolean isUnary(int type, int previousTokenType) {
+  private static boolean isUnary(int type, int previousTokenType) {
     if (type != BSLLexer.MINUS) {
       return false;
     }
@@ -417,15 +421,15 @@ public final class FormatProvider {
     }
   }
 
-  private boolean needIncrementIndent(int tokenType) {
+  private static boolean needIncrementIndent(int tokenType) {
     return incrementIndentTokens.contains(tokenType);
   }
 
-  private boolean needDecrementIndent(int tokenType) {
+  private static boolean needDecrementIndent(int tokenType) {
     return decrementIndentTokens.contains(tokenType);
   }
 
-  private boolean isPrimitive(int tokenType) {
+  private static boolean isPrimitive(int tokenType) {
     return primitiveTokenTypes.contains(tokenType);
   }
 

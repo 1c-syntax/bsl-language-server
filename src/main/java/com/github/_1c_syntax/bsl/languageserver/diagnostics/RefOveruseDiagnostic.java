@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,12 +32,15 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,53 +54,95 @@ import java.util.stream.Collectors;
 )
 public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
-  private static final String REF_REGEX = "Ссылка|Reference";
-  private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile(REF_REGEX);
+  private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
   private static final int BAD_CHILD_COUNT = 3;
-  private Collection<ParseTree> dataSourceCollection = new ArrayList<>();
+  private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
+  private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+    checkQuery(ctx).forEach(diagnosticStorage::addDiagnostic);
+    return ctx;
+  }
+
+  private Stream<BSLParserRuleContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
 
-    if (columnsCollection.isEmpty()
-      || dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
-      return ctx;
+    if (columnsCollection.isEmpty()) {
+      return Stream.empty();
     }
 
-    if (dataSourceCollection.isEmpty()) {
-      performSimpleCheck(columnsCollection);
-      return ctx;
+    dataSourcesWithTabularFlag = dataSourcesWithTabularSection(ctx);
+    if (dataSourcesWithTabularFlag.isEmpty()) {
+      return getSimpleOverused(columnsCollection);
     }
 
-    var tableNames = dataSourceCollection.stream()
-      .map(RefOveruseDiagnostic::getTableNameOrAlias)
-      .collect(Collectors.toSet());
-
-    columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
-    return ctx;
-
+    return getOverused(columnsCollection);
   }
 
-  @Override
-  public ParseTree visitSelectQuery(SDBLParser.SelectQueryContext ctx) {
-    this.dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
-    return super.visitSelectQuery(ctx);
+  private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
+    return findAllDataSourceWithoutInnerQueries(ctx)
+      .collect(Collectors.toMap(
+        RefOveruseDiagnostic::getTableNameOrAlias,
+        RefOveruseDiagnostic::isTableWithTabularSection,
+        (existing, replacement) -> existing,
+        HashMap::new));
   }
 
-  private void performSimpleCheck(Collection<ParseTree> columnsCollection) {
-    columnsCollection.stream()
+  private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
+    SDBLParser.QueryContext ctx) {
+    if (ctx.from == null){
+      return Stream.empty();
+    }
+    return Stream.concat(
+      ctx.from.dataSource().stream(),
+      ctx.from.dataSource().stream()
+        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
+        .map(SDBLParser.JoinPartContext::dataSource)
+        .filter(Objects::nonNull)
+    );
+  }
+
+  private static String getTableNameOrAlias(SDBLParser.DataSourceContext dataSource) {
+    final var value = Optional.of(dataSource);
+    return value
+      .map(SDBLParser.DataSourceContext::alias)
+      .map(alias -> (ParseTree)alias.name)
+      .or(() -> value
+        .map(SDBLParser.DataSourceContext::table)
+        .map(tableContext -> (ParseTree)tableContext.tableName))
+      .or(() -> value
+        .map(SDBLParser.DataSourceContext::parameterTable)
+        .map(tableContext -> (ParseTree)tableContext.parameter()))
+      .map(ParseTree::getText)
+      .orElse("");
+  }
+
+  private static boolean isTableWithTabularSection(SDBLParser.DataSourceContext dataSourceContext) {
+    final var table = dataSourceContext.table();
+    if (table == null) {
+      return dataSourceContext.virtualTable() != null;
+    }
+    return table.tableName != null || table.objectTableName != null;
+  }
+
+  private static Stream<BSLParserRuleContext> getSimpleOverused(Collection<ParseTree> columnsCollection) {
+    return columnsCollection.stream()
       .filter(columnNode -> columnNode.getChildCount() > BAD_CHILD_COUNT)
       .map(column -> column.getChild(column.getChildCount() - 1))
       .filter(lastChild -> REF_PATTERN.matcher(lastChild.getText()).matches())
-      .forEach(node -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) node));
+      .map(BSLParserRuleContext.class::cast);
   }
 
-  private void checkColumnNode(SDBLParser.ColumnContext ctx, Set<String> tableNames) {
+  private Stream<BSLParserRuleContext> getOverused(Collection<ParseTree> columnsCollection) {
+    return columnsCollection.stream()
+      .map(SDBLParser.ColumnContext.class::cast)
+      .filter(column -> column.getChildCount() >= BAD_CHILD_COUNT)
+      .filter(this::isOveruse)
+      .map(BSLParserRuleContext.class::cast);
+  }
 
-    if (ctx.children == null) {
-      return;
-    }
+  private boolean isOveruse(SDBLParser.ColumnContext ctx) {
 
     // children:
     //
@@ -111,39 +156,24 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
     final int childCount = ctx.children.size();
 
-    if (childCount < 3) {
-      return;
-    }
-
-    var lastChild = ctx.getChild(childCount - 1);
     // dots are also children of ColumnContext,
     // that is why -3 must be an index of penultimate identifier
-    var penultimateChild = ctx.getChild(childCount - 3);
+    var penultimateChild = ctx.getChild(childCount - BAD_CHILD_COUNT);
 
-    String lastIdentifierName = lastChild.getText();
     String penultimateIdentifierName = penultimateChild.getText();
 
-    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()
-      || (REF_PATTERN.matcher(lastIdentifierName).matches()
-      && !tableNames.contains(penultimateIdentifierName))) {
-      diagnosticStorage.addDiagnostic(ctx);
+    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()) {
+      if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
+        return true;
+      }
+      var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
+      return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
     }
-  }
-
-  private static String getTableNameOrAlias(ParseTree dataSource) {
-    return Optional.of(dataSource)
-      .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_alias))
-      .or(() -> Optional.of(dataSource)
-        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_table)))
-      .or(() -> Optional.of(dataSource)
-        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_parameterTable)))
-      .orElse("");
-  }
-
-  private static Optional<String> extractTextFromChild(ParseTree parseTree, int childRuleType) {
-    return Optional.of(parseTree)
-      .flatMap(tree -> Trees.getFirstChild(tree, childRuleType))
-      .flatMap(child -> Trees.getFirstChild(child, SDBLParser.RULE_identifier))
-      .map(BSLParserRuleContext::getText);
+    var lastChild = ctx.getChild(childCount - 1);
+    String lastIdentifierName = lastChild.getText();
+    if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
+      return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
+    }
+    return false;
   }
 }

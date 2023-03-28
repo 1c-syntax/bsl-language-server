@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import org.eclipse.lsp4j.CodeAction;
@@ -36,7 +37,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -105,7 +105,12 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       Collections.singletonList(textEdit));
     edit.setChanges(changes);
 
-    var codeAction = new CodeAction("Generate missing regions");
+    var title = Resources.getResourceString(
+      languageServerConfiguration.getLanguage(),
+      getClass(),
+      "title"
+    );
+    var codeAction = new CodeAction(title);
     codeAction.setDiagnostics(new ArrayList<>());
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
@@ -124,7 +129,6 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     return regionsLanguage;
   }
 
-  @NotNull
   private ScriptVariant getScriptVariantFromConfigLanguage() {
     ScriptVariant regionsLanguage;
     if (languageServerConfiguration.getLanguage() == Language.EN) {
@@ -135,7 +139,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     return regionsLanguage;
   }
 
-  private Range calculateFixRange(Range range) {
+  private static Range calculateFixRange(Range range) {
 
     Position start = range.getStart();
     if (start == null) {

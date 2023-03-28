@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -75,7 +75,7 @@ public class SymbolTree {
 
   // TODO: value = AccessLevel.PRIVATE после окончания тестирования производительности
   @Getter(lazy = true)
-  Map<String, Map<SourceDefinedSymbol, VariableSymbol>> variablesByName = createVariablesByName();
+  Map<SourceDefinedSymbol, Map<String, VariableSymbol>> variablesByName = createVariablesByName();
 
   /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
@@ -194,7 +194,7 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
     return Optional.ofNullable(
-      getVariablesByName().getOrDefault(variableName, Collections.emptyMap()).get(scopeSymbol)
+      getVariablesByName().getOrDefault(scopeSymbol, Collections.emptyMap()).get(variableName)
     );
   }
 
@@ -213,13 +213,17 @@ public class SymbolTree {
     return getChildrenFlat(VariableSymbol.class);
   }
 
-  private Map<String, Map<SourceDefinedSymbol, VariableSymbol>> createVariablesByName() {
+  private Map<SourceDefinedSymbol, Map<String, VariableSymbol>> createVariablesByName() {
     return getVariables().stream()
       .collect(
         groupingBy(
-          VariableSymbol::getName,
-          () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER),
-          toMap(VariableSymbol::getScope, Function.identity())
+          VariableSymbol::getScope,
+          toMap(
+            VariableSymbol::getName,
+            Function.identity(),
+            (existing, replacement) -> existing,
+            () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
+          )
         )
       );
   }

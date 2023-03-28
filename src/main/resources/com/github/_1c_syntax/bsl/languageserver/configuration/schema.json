@@ -659,17 +659,33 @@
                             "$id": "#/properties/include",
                             "type": "array",
                             "items": {
-                              "type": "string"
+                                "type": "string"
                             }
                         },
                         "exclude": {
                             "$id": "#/properties/exclude",
                             "type": "array",
                             "items": {
-                              "type": "string"
+                                "type": "string"
                             }
                         }
                     }
+                },
+                "analyzeOnStart": {
+                    "$id": "#/properties/analyzeOnStart",
+                    "type": "boolean",
+                    "title": "Analyze project and push computed diagnostics to client on server start.",
+                    "default": false,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Analyze project on start."
+                        },
+                        {
+                            "const": false,
+                            "description": "Don't analyze project on start. (default)."
+                        }
+                    ]
                 }
             }
         },
@@ -736,6 +752,26 @@
             "type": "string",
             "title": "Path to root directory of configuration files.",
             "default": null
+        },
+        "sendErrors": {
+            "$id": "#/properties/sendErrors",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "send",
+                    "description": "Send always"
+                },
+                {
+                    "const": "never",
+                    "description": "Never send"
+                },
+                {
+                    "const": "ask",
+                    "description": "Ask for permission"
+                }
+            ],
+            "title": "Send errors and exceptions to developers of BSL Language Server.",
+            "default": "ask"
         }
     }
 }

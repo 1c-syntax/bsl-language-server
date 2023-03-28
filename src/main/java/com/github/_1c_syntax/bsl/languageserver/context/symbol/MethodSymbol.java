@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,9 +54,22 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
 
   @EqualsAndHashCode.Include
   DocumentContext owner;
-  Range range;
-  @EqualsAndHashCode.Include
-  Range subNameRange;
+
+  @Getter(AccessLevel.NONE)
+  int startLine;
+  @Getter(AccessLevel.NONE)
+  int startCharacter;
+  @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
+  int endCharacter;
+
+  @Getter(AccessLevel.NONE)
+  int subNameLine;
+  @Getter(AccessLevel.NONE)
+  int subNameStartCharacter;
+  @Getter(AccessLevel.NONE)
+  int subNameEndCharacter;
 
   @Getter
   @Setter
@@ -79,6 +94,16 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @Builder.Default
   List<Annotation> annotations = new ArrayList<>();
 
+  @Override
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @EqualsAndHashCode.Include
+  public Range getSubNameRange() {
+    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
+  }
+
   public Optional<RegionSymbol> getRegion() {
     return getParent()
       .filter(RegionSymbol.class::isInstance)
@@ -93,5 +118,33 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @Override
   public Range getSelectionRange() {
     return getSubNameRange();
+  }
+
+  public static MethodSymbolBuilder builder() {
+    return new MethodSymbolBuilder();
+  }
+
+  public static class MethodSymbolBuilder {
+
+    public MethodSymbolBuilder range(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      startLine = start.getLine();
+      startCharacter = start.getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
+
+      return this;
+    }
+
+    public MethodSymbolBuilder subNameRange(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      subNameLine = start.getLine();
+      subNameStartCharacter = start.getCharacter();
+      subNameEndCharacter = end.getCharacter();
+
+      return this;
+    }
   }
 }

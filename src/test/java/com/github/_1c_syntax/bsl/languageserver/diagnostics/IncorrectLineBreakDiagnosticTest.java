@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,8 +37,6 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
   @Test
   void test() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
@@ -49,10 +47,10 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
       .hasRange(20, 49, 50)
       .hasRange(69, 80, 83)
       .hasRange(82, 89, 92)
-      .hasRange(44, 25, 26)
-      .hasRange(46, 25, 26)
-      .hasRange(58, 4, 5)
-      .hasRange(60, 4, 5)
+      .hasRange(44, 25, 76)
+      .hasRange(46, 25, 79)
+      .hasRange(58, 4, 55)
+      .hasRange(60, 4, 58)
       .hasRange(101, 2, 3)
       .hasRange(105, 2, 3)
       .hasRange(109, 2, 3)
@@ -88,7 +86,7 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(6, 32, 33)
       .hasRange(7, 35, 36)
@@ -101,6 +99,7 @@ class IncorrectLineBreakDiagnosticTest extends AbstractDiagnosticTest<IncorrectL
       .hasRange(46, 25, 26)
       .hasRange(58, 4, 5)
       .hasRange(60, 4, 5)
+      .hasRange(134, 4, 5)
     ;
 
   }

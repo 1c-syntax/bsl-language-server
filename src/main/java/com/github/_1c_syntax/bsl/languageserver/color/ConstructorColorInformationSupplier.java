@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.color;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -46,7 +47,6 @@ import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_
 @Component
 public class ConstructorColorInformationSupplier implements ColorInformationSupplier {
 
-  private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
   private static final Pattern COLOR_PATTERN = CaseInsensitivePattern.compile("^(?:Цвет|Color)$");
 
   @Override
@@ -58,21 +58,9 @@ public class ConstructorColorInformationSupplier implements ColorInformationSupp
 
     return newExpressions.stream()
       .map(BSLParser.NewExpressionContext.class::cast)
-      .filter(newExpression -> COLOR_PATTERN.matcher(typeName(newExpression)).matches())
+      .filter(newExpression -> Constructors.typeName(newExpression).filter(name -> COLOR_PATTERN.matcher(name).matches()).isPresent())
       .map(ConstructorColorInformationSupplier::toColorInformation)
       .collect(Collectors.toList());
-  }
-
-  private static String typeName(BSLParser.NewExpressionContext ctx) {
-    if (ctx.typeName() != null) {
-      return ctx.typeName().getText();
-    }
-
-    if (ctx.doCall() == null || ctx.doCall().callParamList().isEmpty()) {
-      return "";
-    }
-
-    return QUOTE_PATTERN.matcher(ctx.doCall().callParamList().callParam(0).getText()).replaceAll("");
   }
 
   private static ColorInformation toColorInformation(BSLParser.NewExpressionContext ctx) {

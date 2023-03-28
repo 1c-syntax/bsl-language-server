@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,14 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.util.Positions;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -163,7 +165,7 @@ public final class Trees {
    * Пример:
    * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
     var parent = element.getParent();
     if (parent == null) {
@@ -293,7 +295,7 @@ public final class Trees {
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -314,7 +316,7 @@ public final class Trees {
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -362,8 +364,14 @@ public final class Trees {
    * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
+    return findAllRuleNodes(t, Arrays.asList(index));
+  }
+
+  /**
+   * Получает дочерние ноды с нужными типами
+   */
+  public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Collection<Integer> indexes) {
     List<ParserRuleContext> nodes = new ArrayList<>();
-    List<Integer> indexes = Arrays.asList(index);
 
     if (t instanceof ParserRuleContext
       && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
@@ -371,7 +379,7 @@ public final class Trees {
     }
 
     IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllRuleNodes(t.getChild(i), index))
+      .mapToObj(i -> findAllRuleNodes(t.getChild(i), indexes))
       .forEachOrdered(nodes::addAll);
 
     return nodes;
@@ -406,6 +414,46 @@ public final class Trees {
 
     return IntStream.range(0, t.getChildCount())
       .anyMatch(i -> nodeContains(t.getChild(i), exclude, index));
+  }
+
+  /**
+   * Получение ноды в дереве по позиции в документе.
+   *
+   * @param tree - дерево, в котором ищем
+   * @param position - искомая позиция
+   * @return терминальная нода на указанной позиции, если есть
+   */
+  public static Optional<TerminalNode> findTerminalNodeContainsPosition(BSLParserRuleContext tree, Position position) {
+
+    if (tree.getTokens().isEmpty()) {
+      return Optional.empty();
+    }
+
+    var start = tree.getStart();
+    var stop = tree.getStop();
+
+    if (!(positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop))) {
+      return Optional.empty();
+    }
+
+    var children = Trees.getChildren(tree);
+
+    for (Tree child : children) {
+      if (child instanceof TerminalNode) {
+        var terminalNode = (TerminalNode) child;
+        var token = terminalNode.getSymbol();
+        if (tokenContainsPosition(token, position)) {
+          return Optional.of(terminalNode);
+        }
+      } else {
+        Optional<TerminalNode> node = findTerminalNodeContainsPosition((BSLParserRuleContext) child, position);
+        if (node.isPresent()) {
+          return node;
+        }
+      }
+    }
+
+    return Optional.empty();
   }
 
   /**
@@ -493,5 +541,22 @@ public final class Trees {
     return recursive
       && ruleContext.children != null
       && ruleContext.children.stream().anyMatch(Trees::treeContainsErrors);
+  }
+
+  private static boolean tokenContainsPosition(Token token, Position position) {
+    var tokenRange = Ranges.create(token);
+    return Ranges.containsPosition(tokenRange, position);
+  }
+
+  private static boolean positionIsBeforeOrOnToken(Position position, Token token) {
+    var tokenRange = Ranges.create(token);
+    var end = tokenRange.getEnd();
+    return Positions.isBefore(position, end) || end.equals(position);
+  }
+
+  private static boolean positionIsAfterOrOnToken(Position position, Token token) {
+    var tokenRange = Ranges.create(token);
+    var start = tokenRange.getStart();
+    return Positions.isBefore(start, position) || start.equals(position);
   }
 }
