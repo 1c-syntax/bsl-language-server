@@ -26,9 +26,19 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Класс с методами-утилитами для MdoReference.
+ */
 @UtilityClass
 public class MdoReferences {
 
+  /**
+   * Получить mdoRef в языке конфигурации
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale mdoRef
+   */
   public String getLocaleMdoRef(DocumentContext documentContext, MD mdo) {
     final var mdoReference = mdo.getMdoReference();
     if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
@@ -37,6 +47,13 @@ public class MdoReferences {
     return mdoReference.getMdoRefRu();
   }
 
+  /**
+   * Получить имя родителя метаданного в языке конфигурации.
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale owner mdo name
+   */
   public String getLocaleOwnerMdoName(DocumentContext documentContext, MD mdo) {
     final var names = getLocaleMdoRef(documentContext, mdo).split("\\.");
     return names[0].concat(".").concat(names[1]);
