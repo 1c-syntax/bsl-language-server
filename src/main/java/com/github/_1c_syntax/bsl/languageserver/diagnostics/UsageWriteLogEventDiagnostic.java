@@ -97,7 +97,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private void checkParams(BSLParser.GlobalMethodCallContext context) {
     final var callParams = context.doCall().callParamList().callParam();
-    if (!checkFirstParams(context, callParams)){
+    if (!checkFirstParams(context, callParams)) {
       return;
     }
 
@@ -208,7 +208,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       return true;
     }
     final var methodCalls = Trees.findAllRuleNodes(expression,
-          List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall)).stream()
+        List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall)).stream()
       .filter(BSLParserRuleContext.class::isInstance)
       .map(BSLParserRuleContext.class::cast)
       .collect(Collectors.toList());
@@ -226,11 +226,9 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isErrorDescriptionCallCorrect(Collection<BSLParserRuleContext> calls) {
     return calls.stream()
-//      .filter(context -> context instanceof BSLParser.GlobalMethodCallContext)
-//      .map(BSLParser.GlobalMethodCallContext.class::cast)
       .filter(context -> isAppropriateMethodName(context, PATTERN_DETAIL_ERROR_DESCRIPTION))
       .filter(context -> context instanceof BSLParser.GlobalMethodCallContext
-        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext)context)))
+        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)))
       .anyMatch(UsageWriteLogEventDiagnostic::hasFirstDescendantGlobalCallWithPatternError);
   }
 
@@ -272,7 +270,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     return calls.stream()
       .filter(context -> isAppropriateMethodName(context, PATTERN_BRIEF_ERROR_DESCRIPTION))
       .anyMatch(context -> context instanceof BSLParser.GlobalMethodCallContext
-      || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext)context)));
+        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)));
   }
 
   private static boolean isValidExpression(BSLParser.ExpressionContext context, BSLParser.CodeBlockContext codeBlock,
