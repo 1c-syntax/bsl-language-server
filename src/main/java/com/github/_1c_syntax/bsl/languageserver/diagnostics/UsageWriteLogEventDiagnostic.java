@@ -118,7 +118,8 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private boolean checkFirstParams(
     BSLParser.GlobalMethodCallContext context,
-                                   List<? extends BSLParser.CallParamContext> callParams) {
+    List<? extends BSLParser.CallParamContext> callParams
+  ) {
     if (callParams.size() < WRITE_LOG_EVENT_METHOD_PARAMS_COUNT) {
       fireIssue(context, WRONG_NUMBER_MESSAGE);
       return false;
