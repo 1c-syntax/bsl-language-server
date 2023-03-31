@@ -746,6 +746,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/TransferringParametersBetweenClientAndServer/</loc>
+         <lastmod>2023-03-31</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/TryNumber/</loc>
          <lastmod>2023-03-31</lastmod>
          <changefreq>daily</changefreq>
