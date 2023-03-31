@@ -30,11 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import com.github._1c_syntax.bsl.parser.SDBLParser.ColumnContext;
-import com.github._1c_syntax.bsl.parser.SDBLParser.DataSourceContext;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
 import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -75,31 +74,32 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
   private static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
   private static final Set<Integer> METADATA_TYPES = Set.of(
-      SDBLParser.BUSINESS_PROCESS_TYPE,
-      SDBLParser.CATALOG_TYPE,
-      SDBLParser.DOCUMENT_TYPE,
-      SDBLParser.INFORMATION_REGISTER_TYPE,
-      SDBLParser.CONSTANT_TYPE,
-      SDBLParser.FILTER_CRITERION_TYPE,
-      SDBLParser.EXCHANGE_PLAN_TYPE,
-      SDBLParser.SEQUENCE_TYPE,
-      SDBLParser.DOCUMENT_JOURNAL_TYPE,
-      SDBLParser.ENUM_TYPE,
-      SDBLParser.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
-      SDBLParser.CHART_OF_ACCOUNTS_TYPE,
-      SDBLParser.CHART_OF_CALCULATION_TYPES_TYPE,
-      SDBLParser.ACCUMULATION_REGISTER_TYPE,
-      SDBLParser.ACCOUNTING_REGISTER_TYPE,
-      SDBLParser.CALCULATION_REGISTER_TYPE,
-      SDBLParser.TASK_TYPE,
-      SDBLParser.EXTERNAL_DATA_SOURCE_TYPE);
+    SDBLParser.BUSINESS_PROCESS_TYPE,
+    SDBLParser.CATALOG_TYPE,
+    SDBLParser.DOCUMENT_TYPE,
+    SDBLParser.INFORMATION_REGISTER_TYPE,
+    SDBLParser.CONSTANT_TYPE,
+    SDBLParser.FILTER_CRITERION_TYPE,
+    SDBLParser.EXCHANGE_PLAN_TYPE,
+    SDBLParser.SEQUENCE_TYPE,
+    SDBLParser.DOCUMENT_JOURNAL_TYPE,
+    SDBLParser.ENUM_TYPE,
+    SDBLParser.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
+    SDBLParser.CHART_OF_ACCOUNTS_TYPE,
+    SDBLParser.CHART_OF_CALCULATION_TYPES_TYPE,
+    SDBLParser.ACCUMULATION_REGISTER_TYPE,
+    SDBLParser.ACCOUNTING_REGISTER_TYPE,
+    SDBLParser.CALCULATION_REGISTER_TYPE,
+    SDBLParser.TASK_TYPE,
+    SDBLParser.EXTERNAL_DATA_SOURCE_TYPE);
   private static final Collection<Integer> EXCLUDED_COLUMNS_ROOT =
     Set.of(SDBLParser.RULE_inlineTableField, SDBLParser.RULE_query);
   public static final List<String> SPECIAL_LIST_FOR_DATA_SOURCE = List.of("");
 
   private Map<String, List<String>> dataSourceWithTabularSectionNames = Collections.emptyMap();
   private Map<String, List<String>> prevDataSourceWithTabularSectionNames = Collections.emptyMap();
-  @Nullable private Range prevQueryRange;
+  @Nullable
+  private Range prevQueryRange;
 
   @Override
   public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
@@ -116,12 +116,12 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return super.visitQuery(ctx);
   }
 
-  private Stream<ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
+  private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columns = Trees.findAllTopLevelRuleNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
       .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
         .getRuleIndex() == SDBLParser.RULE_query)
-      .map(ColumnContext.class::cast)
+      .map(SDBLParser.ColumnContext.class::cast)
       .collect(Collectors.toList());
 
     if (columns.isEmpty()) {
@@ -142,7 +142,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     var queryRange = Ranges.create(ctx);
 
     final Map<String, List<String>> result;
-    if (prevQueryRange == null || !Ranges.containsRange(prevQueryRange, queryRange)){
+    if (prevQueryRange == null || !Ranges.containsRange(prevQueryRange, queryRange)) {
       result = newResult;
       prevDataSourceWithTabularSectionNames = result;
       prevQueryRange = queryRange;
@@ -153,21 +153,21 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return result;
   }
 
-  private Map<String, List<String>> calcDataSourceWithTabularSectionNames(Stream<? extends DataSourceContext> dataSources) {
+  private Map<String, List<String>> calcDataSourceWithTabularSectionNames(
+    Stream<? extends SDBLParser.DataSourceContext> dataSources) {
+
     return dataSources
       .map(dataSourceContext -> new TabularSectionTable(getTableNameOrAlias(dataSourceContext),
         getTabularSectionNames(dataSourceContext)))
-//      .filter(tabularSectionTable -> !tabularSectionTable.tableNameOrAlias.isEmpty())// TODO убираешь эти условия, и падает тест со строкой 13
-//      .filter(tabularSectionTable -> !tabularSectionTable.tabularSectionNames.isEmpty())
       .collect(Collectors.toMap(
         TabularSectionTable::getTableNameOrAlias,
         TabularSectionTable::getTabularSectionNames,
         (existing, replacement) -> existing));
   }
 
-  private static Stream<? extends DataSourceContext> findAllDataSourceWithoutInnerQueries(
+  private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
     SDBLParser.QueryContext ctx) {
-    if (ctx.from == null){
+    if (ctx.from == null) {
       return Stream.empty();
     }
     return Stream.concat(
@@ -177,11 +177,11 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     );
   }
 
-  private static Collection<DataSourceContext> getInnerDataSource(DataSourceContext dataSourceContext) {
-    var result = new ArrayList<DataSourceContext>();
+  private static Collection<SDBLParser.DataSourceContext> getInnerDataSource(SDBLParser.DataSourceContext dataSourceContext) {
+    var result = new ArrayList<SDBLParser.DataSourceContext>();
     Optional.ofNullable(dataSourceContext.dataSource())
-        .map(RefOveruseDiagnostic::getInnerDataSource)
-        .ifPresent(result::addAll);
+      .map(RefOveruseDiagnostic::getInnerDataSource)
+      .ifPresent(result::addAll);
 
     var joinDataSources = dataSourceContext.joinPart().stream()
       .map(SDBLParser.JoinPartContext::dataSource)
@@ -197,23 +197,23 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return result;
   }
 
-  private static String getTableNameOrAlias(DataSourceContext dataSource) {
+  private static String getTableNameOrAlias(SDBLParser.DataSourceContext dataSource) {
     final var value = Optional.of(dataSource);
     return value
-      .map(DataSourceContext::alias)
-      .map(alias -> (ParseTree)alias.name)
+      .map(SDBLParser.DataSourceContext::alias)
+      .map(alias -> (ParseTree) alias.name)
       .or(() -> value
-        .map(DataSourceContext::table)
-        .map(tableContext -> (ParseTree)tableContext.tableName))
+        .map(SDBLParser.DataSourceContext::table)
+        .map(tableContext -> (ParseTree) tableContext.tableName))
       .or(() -> value
-        .map(DataSourceContext::parameterTable)
-        .map(tableContext -> (ParseTree)tableContext.parameter()))
+        .map(SDBLParser.DataSourceContext::parameterTable)
+        .map(tableContext -> (ParseTree) tableContext.parameter()))
       .map(ParseTree::getText)
       .orElse("");
 
   }
 
-  private List<String> getTabularSectionNames(DataSourceContext dataSourceContext) {
+  private List<String> getTabularSectionNames(SDBLParser.DataSourceContext dataSourceContext) {
     final var table = dataSourceContext.table();
     if (table == null) {
       return getSpecialListForDataSource(dataSourceContext.virtualTable() != null);
@@ -222,13 +222,13 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     if (mdo == null) {
       return getSpecialListForDataSource(table.tableName != null);
     }
-    if (table.objectTableName != null){
+    if (table.objectTableName != null) {
       return SPECIAL_LIST_FOR_DATA_SOURCE;
     }
     return getTabularSectionNames(mdo);
   }
 
-  private List<String> getSpecialListForDataSource(boolean useSpecialName) {
+  private static List<String> getSpecialListForDataSource(boolean useSpecialName) {
     if (useSpecialName) {
       return SPECIAL_LIST_FOR_DATA_SOURCE;
     }
@@ -238,7 +238,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private List<String> getTabularSectionNames(SDBLParser.MdoContext mdo) {
     final var configuration = documentContext.getServerContext()
       .getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY){
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
       return Collections.emptyList();
     }
     return MDOType.fromValue(mdo.type.getText()).stream()
@@ -246,35 +246,30 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .map(mdoReference -> configuration.getChildrenByMdoRef().get(mdoReference))
       .filter(AbstractMDObjectComplex.class::isInstance)
       .map(AbstractMDObjectComplex.class::cast)
-      .flatMap(mdObjectComplex -> getTabularSectionNames(mdObjectComplex))
+      .flatMap(RefOveruseDiagnostic::getTabularSectionNames)
       .collect(Collectors.toList());
   }
 
-  private Stream<String> getTabularSectionNames(AbstractMDObjectComplex mdObjectComplex) {
+  private static Stream<String> getTabularSectionNames(AbstractMDObjectComplex mdObjectComplex) {
     return mdObjectComplex.getAttributes().stream()
-      .filter(abstractMDOAttribute -> abstractMDOAttribute instanceof TabularSection)
-      .map(abstractMDOAttribute -> abstractMDOAttribute.getName());
+      .filter(TabularSection.class::isInstance)
+      .map(AbstractMDObjectBase::getName);
   }
 
-  private static Stream<ColumnContext> getSimpleOverused(List<ColumnContext> columnsCollection) {
+  private static Stream<SDBLParser.ColumnContext> getSimpleOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
       .filter(columnNode -> columnNode.getChildCount() > COUNT_OF_TABLE_DOT_REF)
-//      .map(column -> column.getChild(column.getChildCount() - 1))
       .filter(column -> REF_PATTERN.matcher(column.getChild(column.getChildCount() - 1).getText()).matches());
-//      .map(column -> column.getChild(column.getChildCount() - 1))
-//      .filter(lastChild -> REF_PATTERN.matcher(lastChild.getText()).matches())
-//      .map(BSLParserRuleContext.class::cast);
   }
 
-  private Stream<ColumnContext> getOverused(List<ColumnContext> columnsCollection) {
+  private Stream<SDBLParser.ColumnContext> getOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
-      .map(ColumnContext.class::cast)
+      .map(SDBLParser.ColumnContext.class::cast)
       .filter(column -> column.getChildCount() >= COUNT_OF_TABLE_DOT_REF)
       .filter(this::isOveruse);
-//      .map(BSLParserRuleContext.class::cast);
   }
 
-  private boolean isOveruse(ColumnContext ctx) {
+  private boolean isOveruse(SDBLParser.ColumnContext ctx) {
 
     // children:
     //
@@ -295,21 +290,18 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       var penultimateIdentifierName = children.get(lastIndex - LAST_INDEX_OF_TABLE_DOT_REF).getText();
       return dataSourceWithTabularSectionNames.get(penultimateIdentifierName) == null;
     }
-    if (refIndex < LAST_INDEX_OF_TABLE_DOT_REF){
+    if (refIndex < LAST_INDEX_OF_TABLE_DOT_REF) {
       return false;
     }
-    if (refIndex > LAST_INDEX_OF_TABLE_DOT_REF){
+    if (refIndex > LAST_INDEX_OF_TABLE_DOT_REF) {
       return true;
     }
     var tabName = children.get(0).getText();
-//    return dataSourceWithTabularSectionNames.get(tabName) == null;
     return dataSourceWithTabularSectionNames.getOrDefault(tabName, Collections.emptyList()).isEmpty();
-//    return dataSourceWithTabularSectionNames.getOrDefault(tabName, SPECIAL_LIST_FOR_DATA_SOURCE).equals(SPECIAL_LIST_FOR_DATA_SOURCE);
-//    return !dataSourcesWithTabularFlag.getOrDefault(tabName, false);
   }
 
   private static int findLastRef(List<ParseTree> children) {
-    for (int i = children.size() - 1; i >= 0 ; i--) {
+    for (int i = children.size() - 1; i >= 0; i--) {
       final var child = children.get(i);
       final var childText = child.getText();
       if (REF_PATTERN.matcher(childText).matches()) {
@@ -319,12 +311,11 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return -1;
   }
 
-  private static List<ParseTree> extractFirstMetadataTypeName(ColumnContext ctx) {
-    // TODO использовать ctx.columnNames или подобное вместо children
+  private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
     final var mdoName = ctx.mdoName;
     final var children = ctx.children;
     if (mdoName == null || children.size() < COUNT_OF_TABLE_DOT_REF_DOT_REF
-        || !METADATA_TYPES.contains(mdoName.getStart().getType())){
+      || !METADATA_TYPES.contains(mdoName.getStart().getType())) {
       return children;
     }
     return children.subList(1, children.size() - 1);
@@ -332,7 +323,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Value
   @AllArgsConstructor
-  private final static class TabularSectionTable {
+  private static class TabularSectionTable {
     String tableNameOrAlias;
     List<String> tabularSectionNames;
   }
