@@ -29,9 +29,26 @@ import java.net.URI;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+/**
+ * Интерфейс DTO для хранения промежуточных данных команд между созданием команды и ее выполнением.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
 public interface CommandArguments {
+  /**
+   * URI документа, с которым связана команда.
+   *
+   * @return URI документа, с которым связана команда.
+   */
   URI getUri();
+
+  /**
+   * Идентификатор команды.
+   * <p>
+   * Должен совпадать с {@link CommandSupplier#getId()} сапплаера,
+   * создающего команду.
+   *
+   * @return Идентификатор команды.
+   */
   String getId();
 }

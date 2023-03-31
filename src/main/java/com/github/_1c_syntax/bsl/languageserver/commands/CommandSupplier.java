@@ -26,8 +26,25 @@ import org.eclipse.lsp4j.Command;
 import java.beans.Introspector;
 import java.util.Optional;
 
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.CommandProvider}
+ * данными о доступных в документе командах.
+ * <p>
+ * Конкретный сапплаер может расширить состав данных, передаваемых в аргументах команды, доопределив дата-класс,
+ * наследующий {@link CommandArguments}, и указав его тип в качестве типа-параметра класса.
+ *
+ * @param <T> Конкретный тип для аргументов команды.
+ */
+
 public interface CommandSupplier<T extends CommandArguments> {
 
+  /**
+   * Идентификатор сапплаера.
+   * <p>
+   * Идентификатор в аргументах команды должен совпадать с данным идентификатором.
+   *
+   * @return Идентификатор сапплаера.
+   */
   default String getId() {
     String simpleName = getClass().getSimpleName();
     if (simpleName.endsWith("CommandSupplier")) {
@@ -42,10 +59,27 @@ public interface CommandSupplier<T extends CommandArguments> {
     return new Command(title, getId());
   }
 
+  /**
+   * Получить класс для аргументов команды.
+   *
+   * @return Конкретный класс для аргументов команды.
+   */
   Class<T> getCommandArgumentsClass();
 
+  /**
+   * Выполнить серверную команду.
+   *
+   * @param arguments Аргументы команды.
+   *
+   * @return Результат выполнения команды.
+   */
   Optional<Object> execute(T arguments);
-  
+
+  /**
+   * Флаг, показывающий необходимость обновить линзы после выполнения команды.
+   *
+   * @return Флаг, показывающий необходимость обновить линзы после выполнения команды.
+   */
   default boolean refreshCodeLensesAfterExecuteCommand() {
     return false;
   }
