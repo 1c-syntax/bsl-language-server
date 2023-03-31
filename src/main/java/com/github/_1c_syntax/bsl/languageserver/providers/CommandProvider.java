@@ -33,6 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code workspace/executeCommans}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_executeCommand">Execute a command specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 public class CommandProvider {

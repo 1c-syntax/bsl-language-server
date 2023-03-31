@@ -38,12 +38,18 @@ import java.util.stream.Collectors;
 @Configuration
 public class CommandsConfiguration {
 
+  /**
+   * Получить список сапплаеров команд в разрезе их идентификаторов.
+   *
+   * @param commandSuppliers Плоский список сапплаеров.
+   * @return Список сапплаеров линз в разрезе их идентификаторов.
+   */
   @Bean
   @SuppressWarnings("unchecked")
   public Map<String, CommandSupplier<CommandArguments>> commandSuppliersById(
-    Collection<CommandSupplier<? extends CommandArguments>> codeLensSuppliers
+    Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
   ) {
-    return codeLensSuppliers.stream()
+    return commandSuppliers.stream()
       .map(commandSupplier -> (CommandSupplier<CommandArguments>) commandSupplier)
       .collect(Collectors.toMap(CommandSupplier::getId, Function.identity()));
   }
