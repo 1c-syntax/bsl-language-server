@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1679581304361,
+  "lastUpdate": 1680251414267,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21452,6 +21452,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8751686153239218",
             "extra": "mean: 53.19856778780619 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72a65bb49aa098da087c0dab4f0cc31bba0ecefd",
+          "message": "Merge pull request #3010 from artbear/UsageWriteLogEvent-1691\n\nUsageWriteLogEvent - Исключено FP при использовании глобального объекта ОбработкаОшибок",
+          "timestamp": "2023-03-31T11:19:18+03:00",
+          "tree_id": "51658d11d26609905243f3e6124831a7abe6da30",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/72a65bb49aa098da087c0dab4f0cc31bba0ecefd"
+        },
+        "date": 1680251405264,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.91320959726969,
+            "unit": "sec",
+            "range": "stddev: 0.852429133591137",
+            "extra": "mean: 53.91320959726969 sec\nrounds: 3"
           }
         ]
       }
