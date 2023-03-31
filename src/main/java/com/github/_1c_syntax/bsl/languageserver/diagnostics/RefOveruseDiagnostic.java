@@ -117,7 +117,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
-    var columns = Trees.findAllTopLevelRuleNodes(ctx, RULE_COLUMNS).stream()
+    var columns = Trees.findAllTopLevelDescendantNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
       .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
         .getRuleIndex() == SDBLParser.RULE_query)

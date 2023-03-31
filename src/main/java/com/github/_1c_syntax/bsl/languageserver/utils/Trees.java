@@ -391,29 +391,31 @@ public final class Trees {
    * Например, если указать RULE_codeBlock, то найдется только самый верхнеуровневый блок кода, все вложенные найдены не будут
    * ВАЖНО: начальная нода не проверяется на условие, т.к. тогда она единственная и вернется в результате
    *
-   * @param t - начальный узел дерева
+   * @param root - начальный узел дерева
    * @param indexes - коллекция индексов
    * @return найденные узлы
    */
-  public static Collection<ParserRuleContext> findAllTopLevelRuleNodes(ParserRuleContext t, Collection<Integer> indexes) {
+  public static Collection<ParserRuleContext> findAllTopLevelDescendantNodes(ParserRuleContext root,
+                                                                             Collection<Integer> indexes) {
     var result = new ArrayList<ParserRuleContext>();
 
-    t.children.stream()
-      .map(node -> findAllTopLevelRuleNodesInner(node, indexes))
-      .forEachOrdered(result::addAll);
+    root.children.stream()
+      .map(node -> findAllTopLevelDescendantNodesInner(node, indexes))
+      .forEach(result::addAll);
 
     return result;
   }
 
-  private static Collection<ParserRuleContext> findAllTopLevelRuleNodesInner(ParseTree t, Collection<Integer> indexes) {
-    if (t instanceof ParserRuleContext
-      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
-      return List.of((ParserRuleContext) t);
+  private static Collection<ParserRuleContext> findAllTopLevelDescendantNodesInner(ParseTree root,
+                                                                                   Collection<Integer> indexes) {
+    if (root instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) root).getRuleIndex())) {
+      return List.of((ParserRuleContext) root);
     }
 
     List<ParserRuleContext> result = new ArrayList<>();
-    IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllTopLevelRuleNodesInner(t.getChild(i), indexes))
+    IntStream.range(0, root.getChildCount())
+      .mapToObj(i -> findAllTopLevelDescendantNodesInner(root.getChild(i), indexes))
       .forEachOrdered(result::addAll);
 
     return result;
