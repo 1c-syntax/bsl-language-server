@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +29,10 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWriteLogEventDiagnostic> {
-  UsageWriteLogEventDiagnosticTest() {
-    super(UsageWriteLogEventDiagnostic.class);
+@CleanupContextBeforeClassAndAfterClass
+class TransferringParametersBetweenClientAndServerDiagnosticTest extends AbstractDiagnosticTest<TransferringParametersBetweenClientAndServerDiagnostic> {
+  TransferringParametersBetweenClientAndServerDiagnosticTest() {
+    super(TransferringParametersBetweenClientAndServerDiagnostic.class);
   }
 
   @Test
@@ -39,28 +41,14 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasRange(3, 4, 39)
-      .hasRange(4, 4, 73)
-      .hasRange(5, 4, 77)
-      .hasRange(7, 4, 9, 61)
-      .hasRange(11, 4, 79)
-      .hasRange(16, 6, 17, 25)
-      .hasRange(23, 6, 24, 24)
-      .hasRange(31, 6, 32, 45)
-      .hasRange(38, 6, 39, 37)
-      .hasRange(45, 6, 46, 21)
-      .hasRange(45, 6, 46, 21)
-      .hasRange(190, 6, 192,56)
-      .hasRange(204, 6, 206,22)
-      .hasRange(219, 6, 221,22)
-      .hasRange(286, 12, 291,39)
-
-      .hasRange(354, 6, 356,73)
-      .hasRange(368, 6, 370,22)
-      .hasRange(383, 6, 385,22)
-      .hasRange(439, 12, 444,39)
-      .hasSize(18)
-    ;
-
+      .hasMessageOnRange(getMessage("Парам1", "Сервер1"), 6, 18, 24)
+      .hasSize(1);
   }
+
+  private String getMessage(String paramName, String methodName) {
+    return String.format("Установите модификатор \"Знач\" для параметра %s метода %s",
+      paramName, methodName);
+  }
+
+
 }

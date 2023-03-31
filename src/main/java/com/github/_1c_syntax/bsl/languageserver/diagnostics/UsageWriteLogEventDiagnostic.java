@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -70,6 +71,9 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern PATTERN_ERROR = CaseInsensitivePattern.compile(
     "ошибка|error"
   );
+  private static final Pattern ERROR_PROCESSING_ERROR = CaseInsensitivePattern.compile(
+    "обработкаошибок|errorprocessing"
+  );
 
   private static final int WRITE_LOG_EVENT_METHOD_PARAMS_COUNT = 5;
   public static final int COMMENTS_PARAM_INDEX = 4;
@@ -93,7 +97,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private void checkParams(BSLParser.GlobalMethodCallContext context) {
     final var callParams = context.doCall().callParamList().callParam();
-    if (!checkFirstParams(context, callParams)){
+    if (!checkFirstParams(context, callParams)) {
       return;
     }
 
@@ -112,7 +116,10 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private boolean checkFirstParams(BSLParser.GlobalMethodCallContext context, List<? extends BSLParser.CallParamContext> callParams) {
+  private boolean checkFirstParams(
+    BSLParser.GlobalMethodCallContext context,
+    List<? extends BSLParser.CallParamContext> callParams
+  ) {
     if (callParams.size() < WRITE_LOG_EVENT_METHOD_PARAMS_COUNT) {
       fireIssue(context, WRONG_NUMBER_MESSAGE);
       return false;
@@ -176,7 +183,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     if (hasRaiseStatement(codeBlockContext)) {
       return true;
     }
-    return isValidExpression(codeBlockContext, commentsCtx.expression(), true);
+    return isValidCommentExpression(codeBlockContext, commentsCtx.expression(), true);
   }
 
   private static boolean hasRaiseStatement(BSLParser.CodeBlockContext codeBlockContext) {
@@ -192,7 +199,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   // то проверим, что в присвоении есть ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()
   // если есть какая-то переменная, определенная на уровень выше (например, параметр метода), то не анализируем ее
 
-  private static boolean isValidExpression(
+  private static boolean isValidCommentExpression(
     BSLParser.CodeBlockContext codeBlock,
     @Nullable BSLParser.ExpressionContext expression,
     boolean checkPrevAssignment
@@ -200,49 +207,70 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     if (expression == null) {
       return true;
     }
-    final var assignmentGlobalCalls = Trees.findAllRuleNodes(expression, BSLParser.RULE_globalMethodCall);
-    if (!assignmentGlobalCalls.isEmpty()) {
-      if (isErrorDescriptionCallCorrect(assignmentGlobalCalls)) {
+    final var methodCalls = Trees.findAllRuleNodes(expression,
+        List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall)).stream()
+      .filter(BSLParserRuleContext.class::isInstance)
+      .map(BSLParserRuleContext.class::cast)
+      .collect(Collectors.toList());
+    if (!methodCalls.isEmpty()) {
+      if (isErrorDescriptionCallCorrect(methodCalls)) {
         return true;
       }
-      if (hasSimpleErrorDescription(assignmentGlobalCalls) || hasBriefErrorDescription(assignmentGlobalCalls)) {
+      if (hasSimpleErrorDescription(methodCalls) || hasBriefErrorDescription(methodCalls)) {
         return false;
       }
     }
+
     return isValidExpression(expression, codeBlock, checkPrevAssignment);
   }
 
-  private static boolean isErrorDescriptionCallCorrect(Collection<ParseTree> globalCalls) {
-    return globalCalls.stream()
-      .filter(context -> context instanceof BSLParser.GlobalMethodCallContext)
-      .map(BSLParser.GlobalMethodCallContext.class::cast)
-      .filter(context -> isAppropriateName(context, PATTERN_DETAIL_ERROR_DESCRIPTION))
-      .anyMatch(UsageWriteLogEventDiagnostic::hasFirstDescendantGlobalCall);
+  private static boolean isErrorDescriptionCallCorrect(Collection<BSLParserRuleContext> calls) {
+    return calls.stream()
+      .filter(context -> isAppropriateMethodName(context, PATTERN_DETAIL_ERROR_DESCRIPTION))
+      .filter(context -> context instanceof BSLParser.GlobalMethodCallContext
+        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)))
+      .anyMatch(UsageWriteLogEventDiagnostic::hasFirstDescendantGlobalCallWithPatternError);
   }
 
-  private static boolean isAppropriateName(
-    BSLParser.GlobalMethodCallContext context,
+  private static boolean isAppropriateMethodName(
+    BSLParserRuleContext context,
     Pattern patternDetailErrorDescription
   ) {
-    return patternDetailErrorDescription.matcher(context.methodName().getText()).matches();
+    BSLParser.MethodNameContext methodNameContext = context.getRuleContext(BSLParser.MethodNameContext.class, 0);
+    return patternDetailErrorDescription.matcher(methodNameContext.getText()).matches();
   }
 
-  private static boolean hasFirstDescendantGlobalCall(BSLParser.GlobalMethodCallContext globalCallCtx) {
+  private static boolean isErrorProcessingCall(BSLParser.MethodCallContext methodCallContext) {
+    return Optional.of(methodCallContext)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context instanceof BSLParser.AccessCallContext)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context instanceof BSLParser.ModifierContext)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context instanceof BSLParser.ComplexIdentifierContext)
+      .map(BSLParser.ComplexIdentifierContext.class::cast)
+      .map(BSLParser.ComplexIdentifierContext::IDENTIFIER)
+      .filter(terminalNode -> ERROR_PROCESSING_ERROR.matcher(terminalNode.getText()).matches())
+      .isPresent();
+  }
+
+  private static boolean hasFirstDescendantGlobalCallWithPatternError(BSLParserRuleContext globalCallCtx) {
     return Trees.findAllRuleNodes(globalCallCtx, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
-      .anyMatch(context -> isAppropriateName(context, PATTERN_ERROR_INFO));
+      .anyMatch(context -> isAppropriateMethodName(context, PATTERN_ERROR_INFO));
   }
 
-  private static boolean hasSimpleErrorDescription(Collection<ParseTree> globalCalls) {
+  private static boolean hasSimpleErrorDescription(Collection<BSLParserRuleContext> globalCalls) {
     return globalCalls.stream()
       .filter(context -> context instanceof BSLParser.GlobalMethodCallContext)
-      .anyMatch(context -> isAppropriateName((BSLParser.GlobalMethodCallContext) context, PATTERN_SIMPLE_ERROR_DESCRIPTION));
+      .anyMatch(context -> isAppropriateMethodName(context, PATTERN_SIMPLE_ERROR_DESCRIPTION));
   }
 
-  private static boolean hasBriefErrorDescription(Collection<ParseTree> globalCalls) {
-    return globalCalls.stream()
-      .filter(context -> context instanceof BSLParser.GlobalMethodCallContext)
-      .anyMatch(context -> isAppropriateName((BSLParser.GlobalMethodCallContext) context, PATTERN_BRIEF_ERROR_DESCRIPTION));
+  private static boolean hasBriefErrorDescription(Collection<BSLParserRuleContext> calls) {
+    return calls.stream()
+      .filter(context -> isAppropriateMethodName(context, PATTERN_BRIEF_ERROR_DESCRIPTION))
+      .anyMatch(context -> context instanceof BSLParser.GlobalMethodCallContext
+        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)));
   }
 
   private static boolean isValidExpression(BSLParser.ExpressionContext context, BSLParser.CodeBlockContext codeBlock,
@@ -272,7 +300,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     String varName = identifierContext.getText();
     return getAssignment(varName, codeBlock)
       .map(BSLParser.AssignmentContext::expression)
-      .map(expression -> isValidExpression(codeBlock, expression, false))
+      .map(expression -> isValidCommentExpression(codeBlock, expression, false))
       .orElse(true);
   }
 
