@@ -54,7 +54,12 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(204, 6, 206,22)
       .hasRange(219, 6, 221,22)
       .hasRange(286, 12, 291,39)
-      .hasSize(14)
+
+      .hasRange(354, 6, 356,73)
+      .hasRange(368, 6, 370,22)
+      .hasRange(383, 6, 385,22)
+      .hasRange(439, 12, 444,39)
+      .hasSize(18)
     ;
 
   }
