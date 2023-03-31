@@ -55,6 +55,12 @@ public interface CommandSupplier<T extends CommandArguments> {
     return simpleName;
   }
 
+  /**
+   * Создать DTO команды.
+   *
+   * @param title Заголовок команды.
+   * @return Команда с заполненными заголовком и идентификатором команды.
+   */
   default Command createCommand(String title) {
     return new Command(title, getId());
   }

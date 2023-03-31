@@ -46,6 +46,13 @@ public class CommandProvider {
   private final ObjectMapper objectMapper;
   private final CodeLensProvider codeLensProvider;
 
+  /**
+   * Выполнить серверную команду.
+   *
+   * @param arguments Аргументы команды.
+   *
+   * @return Результат выполнения команды.
+   */
   public Object executeCommand(CommandArguments arguments) {
     var commandId = arguments.getId();
 
@@ -67,13 +74,27 @@ public class CommandProvider {
     return result;
   }
 
+  /**
+   * Список идентификаторов известных серверных команд.
+   *
+   * @return Список идентификаторов известных серверных команд.
+   */
   public List<String> getCommandIds() {
     return List.copyOf(commandSuppliersById.keySet());
   }
 
+  /**
+   * Извлечь аргументы команды из параметров входящего запроса.
+   *
+   * @param executeCommandParams Параметры запроса workspace/executeCommand.
+   * @return Аргументы команды.
+   *
+   * @throws RuntimeException Выбрасывает исключение, если параметры входящего запроса не содержат
+   * данных для вычисления аргументов команды.
+   */
   @SneakyThrows
-  public CommandArguments extractArguments(ExecuteCommandParams codeLens) {
-    var rawArguments = codeLens.getArguments();
+  public CommandArguments extractArguments(ExecuteCommandParams executeCommandParams) {
+    var rawArguments = executeCommandParams.getArguments();
 
     if (rawArguments.isEmpty()) {
       throw new RuntimeException("Command arguments is empty");

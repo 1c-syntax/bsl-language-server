@@ -28,6 +28,9 @@ import lombok.experimental.NonFinal;
 
 import java.net.URI;
 
+/**
+ * DTO для хранения промежуточных данных команд между созданием команды и ее выполнением.
+ */
 @Value
 @NonFinal
 public class DefaultCommandArguments implements CommandArguments {

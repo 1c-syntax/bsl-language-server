@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -40,8 +40,8 @@ public class ObjectMapperConfiguration  {
 
   @Bean
   public ObjectMapper objectMapper(
-    List<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
-    List<CommandSupplier<? extends CommandArguments>> commandSuppliers
+    Collection<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
+    Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
   ) {
 
     var namedTypes = new ArrayList<NamedType>();
