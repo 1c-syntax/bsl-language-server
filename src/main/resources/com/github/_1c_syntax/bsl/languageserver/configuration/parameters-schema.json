@@ -546,6 +546,24 @@
             },
             "$id": "#/definitions/DuplicateStringLiteral"
         },
+        "DuplicatedInsertionIntoCollection": {
+            "description": "Duplicate adding or pasting a value to a collection",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate adding or pasting a value to a collection",
+            "properties": {
+                "isAllowedMethodADD": {
+                    "description": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear"
+                }
+            },
+            "$id": "#/definitions/DuplicatedInsertionIntoCollection"
+        },
         "EmptyCodeBlock": {
             "description": "Empty code block",
             "default": true,
@@ -1046,6 +1064,16 @@
             },
             "$id": "#/definitions/MethodSize"
         },
+        "MissedRequiredParameter": {
+            "description": "Missed a required method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed a required method parameter",
+            "$id": "#/definitions/MissedRequiredParameter"
+        },
         "MissingCodeTryCatchEx": {
             "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "default": true,
@@ -1063,6 +1091,16 @@
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
+        },
+        "MissingCommonModuleMethod": {
+            "description": "Referencing a missing common module method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referencing a missing common module method",
+            "$id": "#/definitions/MissingCommonModuleMethod"
         },
         "MissingEventSubscriptionHandler": {
             "description": "Event subscription handler missing",
@@ -1626,6 +1664,16 @@
             },
             "$id": "#/definitions/SetPermissionsForNewObjects"
         },
+        "SetPrivilegedMode": {
+            "description": "Using privileged mode",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using privileged mode",
+            "$id": "#/definitions/SetPrivilegedMode"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
@@ -1877,6 +1925,16 @@
             ],
             "title": "Useless collection iteration",
             "$id": "#/definitions/UseLessForEach"
+        },
+        "UseSystemInformation": {
+            "description": "Use of system information",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Use of system information",
+            "$id": "#/definitions/UseSystemInformation"
         },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",

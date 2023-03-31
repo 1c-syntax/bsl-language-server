@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -32,7 +33,6 @@ import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.util.Positions;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -165,7 +165,7 @@ public final class Trees {
    * Пример:
    * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
     var parent = element.getParent();
     if (parent == null) {
@@ -295,7 +295,7 @@ public final class Trees {
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -316,7 +316,7 @@ public final class Trees {
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
+  @Nullable
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -364,8 +364,14 @@ public final class Trees {
    * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
+    return findAllRuleNodes(t, Arrays.asList(index));
+  }
+
+  /**
+   * Получает дочерние ноды с нужными типами
+   */
+  public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Collection<Integer> indexes) {
     List<ParserRuleContext> nodes = new ArrayList<>();
-    List<Integer> indexes = Arrays.asList(index);
 
     if (t instanceof ParserRuleContext
       && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
@@ -373,7 +379,7 @@ public final class Trees {
     }
 
     IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllRuleNodes(t.getChild(i), index))
+      .mapToObj(i -> findAllRuleNodes(t.getChild(i), indexes))
       .forEachOrdered(nodes::addAll);
 
     return nodes;

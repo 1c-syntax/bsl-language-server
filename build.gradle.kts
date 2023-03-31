@@ -9,16 +9,16 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "3.5.0.2730"
-    id("io.freefair.lombok") version "6.6"
-    id("io.freefair.javadoc-links") version "6.6"
-    id("io.freefair.javadoc-utf-8") version "6.6"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
-    id("io.freefair.maven-central.validate-poms") version "6.6"
-    id("me.qoomon.git-versioning") version "6.3.6"
-    id("com.github.ben-manes.versions") version "0.44.0"
+    id("io.freefair.lombok") version "6.6.1"
+    id("io.freefair.javadoc-links") version "6.6.1"
+    id("io.freefair.javadoc-utf-8") version "6.6.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
+    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("me.qoomon.git-versioning") version "6.4.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
     id("org.springframework.boot") version "2.7.5"
     id("io.spring.dependency-management") version "1.1.0"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
@@ -55,7 +55,7 @@ val languageToolVersion = "5.6"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.9.1")
+        mavenBom("io.sentry:sentry-bom:6.13.1")
     }
 }
 
@@ -66,11 +66,11 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.0")
+    api("info.picocli:picocli-spring-boot-starter:4.7.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.17.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.17.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.19.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
@@ -92,7 +92,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.7")
+    implementation("org.aspectj", "aspectjrt", "1.9.9.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -101,7 +101,7 @@ dependencies {
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.2")
+    implementation("me.tongfei", "progressbar", "0.9.5")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -118,9 +118,7 @@ dependencies {
     implementation("io.sentry:sentry-logback")
 
     // COMPILE
-
-    // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     // TEST
 
@@ -130,8 +128,8 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
-    testImplementation("org.awaitility", "awaitility", "4.1.1")
+    testImplementation("org.jmockit", "jmockit", "1.49")
+    testImplementation("org.awaitility", "awaitility", "4.2.0")
 }
 
 java {
@@ -177,6 +175,9 @@ tasks.test {
     reports {
         html.required.set(true)
     }
+
+    val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {
@@ -219,6 +220,7 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    isFailOnError = false
     options {
         this as StandardJavadocDocletOptions
         links(

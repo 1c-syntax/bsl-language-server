@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,7 +37,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -130,7 +129,6 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     return regionsLanguage;
   }
 
-  @NotNull
   private ScriptVariant getScriptVariantFromConfigLanguage() {
     ScriptVariant regionsLanguage;
     if (languageServerConfiguration.getLanguage() == Language.EN) {
