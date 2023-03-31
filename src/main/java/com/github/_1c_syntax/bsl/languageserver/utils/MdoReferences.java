@@ -56,6 +56,9 @@ public class MdoReferences {
    */
   public String getLocaleOwnerMdoName(DocumentContext documentContext, MD mdo) {
     final var names = getLocaleMdoRef(documentContext, mdo).split("\\.");
+    if (names.length <= 1){
+      return "";
+    }
     return names[0].concat(".").concat(names[1]);
   }
 
