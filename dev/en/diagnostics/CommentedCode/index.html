@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -969,15 +969,15 @@
 <p>Software modules should not have commented out code fragments, as well as fragments, which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.) and with specific developers of this code.</p>
 <p>For example, it is unacceptable to leave such fragments in the code after debugging or refactoring is completed:</p>
 <p><div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
-    <span class="c c-Singleline">//If True Then</span>
-    <span class="c c-Singleline">//  Message(&quot;For debugging&quot;);</span>
-    <span class="c c-Singleline">//EndIf;</span>
+    <span class="c1">//If True Then</span>
+    <span class="c1">//  Message(&quot;For debugging&quot;);</span>
+    <span class="c1">//EndIf;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 also wrong:
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
     <span class="k">If</span> <span class="kc">True</span> <span class="k">Then</span>
-        <span class="c c-Singleline">// Ivanov: need fix</span>
+        <span class="c1">// Ivanov: need fix</span>
     <span class="k">EndIf</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div></p>
@@ -991,8 +991,8 @@ A code block is considered commented, if at least one line inside the block is d
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
-<span class="c c-Singleline">// BSLLS:CommentedCode-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CommentedCode-off</span>
+<span class="c1">// BSLLS:CommentedCode-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1066,7 +1066,7 @@ A code block is considered commented, if at least one line inside the block is d
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -971,18 +971,18 @@
 <p>This diagnostics checks that all possible paths of the function execution have an explicit Return statement and the function does not return unexpected values.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <h3 id="Incorrect">Incorrect<a class="headerlink" href="#Incorrect" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// if the rate is full, but not Tax10 not Tax10 - returns Undefined</span>
-<span class="c c-Singleline">// this could be error or planned behavior.</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// if the rate is full, but not Tax10 not Tax10 - returns Undefined</span>
+<span class="c1">// this could be error or planned behavior.</span>
 <span class="k">Function</span> <span class="nf">DefineTaxRate</span><span class="p">(</span><span class="k">Val</span> <span class="nv">Rate</span><span class="p">)</span>
-    <span class="k">If</span> <span class="nv">Rate</span> <span class="o">=</span> <span class=" -Class">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax20</span> <span class="k">Then</span>
+    <span class="k">If</span> <span class="nv">Rate</span> <span class="o">=</span> <span class="nc">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax20</span> <span class="k">Then</span>
         <span class="k">Return</span> <span class="m">20</span><span class="p">;</span>
-    <span class="k">ElsIf</span> <span class="nv">Rate</span> <span class="o">=</span> <span class=" -Class">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax10</span> <span class="k">Then</span>
+    <span class="k">ElsIf</span> <span class="nv">Rate</span> <span class="o">=</span> <span class="nc">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax10</span> <span class="k">Then</span>
         <span class="k">Return</span> <span class="m">10</span><span class="p">;</span>
     <span class="k">ElsIf</span> <span class="k">Not</span> <span class="nb">ValueIsFilled</span><span class="p">(</span><span class="nv">Rate</span><span class="p">)</span> <span class="k">Then</span>
-        <span class="k">Return</span> <span class=" -Class">Constants</span><span class="o">.</span><span class="nv">DefaultTaxRate</span><span class="o">.</span><span class="nf">Get</span><span class="p">();</span>
+        <span class="k">Return</span> <span class="nc">Constants</span><span class="o">.</span><span class="nv">DefaultTaxRate</span><span class="o">.</span><span class="nf">Get</span><span class="p">();</span>
     <span class="k">EndIf</span><span class="p">;</span>
 
-    <span class="c c-Singleline">// implicit return Undefined</span>
+    <span class="c1">// implicit return Undefined</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
 <h3 id="Correct">Correct<a class="headerlink" href="#Correct" title="Permanent link">&para;</a></h3>
@@ -1005,7 +1005,7 @@ EndFunction
     <span class="k">If</span> <span class="nv">OrderBasket</span><span class="o">.</span><span class="nv">Rows</span><span class="o">.</span><span class="nf">Count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="m">10</span> <span class="k">Then</span>
         <span class="k">Return</span> <span class="nv">Discounts</span><span class="o">.</span><span class="nf">DiscountOnBigBasket</span><span class="p">(</span><span class="nv">OrderBasket</span><span class="p">);</span>
     <span class="k">ElsIf</span> <span class="nv">OrderBasket</span><span class="o">.</span><span class="nv">IsCustomerCard</span> <span class="k">Then</span>
-        <span class="c c-Singleline">// function returns an unintended value is Undefined</span>
+        <span class="c1">// function returns an unintended value is Undefined</span>
         <span class="nv">Discounts</span><span class="o">.</span><span class="nf">DiscountByCustomerCard</span><span class="p">(</span><span class="nv">OrderBasket</span><span class="p">);</span>
     <span class="k">Else</span> 
         <span class="k">Return</span> <span class="m">0</span><span class="p">;</span>
@@ -1015,8 +1015,8 @@ EndFunction
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:AllFunctionPathMustHaveReturn-off</span>
-<span class="c c-Singleline">// BSLLS:AllFunctionPathMustHaveReturn-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:AllFunctionPathMustHaveReturn-off</span>
+<span class="c1">// BSLLS:AllFunctionPathMustHaveReturn-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;AllFunctionPathMustHaveReturn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1090,7 +1090,7 @@ EndFunction
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

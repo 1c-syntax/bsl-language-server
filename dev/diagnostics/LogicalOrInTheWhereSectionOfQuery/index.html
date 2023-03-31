@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -963,26 +963,26 @@
 <p>1) В основном условии оператор <code>ИЛИ</code> можно использовать только для последнего из используемых или единственного поля индекса, когда оператор <code>ИЛИ</code> можно заменить на оператор <code>В</code>.</p>
 <p>Правильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
-    <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="kd">&amp;Значение2</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="nd">&amp;Значение1</span>
+    <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="nd">&amp;Значение2</span>
 </code></pre></div>
 <p>т.к. можно переписать при помощи оператора <code>В</code> (специально переписывать не нужно, можно оставить, как есть):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="nf">В</span> <span class="p">(</span><span class="kd">&amp;Значения)</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="nf">В</span> <span class="p">(</span><span class="nd">&amp;Значения)</span>
 </code></pre></div>
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
-    <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение2</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="nd">&amp;Значение1</span>
+    <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="nd">&amp;Значение2</span>
 </code></pre></div>
 <p>нельзя переписать при помощи <code>В</code>, но можно переписать при помощи <code>ОБЪЕДИНИТЬ ВСЕ</code> (каждое поле Поле1 и Поле2 должны быть проиндексированы):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="nd">&amp;Значение1</span>
 
 <span class="nv">ОБЪЕДИНИТЬ</span> <span class="nv">ВСЕ</span>
 
 <span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="nd">&amp;Значение1</span>
 </code></pre></div>
 <blockquote>
 <p>Примечание: заменить <code>ИЛИ</code> на <code>ОБЪЕДИНИТЬ ВСЕ</code> можно не всегда, убедитесь, что результат будет действительно тем же, что и при <code>ИЛИ</code>, перед тем, как применять.</p>
@@ -990,20 +990,20 @@
 <p>2) В дополнительном условии оператор ИЛИ можно использовать без ограничений.</p>
 <p>Правильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1 // Основное условие (использует индекс)</span>
-    <span class="k">И</span> <span class="c c-Singleline">// Дополнительное условие (можно использовать ИЛИ)</span>
-    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение2 ИЛИ Таблица.Поле3 = &amp;Значение3)</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="nd">&amp;Значение1 // Основное условие (использует индекс)</span>
+    <span class="k">И</span> <span class="c1">// Дополнительное условие (можно использовать ИЛИ)</span>
+    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="nd">&amp;Значение2 ИЛИ Таблица.Поле3 = &amp;Значение3)</span>
 </code></pre></div>
 <p>Правильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1 ИЛИ Таблица.Поле1 = &amp;Значение2)</span>
+    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="nd">&amp;Значение1 ИЛИ Таблица.Поле1 = &amp;Значение2)</span>
     <span class="k">И</span>
-    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение3 ИЛИ Таблица.Поле2 = &amp;Значение4)</span>
+    <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="nd">&amp;Значение3 ИЛИ Таблица.Поле2 = &amp;Значение4)</span>
 </code></pre></div>
 <p>т.к. можно переписать при помощи В (специально переписывать не нужно, можно оставить, как есть):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
-    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="nf">В</span> <span class="p">(</span><span class="kd">&amp;Значения1)   // Основное условие</span>
-    <span class="k">И</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="nf">В</span> <span class="p">(</span><span class="kd">&amp;Значения2) // Дополнительное условие (или наоборот)</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="nf">В</span> <span class="p">(</span><span class="nd">&amp;Значения1)   // Основное условие</span>
+    <span class="k">И</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="nf">В</span> <span class="p">(</span><span class="nd">&amp;Значения2) // Дополнительное условие (или наоборот)</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -1016,8 +1016,8 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
-<span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
+<span class="c1">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;LogicalOrInTheWhereSectionOfQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
@@ -1088,7 +1088,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

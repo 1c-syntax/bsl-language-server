@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -988,41 +988,41 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">СерверныйМодульМенеджера</span><span class="p">(</span><span class="nv">Имя</span><span class="p">)</span>                                                   <span class="c c-Singleline">// 1</span>
-    <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                                <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-    <span class="nv">ЧастиИмени</span> <span class="o">=</span> <span class="nb">СтрРазделить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">);</span>                                                <span class="c c-Singleline">// 0</span>
-    <span class="k">Если</span> <span class="nv">ЧастиИмени</span><span class="o">.</span><span class="nf">Количество</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Тогда</span>                                              <span class="c c-Singleline">// 1</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-        <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                  <span class="c c-Singleline">// 0</span>
-        <span class="nv">ИмяОбъекта</span> <span class="o">=</span> <span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                     <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-        <span class="k">Если</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;Константы&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                                          <span class="c c-Singleline">// 1</span>
-            <span class="k">Если</span> <span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">Константы</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>           <span class="c c-Singleline">// 1</span>
-                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c c-Singleline">// 0</span>
-            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c c-Singleline">// 0</span>
-        <span class="k">ИначеЕсли</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;РегистрыСведений&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                              <span class="c c-Singleline">// 1</span>
-            <span class="k">Если</span> <span class=" -Class">Метаданные</span><span class="o">.</span><span class="nv">РегистрыСведений</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>    <span class="c c-Singleline">// 1</span>
-                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c c-Singleline">// 0</span>
-            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c c-Singleline">// 0</span>
-        <span class="k">Иначе</span>                                                                           <span class="c c-Singleline">// 1</span>
-            <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                        <span class="c c-Singleline">// 0</span>
-        <span class="k">КонецЕсли</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
-    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-    <span class="k">Если</span> <span class="k">Не</span> <span class="nv">ОбъектНайден</span> <span class="k">Тогда</span>                                                          <span class="c c-Singleline">// 1</span>
-        <span class="k">ВызватьИсключение</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nf">ПодставитьПараметрыВСтроку</span><span class="p">(</span>      <span class="c c-Singleline">// 0</span>
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">СерверныйМодульМенеджера</span><span class="p">(</span><span class="nv">Имя</span><span class="p">)</span>                                                   <span class="c1">// 1</span>
+    <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                                <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+    <span class="nv">ЧастиИмени</span> <span class="o">=</span> <span class="nb">СтрРазделить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">);</span>                                                <span class="c1">// 0</span>
+    <span class="k">Если</span> <span class="nv">ЧастиИмени</span><span class="o">.</span><span class="nf">Количество</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Тогда</span>                                              <span class="c1">// 1</span>
+                                                                                        <span class="c1">// 0</span>
+        <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                  <span class="c1">// 0</span>
+        <span class="nv">ИмяОбъекта</span> <span class="o">=</span> <span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                     <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+        <span class="k">Если</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;Константы&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                                          <span class="c1">// 1</span>
+            <span class="k">Если</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Константы</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>           <span class="c1">// 1</span>
+                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c1">// 0</span>
+            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c1">// 0</span>
+        <span class="k">ИначеЕсли</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;РегистрыСведений&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                              <span class="c1">// 1</span>
+            <span class="k">Если</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">РегистрыСведений</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>    <span class="c1">// 1</span>
+                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c1">// 0</span>
+            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c1">// 0</span>
+        <span class="k">Иначе</span>                                                                           <span class="c1">// 1</span>
+            <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                        <span class="c1">// 0</span>
+        <span class="k">КонецЕсли</span><span class="p">;</span>                                                                      <span class="c1">// 0</span>
+    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+    <span class="k">Если</span> <span class="k">Не</span> <span class="nv">ОбъектНайден</span> <span class="k">Тогда</span>                                                          <span class="c1">// 1</span>
+        <span class="k">ВызватьИсключение</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nf">ПодставитьПараметрыВСтроку</span><span class="p">(</span>      <span class="c1">// 0</span>
             <span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;ru = &#39;Объект метаданных &quot;&quot;%1&quot;&quot; не найден,                             // 0</span>
-                       <span class="s">|либо для него не поддерживается получение модуля менеджера.&#39;&quot;</span><span class="p">),</span> <span class="c c-Singleline">// 0</span>
-            <span class="nv">Имя</span><span class="p">);</span>                                                                       <span class="c c-Singleline">// 0</span>
-    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c c-Singleline">// 0</span>
-    <span class="nb">УстановитьБезопасныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span>                                                  <span class="c c-Singleline">// 0</span>
-    <span class="nv">Модуль</span> <span class="o">=</span> <span class="nb">Вычислить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">);</span>                                                            <span class="c c-Singleline">// 0</span>
-    <span class="nv">F</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">);</span>                                               <span class="c c-Singleline">// 1</span>
-    <span class="nv">А</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие2</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">));</span>                            <span class="c c-Singleline">// 2</span>
-    <span class="nv">M</span> <span class="o">=</span> <span class="kc">ИСТИНА</span> <span class="k">ИЛИ</span> <span class="m">7</span><span class="p">;</span>                                                                   <span class="c c-Singleline">// 1</span>
-    <span class="k">Возврат</span> <span class="nv">Модуль</span><span class="p">;</span>                                                                     <span class="c c-Singleline">// 0</span>
-<span class="k">КонецФункции</span>                                                                            <span class="c c-Singleline">// итог 12</span>
+                       <span class="s">|либо для него не поддерживается получение модуля менеджера.&#39;&quot;</span><span class="p">),</span> <span class="c1">// 0</span>
+            <span class="nv">Имя</span><span class="p">);</span>                                                                       <span class="c1">// 0</span>
+    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c1">// 0</span>
+    <span class="nb">УстановитьБезопасныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span>                                                  <span class="c1">// 0</span>
+    <span class="nv">Модуль</span> <span class="o">=</span> <span class="nb">Вычислить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">);</span>                                                            <span class="c1">// 0</span>
+    <span class="nv">F</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">);</span>                                               <span class="c1">// 1</span>
+    <span class="nv">А</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие2</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">));</span>                            <span class="c1">// 2</span>
+    <span class="nv">M</span> <span class="o">=</span> <span class="kc">ИСТИНА</span> <span class="k">ИЛИ</span> <span class="m">7</span><span class="p">;</span>                                                                   <span class="c1">// 1</span>
+    <span class="k">Возврат</span> <span class="nv">Модуль</span><span class="p">;</span>                                                                     <span class="c1">// 0</span>
+<span class="k">КонецФункции</span>                                                                            <span class="c1">// итог 12</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -1034,8 +1034,8 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CyclomaticComplexity-off</span>
-<span class="c c-Singleline">// BSLLS:CyclomaticComplexity-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CyclomaticComplexity-off</span>
+<span class="c1">// BSLLS:CyclomaticComplexity-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;CyclomaticComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1109,7 +1109,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

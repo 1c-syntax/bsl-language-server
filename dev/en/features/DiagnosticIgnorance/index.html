@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -989,48 +989,48 @@ The escaping comment is formed as follows: <code>[Prefix][:DiagnosticKey]-[Activ
 <p>For disable specific diagnostics in the module (for example, the cognitive complexity <code>CognitiveComplexity</code> and size limit of the method <code>MethodSize</code>), you must insert the comment <code>// BSLLS:CognitiveComplexity-off</code> and <code>// BSLLS:MethodSize-off</code> (or <code>// BSLLS:CognitiveComplexity-выкл</code> and <code>// BSLLS:MethodSize-выкл</code>)</p>
 <h3 id="Disable-all-diagnostics-for-code-block">Disable all diagnostics for code block<a class="headerlink" href="#Disable-all-diagnostics-for-code-block" title="Permanent link">&para;</a></h3>
 <p>If you want to disable diagnostics for a section of code, leaving the BSL LS option to analyze the remaining ones, you must <code>wrap</code> the hidden section of code</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS-off</span>
 <span class="k">Procedure</span> <span class="nf">SkipByBSLLS</span><span class="p">()</span>
-    <span class="c c-Singleline">// content will be ignored</span>
+    <span class="c1">// content will be ignored</span>
 <span class="k">EndProcedure</span>
-<span class="c c-Singleline">// BSLLS-on</span>
+<span class="c1">// BSLLS-on</span>
 
 <span class="k">Procedure</span> <span class="nf">AnalyzeByBSLLS</span><span class="p">()</span>
-    <span class="c c-Singleline">// content will be  analyzed</span>
+    <span class="c1">// content will be  analyzed</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <h3 id="Disable-specific-diagnostics-for-code-block">Disable specific diagnostics for code block<a class="headerlink" href="#Disable-specific-diagnostics-for-code-block" title="Permanent link">&para;</a></h3>
 <p>If you need to disable specific diagnostics (for example, the cognitive complexity <code>CognitiveComplexity</code> and the limit on the size of the method <code>MethodSize</code>) for a section of code, you must <code>wrap</code> the hidden section of code for example</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:MethodSize-off</span>
 <span class="k">Procedure</span> <span class="nf">SkipedByMethodSizeMethod</span><span class="p">()</span>
-    <span class="c c-Singleline">// Very long code block</span>
+    <span class="c1">// Very long code block</span>
 <span class="k">EndProcedure</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+<span class="c1">// BSLLS:MethodSize-on</span>
 
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<span class="c1">// BSLLS:CognitiveComplexity-off</span>
 <span class="k">Procedure</span> <span class="nf">SkipedByCognitiveComplexityMethod</span><span class="p">()</span>
-    <span class="c c-Singleline">// Very long and complexity code block</span>
+    <span class="c1">// Very long and complexity code block</span>
 <span class="k">EndProcedure</span>
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+<span class="c1">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
 <p>Embedding <code>wrappers</code>, is supported, i.e. it is possible to escape a block of code from several diagnostics, for example</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CognitiveComplexity-off</span>
+<span class="c1">// BSLLS:MethodSize-off</span>
 <span class="k">Procedure</span> <span class="nf">SkipedByMethodSizeCognitiveComplexityMethod</span><span class="p">()</span>
-    <span class="c c-Singleline">// Very long code block</span>
+    <span class="c1">// Very long code block</span>
 <span class="k">EndProcedure</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+<span class="c1">// BSLLS:MethodSize-on</span>
 
 <span class="k">Procedure</span> <span class="nf">SkipedByCognitiveComplexityПроцедура</span><span class="p">()</span>
-   <span class="c c-Singleline">// Very complex and incomprehensible code block, but not long</span>
+   <span class="c1">// Very complex and incomprehensible code block, but not long</span>
 <span class="k">EndProcedure</span>
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+<span class="c1">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
 <h3 id="Disable-single-line-diagnostics">Disable single line diagnostics<a class="headerlink" href="#Disable-single-line-diagnostics" title="Permanent link">&para;</a></h3>
 <p>To escape a single line, you can use <code>wrapper</code> as in the example above, but it is more convenient to use <code>inline comment</code>, i.e. the comment located at the end of the line, example</p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">SomeMethode</span><span class="p">()</span>
-    <span class="k">if</span> <span class="kc">true</span> <span class="k">then</span><span class="c c-Singleline">// BSLLS:CanonicalSpellingKeywords-off</span>
-        <span class="c c-Singleline">// Analized content</span>
+    <span class="k">if</span> <span class="kc">true</span> <span class="k">then</span><span class="c1">// BSLLS:CanonicalSpellingKeywords-off</span>
+        <span class="c1">// Analized content</span>
     <span class="k">EndIf</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
@@ -1100,7 +1100,7 @@ The escaping comment is formed as follows: <code>[Prefix][:DiagnosticKey]-[Activ
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

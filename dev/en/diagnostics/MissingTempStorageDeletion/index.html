@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -982,7 +982,7 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>1 - Example of correct code:
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">ПриОбработкеПодобранныхТоваров</span><span class="p">(</span><span class="nv">Элемент</span><span class="p">,</span> <span class="nv">АдресТоваровВХранилище</span><span class="p">,</span> <span class="nv">СтандартнаяОбработка</span><span class="p">)</span> <span class="k">Экспорт</span>
     <span class="k">Если</span> <span class="nv">АдресТоваровВХранилище</span> <span class="o">=</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>
         <span class="k">Возврат</span><span class="p">;</span>
@@ -990,12 +990,12 @@
     <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span> 
 <span class="k">КонецПроцедуры</span>
 
-<span class="kd">&amp;НаСервере</span>
+<span class="nd">&amp;НаСервере</span>
 <span class="k">Процедура</span> <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">)</span>
     <span class="nv">ПодобранныеТовары</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span>
     <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Загрузить</span><span class="p">(</span><span class="nv">ПодобранныеТовары</span><span class="p">);</span>
 
-    <span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровДокумента</span><span class="p">);</span> <span class="c c-Singleline">// очищается временное хранилище для минимизации расхода оперативной памяти</span>
+    <span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровДокумента</span><span class="p">);</span> <span class="c1">// очищается временное хранилище для минимизации расхода оперативной памяти</span>
 <span class="k">КонецПроцедуры</span> 
 </code></pre></div></p>
 <p>2 - Consider this recommendation when working with background jobs</p>
@@ -1010,19 +1010,19 @@
 </ul>
 <p>Correct:
 <div class="highlight"><pre><span></span><code><span class="nv">Настройки</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">Результат</span><span class="o">.</span><span class="nv">АдресРезультата</span><span class="p">);</span>
-<span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">Результат</span><span class="o">.</span><span class="nv">АдресРезультата</span><span class="p">);</span>  <span class="c c-Singleline">// Данные во временном хранилище больше не требуются.</span>
+<span class="nb">УдалитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">Результат</span><span class="o">.</span><span class="nv">АдресРезультата</span><span class="p">);</span>  <span class="c1">// Данные во временном хранилище больше не требуются.</span>
 </code></pre></div></p>
 <ul>
 <li>If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;AtServer</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtServer</span>
 <span class="k">Процедура</span> <span class="nf">ПриСозданииНаСервере</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
-    <span class="nv">АдресРезультатаФоновогоЗадания</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c c-Singleline">// Резервируем адрес временного хранилища</span>
+    <span class="nv">АдресРезультатаФоновогоЗадания</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c1">// Резервируем адрес временного хранилища</span>
 <span class="k">EndProcedure</span>
 
-<span class="kd">&amp;НаСервере</span>
+<span class="nd">&amp;НаСервере</span>
 <span class="k">Функция</span> <span class="nf">НачатьПоискНастроекУчетнойЗаписи</span><span class="p">()</span>
     <span class="nv">ПараметрыВыполнения</span> <span class="o">=</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ПараметрыВыполненияФункции</span><span class="p">(</span><span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
-    <span class="nv">ПараметрыВыполнения</span><span class="o">.</span><span class="nv">АдресРезультата</span> <span class="o">=</span> <span class="nv">АдресРезультатаФоновогоЗадания</span><span class="p">;</span> <span class="c c-Singleline">// всегда используем одно и то же временное хранилище</span>
+    <span class="nv">ПараметрыВыполнения</span><span class="o">.</span><span class="nv">АдресРезультата</span> <span class="o">=</span> <span class="nv">АдресРезультатаФоновогоЗадания</span><span class="p">;</span> <span class="c1">// всегда используем одно и то же временное хранилище</span>
 
     <span class="k">Возврат</span> <span class="nv">ДлительныеОперации</span><span class="o">.</span><span class="nf">ВыполнитьФункцию</span><span class="p">(</span><span class="nv">ПараметрыВыполнения</span><span class="p">,</span>
         <span class="s">&quot;Справочники.УчетныеЗаписиЭлектроннойПочты.ОпределитьНастройкиУчетнойЗаписи&quot;</span><span class="p">,</span>
@@ -1031,20 +1031,20 @@
 </code></pre></div></li>
 </ul>
 <p>3 - Another example of preliminary initialization of temporary storage for reuse</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// в форме документа</span>
-<span class="kd">&amp;НаСервере</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// в форме документа</span>
+<span class="nd">&amp;НаСервере</span>
 <span class="k">Процедура</span> <span class="nf">ПриСозданииНаСервере</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
-    <span class="nv">АдресТоваров</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c c-Singleline">// Инициализируется реквизит формы</span>
+    <span class="nv">АдресТоваров</span> <span class="o">=</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="kc">Неопределено</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span> <span class="c1">// Инициализируется реквизит формы</span>
 <span class="k">КонецПроцедуры</span>
 
-<span class="kd">&amp;НаСервере</span>
+<span class="nd">&amp;НаСервере</span>
 <span class="k">Функция</span> <span class="nf">ТоварыВоВременномХранилище</span><span class="p">()</span>
     <span class="k">Возврат</span> <span class="nb">ПоместитьВоВременноеХранилище</span><span class="p">(</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Выгрузить</span><span class="p">(),</span> <span class="nv">АдресТоваров</span><span class="p">);</span>
 <span class="k">КонецФункции</span>
 
-<span class="c c-Singleline">// и далее при переиспользовании временного хранилища не требуется удалять значение из временного хранилища:</span>
+<span class="c1">// и далее при переиспользовании временного хранилища не требуется удалять значение из временного хранилища:</span>
 
-<span class="kd">&amp;НаСервере</span>
+<span class="nd">&amp;НаСервере</span>
 <span class="k">Процедура</span> <span class="nf">ПолучитьТоварыИзХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">)</span>
     <span class="nv">ПодобранныеТовары</span> <span class="o">=</span> <span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресТоваровВХранилище</span><span class="p">);</span>
     <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="o">.</span><span class="nf">Загрузить</span><span class="p">(</span><span class="nv">ПодобранныеТовары</span><span class="p">);</span>
@@ -1066,8 +1066,8 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingTempStorageDeletion-off</span>
-<span class="c c-Singleline">// BSLLS:MissingTempStorageDeletion-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:MissingTempStorageDeletion-off</span>
+<span class="c1">// BSLLS:MissingTempStorageDeletion-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingTempStorageDeletion&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
@@ -1138,7 +1138,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

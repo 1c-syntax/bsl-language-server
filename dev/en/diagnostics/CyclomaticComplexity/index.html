@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -987,41 +987,41 @@ Cyclomatic complexity shows the minimum number of required tests. The most effec
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">ServerModuleManager</span><span class="p">(</span><span class="nv">Name</span><span class="p">)</span>                                                      <span class="c c-Singleline">// 1</span>
-    <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>                                                              <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-    <span class="nv">NameParts</span> <span class="o">=</span> <span class="nb">StrSplit</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">);</span>                                                    <span class="c c-Singleline">// 0</span>
-    <span class="k">If</span> <span class="nv">NameParts</span><span class="o">.</span><span class="nf">Count</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>                                                       <span class="c c-Singleline">// 1</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-        <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="nv">NameParts</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                 <span class="c c-Singleline">// 0</span>
-        <span class="nv">ObjectName</span> <span class="o">=</span> <span class="nv">NameParts</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                      <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-        <span class="k">If</span> <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="s">&quot;Constants&quot;</span><span class="p">)</span> <span class="k">Then</span>                                           <span class="c c-Singleline">// 1</span>
-            <span class="k">If</span> <span class=" -Class">Metadata</span><span class="o">.</span><span class="nv">Constants</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">ObjectName</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span> <span class="k">Then</span>                    <span class="c c-Singleline">// 1</span>
-                <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>                                                   <span class="c c-Singleline">// 0</span>
-            <span class="k">EndIf</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
-        <span class="k">ElsIf</span> <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="s">&quot;InformationRegisters&quot;</span><span class="p">)</span> <span class="k">Then</span>                            <span class="c c-Singleline">// 1</span>
-            <span class="k">If</span> <span class=" -Class">Metadata</span><span class="o">.</span><span class="nv">InformationRegisters</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">ObjectName</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span> <span class="k">Then</span>         <span class="c c-Singleline">// 1</span>
-                <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>                                                   <span class="c c-Singleline">// 0</span>
-            <span class="k">EndIf</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
-        <span class="k">Else</span>                                                                            <span class="c c-Singleline">// 1</span>
-            <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>                                                      <span class="c c-Singleline">// 0</span>
-        <span class="k">EndIf</span><span class="p">;</span>                                                                          <span class="c c-Singleline">// 0</span>
-    <span class="k">EndIf</span><span class="p">;</span>                                                                              <span class="c c-Singleline">// 0</span>
-                                                                                        <span class="c c-Singleline">// 0</span>
-    <span class="k">If</span> <span class="k">Not</span> <span class="nv">ObjectFounded</span> <span class="k">Then</span>                                                           <span class="c c-Singleline">// 1</span>
-        <span class="k">Raise</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nf">ПодставитьПараметрыВСтроку</span><span class="p">(</span>                  <span class="c c-Singleline">// 0</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">ServerModuleManager</span><span class="p">(</span><span class="nv">Name</span><span class="p">)</span>                                                      <span class="c1">// 1</span>
+    <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>                                                              <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+    <span class="nv">NameParts</span> <span class="o">=</span> <span class="nb">StrSplit</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">);</span>                                                    <span class="c1">// 0</span>
+    <span class="k">If</span> <span class="nv">NameParts</span><span class="o">.</span><span class="nf">Count</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>                                                       <span class="c1">// 1</span>
+                                                                                        <span class="c1">// 0</span>
+        <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="nv">NameParts</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                 <span class="c1">// 0</span>
+        <span class="nv">ObjectName</span> <span class="o">=</span> <span class="nv">NameParts</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                      <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+        <span class="k">If</span> <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="s">&quot;Constants&quot;</span><span class="p">)</span> <span class="k">Then</span>                                           <span class="c1">// 1</span>
+            <span class="k">If</span> <span class="nc">Metadata</span><span class="o">.</span><span class="nv">Constants</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">ObjectName</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span> <span class="k">Then</span>                    <span class="c1">// 1</span>
+                <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>                                                   <span class="c1">// 0</span>
+            <span class="k">EndIf</span><span class="p">;</span>                                                                      <span class="c1">// 0</span>
+        <span class="k">ElsIf</span> <span class="nv">TypeName</span> <span class="o">=</span> <span class="nb">Upper</span><span class="p">(</span><span class="s">&quot;InformationRegisters&quot;</span><span class="p">)</span> <span class="k">Then</span>                            <span class="c1">// 1</span>
+            <span class="k">If</span> <span class="nc">Metadata</span><span class="o">.</span><span class="nv">InformationRegisters</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">ObjectName</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span> <span class="k">Then</span>         <span class="c1">// 1</span>
+                <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>                                                   <span class="c1">// 0</span>
+            <span class="k">EndIf</span><span class="p">;</span>                                                                      <span class="c1">// 0</span>
+        <span class="k">Else</span>                                                                            <span class="c1">// 1</span>
+            <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>                                                      <span class="c1">// 0</span>
+        <span class="k">EndIf</span><span class="p">;</span>                                                                          <span class="c1">// 0</span>
+    <span class="k">EndIf</span><span class="p">;</span>                                                                              <span class="c1">// 0</span>
+                                                                                        <span class="c1">// 0</span>
+    <span class="k">If</span> <span class="k">Not</span> <span class="nv">ObjectFounded</span> <span class="k">Then</span>                                                           <span class="c1">// 1</span>
+        <span class="k">Raise</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nf">ПодставитьПараметрыВСтроку</span><span class="p">(</span>                  <span class="c1">// 0</span>
             <span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;ru = &#39;Объект метаданных &quot;&quot;%1&quot;&quot; не найден,                             // 0</span>
-                       <span class="s">|либо для него не поддерживается получение модуля менеджера.&#39;&quot;</span><span class="p">),</span> <span class="c c-Singleline">// 0</span>
-            <span class="nv">Name</span><span class="p">);</span>                                                                      <span class="c c-Singleline">// 0</span>
-    <span class="k">EndIf</span><span class="p">;</span>                                                                              <span class="c c-Singleline">// 0</span>
-    <span class="nb">SetSafeMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span>                                                                  <span class="c c-Singleline">// 0</span>
-    <span class="nv">Module</span> <span class="o">=</span> <span class="nb">Eval</span><span class="p">(</span><span class="nv">Name</span><span class="p">);</span>                                                                <span class="c c-Singleline">// 0</span>
-    <span class="nv">F</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition1</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">Undefined</span><span class="p">);</span>                                             <span class="c c-Singleline">// 1</span>
-    <span class="nv">А</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition1</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition2</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">Undefined</span><span class="p">));</span>                   <span class="c c-Singleline">// 2</span>
-    <span class="nv">M</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">Or</span> <span class="m">7</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 1</span>
-    <span class="k">Return</span> <span class="nv">Module</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
-<span class="k">EndFunction</span>                                                                              <span class="c c-Singleline">// Total 12</span>
+                       <span class="s">|либо для него не поддерживается получение модуля менеджера.&#39;&quot;</span><span class="p">),</span> <span class="c1">// 0</span>
+            <span class="nv">Name</span><span class="p">);</span>                                                                      <span class="c1">// 0</span>
+    <span class="k">EndIf</span><span class="p">;</span>                                                                              <span class="c1">// 0</span>
+    <span class="nb">SetSafeMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span>                                                                  <span class="c1">// 0</span>
+    <span class="nv">Module</span> <span class="o">=</span> <span class="nb">Eval</span><span class="p">(</span><span class="nv">Name</span><span class="p">);</span>                                                                <span class="c1">// 0</span>
+    <span class="nv">F</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition1</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">Undefined</span><span class="p">);</span>                                             <span class="c1">// 1</span>
+    <span class="nv">А</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition1</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">SomeCondition2</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">Undefined</span><span class="p">));</span>                   <span class="c1">// 2</span>
+    <span class="nv">M</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">Or</span> <span class="m">7</span><span class="p">;</span>                                                                      <span class="c1">// 1</span>
+    <span class="k">Return</span> <span class="nv">Module</span><span class="p">;</span>                                                                      <span class="c1">// 0</span>
+<span class="k">EndFunction</span>                                                                              <span class="c1">// Total 12</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -1033,8 +1033,8 @@ Cyclomatic complexity shows the minimum number of required tests. The most effec
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CyclomaticComplexity-off</span>
-<span class="c c-Singleline">// BSLLS:CyclomaticComplexity-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CyclomaticComplexity-off</span>
+<span class="c1">// BSLLS:CyclomaticComplexity-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;CyclomaticComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1108,7 +1108,7 @@ Cyclomatic complexity shows the minimum number of required tests. The most effec
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

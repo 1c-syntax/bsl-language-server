@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -964,14 +964,14 @@
 <p>При необходимости передавать в функцию большое число параметров рекомендуется группировать однотипные параметры в один или несколько составных параметров типа Структура.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nf">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ТоварУслуга</span><span class="p">,</span> <span class="nv">ЕдиницаИзмерения</span><span class="p">,</span> <span class="nv">ВесНетто</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 <p>Правильно:<br />
 Cгруппировать параметры, описывающие значения реквизитов номенклатуры, в структуру ЗначенияРеквизитов.</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nf">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">ЗначенияРеквизитов</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
@@ -982,8 +982,8 @@ Cгруппировать параметры, описывающие значе�
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfParams-off</span>
-<span class="c c-Singleline">// BSLLS:NumberOfParams-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:NumberOfParams-off</span>
+<span class="c1">// BSLLS:NumberOfParams-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfParams&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1056,7 +1056,7 @@ Cгруппировать параметры, описывающие значе�
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

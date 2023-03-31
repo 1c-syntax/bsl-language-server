@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -972,117 +972,117 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <h3 id="Cognitive-Complexity-calculation">Cognitive Complexity calculation<a class="headerlink" href="#Cognitive-Complexity-calculation" title="Permanent link">&para;</a></h3>
 <p>Bellow are given code analysis rules, conditions increase cognitive complexity.</p>
 <h4 id="Each-next-block-increases-complexity-by-1">Each next block increases complexity by 1<a class="headerlink" href="#Each-next-block-increases-complexity-by-1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
-<span class="k">For</span> <span class="k">Each</span> <span class="nv">Element</span> <span class="k">in</span> <span class="nv">Collection</span> <span class="k">Do</span>                    <span class="c c-Singleline">// +1</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Loop `For each`</span>
+<span class="k">For</span> <span class="k">Each</span> <span class="nv">Element</span> <span class="k">in</span> <span class="nv">Collection</span> <span class="k">Do</span>                    <span class="c1">// +1</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Loop `For`</span>
-<span class="k">For</span> <span class="nv">i</span> <span class="o">=</span> <span class="nv">StartValue</span> <span class="k">To</span> <span class="nv">EndValue</span> <span class="k">Do</span>                    <span class="c c-Singleline">// +1</span>
+<span class="c1">// Loop `For`</span>
+<span class="k">For</span> <span class="nv">i</span> <span class="o">=</span> <span class="nv">StartValue</span> <span class="k">To</span> <span class="nv">EndValue</span> <span class="k">Do</span>                    <span class="c1">// +1</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Loop `While`</span>
-<span class="k">While</span> <span class="nv">Condition</span> <span class="k">Do</span>                                   <span class="c c-Singleline">// +1</span>
+<span class="c1">// Loop `While`</span>
+<span class="k">While</span> <span class="nv">Condition</span> <span class="k">Do</span>                                   <span class="c1">// +1</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
 
-<span class="c c-Singleline">// Condition</span>
-<span class="k">If</span> <span class="nv">Condition1</span> <span class="k">Then</span>                                   <span class="c c-Singleline">// +1</span>
+<span class="c1">// Condition</span>
+<span class="k">If</span> <span class="nv">Condition1</span> <span class="k">Then</span>                                   <span class="c1">// +1</span>
 
-<span class="c c-Singleline">// Alternative condition branch</span>
-<span class="nv">ElseIf</span> <span class="nv">Condition2</span> <span class="k">Then</span>                               <span class="c c-Singleline">// +1</span>
+<span class="c1">// Alternative condition branch</span>
+<span class="nv">ElseIf</span> <span class="nv">Condition2</span> <span class="k">Then</span>                               <span class="c1">// +1</span>
 
-<span class="c c-Singleline">// default branch</span>
+<span class="c1">// default branch</span>
 <span class="k">Else</span>
 <span class="k">EndIf</span><span class="p">;</span>
 
-<span class="c c-Singleline">// ternary operator</span>
-<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>         <span class="c c-Singleline">// +1</span>
+<span class="c1">// ternary operator</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>         <span class="c1">// +1</span>
 
 <span class="k">Try</span>
-<span class="c c-Singleline">// Exception handling</span>
-<span class="k">Except</span>                                               <span class="c c-Singleline">// +1</span>
+<span class="c1">// Exception handling</span>
+<span class="k">Except</span>                                               <span class="c1">// +1</span>
 <span class="k">EndTry</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Go to label</span>
-<span class="k">Goto</span> <span class=" -Label">~Label;                                          // +1</span>
+<span class="c1">// Go to label</span>
+<span class="k">Goto</span> <span class="nl">~Label</span><span class="p">;</span>                                          <span class="c1">// +1</span>
 
-<span class="c c-Singleline">// Binary logical operations</span>
+<span class="c1">// Binary logical operations</span>
 
-<span class="k">While</span> <span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Do</span>                    <span class="c c-Singleline">// +2</span>
+<span class="k">While</span> <span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Do</span>                    <span class="c1">// +2</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="k">If</span> <span class="nv">Condition1</span> <span class="k">And</span> <span class="nv">Condition2</span> <span class="k">Then</span>                    <span class="c c-Singleline">// +2</span>
+<span class="k">If</span> <span class="nv">Condition1</span> <span class="k">And</span> <span class="nv">Condition2</span> <span class="k">Then</span>                    <span class="c1">// +2</span>
 
-<span class="nv">ElseIf</span> <span class="nv">Condition2</span>                                    <span class="c c-Singleline">// +1</span>
-        <span class="k">Or</span> <span class="nv">Condition3</span> <span class="k">And</span> <span class="nv">Condition4</span> <span class="k">Then</span>            <span class="c c-Singleline">// +2</span>
+<span class="nv">ElseIf</span> <span class="nv">Condition2</span>                                    <span class="c1">// +1</span>
+        <span class="k">Or</span> <span class="nv">Condition3</span> <span class="k">And</span> <span class="nv">Condition4</span> <span class="k">Then</span>            <span class="c1">// +2</span>
 
 <span class="k">EndIf</span><span class="p">;</span>
 
-<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Or</span> <span class="k">Not</span> <span class="nv">Condition3</span><span class="p">,</span><span class="c c-Singleline">// +3</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Or</span> <span class="k">Not</span> <span class="nv">Condition3</span><span class="p">,</span><span class="c1">// +3</span>
                 <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
 
-<span class="nv">Value</span> <span class="o">=</span> <span class="nv">First</span> <span class="k">Or</span> <span class="nv">Second</span><span class="p">;</span>                             <span class="c c-Singleline">// +1</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="nv">First</span> <span class="k">Or</span> <span class="nv">Second</span><span class="p">;</span>                             <span class="c1">// +1</span>
 
-<span class="nv">Value</span> <span class="o">=</span> <span class="nv">A</span> <span class="o">&lt;&gt;</span> <span class="nv">B</span><span class="p">;</span>                                      <span class="c c-Singleline">// +1</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="nv">A</span> <span class="o">&lt;&gt;</span> <span class="nv">B</span><span class="p">;</span>                                      <span class="c1">// +1</span>
 </code></pre></div>
 <h4 id="For-each-nesting-level-next-blocks-get-additional-1-to-complexity">For each nesting level, next blocks get additional 1 to complexity<a class="headerlink" href="#For-each-nesting-level-next-blocks-get-additional-1-to-complexity" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Loop `For each`</span>
 <span class="k">For</span> <span class="k">Each</span> <span class="nv">Element</span> <span class="k">in</span> <span class="nv">Collection</span> <span class="k">Do</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Loop `For`</span>
+<span class="c1">// Loop `For`</span>
 <span class="k">For</span> <span class="nv">i</span> <span class="o">=</span> <span class="nv">StartValue</span> <span class="k">To</span> <span class="nv">EndValue</span> <span class="k">Do</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Loop `While`</span>
+<span class="c1">// Loop `While`</span>
 <span class="k">While</span> <span class="nv">Condition</span> <span class="k">Do</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
-<span class="c c-Singleline">// Condition</span>
+<span class="c1">// Condition</span>
 <span class="k">If</span> <span class="nv">Condition1</span> <span class="k">Then</span>
 <span class="k">EndIf</span><span class="p">;</span>
 
-<span class="c c-Singleline">// ternary operator</span>
+<span class="c1">// ternary operator</span>
 <span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
 
 <span class="k">Try</span>
-<span class="c c-Singleline">// Exception handling</span>
+<span class="c1">// Exception handling</span>
 <span class="k">Except</span>
 <span class="k">EndTry</span><span class="p">;</span>
 
-<span class=" -Label">~Label:</span>
+<span class="nl">~Label</span><span class="p">:</span>
 </code></pre></div>
 <h4 id="Alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested">Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested<a class="headerlink" href="#Alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested" title="Permanent link">&para;</a></h4>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bellow are code examples and their cognitive complexity calculation.</p>
 <div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">Example1</span><span class="p">(</span><span class="nv">ClassType</span><span class="p">)</span>
-    <span class="k">If</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nf">Unknown</span><span class="p">()</span> <span class="k">Then</span>                                                  <span class="c c-Singleline">// +1, condition expression, no nesting</span>
+    <span class="k">If</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nf">Unknown</span><span class="p">()</span> <span class="k">Then</span>                                                  <span class="c1">// +1, condition expression, no nesting</span>
         <span class="k">Return</span> <span class="nv">Chars</span><span class="o">.</span><span class="nv">UnknownSymbol</span><span class="p">;</span>
     <span class="k">EndIf</span><span class="p">;</span>
 
     <span class="nv">AmbiguityFound</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>
     <span class="nv">ListSymbols</span> <span class="o">=</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nf">GetSymbol</span><span class="p">()</span><span class="o">.</span><span class="nv">Children</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">);</span>
     <span class="k">For</span> <span class="k">Each</span> <span class="nv">Symbol</span> <span class="k">in</span> <span class="nv">ListSymbols</span> <span class="k">Do</span>
-<span class="c c-Singleline">// +1, loop, no nesting</span>
-        <span class="k">If</span> <span class="nv">Symbol</span><span class="o">.</span><span class="nf">HasType</span><span class="p">(</span><span class="nv">Symbols</span><span class="o">.</span><span class="nv">Strage</span><span class="p">)</span>                                         <span class="c c-Singleline">// +2, condition nested in loop, nesting 1</span>
-            <span class="k">AND</span> <span class="k">NOT</span> <span class="nv">Symbols</span><span class="o">.</span><span class="nf">Export</span><span class="p">()</span> <span class="k">Then</span>                                            <span class="c c-Singleline">// +1, logival operation, nesting not taken into account</span>
+<span class="c1">// +1, loop, no nesting</span>
+        <span class="k">If</span> <span class="nv">Symbol</span><span class="o">.</span><span class="nf">HasType</span><span class="p">(</span><span class="nv">Symbols</span><span class="o">.</span><span class="nv">Strage</span><span class="p">)</span>                                         <span class="c1">// +2, condition nested in loop, nesting 1</span>
+            <span class="k">AND</span> <span class="k">NOT</span> <span class="nv">Symbols</span><span class="o">.</span><span class="nf">Export</span><span class="p">()</span> <span class="k">Then</span>                                            <span class="c1">// +1, logival operation, nesting not taken into account</span>
 
-            <span class="k">If</span> <span class="nf">CanOverride</span><span class="p">(</span><span class="nv">Symbol</span><span class="p">)</span> <span class="k">Then</span>                                     <span class="c c-Singleline">// +3, nested condition, nesting 2</span>
+            <span class="k">If</span> <span class="nf">CanOverride</span><span class="p">(</span><span class="nv">Symbol</span><span class="p">)</span> <span class="k">Then</span>                                     <span class="c1">// +3, nested condition, nesting 2</span>
                 <span class="nv">Overrideability</span> <span class="o">=</span> <span class="nf">CheckOverrideability</span><span class="p">(</span><span class="nv">Symbol</span><span class="p">,</span> <span class="nv">ClassType</span><span class="p">);</span>
-                <span class="k">If</span> <span class="nv">Overrideability</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>                           <span class="c c-Singleline">// +4, nested condition, nesting 3</span>
-                    <span class="k">If</span> <span class="k">NOT</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                 <span class="c c-Singleline">// +5, nested condition, nesting 4</span>
+                <span class="k">If</span> <span class="nv">Overrideability</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>                           <span class="c1">// +4, nested condition, nesting 3</span>
+                    <span class="k">If</span> <span class="k">NOT</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                 <span class="c1">// +5, nested condition, nesting 4</span>
                         <span class="nv">AmbiguityFound</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>
                     <span class="k">EndIf</span><span class="p">;</span>
-                <span class="nv">ElseIf</span> <span class="nv">Overrideability</span> <span class="k">Then</span>                                     <span class="c c-Singleline">// +1, alternative condition branch, nesting not taken into account</span>
+                <span class="nv">ElseIf</span> <span class="nv">Overrideability</span> <span class="k">Then</span>                                     <span class="c1">// +1, alternative condition branch, nesting not taken into account</span>
                     <span class="k">Return</span> <span class="nv">Symbol</span><span class="p">;</span>
                 <span class="k">EndIf</span><span class="p">;</span>
-            <span class="k">Else</span>                                                                      <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
+            <span class="k">Else</span>                                                                      <span class="c1">// +1, default branch, nesting not taken into account</span>
                 <span class="k">Continue</span><span class="p">;</span>
             <span class="k">EndIf</span><span class="p">;</span>
         <span class="k">EndIf</span><span class="p">;</span>
     <span class="k">EndDo</span><span class="p">;</span>
 
-    <span class="k">If</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                                   <span class="c c-Singleline">// +1, no nesting</span>
+    <span class="k">If</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                                   <span class="c1">// +1, no nesting</span>
         <span class="k">Return</span> <span class="nv">Symbols</span><span class="o">.</span><span class="nv">UnknownSymbol</span><span class="p">;</span>
     <span class="k">EndIf</span><span class="p">;</span>
 
@@ -1091,54 +1091,54 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">Example2</span><span class="p">(</span><span class="nv">Document</span><span class="p">)</span>
     <span class="nf">StartTransaction</span><span class="p">();</span>
-    <span class="nv">NeedPost</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">Posted</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span>                                                         <span class="c c-Singleline">// +1, ternary operator</span>
-                                        <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">DeletionMark</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="kc">TRUE</span><span class="p">));</span>                  <span class="c c-Singleline">// +2, nested ternary operator, nesting 1</span>
-    <span class="k">Try</span>                                                                                          <span class="c c-Singleline">// +0, try increases nesting level</span>
+    <span class="nv">NeedPost</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">Posted</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span>                                                         <span class="c1">// +1, ternary operator</span>
+                                        <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">DeletionMark</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="kc">TRUE</span><span class="p">));</span>                  <span class="c1">// +2, nested ternary operator, nesting 1</span>
+    <span class="k">Try</span>                                                                                          <span class="c1">// +0, try increases nesting level</span>
         <span class="nv">DocumentObject</span> <span class="o">=</span> <span class="nv">Document</span><span class="o">.</span><span class="nf">GetObject</span><span class="p">();</span>
-        <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                            <span class="c c-Singleline">// +2, nested condition, nesting 1</span>
-            <span class="k">For</span> <span class="k">Each</span> <span class="nv">TabularSectionLine</span> <span class="k">Из</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">TabularSection</span> <span class="k">Do</span>                      <span class="c c-Singleline">// +3, nested loop, nesting 2</span>
-                <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column1</span> <span class="o">=</span> <span class="m">7</span>                                                <span class="c c-Singleline">// +4, nested condition, nesting 3</span>
-                        <span class="k">OR</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column2</span> <span class="o">=</span> <span class="m">7</span> <span class="k">Then</span>                                   <span class="c c-Singleline">// +1, logical operation, nesting not taken into account</span>
+        <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                            <span class="c1">// +2, nested condition, nesting 1</span>
+            <span class="k">For</span> <span class="k">Each</span> <span class="nv">TabularSectionLine</span> <span class="k">Из</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">TabularSection</span> <span class="k">Do</span>                      <span class="c1">// +3, nested loop, nesting 2</span>
+                <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column1</span> <span class="o">=</span> <span class="m">7</span>                                                <span class="c1">// +4, nested condition, nesting 3</span>
+                        <span class="k">OR</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column2</span> <span class="o">=</span> <span class="m">7</span> <span class="k">Then</span>                                   <span class="c1">// +1, logical operation, nesting not taken into account</span>
                     <span class="k">Continue</span><span class="p">;</span>
                 <span class="k">EndIf</span><span class="p">;</span>
-                <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column4</span> <span class="o">&gt;</span> <span class="m">1</span> <span class="k">Then</span>                                          <span class="c c-Singleline">// +4, nested condition, nesting 3</span>
+                <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column4</span> <span class="o">&gt;</span> <span class="m">1</span> <span class="k">Then</span>                                          <span class="c1">// +4, nested condition, nesting 3</span>
                     <span class="k">Break</span><span class="p">;</span>
-                <span class="k">Else</span>                                                                            <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
-                    <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column1</span> <span class="o">+</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column2</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>         <span class="c c-Singleline">// +5, nested condition, nesting 4</span>
+                <span class="k">Else</span>                                                                            <span class="c1">// +1, default branch, nesting not taken into account</span>
+                    <span class="k">If</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column1</span> <span class="o">+</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column2</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>         <span class="c1">// +5, nested condition, nesting 4</span>
                         <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column10</span> <span class="o">=</span> <span class="nv">TabularSectionLine</span><span class="o">.</span><span class="nv">Column1</span> <span class="o">*</span> <span class="m">2</span><span class="p">;</span>
                     <span class="k">EndIf</span><span class="p">;</span>
                 <span class="k">EndIf</span><span class="p">;</span>
             <span class="k">EndDo</span><span class="p">;</span>
-        <span class="k">Else</span>                                                                                    <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
-            <span class="nv">NeedPost</span> <span class="o">=</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Date</span> <span class="o">&gt;</span> <span class="nb">CurrentDate</span><span class="p">();</span>                                     <span class="c c-Singleline">// +1, logical operation, nesting not taken into account</span>
-            <span class="k">Goto</span> <span class=" -Label">~Label;                                                                        // +1, go to label, nesting not taken into account</span>
+        <span class="k">Else</span>                                                                                    <span class="c1">// +1, default branch, nesting not taken into account</span>
+            <span class="nv">NeedPost</span> <span class="o">=</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Date</span> <span class="o">&gt;</span> <span class="nb">CurrentDate</span><span class="p">();</span>                                     <span class="c1">// +1, logical operation, nesting not taken into account</span>
+            <span class="k">Goto</span> <span class="nl">~Label</span><span class="p">;</span>                                                                        <span class="c1">// +1, go to label, nesting not taken into account</span>
         <span class="k">EndIf</span><span class="p">;</span>
 
-        <span class="k">If</span> <span class="nv">NeedPost</span> <span class="k">Then</span>                                                                        <span class="c c-Singleline">// +2, nested condition, nesting 1</span>
+        <span class="k">If</span> <span class="nv">NeedPost</span> <span class="k">Then</span>                                                                        <span class="c1">// +2, nested condition, nesting 1</span>
             <span class="nv">DocumentObject</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">DocumentWriteMode</span><span class="o">.</span><span class="nv">Posting</span><span class="p">);</span>
-        <span class="nv">ElseIf</span> <span class="k">NOT</span> <span class="nv">NeedPost</span> <span class="k">Then</span>                                                                <span class="c c-Singleline">// +1, alternative branch, nesting not taken into account</span>
+        <span class="nv">ElseIf</span> <span class="k">NOT</span> <span class="nv">NeedPost</span> <span class="k">Then</span>                                                                <span class="c1">// +1, alternative branch, nesting not taken into account</span>
             <span class="nv">DocumentObject</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">DocumentWriteMode</span><span class="o">.</span><span class="nv">Write</span><span class="p">);</span>
-        <span class="k">Else</span>                                                                                    <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
+        <span class="k">Else</span>                                                                                    <span class="c1">// +1, default branch, nesting not taken into account</span>
             <span class="k">Raise</span> <span class="s">&quot;Why?&quot;</span><span class="p">;</span>
         <span class="k">EndIf</span><span class="p">;</span>
-    <span class="k">Except</span>                                                                                      <span class="c c-Singleline">// +1, except processing</span>
+    <span class="k">Except</span>                                                                                      <span class="c1">// +1, except processing</span>
         <span class="nv">RetryWrite</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">;</span>
-        <span class="k">Try</span>                                                                                     <span class="c c-Singleline">// +0, try, increases nesting level</span>
-            <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                       <span class="c c-Singleline">// +3, nested condition, nesting 2</span>
+        <span class="k">Try</span>                                                                                     <span class="c1">// +0, try, increases nesting level</span>
+            <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                       <span class="c1">// +3, nested condition, nesting 2</span>
                 <span class="nv">DocumentObject</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">DocumentWriteMode</span><span class="o">.</span><span class="nv">Write</span><span class="p">);</span>
             <span class="k">EndIf</span><span class="p">;</span>
-        <span class="k">Raise</span>                                                                                   <span class="c c-Singleline">// +2, except processing, nesting 1</span>
+        <span class="k">Raise</span>                                                                                   <span class="c1">// +2, except processing, nesting 1</span>
             <span class="nv">RetryWrite</span> <span class="o">=</span> <span class="kc">ИСТИНА</span><span class="p">;</span>
         <span class="k">EndTry</span><span class="p">;</span>
-        <span class="k">If</span> <span class="k">NOT</span> <span class="nv">RetryWrite</span> <span class="k">Then</span>                                                                  <span class="c c-Singleline">// +2, nested condition, nesting 1</span>
-            <span class="k">While</span> <span class="nf">TransactionIsActive</span><span class="p">()</span> <span class="k">Do</span>                                                      <span class="c c-Singleline">// +3, nested loop, nesting 2</span>
+        <span class="k">If</span> <span class="k">NOT</span> <span class="nv">RetryWrite</span> <span class="k">Then</span>                                                                  <span class="c1">// +2, nested condition, nesting 1</span>
+            <span class="k">While</span> <span class="nf">TransactionIsActive</span><span class="p">()</span> <span class="k">Do</span>                                                      <span class="c1">// +3, nested loop, nesting 2</span>
                 <span class="nf">CancelTransaction</span><span class="p">();</span>
             <span class="k">EndDo</span><span class="p">;</span>
         <span class="k">EndIf</span><span class="p">;</span>
         <span class="k">Raise</span> <span class="s">&quot;Error&quot;</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
-    <span class=" -Label">~Label:</span>
+    <span class="nl">~Label</span><span class="p">:</span>
     <span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
@@ -1149,8 +1149,8 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CognitiveComplexity-off</span>
+<span class="c1">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;CognitiveComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1224,7 +1224,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

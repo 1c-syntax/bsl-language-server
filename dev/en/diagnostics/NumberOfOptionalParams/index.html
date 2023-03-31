@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -964,14 +964,14 @@
 If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create an item in catalog &quot;Goods&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Create an item in catalog &quot;Goods&quot;</span>
 <span class="k">Procedure</span> <span class="nf">CreateSKU</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> <span class="nv">Goods</span><span class="p">,</span> <span class="nv">Units</span><span class="p">,</span> <span class="nv">Weight</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="c c-Singleline">// ... </span>
+<span class="c1">// ... </span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <p>Correct:<br />
 Group parameters, having goods item properties into Structure Values.</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Create item in catalog &quot;Goods&quot;</span>
 <span class="k">Procedure</span> <span class="nf">CreateNewGoods</span><span class="p">(</span><span class="nv">Values</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
@@ -982,8 +982,8 @@ Group parameters, having goods item properties into Structure Values.</p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfOptionalParams-off</span>
-<span class="c c-Singleline">// BSLLS:NumberOfOptionalParams-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:NumberOfOptionalParams-off</span>
+<span class="c1">// BSLLS:NumberOfOptionalParams-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfOptionalParams&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1056,7 +1056,7 @@ Group parameters, having goods item properties into Structure Values.</p>
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

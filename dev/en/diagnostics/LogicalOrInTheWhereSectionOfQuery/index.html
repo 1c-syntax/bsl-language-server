@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -967,26 +967,26 @@
 <p>1) In the main condition, the <code>OR</code> operator can only be used for the last used or the only index field, when the <code>OR</code> operator can be replaced by the <code>IN</code> operator.</p>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
-    <span class="k">OR</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="nd">&amp;Value1</span>
+    <span class="k">OR</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed</span> <span class="o">=</span> <span class="nd">&amp;Value2</span>
 </code></pre></div>
 <p>because can be rewritten using the <code>IN</code> operator (you don’t need to specifically rewrite it, you can leave it as it is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value)</span>
 </code></pre></div>
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
-    <span class="k">OR</span>  <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value2</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="nd">&amp;Value1</span>
+    <span class="k">OR</span>  <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="nd">&amp;Value2</span>
 </code></pre></div>
 <p>cannot be rewritten with <code>IN</code>, but can be rewritten with <code>UNION ALL</code> (each Field1 and Field2 must be indexed):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
+     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="o">=</span> <span class="nd">&amp;Value1</span>
 
 <span class="nv">UNION</span> <span class="nv">ALL</span>
 
 <span class="nv">WHERE</span>
-     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="kd">&amp;Value1</span>
+     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="nd">&amp;Value1</span>
 </code></pre></div>
 <blockquote>
 <p>Note: it is not always possible to replace <code>OR</code> with <code>UNION ALL</code>, make sure the result is really the same as with <code>OR</code> before applying.</p>
@@ -994,20 +994,20 @@
 <p>2) Additionally, the 'OR' operator can be used without restriction.</p>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="kd">&amp;Value1 // Main condition (use index)</span>
-    <span class="k">AND</span> <span class="c c-Singleline">// Addition condition (can use OR)</span>
-    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="kd">&amp;Value2 OR Table.Filed3 = &amp;Value3)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="nd">&amp;Value1 // Main condition (use index)</span>
+    <span class="k">AND</span> <span class="c1">// Addition condition (can use OR)</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="nd">&amp;Value2 OR Table.Filed3 = &amp;Value3)</span>
 </code></pre></div>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="kd">&amp;Value1 OR Table.Filed1 = &amp;Value2)</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="nd">&amp;Value1 OR Table.Filed1 = &amp;Value2)</span>
     <span class="k">AND</span>
-    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="kd">&amp;Value3 OR Table.Filed2 = &amp;Value4)</span>
+    <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="nd">&amp;Value3 OR Table.Filed2 = &amp;Value4)</span>
 </code></pre></div>
 <p>because can be rewritten using 'IN' (no special rewriting needed, can be left as is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value1)   // Main condition</span>
-    <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="nf">IN</span> <span class="p">(</span><span class="kd">&amp;Value2) // Additional condition (or vice versa)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value1)   // Main condition</span>
+    <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value2) // Additional condition (or vice versa)</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -1020,8 +1020,8 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
-<span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
+<span class="c1">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;LogicalOrInTheWhereSectionOfQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
@@ -1092,7 +1092,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

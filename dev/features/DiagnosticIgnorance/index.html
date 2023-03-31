@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -989,49 +989,49 @@
 <p>Для отключения конкретных диагностик в модуле (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>), необходимо в начале модуля вставить комментарий <code>// BSLLS:CognitiveComplexity-off</code> и <code>// BSLLS:MethodSize-off</code> (или <code>// BSLLS:CognitiveComplexity-выкл</code> и <code>// BSLLS:MethodSize-выкл</code>)</p>
 <h3 id="Отключить-все-диагностики-для-участка-кода">Отключить все диагностики для участка кода<a class="headerlink" href="#Отключить-все-диагностики-для-участка-кода" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить диагностики для участка кода, оставив возможность BSL LS анализировать оставшие, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS-off</span>
 <span class="k">Процедура</span> <span class="nf">СкрываемаяОтBSLLSПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Невидимое содержимое процедуры</span>
+    <span class="c1">// Невидимое содержимое процедуры</span>
 <span class="k">КонецПроцедуры</span>
-<span class="c c-Singleline">// BSLLS-on</span>
+<span class="c1">// BSLLS-on</span>
 
 <span class="k">Процедура</span> <span class="nf">ВидимаяBSLLSПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Видимое содержимое процедуры</span>
+    <span class="c1">// Видимое содержимое процедуры</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 <h3 id="Отключить-конкретные-диагностики-для-участка-кода">Отключить конкретные диагностики для участка кода<a class="headerlink" href="#Отключить-конкретные-диагностики-для-участка-кода" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить конкретные диагностики (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>) для участка кода, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:MethodSize-off</span>
 <span class="k">Процедура</span> <span class="nf">СкрываемаяОтMethodSizeПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Очень длинное тело метода</span>
+    <span class="c1">// Очень длинное тело метода</span>
 <span class="k">КонецПроцедуры</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+<span class="c1">// BSLLS:MethodSize-on</span>
 
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<span class="c1">// BSLLS:CognitiveComplexity-off</span>
 <span class="k">Процедура</span> <span class="nf">СкрываемаяОтCognitiveComplexityПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Очень сложное и непонятное содержимое</span>
+    <span class="c1">// Очень сложное и непонятное содержимое</span>
 <span class="k">КонецПроцедуры</span>
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+<span class="c1">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
 <p>Поддерживается вложение <code>оберток</code>, т.е. возможно экранирование блока кода от нескольких диагностик, пример</p>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CognitiveComplexity-off</span>
+<span class="c1">// BSLLS:MethodSize-off</span>
 <span class="k">Процедура</span> <span class="nf">СкрываемаяОтMethodSizeCognitiveComplexityПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Очень длинное тело метода, непонятное никому</span>
+    <span class="c1">// Очень длинное тело метода, непонятное никому</span>
 <span class="k">КонецПроцедуры</span>
-<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+<span class="c1">// BSLLS:MethodSize-on</span>
 
 <span class="k">Процедура</span> <span class="nf">СкрываемаяОтCognitiveComplexityПроцедура</span><span class="p">()</span>
-    <span class="c c-Singleline">// Очень сложное и непонятное содержимое, но не длинное</span>
+    <span class="c1">// Очень сложное и непонятное содержимое, но не длинное</span>
 <span class="k">КонецПроцедуры</span>
-<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+<span class="c1">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
 <h3 id="Отключить-диагностику-для-одной-строки">Отключить диагностику для одной строки<a class="headerlink" href="#Отключить-диагностику-для-одной-строки" title="Permanent link">&para;</a></h3>
 <p>Для экранирование одной строки можно использовать <code>обертку</code> как в примере выше, но удобнее использовать <code>висячий комментарий</code>, т.е. комментарий, расположенный в конце строки, пример</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ВидимаяBSLLS</span><span class="p">()</span>
-    <span class="c c-Singleline">// С помощью висячего комментария скрыта следующая строка от диагностики &quot;Каноническое написание ключевых слов&quot;</span>
-    <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">тогда</span> <span class="c c-Singleline">// BSLLS:CanonicalSpellingKeywords-выкл</span>
-        <span class="c c-Singleline">// Видимое содержимое</span>
+    <span class="c1">// С помощью висячего комментария скрыта следующая строка от диагностики &quot;Каноническое написание ключевых слов&quot;</span>
+    <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">тогда</span> <span class="c1">// BSLLS:CanonicalSpellingKeywords-выкл</span>
+        <span class="c1">// Видимое содержимое</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
@@ -1101,7 +1101,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

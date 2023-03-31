@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -949,16 +949,16 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Неверный код
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
     <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
     <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
     <span class="nb">ПоказатьВводЧисла</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Введите количество&quot;</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">,</span> <span class="m">2</span><span class="p">);</span>
 
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c c-Singleline">// неверно, т.к. всегда будет 10</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c1">// неверно, т.к. всегда будет 10</span>
 <span class="k">КонецПроцедуры</span>
 
-<span class="kd">&amp;НаКлиенте</span>
+<span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">ПослеВводаКоличества</span><span class="p">(</span><span class="nv">Число</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="p">)</span> <span class="k">Экспорт</span>
     <span class="k">Если</span> <span class="nv">Число</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>
          <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Число</span><span class="p">;</span>
@@ -966,7 +966,7 @@
 <span class="k">КонецПроцедуры</span><span class="p">;</span>
 </code></pre></div></p>
 <p>Правильный код
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
     <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
     <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
@@ -974,37 +974,37 @@
 
 <span class="k">КонецПроцедуры</span>
 
-<span class="kd">&amp;НаКлиенте</span>
+<span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">ПослеВводаКоличества</span><span class="p">(</span><span class="nv">Число</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="p">)</span> <span class="k">Экспорт</span>
     <span class="k">Если</span> <span class="nv">Число</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>
         <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Число</span><span class="p">;</span>
-        <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c c-Singleline">// неверно, т.к. всегда будет 10</span>
+        <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c1">// неверно, т.к. всегда будет 10</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span><span class="p">;</span>
 </code></pre></div></p>
 <p>В некоторых случаях выполнение кода сразу после вызова асинхронного метода вполне возможно, если не нужно ожидать результатов выполнения асинхронного действия.
 Например
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
     <span class="nb">ПоказатьПредупреждение</span><span class="p">(,</span> <span class="s">&quot;Предупреждаю&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
     <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;начал работать код после ПоказатьПредупреждение&quot;</span><span class="p">);</span>
-    <span class="c c-Singleline">// ...</span>
+    <span class="c1">// ...</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div></p>
 <p>Также важно учесть, что асинхронный метод может вызываться в одной из веток кода и нужно анализировать последующий код до конца текущей процедуры\функции.
 Пример:
-<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
     <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
     <span class="k">Если</span> <span class="nv">Условие</span> <span class="k">Тогда</span>
         <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
         <span class="nb">ПоказатьВводЧисла</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Введите количество&quot;</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">,</span> <span class="m">2</span><span class="p">);</span>
     <span class="k">Иначе</span>
-        <span class="c c-Singleline">// какой-то код</span>
+        <span class="c1">// какой-то код</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
-    <span class="c c-Singleline">// последующий код также может вызываться сразу после вызова асинхронного метода, что может быть неверно</span>
+    <span class="c1">// последующий код также может вызываться сразу после вызова асинхронного метода, что может быть неверно</span>
 
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c c-Singleline">// неверно, т.к. всегда будет 10</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c1">// неверно, т.к. всегда будет 10</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
@@ -1020,8 +1020,8 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeAfterAsyncCall-off</span>
-<span class="c c-Singleline">// BSLLS:CodeAfterAsyncCall-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:CodeAfterAsyncCall-off</span>
+<span class="c1">// BSLLS:CodeAfterAsyncCall-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;CodeAfterAsyncCall&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
@@ -1092,7 +1092,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

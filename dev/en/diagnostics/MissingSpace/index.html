@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -1003,28 +1003,28 @@
 <h3 id="Using-checkSpaceToRightOfUnary-parameter">Using <code>checkSpaceToRightOfUnary</code> parameter<a class="headerlink" href="#Using-checkSpaceToRightOfUnary-parameter" title="Permanent link">&para;</a></h3>
 <p>The parameter makes sense only in case the unary operator is listed in one of three base parameters.</p>
 <p>If set to <code>false</code></p>
-<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Correct</span>
-<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c c-Singleline">// Correct</span>
+<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c1">// Correct</span>
+<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c1">// Correct</span>
 </code></pre></div>
 <p>If set to <code>true</code></p>
-<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Incorrect</span>
-<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c c-Singleline">// Correct</span>
+<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c1">// Incorrect</span>
+<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c1">// Correct</span>
 </code></pre></div>
 <h3 id="Using-allowMultipleCommas-parameter">Using <code>allowMultipleCommas</code> parameter<a class="headerlink" href="#Using-allowMultipleCommas-parameter" title="Permanent link">&para;</a></h3>
 <p>The parameter has sense only if <code>,</code> is listed in one of three base parameters Defaults to <code>false</code></p>
 <p>If set to <code>false</code></p>
-<div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Bad</span>
-    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c1">// Bad</span>
+    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c1">// Correct</span>
 </code></pre></div>
 <p>If set to <code>true</code></p>
-<div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Correct</span>
-<span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c1">// Correct</span>
+<span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nf">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c1">// Correct</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingSpace-off</span>
-<span class="c c-Singleline">// BSLLS:MissingSpace-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:MissingSpace-off</span>
+<span class="c1">// BSLLS:MissingSpace-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingSpace&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1101,7 +1101,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

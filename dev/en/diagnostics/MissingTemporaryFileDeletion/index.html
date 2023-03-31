@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.5">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.240905d7.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7a7fce14.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -966,16 +966,16 @@ You should not rely on automatic deletion of files and folders before platform s
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
-<span class="c c-Singleline">// Not delete temporary file</span>
+<span class="c1">// Not delete temporary file</span>
 </code></pre></div>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 
-<span class="c c-Singleline">// Work with file</span>
+<span class="c1">// Work with file</span>
 <span class="o">...</span>
 
-<span class="c c-Singleline">// Delete temporary file</span>
+<span class="c1">// Delete temporary file</span>
 <span class="k">Try</span>
    <span class="nb">DeleteFiles</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 <span class="nv">Catch</span>
@@ -999,8 +999,8 @@ You should not rely on automatic deletion of files and folders before platform s
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-off</span>
-<span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:MissingTemporaryFileDeletion-off</span>
+<span class="c1">// BSLLS:MissingTemporaryFileDeletion-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingTemporaryFileDeletion&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1073,7 +1073,7 @@ You should not rely on automatic deletion of files and folders before platform s
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.19047be9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.407015b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
