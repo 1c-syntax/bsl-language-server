@@ -19,22 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.databind;
 
-import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
+import java.io.IOException;
 import java.net.URI;
 
 /**
- * DTO для хранения промежуточных данных линз между созданием линзы и ее разрешением.
+ * Адаптер для (де)сериализации типа {@link URI} для библиотеки GSON.
  */
-@Value
-@NonFinal
-public class DefaultCodeLensData implements CodeLensData {
-  @JsonAdapter(URITypeAdapter.class)
-  URI uri;
-  String id;
+public class URITypeAdapter extends TypeAdapter<URI> {
+  @Override
+  public void write(JsonWriter out, URI uri) throws IOException {
+    out.value(uri.toString());
+  }
+
+  @Override
+  public URI read(JsonReader in) throws IOException {
+    return URI.create(in.nextString());
+  }
 }
