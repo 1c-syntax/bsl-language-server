@@ -68,7 +68,7 @@ public class CommandProvider {
       .orElse(null);
 
     CompletableFuture.runAsync(() -> {
-      if (commandSupplier.refreshInlayHintsAfterExecuteCommand()) {
+      if (commandSupplier.needRefreshInlayHintsAfterExecuteCommand()) {
         inlayHintProvider.refreshInlayHints();
       }
       if (commandSupplier.needRefreshCodeLensesAfterExecuteCommand()) {

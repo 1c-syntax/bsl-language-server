@@ -50,7 +50,7 @@ public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
   }
 
   @Override
-  public boolean refreshInlayHintsAfterExecuteCommand() {
+  public boolean needRefreshInlayHintsAfterExecuteCommand() {
     return true;
   }
 
