@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,9 +29,26 @@ import java.net.URI;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+/**
+ * Интерфейс DTO для хранения промежуточных данных команд между созданием команды и ее выполнением.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = "id", visible = true)
 public interface CommandArguments {
+  /**
+   * URI документа, с которым связана команда.
+   *
+   * @return URI документа, с которым связана команда.
+   */
   URI getUri();
+
+  /**
+   * Идентификатор команды.
+   * <p>
+   * Должен совпадать с {@link CommandSupplier#getId()} сапплаера,
+   * создающего команду.
+   *
+   * @return Идентификатор команды.
+   */
   String getId();
 }

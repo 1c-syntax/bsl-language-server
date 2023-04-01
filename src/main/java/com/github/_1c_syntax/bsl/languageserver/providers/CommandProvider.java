@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,6 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code workspace/executeCommans}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_executeCommand">Execute a command specification</a>.
+ */
 @Component
 @RequiredArgsConstructor
 public class CommandProvider {
@@ -43,6 +48,13 @@ public class CommandProvider {
   private final CodeLensProvider codeLensProvider;
   private final InlayHintProvider inlayHintProvider;
 
+  /**
+   * Выполнить серверную команду.
+   *
+   * @param arguments Аргументы команды.
+   *
+   * @return Результат выполнения команды.
+   */
   public Object executeCommand(CommandArguments arguments) {
     var commandId = arguments.getId();
 
@@ -59,21 +71,36 @@ public class CommandProvider {
       if (commandSupplier.refreshInlayHintsAfterExecuteCommand()) {
         inlayHintProvider.refreshInlayHints();
       }
-      if (commandSupplier.refreshCodeLensesAfterExecuteCommand()) {
+      if (commandSupplier.needRefreshCodeLensesAfterExecuteCommand()) {
         codeLensProvider.refreshCodeLenses();
       }
+      
     });
 
     return result;
   }
 
+  /**
+   * Список идентификаторов известных серверных команд.
+   *
+   * @return Список идентификаторов известных серверных команд.
+   */
   public List<String> getCommandIds() {
     return List.copyOf(commandSuppliersById.keySet());
   }
 
+  /**
+   * Извлечь аргументы команды из параметров входящего запроса.
+   *
+   * @param executeCommandParams Параметры запроса workspace/executeCommand.
+   * @return Аргументы команды.
+   *
+   * @throws RuntimeException Выбрасывает исключение, если параметры входящего запроса не содержат
+   * данных для вычисления аргументов команды.
+   */
   @SneakyThrows
-  public CommandArguments extractArguments(ExecuteCommandParams codeLens) {
-    var rawArguments = codeLens.getArguments();
+  public CommandArguments extractArguments(ExecuteCommandParams executeCommandParams) {
+    var rawArguments = executeCommandParams.getArguments();
 
     if (rawArguments.isEmpty()) {
       throw new RuntimeException("Command arguments is empty");
