@@ -44,7 +44,9 @@ public class CommandProvider {
 
   private final Map<String, CommandSupplier<CommandArguments>> commandSuppliersById;
   private final ObjectMapper objectMapper;
+
   private final CodeLensProvider codeLensProvider;
+  private final InlayHintProvider inlayHintProvider;
 
   /**
    * Выполнить серверную команду.
@@ -66,6 +68,9 @@ public class CommandProvider {
       .orElse(null);
 
     CompletableFuture.runAsync(() -> {
+      if (commandSupplier.needRefreshInlayHintsAfterExecuteCommand()) {
+        inlayHintProvider.refreshInlayHints();
+      }
       if (commandSupplier.needRefreshCodeLensesAfterExecuteCommand()) {
         codeLensProvider.refreshCodeLenses();
       }

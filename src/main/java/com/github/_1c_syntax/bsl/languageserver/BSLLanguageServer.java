@@ -46,6 +46,7 @@ import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
@@ -111,6 +112,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
+    capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
@@ -310,6 +312,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       .map(TextDocumentClientCapabilities::getRename)
       .map(RenameCapabilities::getPrepareSupport)
       .orElse(false);
+  }
+
+  private static InlayHintRegistrationOptions getInlayHintProvider() {
+    var inlayHintOptions = new InlayHintRegistrationOptions();
+    inlayHintOptions.setResolveProvider(Boolean.FALSE);
+    inlayHintOptions.setWorkDoneProgress(Boolean.FALSE);
+    return inlayHintOptions;
   }
 
   private ExecuteCommandOptions getExecuteCommandProvider() {

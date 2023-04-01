@@ -84,6 +84,15 @@ public interface CommandSupplier<T extends CommandArguments> {
   Optional<Object> execute(T arguments);
 
   /**
+   * Флаг, показывающий необходимость обновить inlay hints после выполнения команды.
+   *
+   * @return Флаг, показывающий необходимость обновить inlay hints после выполнения команды.
+   */
+  default boolean needRefreshInlayHintsAfterExecuteCommand() {
+    return false;
+  }
+
+  /**
    * Флаг, показывающий необходимость обновить линзы после выполнения команды.
    *
    * @return Флаг, показывающий необходимость обновить линзы после выполнения команды.
