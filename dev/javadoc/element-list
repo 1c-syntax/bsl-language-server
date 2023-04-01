@@ -7,9 +7,10 @@ com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.codelenses
-com.github._1c_syntax.bsl.languageserver.codelenses.databind
 com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure
 com.github._1c_syntax.bsl.languageserver.color
+com.github._1c_syntax.bsl.languageserver.commands
+com.github._1c_syntax.bsl.languageserver.commands.infrastructure
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.databind
@@ -25,6 +26,7 @@ com.github._1c_syntax.bsl.languageserver.context.symbol
 com.github._1c_syntax.bsl.languageserver.context.symbol.annotations
 com.github._1c_syntax.bsl.languageserver.context.symbol.description
 com.github._1c_syntax.bsl.languageserver.context.symbol.variable
+com.github._1c_syntax.bsl.languageserver.databind
 com.github._1c_syntax.bsl.languageserver.diagnostics
 com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure
 com.github._1c_syntax.bsl.languageserver.diagnostics.metadata
