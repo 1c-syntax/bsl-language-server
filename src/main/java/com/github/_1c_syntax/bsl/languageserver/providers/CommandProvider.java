@@ -66,7 +66,7 @@ public class CommandProvider {
       .orElse(null);
 
     CompletableFuture.runAsync(() -> {
-      if (commandSupplier.refreshCodeLensesAfterExecuteCommand()) {
+      if (commandSupplier.needRefreshCodeLensesAfterExecuteCommand()) {
         codeLensProvider.refreshCodeLenses();
       }
     });

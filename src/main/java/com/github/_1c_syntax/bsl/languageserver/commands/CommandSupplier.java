@@ -38,6 +38,8 @@ import java.util.Optional;
 
 public interface CommandSupplier<T extends CommandArguments> {
 
+  String COMMAND_SUPPLIER_SUFFIX = "CommandSupplier";
+
   /**
    * Идентификатор сапплаера.
    * <p>
@@ -47,8 +49,8 @@ public interface CommandSupplier<T extends CommandArguments> {
    */
   default String getId() {
     String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("CommandSupplier")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "CommandSupplier".length());
+    if (simpleName.endsWith(COMMAND_SUPPLIER_SUFFIX)) {
+      simpleName = simpleName.substring(0, simpleName.length() - COMMAND_SUPPLIER_SUFFIX.length());
       simpleName = Introspector.decapitalize(simpleName);
     }
 
@@ -86,7 +88,7 @@ public interface CommandSupplier<T extends CommandArguments> {
    *
    * @return Флаг, показывающий необходимость обновить линзы после выполнения команды.
    */
-  default boolean refreshCodeLensesAfterExecuteCommand() {
+  default boolean needRefreshCodeLensesAfterExecuteCommand() {
     return false;
   }
 
