@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1680261843179,
+  "lastUpdate": 1680348729076,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21576,6 +21576,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6362354834477786",
             "extra": "mean: 53.00859419504801 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9f9644f41a1812feb22390fb3499bf1b824db346",
+          "message": "Merge pull request #3034 from 1c-syntax/bugfix/issue-2919_image_macos_j20\n\nfix(build): Поддержка jpackage macOS Ventura",
+          "timestamp": "2023-04-01T14:21:03+03:00",
+          "tree_id": "9b343a2b5186fcb52b0be49695197ae9c42bd57c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9f9644f41a1812feb22390fb3499bf1b824db346"
+        },
+        "date": 1680348721116,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 52.84878023465475,
+            "unit": "sec",
+            "range": "stddev: 0.5174172569501432",
+            "extra": "mean: 52.84878023465475 sec\nrounds: 3"
           }
         ]
       }
