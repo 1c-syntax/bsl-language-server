@@ -38,6 +38,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер, обрабатывающий запросы {@code textDocument/inlayHint} и {@code inlayHint/resolve}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint">Inlay hint request</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve">Inlay hint resolve request</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class InlayHintProvider {
@@ -47,6 +53,13 @@ public class InlayHintProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
 
+  /**
+   * Получить список inlay hints в документе.
+   *
+   * @param documentContext Документ, для которого запрашиваются inlay hints.
+   * @param params          Параметры запроса.
+   * @return Список inlay hints в документе
+   */
   public List<InlayHint> getInlayHint(DocumentContext documentContext, InlayHintParams params) {
     return suppliers.stream()
       .map(supplier -> supplier.getInlayHints(documentContext, params))
@@ -54,6 +67,9 @@ public class InlayHintProvider {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Отправить запрос на обновление inlay hints.
+   */
   public void refreshInlayHints() {
     boolean refreshSupport = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)

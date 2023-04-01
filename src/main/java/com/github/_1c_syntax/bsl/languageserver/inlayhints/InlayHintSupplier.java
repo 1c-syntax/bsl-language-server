@@ -27,7 +27,18 @@ import org.eclipse.lsp4j.InlayHintParams;
 
 import java.util.List;
 
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider}
+ * данными о доступных в документе inlay hints.
+ */
 public interface InlayHintSupplier {
 
+  /**
+   * Получить inlay hints, доступные в документе.
+   *
+   * @param documentContext Контекст документа, для которого надо рассчитать inlay hints.
+   * @param params          Параметры запроса.
+   * @return Список inlay hints в документе.
+   */
   List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
 }
