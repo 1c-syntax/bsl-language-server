@@ -22,20 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterEachTestMethod
 class InlayHintProviderTest {
 
   @Autowired
@@ -61,6 +67,31 @@ class InlayHintProviderTest {
     var inlayHints = provider.getInlayHint(documentContext, params);
 
     // then
-    assertThat(inlayHints).hasSizeGreaterThan(0);
+    assertThat(inlayHints)
+      .contains(getTestHint());
   }
+
+  private static InlayHint getTestHint() {
+    return new InlayHint(new Position(0, 0), Either.forLeft("test hint"));
+  }
+
+  @TestConfiguration
+  static class Configuration {
+    @Bean
+    InlayHintSupplier inlayHintSupplier() {
+      return new InlayHintSupplier() {
+        @Override
+        public String getId() {
+          return "test";
+        }
+
+        @Override
+        public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
+          var inlayHint = getTestHint();
+          return List.of(inlayHint);
+        }
+      };
+    }
+  }
+
 }
