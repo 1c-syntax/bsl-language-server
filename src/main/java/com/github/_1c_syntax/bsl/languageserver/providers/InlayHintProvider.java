@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,11 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.InlayHintWorkspaceCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,10 +52,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InlayHintProvider {
 
-  private final Collection<InlayHintSupplier> suppliers;
-
+  private final ObjectProvider<List<InlayHintSupplier>> enabledInlayHintSuppliersProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
+
+  private List<InlayHintSupplier> enabledInlayHintSuppliers;
+
+  @PostConstruct
+  protected void init() {
+    enabledInlayHintSuppliers = enabledInlayHintSuppliersProvider.getObject();
+  }
 
   /**
    * Получить список inlay hints в документе.
@@ -61,10 +71,24 @@ public class InlayHintProvider {
    * @return Список inlay hints в документе
    */
   public List<InlayHint> getInlayHint(DocumentContext documentContext, InlayHintParams params) {
-    return suppliers.stream()
+    return enabledInlayHintSuppliers.stream()
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * В случае поддержки запроса подключенным клиентом инициирует запрос {@code workspace/inlayHint/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    enabledInlayHintSuppliers = enabledInlayHintSuppliersProvider.getObject();
+
+    refreshInlayHints();
   }
 
   /**

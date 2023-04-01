@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 
+import java.beans.Introspector;
 import java.util.List;
 
 /**
@@ -32,6 +33,23 @@ import java.util.List;
  * данными о доступных в документе inlay hints.
  */
 public interface InlayHintSupplier {
+
+  String INLAY_HINT_SUPPLIER = "InlayHintSupplier";
+
+  /**
+   * Идентификатор сапплаера.
+   *
+   * @return Идентификатор сапплаера.
+   */
+  default String getId() {
+    String simpleName = getClass().getSimpleName();
+    if (simpleName.endsWith(INLAY_HINT_SUPPLIER)) {
+      simpleName = simpleName.substring(0, simpleName.length() - INLAY_HINT_SUPPLIER.length());
+      simpleName = Introspector.decapitalize(simpleName);
+    }
+
+    return simpleName;
+  }
 
   /**
    * Получить inlay hints, доступные в документе.
