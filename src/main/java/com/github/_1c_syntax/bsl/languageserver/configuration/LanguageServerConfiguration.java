@@ -223,6 +223,7 @@ public class LanguageServerConfiguration {
     // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintsOptions, configuration.inlayHintsOptions);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
