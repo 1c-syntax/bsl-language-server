@@ -79,18 +79,15 @@ class InlayHintProviderTest {
   static class Configuration {
     @Bean
     InlayHintSupplier inlayHintSupplier() {
-      return new InlayHintSupplier() {
-        @Override
-        public String getId() {
-          return "test";
-        }
+      return new TestInlayHintSupplier();
+    }
+  }
 
-        @Override
-        public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
-          var inlayHint = getTestHint();
-          return List.of(inlayHint);
-        }
-      };
+  static class TestInlayHintSupplier implements InlayHintSupplier {
+    @Override
+    public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
+      var inlayHint = getTestHint();
+      return List.of(inlayHint);
     }
   }
 
