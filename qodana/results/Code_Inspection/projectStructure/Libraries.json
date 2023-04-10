@@ -7,15 +7,15 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-websocket/2.7.5/fef1dcd9a493c2453a6b0a17bec0141a855fb93/spring-boot-starter-websocket-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-websocket/2.7.10/d3eb6d92cf5748073399eb4161054e1063ad2a99/spring-boot-starter-websocket-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.7.5/c28e1546461803490588085345ba5d2897d232bc/spring-boot-starter-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/2.7.10/307ab4f1ca9ae26944c407e2352d6e705097c0e2/spring-boot-starter-2.7.10.jar!/"
       ]
     },
     {
@@ -121,9 +121,9 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/2.13.4/b739978806ffc80967ba0efe43b1296c29c4cfe8/jackson-dataformat-xml-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/2.13.5/70f9003aefadda1fa94d0292e559b16c6364163b/jackson-dataformat-xml-2.13.5.jar!/"
       ]
     },
     {
@@ -133,9 +133,9 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.13.4/e6d820112871f33cd94a1dcc54eef58874753b5/jackson-datatype-jsr310-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.13.5/8ba3b868e81d7fc6ead686bd2353859b111d9eaf/jackson-datatype-jsr310-2.13.5.jar!/"
       ]
     },
     {
@@ -169,39 +169,39 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-web/2.7.5/bb4099d0466a62c3b11ab9323babca13bb430a2e/spring-boot-starter-web-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-web/2.7.10/aff75a41f298e83ad9542d8f26b12bbe8e105c35/spring-boot-starter-web-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-messaging:5.3.23",
+      "name": "Gradle: org.springframework:spring-messaging:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-messaging/5.3.23/ba45e1d5cbafca683baa5d801b779eba1f4adaee/spring-messaging-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-messaging/5.3.26/429d90c0dbb70496bed69830db06a8a5b84f18c4/spring-messaging-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-websocket:5.3.23",
+      "name": "Gradle: org.springframework:spring-websocket:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-websocket/5.3.23/28c5d2ab4ab1f0fec2ca68c502576a91d552c356/spring-websocket-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-websocket/5.3.26/71ed7988f5c6eeebba0806c2d372b73e4d32ea98/spring-websocket-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.7.5/96646e63a2296d0a3209383e81cdb8c87ab2f913/spring-boot-autoconfigure-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/2.7.10/514bec7b4e424199325b4f3c8949b9e2b5f6f16c/spring-boot-autoconfigure-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.7.5/fd04e228e6e21b7ad13c10ae29afd31868d842e5/spring-boot-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot/2.7.10/538847f69a830791fac87bd3c232a001bd2c6806/spring-boot-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.7.5/61f4c53e35baa31a269bbeb7bb9d5e781448feef/spring-boot-starter-logging-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/2.7.10/104816b754b243f2640d43144c933352dacfdb5b/spring-boot-starter-logging-2.7.10.jar!/"
       ]
     },
     {
@@ -211,9 +211,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-core:5.3.23",
+      "name": "Gradle: org.springframework:spring-core:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/5.3.23/91407dc1106ea423c44150f3da1a0b4f8e25e5ca/spring-core-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/5.3.26/81f0f0bbba14ca6e17d52f0b1c7d52da8c4da098/spring-core-5.3.26.jar!/"
       ]
     },
     {
@@ -295,9 +295,9 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.4.2/325c06bdfeb628cfb80ebaaf1a26cc1eb558a585/jackson-databind-2.13.4.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.5/aa95e46dbc32454f3983221d420e78ef19ddf844/jackson-databind-2.13.5.jar!/"
       ]
     },
     {
@@ -409,9 +409,9 @@
       ]
     },
     {
-      "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.7",
+      "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:2.3.8",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/jaxb-runtime/2.3.7/ebcde6a44159eb9e3db721dfe6b45f26e6272341/jaxb-runtime-2.3.7.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/jaxb-runtime/2.3.8/c90a335a07c60db986f29d35b0f8ac0a18f0f989/jaxb-runtime-2.3.8.jar!/"
       ]
     },
     {
@@ -445,9 +445,9 @@
       ]
     },
     {
-      "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.5",
+      "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.9",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-registry-prometheus/1.9.5/f3a7fd8df8740b34602e191efafc4a0dc83c2a40/micrometer-registry-prometheus-1.9.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-registry-prometheus/1.9.9/42cbc4506c135f99f2cadfdaf8d29cab879e0185/micrometer-registry-prometheus-1.9.9.jar!/"
       ]
     },
     {
@@ -505,21 +505,21 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.13.4/858c6cc78e1f08a885b1613e1d817c829df70a6e/jackson-annotations-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.13.5/136f77ab424f302c9e27230b4482e8000e142edf/jackson-annotations-2.13.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.13.4/cf934c681294b97ef6d80082faeefbe1edadf56/jackson-core-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.13.5/d07c97d3de9ea658caf1ff1809fd9de930a286a/jackson-core-2.13.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.3.1",
+      "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.4.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.woodstox/woodstox-core/6.3.1/bf29b07ca4dd81ef3c0bc18c8bd5617510a81c5d/woodstox-core-6.3.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.woodstox/woodstox-core/6.4.0/c47579857bbf12c85499f431d4ecf27d77976b7c/woodstox-core-6.4.0.jar!/"
       ]
     },
     {
@@ -547,39 +547,39 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-json/2.7.5/9c7df04ff37b2e7471632ddeb4a296c5fb6bddee/spring-boot-starter-json-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-json/2.7.10/eca10dbca78387d79eb711bdb60d54d28be61621/spring-boot-starter-json-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/2.7.5/eb7849c52953de44d9712adf45398ccb1a7d4295/spring-boot-starter-tomcat-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/2.7.10/5ff5cd70bc2d3c4c5f569d6e7160a104d65681ac/spring-boot-starter-tomcat-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-webmvc:5.3.23",
+      "name": "Gradle: org.springframework:spring-webmvc:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-webmvc/5.3.23/b163527c275b0374371890c0b76c2a2a09f9804b/spring-webmvc-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-webmvc/5.3.26/539e1d03decbec523b7ad87fb786fd0b1cf29ce/spring-webmvc-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-web:5.3.23",
+      "name": "Gradle: org.springframework:spring-web:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-web/5.3.23/193f5276092d9cbe3222c63885b47ca7b2cce97/spring-web-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-web/5.3.26/479b988a36bcaa2d4bf7c50e53bc7cbcedbe645c/spring-web-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-beans:5.3.23",
+      "name": "Gradle: org.springframework:spring-beans:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.23/3bdefbf6042ed742cbe16f27d2d14cca9096a606/spring-beans-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/5.3.26/203a417a6022ba6597db2026b64bac656b7ede0a/spring-beans-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-context:5.3.23",
+      "name": "Gradle: org.springframework:spring-context:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-context/5.3.23/530b36b2ce2c9e471c6a260c3f181bcd20325a58/spring-context-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-context/5.3.26/60596de235eaacc8fe736167abdc2a1bf3d8b26/spring-context-5.3.26.jar!/"
       ]
     },
     {
@@ -601,9 +601,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-jcl:5.3.23",
+      "name": "Gradle: org.springframework:spring-jcl:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/5.3.23/3c7eb5fcca67b611065f73ff4325e398f8b051a3/spring-jcl-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/5.3.26/2005accc2cf5212c614df3760b3a434e7dce807c/spring-jcl-5.3.26.jar!/"
       ]
     },
     {
@@ -715,9 +715,9 @@
       ]
     },
     {
-      "name": "Gradle: org.glassfish.jaxb:txw2:2.3.7",
+      "name": "Gradle: org.glassfish.jaxb:txw2:2.3.8",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/txw2/2.3.7/55cddcac1945150e09b09b0f89d86799652eee82/txw2-2.3.7.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.glassfish.jaxb/txw2/2.3.8/66e0297f1196f0d15a776e699de1b8e6ac5d44dd/txw2-2.3.8.jar!/"
       ]
     },
     {
@@ -739,9 +739,9 @@
       ]
     },
     {
-      "name": "Gradle: io.micrometer:micrometer-core:1.9.5",
+      "name": "Gradle: io.micrometer:micrometer-core:1.9.9",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-core/1.9.5/927ffd91d36d5c743e2a67d3c8cb320790ee1e34/micrometer-core-1.9.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.micrometer/micrometer-core/1.9.9/71ca38f65a24b2fda26ff5c0cce78699c9d31d49/micrometer-core-1.9.9.jar!/"
       ]
     },
     {
@@ -775,45 +775,45 @@
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.13.4/557dbba5d8dfc7b7f944c58fe084109afcb5670b/jackson-datatype-jdk8-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.13.5/1278f38160812811c56eb77f67213662ed1c7a2e/jackson-datatype-jdk8-2.13.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.13.4",
+      "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.13.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.13.4/858ccf6624b5fac6044813e845063edb6a62cf37/jackson-module-parameter-names-2.13.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.13.5/a401a99e7a45450fd3ef76e82ba39005fd1a8c22/jackson-module-parameter-names-2.13.5.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.68",
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.73",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-websocket/9.0.68/15fc94001bb916a808631422a6488a678496ef94/tomcat-embed-websocket-9.0.68.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-websocket/9.0.73/bd1f33e9103ef8435f34574c2046f5db0e35090b/tomcat-embed-websocket-9.0.73.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.68",
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.73",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/9.0.68/caafeb87d6ff30adda888049c9b81591c7cc20d1/tomcat-embed-core-9.0.68.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/9.0.73/16f0a7f04e4f1ab18fe40510a3a13f974b6c1d70/tomcat-embed-core-9.0.73.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.68",
+      "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.73",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-el/9.0.68/296afe7483256960d7ebdd8dcb4b49775d7cb85f/tomcat-embed-el-9.0.68.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-el/9.0.73/bccf17a0a9e3dc239915114e6d6b74c6cc339c39/tomcat-embed-el-9.0.73.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-aop:5.3.23",
+      "name": "Gradle: org.springframework:spring-aop:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.23/30d0034ba29178e98781d85f51a7eb709a628e9b/spring-aop-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/5.3.26/48d5f80bac87b2fa507a7669fb9fc3c24893a91c/spring-aop-5.3.26.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-expression:5.3.23",
+      "name": "Gradle: org.springframework:spring-expression:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/5.3.23/3a676bf4b9bc42bd37ab5ad264acb6ceb63397a2/spring-expression-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/5.3.26/75ccfb9a99560d6a6b2654eae88896ed58b3e428/spring-expression-5.3.26.jar!/"
       ]
     },
     {
@@ -925,9 +925,9 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.7.5/f52fd19eda97bb76bb304f4734c3d654ecca0666/spring-boot-starter-test-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/2.7.10/d522c60c5d596ebb27b09dfdbb00af3860c5c292/spring-boot-starter-test-2.7.10.jar!/"
       ]
     },
     {
@@ -943,21 +943,21 @@
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.7.5/b01668d3ed2d5d9e56072108f04030cd2caceb0e/spring-boot-test-autoconfigure-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/2.7.10/ce5b8ae533faeb35e45de70f0319b68647dc1c1f/spring-boot-test-autoconfigure-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.5",
+      "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.7.5/2db591bb7568aa41795d595cabf99ef837b860c0/spring-boot-test-2.7.5.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test/2.7.10/6124c877f6afa7573acf5f5da6004b7a2cff8b84/spring-boot-test-2.7.10.jar!/"
       ]
     },
     {
-      "name": "Gradle: org.springframework:spring-test:5.3.23",
+      "name": "Gradle: org.springframework:spring-test:5.3.26",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.3.23/d8ef0b0c1a26cf5a62b4e1204717ce6c682e2641/spring-test-5.3.23.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.3.26/8db25cd6703a7a23db02883d1eac5ec4e597e27e/spring-test-5.3.26.jar!/"
       ]
     },
     {
@@ -1003,15 +1003,15 @@
       ]
     },
     {
-      "name": "Gradle: org.xmlunit:xmlunit-core:2.9.0",
+      "name": "Gradle: org.xmlunit:xmlunit-core:2.9.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.xmlunit/xmlunit-core/2.9.0/8959725d90eecfee28acd7110e2bb8460285d876/xmlunit-core-2.9.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.xmlunit/xmlunit-core/2.9.1/e5833662d9a1279a37da3ef6f62a1da29fcd68c4/xmlunit-core-2.9.1.jar!/"
       ]
     },
     {
-      "name": "Gradle: net.minidev:json-smart:2.4.8",
+      "name": "Gradle: net.minidev:json-smart:2.4.10",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.minidev/json-smart/2.4.8/7c62f5f72ab05eb54d40e2abf0360a2fe9ea477f/json-smart-2.4.8.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.minidev/json-smart/2.4.10/91cb329e9424bf32131eeb1ce2d17bf31b9899bc/json-smart-2.4.10.jar!/"
       ]
     },
     {
@@ -1033,21 +1033,21 @@
       ]
     },
     {
-      "name": "Gradle: net.bytebuddy:byte-buddy:1.12.18",
+      "name": "Gradle: net.bytebuddy:byte-buddy:1.12.23",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.12.18/875a9c3f29d2f6f499dfd60d76e97a343f9b1233/byte-buddy-1.12.18.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.12.23/d470526e8c4566c04e9ae5d3ccb62d1a7aa58986/byte-buddy-1.12.23.jar!/"
       ]
     },
     {
-      "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.18",
+      "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.23",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.12.18/417a7310a7bf1c1aae5ca502d26515f9c2f94396/byte-buddy-agent-1.12.18.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.12.23/1cba11fdb72c383edacb909f79ae6870efd275e4/byte-buddy-agent-1.12.23.jar!/"
       ]
     },
     {
-      "name": "Gradle: net.minidev:accessors-smart:2.4.8",
+      "name": "Gradle: net.minidev:accessors-smart:2.4.9",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.minidev/accessors-smart/2.4.8/6e1bee5a530caba91893604d6ab41d0edcecca9a/accessors-smart-2.4.8.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/net.minidev/accessors-smart/2.4.9/32e540749224c22c9b17de8137e916aae9057e22/accessors-smart-2.4.9.jar!/"
       ]
     },
     {
@@ -1069,9 +1069,9 @@
       ]
     },
     {
-      "name": "Gradle: org.ow2.asm:asm:9.1",
+      "name": "Gradle: org.ow2.asm:asm:9.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.1/a99500cf6eea30535eeac6be73899d048f8d12a8/asm-9.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.3/8e6300ef51c1d801a7ed62d07cd221aca3a90640/asm-9.3.jar!/"
       ]
     },
     {
