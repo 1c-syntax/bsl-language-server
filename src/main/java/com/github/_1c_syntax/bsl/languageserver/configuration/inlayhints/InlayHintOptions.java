@@ -40,7 +40,7 @@ import java.util.Map;
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InlayHintsOptions {
+public class InlayHintOptions {
 
   /**
    * Параметры сапплаеров inlay hints.

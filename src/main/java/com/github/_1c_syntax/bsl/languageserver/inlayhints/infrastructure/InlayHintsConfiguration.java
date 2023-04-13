@@ -55,7 +55,7 @@ public class InlayHintsConfiguration {
     LanguageServerConfiguration configuration,
     Collection<InlayHintSupplier> inlayHintSuppliers
   ) {
-    var parameters = configuration.getInlayHintsOptions().getParameters();
+    var parameters = configuration.getInlayHintOptions().getParameters();
     return inlayHintSuppliers.stream()
       .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
       .collect(Collectors.toList());

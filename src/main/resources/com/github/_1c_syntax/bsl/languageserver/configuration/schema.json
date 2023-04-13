@@ -516,6 +516,15 @@
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
+        },
+        "inlayHintParameters": {
+            "$id": "#/definitions/inlayHintParameters",
+            "type": "object",
+            "title": "Inlay hints parameters configuration.\nKey-value object, where key is a inlay hint ID, and value is boolean or object with concrete inlay hint configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            }
         }
     },
     "properties": {
@@ -723,6 +732,16 @@
                             "description": "Don't format keywords to canonical view"
                         }
                     ]
+                }
+            }
+        },
+        "inlayHint": {
+            "$id": "#/properties/inlayHint",
+            "type": "object",
+            "title": "Inlay hint configuration.",
+            "properties": {
+                "parameters": {
+                    "$ref": "#/definitions/inlayHintParameters"
                 }
             }
         },
