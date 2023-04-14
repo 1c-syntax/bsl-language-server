@@ -62,6 +62,56 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private final LanguageServerConfiguration configuration;
 
+  @Override
+  public MarkupContent getContent(MethodSymbol symbol) {
+    var markupBuilder = new StringJoiner("\n");
+
+    // сигнатура
+    // местоположение метода
+    // описание метода
+    // параметры
+    // возвращаемое значение
+    // примеры
+    // варианты вызова
+
+    // сигнатура
+    String signature = getSignature(symbol);
+    addSectionIfNotEmpty(markupBuilder, signature);
+
+    // местоположение метода
+    String methodLocation = getLocation(symbol);
+    addSectionIfNotEmpty(markupBuilder, methodLocation);
+
+    // описание метода
+    String purposeSection = getPurposeSection(symbol);
+    addSectionIfNotEmpty(markupBuilder, purposeSection);
+
+    // параметры
+    String parametersSection = getParametersSection(symbol);
+    addSectionIfNotEmpty(markupBuilder, parametersSection);
+
+    // возвращаемое значение
+    String returnedValueSection = getReturnedValueSection(symbol);
+    addSectionIfNotEmpty(markupBuilder, returnedValueSection);
+
+    // примеры
+    String examplesSection = getExamplesSection(symbol);
+    addSectionIfNotEmpty(markupBuilder, examplesSection);
+
+    // варианты вызова
+    String callOptionsSection = getCallOptionsSection(symbol);
+    addSectionIfNotEmpty(markupBuilder, callOptionsSection);
+
+    String content = markupBuilder.toString();
+
+    return new MarkupContent(MarkupKind.MARKDOWN, content);
+  }
+
+  @Override
+  public SymbolKind getSymbolKind() {
+    return SymbolKind.Method;
+  }
+
   private static void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {
       markupBuilder.add(newContent);
@@ -74,6 +124,69 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return methodSymbol.getDescription()
       .map(MethodDescription::getPurposeDescription)
       .orElse("");
+  }
+
+  private String getParametersSection(MethodSymbol methodSymbol) {
+    var result = new StringJoiner("  \n"); // два пробела
+    methodSymbol.getParameters().forEach(parameterDefinition ->
+      result.add(parameterToString(parameterDefinition))
+    );
+
+    var parameters = result.toString();
+
+    if (!parameters.isBlank()) {
+      var parametersSection = new StringJoiner("\n");
+      String header = "**" + getResourceString(PARAMETERS_KEY) + ":**";
+      parametersSection.add(header);
+      parametersSection.add("");
+      parametersSection.add(parameters);
+      return parametersSection.toString();
+    }
+
+    return "";
+  }
+
+  private String getReturnedValueSection(MethodSymbol methodSymbol) {
+    var result = new StringJoiner("  \n"); // два пробела
+    methodSymbol.getDescription().ifPresent((MethodDescription methodDescription) -> {
+      Map<String, String> typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
+      result.add(typesMapToString(typesMap, 1));
+    });
+
+    var returnedValue = result.toString();
+
+    if (!returnedValue.isEmpty()) {
+      returnedValue = "**" + getResourceString(RETURNED_VALUE_KEY) + ":**\n\n" + returnedValue;
+    }
+
+    return returnedValue;
+  }
+
+  private String getExamplesSection(MethodSymbol methodSymbol) {
+    var examples = methodSymbol.getDescription()
+      .map(MethodDescription::getExamples)
+      .orElseGet(Collections::emptyList);
+    return getSectionWithCodeFences(examples, EXAMPLES_KEY);
+  }
+
+  private String getCallOptionsSection(MethodSymbol methodSymbol) {
+    var callOptions = methodSymbol.getDescription()
+      .map(MethodDescription::getCallOptions)
+      .orElseGet(Collections::emptyList);
+    return getSectionWithCodeFences(callOptions, CALL_OPTIONS_KEY);
+  }
+
+  private String getSectionWithCodeFences(List<String> codeBlocks, String resourceKey) {
+    String codeFences = codeBlocks
+      .stream()
+      .map(codeBlock -> "```bsl\n" + codeBlock + "\n```")
+      .collect(Collectors.joining("\n"));
+
+    if (!codeFences.isEmpty()) {
+      codeFences = "**" + getResourceString(resourceKey) + ":**\n\n" + codeFences;
+    }
+
+    return codeFences;
   }
 
   private static String getLocation(MethodSymbol symbol) {
@@ -89,12 +202,75 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     );
   }
 
+  private String getSignature(MethodSymbol methodSymbol) {
+    String signatureTemplate = "```bsl\n%s %s(%s)%s%s\n```";
+
+    String methodKind;
+    if (methodSymbol.isFunction()) {
+      methodKind = getResourceString(FUNCTION_KEY);
+    } else {
+      methodKind = getResourceString(PROCEDURE_KEY);
+    }
+    String methodName = methodSymbol.getName();
+
+    var parametersDescription = new StringJoiner(", ");
+    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
+      var parameter = "";
+      var parameterName = parameterDefinition.getName();
+
+      if (parameterDefinition.isByValue()) {
+        parameter = parameter + getResourceString(VAL_KEY) + " ";
+      }
+      parameter += parameterName;
+
+      var parameterTypes = parameterDefinition.getDescription()
+        .map(ParameterDescription::getTypes)
+        .map(MethodSymbolMarkupContentBuilder::getTypes)
+        .orElse("");
+
+      if (!parameterTypes.isEmpty()) {
+        parameter += ": " + parameterTypes;
+      }
+
+      if (parameterDefinition.isOptional()) {
+        parameter += " = ";
+        parameter += parameterDefinition.getDefaultValue().getValue();
+      }
+
+      parametersDescription.add(parameter);
+    });
+    var parameters = parametersDescription.toString();
+
+    String returnedValueType = methodSymbol.getDescription()
+      .map(MethodDescription::getReturnedValue)
+      .map(MethodSymbolMarkupContentBuilder::getTypes)
+      .orElse("");
+    if (!returnedValueType.isEmpty()) {
+      returnedValueType = ": " + returnedValueType;
+    }
+
+    String export = methodSymbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
+
+    return String.format(
+      signatureTemplate,
+      methodKind,
+      methodName,
+      parameters,
+      export,
+      returnedValueType
+    );
+  }
+
   private static String getTypes(List<TypeDescription> typeDescriptions) {
     return typeDescriptions.stream()
       .map(TypeDescription::getName)
       .flatMap(parameterType -> Stream.of(parameterType.split(",")))
       .map(String::trim)
       .collect(Collectors.joining(" | "));
+  }
+
+  private String getResourceString(String key) {
+    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
   }
 
   public static String parameterToString(ParameterDescription parameter, int level) {
@@ -167,182 +343,5 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     type.getParameters().forEach((ParameterDescription parameter) ->
       result.add(parameterToString(parameter, level + 1)));
     return result.toString();
-  }
-
-  @Override
-  public MarkupContent getContent(MethodSymbol symbol) {
-    var markupBuilder = new StringJoiner("\n");
-
-    // сигнатура
-    // местоположение метода
-    // описание метода
-    // параметры
-    // возвращаемое значение
-    // примеры
-    // варианты вызова
-
-    // сигнатура
-    String signature = getSignature(symbol);
-    addSectionIfNotEmpty(markupBuilder, signature);
-
-    // местоположение метода
-    String methodLocation = getLocation(symbol);
-    addSectionIfNotEmpty(markupBuilder, methodLocation);
-
-    // описание метода
-    String purposeSection = getPurposeSection(symbol);
-    addSectionIfNotEmpty(markupBuilder, purposeSection);
-
-    // параметры
-    String parametersSection = getParametersSection(symbol);
-    addSectionIfNotEmpty(markupBuilder, parametersSection);
-
-    // возвращаемое значение
-    String returnedValueSection = getReturnedValueSection(symbol);
-    addSectionIfNotEmpty(markupBuilder, returnedValueSection);
-
-    // примеры
-    String examplesSection = getExamplesSection(symbol);
-    addSectionIfNotEmpty(markupBuilder, examplesSection);
-
-    // варианты вызова
-    String callOptionsSection = getCallOptionsSection(symbol);
-    addSectionIfNotEmpty(markupBuilder, callOptionsSection);
-
-    String content = markupBuilder.toString();
-
-    return new MarkupContent(MarkupKind.MARKDOWN, content);
-  }
-
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
-  }
-
-  private String getParametersSection(MethodSymbol methodSymbol) {
-    var result = new StringJoiner("  \n"); // два пробела
-    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-        result.add(parameterToString(parameterDefinition));
-      }
-    );
-
-    var parameters = result.toString();
-
-    if (!parameters.isBlank()) {
-      var parametersSection = new StringJoiner("\n");
-      String header = "**" + getResourceString(PARAMETERS_KEY) + ":**";
-      parametersSection.add(header);
-      parametersSection.add("");
-      parametersSection.add(parameters);
-      return parametersSection.toString();
-    }
-
-    return "";
-  }
-
-  private String getReturnedValueSection(MethodSymbol methodSymbol) {
-    var result = new StringJoiner("  \n"); // два пробела
-    methodSymbol.getDescription().ifPresent((MethodDescription methodDescription) -> {
-      Map<String, String> typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
-      result.add(typesMapToString(typesMap, 1));
-    });
-
-    var returnedValue = result.toString();
-
-    if (!returnedValue.isEmpty()) {
-      returnedValue = "**" + getResourceString(RETURNED_VALUE_KEY) + ":**\n\n" + returnedValue;
-    }
-
-    return returnedValue;
-  }
-
-  private String getExamplesSection(MethodSymbol methodSymbol) {
-    var examples = methodSymbol.getDescription()
-      .map(MethodDescription::getExamples)
-      .orElseGet(Collections::emptyList);
-    return getSectionWithCodeFences(examples, EXAMPLES_KEY);
-  }
-
-  private String getCallOptionsSection(MethodSymbol methodSymbol) {
-    var callOptions = methodSymbol.getDescription()
-      .map(MethodDescription::getCallOptions)
-      .orElseGet(Collections::emptyList);
-    return getSectionWithCodeFences(callOptions, CALL_OPTIONS_KEY);
-  }
-
-  private String getSectionWithCodeFences(List<String> codeBlocks, String resourceKey) {
-    String codeFences = codeBlocks
-      .stream()
-      .map(codeBlock -> "```bsl\n" + codeBlock + "\n```")
-      .collect(Collectors.joining("\n"));
-
-    if (!codeFences.isEmpty()) {
-      codeFences = "**" + getResourceString(resourceKey) + ":**\n\n" + codeFences;
-    }
-
-    return codeFences;
-  }
-
-  private String getSignature(MethodSymbol methodSymbol) {
-    String signatureTemplate = "```bsl\n%s %s(%s)%s%s\n```";
-
-    String methodKind;
-    if (methodSymbol.isFunction()) {
-      methodKind = getResourceString(FUNCTION_KEY);
-    } else {
-      methodKind = getResourceString(PROCEDURE_KEY);
-    }
-    String methodName = methodSymbol.getName();
-
-    var parametersDescription = new StringJoiner(", ");
-    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-      var parameter = "";
-      var parameterName = parameterDefinition.getName();
-
-      if (parameterDefinition.isByValue()) {
-        parameter = parameter + getResourceString(VAL_KEY) + " ";
-      }
-      parameter += parameterName;
-
-      var parameterTypes = parameterDefinition.getDescription()
-        .map(ParameterDescription::getTypes)
-        .map(MethodSymbolMarkupContentBuilder::getTypes)
-        .orElse("");
-
-      if (!parameterTypes.isEmpty()) {
-        parameter += ": " + parameterTypes;
-      }
-
-      if (parameterDefinition.isOptional()) {
-        parameter += " = ";
-        parameter += parameterDefinition.getDefaultValue().getValue();
-      }
-
-      parametersDescription.add(parameter);
-    });
-    var parameters = parametersDescription.toString();
-
-    String returnedValueType = methodSymbol.getDescription()
-      .map(MethodDescription::getReturnedValue)
-      .map(MethodSymbolMarkupContentBuilder::getTypes)
-      .orElse("");
-    if (!returnedValueType.isEmpty()) {
-      returnedValueType = ": " + returnedValueType;
-    }
-
-    String export = methodSymbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
-
-    return String.format(
-      signatureTemplate,
-      methodKind,
-      methodName,
-      parameters,
-      export,
-      returnedValueType
-    );
-  }
-
-  private String getResourceString(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
   }
 }
