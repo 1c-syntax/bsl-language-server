@@ -141,6 +141,9 @@ public class CodeLensProvider {
     return objectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
   }
 
+  /**
+   * Отправить запрос на обновление линз кода.
+   */
   public void refreshCodeLenses() {
     boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)

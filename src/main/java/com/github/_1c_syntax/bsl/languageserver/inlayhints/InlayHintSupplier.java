@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,9 +25,38 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 
+import java.beans.Introspector;
 import java.util.List;
 
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider}
+ * данными о доступных в документе inlay hints.
+ */
 public interface InlayHintSupplier {
 
+  String INLAY_HINT_SUPPLIER = "InlayHintSupplier";
+
+  /**
+   * Идентификатор сапплаера.
+   *
+   * @return Идентификатор сапплаера.
+   */
+  default String getId() {
+    String simpleName = getClass().getSimpleName();
+    if (simpleName.endsWith(INLAY_HINT_SUPPLIER)) {
+      simpleName = simpleName.substring(0, simpleName.length() - INLAY_HINT_SUPPLIER.length());
+      simpleName = Introspector.decapitalize(simpleName);
+    }
+
+    return simpleName;
+  }
+
+  /**
+   * Получить inlay hints, доступные в документе.
+   *
+   * @param documentContext Контекст документа, для которого надо рассчитать inlay hints.
+   * @param params          Параметры запроса.
+   * @return Список inlay hints в документе.
+   */
   List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
 }
