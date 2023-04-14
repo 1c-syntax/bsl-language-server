@@ -19,31 +19,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses;
+package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import com.github._1c_syntax.bsl.languageserver.commands.ToggleCognitiveComplexityInlayHintsCommandSupplier;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
-/**
- * Сапплаер линз, показывающий когнитивную сложность методов.
- */
 @Component
-public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
-
-  public CognitiveComplexityCodeLensSupplier(
-    LanguageServerConfiguration configuration,
-    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier
-  ) {
-    super(configuration, commandSupplier);
-  }
+@RequiredArgsConstructor
+public class CognitiveComplexityInlayHintSupplier extends AbstractComplexityInlayHintSupplier {
 
   @Override
-  protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
-    return documentContext.getCognitiveComplexityData().getMethodsComplexity();
+  protected Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(
+    DocumentContext documentContext
+  ) {
+    return documentContext
+      .getCognitiveComplexityData()
+      .getMethodsComplexitySecondaryLocations();
   }
 }
