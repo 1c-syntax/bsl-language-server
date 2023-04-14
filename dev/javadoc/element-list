@@ -18,6 +18,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.formating
+com.github._1c_syntax.bsl.languageserver.configuration.inlayhints
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
@@ -36,6 +37,8 @@ com.github._1c_syntax.bsl.languageserver.events
 com.github._1c_syntax.bsl.languageserver.folding
 com.github._1c_syntax.bsl.languageserver.hover
 com.github._1c_syntax.bsl.languageserver.infrastructure
+com.github._1c_syntax.bsl.languageserver.inlayhints
+com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
 com.github._1c_syntax.bsl.languageserver.providers
 com.github._1c_syntax.bsl.languageserver.recognizer
