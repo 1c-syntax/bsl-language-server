@@ -65,7 +65,7 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
     List<TerminalNode> params = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
-      .map(node -> ((BSLParser.ParamContext) node))
+      .map(BSLParser.ParamContext.class::cast)
       .map(BSLParser.ParamContext::IDENTIFIER)
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
