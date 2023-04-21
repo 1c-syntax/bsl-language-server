@@ -29,8 +29,8 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
-  implements CommandSupplier<ToggleComplexityInlayHintsCommandArguments>
-{
+  implements CommandSupplier<ToggleComplexityInlayHintsCommandArguments> {
+
   private final AbstractComplexityInlayHintSupplier complexityInlayHintSupplier;
 
   @Override
