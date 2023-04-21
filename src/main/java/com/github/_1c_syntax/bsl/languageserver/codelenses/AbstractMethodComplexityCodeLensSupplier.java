@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.commands.AbstractToggleComplexityInlayHintsCommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -70,14 +71,14 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     var methodsComplexity = getMethodsComplexity(documentContext);
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
+
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
-      var command = commandSupplier.createCommand(title);
-      // todo: refactor
-      var arguments = new AbstractToggleComplexityInlayHintsCommandSupplier.ToggleComplexityInlayHintsCommandArguments(
+      var arguments = new ToggleComplexityInlayHintsCommandArguments(
         commandSupplier.getId(),
         data
       );
-      command.setArguments(List.of(arguments));
+
+      var command = commandSupplier.createCommand(title, arguments);
 
       unresolved.setCommand(command);
     });

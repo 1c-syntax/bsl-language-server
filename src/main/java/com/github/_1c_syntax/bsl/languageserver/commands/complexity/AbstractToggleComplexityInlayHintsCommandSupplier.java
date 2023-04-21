@@ -19,22 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.commands;
+package com.github._1c_syntax.bsl.languageserver.commands.complexity;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.AbstractMethodComplexityCodeLensSupplier;
+import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.AbstractComplexityInlayHintSupplier;
-import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
-import lombok.Value;
 
-import java.beans.ConstructorProperties;
-import java.net.URI;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
-  implements CommandSupplier<AbstractToggleComplexityInlayHintsCommandSupplier.ToggleComplexityInlayHintsCommandArguments>
+  implements CommandSupplier<ToggleComplexityInlayHintsCommandArguments>
 {
   private final AbstractComplexityInlayHintSupplier complexityInlayHintSupplier;
 
@@ -54,23 +49,4 @@ public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
     return true;
   }
 
-  @Value
-  @EqualsAndHashCode(callSuper = true)
-  @ToString(callSuper = true)
-  public static class ToggleComplexityInlayHintsCommandArguments extends DefaultCommandArguments {
-    /**
-     * Имя метода.
-     */
-    String methodName;
-
-    @ConstructorProperties({"uri", "id", "methodName"})
-    public ToggleComplexityInlayHintsCommandArguments(URI uri, String id, String methodName) {
-      super(uri, id);
-      this.methodName = methodName;
-    }
-
-    public ToggleComplexityInlayHintsCommandArguments(String id, AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData data) {
-      this(data.getUri(), id, data.getMethodName());
-    }
-  }
 }
