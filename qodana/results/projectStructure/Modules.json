@@ -5,6 +5,19 @@
       "contentEntries": [
         {
           "path": "file://$PROJECT_DIR$",
+          "excludePatterns": [],
+          "excludeFolders": [
+            {
+              "path": "file://$PROJECT_DIR$/.gradle",
+              "type": "Exclude",
+              "packagePrefix": ""
+            },
+            {
+              "path": "file://$PROJECT_DIR$/build",
+              "type": "Exclude",
+              "packagePrefix": ""
+            }
+          ],
           "sourceFolders": []
         }
       ],
@@ -24,6 +37,8 @@
       "contentEntries": [
         {
           "path": "file://$PROJECT_DIR$/src/jmh",
+          "excludePatterns": [],
+          "excludeFolders": [],
           "sourceFolders": [
             {
               "path": "file://$PROJECT_DIR$/src/jmh/java",
@@ -817,6 +832,8 @@
       "contentEntries": [
         {
           "path": "file://$PROJECT_DIR$/src/test",
+          "excludePatterns": [],
+          "excludeFolders": [],
           "sourceFolders": [
             {
               "path": "file://$PROJECT_DIR$/src/test/java",
@@ -1579,6 +1596,8 @@
       "contentEntries": [
         {
           "path": "file://$PROJECT_DIR$/src/main",
+          "excludePatterns": [],
+          "excludeFolders": [],
           "sourceFolders": [
             {
               "path": "file://$PROJECT_DIR$/src/main/java",

@@ -31,407 +31,159 @@
   "hash": "d6a3fbf64869f3fa53973788f8e84f715402af0e5176613516f554bac3c9c5a1"
 },{
   "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Default annotation parameter value",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Redundant default parameter value assignment",
-  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 88,
-      "offset": 20,
-      "length": 32,
+      "line": 124,
+      "offset": 9,
+      "length": 4,
       "code": {
-        "startLine": 86,
-        "length": 32,
-        "offset": 68,
-        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = \"\" + DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
+        "startLine": 122,
+        "length": 4,
+        "offset": 158,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "DefaultAnnotationParam"
+    "inspectionName": "EmptyStatementBody"
   },
-  "hash": "e54d22da1df29d2d0b5068135afdbf35b6b42cd84636402376982a54bbc1f1ac"
+  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
 },{
   "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Default annotation parameter value",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Redundant default parameter value assignment",
-  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 50,
-      "offset": 20,
-      "length": 17,
+      "line": 263,
+      "offset": 9,
+      "length": 4,
       "code": {
-        "startLine": 48,
-        "length": 17,
-        "offset": 68,
-        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
+        "startLine": 261,
+        "length": 4,
+        "offset": 156,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "DefaultAnnotationParam"
+    "inspectionName": "EmptyStatementBody"
   },
-  "hash": "0075b5ac0f587a18b42ec66d5835585bd8dd59fe5399780ae701a882e27920e2"
+  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
 },{
   "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Stream API call chain can be simplified",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Can be replaced with 'peek'",
-  "detailsInfo": "Reports stream API call chains that can be simplified. Simplification will often avoid some temporary object creation during collection traversal.\n\n\nThe inspection replaces the following call chains:\n\n* `collection.stream().forEach()` → `collection.forEach()`\n* `collection.stream().collect(toList/toSet/toCollection())` → `new CollectionType<>(collection)`\n* `collection.stream().toArray()` → `collection.toArray()`\n* `Arrays.asList().stream()` → `Arrays.stream()` or `Stream.of()`\n* `IntStream.range(0, array.length).mapToObj(idx -> array[idx])` → `Arrays.stream(array)`\n* `IntStream.range(0, list.size()).mapToObj(idx -> list.get(idx))` → `list.stream()`\n* `Collections.singleton().stream()` → `Stream.of()`\n* `Collections.emptyList().stream()` → `Stream.empty()`\n* `stream.filter().findFirst().isPresent()` → `stream.anyMatch()`\n* `stream.collect(counting())` → `stream.count()`\n* `stream.collect(maxBy())` → `stream.max()`\n* `stream.collect(mapping())` → `stream.map().collect()`\n* `stream.collect(reducing())` → `stream.reduce()`\n* `stream.collect(summingInt())` → `stream.mapToInt().sum()`\n* `stream.mapToObj(x -> x)` → `stream.boxed()`\n* `stream.map(x -> {...; return x;})` → `stream.peek(x -> ...)`\n* `!stream.anyMatch()` → `stream.noneMatch()`\n* `!stream.anyMatch(x -> !(...))` → `stream.allMatch()`\n* `stream.map().anyMatch(Boolean::booleanValue)` → `stream.anyMatch()`\n* `IntStream.range(expr1, expr2).mapToObj(x -> array[x])` → `Arrays.stream(array, expr1, expr2)`\n* `Collection.nCopies(count, ...)` → `Stream.generate().limit(count)`\n* `stream.sorted(comparator).findFirst()` → `Stream.min(comparator)`\n* `optional.orElseGet(() -> { throw new ...; })` → `optional.orElseThrow()`\n\n\nNote that the replacement semantics may have minor differences in some cases. For example,\n`Collections.synchronizedList(...).stream().forEach()` is not synchronized while\n`Collections.synchronizedList(...).forEach()` is synchronized.\nAlso, `collect(Collectors.maxBy())` returns an empty `Optional` if the resulting element is\n`null` while `Stream.max()` throws `NullPointerException` in this case.",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ScheduledJobHandlerDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 89,
-      "offset": 8,
-      "length": 3,
+      "line": 372,
+      "offset": 9,
+      "length": 4,
       "code": {
-        "startLine": 87,
-        "length": 3,
-        "offset": 111,
-        "surroundingCode": "    scheduledJobHandlers.values().stream()\n      .filter(mdScheduledJobs -> mdScheduledJobs.size() > 1)\n      .map((List<MDScheduledJob> mdScheduledJobs) -> {\n        mdScheduledJobs.sort(Comparator.comparing(AbstractMDObjectBase::getName));\n        return mdScheduledJobs;"
+        "startLine": 370,
+        "length": 4,
+        "offset": 137,
+        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "SimplifyStreamApiCallChains"
+    "inspectionName": "EmptyStatementBody"
   },
-  "hash": "45cf4d9feeefe80fe2fbfd00066e8e8329a7a64dbd2950fa37a6c72f133ab6a4"
+  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
 },{
   "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Field accessed in both 'synchronized' and unsynchronized contexts",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Field 'isEmpty' is accessed in both synchronized and unsynchronized contexts",
-  "detailsInfo": "Reports non-final fields that are accessed in both `synchronized` and non-`synchronized` contexts. `volatile` fields as well as accesses in constructors and initializers are ignored by this inspection.\n\n\nSuch \"partially synchronized\" access is often the result of a coding oversight\nand may lead to unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      public class Program {\n        Console console; // warning: Field 'console' is accessed in both synchronized and unsynchronized contexts\n\n        public synchronized void execute() {\n          console.print(\"running\");\n        }\n\n        public void check() {\n          console.check();\n        }\n      }\n\n\nUse the option to specify if simple getters and setters are counted as accesses too.",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/FormatProvider.java",
       "language": "JAVA",
-      "line": 49,
-      "offset": 19,
-      "length": 7,
+      "line": 279,
+      "offset": 9,
+      "length": 4,
       "code": {
-        "startLine": 47,
-        "length": 7,
-        "offset": 75,
-        "surroundingCode": "public class FileAwarePrintWriter extends PrintWriter {\n\n  private boolean isEmpty = true;\n  private File file;\n"
+        "startLine": 277,
+        "length": 4,
+        "offset": 124,
+        "surroundingCode": "      } else if (needAddSpace(tokenType, previousTokenType, previousIsUnary)) {\n        newTextBuilder.append(' ');\n      } else {\n        // no-op\n      }"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "FieldAccessedSynchronizedAndUnsynchronized"
+    "inspectionName": "EmptyStatementBody"
   },
-  "hash": "b78db030a52c7835b5d3c32304045f5ab114d0f2ce89399bbefc5817bd4d13ae"
+  "hash": "fefd5fda99dae771a107547be7eeb04c9ca7fa01d67fa8bc7c644cdc2ee7241a"
 },{
   "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Redundant character escape",
-  "tags": [
-    "RegExp"
-  ],
-  "severity": "High",
-  "comment": "Redundant character escape '*' in RegExp",
-  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
-      "language": "RegExp",
-      "line": 67,
-      "offset": 76,
-      "length": 3,
-      "code": {
-        "startLine": 65,
-        "length": 3,
-        "offset": 81,
-        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "RegExpRedundantEscape"
-  },
-  "hash": "6db027724eca46be1c37530db8747a3dd0031592cfb0e7dea684fd3808dc7669"
-},{
-  "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Unnecessary 'continue' statement",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "'continue' is unnecessary as the last statement in a loop",
-  "detailsInfo": "Reports `continue` statements if they are the last reachable statements in the loop. These `continue` statements are unnecessary and can be safely removed.\n\nExample:\n\n\n      for (String element: elements) {\n        System.out.println();\n        continue;\n      }\n\nAfter the quick-fix is applied:\n\n\n      for (String element: elements) {\n        System.out.println();\n      }\n\nThe inspection doesn't analyze JSP files.\n\n\nUse the **Ignore in then branch of 'if' statement with 'else' branch** option to ignore\n`continue` statements when they are placed in a `then` branch of a complete\n`if`-`else` statement.\n\nExample:\n\n\n      for (String element: elements) {\n        if(element.isEmpty()) {\n          continue;\n        } else {\n          //...\n        }\n      }\n",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/ExpressionTreeBuildingVisitor.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
       "language": "JAVA",
-      "line": 86,
-      "offset": 11,
-      "length": 8,
+      "line": 158,
+      "offset": 9,
+      "length": 4,
       "code": {
-        "startLine": 84,
-        "length": 8,
-        "offset": 144,
-        "surroundingCode": "          visitMember((BSLParser.MemberContext) child);\n        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {\n          continue;\n        } else {\n          throw new IllegalStateException();"
+        "startLine": 156,
+        "length": 4,
+        "offset": 150,
+        "surroundingCode": "        needReturn = !allowedMethodNamesPattern.matcher(\n          ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();\n      } else {\n        // no-op\n      }"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "UnnecessaryContinue"
+    "inspectionName": "EmptyStatementBody"
   },
-  "hash": "c70d70b6e7328acd0c64552167509c2554789136a5f6e56b42cbb9204a3e10c2"
-},{
-  "tool": "Code Inspection",
-  "category": "Serialization issues",
-  "type": "Non-serializable field in a 'Serializable' class",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Non-serializable field 'exitPoint' in a Serializable class",
-  "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/ControlFlowGraph.java",
-      "language": "JAVA",
-      "line": 35,
-      "offset": 22,
-      "length": 9,
-      "code": {
-        "startLine": 33,
-        "length": 9,
-        "offset": 32,
-        "surroundingCode": "\n  @Getter\n  private ExitVertex exitPoint;\n\n  ControlFlowGraph() {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "NonSerializableFieldInSerializableClass"
-  },
-  "hash": "a330a052f7fb4db0324ec4ebc4b4aebd24031a56f77d397604f85b354d76f263"
-},{
-  "tool": "Code Inspection",
-  "category": "Serialization issues",
-  "type": "Non-serializable field in a 'Serializable' class",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Non-serializable field 'compatibilityMode' in a Serializable class",
-  "detailsInfo": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticCompatibilityMode.java",
-      "language": "JAVA",
-      "line": 54,
-      "offset": 35,
-      "length": 17,
-      "code": {
-        "startLine": 52,
-        "length": 17,
-        "offset": 39,
-        "surroundingCode": "  ;\n\n  private final CompatibilityMode compatibilityMode;\n\n  DiagnosticCompatibilityMode(int minor, int version) {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "NonSerializableFieldInSerializableClass"
-  },
-  "hash": "9bd9720fd9fe1e4cf2bec3d06a245d8a9f9ec06aa56b941bb143d551ad027ef7"
-},{
-  "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "'protected' member in 'final' class",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Class member declared 'protected' in 'final' class",
-  "detailsInfo": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/TernaryOperatorNode.java",
-      "language": "JAVA",
-      "line": 40,
-      "offset": 3,
-      "length": 9,
-      "code": {
-        "startLine": 38,
-        "length": 9,
-        "offset": 30,
-        "surroundingCode": "  BslExpression falsePart;\n\n  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {\n    super(ExpressionNodeType.TERNARY_OP);\n    this.condition = condition;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "ProtectedMemberInFinalClass"
-  },
-  "hash": "a6d80b534536073a4fb6262653b6f6d1e410126df2120e0d92bcc01ec12c4b9c"
-},{
-  "tool": "Code Inspection",
-  "category": "Inheritance issues",
-  "type": "Abstract class which has no concrete subclass",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Abstract class 'AbstractCfgVisitor' has no concrete subclass",
-  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/AbstractCfgVisitor.java",
-      "language": "JAVA",
-      "line": 32,
-      "offset": 23,
-      "length": 18,
-      "code": {
-        "startLine": 30,
-        "length": 18,
-        "offset": 63,
-        "surroundingCode": " * конкретных узлов графа управления\n */\npublic abstract class AbstractCfgVisitor {\n\n  @FunctionalInterface"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AbstractClassNeverImplemented"
-  },
-  "hash": "250f295ed1d99a3e34b62c1608641577216dc19ed5ba5ceeb0c3a1651a20a4ab"
-},{
-  "tool": "Code Inspection",
-  "category": "Inheritance issues",
-  "type": "Abstract class which has no concrete subclass",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Abstract class 'DiagnosticComputer' has no concrete subclass",
-  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/DiagnosticComputer.java",
-      "language": "JAVA",
-      "line": 39,
-      "offset": 23,
-      "length": 18,
-      "code": {
-        "startLine": 37,
-        "length": 18,
-        "offset": 54,
-        "surroundingCode": "@RequiredArgsConstructor\n@Slf4j\npublic abstract class DiagnosticComputer {\n\n  public List<Diagnostic> compute(DocumentContext documentContext) {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AbstractClassNeverImplemented"
-  },
-  "hash": "a508c9d777c317e228c597aaf9c21e550b0364857c085c77a2affd1eb4dcbb06"
-},{
-  "tool": "Code Inspection",
-  "category": "Inheritance issues",
-  "type": "Abstract class which has no concrete subclass",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Abstract class 'DiagnosticMixIn' has no concrete subclass",
-  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/databind/DiagnosticMixIn.java",
-      "language": "JAVA",
-      "line": 34,
-      "offset": 23,
-      "length": 15,
-      "code": {
-        "startLine": 32,
-        "length": 15,
-        "offset": 108,
-        "surroundingCode": " * См. {@link com.fasterxml.jackson.databind.ObjectMapper#addMixIn(Class, Class)}\n */\npublic abstract class DiagnosticMixIn {\n\n  @JsonSerialize(using = DiagnosticCodeSerializer.class)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AbstractClassNeverImplemented"
-  },
-  "hash": "90b50e5f61f0466d344d0ee800056565883a508ec770e774a050442d08db423c"
-},{
-  "tool": "Code Inspection",
-  "category": "Inheritance issues",
-  "type": "Abstract class which has no concrete subclass",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Abstract class 'DiagnosticsConfiguration' has no concrete subclass",
-  "detailsInfo": "Reports `abstract` classes that have no concrete subclasses.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/infrastructure/DiagnosticsConfiguration.java",
-      "language": "JAVA",
-      "line": 58,
-      "offset": 23,
-      "length": 24,
-      "code": {
-        "startLine": 56,
-        "length": 24,
-        "offset": 62,
-        "surroundingCode": "@Configuration\n@RequiredArgsConstructor\npublic abstract class DiagnosticsConfiguration {\n\n  private final LanguageServerConfiguration configuration;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AbstractClassNeverImplemented"
-  },
-  "hash": "bc7c46b00be2e5d3ce721f09cbec59e932434e4f4c7229773a703574bd1139a4"
+  "hash": "f588f93d637b5f2abc9e745577a7b428b9a587e4c96659b9229547bfe2d09e25"
 },{
   "tool": "Code Inspection",
   "category": "Lombok",
@@ -465,188 +217,33 @@
   "hash": "04085f7c5cec4361bb0d0b37131da1089051295ed971c2b35d37e940fafa99ea"
 },{
   "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Cast conflicts with 'instanceof'",
+  "category": "RegExp",
+  "type": "Redundant character escape",
   "tags": [
-    "JAVA"
+    "RegExp"
   ],
   "severity": "High",
-  "comment": "Cast to 'BSLParser.NewExpressionContext' type conflicts with preceding 'instanceof ParserRuleContext' check",
-  "detailsInfo": "Reports type cast expressions that are preceded by an `instanceof` check for a different type.\n\n\nAlthough this might be intended, such a construct is most likely an error, and will\nresult in a `java.lang.ClassCastException` at runtime.\n\n**Example:**\n\n\n      class Main {\n        int whenCharSequenceCastToNumber(Object o){\n          if (o instanceof CharSequence) {\n            return ((Number) o).intValue();\n          }\n          return 0;\n        }\n\n        int earlyReturnWhenNotCharSequence(Object o){\n          if (!(o instanceof CharSequence)) return 0;\n          return ((Number)o).intValue();\n        }\n      }\n",
+  "comment": "Redundant character escape '*' in RegExp",
+  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
-      "language": "JAVA",
-      "line": 154,
-      "offset": 47,
-      "length": 34,
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "language": "RegExp",
+      "line": 67,
+      "offset": 76,
+      "length": 3,
       "code": {
-        "startLine": 152,
-        "length": 34,
-        "offset": 164,
-        "surroundingCode": "        needReturn = true;\n      } else if (BSLParser.RULE_newExpression == ((ParserRuleContext) t).getRuleIndex()) {\n        needReturn = !emptyCallParameterList(((BSLParser.NewExpressionContext) t).doCall());\n      } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {\n        needReturn = !allowedMethodNamesPattern.matcher("
+        "startLine": 65,
+        "length": 3,
+        "offset": 81,
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "CastConflictsWithInstanceof"
+    "inspectionName": "RegExpRedundantEscape"
   },
-  "hash": "0ec6b57b6fde6b520ba45a4b32d10fd824ac61a69016a64a1de73ece03f80b71"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Cast conflicts with 'instanceof'",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Cast to 'BSLParser.GlobalMethodCallContext' type conflicts with preceding 'instanceof ParserRuleContext' check",
-  "detailsInfo": "Reports type cast expressions that are preceded by an `instanceof` check for a different type.\n\n\nAlthough this might be intended, such a construct is most likely an error, and will\nresult in a `java.lang.ClassCastException` at runtime.\n\n**Example:**\n\n\n      class Main {\n        int whenCharSequenceCastToNumber(Object o){\n          if (o instanceof CharSequence) {\n            return ((Number) o).intValue();\n          }\n          return 0;\n        }\n\n        int earlyReturnWhenNotCharSequence(Object o){\n          if (!(o instanceof CharSequence)) return 0;\n          return ((Number)o).intValue();\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
-      "language": "JAVA",
-      "line": 157,
-      "offset": 12,
-      "length": 37,
-      "code": {
-        "startLine": 155,
-        "length": 37,
-        "offset": 162,
-        "surroundingCode": "      } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {\n        needReturn = !allowedMethodNamesPattern.matcher(\n          ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();\n      } else {\n        // no-op"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "CastConflictsWithInstanceof"
-  },
-  "hash": "eb7e5d91d62cae0911e19809f43f952ba9068b18112f8b4bba2e027c635278fc"
-},{
-  "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Non-private field accessed in 'synchronized' context",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Non-private field 'this.out' accessed in synchronized context",
-  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
-      "language": "JAVA",
-      "line": 91,
-      "offset": 5,
-      "length": 8,
-      "code": {
-        "startLine": 89,
-        "length": 8,
-        "offset": 30,
-        "surroundingCode": "    closeOutputStream();\n\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
-  },
-  "hash": "0ccd0f1dfb2755ed9a5c2b636ad341d7859d728e17008dc8976913cc78380fce"
-},{
-  "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Non-private field accessed in 'synchronized' context",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Non-private field 'this.lock' accessed in synchronized context",
-  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
-      "language": "JAVA",
-      "line": 92,
-      "offset": 5,
-      "length": 9,
-      "code": {
-        "startLine": 90,
-        "length": 9,
-        "offset": 106,
-        "surroundingCode": "\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
-  },
-  "hash": "39a4f87131c4f867445fb0b7be71b54fd52580f469490b4db6d9111cac05ac8f"
-},{
-  "tool": "Code Inspection",
-  "category": "Threading issues",
-  "type": "Non-private field accessed in 'synchronized' context",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Non-private field 'this.out' accessed in synchronized context",
-  "detailsInfo": "Reports non-`final`, non-`private` fields that are accessed in a synchronized context.\n\n\nA non-`private` field cannot be guaranteed to always be accessed in a synchronized manner, and such \"partially synchronized\"\naccess may result in unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      class Bar {\n        public String field1;\n      }\n      public Bar myBar;\n\n      synchronized public void sample() {\n       myBar.field1 = \"bar\";\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/lsp/FileAwarePrintWriter.java",
-      "language": "JAVA",
-      "line": 92,
-      "offset": 17,
-      "length": 8,
-      "code": {
-        "startLine": 90,
-        "length": 8,
-        "offset": 118,
-        "surroundingCode": "\n    this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));\n    this.lock = this.out;\n    this.isEmpty = false;\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "PublicFieldAccessedInSynchronizedContext"
-  },
-  "hash": "a342c69e069ab0f17aea25348a1e79ddce1a3e70499abd1c56e771f18738e016"
-},{
-  "tool": "Code Inspection",
-  "category": "Class structure",
-  "type": "Utility class with 'public' constructor",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Class 'BSLLSBinding' has only 'static' members, and a 'public' constructor",
-  "detailsInfo": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/BSLLSBinding.java",
-      "language": "JAVA",
-      "line": 43,
-      "offset": 14,
-      "length": 12,
-      "code": {
-        "startLine": 41,
-        "length": 12,
-        "offset": 97,
-        "surroundingCode": "@EnableAutoConfiguration\n@ComponentScan(\"com.github._1c_syntax.bsl.languageserver\")\npublic class BSLLSBinding {\n\n  @Getter(lazy = true, value = AccessLevel.PRIVATE)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UtilityClassWithPublicConstructor"
-  },
-  "hash": "2c148ff0fe1e588079873203724019e5e6ca93a51f0882c21988a94471e1733b"
+  "hash": "6db027724eca46be1c37530db8747a3dd0031592cfb0e7dea684fd3808dc7669"
 }]}
