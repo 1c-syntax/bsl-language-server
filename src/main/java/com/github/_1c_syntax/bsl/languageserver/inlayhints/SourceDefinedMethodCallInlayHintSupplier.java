@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -40,6 +41,7 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -51,7 +53,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSupplier {
 
+  private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = true;
+
   private final ReferenceIndex referenceIndex;
+  protected final LanguageServerConfiguration configuration;
+
 
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
@@ -67,13 +73,13 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.getSelectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
-      .map(SourceDefinedMethodCallInlayHintSupplier::toInlayHints)
+      .map(this::toInlayHints)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }
 
 
-  private static List<InlayHint> toInlayHints(Reference reference) {
+  private List<InlayHint> toInlayHints(Reference reference) {
 
     var methodSymbol = (MethodSymbol) reference.getSymbol();
     var parameters = methodSymbol.getParameters();
@@ -101,7 +107,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
           var passedValue = callParam.getText();
           var defaultValue = parameter.getDefaultValue();
 
-          if (StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
+          if (!showAllParameters() && StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
             continue;
           }
 
@@ -137,6 +143,15 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
 
+  }
+
+  private boolean showAllParameters() {
+    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    if (parameters.isLeft()) {
+      return DEFAULT_SHOW_ALL_PARAMETERS;
+    } else {
+      return (boolean) parameters.getRight().getOrDefault("showAllParameters", DEFAULT_SHOW_ALL_PARAMETERS);
+    }
   }
 
   private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
