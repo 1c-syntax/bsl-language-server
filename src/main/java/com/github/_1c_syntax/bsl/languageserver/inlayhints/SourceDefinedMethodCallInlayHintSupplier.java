@@ -53,7 +53,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSupplier {
 
-  private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = true;
+  private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
+  private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
   private final ReferenceIndex referenceIndex;
   protected final LanguageServerConfiguration configuration;
@@ -116,7 +117,11 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
           var labelBuilder = new StringBuilder();
           labelBuilder.append(parameter.getName());
-          if (passedValue.isBlank() && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)) {
+          
+          if (showDefaultValues()
+            && passedValue.isBlank()
+            && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
+          ) {
             labelBuilder.append(" (");
             labelBuilder.append(defaultValue.getValue());
             labelBuilder.append(")");
@@ -153,6 +158,16 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       return (boolean) parameters.getRight().getOrDefault("showAllParameters", DEFAULT_SHOW_ALL_PARAMETERS);
     }
   }
+
+  private boolean showDefaultValues() {
+    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    if (parameters.isLeft()) {
+      return DEFAULT_DEFAULT_VALUES;
+    } else {
+      return (boolean) parameters.getRight().getOrDefault("showDefaultValues", DEFAULT_DEFAULT_VALUES);
+    }
+  }
+
 
   private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
     var selectionRange = reference.getSelectionRange();
