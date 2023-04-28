@@ -67,6 +67,7 @@ gen/
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
 .idea/checkstyle-idea.xml
+.idea/jpa-buddy.xml
 *.bak
 *.orig
 
