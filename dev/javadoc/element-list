@@ -10,6 +10,7 @@ com.github._1c_syntax.bsl.languageserver.codelenses
 com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure
 com.github._1c_syntax.bsl.languageserver.color
 com.github._1c_syntax.bsl.languageserver.commands
+com.github._1c_syntax.bsl.languageserver.commands.complexity
 com.github._1c_syntax.bsl.languageserver.commands.infrastructure
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
