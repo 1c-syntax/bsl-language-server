@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1681764777853,
+  "lastUpdate": 1683979682709,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21731,6 +21731,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4993416305927912",
             "extra": "mean: 52.7933775583903 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fdbbf1417e952e14a6492eaa2763a3f1654acfcf",
+          "message": "Merge pull request #3039 from 1c-syntax/feature/complexity-inlay-hints",
+          "timestamp": "2023-05-13T13:56:54+02:00",
+          "tree_id": "46281d1d85c56bb730500661c228a4bd211bc14f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fdbbf1417e952e14a6492eaa2763a3f1654acfcf"
+        },
+        "date": 1683979675009,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 51.98851307233175,
+            "unit": "sec",
+            "range": "stddev: 0.963733652588678",
+            "extra": "mean: 51.98851307233175 sec\nrounds: 3"
           }
         ]
       }
