@@ -38,9 +38,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Абстрактный поставщик подсказок о сложности методов.
+ * </p>
+ * По умолчанию подсказки отключены. Для включения нужно вызвать метод {@link #toggleHints(URI, String)}.
+ */
 public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSupplier {
+
   private final Map<URI, Set<String>> enabledMethods = new HashMap<>();
 
+  /**
+   * Получение подсказок о местах увеличения сложности метода.
+   * </p>
+   *
+   * @inheritDoc
+   */
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var enabledMethodsInFile = enabledMethods.getOrDefault(documentContext.getUri(), Collections.emptySet());
@@ -56,19 +68,12 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
       .collect(Collectors.toList());
   }
 
-  protected abstract Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(
-    DocumentContext documentContext
-  );
-  
-  private static InlayHint toInlayHint(ComplexitySecondaryLocation complexitySecondaryLocation) {
-    var inlayHint = new InlayHint();
-    inlayHint.setPosition(complexitySecondaryLocation.getRange().getStart());
-    inlayHint.setPaddingRight(Boolean.TRUE);
-    inlayHint.setKind(InlayHintKind.Parameter);
-    inlayHint.setLabel(complexitySecondaryLocation.getMessage());
-    return inlayHint;
-  }
-
+  /**
+   * Переключить показ подсказок сложности для метода.
+   *
+   * @param uri        URI документа.
+   * @param methodName Имя метода.
+   */
   public void toggleHints(URI uri, String methodName) {
     var methodsInFile = enabledMethods.computeIfAbsent(uri, uri1 -> new HashSet<>());
     if (methodsInFile.contains(methodName)) {
@@ -76,6 +81,25 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
     } else {
       methodsInFile.add(methodName);
     }
+  }
+
+  /**
+   * Получение мест увеличения сложности метода. Нужно переопределить в наследниках.
+   *
+   * @param documentContext Контекст документа.
+   * @return Места увеличения сложности метода.
+   */
+  protected abstract Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(
+    DocumentContext documentContext
+  );
+
+  private static InlayHint toInlayHint(ComplexitySecondaryLocation complexitySecondaryLocation) {
+    var inlayHint = new InlayHint();
+    inlayHint.setPosition(complexitySecondaryLocation.getRange().getStart());
+    inlayHint.setPaddingRight(Boolean.TRUE);
+    inlayHint.setKind(InlayHintKind.Parameter);
+    inlayHint.setLabel(complexitySecondaryLocation.getMessage());
+    return inlayHint;
   }
 
 }

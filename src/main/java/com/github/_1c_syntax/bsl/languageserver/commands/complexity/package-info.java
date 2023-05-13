@@ -19,22 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.commands;
-
-import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
-import com.github._1c_syntax.bsl.languageserver.inlayhints.CyclomaticComplexityInlayHintSupplier;
-import org.springframework.stereotype.Component;
-
 /**
- * Поставщик команды переключения подсказок цикломатической сложности.
+ * Служебные классы команд, связанные с показом сложности методов.
  */
-@Component
-public class ToggleCyclomaticComplexityInlayHintsCommandSupplier
-  extends AbstractToggleComplexityInlayHintsCommandSupplier {
+@DefaultAnnotation(NonNull.class)
+package com.github._1c_syntax.bsl.languageserver.commands.complexity;
 
-  public ToggleCyclomaticComplexityInlayHintsCommandSupplier(
-    CyclomaticComplexityInlayHintSupplier complexityInlayHintSupplier
-  ) {
-    super(complexityInlayHintSupplier);
-  }
-}
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

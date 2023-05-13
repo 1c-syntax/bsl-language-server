@@ -300,6 +300,7 @@ class FormatProviderTest {
   }
 
   private TextDocumentIdentifier getTextDocumentIdentifier() {
+    // TODO: Переделать на TestUtils.getTextDocumentIdentifier();
     File file = getTestFile();
     String uri = file.toURI().toString();
 
