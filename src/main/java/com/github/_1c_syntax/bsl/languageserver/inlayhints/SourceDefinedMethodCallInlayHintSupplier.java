@@ -49,10 +49,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Поставщик подсказок о параметрах вызываемого метода.
+ */
 @Component
 @RequiredArgsConstructor
 public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSupplier {
 
+  // todo: DEFAULT_SHOW_PARAMETERS_WITH_SAME_NAME
   private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
   private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
@@ -106,7 +110,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
           var callParam = callParams.get(i);
 
           var passedValue = callParam.getText();
-          var defaultValue = parameter.getDefaultValue();
 
           if (!showAllParameters() && StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
             continue;
@@ -115,30 +118,9 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
           var inlayHint = new InlayHint();
           inlayHint.setKind(InlayHintKind.Parameter);
 
-          var labelBuilder = new StringBuilder();
-          labelBuilder.append(parameter.getName());
-          
-          if (showDefaultValues()
-            && passedValue.isBlank()
-            && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
-          ) {
-            labelBuilder.append(" (");
-            labelBuilder.append(defaultValue.getValue());
-            labelBuilder.append(")");
-          } else {
-            labelBuilder.append(":");
-            inlayHint.setPaddingRight(Boolean.TRUE);
-          }
-
-          inlayHint.setLabel(labelBuilder.toString());
-
-          var position = new Position(callParam.getStart().getLine() - 1, callParam.getStart().getCharPositionInLine());
-          inlayHint.setPosition(position);
-
-          // todo: refactor
-          var markdown = MethodSymbolMarkupContentBuilder.parameterToString(parameter);
-          var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
-          inlayHint.setTooltip(tooltip);
+          setLabelAndPadding(inlayHint, parameter, passedValue);
+          setPosition(inlayHint, callParam);
+          setTooltip(inlayHint, parameter);
 
           hints.add(inlayHint);
         }
@@ -149,6 +131,45 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .collect(Collectors.toList());
 
   }
+
+  private void setLabelAndPadding(
+    InlayHint inlayHint,
+    ParameterDefinition parameter,
+    String passedValue
+  ) {
+
+    var defaultValue = parameter.getDefaultValue();
+
+    var labelBuilder = new StringBuilder();
+    labelBuilder.append(parameter.getName());
+
+    if (showDefaultValues()
+      && passedValue.isBlank()
+      && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
+    ) {
+      labelBuilder.append(" (");
+      labelBuilder.append(defaultValue.getValue());
+      labelBuilder.append(")");
+    } else {
+      labelBuilder.append(":");
+      inlayHint.setPaddingRight(Boolean.TRUE);
+    }
+
+    inlayHint.setLabel(labelBuilder.toString());
+  }
+
+  private static void setPosition(InlayHint inlayHint, BSLParser.CallParamContext callParam) {
+    var position = new Position(callParam.getStart().getLine() - 1, callParam.getStart().getCharPositionInLine());
+    inlayHint.setPosition(position);
+  }
+
+  private static void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {
+    // todo: refactor
+    var markdown = MethodSymbolMarkupContentBuilder.parameterToString(parameter);
+    var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
+    inlayHint.setTooltip(tooltip);
+  }
+
 
   private boolean showAllParameters() {
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
@@ -178,7 +199,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext) {
       var globalMethodCallContext = (BSLParser.GlobalMethodCallContext) doCallParent;
       return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
+    } else {
+      return false;
     }
-    return false;
   }
 }
