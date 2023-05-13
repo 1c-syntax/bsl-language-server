@@ -74,7 +74,6 @@ public class CommandProvider {
       if (commandSupplier.needRefreshCodeLensesAfterExecuteCommand()) {
         codeLensProvider.refreshCodeLenses();
       }
-      
     });
 
     return result;
