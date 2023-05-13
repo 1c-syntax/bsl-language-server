@@ -30,6 +30,9 @@ import lombok.Value;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 
+/**
+ * Аргументы команды для переключения отображения сложности метода во всплывающих подсказках.
+ */
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)

@@ -27,23 +27,37 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+/**
+ * Базовый класс для поставщиков команды переключения подсказок сложности.
+ */
 @RequiredArgsConstructor
 public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
   implements CommandSupplier<ToggleComplexityInlayHintsCommandArguments> {
 
   private final AbstractComplexityInlayHintSupplier complexityInlayHintSupplier;
 
+  /**
+   * Получение класса аргументов команды.
+   *
+   * @return Класс аргументов команды.
+   */
   @Override
   public Class<ToggleComplexityInlayHintsCommandArguments> getCommandArgumentsClass() {
     return ToggleComplexityInlayHintsCommandArguments.class;
   }
 
-  @Override
+  /**
+   * @inheritDoc
+   */
+   @Override
   public Optional<Object> execute(ToggleComplexityInlayHintsCommandArguments arguments) {
     complexityInlayHintSupplier.toggleHints(arguments.getUri(), arguments.getMethodName());
     return Optional.empty();
   }
 
+  /**
+   * @inheritDoc
+   */
   @Override
   public boolean needRefreshInlayHintsAfterExecuteCommand() {
     return true;

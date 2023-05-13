@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractTogg
 import com.github._1c_syntax.bsl.languageserver.inlayhints.CyclomaticComplexityInlayHintSupplier;
 import org.springframework.stereotype.Component;
 
+/**
+ * Поставщик команды переключения подсказок цикломатической сложности.
+ */
 @Component
 public class ToggleCyclomaticComplexityInlayHintsCommandSupplier
   extends AbstractToggleComplexityInlayHintsCommandSupplier {

@@ -30,10 +30,16 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Поставщик подсказок о когнитивной сложности методов.
+ */
 @Component
 @RequiredArgsConstructor
 public class CognitiveComplexityInlayHintSupplier extends AbstractComplexityInlayHintSupplier {
 
+  /**
+   * @inheritDoc
+   */
   @Override
   protected Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(
     DocumentContext documentContext
