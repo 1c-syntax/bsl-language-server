@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.commands;
 import org.eclipse.lsp4j.Command;
 
 import java.beans.Introspector;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -61,10 +62,11 @@ public interface CommandSupplier<T extends CommandArguments> {
    * Создать DTO команды.
    *
    * @param title Заголовок команды.
+   * @param arguments Аргументы команды.
    * @return Команда с заполненными заголовком и идентификатором команды.
    */
-  default Command createCommand(String title) {
-    return new Command(title, getId());
+  default Command createCommand(String title, T arguments) {
+    return new Command(title, getId(), List.of(arguments));
   }
 
   /**

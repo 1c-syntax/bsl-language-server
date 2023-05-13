@@ -524,6 +524,26 @@
             "default": null,
             "additionalProperties": {
                 "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cognitive complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cyclomatic complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cyclomaticComplexity"
+                }
             }
         }
     },
