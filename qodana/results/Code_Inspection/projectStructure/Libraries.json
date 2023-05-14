@@ -183,9 +183,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.projectlombok:lombok:1.18.24",
+      "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.24/13a394eed5c4f9efb2a6d956e2086f1d81e857d9/lombok-1.18.24.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/2700d3d6ba2a7bf321e780c29d802aa87aa65bc7/lombok-edge-SNAPSHOT.jar!/"
       ],
       "properties": {}
     },

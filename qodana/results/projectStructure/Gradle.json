@@ -226,12 +226,12 @@
       "version": "1.35"
     },
     {
-      "ideaName": "Gradle: org.projectlombok:lombok:1.18.24",
-      "gradleName": "org.projectlombok:lombok:1.18.24",
+      "ideaName": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
+      "gradleName": "org.projectlombok:lombok:edge-SNAPSHOT",
       "unresolved": false,
       "groupId": "org.projectlombok",
       "artifactId": "lombok",
-      "version": "1.18.24"
+      "version": "edge-SNAPSHOT"
     },
     {
       "ideaName": "Gradle: info.picocli:picocli:4.7.1",

@@ -178,7 +178,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.24",
+          "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
           "type": "Library"
         },
         {
@@ -966,7 +966,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.24",
+          "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
           "type": "Library"
         },
         {
@@ -1726,7 +1726,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.24",
+          "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
           "type": "Library"
         },
         {
