@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1683979682709,
+  "lastUpdate": 1684053972115,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21762,6 +21762,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.963733652588678",
             "extra": "mean: 51.98851307233175 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a78d1d4099b263fa3f7d42c7d5eac7f9bad0f26",
+          "message": "Merge pull request #3046 from 1c-syntax/feature/check-package\n\nПроверка сборки package в develop + поддержка jdk20 для jacoco и lombok",
+          "timestamp": "2023-05-14T10:35:19+02:00",
+          "tree_id": "e6e76df37bbd14d19570ba099d2dcc3d8349b953",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6a78d1d4099b263fa3f7d42c7d5eac7f9bad0f26"
+        },
+        "date": 1684053964559,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 52.891021966934204,
+            "unit": "sec",
+            "range": "stddev: 0.7039978438498299",
+            "extra": "mean: 52.891021966934204 sec\nrounds: 3"
           }
         ]
       }
