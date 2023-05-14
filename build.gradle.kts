@@ -29,6 +29,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
+    maven(url = "https://projectlombok.org/edge-releases") 
 }
 
 group = "io.github.1c-syntax"
@@ -130,6 +131,10 @@ dependencies {
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.49")
     testImplementation("org.awaitility", "awaitility", "4.2.0")
+}
+
+lombok {
+    version = "edge-SNAPSHOT"
 }
 
 java {
