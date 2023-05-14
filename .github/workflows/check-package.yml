@@ -1,4 +1,4 @@
-name: Make image
+name: Check making image
 
 on:
     push:
