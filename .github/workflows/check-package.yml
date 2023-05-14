@@ -40,7 +40,7 @@ jobs:
                 distribution: 'temurin'
 
             - name: Build bootJar with Gradle
-              run: ./gradlew check bootJar
+              run: ./gradlew check build
 
             - name: Build jpackage application image
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
