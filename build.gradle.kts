@@ -134,7 +134,7 @@ dependencies {
 }
 
 lombok {
-    version = "edge-SNAPSHOT"
+    version.set("edge-SNAPSHOT")
 }
 
 java {
