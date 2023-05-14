@@ -137,6 +137,10 @@ lombok {
     version.set("edge-SNAPSHOT")
 }
 
+jacoco {
+    toolVersion = "0.8.10"
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
