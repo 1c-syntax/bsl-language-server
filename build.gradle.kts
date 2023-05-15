@@ -52,7 +52,7 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "6.1"
+val languageToolVersion = "5.9"
 
 dependencyManagement {
     imports {
