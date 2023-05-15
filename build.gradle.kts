@@ -52,7 +52,7 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "5.6"
+val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
@@ -118,6 +118,13 @@ dependencies {
     implementation("io.sentry:sentry-spring-boot-starter")
     implementation("io.sentry:sentry-logback")
 
+    // CONSTRAINTS
+    implementation("com.google.guava:guava") {
+        version {
+            strictly("30.1-jre")
+       }
+    }
+    
     // COMPILE
     compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
