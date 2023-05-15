@@ -119,11 +119,10 @@ dependencies {
     implementation("io.sentry:sentry-logback")
 
     // CONSTRAINTS
-    implementation("com.google.guava:guava")
-    constraints {
-        implementation("com.google.guava:guava:30.1-jre") {
-            because("new Guava (from LT) breaks the Supplier API")
-        }
+    implementation("com.google.guava:guava") {
+        version {
+            strictly("30.1-jre")
+       }
     }
     
     // COMPILE
