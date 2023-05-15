@@ -115,7 +115,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   }
 
   @Override
-  public void run(String[] args) {
+  public void run(String... args) {
     var cmd = new CommandLine(this, picocliFactory);
 
     // проверка использования дефолтной команды

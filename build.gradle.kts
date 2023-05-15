@@ -8,21 +8,21 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "3.5.0.2730"
+    id("org.sonarqube") version "4.0.0.2929"
     id("io.freefair.lombok") version "6.6.1"
     id("io.freefair.javadoc-links") version "6.6.1"
     id("io.freefair.javadoc-utf-8") version "6.6.1"
     id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
     id("io.freefair.maven-central.validate-poms") version "6.6.1"
-    id("me.qoomon.git-versioning") version "6.4.0"
-    id("com.github.ben-manes.versions") version "0.45.0"
-    id("org.springframework.boot") version "2.7.10"
+    id("me.qoomon.git-versioning") version "6.4.2"
+    id("com.github.ben-manes.versions") version "0.46.0"
+    id("org.springframework.boot") version "2.7.11"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
-    id("me.champeau.jmh") version "0.6.8"
+    id("me.champeau.jmh") version "0.7.1"
 }
 
 repositories {
@@ -56,7 +56,7 @@ val languageToolVersion = "5.6"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.13.1")
+        mavenBom("io.sentry:sentry-bom:6.18.1")
     }
 }
 
@@ -67,11 +67,11 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.1")
+    api("info.picocli:picocli-spring-boot-starter:4.7.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.19.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.20.1")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.20.1")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
@@ -93,7 +93,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.9.1")
+    implementation("org.aspectj", "aspectjrt", "1.9.19")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -109,7 +109,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // graphs
-    implementation("org.jgrapht", "jgrapht-core", "1.5.1")
+    implementation("org.jgrapht", "jgrapht-core", "1.5.2")
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")

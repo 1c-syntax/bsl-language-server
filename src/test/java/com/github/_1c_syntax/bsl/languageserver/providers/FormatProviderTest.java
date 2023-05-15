@@ -276,8 +276,6 @@ class FormatProviderTest {
 
     // then
     assertThat(textEdits).hasSize(1);
-
-    TextEdit textEdit = textEdits.get(0);
     assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 > -2");
 
   }
@@ -288,15 +286,6 @@ class FormatProviderTest {
 
   private File getFormattedTestFile() {
     return new File("./src/test/resources/providers/format_formatted.bsl");
-  }
-
-  private TextDocumentItem getTextDocumentItem() throws IOException {
-    File file = getTestFile();
-    String uri = file.toURI().toString();
-
-    String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-
-    return new TextDocumentItem(uri, "bsl", 1, fileContent);
   }
 
   private TextDocumentIdentifier getTextDocumentIdentifier() {
