@@ -66,23 +66,23 @@
           "type": "Module"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.1",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
           "type": "Library"
         },
         {
@@ -122,7 +122,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.19",
           "type": "Library"
         },
         {
@@ -158,23 +158,23 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.1",
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.13.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.35",
+          "name": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.36",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.openjdk.jmh:jmh-core:1.35",
+          "name": "Gradle: org.openjdk.jmh:jmh-core:1.36",
           "type": "Library"
         },
         {
@@ -182,31 +182,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.1",
+          "name": "Gradle: info.picocli:picocli:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:5.3.26",
+          "name": "Gradle: org.springframework:spring-messaging:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:5.3.26",
+          "name": "Gradle: org.springframework:spring-websocket:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
           "type": "Library"
         },
         {
@@ -214,7 +214,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:5.3.26",
+          "name": "Gradle: org.springframework:spring-core:5.3.27",
           "type": "Library"
         },
         {
@@ -222,11 +222,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
           "type": "Library"
         },
         {
@@ -370,7 +370,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
           "type": "Library"
         },
         {
@@ -426,23 +426,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jheaps:jheaps:0.13",
+          "name": "Gradle: org.jheaps:jheaps:0.14",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.13.1",
+          "name": "Gradle: org.apfloat:apfloat:1.10.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.openjdk.jmh:jmh-generator-asm:1.35",
+          "name": "Gradle: io.sentry:sentry:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.openjdk.jmh:jmh-generator-reflection:1.35",
+          "name": "Gradle: org.openjdk.jmh:jmh-generator-asm:1.36",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.openjdk.jmh:jmh-generator-reflection:1.36",
           "type": "Library"
         },
         {
@@ -454,31 +458,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:5.3.26",
+          "name": "Gradle: org.springframework:spring-webmvc:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:5.3.26",
+          "name": "Gradle: org.springframework:spring-web:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:5.3.26",
+          "name": "Gradle: org.springframework:spring-beans:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:5.3.26",
+          "name": "Gradle: org.springframework:spring-context:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.2.11",
+          "name": "Gradle: ch.qos.logback:logback-classic:1.2.12",
           "type": "Library"
         },
         {
@@ -490,7 +494,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:5.3.26",
+          "name": "Gradle: org.springframework:spring-jcl:5.3.27",
           "type": "Library"
         },
         {
@@ -582,7 +586,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
           "type": "Library"
         },
         {
@@ -618,27 +622,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:5.3.26",
+          "name": "Gradle: org.springframework:spring-aop:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:5.3.26",
+          "name": "Gradle: org.springframework:spring-expression:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.2.11",
+          "name": "Gradle: ch.qos.logback:logback-core:1.2.12",
           "type": "Library"
         },
         {
@@ -674,7 +678,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.11",
           "type": "Library"
         },
         {
@@ -690,15 +694,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-test:5.3.26",
+          "name": "Gradle: org.springframework:spring-test:5.3.27",
           "type": "Library"
         },
         {
@@ -862,27 +866,27 @@
           "type": "Module"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.1",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
           "type": "Library"
         },
         {
@@ -918,7 +922,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.19",
           "type": "Library"
         },
         {
@@ -954,15 +958,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.1",
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.13.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
           "type": "Library"
         },
         {
@@ -982,23 +986,23 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.1",
+          "name": "Gradle: info.picocli:picocli:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-test:5.3.26",
+          "name": "Gradle: org.springframework:spring-test:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:5.3.26",
+          "name": "Gradle: org.springframework:spring-core:5.3.27",
           "type": "Library"
         },
         {
@@ -1038,27 +1042,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:5.3.26",
+          "name": "Gradle: org.springframework:spring-messaging:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:5.3.26",
+          "name": "Gradle: org.springframework:spring-websocket:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
           "type": "Library"
         },
         {
@@ -1070,11 +1074,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
           "type": "Library"
         },
         {
@@ -1206,7 +1210,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
           "type": "Library"
         },
         {
@@ -1270,15 +1274,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jheaps:jheaps:0.13",
+          "name": "Gradle: org.jheaps:jheaps:0.14",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.13.1",
+          "name": "Gradle: org.apfloat:apfloat:1.10.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry:6.18.1",
           "type": "Library"
         },
         {
@@ -1286,7 +1294,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:5.3.26",
+          "name": "Gradle: org.springframework:spring-jcl:5.3.27",
           "type": "Library"
         },
         {
@@ -1314,31 +1322,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:5.3.26",
+          "name": "Gradle: org.springframework:spring-webmvc:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:5.3.26",
+          "name": "Gradle: org.springframework:spring-web:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:5.3.26",
+          "name": "Gradle: org.springframework:spring-beans:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:5.3.26",
+          "name": "Gradle: org.springframework:spring-context:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.2.11",
+          "name": "Gradle: ch.qos.logback:logback-classic:1.2.12",
           "type": "Library"
         },
         {
@@ -1418,7 +1426,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
           "type": "Library"
         },
         {
@@ -1482,27 +1490,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:5.3.26",
+          "name": "Gradle: org.springframework:spring-aop:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:5.3.26",
+          "name": "Gradle: org.springframework:spring-expression:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.2.11",
+          "name": "Gradle: ch.qos.logback:logback-core:1.2.12",
           "type": "Library"
         },
         {
@@ -1622,23 +1630,23 @@
           "type": "Own sources"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.1",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
           "type": "Library"
         },
         {
@@ -1678,7 +1686,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.aspectj:aspectjrt:1.9.9.1",
+          "name": "Gradle: org.aspectj:aspectjrt:1.9.19",
           "type": "Library"
         },
         {
@@ -1714,15 +1722,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.1",
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.13.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
           "type": "Library"
         },
         {
@@ -1730,31 +1738,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.1",
+          "name": "Gradle: info.picocli:picocli:4.7.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:5.3.26",
+          "name": "Gradle: org.springframework:spring-messaging:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:5.3.26",
+          "name": "Gradle: org.springframework:spring-websocket:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
           "type": "Library"
         },
         {
@@ -1762,7 +1770,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:5.3.26",
+          "name": "Gradle: org.springframework:spring-core:5.3.27",
           "type": "Library"
         },
         {
@@ -1770,11 +1778,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.19.0",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
           "type": "Library"
         },
         {
@@ -1918,7 +1926,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
           "type": "Library"
         },
         {
@@ -1974,43 +1982,47 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jheaps:jheaps:0.13",
+          "name": "Gradle: org.jheaps:jheaps:0.14",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.13.1",
+          "name": "Gradle: org.apfloat:apfloat:1.10.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.13.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.10",
+          "name": "Gradle: io.sentry:sentry:6.18.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.10",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:5.3.26",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:5.3.26",
+          "name": "Gradle: org.springframework:spring-webmvc:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:5.3.26",
+          "name": "Gradle: org.springframework:spring-web:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:5.3.26",
+          "name": "Gradle: org.springframework:spring-beans:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.2.11",
+          "name": "Gradle: org.springframework:spring-context:5.3.27",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.qos.logback:logback-classic:1.2.12",
           "type": "Library"
         },
         {
@@ -2022,7 +2034,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:5.3.26",
+          "name": "Gradle: org.springframework:spring-jcl:5.3.27",
           "type": "Library"
         },
         {
@@ -2114,7 +2126,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.9",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
           "type": "Library"
         },
         {
@@ -2146,27 +2158,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.73",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:5.3.26",
+          "name": "Gradle: org.springframework:spring-aop:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:5.3.26",
+          "name": "Gradle: org.springframework:spring-expression:5.3.27",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.2.11",
+          "name": "Gradle: ch.qos.logback:logback-core:1.2.12",
           "type": "Library"
         },
         {
