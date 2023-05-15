@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface DiagnosticParameter {
-  Class type();
+  Class<?> type();
 
   String defaultValue() default "";
 }
