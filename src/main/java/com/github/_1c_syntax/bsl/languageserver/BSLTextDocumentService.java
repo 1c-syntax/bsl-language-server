@@ -159,7 +159,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
