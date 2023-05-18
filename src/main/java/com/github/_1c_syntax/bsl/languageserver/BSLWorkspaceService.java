@@ -49,7 +49,6 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final SymbolProvider symbolProvider;
 
   @Override
-  @SuppressWarnings("deprecation")
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
     return CompletableFuture.supplyAsync(() -> Either.forRight(symbolProvider.getSymbols(params)));
   }
