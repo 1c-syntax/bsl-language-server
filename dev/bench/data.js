@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1684171169997,
+  "lastUpdate": 1684436652265,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21855,6 +21855,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.23397999003609918",
             "extra": "mean: 52.59996525446574 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5909e47047d4c3b188d0ab0b0aac6bd99bce9c10",
+          "message": "Merge pull request #3051 from 1c-syntax/chore/lsp4j-0.21.0\n\nLsp4j 0.21.0",
+          "timestamp": "2023-05-18T20:52:55+02:00",
+          "tree_id": "abc29098655d771a1e06d8671afb23e356c15226",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5909e47047d4c3b188d0ab0b0aac6bd99bce9c10"
+        },
+        "date": 1684436644483,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.643282969792686,
+            "unit": "sec",
+            "range": "stddev: 1.428520455497007",
+            "extra": "mean: 55.643282969792686 sec\nrounds: 3"
           }
         ]
       }
