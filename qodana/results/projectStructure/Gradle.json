@@ -26,20 +26,20 @@
       "version": "2.7.11"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j",
-      "version": "0.20.1"
+      "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.websocket",
-      "version": "0.20.1"
+      "version": "0.21.0"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:167aaad827322e09ccde4658a71152dad234de4b",
@@ -322,20 +322,12 @@
       "version": "1.30"
     },
     {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
-      "unresolved": false,
-      "groupId": "org.eclipse.lsp4j",
-      "artifactId": "org.eclipse.lsp4j.generator",
-      "version": "0.20.1"
-    },
-    {
-      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
-      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
+      "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
+      "gradleName": "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
       "unresolved": false,
       "groupId": "org.eclipse.lsp4j",
       "artifactId": "org.eclipse.lsp4j.jsonrpc",
-      "version": "0.20.1"
+      "version": "0.21.0"
     },
     {
       "ideaName": "Gradle: javax.websocket:javax.websocket-api:1.1",
@@ -914,14 +906,6 @@
       "version": "5.3.27"
     },
     {
-      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-      "unresolved": false,
-      "groupId": "org.eclipse.xtend",
-      "artifactId": "org.eclipse.xtend.lib",
-      "version": "2.28.0"
-    },
-    {
       "ideaName": "Gradle: com.google.code.gson:gson:2.9.1",
       "gradleName": "com.google.code.gson:gson:2.9.1",
       "unresolved": false,
@@ -1168,22 +1152,6 @@
       "groupId": "org.apache.logging.log4j",
       "artifactId": "log4j-api",
       "version": "2.17.2"
-    },
-    {
-      "ideaName": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-      "gradleName": "org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-      "unresolved": false,
-      "groupId": "org.eclipse.xtend",
-      "artifactId": "org.eclipse.xtend.lib.macro",
-      "version": "2.28.0"
-    },
-    {
-      "ideaName": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
-      "gradleName": "org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
-      "unresolved": false,
-      "groupId": "org.eclipse.xtext",
-      "artifactId": "org.eclipse.xtext.xbase.lib",
-      "version": "2.28.0"
     },
     {
       "ideaName": "Gradle: io.grpc:grpc-context:1.50.2",

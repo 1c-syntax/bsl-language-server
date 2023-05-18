@@ -78,11 +78,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
           "type": "Library"
         },
         {
@@ -226,11 +226,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
           "type": "Library"
         },
         {
@@ -522,10 +518,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.code.gson:gson:2.9.1",
           "type": "Library"
         },
@@ -647,14 +639,6 @@
         },
         {
           "name": "Gradle: org.apache.logging.log4j:log4j-api:2.17.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
           "type": "Library"
         },
         {
@@ -878,11 +862,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
           "type": "Library"
         },
         {
@@ -1074,11 +1058,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
           "type": "Library"
         },
         {
@@ -1378,10 +1358,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.code.gson:gson:2.9.1",
           "type": "Library"
         },
@@ -1514,14 +1490,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: io.grpc:grpc-context:1.50.2",
           "type": "Library"
         },
@@ -1634,11 +1602,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
           "type": "Library"
         },
         {
@@ -1774,11 +1742,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
+          "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
           "type": "Library"
         },
         {
@@ -2054,10 +2018,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.code.gson:gson:2.9.1",
           "type": "Library"
         },
@@ -2175,14 +2135,6 @@
         },
         {
           "name": "Gradle: org.apache.logging.log4j:log4j-api:2.17.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
           "type": "Library"
         },
         {

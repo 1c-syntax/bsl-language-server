@@ -22,16 +22,16 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.20.1/4664442fb7d13f3f99a00802edecb96143a29b7f/org.eclipse.lsp4j-0.20.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j/0.21.0/ecf3ad7f8320754fb09c2931c183773e2b597d2c/org.eclipse.lsp4j-0.21.0.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.20.1",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.21.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.websocket/0.20.1/224f9a1c33fc9c2059fd532a714a6b22e4864eb3/org.eclipse.lsp4j.websocket-0.20.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.websocket/0.21.0/6908da0ef0abcf4a5c5f1644a74542e778dccc92/org.eclipse.lsp4j.websocket-0.21.0.jar!/"
       ],
       "properties": {}
     },
@@ -267,16 +267,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.20.1",
+      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.generator/0.20.1/451fb7437ddffb551fadb42ed928a8495da7227b/org.eclipse.lsp4j.generator-0.20.1.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.20.1/ae90b8d9c2e9af01d2ccb2cb12f6ffb19dd4448b/org.eclipse.lsp4j.jsonrpc-0.20.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.lsp4j/org.eclipse.lsp4j.jsonrpc/0.21.0/fd8ecb8a6f482ca9bb94a90dfd47dbb02bb60af4/org.eclipse.lsp4j.jsonrpc-0.21.0.jar!/"
       ],
       "properties": {}
     },
@@ -757,13 +750,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib:2.28.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib/2.28.0/b2119c6c7f87783cdf3b422c1901db03fe5fe2d3/org.eclipse.xtend.lib-2.28.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: com.google.code.gson:gson:2.9.1",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.9.1/2cc2131b98ebfb04e2b2c7dfb84431f4045096b/gson-2.9.1.jar!/"
@@ -970,20 +956,6 @@
       "name": "Gradle: org.apache.logging.log4j:log4j-api:2.17.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.17.2/f42d6afa111b4dec5d2aea0fe2197240749a4ea6/log4j-api-2.17.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtend/org.eclipse.xtend.lib.macro/2.28.0/b7201908e9108ed1babd784b53208c7c22d2fe11/org.eclipse.xtend.lib.macro-2.28.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.eclipse.xtext/org.eclipse.xtext.xbase.lib/2.28.0/44245e49dc576cf0b912e423af52bd52f104061a/org.eclipse.xtext.xbase.lib-2.28.0.jar!/"
       ],
       "properties": {}
     },
