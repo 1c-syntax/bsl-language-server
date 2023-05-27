@@ -42,12 +42,12 @@
       "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:167aaad827322e09ccde4658a71152dad234de4b",
-      "gradleName": "com.github.1c-syntax:bsl-parser:167aaad827322e09ccde4658a71152dad234de4b",
+      "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f",
+      "gradleName": "com.github.1c-syntax:bsl-parser:6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "bsl-parser",
-      "version": "167aaad827322e09ccde4658a71152dad234de4b"
+      "version": "6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:utils:f1694d9c",

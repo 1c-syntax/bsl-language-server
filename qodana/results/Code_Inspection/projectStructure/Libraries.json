@@ -36,9 +36,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:bsl-parser:167aaad827322e09ccde4658a71152dad234de4b",
+      "name": "Gradle: com.github.1c-syntax:bsl-parser:6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/167aaad827322e09ccde4658a71152dad234de4b/2f2ebb67ffad48051a1b1c494da03bd56fa0f188/bsl-parser-167aaad827322e09ccde4658a71152dad234de4b.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f/f7a2a1abc4308f6782e0dac70758875120b34441/bsl-parser-6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f.jar!/"
       ],
       "properties": {}
     },
@@ -192,7 +192,7 @@
     {
       "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/2700d3d6ba2a7bf321e780c29d802aa87aa65bc7/lombok-edge-SNAPSHOT.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/a2ff5da8bcd8b1b26f36b806ced63213362c6dcc/lombok-edge-SNAPSHOT.jar!/"
       ],
       "properties": {}
     },
