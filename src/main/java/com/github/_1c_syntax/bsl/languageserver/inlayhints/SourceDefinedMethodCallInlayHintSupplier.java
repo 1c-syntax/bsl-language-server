@@ -56,8 +56,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSupplier {
 
-  // todo: DEFAULT_SHOW_PARAMETERS_WITH_SAME_NAME
+  // TODO: высчитать позицию хинта относительно последнего параметра.
   private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
+  private static final boolean DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME = false;
   private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
   private final ReferenceIndex referenceIndex;
@@ -111,7 +112,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
           var passedValue = callParam.getText();
 
-          if (!showAllParameters() && StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
+          if (!showParametersWithTheSameName() && StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
             continue;
           }
 
@@ -171,12 +172,15 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
 
-  private boolean showAllParameters() {
+  private boolean showParametersWithTheSameName() {
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
-      return DEFAULT_SHOW_ALL_PARAMETERS;
+      return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
     } else {
-      return (boolean) parameters.getRight().getOrDefault("showAllParameters", DEFAULT_SHOW_ALL_PARAMETERS);
+      return (boolean) parameters.getRight().getOrDefault(
+        "showParametersWithTheSameName",
+        DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME
+      );
     }
   }
 

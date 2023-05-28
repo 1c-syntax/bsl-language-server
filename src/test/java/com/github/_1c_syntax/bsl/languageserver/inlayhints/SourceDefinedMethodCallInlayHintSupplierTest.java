@@ -24,7 +24,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
   private SourceDefinedMethodCallInlayHintSupplier supplier;
 
   @Test
-  void testGetInlayHints() {
+  void testDefaultInlayHints() {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
@@ -58,6 +58,5 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
       })
     ;
   }
-
 
 }
