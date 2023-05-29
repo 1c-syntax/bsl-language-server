@@ -81,7 +81,7 @@ class InlayHintProviderTest {
 
     // then
     assertThat(inlayHints)
-      .isNotEmpty();
+      .contains(getTestHint());
   }
 
   @Test
