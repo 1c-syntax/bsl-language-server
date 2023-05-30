@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685207751513,
+  "lastUpdate": 1685428732225,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21917,6 +21917,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1000409958633304",
             "extra": "mean: 55.66157134373983 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "16b792ebc8c124dbc706be80263de515b459e4ee",
+          "message": "Merge pull request #3053 from 1c-syntax/fix/inject-enabled-suppliers\n\nИсправлено внедрение списка включенных сапплаеров",
+          "timestamp": "2023-05-30T08:27:46+02:00",
+          "tree_id": "e5209485a1768d69d1456105118fb531ea33bd84",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/16b792ebc8c124dbc706be80263de515b459e4ee"
+        },
+        "date": 1685428723888,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.3491264184316,
+            "unit": "sec",
+            "range": "stddev: 0.30693506308623564",
+            "extra": "mean: 55.3491264184316 sec\nrounds: 3"
           }
         ]
       }
