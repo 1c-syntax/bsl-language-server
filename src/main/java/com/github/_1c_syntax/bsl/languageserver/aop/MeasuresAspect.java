@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -41,7 +40,6 @@ import java.io.File;
 import java.util.Collection;
 
 @Aspect
-@Slf4j
 @NoArgsConstructor
 public class MeasuresAspect {
 

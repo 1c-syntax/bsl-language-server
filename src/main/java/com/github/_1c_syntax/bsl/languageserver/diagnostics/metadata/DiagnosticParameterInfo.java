@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 public final class DiagnosticParameterInfo {
 
-  private final Class type;
+  private final Class<?> type;
   private final String name;
   private final String description;
   private final Object defaultValue;
@@ -43,7 +43,7 @@ public final class DiagnosticParameterInfo {
 
   }
 
-  public Class getType() {
+  public Class<?> getType() {
     return type;
   }
 

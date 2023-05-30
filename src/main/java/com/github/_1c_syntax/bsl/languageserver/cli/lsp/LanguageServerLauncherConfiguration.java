@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -36,7 +35,6 @@ import java.io.OutputStream;
  * Конфигурация для создания объектов из lsp4j-слоя.
  */
 @Configuration
-@Slf4j
 public class LanguageServerLauncherConfiguration {
 
   @Bean

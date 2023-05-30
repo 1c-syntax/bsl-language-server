@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.springframework.stereotype.Component;
@@ -33,7 +32,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public final class DiagnosticProvider {

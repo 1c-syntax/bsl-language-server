@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.InlayHintWorkspaceCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InlayHintProvider {
 
+  @Qualifier("enabledInlayHintSuppliers")
   private final ObjectProvider<List<InlayHintSupplier>> enabledInlayHintSuppliersProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
