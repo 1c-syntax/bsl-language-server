@@ -37,13 +37,13 @@ import java.util.stream.Collectors;
 public class ReportersAggregator {
 
   @Autowired
-  private final List<DiagnosticReporter> reporters;
+  private List<DiagnosticReporter> reporters;
 
   @Autowired
   @Qualifier("filteredReporters")
   @Lazy
   // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
-  private final List<DiagnosticReporter> filteredReporters;
+  private List<DiagnosticReporter> filteredReporters;
 
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     filteredReporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo, outputDir));

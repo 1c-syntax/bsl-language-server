@@ -21,8 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.CognitiveComplexityInlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.InlayHint;
@@ -32,7 +35,9 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -42,10 +47,18 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class InlayHintProviderTest {
 
   @Autowired
   private InlayHintProvider provider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
+  @Autowired
+  private CognitiveComplexityInlayHintSupplier supplier;
+  @Autowired
+  @Qualifier("enabledInlayHintSuppliers")
+  private ObjectProvider<List<InlayHintSupplier>> enabledInlayHintSuppliersProvider;
 
   private DocumentContext documentContext;
 
@@ -69,6 +82,35 @@ class InlayHintProviderTest {
     // then
     assertThat(inlayHints)
       .contains(getTestHint());
+  }
+
+  @Test
+  void testDefaultEnabledSuppliers() {
+
+    // given
+    // default config
+
+    // when
+    List<InlayHintSupplier> suppliers = enabledInlayHintSuppliersProvider.getObject();
+
+    // then
+    assertThat(suppliers).contains(supplier);
+  }
+
+  @Test
+  void testDisabledSupplierIsNotEnabled() {
+
+    // given
+    configuration.getInlayHintOptions().getParameters().put(supplier.getId(), Either.forLeft(false));
+
+    // when
+    List<InlayHintSupplier> suppliers = enabledInlayHintSuppliersProvider.getObject();
+
+    // then
+    assertThat(suppliers)
+      .isNotEmpty()
+      .doesNotContain(supplier);
+
   }
 
   private static InlayHint getTestHint() {
