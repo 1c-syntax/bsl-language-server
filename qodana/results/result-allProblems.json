@@ -186,35 +186,66 @@
   "hash": "f588f93d637b5f2abc9e745577a7b428b9a587e4c96659b9229547bfe2d09e25"
 },{
   "tool": "Code Inspection",
-  "category": "Lombok",
-  "type": "@Qualifier not copyable by lombok",
+  "category": "Probable bugs",
+  "type": "Mismatched query and update of collection",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Lombok does not copy the annotation 'org.springframework.beans.factory.annotation.Qualifier' into the constructor",
-  "detailsInfo": "Reports Spring `@Qualifier` annotations on class fields that are ignored by the corresponding Lombok `@RequiredArgsConstructor` and `@AllArgsConstructor` annotations. The generated constructors will not receive the `@Qualifier` annotation without a `lombok.copyableAnnotations` definition inside the `lombok.config` file.",
+  "comment": "Contents of collection 'filteredReporters' are queried, but never updated",
+  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
   "sources": [
     {
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
       "language": "JAVA",
-      "line": 43,
-      "offset": 3,
-      "length": 31,
+      "line": 46,
+      "offset": 36,
+      "length": 17,
       "code": {
-        "startLine": 41,
-        "length": 31,
-        "offset": 16,
-        "surroundingCode": "\n  @Autowired\n  @Qualifier(\"filteredReporters\")\n  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly."
+        "startLine": 44,
+        "length": 17,
+        "offset": 144,
+        "surroundingCode": "  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.\n  private List<DiagnosticReporter> filteredReporters;\n\n  public void report(AnalysisInfo analysisInfo, Path outputDir) {"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "SpringQualifierCopyableLombok"
+    "inspectionName": "MismatchedCollectionQueryUpdate"
   },
-  "hash": "04085f7c5cec4361bb0d0b37131da1089051295ed971c2b35d37e940fafa99ea"
+  "hash": "2e55c8f8f6714fcd8beb1a5992db2b07f719c606c0dafd178147618297fcfab0"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched query and update of collection",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Contents of collection 'reporters' are queried, but never updated",
+  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 40,
+      "offset": 36,
+      "length": 9,
+      "code": {
+        "startLine": 38,
+        "length": 9,
+        "offset": 49,
+        "surroundingCode": "\n  @Autowired\n  private List<DiagnosticReporter> reporters;\n\n  @Autowired"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedCollectionQueryUpdate"
+  },
+  "hash": "723f8a2a49563d4f11312a4ef81d19ed1a6faa2aa188a053b2285fbe2cad3ec7"
 },{
   "tool": "Code Inspection",
   "category": "RegExp",

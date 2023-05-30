@@ -1,5 +1,61 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Redundant type cast",
+  "severity": "High",
+  "comment": "Casting 'expression.getParent()' to 'BSLParser.ElsifBranchContext' is redundant",
+  "detailsInfo": "Reports unnecessary cast expressions.\n\nExample:\n\n\n      static Object toObject(String s) {\n        return (Object) s;\n      }\n\n\nUse the checkbox below to ignore clarifying casts e.g., casts in collection calls where `Object` is expected:\n\n\n      static void removeFromList(List<String> l, Object o) {\n        l.remove((String)o);\n      } \n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AllFunctionPathMustHaveReturnDiagnostic.java",
+      "language": "JAVA",
+      "line": 162,
+      "offset": 27,
+      "length": 28,
+      "code": {
+        "startLine": 160,
+        "length": 28,
+        "offset": 168,
+        "surroundingCode": "    var expression = v.getExpression();\n    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {\n      return Optional.of((BSLParser.ElsifBranchContext) expression.getParent());\n    }\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RedundantCast"
+  },
+  "hash": "d9fecfdd91871ff27e84be235f8faac3c8b75d06338c3adb178c4785fc8ec60c"
+},{
+  "tool": "Code Inspection",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
+  "severity": "High",
+  "comment": "Field 'checkRecordSetModule' may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RedundantAccessToObjectDiagnostic.java",
+      "language": "JAVA",
+      "line": 91,
+      "offset": 19,
+      "length": 20,
+      "code": {
+        "startLine": 89,
+        "length": 20,
+        "offset": 70,
+        "surroundingCode": "    defaultValue = \"\" + CHECK_RECORD_SET_MODULE\n  )\n  private boolean checkRecordSetModule = CHECK_RECORD_SET_MODULE;\n\n  @Override"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldMayBeFinal"
+  },
+  "hash": "23717106497439150fe9a80113fdd4c0cb42e5c5a768ca1af52804f031777100"
+},{
+  "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
@@ -56,58 +112,30 @@
   "hash": "8b2d9400df76a1171eb0640b9a6f34236f82258e3717ae5ed547bd9151356547"
 },{
   "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
+  "category": "Class structure",
+  "type": "Field can be local",
   "severity": "High",
-  "comment": "Field 'checkRecordSetModule' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
+  "comment": "Field can be converted to a local variable",
+  "detailsInfo": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RedundantAccessToObjectDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/websocket/WebSocketConfiguration.java",
       "language": "JAVA",
-      "line": 91,
-      "offset": 19,
-      "length": 20,
+      "line": 45,
+      "offset": 18,
+      "length": 12,
       "code": {
-        "startLine": 89,
-        "length": 20,
-        "offset": 70,
-        "surroundingCode": "    defaultValue = \"\" + CHECK_RECORD_SET_MODULE\n  )\n  private boolean checkRecordSetModule = CHECK_RECORD_SET_MODULE;\n\n  @Override"
+        "startLine": 43,
+        "length": 12,
+        "offset": 56,
+        "surroundingCode": "\n  @Value(\"${app.websocket.lsp-path}\")\n  private String endpointPath = \"\";\n\n  @Bean"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
+    "inspectionName": "FieldCanBeLocal"
   },
-  "hash": "23717106497439150fe9a80113fdd4c0cb42e5c5a768ca1af52804f031777100"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'checkAllRegion' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/PublicMethodsDescriptionDiagnostic.java",
-      "language": "JAVA",
-      "line": 60,
-      "offset": 19,
-      "length": 14,
-      "code": {
-        "startLine": 58,
-        "length": 14,
-        "offset": 71,
-        "surroundingCode": "    defaultValue = \"\" + DEFAULT_CHECK_ALL_REGION\n  )\n  private boolean checkAllRegion = DEFAULT_CHECK_ALL_REGION;\n\n  @Override"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "19dc3f691601e330e9614d64ada00b3aed5823c77b2e8da4a2361ce3fa30c091"
+  "hash": "837a5062e32c04ae19d43d3251b5926782cb1744696fc07c7d9bd4ab5c3ef534"
 }]}
