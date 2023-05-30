@@ -107,7 +107,9 @@ class InlayHintProviderTest {
     List<InlayHintSupplier> suppliers = enabledInlayHintSuppliersProvider.getObject();
 
     // then
-    assertThat(suppliers).doesNotContain(supplier);
+    assertThat(suppliers)
+      .isNotEmpty()
+      .doesNotContain(supplier);
 
   }
 
