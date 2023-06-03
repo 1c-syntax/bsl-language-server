@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685428732225,
+  "lastUpdate": 1685824249214,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -21948,6 +21948,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.30693506308623564",
             "extra": "mean: 55.3491264184316 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aartbear@gmail.com",
+            "name": "Artur Ayukhanov",
+            "username": "artbear"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f78f593aa613382a117aa70b4b80aae16d1a681",
+          "message": "[FP] RefOveruse (#2825)\n\n* refOverUse тест с фп\r\n\r\n* refOverUse тест с fp\r\n\r\n* новые методы поиска\r\n\r\n- findAllTopLevelRuleNodes\r\n- доп.метод findAllRuleNodes с коллекцией\r\n\r\n* исправление FP\r\n\r\nисключаю вложенные запросы\r\n\r\n* уточнил комментарии к методу\r\n\r\n* refOverUse Fn тест\r\n\r\n* пропускались вложенные запросы\r\n\r\n* исправил еще небольшое ФП\r\n\r\n* refOfuse fn test\r\n\r\n* учитываются поля без псевдонимов таблиц\r\n\r\nправильно учитываются внешние таблицы\r\n\r\n* refOverUse fp test\r\n\r\n* FP полное имя таблицы\r\n\r\n* refOverUse fp test\r\n\r\n* ФП обращение к инлайн-таблице\r\n\r\n* refOveruse fn fp tests\r\n\r\n* исправил FP\r\n\r\nубрал табы из тест-файла для правильного подсчета позиции\r\n\r\n* refOveruse fp\r\n\r\n* заготовка под проверку метаданных\r\n\r\n* CleanupContextBeforeClassAndAfterEachTestMethod\r\n\r\n* Заготовка исправления\r\n\r\n* убрал ненужные тесты\r\n\r\n* вернул прохождение тестов\r\n\r\nTODO на ФП\r\n\r\n* заготовка анализа таблиц метаданных\r\n\r\n* форматирование + исправлены замечания\r\n\r\n* возвращен неверно отправленный код\r\n\r\n* переименовал метод + исправил имя параметра\r\n\r\nпо замечанию из ПР\r\n\r\n---------\r\n\r\nCo-authored-by: Alexey Sosnoviy <int-it@yandex.ru>",
+          "timestamp": "2023-06-03T22:18:59+02:00",
+          "tree_id": "401a0a71638b2b7ad1a6ac6a6f0e70ef40f680d2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0f78f593aa613382a117aa70b4b80aae16d1a681"
+        },
+        "date": 1685824242453,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.09790484110514,
+            "unit": "sec",
+            "range": "stddev: 0.7649848888820983",
+            "extra": "mean: 55.09790484110514 sec\nrounds: 3"
           }
         ]
       }
