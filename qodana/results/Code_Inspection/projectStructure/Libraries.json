@@ -134,6 +134,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: org.apache.commons:commons-exec:1.3",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.apache.commons/commons-exec/1.3/8dfb9facd0830a27b1b5f29f84593f0aeee7773b/commons-exec-1.3.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: me.tongfei:progressbar:0.9.5",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/me.tongfei/progressbar/0.9.5/aaf7a04a9e9e6bd0aa03268cfcd6168e903bcf2d/progressbar-0.9.5.jar!/"

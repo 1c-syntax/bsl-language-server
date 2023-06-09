@@ -154,6 +154,14 @@
       "version": "4.4"
     },
     {
+      "ideaName": "Gradle: org.apache.commons:commons-exec:1.3",
+      "gradleName": "org.apache.commons:commons-exec:1.3",
+      "unresolved": false,
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-exec",
+      "version": "1.3"
+    },
+    {
       "ideaName": "Gradle: me.tongfei:progressbar:0.9.5",
       "gradleName": "me.tongfei:progressbar:0.9.5",
       "unresolved": false,
