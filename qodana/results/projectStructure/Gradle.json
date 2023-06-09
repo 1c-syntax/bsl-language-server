@@ -1210,6 +1210,14 @@
       "version": "2.7.11"
     },
     {
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "unresolved": false,
+      "groupId": "com.github.spotbugs",
+      "artifactId": "spotbugs-annotations",
+      "version": "4.7.1"
+    },
+    {
       "ideaName": "Gradle: org.jmockit:jmockit:1.49",
       "gradleName": "org.jmockit:jmockit:1.49",
       "unresolved": false,

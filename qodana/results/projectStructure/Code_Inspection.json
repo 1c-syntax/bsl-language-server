@@ -670,6 +670,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.jmockit:jmockit:1.49",
           "type": "Library"
         },
@@ -962,7 +966,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
           "type": "Library"
         },
         {
@@ -1634,7 +1638,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
           "type": "Library"
         },
         {

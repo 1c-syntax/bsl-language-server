@@ -71,9 +71,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.3/46fb4f0ae2e69eafa963711cc5c3369ac81aa31f/spotbugs-annotations-4.7.3.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.1/50e29adaec8cf4299441a6786a909a0b105326ad/spotbugs-annotations-4.7.1.jar!/"
       ],
       "properties": {}
     },
@@ -1250,6 +1250,13 @@
       "name": "Gradle: org.junit.platform:junit-platform-engine:1.8.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.8.2/b737de09f19864bd136805c84df7999a142fec29/junit-platform-engine-1.8.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.3/46fb4f0ae2e69eafa963711cc5c3369ac81aa31f/spotbugs-annotations-4.7.3.jar!/"
       ],
       "properties": {}
     },
