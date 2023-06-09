@@ -66,7 +66,7 @@
           "type": "Module"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.4",
           "type": "Library"
         },
         {
@@ -126,7 +126,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: commons-io:commons-io:2.11.0",
+          "name": "Gradle: commons-io:commons-io:2.13.0",
           "type": "Library"
         },
         {
@@ -166,11 +166,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.22.0",
           "type": "Library"
         },
         {
@@ -190,7 +190,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.3",
+          "name": "Gradle: info.picocli:picocli:4.7.4",
           "type": "Library"
         },
         {
@@ -438,11 +438,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.18.1",
+          "name": "Gradle: io.sentry:sentry:6.22.0",
           "type": "Library"
         },
         {
@@ -670,10 +670,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.jmockit:jmockit:1.49",
           "type": "Library"
         },
@@ -850,7 +846,7 @@
           "type": "Module"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.4",
           "type": "Library"
         },
         {
@@ -910,7 +906,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: commons-io:commons-io:2.11.0",
+          "name": "Gradle: commons-io:commons-io:2.13.0",
           "type": "Library"
         },
         {
@@ -950,11 +946,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.22.0",
           "type": "Library"
         },
         {
@@ -966,7 +962,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
           "type": "Library"
         },
         {
@@ -978,7 +974,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.3",
+          "name": "Gradle: info.picocli:picocli:4.7.4",
           "type": "Library"
         },
         {
@@ -1270,11 +1266,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.18.1",
+          "name": "Gradle: io.sentry:sentry:6.22.0",
           "type": "Library"
         },
         {
@@ -1598,7 +1594,7 @@
           "type": "Own sources"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.4",
           "type": "Library"
         },
         {
@@ -1638,7 +1634,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
           "type": "Library"
         },
         {
@@ -1658,7 +1654,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: commons-io:commons-io:2.11.0",
+          "name": "Gradle: commons-io:commons-io:2.13.0",
           "type": "Library"
         },
         {
@@ -1698,11 +1694,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.18.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.22.0",
           "type": "Library"
         },
         {
@@ -1714,7 +1710,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.3",
+          "name": "Gradle: info.picocli:picocli:4.7.4",
           "type": "Library"
         },
         {
@@ -1962,11 +1958,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.18.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.22.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.18.1",
+          "name": "Gradle: io.sentry:sentry:6.22.0",
           "type": "Library"
         },
         {

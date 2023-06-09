@@ -75,6 +75,37 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
+      "line": 124,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 122,
+        "length": 4,
+        "offset": 158,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
+      "language": "JAVA",
       "line": 372,
       "offset": 9,
       "length": 4,
@@ -122,37 +153,6 @@
     "inspectionName": "EmptyStatementBody"
   },
   "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Statement with empty body",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "'else' statement has empty body",
-  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
-      "language": "JAVA",
-      "line": 124,
-      "offset": 9,
-      "length": 4,
-      "code": {
-        "startLine": 122,
-        "length": 4,
-        "offset": 158,
-        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "EmptyStatementBody"
-  },
-  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -223,37 +223,6 @@
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Contents of collection 'filteredReporters' are queried, but never updated",
-  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
-      "language": "JAVA",
-      "line": 46,
-      "offset": 36,
-      "length": 17,
-      "code": {
-        "startLine": 44,
-        "length": 17,
-        "offset": 144,
-        "surroundingCode": "  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.\n  private List<DiagnosticReporter> filteredReporters;\n\n  public void report(AnalysisInfo analysisInfo, Path outputDir) {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "MismatchedCollectionQueryUpdate"
-  },
-  "hash": "2e55c8f8f6714fcd8beb1a5992db2b07f719c606c0dafd178147618297fcfab0"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Mismatched query and update of collection",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
   "comment": "Contents of collection 'reporters' are queried, but never updated",
   "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
   "sources": [
@@ -277,6 +246,37 @@
     "inspectionName": "MismatchedCollectionQueryUpdate"
   },
   "hash": "723f8a2a49563d4f11312a4ef81d19ed1a6faa2aa188a053b2285fbe2cad3ec7"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched query and update of collection",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Contents of collection 'filteredReporters' are queried, but never updated",
+  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 46,
+      "offset": 36,
+      "length": 17,
+      "code": {
+        "startLine": 44,
+        "length": 17,
+        "offset": 144,
+        "surroundingCode": "  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.\n  private List<DiagnosticReporter> filteredReporters;\n\n  public void report(AnalysisInfo analysisInfo, Path outputDir) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedCollectionQueryUpdate"
+  },
+  "hash": "2e55c8f8f6714fcd8beb1a5992db2b07f719c606c0dafd178147618297fcfab0"
 },{
   "tool": "Code Inspection",
   "category": "RegExp",

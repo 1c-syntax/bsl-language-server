@@ -1,9 +1,9 @@
 {
   "libraries": [
     {
-      "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.3",
+      "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.4",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli-spring-boot-starter/4.7.3/ce66c148f5724746a1019143570f2c96a946adec/picocli-spring-boot-starter-4.7.3.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli-spring-boot-starter/4.7.4/449edfe4231ae2d700a9aa66672e378c25c45df5/picocli-spring-boot-starter-4.7.4.jar!/"
       ],
       "properties": {}
     },
@@ -71,9 +71,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
+      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.1/50e29adaec8cf4299441a6786a909a0b105326ad/spotbugs-annotations-4.7.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.3/46fb4f0ae2e69eafa963711cc5c3369ac81aa31f/spotbugs-annotations-4.7.3.jar!/"
       ],
       "properties": {}
     },
@@ -106,9 +106,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: commons-io:commons-io:2.11.0",
+      "name": "Gradle: commons-io:commons-io:2.13.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.11.0/a2503f302b11ebde7ebc3df41daebe0e4eea3689/commons-io-2.11.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.13.0/8bb2bc9b4df17e2411533a0708a69f983bf5e83b/commons-io-2.13.0.jar!/"
       ],
       "properties": {}
     },
@@ -176,16 +176,16 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.18.1",
+      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.22.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.18.1/f348f2c094bb71f5fb1cd96268459f306853beee/sentry-spring-boot-starter-6.18.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.22.0/3616aceff69d058185eb750360a8bc9a14b9d818/sentry-spring-boot-starter-6.22.0.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-logback:6.18.1",
+      "name": "Gradle: io.sentry:sentry-logback:6.22.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.18.1/1398a34812d954bf290f806b394f1c7f6678ef18/sentry-logback-6.18.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.22.0/8a40a2e73b8a67fd922ef9c7affd24f0f0a32a45/sentry-logback-6.22.0.jar!/"
       ],
       "properties": {}
     },
@@ -204,9 +204,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: info.picocli:picocli:4.7.3",
+      "name": "Gradle: info.picocli:picocli:4.7.4",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.3/8b5a02d4d0ba4c8427cc77988b75feb9541270cb/picocli-4.7.3.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.4/6c036f65c4534c87c4b7f47ed659ee625bee79d4/picocli-4.7.4.jar!/"
       ],
       "properties": {}
     },
@@ -638,16 +638,16 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring:6.18.1",
+      "name": "Gradle: io.sentry:sentry-spring:6.22.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.18.1/d8ad503cf5af40f8f6a97e8542eeb5774d09a162/sentry-spring-6.18.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.22.0/830a33d8067026e1289b4e17d850f5f0256f6679/sentry-spring-6.22.0.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry:6.18.1",
+      "name": "Gradle: io.sentry:sentry:6.22.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.18.1/d27b56cda16baa040f3036156113bbfc467e5ce3/sentry-6.18.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.22.0/f8da4efd798dcbca73283c39235fed56703786eb/sentry-6.22.0.jar!/"
       ],
       "properties": {}
     },
@@ -1250,13 +1250,6 @@
       "name": "Gradle: org.junit.platform:junit-platform-engine:1.8.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.8.2/b737de09f19864bd136805c84df7999a142fec29/junit-platform-engine-1.8.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.7.3/46fb4f0ae2e69eafa963711cc5c3369ac81aa31f/spotbugs-annotations-4.7.3.jar!/"
       ],
       "properties": {}
     },
