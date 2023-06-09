@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -276,8 +276,6 @@ class FormatProviderTest {
 
     // then
     assertThat(textEdits).hasSize(1);
-
-    TextEdit textEdit = textEdits.get(0);
     assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 > -2");
 
   }
@@ -290,16 +288,8 @@ class FormatProviderTest {
     return new File("./src/test/resources/providers/format_formatted.bsl");
   }
 
-  private TextDocumentItem getTextDocumentItem() throws IOException {
-    File file = getTestFile();
-    String uri = file.toURI().toString();
-
-    String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-
-    return new TextDocumentItem(uri, "bsl", 1, fileContent);
-  }
-
   private TextDocumentIdentifier getTextDocumentIdentifier() {
+    // TODO: Переделать на TestUtils.getTextDocumentIdentifier();
     File file = getTestFile();
     String uri = file.toURI().toString();
 

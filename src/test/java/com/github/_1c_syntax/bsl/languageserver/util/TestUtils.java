@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,10 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.util;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -71,4 +72,9 @@ public class TestUtils {
     context.rebuildDocument(documentContext, fileContent, 0);
     return documentContext;
   }
+
+  public static TextDocumentIdentifier getTextDocumentIdentifier(URI uri) {
+    return new TextDocumentIdentifier(uri.toString());
+  }
+
 }

@@ -31,7 +31,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.6'
+        python-version: '3.7.15'
         architecture: 'x64'
 
     - name: Install dependencies
@@ -145,7 +145,7 @@ jobs:
         cp -R temp/site/. public/dev/en
         
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3.9.0
+      uses: peaceiris/actions-gh-pages@v3.9.3
       with:
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
         publish_branch: gh-pages

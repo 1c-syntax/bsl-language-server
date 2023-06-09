@@ -8,27 +8,28 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "3.5.0.2730"
-    id("io.freefair.lombok") version "6.6"
-    id("io.freefair.javadoc-links") version "6.6"
-    id("io.freefair.javadoc-utf-8") version "6.6"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6"
-    id("io.freefair.maven-central.validate-poms") version "6.6"
-    id("me.qoomon.git-versioning") version "6.3.7"
-    id("com.github.ben-manes.versions") version "0.44.0"
-    id("org.springframework.boot") version "2.7.5"
+    id("org.sonarqube") version "4.0.0.2929"
+    id("io.freefair.lombok") version "6.6.1"
+    id("io.freefair.javadoc-links") version "6.6.1"
+    id("io.freefair.javadoc-utf-8") version "6.6.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
+    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("me.qoomon.git-versioning") version "6.4.2"
+    id("com.github.ben-manes.versions") version "0.46.0"
+    id("org.springframework.boot") version "2.7.11"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
-    id("me.champeau.jmh") version "0.6.8"
+    id("me.champeau.jmh") version "0.7.1"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
+    maven(url = "https://projectlombok.org/edge-releases") 
 }
 
 group = "io.github.1c-syntax"
@@ -51,11 +52,11 @@ gitVersioning.apply {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "5.6"
+val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.9.2")
+        mavenBom("io.sentry:sentry-bom:6.18.1")
     }
 }
 
@@ -66,14 +67,14 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.0")
+    api("info.picocli:picocli-spring-boot-starter:4.7.3")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.19.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.19.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.21.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.21.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "167aaad827322e09ccde4658a71152dad234de4b") {
+    api("com.github.1c-syntax", "bsl-parser", "6121e8ec3590e0acf6a6f8944fc4b3dd00ef491f") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -92,7 +93,7 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.9.1")
+    implementation("org.aspectj", "aspectjrt", "1.9.19")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.11.0")
@@ -108,7 +109,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // graphs
-    implementation("org.jgrapht", "jgrapht-core", "1.5.1")
+    implementation("org.jgrapht", "jgrapht-core", "1.5.2")
 
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
@@ -117,10 +118,15 @@ dependencies {
     implementation("io.sentry:sentry-spring-boot-starter")
     implementation("io.sentry:sentry-logback")
 
+    // CONSTRAINTS
+    implementation("com.google.guava:guava") {
+        version {
+            strictly("30.1-jre")
+       }
+    }
+    
     // COMPILE
-
-    // stat analysis
-    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
 
     // TEST
 
@@ -130,8 +136,16 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.2")
+    testImplementation("org.jmockit", "jmockit", "1.49")
     testImplementation("org.awaitility", "awaitility", "4.2.0")
+}
+
+lombok {
+    version.set("edge-SNAPSHOT")
+}
+
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 java {
@@ -177,6 +191,9 @@ tasks.test {
     reports {
         html.required.set(true)
     }
+
+    val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {
@@ -219,6 +236,7 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    isFailOnError = false
     options {
         this as StandardJavadocDocletOptions
         links(

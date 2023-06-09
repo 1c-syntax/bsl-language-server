@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -20,10 +20,11 @@
  * License along with BSL Language Server.
  */
 /**
- * Сериализация и десериализация классов пакета
- * {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
+ * Пакет предназначен для реализации inlay hints,
+ * предоставляемых {@link com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider}.
  */
-@ParametersAreNonnullByDefault
-package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
+@DefaultAnnotation(NonNull.class)
+package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2022.3.0
+        uses: JetBrains/qodana-action@v2023.1.0
         with:
           linter: jetbrains/qodana-jvm-community
       - uses: github/codeql-action/upload-sarif@v2
@@ -28,7 +28,7 @@ jobs:
           sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3.9.0
+        uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ${{ runner.temp }}/qodana/results/report
