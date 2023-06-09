@@ -75,14 +75,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 372,
+      "line": 124,
       "offset": 9,
       "length": 4,
       "code": {
-        "startLine": 370,
+        "startLine": 122,
         "length": 4,
-        "offset": 137,
-        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
+        "offset": 158,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
       }
     }
   ],
@@ -90,7 +90,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "EmptyStatementBody"
   },
-  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
+  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -137,14 +137,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 124,
+      "line": 372,
       "offset": 9,
       "length": 4,
       "code": {
-        "startLine": 122,
+        "startLine": 370,
         "length": 4,
-        "offset": 158,
-        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+        "offset": 137,
+        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
       }
     }
   ],
@@ -152,7 +152,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "EmptyStatementBody"
   },
-  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
+  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
