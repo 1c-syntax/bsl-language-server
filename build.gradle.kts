@@ -100,6 +100,7 @@ dependencies {
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
+    implementation("org.apache.commons", "commons-exec", "1.3")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.9.5")
