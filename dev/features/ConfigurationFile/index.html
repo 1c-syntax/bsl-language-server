@@ -979,9 +979,13 @@
 
 
 <h1 id="Конфигурирование-BSL-Language-Server">Конфигурирование BSL Language Server<a class="headerlink" href="#Конфигурирование-BSL-Language-Server" title="Permanent link">&para;</a></h1>
-<p>BSL Language Server предоставляет возможность изменения настроек, заложенных разработчиками, с помощью конфигурационного файла в формате json.<br />
-Созданный файл необходимо указать с помощью ключа <code>--configuration</code> <em>(или кратко <code>-c</code>)</em> при запуске BSL Language Server в качестве консольного приложения либо, если же используется редактор/IDE с плагином-клиентом BSL Language Server, разместить его в соответствии с документацией <em>(обычно это корень проекта либо рабочей области)</em>.</p>
-<p>В случае отсутствия конфигурационного файла будет предпринята попытка найти файл ".bsl-language-server.json" в "%HOMEPATH%"</p>
+<p>BSL Language Server предоставляет возможность изменения настроек, заложенных разработчиками, с помощью конфигурационного
+файла в формате json.<br />
+Созданный файл необходимо указать с помощью ключа <code>--configuration</code> <em>(или кратко <code>-c</code>)</em> при запуске BSL Language Server
+в качестве консольного приложения либо, если же используется редактор/IDE с плагином-клиентом BSL Language Server,
+разместить его в соответствии с документацией <em>(обычно это корень проекта либо рабочей области)</em>.</p>
+<p>В случае отсутствия конфигурационного файла будет предпринята попытка найти файл ".bsl-language-server.json" в "
+%HOMEPATH%"</p>
 <h2 id="Описание-настроек">Описание настроек<a class="headerlink" href="#Описание-настроек" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1098,6 +1102,11 @@
 <td align="left">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
 </tr>
 <tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
+<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td align="left">Включает отображение параметров вызываемого метожа конфигурации/библиотеки в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
+</tr>
+<tr>
 <td align="left"><code>useDevSite</code></td>
 <td align="center"><code>Булево</code></td>
 <td align="left">При включении настройки формирующиеся ссылки на документацию будут вести на develop-версию сайта. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>
@@ -1131,10 +1140,12 @@
 <p>Ниже приведен пример настройки:</p>
 <ul>
 <li>Устанавливает язык сообщений диагностик - английский;</li>
-<li>Изменяет настройку диагностики <a href="../../diagnostics/LineLength/">LineLength - Ограничение на длину строки</a>, устанавливая предел длины строки в 140 символов;</li>
+<li>Изменяет настройку диагностики <a href="../../diagnostics/LineLength/">LineLength - Ограничение на длину строки</a>, устанавливая
+  предел длины строки в 140 символов;</li>
 <li>Отключает диагностику <a href="../../diagnostics/MethodSize/">MethodSize - Ограничение на размер метода</a>.</li>
 <li>Включает расчет диагностик в непрерывном режиме (<code>computeTrigger = onType</code>)</li>
-<li>Диагностики рассчитываются только по объектам подсистемы "СтандартныеПодсистемы" за исключением "ВариантыОтчетов" и "ВерсионированиеОбъектов"</li>
+<li>Диагностики рассчитываются только по объектам подсистемы "СтандартныеПодсистемы" за исключением "ВариантыОтчетов" и "
+  ВерсионированиеОбъектов"</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
@@ -1148,8 +1159,13 @@
 <span class="w">      </span><span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;subsystemsFilter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;СтандартныеПодсистемы&quot;</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ВариантыОтчетов&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ВерсионированиеОбъектов&quot;</span><span class="p">]</span>
+<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;СтандартныеПодсистемы&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;ВариантыОтчетов&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;ВерсионированиеОбъектов&quot;</span>
+<span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
