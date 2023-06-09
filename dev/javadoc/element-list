@@ -8,6 +8,7 @@ com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.codelenses
 com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure
+com.github._1c_syntax.bsl.languageserver.codelenses.testrunner
 com.github._1c_syntax.bsl.languageserver.color
 com.github._1c_syntax.bsl.languageserver.commands
 com.github._1c_syntax.bsl.languageserver.commands.complexity
