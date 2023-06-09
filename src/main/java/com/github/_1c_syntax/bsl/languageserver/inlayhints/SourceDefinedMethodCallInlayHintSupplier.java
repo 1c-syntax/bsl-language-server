@@ -62,7 +62,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
   private final ReferenceIndex referenceIndex;
-  protected final LanguageServerConfiguration configuration;
+  private final LanguageServerConfiguration configuration;
 
 
   @Override
