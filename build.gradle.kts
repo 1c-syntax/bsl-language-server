@@ -9,13 +9,13 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "4.0.0.2929"
-    id("io.freefair.lombok") version "6.6.1"
-    id("io.freefair.javadoc-links") version "6.6.1"
-    id("io.freefair.javadoc-utf-8") version "6.6.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
-    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("io.freefair.lombok") version "8.0.1"
+    id("io.freefair.javadoc-links") version "8.0.1"
+    id("io.freefair.javadoc-utf-8") version "8.0.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.0.1"
+    id("io.freefair.maven-central.validate-poms") version "8.0.1"
     id("me.qoomon.git-versioning") version "6.4.2"
-    id("com.github.ben-manes.versions") version "0.46.0"
+    id("com.github.ben-manes.versions") version "0.47.0"
     id("org.springframework.boot") version "2.7.11"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.18.1")
+        mavenBom("io.sentry:sentry-bom:6.22.0")
     }
 }
 
@@ -67,7 +67,7 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.3")
+    api("info.picocli:picocli-spring-boot-starter:4.7.4")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.21.0")
@@ -96,7 +96,7 @@ dependencies {
     implementation("org.aspectj", "aspectjrt", "1.9.19")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.11.0")
+    implementation("commons-io", "commons-io", "2.13.0")
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
