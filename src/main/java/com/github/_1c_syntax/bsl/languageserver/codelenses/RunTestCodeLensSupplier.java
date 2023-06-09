@@ -49,11 +49,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Поставщик линз для запуска теста по конкретному тестовому методу.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class RunTestCodeLensSupplier
   implements CodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
+
+  private static final String COMMAND_ID = "language-1c-bsl.languageServer.runTest";
 
   private final TestRunnerAdapter testRunnerAdapter;
   private final LanguageServerConfiguration configuration;
@@ -64,7 +69,7 @@ public class RunTestCodeLensSupplier
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Анализирует параметры запроса и подготавливает данные для слежения за родительским процессом.
+   * Анализирует тип подключенного клиента и управляет применимостью линзы.
    *
    * @param event Событие
    */
@@ -78,16 +83,17 @@ public class RunTestCodeLensSupplier
     clientIsSupported = "Visual Studio Code".equals(clientName);
   }
 
-  @Override
-  public String getId() {
-    return "language-1c-bsl.languageServer.runTest";
-  }
-
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS && clientIsSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
 
@@ -105,11 +111,17 @@ public class RunTestCodeLensSupplier
       .collect(Collectors.toList());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<RunTestCodeLensData> getCodeLensDataClass() {
     return RunTestCodeLensData.class;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
 
@@ -123,7 +135,7 @@ public class RunTestCodeLensSupplier
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runTest"));
-    command.setCommand(getId());
+    command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 
     unresolved.setCommand(command);
@@ -133,7 +145,7 @@ public class RunTestCodeLensSupplier
 
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
     var testId = method.getName();
-    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);
+    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), COMMAND_ID, testId);
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);
@@ -153,6 +165,11 @@ public class RunTestCodeLensSupplier
      */
     String testId;
 
+    /**
+     * @param uri    URI документа.
+     * @param id     Идентификатор линзы.
+     * @param testId Идентификатор теста.
+     */
     @ConstructorProperties({"uri", "id", "testId"})
     public RunTestCodeLensData(URI uri, String id, String testId) {
       super(uri, id);

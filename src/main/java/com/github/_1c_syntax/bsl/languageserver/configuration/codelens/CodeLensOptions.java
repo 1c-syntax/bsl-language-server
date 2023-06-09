@@ -49,6 +49,9 @@ public class CodeLensOptions {
   @JsonDeserialize(using = ParametersDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 
+  /**
+   * Параметры запускателя тестового фреймворка.
+   */
   @JsonProperty("testRunner")
   private TestRunnerAdapterOptions testRunnerAdapterOptions = new TestRunnerAdapterOptions();
 }

@@ -43,11 +43,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Поставщик линзы для запуска всех тестов в текущем файле.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class RunAllTestsCodeLensSupplier
   implements CodeLensSupplier<DefaultCodeLensData> {
+
+  private static final String COMMAND_ID = "language-1c-bsl.languageServer.runAllTests";
 
   private final TestRunnerAdapter testRunnerAdapter;
   private final LanguageServerConfiguration configuration;
@@ -58,7 +63,7 @@ public class RunAllTestsCodeLensSupplier
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Анализирует параметры запроса и подготавливает данные для слежения за родительским процессом.
+   * Анализирует тип подключенного клиента и управляет применимостью линзы.
    *
    * @param event Событие
    */
@@ -72,16 +77,17 @@ public class RunAllTestsCodeLensSupplier
     clientIsSupported = "Visual Studio Code".equals(clientName);
   }
 
-  @Override
-  public String getId() {
-    return "language-1c-bsl.languageServer.runAllTests";
-  }
-
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS && clientIsSupported;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
 
@@ -97,6 +103,9 @@ public class RunAllTestsCodeLensSupplier
     return List.of(toCodeLens(firstMethod, documentContext));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DefaultCodeLensData data) {
     var path = Paths.get(documentContext.getUri());
@@ -108,7 +117,7 @@ public class RunAllTestsCodeLensSupplier
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runAllTests"));
-    command.setCommand(getId());
+    command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 
     unresolved.setCommand(command);
@@ -116,14 +125,17 @@ public class RunAllTestsCodeLensSupplier
     return unresolved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<DefaultCodeLensData> getCodeLensDataClass() {
     return DefaultCodeLensData.class;
   }
 
-  private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
+  private static CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
 
-    var codeLensData = new DefaultCodeLensData(documentContext.getUri(), getId());
+    var codeLensData = new DefaultCodeLensData(documentContext.getUri(), COMMAND_ID);
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);

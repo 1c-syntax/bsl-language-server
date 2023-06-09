@@ -28,19 +28,45 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.SystemUtils;
 
+/**
+ * Параметры запускателя тестового фреймворка.
+ */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TestRunnerAdapterOptions {
 
+  /**
+   * Имя исполняемого файла тестового фреймворка (linux и macOS).
+   */
   private String executable = "1testrunner";
+  /**
+   * Имя исполняемого файла тестового фреймворка (windows).
+   */
   private String executableWin = "1testrunner.bat";
+  /**
+   * Аргументы для получения списка тестов.
+   */
   private String getTestsArguments = "-show %s";
+  /**
+   * Регулярное выражение для получения списка тестов.
+   */
   private String getTestsResultPattern = "^[^<]*Имя\\sтеста\\s<([^>]+)>.*";
+  /**
+   * Аргументы для запуска одного теста.
+   */
   private String runTestArguments = "-run %s %s";
+  /**
+   * Аргументы для запуска всех тестов.
+   */
   private String runAllTestsArguments = "-run %s";
 
+  /**
+   * Получить имя исполняемого файла тестового фреймворка для текущей ОС.
+   *
+   * @return Имя исполняемого файла тестового фреймворка для текущей ОС.
+   */
   public String getExecutableForCurrentOS() {
     return SystemUtils.IS_OS_WINDOWS ? executableWin : executable;
   }

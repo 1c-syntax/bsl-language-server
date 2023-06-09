@@ -47,6 +47,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Расчетчик списка тестов в документе.
+ * Физически выполняет команды по получению идентификаторов тестов на основании конфигурации.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -57,6 +61,12 @@ public class TestRunnerAdapter {
 
   private final LanguageServerConfiguration configuration;
 
+  /**
+   * Получить идентификаторы тестов, содержащихся в файле.
+   *
+   * @param documentContext Контекст документа с тестами.
+   * @return Список идентификаторов тестов.
+   */
   public List<String> getTestIds(DocumentContext documentContext) {
     var cacheKey = Pair.of(documentContext, documentContext.getVersion());
 
@@ -70,8 +80,7 @@ public class TestRunnerAdapter {
     var path = Paths.get(documentContext.getUri()).toString();
     var arguments = String.format(options.getGetTestsArguments(), path);
 
-    var getTestsCommand = new CommandLine(executable)
-      .addArguments(arguments, false);
+    var getTestsCommand = new CommandLine(executable).addArguments(arguments, false);
 
     var timeout = 10_000L;
     var watchdog = new ExecuteWatchdog(timeout);
@@ -100,7 +109,7 @@ public class TestRunnerAdapter {
     }
 
     var getTestsRegex = Pattern.compile(options.getGetTestsResultPattern());
-    
+
     Charset charset;
     if (SystemUtils.IS_OS_WINDOWS) {
       charset = Charset.forName("cp866");
