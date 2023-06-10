@@ -16,7 +16,7 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "6.6.1"
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "2.7.11"
+    id("org.springframework.boot") version "2.7.12"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
@@ -122,7 +122,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("30.1-jre")
+            strictly("32.0.1-jre")
        }
     }
     
