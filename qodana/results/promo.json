@@ -1,51 +1,51 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
+  "category": "Nullability problems",
+  "type": "@NotNull/@Nullable problems",
   "severity": "High",
-  "comment": "Field 'maxAllowedLevel' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
+  "comment": "Not annotated parameter overrides @NotNull parameter",
+  "detailsInfo": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedStatementsDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/references/model/SymbolOccurrence.java",
       "language": "JAVA",
-      "line": 64,
-      "offset": 15,
-      "length": 15,
+      "line": 53,
+      "offset": 41,
+      "length": 1,
       "code": {
-        "startLine": 62,
-        "length": 15,
-        "offset": 60,
-        "surroundingCode": "    defaultValue = \"\" + MAX_ALLOWED_LEVEL\n  )\n  private int maxAllowedLevel = MAX_ALLOWED_LEVEL;\n\n  private ParseTree lastCtx;"
+        "startLine": 51,
+        "length": 1,
+        "offset": 53,
+        "surroundingCode": "\n  @Override\n  public int compareTo(SymbolOccurrence o) {\n    if (this.equals(o)) {\n      return 0;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
+    "inspectionName": "NullableProblems"
   },
-  "hash": "fdc5c4085f9896e91c8ddbeef76869da8ddefca61b7c7c12e9398f73d0746107"
+  "hash": "de7a9ad800b73be72d8621dca12892c7073cd4049d38240b5d7ba07a2eca67e1"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'allowedEmptyLinesCount' may be 'final'",
+  "comment": "Field 'checkMethodDescription' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ConsecutiveEmptyLinesDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LineLengthDiagnostic.java",
       "language": "JAVA",
-      "line": 59,
-      "offset": 15,
+      "line": 68,
+      "offset": 19,
       "length": 22,
       "code": {
-        "startLine": 57,
+        "startLine": 66,
         "length": 22,
-        "offset": 76,
-        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOWED_EMPTY_LINES_COUNT\n  )\n  private int allowedEmptyLinesCount = DEFAULT_ALLOWED_EMPTY_LINES_COUNT;\n\n  @Override"
+        "offset": 71,
+        "surroundingCode": "    defaultValue = \"\" + CHECK_METHOD_DESCRIPTION\n  )\n  private boolean checkMethodDescription = CHECK_METHOD_DESCRIPTION;\n\n  private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();"
       }
     }
   ],
@@ -53,27 +53,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "fd2ef7f06a961fab667c7da1199a09e6c3ee9b1630dff202b94127429d370b00"
+  "hash": "86a5f98338add7295ae35668b22c99b5d74a47cced2cc01e20e15f71306f6eac"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'skipAnnotatedMethods' may be 'final'",
+  "comment": "Field 'maxLineLength' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NonExportMethodsInApiRegionDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LineLengthDiagnostic.java",
       "language": "JAVA",
-      "line": 60,
-      "offset": 19,
-      "length": 20,
+      "line": 62,
+      "offset": 15,
+      "length": 13,
       "code": {
-        "startLine": 58,
-        "length": 20,
-        "offset": 69,
-        "surroundingCode": "    defaultValue = \"\" + SKIP_ANNOTATED_METHODS\n  )\n  private boolean skipAnnotatedMethods = SKIP_ANNOTATED_METHODS;\n\n  @Override"
+        "startLine": 60,
+        "length": 13,
+        "offset": 58,
+        "surroundingCode": "    defaultValue = \"\" + MAX_LINE_LENGTH\n  )\n  private int maxLineLength = MAX_LINE_LENGTH;\n\n  @DiagnosticParameter("
       }
     }
   ],
@@ -81,5 +81,61 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "37dc9c96c98e36c73ee385f47686e5b2226bc8fe4c25337822c2af853a124e3a"
+  "hash": "85c58414dc44e34b845db47c2404b666bf3c68f99772ca6f70ec5b0de663d67c"
+},{
+  "tool": "Code Inspection",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
+  "severity": "High",
+  "comment": "Field 'maxValuesCount' may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfValuesInStructureConstructorDiagnostic.java",
+      "language": "JAVA",
+      "line": 55,
+      "offset": 15,
+      "length": 14,
+      "code": {
+        "startLine": 53,
+        "length": 14,
+        "offset": 59,
+        "surroundingCode": "    defaultValue = \"\" + MAX_VALUES_COUNT\n  )\n  private int maxValuesCount = MAX_VALUES_COUNT;\n\n  @Override"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldMayBeFinal"
+  },
+  "hash": "87c47d6aaf310152a66939cf27acab191df9f07b6046ae8912a8ede5f21fe64b"
+},{
+  "tool": "Code Inspection",
+  "category": "Code maturity",
+  "type": "Commented out code",
+  "severity": "Moderate",
+  "comment": "Commented out code (6 lines)",
+  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
+      "language": "JAVA",
+      "line": 72,
+      "offset": 1,
+      "length": 2,
+      "code": {
+        "startLine": 70,
+        "length": 2,
+        "offset": 36,
+        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "CommentedOutCode"
+  },
+  "hash": "140fdd15ad1c0ab3d2ff0a809804359b9793a40bb71dca1f139d768129204d80"
 }]}

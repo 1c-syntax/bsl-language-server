@@ -70,11 +70,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.12",
           "type": "Library"
         },
         {
@@ -174,7 +174,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:30.1-jre",
+          "name": "Gradle: com.google.guava:guava:32.0.1-jre",
           "type": "Library"
         },
         {
@@ -194,7 +194,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.12",
           "type": "Library"
         },
         {
@@ -206,15 +206,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.12",
           "type": "Library"
         },
         {
@@ -322,7 +322,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.11",
           "type": "Library"
         },
         {
@@ -454,15 +454,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.checkerframework:checker-qual:3.5.0",
+          "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.14.0",
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.j2objc:j2objc-annotations:1.3",
+          "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
           "type": "Library"
         },
         {
@@ -482,11 +482,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.12",
           "type": "Library"
         },
         {
@@ -578,7 +578,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.11",
           "type": "Library"
         },
         {
@@ -618,15 +618,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.75",
           "type": "Library"
         },
         {
@@ -666,7 +666,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.12",
           "type": "Library"
         },
         {
@@ -682,11 +682,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.12",
           "type": "Library"
         },
         {
@@ -726,7 +726,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:json-smart:2.4.10",
+          "name": "Gradle: net.minidev:json-smart:2.4.11",
           "type": "Library"
         },
         {
@@ -750,7 +750,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:accessors-smart:2.4.9",
+          "name": "Gradle: net.minidev:accessors-smart:2.4.11",
           "type": "Library"
         },
         {
@@ -854,15 +854,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.12",
           "type": "Library"
         },
         {
@@ -958,7 +958,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:30.1-jre",
+          "name": "Gradle: com.google.guava:guava:32.0.1-jre",
           "type": "Library"
         },
         {
@@ -982,11 +982,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:2.7.12",
           "type": "Library"
         },
         {
@@ -1034,7 +1034,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.12",
           "type": "Library"
         },
         {
@@ -1046,15 +1046,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.12",
           "type": "Library"
         },
         {
@@ -1154,7 +1154,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.11",
           "type": "Library"
         },
         {
@@ -1290,15 +1290,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.checkerframework:checker-qual:3.5.0",
+          "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.14.0",
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.j2objc:j2objc-annotations:1.3",
+          "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
           "type": "Library"
         },
         {
@@ -1306,7 +1306,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:json-smart:2.4.10",
+          "name": "Gradle: net.minidev:json-smart:2.4.11",
           "type": "Library"
         },
         {
@@ -1330,11 +1330,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.12",
           "type": "Library"
         },
         {
@@ -1422,7 +1422,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.11",
           "type": "Library"
         },
         {
@@ -1446,7 +1446,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:accessors-smart:2.4.9",
+          "name": "Gradle: net.minidev:accessors-smart:2.4.11",
           "type": "Library"
         },
         {
@@ -1470,15 +1470,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.75",
           "type": "Library"
         },
         {
@@ -1602,11 +1602,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:2.7.12",
           "type": "Library"
         },
         {
@@ -1706,7 +1706,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:30.1-jre",
+          "name": "Gradle: com.google.guava:guava:32.0.1-jre",
           "type": "Library"
         },
         {
@@ -1718,7 +1718,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:2.7.12",
           "type": "Library"
         },
         {
@@ -1730,15 +1730,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:2.7.12",
           "type": "Library"
         },
         {
@@ -1846,7 +1846,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.9.11",
           "type": "Library"
         },
         {
@@ -1978,23 +1978,23 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.checkerframework:checker-qual:3.5.0",
+          "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.14.0",
+          "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.j2objc:j2objc-annotations:1.3",
+          "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:2.7.12",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.11",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:2.7.12",
           "type": "Library"
         },
         {
@@ -2086,7 +2086,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.9.10",
+          "name": "Gradle: io.micrometer:micrometer-core:1.9.11",
           "type": "Library"
         },
         {
@@ -2122,15 +2122,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:9.0.75",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.74",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:9.0.75",
           "type": "Library"
         },
         {

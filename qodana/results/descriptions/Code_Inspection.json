@@ -271,16 +271,16 @@
           "description": "Reports call arguments with `Boolean` type without explicit parameter names specified.\n\n\nWhen multiple boolean literals are passed sequentially, it's easy to forget parameter ordering that could lead to mistakes.\nExplicit parameter names allow for easier code reading and understanding.\n\n**Example:**\n\n\n      fun check(checkName: Boolean, checkAddress: Boolean, checkPhone: Boolean) {}\n\n      fun usage() {\n          check(true, false, true) // What does this mean?\n      }\n\nThe quick-fix adds missing parameter names:\n\n\n      fun check(checkName: Boolean, checkAddress: Boolean, checkPhone: Boolean) {}\n\n      fun usage() {\n          check(checkName = true, checkAddress = false, checkPhone = true)\n      }\n"
         },
         {
-          "shortName": "ReplaceGuardClauseWithFunctionCall",
-          "displayName": "Guard clause can be replaced with Kotlin's function call",
-          "enabled": false,
-          "description": "Reports guard clauses that can be replaced with a function call.\n\n**Example:**\n\n      fun test(foo: Int?) {\n          if (foo == null) throw IllegalArgumentException(\"foo\") // replaceable clause\n      }\n\nAfter the quick-fix is applied:\n\n      fun test(foo: Int?) {\n          checkNotNull(foo)\n      }\n"
-        },
-        {
           "shortName": "ReplaceSizeZeroCheckWithIsEmpty",
           "displayName": "Size zero check can be replaced with 'isEmpty()'",
           "enabled": false,
           "description": "Reports `size == 0` checks on `Collections/Array/String` that should be replaced with `isEmpty()`.\n\nUsing `isEmpty()` makes your code simpler.\n\nThe quick-fix replaces the size check with `isEmpty()`.\n\n**Example:**\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.size == 0\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.isEmpty()\n      }\n"
+        },
+        {
+          "shortName": "ReplaceGuardClauseWithFunctionCall",
+          "displayName": "Guard clause can be replaced with Kotlin's function call",
+          "enabled": false,
+          "description": "Reports guard clauses that can be replaced with a function call.\n\n**Example:**\n\n      fun test(foo: Int?) {\n          if (foo == null) throw IllegalArgumentException(\"foo\") // replaceable clause\n      }\n\nAfter the quick-fix is applied:\n\n      fun test(foo: Int?) {\n          checkNotNull(foo)\n      }\n"
         },
         {
           "shortName": "ReplaceToStringWithStringTemplate",
@@ -1629,16 +1629,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "UnnecessaryUnicodeEscape",
-          "displayName": "Unnecessary unicode escape sequence",
-          "enabled": false,
-          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
-        },
-        {
           "shortName": "StringTokenizer",
           "displayName": "Use of 'StringTokenizer'",
           "enabled": false,
           "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
+        },
+        {
+          "shortName": "UnnecessaryUnicodeEscape",
+          "displayName": "Unnecessary unicode escape sequence",
+          "enabled": false,
+          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
         },
         {
           "shortName": "NumericToString",
@@ -2508,16 +2508,16 @@
           "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
         },
         {
-          "shortName": "Singleton",
-          "displayName": "Singleton",
-          "enabled": false,
-          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
-        },
-        {
           "shortName": "NonFinalUtilityClass",
           "displayName": "Utility class is not 'final'",
           "enabled": false,
           "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "Singleton",
+          "displayName": "Singleton",
+          "enabled": false,
+          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
         },
         {
           "shortName": "StaticNonFinalField",
@@ -2705,16 +2705,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ResultOfObjectAllocationIgnored",
-          "displayName": "Result of object allocation ignored",
-          "enabled": false,
-          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
-        },
-        {
           "shortName": "ClassGetClass",
           "displayName": "Suspicious 'Class.getClass()' call",
           "enabled": true,
           "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "ResultOfObjectAllocationIgnored",
+          "displayName": "Result of object allocation ignored",
+          "enabled": false,
+          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
         },
         {
           "shortName": "MisspelledEquals",
@@ -3071,16 +3071,16 @@
           "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
         },
         {
-          "shortName": "ClassNewInstance",
-          "displayName": "Unsafe call to 'Class.newInstance()'",
-          "enabled": false,
-          "description": "Reports calls to `java.lang.Class.newInstance()`.\n\n\nThis method propagates exceptions thrown by\nthe no-arguments constructor, including checked exceptions. Usages of this method\neffectively bypass the compile-time exception checking that would\notherwise be performed by the compiler.\n\n\nA quick-fix is suggested to replace the call with a call to the\n`java.lang.reflect.Constructor.newInstance()` method, which\navoids this problem by wrapping any exception thrown by the constructor in a\n(checked) `java.lang.reflect.InvocationTargetException`.\n\n**Example:**\n\n\n      clazz.newInstance()\n\nAfter the quick-fix is applied:\n\n\n      clazz.getConstructor().newInstance();\n"
-        },
-        {
           "shortName": "MagicConstant",
           "displayName": "Magic Constant",
           "enabled": true,
           "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
+        },
+        {
+          "shortName": "ClassNewInstance",
+          "displayName": "Unsafe call to 'Class.newInstance()'",
+          "enabled": false,
+          "description": "Reports calls to `java.lang.Class.newInstance()`.\n\n\nThis method propagates exceptions thrown by\nthe no-arguments constructor, including checked exceptions. Usages of this method\neffectively bypass the compile-time exception checking that would\notherwise be performed by the compiler.\n\n\nA quick-fix is suggested to replace the call with a call to the\n`java.lang.reflect.Constructor.newInstance()` method, which\navoids this problem by wrapping any exception thrown by the constructor in a\n(checked) `java.lang.reflect.InvocationTargetException`.\n\n**Example:**\n\n\n      clazz.newInstance()\n\nAfter the quick-fix is applied:\n\n\n      clazz.getConstructor().newInstance();\n"
         },
         {
           "shortName": "StaticFieldReferenceOnSubclass",
@@ -3179,16 +3179,16 @@
           "description": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files."
         },
         {
-          "shortName": "EqualsAndHashcode",
-          "displayName": "'equals()' and 'hashCode()' not paired",
-          "enabled": false,
-          "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
-        },
-        {
           "shortName": "IteratorHasNextCallsIteratorNext",
           "displayName": "'Iterator.hasNext()' which calls 'next()'",
           "enabled": true,
           "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
+        },
+        {
+          "shortName": "EqualsAndHashcode",
+          "displayName": "'equals()' and 'hashCode()' not paired",
+          "enabled": false,
+          "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
         },
         {
           "shortName": "CastConflictsWithInstanceof",
@@ -4340,35 +4340,6 @@
       ]
     },
     {
-      "name": "GPath",
-      "inspections": [
-        {
-          "shortName": "GroovyListSetCanBeKeyedAccess",
-          "displayName": "Call to List.set can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapPutCanBeKeyedAccess",
-          "displayName": "Call to Map.put can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapGetCanBeKeyedAccess",
-          "displayName": "Call to Map.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
-        },
-        {
-          "shortName": "GroovyListGetCanBeKeyedAccess",
-          "displayName": "Call to List.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
-        }
-      ]
-    },
-    {
       "name": "Embedded",
       "inspections": [
         {
@@ -4436,6 +4407,35 @@
           "displayName": "Large array allocation with no OutOfMemoryError check",
           "enabled": false,
           "description": "Reports large array allocations which do not check for `java.lang.OutOfMemoryError`. In memory constrained environments, allocations of large data objects should probably be checked for memory depletion.\n\n\nThis inspection is intended for Java ME and other highly resource constrained environments.\nApplying the results of this inspection without consideration might have negative effects on code clarity and design.\n\n\nUse the option to specify the maximum number of elements to allow in unchecked array allocations."
+        }
+      ]
+    },
+    {
+      "name": "GPath",
+      "inspections": [
+        {
+          "shortName": "GroovyListSetCanBeKeyedAccess",
+          "displayName": "Call to List.set can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapPutCanBeKeyedAccess",
+          "displayName": "Call to Map.put can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapGetCanBeKeyedAccess",
+          "displayName": "Call to Map.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
+        },
+        {
+          "shortName": "GroovyListGetCanBeKeyedAccess",
+          "displayName": "Call to List.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
         }
       ]
     },
@@ -8467,16 +8467,16 @@
           "description": "Reports anonymous capturing groups and numeric back references in a RegExp. These are only reported when the RegExp dialect supports named group and named group references. Named groups and named back references improve code readability and are recommended to use instead. When a capture is not needed, matching can be more performant and use less memory by using a non-capturing group, i.e. `(?:xxx)` instead of `(xxx)`.\n\n**Example:**\n\n\n      (\\d\\d\\d\\d)\\1\n\nA better regex pattern could look like this:\n\n\n      (?<quad>\\d\\d\\d\\d)\\k<quad>\n\nNew in 2017.2"
         },
         {
-          "shortName": "RegExpDuplicateAlternationBranch",
-          "displayName": "Duplicate branch in alternation",
-          "enabled": true,
-          "description": "Reports duplicate branches in a RegExp alternation. Duplicate branches slow down matching and obscure the intent of the expression.\n\n**Example:**\n\n\n      (alpha|bravo|charlie|alpha)\n\nAfter the quick-fix is applied:\n\n\n      (alpha|bravo|charlie)\n\nNew in 2017.1"
-        },
-        {
           "shortName": "RegExpRepeatedSpace",
           "displayName": "Consecutive spaces",
           "enabled": true,
           "description": "Reports multiple consecutive spaces in a RegExp. Because spaces are not visible by default, it can be hard to see how many spaces are required. The RegExp can be made more clear by replacing the consecutive spaces with a single space and a counted quantifier.\n\n**Example:**\n\n\n      (     )\n\nAfter the quick-fix is applied:\n\n\n      ( {5})\n\n\nNew in 2017.1"
+        },
+        {
+          "shortName": "RegExpDuplicateAlternationBranch",
+          "displayName": "Duplicate branch in alternation",
+          "enabled": true,
+          "description": "Reports duplicate branches in a RegExp alternation. Duplicate branches slow down matching and obscure the intent of the expression.\n\n**Example:**\n\n\n      (alpha|bravo|charlie|alpha)\n\nAfter the quick-fix is applied:\n\n\n      (alpha|bravo|charlie)\n\nNew in 2017.1"
         }
       ]
     },
@@ -9030,16 +9030,16 @@
       "name": "Test frameworks",
       "inspections": [
         {
-          "shortName": "TestMethodWithoutAssertion",
-          "displayName": "Test method without assertions",
-          "enabled": false,
-          "description": "Reports test methods that do not contain any assertions. Such methods may indicate either incomplete or weak test cases.\n\n**Example:**\n\n\n      public class ExtensiveTest {\n\n        @Test\n        public void testAlive() {\n          System.out.println(\"nothing\");\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the combinations of fully qualified class name and method name regular expression that should qualify as assertions. Class names also match subclasses.\n* Use the **'assert' keyword is considered an assertion** option to specify if the Java `assert` statements using the `assert` keyword should be considered an assertion.\n* Use the **Ignore test methods which declare exceptions** option to ignore the test methods that declare exceptions. This can be useful when you have tests that will throw an exception on failure and thus don't need any assertions."
-        },
-        {
           "shortName": "JUnitMixedFramework",
           "displayName": "JUnit API usage from multiple versions in a single TestCase",
           "enabled": true,
           "description": "Reports JUnit annotated methods when used in a test case from a different JUnit version. To determine the framework version for a test case the inspection checks the framework version of the super class when available. When a super class is not available it will use the most used framework in the test case.\n\nExample (JUnit 4 annotation in JUnit 3 test case):\n\n\n      public class MyTest extends TestCase {\n          @Test\n          public void foo() { }\n\n          @Test\n          @Ignore\n          public void testBar() { }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class MyTest extends TestCase {\n          public void testFoo() {}\n\n          public void _testBar() {}\n      }\n\nExample (JUnit 5 annotation in JUnit 4 test case):\n\n\n      public class MyTest {\n          @BeforeAll // JUnit 5 lifecycle method\n          public void initialize() { }\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void test() {}\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void testWouldBeExecuted() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class MyTest {\n          @BeforeClass // JUnit 4 lifecycle method\n          public void initialize() { }\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void test() {}\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void testWouldBeExecuted() {}\n      }\n"
+        },
+        {
+          "shortName": "TestMethodWithoutAssertion",
+          "displayName": "Test method without assertions",
+          "enabled": false,
+          "description": "Reports test methods that do not contain any assertions. Such methods may indicate either incomplete or weak test cases.\n\n**Example:**\n\n\n      public class ExtensiveTest {\n\n        @Test\n        public void testAlive() {\n          System.out.println(\"nothing\");\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the combinations of fully qualified class name and method name regular expression that should qualify as assertions. Class names also match subclasses.\n* Use the **'assert' keyword is considered an assertion** option to specify if the Java `assert` statements using the `assert` keyword should be considered an assertion.\n* Use the **Ignore test methods which declare exceptions** option to ignore the test methods that declare exceptions. This can be useful when you have tests that will throw an exception on failure and thus don't need any assertions."
         },
         {
           "shortName": "TestFailedLine",
