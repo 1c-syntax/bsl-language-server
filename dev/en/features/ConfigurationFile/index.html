@@ -1000,7 +1000,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 <tr>
 <td align="left"><code>codeLens</code></td>
 <td align="center"><code>JSON-Object</code></td>
-<td align="left">Contains the settings for displaying <code>lens</code> in advanced code editors/IDEs <em>(for example, <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information above a block of code. Object properties</td>
+<td align="left">Contains settings for displaying <code>lenses</code> in advanced code/IDEs <em>(eg <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information above the code block.</td>
 </tr>
 <tr>
 <td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
@@ -1078,6 +1078,31 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td align="left">Show additional links to diagnostics documentation. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
 </tr>
 <tr>
+<td align="left"><code>inlayHint</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">ontains settings for displaying <code>inlay hints</code> in advanced code editors/IDEs <em>(for example <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information directly in the code line.</td>
+</tr>
+<tr>
+<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">A collection of inlay hints settings. The elements of the collection are json objects of the following structure:<em><br/> </em>object key<em> - a string that is an identifier of inlay hint</em> <br/><em>object value</em> - can take either a boolean value, and then it is interpreted as disabling inlay hint (<code>false</code>) or enabling them with parameters by default (<code>true</code>), or a value of type <code>json-object</code>, which is a set of inlay hint settings.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td align="left">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">Cognitive Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td align="left">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">Cyclomatic Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
+</tr>
+<tr>
+<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
+<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td align="left">Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
+</tr>
+<tr>
 <td align="left"><code>useDevSite</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
@@ -1111,10 +1136,12 @@ The created file must be specified using the key <code>--configuration</code> <e
 <p>Setting example:</p>
 <ul>
 <li>Language of diagnostics messages - English;</li>
-<li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>
+<li>Changes the diagnostic setting <a href="../../diagnostics/LineLength/">LineLength - Line length limit</a> by setting
+  line length limit of 140 characters;</li>
 <li>Disable <a href="../../diagnostics/MethodSize/">MethodSize - Method size restriction diagnostic</a>.</li>
 <li>Enables the calculation of diagnostics in continuous mode (<code>computeTrigger = onType</code>)</li>
-<li>Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "VersioningObjects"</li>
+<li>Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "
+  ObjectVersioning"</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
@@ -1128,8 +1155,13 @@ The created file must be specified using the key <code>--configuration</code> <e
 <span class="w">      </span><span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;subsystemsFilter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;StandardSubsystems&quot;</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ReportVariants&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;VersioningObjects&quot;</span><span class="p">]</span>
+<span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;StandardSubsystems&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;exclude&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;ReportVariants&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;ObjectVersioning&quot;</span>
+<span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
