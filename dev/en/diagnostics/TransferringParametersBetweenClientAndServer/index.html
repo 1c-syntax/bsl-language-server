@@ -947,19 +947,116 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<h1 id="TransferringParametersBetweenClientAndServer"><Diagnostic name> (TransferringParametersBetweenClientAndServer)<a class="headerlink" href="#TransferringParametersBetweenClientAndServer" title="Permanent link">&para;</a></h1>
+<!-- Blocks above are included automatically, do not touch -->
+<h2 id="Diagnostic-description">Diagnostic description<a class="headerlink" href="#Diagnostic-description" title="Permanent link">&para;</a></h2>
+<!-- Diagnostic description is filled in manually. It is necessary to describe the meaning an understandable language -->
 
+<p>When transferring control from the client to the server (and vice versa), copies of the parameters are always transferred.</p>
+<ul>
+<li>
+<p>When a server procedure or function is called from the client, a copy of the actual parameter is created and this copy is passed to the server side.</p>
+</li>
+<li>
+<p>When control is returned from the server to the client, a copy of the formal parameter (which was handled in the called procedure or function) is also created for transfer back to the client.</p>
+</li>
+</ul>
+<p>If a formal parameter is specified with the Val modifier, then the value of the parameter will only be passed when the procedure or function is called and will not be passed back when control returns to the client.</p>
+<p>Possible scenarios:</p>
+<ul>
+<li>If a structure with nested structures is passed from the client method to the server method without the Val modifier, and the parameter does not change inside the server method, then a copy of this structure with all its attachments will be transferred from the server when control returns.</li>
+<li>In the case of transferring a flat collection that does not change, for example, an array, a copy of this collection will also be returned from the server to the client in vain.</li>
+</ul>
+<p>As a result, the absence of the Val modifier in client-server interaction can lead to performance degradation and unnecessary/unnecessary load both by the client and the server.</p>
+<p>The current rule finds server methods that execute from client methods and throws remarks on parameters without the Val modifier that are not set to a value.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<!-- This section contains examples for which the diagnostics work, and you can also give an example of how to fix the situation -->
+<p>1. An example with passing parameters from the client to the server without "Val" and with "Val"
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtServerNoContext</span>
+<span class="k">Procedure</span> <span class="nf">TransferParametersToServer</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">ParamWithVal</span><span class="p">,</span> <span class="nv">Collection</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">CollectionWithVal</span><span class="p">)</span>
 
+<span class="nv">Param1</span> <span class="o">=</span> <span class="s">&quot;Changed1&quot;</span><span class="p">;</span>
+<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">&quot;Changed2&quot;</span><span class="p">;</span>
+<span class="nv">Collection</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Key1&quot;</span><span class="p">,</span> <span class="s">&quot;Changed1&quot;</span><span class="p">);</span>
+<span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Key2&quot;</span><span class="p">,</span> <span class="s">&quot;Changed2&quot;</span><span class="p">);</span>
+
+<span class="k">EndProcedure</span>
+
+<span class="nd">&amp;AtClient</span>
+<span class="k">Procedure</span> <span class="nf">PassingParameters</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
+
+<span class="nv">Param1</span> <span class="o">=</span> <span class="s">&quot;Initial1&quot;</span><span class="p">;</span>
+<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">&quot;Initial2&quot;</span><span class="p">;</span>
+<span class="nv">Collection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Key1&quot;</span><span class="p">,</span> <span class="s">&quot;Source1&quot;</span><span class="p">);</span>
+<span class="nv">CollectionWithVal</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Key2&quot;</span><span class="p">,</span> <span class="s">&quot;Source2&quot;</span><span class="p">);</span>
+
+<span class="nf">PassingParametersToServer</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="nv">ParamWithVal</span><span class="p">,</span> <span class="nv">Collection</span><span class="p">,</span> <span class="nv">CollectionWithVal</span><span class="p">);</span>
+
+<span class="nv">Template</span> <span class="o">=</span> <span class="s">&quot;after server %1 = &lt;%2&gt;&quot;</span><span class="p">;</span>
+
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;Param1&quot;</span><span class="p">,</span> <span class="nv">Param1</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;ParamWithVal&quot;</span><span class="p">,</span> <span class="nv">ParamWithVal</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;Collection.Key1&quot;</span><span class="p">,</span> <span class="nv">Collection</span><span class="o">.</span><span class="nv">Key1</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;CollectionWithVal.Key2&quot;</span><span class="p">,</span> <span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nv">Key2</span><span class="p">));</span>
+
+<span class="k">EndProcedure</span>
+</code></pre></div>
+This code, when executed, will show the following result
+<div class="highlight"><pre><span></span><code>after server Param1= &lt;Changed1&gt;
+after server ParamWithVal= &lt;Initial2&gt;
+after server Collection.Key1 =  &lt;Changed1&gt;
+after server CollectionWithVal.Key2= &lt;Initial2&gt;
+</code></pre></div>
+It can be seen that all parameters passed through Value do not change their values after execution, incl. and values within collections.</p>
+<ol>
+<li>An example of inaccurate parameter transfer
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient</span>
+<span class="k">Procedure</span> <span class="nf">UserGroupsDragNDropFinish</span><span class="p">(</span><span class="nv">Response</span><span class="p">,</span> <span class="nv">AdditionalParameters</span><span class="p">)</span>
+
+<span class="k">If</span> <span class="nv">Response</span> <span class="o">=</span> <span class="nv">DialogReturnCode</span><span class="o">.</span><span class="nv">No</span> <span class="k">Then</span>
+<span class="k">Return</span><span class="p">;</span>
+<span class="k">EndIf</span><span class="p">;</span>
+
+<span class="nv">MessageToUser</span> <span class="o">=</span> <span class="nf">MoveUserToNewGroup</span><span class="p">(</span>
+<span class="nv">AdditionalOptions</span><span class="o">.</span><span class="nv">DragNDropOptions</span><span class="p">,</span>
+<span class="nv">AdditionalParameters</span><span class="o">.</span><span class="nv">String</span><span class="p">,</span>
+<span class="nv">AdditionalParameters</span><span class="o">.</span><span class="nv">Move</span>
+<span class="p">);</span>
+
+<span class="k">EndProcedure</span>
+
+<span class="c1">// input parameters ArrayUsers and other parameters do not change</span>
+<span class="c1">// and therefore there is no point in additionally returning them from the server</span>
+<span class="nd">&amp;AtServer</span>
+<span class="k">Function</span> <span class="nf">MoveUserToNewGroup</span><span class="p">(</span><span class="nv">ArrayUsers</span><span class="p">,</span> <span class="nv">NewGroupOwner</span><span class="p">,</span> <span class="nv">Move</span><span class="p">)</span>
+
+<span class="k">If</span> <span class="nv">NewGroupOwner</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>
+<span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
+<span class="k">EndIf</span><span class="p">;</span>
+
+<span class="nv">CurrentGroupOwner</span> <span class="o">=</span> <span class="nv">Items</span><span class="o">.</span><span class="nv">UserGroups</span><span class="o">.</span><span class="nv">CurrentRow</span><span class="p">;</span>
+<span class="nv">MessageToUser</span> <span class="o">=</span> <span class="nv">UsersService</span><span class="o">.</span><span class="nf">MovingUserToNewGroup</span><span class="p">(</span>
+<span class="nv">ArrayUsers</span><span class="p">,</span> <span class="nv">CurrentGroupOwner</span><span class="p">,</span> <span class="nv">NewGroupOwner</span><span class="p">,</span> <span class="nv">Move</span><span class="p">);</span>
+
+<span class="nv">Items</span><span class="o">.</span><span class="nv">UsersList</span><span class="o">.</span><span class="nf">Update</span><span class="p">();</span>
+<span class="nv">Items</span><span class="o">.</span><span class="nv">UserGroups</span><span class="o">.</span><span class="nf">Refresh</span><span class="p">();</span>
+
+<span class="k">Return</span> <span class="nv">MessageToUser</span><span class="p">;</span>
+
+<span class="k">EndFunction</span>
+</code></pre></div></li>
+</ol>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
+<!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
+<!-- Sample sources
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* Source: [Standard: Module texts](https://its.1c.ru/db/v8std#content:456:hdoc) 
+* Useful information: [Refusal to use modal windows](https://its.1c.ru/db/metod8dev#content:5272:hdoc) 
+* Source: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000153">Article on 1C:ITS - Call with transfer of control from client to server</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
