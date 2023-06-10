@@ -1072,52 +1072,15 @@
 <details class="workspace">
 <summary>Workspace</summary>
 </details>
-<table>
-<thead>
-<tr>
-<th>Operation</th>
-<th>Supported</th>
-<th>Comment</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
-<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>with restrictions, see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a></td>
-<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a></td>
-<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+<p>| Operation                                                     | Support                                                    | Commentary                                                  |
+    | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a> |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a> |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |</p>
 <details>
 <summary>Text Synchronization</summary>
 </details>
@@ -1168,9 +1131,9 @@
 <thead>
 <tr>
 <th>Operation</th>
-<th>Supported</th>
-<th>Comment</th>
-<th>Configurable?</th>
+<th>Support</th>
+<th>Commentary</th>
+<th>Is configured?</th>
 </tr>
 </thead>
 <tbody>
@@ -1249,7 +1212,7 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">codeAction</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>codeActionKinds = ? (see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
+<td>codeActionKinds = ? (см. <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1279,7 +1242,7 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">documentLink</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>Displaying hyperlinks to diagnostics documentation.<br />tooltipSupport = true<br />resolveProvider = false</td>
+<td>Showing hyperlinks to documentation on diagnostics.<br />tooltipSupport = true<br />resolveProvider = false</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1375,6 +1338,24 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker">moniker</a></td>
 <td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint">inlayHint</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>resolveProvider = false</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve">inlayHint/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_inlayHint_refresh">inlayHint/refresh</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
