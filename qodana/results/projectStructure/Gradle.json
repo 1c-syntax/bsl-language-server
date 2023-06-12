@@ -50,12 +50,12 @@
       "version": "0.22.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.0",
-      "gradleName": "com.github.1c-syntax:utils:0.5.0",
+      "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.1",
+      "gradleName": "com.github.1c-syntax:utils:0.5.1",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "utils",
-      "version": "0.5.0"
+      "version": "0.5.1"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.10.3",
