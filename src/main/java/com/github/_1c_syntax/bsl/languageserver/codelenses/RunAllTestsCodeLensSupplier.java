@@ -133,9 +133,9 @@ public class RunAllTestsCodeLensSupplier
     return DefaultCodeLensData.class;
   }
 
-  private static CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
+  private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
 
-    var codeLensData = new DefaultCodeLensData(documentContext.getUri(), COMMAND_ID);
+    var codeLensData = new DefaultCodeLensData(documentContext.getUri(), getId());
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);
