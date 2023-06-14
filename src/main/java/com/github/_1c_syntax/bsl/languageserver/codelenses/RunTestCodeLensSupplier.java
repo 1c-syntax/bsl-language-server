@@ -145,7 +145,7 @@ public class RunTestCodeLensSupplier
 
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
     var testId = method.getName();
-    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), COMMAND_ID, testId);
+    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);
