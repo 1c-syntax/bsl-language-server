@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1686584334568,
+  "lastUpdate": 1686728473845,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22258,6 +22258,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.27181778831001085",
             "extra": "mean: 56.41567095120748 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68affbff892124bd32912a6f85361131c9810ed3",
+          "message": "Merge pull request #3065 from sfaqer/bugfix/runTestCodeLens\n\nИсправлена ошибка указания идентификатор линз запуска тестов",
+          "timestamp": "2023-06-14T09:22:30+02:00",
+          "tree_id": "7f285fd92403f35a2ceda2f8e3f67d4f5f1782f8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/68affbff892124bd32912a6f85361131c9810ed3"
+        },
+        "date": 1686728466577,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.63216018676758,
+            "unit": "sec",
+            "range": "stddev: 1.0102332860721803",
+            "extra": "mean: 55.63216018676758 sec\nrounds: 3"
           }
         ]
       }
