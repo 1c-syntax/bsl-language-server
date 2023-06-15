@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1686811033689,
+  "lastUpdate": 1686818573864,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22320,6 +22320,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6919310148936342",
             "extra": "mean: 55.83391976356506 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "884c97c51ffd6b770e4d2a49ea98273308f6fae4",
+          "message": "Merge pull request #3068 from sfaqer/bugfix/sourceDefinedMethodCallReadParams\n\nИсправлена ошибка чтения параметров SourceDefinedMethodCallInlayHintSupplier",
+          "timestamp": "2023-06-15T10:31:23+02:00",
+          "tree_id": "51b5ec6168dc5dd6bcb43635854792f24cf0d9da",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/884c97c51ffd6b770e4d2a49ea98273308f6fae4"
+        },
+        "date": 1686818565236,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.53062629699707,
+            "unit": "sec",
+            "range": "stddev: 0.045388532059404206",
+            "extra": "mean: 55.53062629699707 sec\nrounds: 3"
           }
         ]
       }
