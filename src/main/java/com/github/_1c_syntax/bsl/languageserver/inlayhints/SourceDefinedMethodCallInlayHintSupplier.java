@@ -173,7 +173,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
 
   private boolean showParametersWithTheSameName() {
-    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
     } else {
@@ -185,7 +185,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
   private boolean showDefaultValues() {
-    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
+    var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_DEFAULT_VALUES;
     } else {
