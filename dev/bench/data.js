@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1686728473845,
+  "lastUpdate": 1686811033689,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22289,6 +22289,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0102332860721803",
             "extra": "mean: 55.63216018676758 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fd25d3a61335bc9d9d86b958d99e2c7943f7b2b2",
+          "message": "Merge pull request #3067 from sfaqer/bugfix/3064\n\nИсправлена ошибка падения анализа из-за исключения выпадающего из MissingCommonModuleMethodDiagnostic",
+          "timestamp": "2023-06-15T08:23:31+02:00",
+          "tree_id": "a4cc29506bac48a248899c7e0d0a3d37dfb8e4bc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fd25d3a61335bc9d9d86b958d99e2c7943f7b2b2"
+        },
+        "date": 1686811025890,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.83391976356506,
+            "unit": "sec",
+            "range": "stddev: 0.6919310148936342",
+            "extra": "mean: 55.83391976356506 sec\nrounds: 3"
           }
         ]
       }
