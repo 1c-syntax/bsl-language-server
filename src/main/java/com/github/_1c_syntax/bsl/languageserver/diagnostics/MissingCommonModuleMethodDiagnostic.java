@@ -80,28 +80,29 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {
     final var symbol = symbolOccurrence.getSymbol();
     final var document = documentContext.getServerContext()
-      .getDocument(symbol.getMdoRef(), symbol.getModuleType())
-      .orElseThrow();
-    final var mdObject = document.getMdObject().orElseThrow();
+      .getDocument(symbol.getMdoRef(), symbol.getModuleType());
+    if (document.isEmpty()) return Optional.empty();
+    final var mdObject = document.get().getMdObject();
+    if (mdObject.isEmpty()) return Optional.empty();
 
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
-    final var methodSymbol = document
+    final var methodSymbol = document.get()
       .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
     if (methodSymbol.isEmpty()){
       final var location = symbolOccurrence.getLocation();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(
-        new CallData(mdObject.getName(),
+        new CallData(mdObject.get().getName(),
           getMethodNameByLocation(documentContext.getAst(), location.getRange()),
           location.getRange(), false, false));
     }
     // вызовы приватных методов внутри самого модуля пропускаем
-    if (document.getUri().equals(documentContext.getUri())){
+    if (document.get().getUri().equals(documentContext.getUri())){
       return Optional.empty();
     }
     return methodSymbol
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
-      .map(methodSymbol1 -> new CallData(mdObject.getName(),
+      .map(methodSymbol1 -> new CallData(mdObject.get().getName(),
         methodSymbol1.getName(),
         symbolOccurrence.getLocation().getRange(), true, true));
   }
