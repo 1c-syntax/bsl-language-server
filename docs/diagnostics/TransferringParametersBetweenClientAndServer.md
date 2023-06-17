@@ -1,4 +1,4 @@
-# <Diagnostic name> (TransferringParametersBetweenClientAndServer)
+# Передача параметров между клиентом и сервером (TransferringParametersBetweenClientAndServer)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
