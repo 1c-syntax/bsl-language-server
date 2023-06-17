@@ -1,4 +1,4 @@
-# <Diagnostic name> (TransferringParametersBetweenClientAndServer)
+# Transferring parameters between client and server (TransferringParametersBetweenClientAndServer)
 
 <!-- Blocks above are included automatically, do not touch -->
 ## Diagnostic description
