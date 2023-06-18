@@ -45,10 +45,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class RunTestCodeLensSupplierTest {
+class RunAllTestsCodeLensSupplierTest {
 
   @Autowired
-  private RunTestCodeLensSupplier supplier;
+  private RunAllTestsCodeLensSupplier supplier;
 
   @Autowired
   private ApplicationEventPublisher eventPublisher;
@@ -60,7 +60,7 @@ class RunTestCodeLensSupplierTest {
 
   @BeforeEach
   void init() {
-    var filePath = "./src/test/resources/codelenses/RunTestCodeLensSupplier.os";
+    var filePath = "./src/test/resources/codelenses/RunAllTestsCodeLensSupplier.os";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
   }
 
@@ -107,10 +107,9 @@ class RunTestCodeLensSupplierTest {
   void testResolve() {
     // given
     CodeLens codeLens = new CodeLens();
-    RunTestCodeLensSupplier.RunTestCodeLensData codeLensData = new RunTestCodeLensSupplier.RunTestCodeLensData(
+    DefaultCodeLensData codeLensData = new DefaultCodeLensData(
       documentContext.getUri(),
-      supplier.getId(),
-      "testName"
+      supplier.getId()
     );
 
     // when
