@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeR
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientInfo;
+import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,14 +69,33 @@ class RunTestCodeLensSupplierTest {
     assertThat(codeLenses).isEmpty();
   }
 
-
-
   @Test
-  void test() {
+  void testDryRun() {
+    // given
+    initializeServer("Visual Studio Code");
+
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
 
     // then
+    assertThat(codeLenses).isNotNull();
+  }
+
+  @Test
+  void testResolve() {
+    // given
+    CodeLens codeLens = new CodeLens();
+    RunTestCodeLensSupplier.RunTestCodeLensData codeLensData = new RunTestCodeLensSupplier.RunTestCodeLensData(
+      documentContext.getUri(),
+      supplier.getId(),
+      "testName"
+    );
+
+    // when
+    var resolvedCodeLens = supplier.resolve(documentContext, codeLens, codeLensData);
+
+    // then
+    assertThat(resolvedCodeLens.getCommand()).isNotNull();
   }
 
   private void initializeServer(String clientName) {
