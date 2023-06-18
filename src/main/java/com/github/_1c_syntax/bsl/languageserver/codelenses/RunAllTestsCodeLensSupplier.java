@@ -24,24 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.InitializeParams;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Поставщик линзы для запуска всех тестов в текущем файле.
