@@ -59,7 +59,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "DataFlowIssue"
   },
-  "hash": "686b7bb7a061abd7296ed6135e92aa17f65bd04d7f695987913d5ce75af541c8"
+  "hash": "394f96222933a4e36f79a00cc1a10309b7fe7e413f3b42ca3e345604aaaefc73"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
