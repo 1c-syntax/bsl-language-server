@@ -246,6 +246,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DenyIncompleteValues/</loc>
+         <lastmod>2023-06-18</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedAttributes8312/</loc>
          <lastmod>2023-06-18</lastmod>
          <changefreq>daily</changefreq>
