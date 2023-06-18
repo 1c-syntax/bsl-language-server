@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
@@ -68,7 +70,7 @@ public class MdoRefBuilder {
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
-      TerminalNode identifier,
+    TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
 
@@ -89,6 +91,39 @@ public class MdoRefBuilder {
       .ifPresent(mdoRef::set);
 
     return stringInterner.intern(mdoRef.get());
+  }
+
+  /**
+   * Получить mdoRef в языке конфигурации
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale mdoRef
+   */
+  public String getLocaleMdoRef(DocumentContext documentContext, MD mdo) {
+    final var mdoReference = mdo.getMdoReference();
+    final String result;
+    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
+      result = mdoReference.getMdoRef();
+    } else {
+      result = mdoReference.getMdoRefRu();
+    }
+    return stringInterner.intern(result);
+  }
+
+  /**
+   * Получить имя родителя метаданного в языке конфигурации.
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale owner mdo name
+   */
+  public String getLocaleOwnerMdoName(DocumentContext documentContext, MD mdo) {
+    final var names = getLocaleMdoRef(documentContext, mdo).split("\\.");
+    if (names.length <= 1) {
+      return "";
+    }
+    return stringInterner.intern(names[0].concat(".").concat(names[1]));
   }
 
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
