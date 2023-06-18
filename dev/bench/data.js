@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1687093418793,
+  "lastUpdate": 1687101695799,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22444,6 +22444,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4885693285037611",
             "extra": "mean: 56.29174693425497 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dc8c18bf309d5cdb974f52117d4d119fc540548",
+          "message": "Merge pull request #2976 from artbear/DenyIncomplete-230\n\nПравило Не установлен флаг \"Запрет незаполненных значений\" для измерений регистра - ГОТОВО",
+          "timestamp": "2023-06-18T17:10:37+02:00",
+          "tree_id": "24c0bc2bba4273eeb62186020ecea03537ac0972",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5dc8c18bf309d5cdb974f52117d4d119fc540548"
+        },
+        "date": 1687101688305,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 55.6912567615509,
+            "unit": "sec",
+            "range": "stddev: 1.9841887067460051",
+            "extra": "mean: 55.6912567615509 sec\nrounds: 3"
           }
         ]
       }
