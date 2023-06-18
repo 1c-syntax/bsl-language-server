@@ -50,40 +50,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class RunAllTestsCodeLensSupplier
-  implements CodeLensSupplier<DefaultCodeLensData> {
+  extends AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> {
 
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runAllTests";
 
   private final TestRunnerAdapter testRunnerAdapter;
   private final LanguageServerConfiguration configuration;
   private final Resources resources;
-
-  private boolean clientIsSupported;
-
-  /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
-   * <p>
-   * Анализирует тип подключенного клиента и управляет применимостью линзы.
-   *
-   * @param event Событие
-   */
-  @EventListener
-  public void handleEvent(LanguageServerInitializeRequestReceivedEvent event) {
-    var clientName = Optional.of(event)
-      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
-      .map(InitializeParams::getClientInfo)
-      .map(ClientInfo::getName)
-      .orElse("");
-    clientIsSupported = "Visual Studio Code".equals(clientName);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isApplicable(DocumentContext documentContext) {
-    return documentContext.getFileType() == FileType.OS && clientIsSupported;
-  }
 
   /**
    * {@inheritDoc}
