@@ -1,7 +1,7 @@
 # Deny incomplete values for dimensions (DenyIncompleteValues)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 Often when designing a metadata structure, it is required that the dimensions of a register must always be filled with values (should not be empty).
 
