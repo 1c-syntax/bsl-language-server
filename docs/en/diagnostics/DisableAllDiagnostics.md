@@ -1,4 +1,4 @@
-# <Diagnostic name> (DisableBSLLS)
+# Disable all diagnostics for module (DisableAllDiagnostics)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
