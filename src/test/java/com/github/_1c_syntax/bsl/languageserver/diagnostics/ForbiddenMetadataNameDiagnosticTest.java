@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
 import com.github._1c_syntax.mdclasses.mdo.attributes.AbstractMDOAttribute;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,10 +88,10 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     assertThat(diagnostics, true)
       .hasMessageOnRange("Запрещено использовать имя `Справочник` для `Справочник.Справочник1`", 0, 0, 9)
       .hasMessageOnRange(
-        "Запрещено использовать имя `РегистрСведений` для `Справочник.Справочник1.Attribute.РегистрСведений`",
+        "Запрещено использовать имя `РегистрСведений` для `Справочник.Справочник1.Реквизит.РегистрСведений`",
         0, 0, 9)
       .hasMessageOnRange(
-        "Запрещено использовать имя `РегистрСведений` для `Справочник.Справочник1.TabularSection.РегистрСведений`",
+        "Запрещено использовать имя `РегистрСведений` для `Справочник.Справочник1.ТабличнаяЧасть.РегистрСведений`",
         0, 0, 9)
     ;
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -54,7 +54,12 @@ class UsageWriteLogEventDiagnosticTest extends AbstractDiagnosticTest<UsageWrite
       .hasRange(204, 6, 206,22)
       .hasRange(219, 6, 221,22)
       .hasRange(286, 12, 291,39)
-      .hasSize(14)
+
+      .hasRange(354, 6, 356,73)
+      .hasRange(368, 6, 370,22)
+      .hasRange(383, 6, 385,22)
+      .hasRange(439, 12, 444,39)
+      .hasSize(18)
     ;
 
   }

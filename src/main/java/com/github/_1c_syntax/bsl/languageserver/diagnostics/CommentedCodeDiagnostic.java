@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,9 +41,12 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -67,6 +70,11 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 
+  @DiagnosticParameter(
+    type = String.class
+  )
+  private Set<String> exclusionPrefixes = Collections.emptySet();
+
   private List<MethodDescription> methodDescriptions;
   private CodeRecognizer codeRecognizer;
 
@@ -78,6 +86,12 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   public void configure(Map<String, Object> configuration) {
     threshold = ((Number) configuration.getOrDefault("threshold", threshold)).floatValue();
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
+
+    String excludePrefixesString = (String) configuration.getOrDefault("exclusionPrefixes", "");
+    exclusionPrefixes = Arrays.stream(excludePrefixesString.split(","))
+      .map(String::trim)
+      .filter(s -> !s.isEmpty())
+      .collect(Collectors.toSet());
   }
 
   @Override
@@ -170,11 +184,18 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   }
 
   private boolean isTextParsedAsCode(String text) {
+    String uncommented = uncomment(text);
+
+    for (String prefix : exclusionPrefixes) {
+      if (uncommented.startsWith(prefix)) {
+        return false;
+      }
+    }
     if (!codeRecognizer.meetsCondition(text)) {
       return false;
     }
 
-    BSLTokenizer tokenizer = new BSLTokenizer(uncomment(text));
+    BSLTokenizer tokenizer = new BSLTokenizer(uncommented);
     final List<Token> tokens = tokenizer.getTokens();
 
     // Если меньше двух токенов нет смысла анализировать - это код

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,8 +94,8 @@ class SymbolProviderTest {
   }
 
   @SneakyThrows
-  private boolean uriContains(org.eclipse.lsp4j.SymbolInformation symbolInformation, String name) {
-    return Paths.get(new URI(symbolInformation.getLocation().getUri())).toString().contains(name);
+  private boolean uriContains(WorkspaceSymbol workspaceSymbol, String name) {
+    return Paths.get(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
   }
 
   @Test

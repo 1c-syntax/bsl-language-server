@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,21 +33,24 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeCompu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
+import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
+import com.github._1c_syntax.bsl.support.SupportVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.support.ScriptVariant;
-import com.github._1c_syntax.mdclasses.supportconf.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.supportconf.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -57,9 +60,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -75,6 +80,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Component
 @Scope("prototype")
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
@@ -239,7 +245,8 @@ public class DocumentContext {
   }
 
   public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+    return Optional
+      .ofNullable((AbstractMDObjectBase) getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -264,56 +271,76 @@ public class DocumentContext {
     isComputedDataFrozen = false;
   }
 
-  public void rebuild(String content, int version) {
+  protected void rebuild(String content, int version) {
     computeLock.lock();
 
-    boolean versionMatches = version == this.version && version != 0;
-    boolean contentWasCleared = this.content == null;
+    try {
 
-    if (versionMatches && !contentWasCleared) {
-      clearDependantData();
+      boolean versionMatches = version == this.version && version != 0;
+
+      if (versionMatches && (this.content != null)) {
+        clearDependantData();
+        computeLock.unlock();
+        return;
+      }
+
+      if (!isComputedDataFrozen) {
+        clearSecondaryData();
+      }
+
+      this.content = content;
+      tokenizer = new BSLTokenizer(content);
+      this.version = version;
+      symbolTree = computeSymbolTree();
+
+    } finally {
       computeLock.unlock();
-      return;
     }
 
-    if (!isComputedDataFrozen) {
-      clearSecondaryData();
-    }
-
-    this.content = content;
-    tokenizer = new BSLTokenizer(content);
-    this.version = version;
-    symbolTree = computeSymbolTree();
-
-    computeLock.unlock();
   }
 
-  public void clearSecondaryData() {
+  protected void rebuild() {
+    try {
+      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      rebuild(newContent, 0);
+    } catch (IOException e) {
+      LOGGER.error("Can't rebuild content from uri", e);
+    }
+  }
+
+  protected void clearSecondaryData() {
     computeLock.lock();
 
-    content = null;
-    contentList.clear();
-    tokenizer = null;
-    queries.clear();
-    clearDependantData();
+    try {
 
-    if (!isComputedDataFrozen) {
-      cognitiveComplexityData.clear();
-      cyclomaticComplexityData.clear();
-      metrics.clear();
-      diagnosticIgnoranceData.clear();
+      content = null;
+      contentList.clear();
+      tokenizer = null;
+      queries.clear();
+      clearDependantData();
+
+      if (!isComputedDataFrozen) {
+        cognitiveComplexityData.clear();
+        cyclomaticComplexityData.clear();
+        metrics.clear();
+        diagnosticIgnoranceData.clear();
+      }
+    } finally {
+      computeLock.unlock();
     }
-    computeLock.unlock();
   }
 
   private void clearDependantData() {
     computeLock.lock();
     diagnosticsLock.lock();
 
-    diagnostics.clear();
+    try {
+      diagnostics.clear();
+    } finally {
+      diagnosticsLock.unlock();
+      computeLock.unlock();
+    }
 
-    diagnosticsLock.unlock();
-    computeLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {

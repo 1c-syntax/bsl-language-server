@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,11 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.common.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDEventSubscription;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
 import org.eclipse.lsp4j.Range;
 
 import java.util.regex.Pattern;
@@ -74,7 +74,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
 
     // для анализа выбираются все имеющиеся подписки на события
     configuration.getChildren().stream()
-      .filter(mdo -> mdo.getType() == MDOType.EVENT_SUBSCRIPTION)
+      .filter(mdo -> mdo.getMdoType() == MDOType.EVENT_SUBSCRIPTION)
       .map(MDEventSubscription.class::cast)
       .forEach((MDEventSubscription eventSubs) -> {
         // проверка на пустой обработчик

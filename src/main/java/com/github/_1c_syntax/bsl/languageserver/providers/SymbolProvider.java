@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,14 +32,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -52,7 +55,12 @@ public class SymbolProvider {
 
   private final ServerContext context;
 
-  public List<? extends SymbolInformation> getSymbols(WorkspaceSymbolParams params) {
+  private static final Set<VariableKind> supportedVariableKinds = EnumSet.of(
+    VariableKind.MODULE,
+    VariableKind.GLOBAL
+  );
+
+  public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params) {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
@@ -67,7 +75,7 @@ public class SymbolProvider {
     return context.getDocuments().values().stream()
       .flatMap(SymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
-      .map(SymbolProvider::createSymbolInformation)
+      .map(SymbolProvider::createWorkspaceSymbol)
       .collect(Collectors.toList());
   }
 
@@ -83,21 +91,23 @@ public class SymbolProvider {
       case Method:
         return true;
       case Variable:
-        return ((VariableSymbol) symbol).getKind() != VariableKind.LOCAL;
+        return supportedVariableKinds.contains(((VariableSymbol) symbol).getKind());
       default:
         return false;
     }
   }
 
-  private static SymbolInformation createSymbolInformation(Pair<URI, SourceDefinedSymbol> symbolPair) {
+  private static WorkspaceSymbol createWorkspaceSymbol(Pair<URI, SourceDefinedSymbol> symbolPair) {
     var uri = symbolPair.getKey();
     var symbol = symbolPair.getValue();
-    var symbolInformation = new SymbolInformation(
-      symbol.getName(),
-      symbol.getSymbolKind(),
-      new Location(uri.toString(), symbol.getRange())
-    );
-    symbolInformation.setTags(symbol.getTags());
-    return symbolInformation;
+    var location = new Location(uri.toString(), symbol.getRange());
+
+    var workspaceSymbol = new WorkspaceSymbol();
+    workspaceSymbol.setName(symbol.getName());
+    workspaceSymbol.setKind(symbol.getSymbolKind());
+    workspaceSymbol.setLocation(Either.forLeft(location));
+    workspaceSymbol.setTags(symbol.getTags());
+
+    return workspaceSymbol;
   }
 }

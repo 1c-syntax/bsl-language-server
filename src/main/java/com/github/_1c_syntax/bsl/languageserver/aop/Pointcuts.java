@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * Сборник общих Pointcut для AOP-слоя.
@@ -66,6 +68,22 @@ public class Pointcuts {
   }
 
   /**
+   * Это обращение к реализации {@link TextDocumentService}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.TextDocumentService+)")
+  public void isTextDocumentService() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к реализации {@link WorkspaceService}.
+   */
+  @Pointcut("within(org.eclipse.lsp4j.services.WorkspaceService+)")
+  public void isWorkspaceService() {
+    // no-op
+  }
+
+  /**
    * Это обращение к классу {@link ServerContext}.
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
@@ -86,6 +104,14 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* rebuild(..))")
   public void isRebuildCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода populateContext.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* populateContext(..))")
+  public void isPopulateContextCall() {
     // no-op
   }
 
@@ -118,6 +144,14 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
   public void isInitializeCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов публичного метода.
+   */
+  @Pointcut("execution(public * com.github._1c_syntax.bsl.languageserver..*(..))")
+  public void isPublicMethodCall() {
     // no-op
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -132,8 +132,10 @@ public final class Ranges {
       return Ranges.create((TerminalNode) tree);
     } else if (tree instanceof Token) {
       return Ranges.create((Token) tree);
-    } else {
+    } else if (tree instanceof ParserRuleContext) {
       return Ranges.create((ParserRuleContext) tree);
+    } else {
+      throw new IllegalArgumentException();
     }
   }
 
@@ -143,6 +145,49 @@ public final class Ranges {
 
   public boolean containsPosition(Range range, Position position) {
     return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+  }
+
+  /**
+   * Натуральный порядок сравнения Range
+   *
+   * @param o1 - левый\меньший операнд
+   * @param o2 - правый\больший операнд
+   * @return 0 - равно, 1 - больше, -1 - меньше
+   */
+  public int compare(Range o1, Range o2) {
+    if (o1.equals(o2)){
+      return 0;
+    }
+    final var startCompare = compare(o1.getStart(), o2.getStart());
+    if (startCompare != 0){
+      return startCompare;
+    }
+    return compare(o1.getEnd(), o2.getEnd());
+  }
+
+  /**
+   * Натуральный порядок сравнения Position
+   *
+   * @param pos1 - левый\меньший операнд
+   * @param pos2 - правый\больший операнд
+   * @return 0 - равно, 1 - больше, -1 - меньше
+   */
+  public int compare(Position pos1, Position pos2) {
+    if (pos1.equals(pos2)){
+      return 0;
+    }
+
+    // 1,1 10,10
+    if (pos1.getLine() < pos2.getLine()) {
+      return -1;
+    }
+    // 10,10 1,1
+    if (pos1.getLine() > pos2.getLine()) {
+      return 1;
+    }
+    // 1,4 1,9
+    return Integer.compare(pos1.getCharacter(), pos2.getCharacter());
+    // 1,9 1,4
   }
 
   /**

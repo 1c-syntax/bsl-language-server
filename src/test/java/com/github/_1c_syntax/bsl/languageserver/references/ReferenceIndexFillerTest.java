@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,29 +22,40 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class ReferenceIndexFillerTest {
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
   @Autowired
   private ReferenceIndex referenceIndex;
+
+  @Autowired
+  private ServerContext serverContext;
 
   @Test
   void testFindCalledMethod() {
@@ -66,6 +77,62 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).get()
       .extracting(Reference::getSelectionRange)
       .isEqualTo(Ranges.create(4, 0, 4, 9));
+  }
+
+  @Test
+  void testFindNotifyDescription() {
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexNotifyDescription.bsl");
+    referenceIndexFiller.fill(documentContext);
+
+    var method = documentContext.getSymbolTree().getMethodSymbol("ОбработчикОписаниеОповещения");
+    assertThat(method).isPresent();
+    var references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
+
+    method = documentContext.getSymbolTree().getMethodSymbol("ОшибкаОписаниеОповещения");
+    assertThat(method).isPresent();
+    references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
+
+    // Проверяем обход дерева в глубину для NewExpression если это описание оповещения
+    method = documentContext.getSymbolTree().getMethodSymbol("ДополнительныеПараметрыОповещения");
+    assertThat(method).isPresent();
+    references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
+  }
+
+  @Test
+  void testFindNotifyDescriptionConfiguration() throws IOException {
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var file = new File("src/test/resources/metadata/designer",
+      "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    file = new File("src/test/resources/metadata/designer",
+      "CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl");
+    uri = Absolute.uri(file);
+    var documentContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    var method = documentContext.getSymbolTree().getMethodSymbol("ОбработчикОписаниеОповещения");
+    assertThat(method).isPresent();
+    var references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
+
+    method = documentContext.getSymbolTree().getMethodSymbol("ОшибкаОписаниеОповещения");
+    assertThat(method).isPresent();
+    references = referenceIndex.getReferencesTo(method.get());
+    assertThat(references).hasSize(1);
   }
 
   @Test

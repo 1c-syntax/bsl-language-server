@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,6 +29,9 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -137,6 +140,28 @@ class BSLTextDocumentServiceTest {
     assertThat(diagnostics.getDiagnostics()).hasSize(2);
   }
 
+  @Test
+  void testRename() throws ExecutionException, InterruptedException, IOException {
+    var params = new RenameParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 16));
+
+    var result = textDocumentService.rename(params);
+
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void testRenamePrepare() throws ExecutionException, InterruptedException, IOException {
+    var params = new PrepareRenameParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 16));
+
+    var result = textDocumentService.prepareRename(params);
+
+    assertThat(result).isNotNull();
+  }
+
   private File getTestFile() {
     return new File("./src/test/resources/BSLTextDocumentServiceTest.bsl");
   }
@@ -151,6 +176,7 @@ class BSLTextDocumentServiceTest {
   }
 
   private TextDocumentIdentifier getTextDocumentIdentifier() {
+    // TODO: Переделать на TestUtils.getTextDocumentIdentifier();
     File file = getTestFile();
     String uri = file.toURI().toString();
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -47,6 +47,13 @@ public abstract class DiagnosticComputer {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
         } catch (RuntimeException e) {
+          /*
+          TODO:
+          В случае если подключен ленг клиент, то логирование ошибки в консоль приводит к падению сервера
+          т.к данный лог идёт в выхлоп не по протоколу.
+          Требуется обернуть логгер в случае подключенного ленг клиента и слать прокольное событие
+          которое запишет ошибку в лог.
+          */
           String message = String.format(
             "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
             documentContext.getUri(),
