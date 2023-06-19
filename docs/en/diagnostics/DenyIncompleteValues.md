@@ -17,7 +17,7 @@ The rule applies to the following registers:
 - accounting register
 - calculation register
 
-## Примеры
+## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ## Sources
