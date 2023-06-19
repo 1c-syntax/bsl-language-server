@@ -10,8 +10,12 @@
       
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/">
       
+      
+      
+        <link rel="next" href="faq/">
+      
       <link rel="icon" href="assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.11">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -19,12 +23,13 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.8c5ef100.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.9647289d.min.css">
-        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ecc896b0.min.css">
       
+      
+
     
     
     
@@ -39,10 +44,11 @@
     
       <link rel="stylesheet" href="assets/stylesheets/extra.css">
     
-    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
+    
     
     
   </head>
@@ -106,27 +112,31 @@
       </div>
     </div>
     
-      <form class="md-header__option" data-md-component="palette">
-        
+      
+        <form class="md-header__option" data-md-component="palette">
           
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
+              </label>
+            
           
-          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+            
+            
+            <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
+              </label>
+            
           
-            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
-            </label>
-          
-        
-          
-          
-          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-          
-            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
-            </label>
-          
-        
-      </form>
+        </form>
+      
     
     
       <div class="md-header__option">
@@ -143,13 +153,13 @@
                     English
                   </a>
                 </li>
-                
+              
                 <li class="md-select__item">
                   <a href="/bsl-language-server/" hreflang="ru" class="md-select__link">
                     Русский
                   </a>
                 </li>
-                
+              
             </ul>
           </div>
         </div>
@@ -170,7 +180,7 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
@@ -182,7 +192,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -194,7 +204,7 @@
         <a href="https://github.com/1c-syntax/bsl-language-server" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     1c-syntax/bsl-language-server
@@ -213,7 +223,7 @@
           
             
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-tabs__inner md-grid">
+  <div class="md-grid">
     <ul class="md-tabs__list">
       
         
@@ -329,7 +339,7 @@
       <a href="https://github.com/1c-syntax/bsl-language-server" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     1c-syntax/bsl-language-server
@@ -352,17 +362,18 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_1">
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
           Home
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Home" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Home
@@ -378,7 +389,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
         
@@ -409,8 +420,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#Capabilities" class="md-nav__link">
-    Capabilities
+  <a href="#Features" class="md-nav__link">
+    Features
   </a>
   
 </li>
@@ -425,6 +436,13 @@
         <li class="md-nav__item">
   <a href="#Run-from-command-line" class="md-nav__link">
     Run from command line
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Run-in-websocket-mode" class="md-nav__link">
+    Run in websocket mode
   </a>
   
 </li>
@@ -511,17 +529,18 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2">
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
           Contributing
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Contributing" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Contributing
@@ -551,17 +570,18 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_2">
+        <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
           Start
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Start" data-md-level="2">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_2_2">
           <span class="md-nav__icon md-icon"></span>
           Start
@@ -640,17 +660,18 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_2_3">
+        <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
           Diagnostics development
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Diagnostics development" data-md-level="2">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_2_3">
           <span class="md-nav__icon md-icon"></span>
           Diagnostics development
@@ -779,17 +800,18 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_3">
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
           Reporters
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Reporters" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Reporters
@@ -912,17 +934,18 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_5">
+        <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
           Features
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="Features" data-md-level="1">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Features
@@ -985,14 +1008,14 @@
             
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/index.md" title="Edit this page" class="md-content__button md-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
-  </a>
+                  
 
+  
+  
 
 
 <h1 id="BSL-Language-Server">BSL Language Server<a class="headerlink" href="#BSL-Language-Server" title="Permanent link">&para;</a></h1>
@@ -1013,6 +1036,7 @@
 <li><a href="contributing/">Contributing guidelines</a></li>
 <li><a href="#capabilities">Capabilities</a></li>
 <li><a href="#cli">Run from command line</a></li>
+<li><a href="#websocket">Run in websocket mode</a></li>
 <li><a href="#analyze">Run in analyzer mode</a></li>
 <li><a href="#format">Run in formatter mode</a></li>
 <li><a href="#configuration">Configuration file</a></li>
@@ -1025,7 +1049,7 @@
 </ul>
 <p><a id="capabilities"></a></p>
 <p>Perfomance measurement - <a href="../bench/index.html">SSL 3.1</a></p>
-<h2 id="Capabilities">Capabilities<a class="headerlink" href="#Capabilities" title="Permanent link">&para;</a></h2>
+<h2 id="Features">Features<a class="headerlink" href="#Features" title="Permanent link">&para;</a></h2>
 <ul>
 <li>File formatting</li>
 <li>Selected region formatting</li>
@@ -1039,60 +1063,24 @@
 <li>Expand selection</li>
 <li>Display color representation and convert between <code>Color</code> and <code>WebColors</code></li>
 <li>Diagnostics</li>
-<li>Quick fixes for several diagnostics</li>
+<li>Quick fixes and code actions for several diagnostics</li>
 <li>Run diagnostics engine from command line</li>
 <li>Run formatter engine from command line</li>
+<li>Renaming Symbols</li>
 </ul>
 <h2 id="Supported-protocol-operations">Supported protocol operations<a class="headerlink" href="#Supported-protocol-operations" title="Permanent link">&para;</a></h2>
 <details class="workspace">
 <summary>Workspace</summary>
 </details>
-<table>
-<thead>
-<tr>
-<th>Operation</th>
-<th>Supported</th>
-<th>Comment</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
-<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>with restrictions, see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a></td>
-<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+<p>| Operation                                                     | Support                                                    | Commentary                                                  |
+    | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a> |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a> |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |</p>
 <details>
 <summary>Text Synchronization</summary>
 </details>
@@ -1139,21 +1127,20 @@
 </table>
 <details class="textdocument">
 <summary>Textdocument</summary>
-</details>
 <table>
 <thead>
 <tr>
 <th>Operation</th>
-<th>Supported</th>
-<th>Comment</th>
-<th>Configurable?</th>
+<th>Support</th>
+<th>Commentary</th>
+<th>Is configured?</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">publishDiagnostics</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">список диагностик</a></td>
+<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">diagnostics</a></td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1225,7 +1212,7 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">codeAction</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>codeActionKinds = ? (see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
+<td>codeActionKinds = ? (см. <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1238,24 +1225,24 @@
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td>resolveProvider = false</td>
-<td>да</td>
+<td>yes</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">codeLens/refresh</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">documentLink</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>Displaying hyperlinks to diagnostics documentation.<br />tooltipSupport = true<br />resolveProvider = false</td>
+<td>Showing hyperlinks to documentation on diagnostics.<br />tooltipSupport = true<br />resolveProvider = false</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1296,13 +1283,13 @@
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename">rename</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename">prepareRename</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td></td>
 <td></td>
 </tr>
@@ -1354,64 +1341,113 @@
 <td></td>
 <td></td>
 </tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint">inlayHint</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>resolveProvider = false</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve">inlayHint/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_inlayHint_refresh">inlayHint/refresh</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
+</details>
 <p><a id="cli"></a></p>
 <h2 id="Run-from-command-line">Run from command line<a class="headerlink" href="#Run-from-command-line" title="Permanent link">&para;</a></h2>
 <p>jar-files run through <code>java -jar path/to/file.jar</code>.</p>
-<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --help
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>--help
 
-BSL language server
-Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>
-  -c, --configuration<span class="o">=</span>&lt;path&gt;
-               Path to language server configuration file
-  -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span>
+BSL<span class="w"> </span>language<span class="w"> </span>server
+Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]]</span>
+<span class="w">  </span>-c,<span class="w"> </span>--configuration<span class="o">=</span>&lt;path&gt;
+<span class="w">               </span>Path<span class="w"> </span>to<span class="w"> </span>language<span class="w"> </span>server<span class="w"> </span>configuration<span class="w"> </span>file
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">   </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
 Commands:
-  analyze, -a, --analyze  Run analysis and get diagnostic info
-  format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory
-  version, -v, --version  Print version
-  lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
+<span class="w">  </span>analyze,<span class="w"> </span>-a,<span class="w"> </span>--analyze<span class="w">      </span>Run<span class="w"> </span>analysis<span class="w"> </span>and<span class="w"> </span>get<span class="w"> </span>diagnostic<span class="w"> </span>info
+<span class="w">  </span>format,<span class="w"> </span>-f,<span class="w"> </span>--format<span class="w">        </span>Format<span class="w"> </span>files<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>directory
+<span class="w">  </span>version,<span class="w"> </span>-v,<span class="w"> </span>--version<span class="w">      </span>Print<span class="w"> </span>version
+<span class="w">  </span>lsp,<span class="w"> </span>--lsp<span class="w">                  </span>LSP<span class="w"> </span>server<span class="w"> </span>mode<span class="w"> </span><span class="o">(</span>default<span class="o">)</span>
+<span class="w">  </span>websocket,<span class="w"> </span>-w,<span class="w"> </span>--websocket<span class="w">  </span>Websocket<span class="w"> </span>server<span class="w"> </span>mode
 </code></pre></div>
 <p>Starting BSL Language Server in standard mode will run the Language Server communicating via <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. stdin and stdout are used for communication.</p>
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a id="websocket"></a></p>
+<h2 id="Run-in-websocket-mode">Run in websocket mode<a class="headerlink" href="#Run-in-websocket-mode" title="Permanent link">&para;</a></h2>
+<p>By default, interaction with the server goes through standard input / output streams. 
+But you can run BSL Language Server with a built-in web server and interact with it via websocket.</p>
+<p>To do this, start the BSL Language Server with the <code>--websocket</code> or <code>-w</code> option:</p>
+<div class="highlight"><pre><span></span><code>Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span>websocket<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>--app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<span class="w">                                     </span><span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--server.port<span class="o">=</span>&lt;port&gt;<span class="o">]</span>
+Websocket<span class="w"> </span>server<span class="w"> </span>mode
+<span class="w">      </span>--app.websocket.lsp-path<span class="o">=</span>&lt;path&gt;
+<span class="w">                             </span>Path<span class="w"> </span>to<span class="w"> </span>LSP<span class="w"> </span>endpoint.<span class="w"> </span>Default<span class="w"> </span>is<span class="w"> </span>/lsp
+<span class="w">  </span>-c,<span class="w"> </span>--configuration<span class="o">=</span>&lt;path&gt;<span class="w"> </span>Path<span class="w"> </span>to<span class="w"> </span>language<span class="w"> </span>server<span class="w"> </span>configuration<span class="w"> </span>file
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">                 </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">      </span>--server.port<span class="o">=</span>&lt;port&gt;<span class="w">   </span>Port<span class="w"> </span>to<span class="w"> </span>listen.<span class="w"> </span>Default<span class="w"> </span>is<span class="w"> </span><span class="m">8025</span>
+</code></pre></div>
+<p>Once started, BSL Language Server will be available at <code>ws://localhost:8025/lsp</code>.</p>
+<p>To redefine the port to the LSP server, you must use the <code>--server.port</code> option and the port number.
+To redefine the path to the LSP server, you must use the <code>--app.websocket.lsp-path</code> option and a path starting with <code>/</code>.</p>
+<p>An example of running BSL Language Server in websocket mode with port 8080:</p>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>--websocket<span class="w"> </span>--server.port<span class="o">=</span><span class="m">8080</span>
+</code></pre></div>
+<blockquote>
+<p>For large projects, it is recommended to specify the -Xmx parameter, which is responsible for the RAM limit for the java process. The amount of allocated memory depends on the size of the analyzed codebase.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...<span class="w"> </span>other<span class="w"> </span>parameters
+</code></pre></div>
 <p><a id="analyze"></a></p>
 <h2 id="Run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#Run-in-analyzer-mode" title="Permanent link">&para;</a></h2>
 <p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>
-<div class="highlight"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
-                                   <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
-Run analysis and get diagnostic info
-  -c, --configuration<span class="o">=</span>&lt;path&gt;
-                           Path to language server configuration file
-  -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>
-  -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory
-  -q, --silent             Silent mode
-  -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>
-  -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory
-  -w, --workspaceDir<span class="o">=</span>&lt;path&gt; 
-                           Workspace directory
+<div class="highlight"><pre><span></span><code>Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span>analyze<span class="w"> </span><span class="o">[</span>-hq<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<span class="w">                                   </span><span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
+Run<span class="w"> </span>analysis<span class="w"> </span>and<span class="w"> </span>get<span class="w"> </span>diagnostic<span class="w"> </span>info
+<span class="w">  </span>-c,<span class="w"> </span>--configuration<span class="o">=</span>&lt;path&gt;
+<span class="w">                           </span>Path<span class="w"> </span>to<span class="w"> </span>language<span class="w"> </span>server<span class="w"> </span>configuration<span class="w"> </span>file
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">               </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>-o,<span class="w"> </span>--outputDir<span class="o">=</span>&lt;path&gt;<span class="w">   </span>Output<span class="w"> </span>report<span class="w"> </span>directory
+<span class="w">  </span>-q,<span class="w"> </span>--silent<span class="w">             </span>Silent<span class="w"> </span>mode
+<span class="w">  </span>-r,<span class="w"> </span>--reporter<span class="o">=</span>&lt;keys&gt;<span class="w">    </span>Reporter<span class="w"> </span>key<span class="w"> </span><span class="o">(</span>console,<span class="w"> </span>junit,<span class="w"> </span>json,<span class="w"> </span>tslint,<span class="w"> </span>generic<span class="o">)</span>
+<span class="w">  </span>-s,<span class="w"> </span>--srcDir<span class="o">=</span>&lt;path&gt;<span class="w">      </span>Source<span class="w"> </span>directory
+<span class="w">  </span>-w,<span class="w"> </span>--workspaceDir<span class="o">=</span>&lt;path&gt;<span class="w"> </span>
+<span class="w">                           </span>Workspace<span class="w"> </span>directory
 </code></pre></div>
 <p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder. 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
 <p>Command line example to run analysis:</p>
-<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>--analyze<span class="w"> </span>--srcDir<span class="w"> </span>./src/cf<span class="w"> </span>--reporter<span class="w"> </span>json
 </code></pre></div>
 <blockquote>
 <p>When run analysis for large code base it is recommended to set parameter {code0}-Xmx{/code0} to set maximum limit of  memory being allocated to java process. The size of allocated memory depends on the size of code base for analysis.</p>
 </blockquote>
-<div class="highlight"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ... other parameters
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...<span class="w"> </span>other<span class="w"> </span>parameters
 </code></pre></div>
 <p><a id="format"></a></p>
 <h2 id="Run-in-formatter-mode">Run in formatter mode<a class="headerlink" href="#Run-in-formatter-mode" title="Permanent link">&para;</a></h2>
 <p>To run in formatter mode use parameter <code>--format</code> (short <code>-f</code>).</p>
-<div class="highlight"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
-Format files <span class="k">in</span> <span class="nb">source</span> directory
-  -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
-  -q, --silent          Silent mode
-  -s, --src<span class="o">=</span>&lt;path&gt;      Source directory or file
+<div class="highlight"><pre><span></span><code>Usage:<span class="w"> </span>bsl-language-server<span class="w"> </span>format<span class="w"> </span><span class="o">[</span>-hq<span class="o">]</span><span class="w"> </span><span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+Format<span class="w"> </span>files<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>directory
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">            </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>-q,<span class="w"> </span>--silent<span class="w">          </span>Silent<span class="w"> </span>mode
+<span class="w">  </span>-s,<span class="w"> </span>--src<span class="o">=</span>&lt;path&gt;<span class="w">      </span>Source<span class="w"> </span>directory<span class="w"> </span>or<span class="w"> </span>file
 </code></pre></div>
 <p>To set source code folder (or source file) for formatting use parameter <code>--src</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder (or file).</p>
 <p>Command line example to run formatting:</p>
-<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>--format<span class="w"> </span>--src<span class="w"> </span>./src/cf
 </code></pre></div>
 <p><a id="configuration"></a></p>
 <h2 id="Configuration-file">Configuration file<a class="headerlink" href="#Configuration-file" title="Permanent link">&para;</a></h2>
@@ -1433,34 +1469,20 @@ Format files <span class="k">in</span> <span class="nb">source</span> directory
 <p><a href="https://Digilabs.ru"><img alt="Digilabs" src="https://digilabs.ru/1c359e054740a0b75966f8c4babc239a.svg" /></a></p>
 <p><a href="https://digilabs.ru">Digilabs</a> - authors of <code>Alkir</code> - a software package for monitoring the performance of systems based on 1C:Enterprise 8. Digilabs provides us with server facilities for continuous performance testing of the BSL Language Server.</p>
 
-              
-            </article>
-          </div>
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
         </div>
         
       </main>
       
         <footer class="md-footer">
-  
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
-      
-      
-        
-        <a href="faq/" class="md-footer__link md-footer__link--next" aria-label="Next: Frequently asked questions" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Frequently asked questions
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1478,20 +1500,24 @@ Format files <span class="k">in</span> <span class="nb">source</span> directory
   
     
     
+    
+    
       
       
     
     <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   
+    
+    
     
     
       
       
     
     <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="t.me" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M248 8C111.033 8 0 119.033 0 256s111.033 248 248 248 248-111.033 248-248S384.967 8 248 8Zm114.952 168.66c-3.732 39.215-19.881 134.378-28.1 178.3-3.476 18.584-10.322 24.816-16.948 25.425-14.4 1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25 5.342-39.5 3.652-3.793 67.107-61.51 68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608 69.142-14.845 10.194-26.894 9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7 18.45-13.7 108.446-47.248 144.628-62.3c68.872-28.647 83.183-33.623 92.511-33.789 2.052-.034 6.639.474 9.61 2.885a10.452 10.452 0 0 1 3.53 6.716 43.765 43.765 0 0 1 .417 9.769Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M248 8C111.033 8 0 119.033 0 256s111.033 248 248 248 248-111.033 248-248S384.967 8 248 8Zm114.952 168.66c-3.732 39.215-19.881 134.378-28.1 178.3-3.476 18.584-10.322 24.816-16.948 25.425-14.4 1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25 5.342-39.5 3.652-3.793 67.107-61.51 68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608 69.142-14.845 10.194-26.894 9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7 18.45-13.7 108.446-47.248 144.628-62.3c68.872-28.647 83.183-33.623 92.511-33.789 2.052-.034 6.639.474 9.61 2.885a10.452 10.452 0 0 1 3.53 6.716 43.765 43.765 0 0 1 .417 9.769Z"/></svg>
     </a>
   
 </div>
@@ -1504,14 +1530,19 @@ Format files <span class="k">in</span> <span class="nb">source</span> directory
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "assets/javascripts/workers/search.2a1c317c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.748e2769.min.js"></script>
+      <script src="assets/javascripts/bundle.a51614de.min.js"></script>
       
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
+        
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
+        
       
-        <script src="assets/javascripts/tables.js"></script>
+        
+          <script src="assets/javascripts/tables.js"></script>
+        
       
     
   </body>
