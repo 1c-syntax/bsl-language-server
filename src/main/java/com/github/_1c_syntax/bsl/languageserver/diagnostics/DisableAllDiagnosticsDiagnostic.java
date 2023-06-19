@@ -21,14 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.eclipse.lsp4j.Range;
-
-import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,8 +40,7 @@ public class DisableAllDiagnosticsDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
-    List<Range> ignoreOffList = diagnosticIgnorance.getIgnoreOffList();
-    ignoreOffList.forEach(diagnosticStorage::addDiagnostic);
+    documentContext.getDiagnosticIgnorance().getIgnoreOffList()
+      .forEach(diagnosticStorage::addDiagnostic);
   }
 }

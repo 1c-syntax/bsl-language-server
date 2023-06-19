@@ -56,6 +56,5 @@ class DisableAllDiagnosticsDiagnosticTest extends AbstractDiagnosticTest<Disable
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(9, 0, 13);
-
   }
 }
