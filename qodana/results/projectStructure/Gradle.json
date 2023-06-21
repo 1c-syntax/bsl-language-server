@@ -10,20 +10,20 @@
       "version": "4.7.4"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-websocket:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-websocket:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-websocket",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
       "ideaName": "Gradle: org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0",
@@ -170,12 +170,12 @@
       "version": "0.9.5"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1",
-      "gradleName": "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0",
+      "gradleName": "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.dataformat",
       "artifactId": "jackson-dataformat-xml",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
       "ideaName": "Gradle: com.contrastsecurity:java-sarif:2.0",
@@ -186,12 +186,12 @@
       "version": "2.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1",
-      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
+      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.datatype",
       "artifactId": "jackson-datatype-jsr310",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
       "ideaName": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
@@ -258,52 +258,52 @@
       "version": "4.7.4"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-web:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-web:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-web",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-messaging:6.0.3",
-      "gradleName": "org.springframework:spring-messaging:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-messaging:6.0.9",
+      "gradleName": "org.springframework:spring-messaging:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-messaging",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-websocket:6.0.3",
-      "gradleName": "org.springframework:spring-websocket:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-websocket:6.0.9",
+      "gradleName": "org.springframework:spring-websocket:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-websocket",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-autoconfigure:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-autoconfigure:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-autoconfigure",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-logging:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-logging:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-logging",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
       "ideaName": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
@@ -314,12 +314,12 @@
       "version": "2.1.1"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-core:6.0.3",
-      "gradleName": "org.springframework:spring-core:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-core:6.0.9",
+      "gradleName": "org.springframework:spring-core:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-core",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
       "ideaName": "Gradle: org.yaml:snakeyaml:1.33",
@@ -410,12 +410,12 @@
       "version": "1.10.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.14.1",
-      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.0",
+      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.core",
       "artifactId": "jackson-databind",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
       "ideaName": "Gradle: io.grpc:grpc-stub:1.50.2",
@@ -514,12 +514,12 @@
       "version": "1.7.1"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-registry-prometheus:1.10.2",
-      "gradleName": "io.micrometer:micrometer-registry-prometheus:1.10.2",
+      "ideaName": "Gradle: io.micrometer:micrometer-registry-prometheus:1.11.0",
+      "gradleName": "io.micrometer:micrometer-registry-prometheus:1.11.0",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-registry-prometheus",
-      "version": "1.10.2"
+      "version": "1.11.0"
     },
     {
       "ideaName": "Gradle: io.prometheus:simpleclient_guava:0.16.0",
@@ -642,12 +642,12 @@
       "version": "2.1.9"
     },
     {
-      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.1",
-      "gradleName": "org.glassfish.jaxb:jaxb-runtime:4.0.1",
+      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.2",
+      "gradleName": "org.glassfish.jaxb:jaxb-runtime:4.0.2",
       "unresolved": false,
       "groupId": "org.glassfish.jaxb",
       "artifactId": "jaxb-runtime",
-      "version": "4.0.1"
+      "version": "4.0.2"
     },
     {
       "ideaName": "Gradle: org.jetbrains:annotations:20.1.0",
@@ -674,12 +674,12 @@
       "version": "20220924"
     },
     {
-      "ideaName": "Gradle: org.slf4j:slf4j-api:2.0.6",
-      "gradleName": "org.slf4j:slf4j-api:2.0.6",
+      "ideaName": "Gradle: org.slf4j:slf4j-api:2.0.7",
+      "gradleName": "org.slf4j:slf4j-api:2.0.7",
       "unresolved": false,
       "groupId": "org.slf4j",
       "artifactId": "slf4j-api",
-      "version": "2.0.6"
+      "version": "2.0.7"
     },
     {
       "ideaName": "Gradle: commons-collections:commons-collections:3.2.2",
@@ -698,28 +698,28 @@
       "version": "3.21.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.14.1",
-      "gradleName": "com.fasterxml.jackson.core:jackson-annotations:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.15.0",
+      "gradleName": "com.fasterxml.jackson.core:jackson-annotations:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.core",
       "artifactId": "jackson-annotations",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-core:2.14.1",
-      "gradleName": "com.fasterxml.jackson.core:jackson-core:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-core:2.15.0",
+      "gradleName": "com.fasterxml.jackson.core:jackson-core:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.core",
       "artifactId": "jackson-core",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.woodstox:woodstox-core:6.4.0",
-      "gradleName": "com.fasterxml.woodstox:woodstox-core:6.4.0",
+      "ideaName": "Gradle: com.fasterxml.woodstox:woodstox-core:6.5.1",
+      "gradleName": "com.fasterxml.woodstox:woodstox-core:6.5.1",
       "unresolved": false,
       "groupId": "com.fasterxml.woodstox",
       "artifactId": "woodstox-core",
-      "version": "6.4.0"
+      "version": "6.5.1"
     },
     {
       "ideaName": "Gradle: org.codehaus.woodstox:stax2-api:4.2.1",
@@ -834,92 +834,92 @@
       "version": "3.2"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-json:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-json:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-json:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-json:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-json",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-tomcat:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-tomcat:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-tomcat",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-webmvc:6.0.3",
-      "gradleName": "org.springframework:spring-webmvc:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-webmvc:6.0.9",
+      "gradleName": "org.springframework:spring-webmvc:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-webmvc",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-web:6.0.3",
-      "gradleName": "org.springframework:spring-web:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-web:6.0.9",
+      "gradleName": "org.springframework:spring-web:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-web",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-beans:6.0.3",
-      "gradleName": "org.springframework:spring-beans:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-beans:6.0.9",
+      "gradleName": "org.springframework:spring-beans:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-beans",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-context:6.0.3",
-      "gradleName": "org.springframework:spring-context:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-context:6.0.9",
+      "gradleName": "org.springframework:spring-context:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-context",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: ch.qos.logback:logback-classic:1.4.5",
-      "gradleName": "ch.qos.logback:logback-classic:1.4.5",
+      "ideaName": "Gradle: ch.qos.logback:logback-classic:1.4.7",
+      "gradleName": "ch.qos.logback:logback-classic:1.4.7",
       "unresolved": false,
       "groupId": "ch.qos.logback",
       "artifactId": "logback-classic",
-      "version": "1.4.5"
+      "version": "1.4.7"
     },
     {
-      "ideaName": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.19.0",
-      "gradleName": "org.apache.logging.log4j:log4j-to-slf4j:2.19.0",
+      "ideaName": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.20.0",
+      "gradleName": "org.apache.logging.log4j:log4j-to-slf4j:2.20.0",
       "unresolved": false,
       "groupId": "org.apache.logging.log4j",
       "artifactId": "log4j-to-slf4j",
-      "version": "2.19.0"
+      "version": "2.20.0"
     },
     {
-      "ideaName": "Gradle: org.slf4j:jul-to-slf4j:2.0.6",
-      "gradleName": "org.slf4j:jul-to-slf4j:2.0.6",
+      "ideaName": "Gradle: org.slf4j:jul-to-slf4j:2.0.7",
+      "gradleName": "org.slf4j:jul-to-slf4j:2.0.7",
       "unresolved": false,
       "groupId": "org.slf4j",
       "artifactId": "jul-to-slf4j",
-      "version": "2.0.6"
+      "version": "2.0.7"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-jcl:6.0.3",
-      "gradleName": "org.springframework:spring-jcl:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-jcl:6.0.9",
+      "gradleName": "org.springframework:spring-jcl:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-jcl",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: com.google.code.gson:gson:2.9.1",
-      "gradleName": "com.google.code.gson:gson:2.9.1",
+      "ideaName": "Gradle: com.google.code.gson:gson:2.10.1",
+      "gradleName": "com.google.code.gson:gson:2.10.1",
       "unresolved": false,
       "groupId": "com.google.code.gson",
       "artifactId": "gson",
-      "version": "2.9.1"
+      "version": "2.10.1"
     },
     {
       "ideaName": "Gradle: com.tunnelvisionlabs:antlr4-runtime:4.9.0",
@@ -1026,12 +1026,12 @@
       "version": "0.16.0"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-core:1.10.2",
-      "gradleName": "io.micrometer:micrometer-core:1.10.2",
+      "ideaName": "Gradle: io.micrometer:micrometer-core:1.11.0",
+      "gradleName": "io.micrometer:micrometer-core:1.11.0",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-core",
-      "version": "1.10.2"
+      "version": "1.11.0"
     },
     {
       "ideaName": "Gradle: io.prometheus:simpleclient_tracer_otel:0.16.0",
@@ -1058,12 +1058,20 @@
       "version": "1.1"
     },
     {
-      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.1",
-      "gradleName": "org.glassfish.jaxb:jaxb-core:4.0.1",
+      "ideaName": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.2",
+      "gradleName": "org.glassfish.jaxb:jaxb-core:4.0.2",
       "unresolved": false,
       "groupId": "org.glassfish.jaxb",
       "artifactId": "jaxb-core",
-      "version": "4.0.1"
+      "version": "4.0.2"
+    },
+    {
+      "ideaName": "Gradle: ch.randelshofer:fastdoubleparser:0.8.0",
+      "gradleName": "ch.randelshofer:fastdoubleparser:0.8.0",
+      "unresolved": false,
+      "groupId": "ch.randelshofer",
+      "artifactId": "fastdoubleparser",
+      "version": "0.8.0"
     },
     {
       "ideaName": "Gradle: org.ow2.asm:asm:9.0",
@@ -1074,84 +1082,84 @@
       "version": "9.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1",
-      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0",
+      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.datatype",
       "artifactId": "jackson-datatype-jdk8",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.1",
-      "gradleName": "com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.1",
+      "ideaName": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.0",
+      "gradleName": "com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.0",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.module",
       "artifactId": "jackson-module-parameter-names",
-      "version": "2.14.1"
+      "version": "2.15.0"
     },
     {
-      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.4",
-      "gradleName": "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.4",
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.8",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.8",
       "unresolved": false,
       "groupId": "org.apache.tomcat.embed",
       "artifactId": "tomcat-embed-websocket",
-      "version": "10.1.4"
+      "version": "10.1.8"
     },
     {
-      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.4",
-      "gradleName": "org.apache.tomcat.embed:tomcat-embed-core:10.1.4",
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.8",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-core:10.1.8",
       "unresolved": false,
       "groupId": "org.apache.tomcat.embed",
       "artifactId": "tomcat-embed-core",
-      "version": "10.1.4"
+      "version": "10.1.8"
     },
     {
-      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.4",
-      "gradleName": "org.apache.tomcat.embed:tomcat-embed-el:10.1.4",
+      "ideaName": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.8",
+      "gradleName": "org.apache.tomcat.embed:tomcat-embed-el:10.1.8",
       "unresolved": false,
       "groupId": "org.apache.tomcat.embed",
       "artifactId": "tomcat-embed-el",
-      "version": "10.1.4"
+      "version": "10.1.8"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-aop:6.0.3",
-      "gradleName": "org.springframework:spring-aop:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-aop:6.0.9",
+      "gradleName": "org.springframework:spring-aop:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-aop",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-expression:6.0.3",
-      "gradleName": "org.springframework:spring-expression:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-expression:6.0.9",
+      "gradleName": "org.springframework:spring-expression:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-expression",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-observation:1.10.2",
-      "gradleName": "io.micrometer:micrometer-observation:1.10.2",
+      "ideaName": "Gradle: io.micrometer:micrometer-observation:1.11.0",
+      "gradleName": "io.micrometer:micrometer-observation:1.11.0",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-observation",
-      "version": "1.10.2"
+      "version": "1.11.0"
     },
     {
-      "ideaName": "Gradle: ch.qos.logback:logback-core:1.4.5",
-      "gradleName": "ch.qos.logback:logback-core:1.4.5",
+      "ideaName": "Gradle: ch.qos.logback:logback-core:1.4.7",
+      "gradleName": "ch.qos.logback:logback-core:1.4.7",
       "unresolved": false,
       "groupId": "ch.qos.logback",
       "artifactId": "logback-core",
-      "version": "1.4.5"
+      "version": "1.4.7"
     },
     {
-      "ideaName": "Gradle: org.apache.logging.log4j:log4j-api:2.19.0",
-      "gradleName": "org.apache.logging.log4j:log4j-api:2.19.0",
+      "ideaName": "Gradle: org.apache.logging.log4j:log4j-api:2.20.0",
+      "gradleName": "org.apache.logging.log4j:log4j-api:2.20.0",
       "unresolved": false,
       "groupId": "org.apache.logging.log4j",
       "artifactId": "log4j-api",
-      "version": "2.19.0"
+      "version": "2.20.0"
     },
     {
       "ideaName": "Gradle: io.grpc:grpc-context:1.50.2",
@@ -1178,12 +1186,12 @@
       "version": "0.10.2"
     },
     {
-      "ideaName": "Gradle: io.micrometer:micrometer-commons:1.10.2",
-      "gradleName": "io.micrometer:micrometer-commons:1.10.2",
+      "ideaName": "Gradle: io.micrometer:micrometer-commons:1.11.0",
+      "gradleName": "io.micrometer:micrometer-commons:1.11.0",
       "unresolved": false,
       "groupId": "io.micrometer",
       "artifactId": "micrometer-commons",
-      "version": "1.10.2"
+      "version": "1.11.0"
     },
     {
       "ideaName": "Gradle: io.prometheus:simpleclient_tracer_common:0.16.0",
@@ -1202,20 +1210,20 @@
       "version": "4.0.0"
     },
     {
-      "ideaName": "Gradle: jakarta.activation:jakarta.activation-api:2.1.0",
-      "gradleName": "jakarta.activation:jakarta.activation-api:2.1.0",
+      "ideaName": "Gradle: jakarta.activation:jakarta.activation-api:2.1.2",
+      "gradleName": "jakarta.activation:jakarta.activation-api:2.1.2",
       "unresolved": false,
       "groupId": "jakarta.activation",
       "artifactId": "jakarta.activation-api",
-      "version": "2.1.0"
+      "version": "2.1.2"
     },
     {
-      "ideaName": "Gradle: org.glassfish.jaxb:txw2:4.0.1",
-      "gradleName": "org.glassfish.jaxb:txw2:4.0.1",
+      "ideaName": "Gradle: org.glassfish.jaxb:txw2:4.0.2",
+      "gradleName": "org.glassfish.jaxb:txw2:4.0.2",
       "unresolved": false,
       "groupId": "org.glassfish.jaxb",
       "artifactId": "txw2",
-      "version": "4.0.1"
+      "version": "4.0.2"
     },
     {
       "ideaName": "Gradle: com.sun.istack:istack-commons-runtime:4.1.1",
@@ -1226,12 +1234,12 @@
       "version": "4.1.1"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-test:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-starter-test:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-starter-test:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-test",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.1",
@@ -1258,44 +1266,52 @@
       "version": "4.2.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-test-autoconfigure:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-test-autoconfigure:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-test-autoconfigure",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-test:3.0.1",
-      "gradleName": "org.springframework.boot:spring-boot-test:3.0.1",
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-test:3.1.0",
+      "gradleName": "org.springframework.boot:spring-boot-test:3.1.0",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-test",
-      "version": "3.0.1"
+      "version": "3.1.0"
     },
     {
-      "ideaName": "Gradle: org.springframework:spring-test:6.0.3",
-      "gradleName": "org.springframework:spring-test:6.0.3",
+      "ideaName": "Gradle: org.springframework:spring-test:6.0.9",
+      "gradleName": "org.springframework:spring-test:6.0.9",
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-test",
-      "version": "6.0.3"
+      "version": "6.0.9"
     },
     {
-      "ideaName": "Gradle: com.jayway.jsonpath:json-path:2.7.0",
-      "gradleName": "com.jayway.jsonpath:json-path:2.7.0",
+      "ideaName": "Gradle: com.jayway.jsonpath:json-path:2.8.0",
+      "gradleName": "com.jayway.jsonpath:json-path:2.8.0",
       "unresolved": false,
       "groupId": "com.jayway.jsonpath",
       "artifactId": "json-path",
-      "version": "2.7.0"
+      "version": "2.8.0"
     },
     {
-      "ideaName": "Gradle: org.assertj:assertj-core:3.23.1",
-      "gradleName": "org.assertj:assertj-core:3.23.1",
+      "ideaName": "Gradle: net.minidev:json-smart:2.4.10",
+      "gradleName": "net.minidev:json-smart:2.4.10",
+      "unresolved": false,
+      "groupId": "net.minidev",
+      "artifactId": "json-smart",
+      "version": "2.4.10"
+    },
+    {
+      "ideaName": "Gradle: org.assertj:assertj-core:3.24.2",
+      "gradleName": "org.assertj:assertj-core:3.24.2",
       "unresolved": false,
       "groupId": "org.assertj",
       "artifactId": "assertj-core",
-      "version": "3.23.1"
+      "version": "3.24.2"
     },
     {
       "ideaName": "Gradle: org.hamcrest:hamcrest:2.2",
@@ -1306,28 +1322,28 @@
       "version": "2.2"
     },
     {
-      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter:5.9.1",
-      "gradleName": "org.junit.jupiter:junit-jupiter:5.9.1",
+      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter:5.9.3",
+      "gradleName": "org.junit.jupiter:junit-jupiter:5.9.3",
       "unresolved": false,
       "groupId": "org.junit.jupiter",
       "artifactId": "junit-jupiter",
-      "version": "5.9.1"
+      "version": "5.9.3"
     },
     {
-      "ideaName": "Gradle: org.mockito:mockito-junit-jupiter:4.8.1",
-      "gradleName": "org.mockito:mockito-junit-jupiter:4.8.1",
+      "ideaName": "Gradle: org.mockito:mockito-junit-jupiter:5.3.1",
+      "gradleName": "org.mockito:mockito-junit-jupiter:5.3.1",
       "unresolved": false,
       "groupId": "org.mockito",
       "artifactId": "mockito-junit-jupiter",
-      "version": "4.8.1"
+      "version": "5.3.1"
     },
     {
-      "ideaName": "Gradle: org.mockito:mockito-core:4.8.1",
-      "gradleName": "org.mockito:mockito-core:4.8.1",
+      "ideaName": "Gradle: org.mockito:mockito-core:5.3.1",
+      "gradleName": "org.mockito:mockito-core:5.3.1",
       "unresolved": false,
       "groupId": "org.mockito",
       "artifactId": "mockito-core",
-      "version": "4.8.1"
+      "version": "5.3.1"
     },
     {
       "ideaName": "Gradle: org.skyscreamer:jsonassert:1.5.1",
@@ -1338,60 +1354,60 @@
       "version": "1.5.1"
     },
     {
-      "ideaName": "Gradle: org.xmlunit:xmlunit-core:2.9.0",
-      "gradleName": "org.xmlunit:xmlunit-core:2.9.0",
+      "ideaName": "Gradle: org.xmlunit:xmlunit-core:2.9.1",
+      "gradleName": "org.xmlunit:xmlunit-core:2.9.1",
       "unresolved": false,
       "groupId": "org.xmlunit",
       "artifactId": "xmlunit-core",
-      "version": "2.9.0"
+      "version": "2.9.1"
     },
     {
-      "ideaName": "Gradle: net.minidev:json-smart:2.4.8",
-      "gradleName": "net.minidev:json-smart:2.4.8",
-      "unresolved": false,
-      "groupId": "net.minidev",
-      "artifactId": "json-smart",
-      "version": "2.4.8"
-    },
-    {
-      "ideaName": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
-      "gradleName": "net.bytebuddy:byte-buddy:1.12.20",
-      "unresolved": false,
-      "groupId": "net.bytebuddy",
-      "artifactId": "byte-buddy",
-      "version": "1.12.20"
-    },
-    {
-      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.1",
-      "gradleName": "org.junit.jupiter:junit-jupiter-params:5.9.1",
-      "unresolved": false,
-      "groupId": "org.junit.jupiter",
-      "artifactId": "junit-jupiter-params",
-      "version": "5.9.1"
-    },
-    {
-      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.1",
-      "gradleName": "org.junit.jupiter:junit-jupiter-api:5.9.1",
-      "unresolved": false,
-      "groupId": "org.junit.jupiter",
-      "artifactId": "junit-jupiter-api",
-      "version": "5.9.1"
-    },
-    {
-      "ideaName": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
-      "gradleName": "net.bytebuddy:byte-buddy-agent:1.12.20",
-      "unresolved": false,
-      "groupId": "net.bytebuddy",
-      "artifactId": "byte-buddy-agent",
-      "version": "1.12.20"
-    },
-    {
-      "ideaName": "Gradle: net.minidev:accessors-smart:2.4.8",
-      "gradleName": "net.minidev:accessors-smart:2.4.8",
+      "ideaName": "Gradle: net.minidev:accessors-smart:2.4.9",
+      "gradleName": "net.minidev:accessors-smart:2.4.9",
       "unresolved": false,
       "groupId": "net.minidev",
       "artifactId": "accessors-smart",
-      "version": "2.4.8"
+      "version": "2.4.9"
+    },
+    {
+      "ideaName": "Gradle: net.bytebuddy:byte-buddy:1.14.4",
+      "gradleName": "net.bytebuddy:byte-buddy:1.14.4",
+      "unresolved": false,
+      "groupId": "net.bytebuddy",
+      "artifactId": "byte-buddy",
+      "version": "1.14.4"
+    },
+    {
+      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.3",
+      "gradleName": "org.junit.jupiter:junit-jupiter-params:5.9.3",
+      "unresolved": false,
+      "groupId": "org.junit.jupiter",
+      "artifactId": "junit-jupiter-params",
+      "version": "5.9.3"
+    },
+    {
+      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.3",
+      "gradleName": "org.junit.jupiter:junit-jupiter-api:5.9.3",
+      "unresolved": false,
+      "groupId": "org.junit.jupiter",
+      "artifactId": "junit-jupiter-api",
+      "version": "5.9.3"
+    },
+    {
+      "ideaName": "Gradle: net.bytebuddy:byte-buddy-agent:1.14.4",
+      "gradleName": "net.bytebuddy:byte-buddy-agent:1.14.4",
+      "unresolved": false,
+      "groupId": "net.bytebuddy",
+      "artifactId": "byte-buddy-agent",
+      "version": "1.14.4"
+    },
+    {
+      "ideaName": "Gradle: org.ow2.asm:asm:9.3",
+      "gradleName": "org.ow2.asm:asm:9.3",
+      "unresolved": false,
+      "groupId": "org.ow2.asm",
+      "artifactId": "asm",
+      "version": "9.3"
     },
     {
       "ideaName": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
@@ -1402,12 +1418,12 @@
       "version": "1.1.2"
     },
     {
-      "ideaName": "Gradle: org.junit.platform:junit-platform-commons:1.9.1",
-      "gradleName": "org.junit.platform:junit-platform-commons:1.9.1",
+      "ideaName": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
+      "gradleName": "org.junit.platform:junit-platform-commons:1.9.3",
       "unresolved": false,
       "groupId": "org.junit.platform",
       "artifactId": "junit-platform-commons",
-      "version": "1.9.1"
+      "version": "1.9.3"
     },
     {
       "ideaName": "Gradle: org.opentest4j:opentest4j:1.2.0",
@@ -1416,14 +1432,6 @@
       "groupId": "org.opentest4j",
       "artifactId": "opentest4j",
       "version": "1.2.0"
-    },
-    {
-      "ideaName": "Gradle: org.ow2.asm:asm:9.1",
-      "gradleName": "org.ow2.asm:asm:9.1",
-      "unresolved": false,
-      "groupId": "org.ow2.asm",
-      "artifactId": "asm",
-      "version": "9.1"
     },
     {
       "ideaName": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
@@ -1442,20 +1450,20 @@
       "version": "4.8.147"
     },
     {
-      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.1",
-      "gradleName": "org.junit.jupiter:junit-jupiter-engine:5.9.1",
+      "ideaName": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.3",
+      "gradleName": "org.junit.jupiter:junit-jupiter-engine:5.9.3",
       "unresolved": false,
       "groupId": "org.junit.jupiter",
       "artifactId": "junit-jupiter-engine",
-      "version": "5.9.1"
+      "version": "5.9.3"
     },
     {
-      "ideaName": "Gradle: org.objenesis:objenesis:3.2",
-      "gradleName": "org.objenesis:objenesis:3.2",
+      "ideaName": "Gradle: org.objenesis:objenesis:3.3",
+      "gradleName": "org.objenesis:objenesis:3.3",
       "unresolved": false,
       "groupId": "org.objenesis",
       "artifactId": "objenesis",
-      "version": "3.2"
+      "version": "3.3"
     },
     {
       "ideaName": "Gradle: io.github.x-stream:mxparser:1.2.2",
@@ -1474,12 +1482,12 @@
       "version": "0.25.0"
     },
     {
-      "ideaName": "Gradle: org.junit.platform:junit-platform-engine:1.9.1",
-      "gradleName": "org.junit.platform:junit-platform-engine:1.9.1",
+      "ideaName": "Gradle: org.junit.platform:junit-platform-engine:1.9.3",
+      "gradleName": "org.junit.platform:junit-platform-engine:1.9.3",
       "unresolved": false,
       "groupId": "org.junit.platform",
       "artifactId": "junit-platform-engine",
-      "version": "1.9.1"
+      "version": "1.9.3"
     },
     {
       "ideaName": "Gradle: xmlpull:xmlpull:1.1.3.1",
@@ -1514,12 +1522,12 @@
       "version": "2.0.3"
     },
     {
-      "ideaName": "Gradle: org.eclipse.angus:angus-activation:1.0.0",
-      "gradleName": "org.eclipse.angus:angus-activation:1.0.0",
+      "ideaName": "Gradle: org.eclipse.angus:angus-activation:2.0.0",
+      "gradleName": "org.eclipse.angus:angus-activation:2.0.0",
       "unresolved": false,
       "groupId": "org.eclipse.angus",
       "artifactId": "angus-activation",
-      "version": "1.0.0"
+      "version": "2.0.0"
     }
   ]
 }

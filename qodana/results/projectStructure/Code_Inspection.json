@@ -70,11 +70,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.1.0",
           "type": "Library"
         },
         {
@@ -150,7 +150,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0",
           "type": "Library"
         },
         {
@@ -158,7 +158,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
           "type": "Library"
         },
         {
@@ -194,27 +194,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:6.0.3",
+          "name": "Gradle: org.springframework:spring-messaging:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:6.0.3",
+          "name": "Gradle: org.springframework:spring-websocket:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.1.0",
           "type": "Library"
         },
         {
@@ -222,7 +222,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:6.0.3",
+          "name": "Gradle: org.springframework:spring-core:6.0.9",
           "type": "Library"
         },
         {
@@ -270,7 +270,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.0",
           "type": "Library"
         },
         {
@@ -322,7 +322,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.11.0",
           "type": "Library"
         },
         {
@@ -386,7 +386,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.2",
           "type": "Library"
         },
         {
@@ -402,7 +402,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:slf4j-api:2.0.6",
+          "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
           "type": "Library"
         },
         {
@@ -414,15 +414,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.4.0",
+          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.5.1",
           "type": "Library"
         },
         {
@@ -482,47 +482,47 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:6.0.3",
+          "name": "Gradle: org.springframework:spring-webmvc:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:6.0.3",
+          "name": "Gradle: org.springframework:spring-web:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:6.0.3",
+          "name": "Gradle: org.springframework:spring-beans:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:6.0.3",
+          "name": "Gradle: org.springframework:spring-context:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.4.5",
+          "name": "Gradle: ch.qos.logback:logback-classic:1.4.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.19.0",
+          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.20.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.6",
+          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:6.0.3",
+          "name": "Gradle: org.springframework:spring-jcl:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.code.gson:gson:2.9.1",
+          "name": "Gradle: com.google.code.gson:gson:2.10.1",
           "type": "Library"
         },
         {
@@ -578,7 +578,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-core:1.11.0",
           "type": "Library"
         },
         {
@@ -594,7 +594,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: ch.randelshofer:fastdoubleparser:0.8.0",
           "type": "Library"
         },
         {
@@ -602,43 +606,43 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:6.0.3",
+          "name": "Gradle: org.springframework:spring-aop:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:6.0.3",
+          "name": "Gradle: org.springframework:spring-expression:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-observation:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-observation:1.11.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.4.5",
+          "name": "Gradle: ch.qos.logback:logback-core:1.4.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.19.0",
+          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.20.0",
           "type": "Library"
         },
         {
@@ -654,7 +658,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-commons:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-commons:1.11.0",
           "type": "Library"
         },
         {
@@ -666,11 +670,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.0",
+          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.2",
           "type": "Library"
         },
         {
@@ -678,7 +682,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.0",
           "type": "Library"
         },
         {
@@ -694,23 +698,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-test:6.0.3",
+          "name": "Gradle: org.springframework:spring-test:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.jayway.jsonpath:json-path:2.7.0",
+          "name": "Gradle: com.jayway.jsonpath:json-path:2.8.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.assertj:assertj-core:3.23.1",
+          "name": "Gradle: net.minidev:json-smart:2.4.10",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.assertj:assertj-core:3.24.2",
           "type": "Library"
         },
         {
@@ -718,15 +726,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.mockito:mockito-junit-jupiter:4.8.1",
+          "name": "Gradle: org.mockito:mockito-junit-jupiter:5.3.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.mockito:mockito-core:4.8.1",
+          "name": "Gradle: org.mockito:mockito-core:5.3.1",
           "type": "Library"
         },
         {
@@ -734,31 +742,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.xmlunit:xmlunit-core:2.9.0",
+          "name": "Gradle: org.xmlunit:xmlunit-core:2.9.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:json-smart:2.4.8",
+          "name": "Gradle: net.minidev:accessors-smart:2.4.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
+          "name": "Gradle: net.bytebuddy:byte-buddy:1.14.4",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
+          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.14.4",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:accessors-smart:2.4.8",
+          "name": "Gradle: org.ow2.asm:asm:9.3",
           "type": "Library"
         },
         {
@@ -766,15 +774,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.1",
+          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
           "type": "Library"
         },
         {
           "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.ow2.asm:asm:9.1",
           "type": "Library"
         },
         {
@@ -786,11 +790,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.objenesis:objenesis:3.2",
+          "name": "Gradle: org.objenesis:objenesis:3.3",
           "type": "Library"
         },
         {
@@ -802,7 +806,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-engine:1.9.1",
+          "name": "Gradle: org.junit.platform:junit-platform-engine:1.9.3",
           "type": "Library"
         },
         {
@@ -822,7 +826,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.angus:angus-activation:1.0.0",
+          "name": "Gradle: org.eclipse.angus:angus-activation:2.0.0",
           "type": "Library"
         }
       ]
@@ -866,15 +870,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.1.0",
           "type": "Library"
         },
         {
@@ -946,7 +950,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0",
           "type": "Library"
         },
         {
@@ -954,7 +958,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
           "type": "Library"
         },
         {
@@ -994,23 +998,23 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-test:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-test:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-test:6.0.3",
+          "name": "Gradle: org.springframework:spring-test:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:6.0.3",
+          "name": "Gradle: org.springframework:spring-core:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.jayway.jsonpath:json-path:2.7.0",
+          "name": "Gradle: com.jayway.jsonpath:json-path:2.8.0",
           "type": "Library"
         },
         {
@@ -1018,7 +1022,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.assertj:assertj-core:3.23.1",
+          "name": "Gradle: net.minidev:json-smart:2.4.10",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.assertj:assertj-core:3.24.2",
           "type": "Library"
         },
         {
@@ -1026,15 +1034,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.mockito:mockito-junit-jupiter:4.8.1",
+          "name": "Gradle: org.mockito:mockito-junit-jupiter:5.3.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.mockito:mockito-core:4.8.1",
+          "name": "Gradle: org.mockito:mockito-core:5.3.1",
           "type": "Library"
         },
         {
@@ -1042,31 +1050,31 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.xmlunit:xmlunit-core:2.9.0",
+          "name": "Gradle: org.xmlunit:xmlunit-core:2.9.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:6.0.3",
+          "name": "Gradle: org.springframework:spring-messaging:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:6.0.3",
+          "name": "Gradle: org.springframework:spring-websocket:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.1.0",
           "type": "Library"
         },
         {
@@ -1114,7 +1122,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.0",
           "type": "Library"
         },
         {
@@ -1166,7 +1174,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.11.0",
           "type": "Library"
         },
         {
@@ -1230,7 +1238,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.2",
           "type": "Library"
         },
         {
@@ -1246,7 +1254,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:slf4j-api:2.0.6",
+          "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
           "type": "Library"
         },
         {
@@ -1258,15 +1266,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.4.0",
+          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.5.1",
           "type": "Library"
         },
         {
@@ -1314,71 +1322,71 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:6.0.3",
+          "name": "Gradle: org.springframework:spring-jcl:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:json-smart:2.4.8",
+          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.0",
+          "name": "Gradle: net.minidev:accessors-smart:2.4.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
+          "name": "Gradle: net.bytebuddy:byte-buddy:1.14.4",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
+          "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.14.4",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:6.0.3",
+          "name": "Gradle: org.springframework:spring-webmvc:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:6.0.3",
+          "name": "Gradle: org.springframework:spring-web:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:6.0.3",
+          "name": "Gradle: org.springframework:spring-beans:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:6.0.3",
+          "name": "Gradle: org.springframework:spring-context:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.4.5",
+          "name": "Gradle: ch.qos.logback:logback-classic:1.4.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.19.0",
+          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.20.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.6",
+          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.code.gson:gson:2.9.1",
+          "name": "Gradle: com.google.code.gson:gson:2.10.1",
           "type": "Library"
         },
         {
@@ -1434,7 +1442,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-core:1.11.0",
           "type": "Library"
         },
         {
@@ -1450,11 +1458,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: net.minidev:accessors-smart:2.4.8",
+          "name": "Gradle: ch.randelshofer:fastdoubleparser:0.8.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.ow2.asm:asm:9.3",
           "type": "Library"
         },
         {
@@ -1462,7 +1474,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.1",
+          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
           "type": "Library"
         },
         {
@@ -1470,43 +1482,43 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:6.0.3",
+          "name": "Gradle: org.springframework:spring-aop:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:6.0.3",
+          "name": "Gradle: org.springframework:spring-expression:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-observation:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-observation:1.11.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.4.5",
+          "name": "Gradle: ch.qos.logback:logback-core:1.4.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.19.0",
+          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.20.0",
           "type": "Library"
         },
         {
@@ -1522,7 +1534,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-commons:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-commons:1.11.0",
           "type": "Library"
         },
         {
@@ -1530,15 +1542,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.2",
           "type": "Library"
         },
         {
           "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.ow2.asm:asm:9.1",
           "type": "Library"
         },
         {
@@ -1550,11 +1558,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.1",
+          "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.objenesis:objenesis:3.2",
+          "name": "Gradle: org.objenesis:objenesis:3.3",
           "type": "Library"
         },
         {
@@ -1566,7 +1574,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-engine:1.9.1",
+          "name": "Gradle: org.junit.platform:junit-platform-engine:1.9.3",
           "type": "Library"
         },
         {
@@ -1586,7 +1594,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.angus:angus-activation:1.0.0",
+          "name": "Gradle: org.eclipse.angus:angus-activation:2.0.0",
           "type": "Library"
         }
       ]
@@ -1626,11 +1634,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter:3.1.0",
           "type": "Library"
         },
         {
@@ -1706,7 +1714,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0",
           "type": "Library"
         },
         {
@@ -1714,7 +1722,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
           "type": "Library"
         },
         {
@@ -1742,27 +1750,27 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-messaging:6.0.3",
+          "name": "Gradle: org.springframework:spring-messaging:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-websocket:6.0.3",
+          "name": "Gradle: org.springframework:spring-websocket:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.1.0",
           "type": "Library"
         },
         {
@@ -1770,7 +1778,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-core:6.0.3",
+          "name": "Gradle: org.springframework:spring-core:6.0.9",
           "type": "Library"
         },
         {
@@ -1818,7 +1826,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.0",
           "type": "Library"
         },
         {
@@ -1870,7 +1878,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-registry-prometheus:1.11.0",
           "type": "Library"
         },
         {
@@ -1934,7 +1942,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.2",
           "type": "Library"
         },
         {
@@ -1950,7 +1958,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:slf4j-api:2.0.6",
+          "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
           "type": "Library"
         },
         {
@@ -1962,15 +1970,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.4.0",
+          "name": "Gradle: com.fasterxml.woodstox:woodstox-core:6.5.1",
           "type": "Library"
         },
         {
@@ -2014,47 +2022,47 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.0.1",
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.1.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-webmvc:6.0.3",
+          "name": "Gradle: org.springframework:spring-webmvc:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-web:6.0.3",
+          "name": "Gradle: org.springframework:spring-web:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-beans:6.0.3",
+          "name": "Gradle: org.springframework:spring-beans:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-context:6.0.3",
+          "name": "Gradle: org.springframework:spring-context:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-classic:1.4.5",
+          "name": "Gradle: ch.qos.logback:logback-classic:1.4.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.19.0",
+          "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.20.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.6",
+          "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.7",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-jcl:6.0.3",
+          "name": "Gradle: org.springframework:spring-jcl:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.code.gson:gson:2.9.1",
+          "name": "Gradle: com.google.code.gson:gson:2.10.1",
           "type": "Library"
         },
         {
@@ -2110,7 +2118,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-core:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-core:1.11.0",
           "type": "Library"
         },
         {
@@ -2126,47 +2134,51 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1",
+          "name": "Gradle: ch.randelshofer:fastdoubleparser:0.8.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.1",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.4",
+          "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.4",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-aop:6.0.3",
+          "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.8",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework:spring-expression:6.0.3",
+          "name": "Gradle: org.springframework:spring-aop:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-observation:1.10.2",
+          "name": "Gradle: org.springframework:spring-expression:6.0.9",
           "type": "Library"
         },
         {
-          "name": "Gradle: ch.qos.logback:logback-core:1.4.5",
+          "name": "Gradle: io.micrometer:micrometer-observation:1.11.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.19.0",
+          "name": "Gradle: ch.qos.logback:logback-core:1.4.7",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.apache.logging.log4j:log4j-api:2.20.0",
           "type": "Library"
         },
         {
@@ -2182,7 +2194,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.micrometer:micrometer-commons:1.10.2",
+          "name": "Gradle: io.micrometer:micrometer-commons:1.11.0",
           "type": "Library"
         },
         {
@@ -2194,11 +2206,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.0",
+          "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.1",
+          "name": "Gradle: org.glassfish.jaxb:txw2:4.0.2",
           "type": "Library"
         },
         {
@@ -2238,7 +2250,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.eclipse.angus:angus-activation:1.0.0",
+          "name": "Gradle: org.eclipse.angus:angus-activation:2.0.0",
           "type": "Library"
         }
       ]
