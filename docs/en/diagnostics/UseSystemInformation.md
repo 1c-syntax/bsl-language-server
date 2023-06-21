@@ -3,7 +3,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-The `SystemInformation` object provides data about the computer and configuration in 1C, which can be used for malicious purposes.
+`SystemInformation` provides data about the computer and configuration in 1C, which can be used for malicious purposes.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->

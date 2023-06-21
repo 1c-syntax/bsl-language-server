@@ -516,6 +516,58 @@
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
+        },
+        "inlayHintParameters": {
+            "$id": "#/definitions/inlayHintParameters",
+            "type": "object",
+            "title": "Inlay hints parameters configuration.\nKey-value object, where key is a inlay hint ID, and value is boolean or object with concrete inlay hint configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cognitive complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cyclomatic complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cyclomaticComplexity"
+                },
+                "sourceDefinedMethodCall": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show parameters of called source defined methods.",
+                    "properties": {
+                        "showParametersWithTheSameName": {
+                            "description": "Show hints for parameters with names that are contained in passed value.",
+                            "default": false,
+                            "type": "boolean",
+                            "title": "Show hints for parameters with names that contains passed value."
+                        },
+                        "showDefaultValues": {
+                            "description": "Show hints with default values for non-passed parameters.",
+                            "default": true,
+                            "type": "boolean",
+                            "title": "Show hints with default values for non-passed parameters."
+                        }
+                    },
+                    "$id": "#/definitions/inlayHintParameters/sourceDefinedMethodCall"
+                }
+            }
         }
     },
     "properties": {
@@ -542,6 +594,49 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/codeLensParameters"
+                },
+                "testRunner": {
+                    "$id": "#/properties/codeLens/testRunner",
+                    "type": "object",
+                    "title": "Test runner configuration to use for 'Run test' code lenses.",
+                    "properties": {
+                        "executable": {
+                            "$id": "#/properties/codeLens/testRunner/executable",
+                            "type": "string",
+                            "title": "Path to test runner executable.",
+                            "default": "1testrunner"
+                        },
+                        "executableWin": {
+                            "$id": "#/properties/codeLens/testRunner/executableWin",
+                            "type": "string",
+                            "title": "Path to test runner executable on Windows systems.",
+                            "default": "1testrunner.bat"
+                        },
+                        "getTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to get test method names. %s will be replaced with path to current file.",
+                            "default": "-show %s"
+                        },
+                        "getTestsResultPattern": {
+                            "$id": "#/properties/codeLens/testRunner/resultPattern",
+                            "type": "string",
+                            "title": "Regular expression to parse test runner output for method names.",
+                            "default": "^[^<]*<([^>]+)>.*"
+                        },
+                        "runTestArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runTestArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run test method. %s will be replaced with path to current file, %m will be replaced with test method name.",
+                            "default": "-run %s %s"
+                        },
+                        "runAllTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runAllTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run all tests in current file. %s will be replaced with path to current file.",
+                            "default": "-run %s"
+                        }
+                    }
                 }
             }
         },
@@ -723,6 +818,16 @@
                             "description": "Don't format keywords to canonical view"
                         }
                     ]
+                }
+            }
+        },
+        "inlayHint": {
+            "$id": "#/properties/inlayHint",
+            "type": "object",
+            "title": "Inlay hint configuration.",
+            "properties": {
+                "parameters": {
+                    "$ref": "#/definitions/inlayHintParameters"
                 }
             }
         },

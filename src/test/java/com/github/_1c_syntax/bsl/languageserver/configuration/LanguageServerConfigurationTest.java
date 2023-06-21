@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -152,6 +153,7 @@ class LanguageServerConfigurationTest {
     // when
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    InlayHintOptions inlayHintOptions = configuration.getInlayHintOptions();
 
     // then
     assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
@@ -162,6 +164,10 @@ class LanguageServerConfigurationTest {
     assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
     assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
     assertThat(diagnosticsOptions.getParameters()).isEmpty();
+
+    assertThat(inlayHintOptions.getParameters())
+      .containsEntry("sourceDefinedMethodCall", Either.forRight(Map.of("showParametersWithTheSameName", true)));
+
   }
 
 }

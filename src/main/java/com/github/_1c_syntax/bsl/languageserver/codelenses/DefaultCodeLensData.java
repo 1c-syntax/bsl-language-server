@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.databind.URITypeAdapter;
+import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import lombok.Value;
 import lombok.experimental.NonFinal;

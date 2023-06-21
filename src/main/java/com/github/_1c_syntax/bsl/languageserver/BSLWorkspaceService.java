@@ -22,11 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -43,10 +45,10 @@ import java.util.concurrent.CompletableFuture;
 public class BSLWorkspaceService implements WorkspaceService {
 
   private final LanguageServerConfiguration configuration;
+  private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
 
   @Override
-  @SuppressWarnings("deprecation")
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
     return CompletableFuture.supplyAsync(() -> Either.forRight(symbolProvider.getSymbols(params)));
   }
@@ -63,5 +65,12 @@ public class BSLWorkspaceService implements WorkspaceService {
   @Override
   public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
     // no-op
+  }
+
+  @Override
+  public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+    var arguments = commandProvider.extractArguments(params);
+
+    return CompletableFuture.supplyAsync(() -> commandProvider.executeCommand(arguments));
   }
 }

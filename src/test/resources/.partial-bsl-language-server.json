@@ -4,6 +4,13 @@
       "cyclomaticComplexity": false
     }
   },
+  "inlayHint": {
+    "parameters": {
+      "sourceDefinedMethodCall": {
+        "showParametersWithTheSameName": true
+      }
+    }
+  },
   "diagnostics": {
     "mode": "on"
   }

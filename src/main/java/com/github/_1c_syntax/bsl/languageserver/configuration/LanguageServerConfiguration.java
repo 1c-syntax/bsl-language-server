@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.utils.Absolute;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -90,6 +91,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
+
+  @JsonProperty("inlayHint")
+  @Setter(value = AccessLevel.NONE)
+  private InlayHintOptions inlayHintOptions = new InlayHintOptions();
 
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
@@ -222,6 +227,7 @@ public class LanguageServerConfiguration {
   private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
     // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
