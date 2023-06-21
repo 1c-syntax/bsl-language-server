@@ -1,0 +1,435 @@
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched read and write of array",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Contents of array 'reportersOptions' are read, but never written to",
+  "detailsInfo": "Reports arrays whose contents are read but not updated, or updated but not read. Such inconsistent reads and writes are pointless and probably indicate dead, incomplete or erroneous code.\n\n**Example:**\n\n\n      final int[] bar = new int[3];\n      bar[2] = 3;\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/AnalyzeCommand.java",
+      "language": "JAVA",
+      "line": 135,
+      "offset": 20,
+      "length": 16,
+      "code": {
+        "startLine": 133,
+        "length": 16,
+        "offset": 128,
+        "surroundingCode": "    completionCandidates = ReportersKeys.class,\n    description = \"Reporter key (${COMPLETION-CANDIDATES})\")\n  private String[] reportersOptions = {};\n\n  @Option("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedArrayReadWrite"
+  },
+  "hash": "d6a3fbf64869f3fa53973788f8e84f715402af0e5176613516f554bac3c9c5a1"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Nullability and data flow problems",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Method invocation 'getRuleIndex' may produce 'NullPointerException'",
+  "detailsInfo": "Reports code constructs that always violate nullability contracts, may throw exceptions, or are just redundant, based on data flow analysis.\n\nExamples:\n\n    if (array.length < index) {\n      System.out.println(array[index]);\n    } // Array index is always out of bounds\n\n    if (str == null) System.out.println(\"str is null\");\n    System.out.println(str.trim());\n    // the last statement may throw an NPE\n\n    @NotNull\n    Integer square(@Nullable Integer input) {\n        // the method contract is violated\n        return input == null ? null : input * input;\n    }\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Suggest @Nullable annotation for methods/fields/parameters where nullable values are used** option to warn when a nullable value is passed as an argument to a method with a non-annotated parameter, stored into non-annotated field, or returned from a non-annotated method. In this case, the inspection will suggest propagating the `@Nullable` annotation. You can also configure nullability annotations using the **Configure Annotations** button.\n* Use the **Treat non-annotated members and parameters as @Nullable** option to assume that non-annotated members can be null, so they must not be used in non-null context.\n* Use the **Report not-null required parameter with null-literal argument usages** option to report method parameters that cannot be null (e.g. immediately dereferenced in the method body), but there are call sites where a `null` literal is passed.\n* Use the **Report nullable methods that always return a non-null value** option to report methods that are annotated as `@Nullable`, but always return non-null value. In this case, it's suggested that you change the annotation to `@NotNull`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Report problems that happen only on some code paths** option to control whether to report problems that may happen only on some code path. If this option is disabled, warnings like *exception is possible* will not be reported. The inspection will report only warnings like *exception will definitely occur*. This mode may greatly reduce the number of false-positives, especially if the code is not consistently annotated with nullability and contract annotations. That is why it can be useful for finding the most important problems in legacy code bases.\n\n\nBefore IntelliJ IDEA 2022.3, this inspection was part of the \"Constant Conditions \\& Exceptions\" inspection.\nNow, it is split into two inspections:\n\"Constant Values\" and \"Nullability and data flow problems\".",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RefOveruseDiagnostic.java",
+      "language": "JAVA",
+      "line": 123,
+      "offset": 10,
+      "length": 12,
+      "code": {
+        "startLine": 121,
+        "length": 12,
+        "offset": 224,
+        "surroundingCode": "      .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)\n      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)\n        .getRuleIndex() == SDBLParser.RULE_query)\n      .map(SDBLParser.ColumnContext.class::cast)\n      .collect(Collectors.toList());"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DataFlowIssue"
+  },
+  "hash": "394f96222933a4e36f79a00cc1a10309b7fe7e413f3b42ca3e345604aaaefc73"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "'@Serial' annotation could be used",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'serialVersionUID' can be annotated with '@Serial' annotation",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/events/LanguageServerInitializeRequestReceivedEvent.java",
+      "language": "JAVA",
+      "line": 36,
+      "offset": 29,
+      "length": 16,
+      "code": {
+        "startLine": 34,
+        "length": 16,
+        "offset": 114,
+        "surroundingCode": "public class LanguageServerInitializeRequestReceivedEvent extends ApplicationEvent {\n\n  private static final long serialVersionUID = 7153531865051478056L;\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MissingSerialAnnotation"
+  },
+  "hash": "5269aed6ad921a6392e1a7cad5e5cffabbb40c44482e0e5000ff01e93c920df1"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "'@Serial' annotation could be used",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'serialVersionUID' can be annotated with '@Serial' annotation",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/events/ServerContextPopulatedEvent.java",
+      "language": "JAVA",
+      "line": 29,
+      "offset": 29,
+      "length": 16,
+      "code": {
+        "startLine": 27,
+        "length": 16,
+        "offset": 97,
+        "surroundingCode": "public class ServerContextPopulatedEvent extends ApplicationEvent {\n\n  private static final long serialVersionUID = -4485675935728156708L;\n\n  public ServerContextPopulatedEvent(ServerContext source) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MissingSerialAnnotation"
+  },
+  "hash": "a4e87d950079fb102df4397dd6a91afc18b18bf35e6644042283cd852de61e16"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "'@Serial' annotation could be used",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'serialVersionUID' can be annotated with '@Serial' annotation",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/events/DocumentContextContentChangedEvent.java",
+      "language": "JAVA",
+      "line": 29,
+      "offset": 29,
+      "length": 16,
+      "code": {
+        "startLine": 27,
+        "length": 16,
+        "offset": 104,
+        "surroundingCode": "public class DocumentContextContentChangedEvent extends ApplicationEvent {\n\n  private static final long serialVersionUID = 3091414460731918073L;\n\n  public DocumentContextContentChangedEvent(DocumentContext source) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MissingSerialAnnotation"
+  },
+  "hash": "24f7f1ed1030f6dd1181a354a36746eece6f04a383e5592950234dc84140a762"
+},{
+  "tool": "Code Inspection",
+  "category": "Serialization issues",
+  "type": "'@Serial' annotation could be used",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'serialVersionUID' can be annotated with '@Serial' annotation",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/events/LanguageServerConfigurationChangedEvent.java",
+      "language": "JAVA",
+      "line": 34,
+      "offset": 29,
+      "length": 16,
+      "code": {
+        "startLine": 32,
+        "length": 16,
+        "offset": 109,
+        "surroundingCode": "public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {\n\n  private static final long serialVersionUID = 649143503434640953L;\n\n  public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MissingSerialAnnotation"
+  },
+  "hash": "0c24101c1325d2657b75ac71c1cb6441367b7a78b4bffed8b5cf5bbdfcf96f8a"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
+      "language": "JAVA",
+      "line": 372,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 370,
+        "length": 4,
+        "offset": 137,
+        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
+      "language": "JAVA",
+      "line": 124,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 122,
+        "length": 4,
+        "offset": 158,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        fakeParam.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "ca7195dc12bd26b031fb8cc9f47e4748b3a43dac1633be1683282470e7c638a0"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
+      "language": "JAVA",
+      "line": 263,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 261,
+        "length": 4,
+        "offset": 156,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/FormatProvider.java",
+      "language": "JAVA",
+      "line": 279,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 277,
+        "length": 4,
+        "offset": 124,
+        "surroundingCode": "      } else if (needAddSpace(tokenType, previousTokenType, previousIsUnary)) {\n        newTextBuilder.append(' ');\n      } else {\n        // no-op\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "fefd5fda99dae771a107547be7eeb04c9ca7fa01d67fa8bc7c644cdc2ee7241a"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
+      "language": "JAVA",
+      "line": 158,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 156,
+        "length": 4,
+        "offset": 150,
+        "surroundingCode": "        needReturn = !allowedMethodNamesPattern.matcher(\n          ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();\n      } else {\n        // no-op\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "f588f93d637b5f2abc9e745577a7b428b9a587e4c96659b9229547bfe2d09e25"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched query and update of collection",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Contents of collection 'filteredReporters' are queried, but never updated",
+  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 46,
+      "offset": 36,
+      "length": 17,
+      "code": {
+        "startLine": 44,
+        "length": 17,
+        "offset": 144,
+        "surroundingCode": "  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.\n  private List<DiagnosticReporter> filteredReporters;\n\n  public void report(AnalysisInfo analysisInfo, Path outputDir) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedCollectionQueryUpdate"
+  },
+  "hash": "2e55c8f8f6714fcd8beb1a5992db2b07f719c606c0dafd178147618297fcfab0"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Mismatched query and update of collection",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Contents of collection 'reporters' are queried, but never updated",
+  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 40,
+      "offset": 36,
+      "length": 9,
+      "code": {
+        "startLine": 38,
+        "length": 9,
+        "offset": 49,
+        "surroundingCode": "\n  @Autowired\n  private List<DiagnosticReporter> reporters;\n\n  @Autowired"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "MismatchedCollectionQueryUpdate"
+  },
+  "hash": "723f8a2a49563d4f11312a4ef81d19ed1a6faa2aa188a053b2285fbe2cad3ec7"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Redundant character escape",
+  "tags": [
+    "RegExp"
+  ],
+  "severity": "High",
+  "comment": "Redundant character escape '*' in RegExp",
+  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "language": "RegExp",
+      "line": 67,
+      "offset": 76,
+      "length": 3,
+      "code": {
+        "startLine": 65,
+        "length": 3,
+        "offset": 81,
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpRedundantEscape"
+  },
+  "hash": "6db027724eca46be1c37530db8747a3dd0031592cfb0e7dea684fd3808dc7669"
+}]}
