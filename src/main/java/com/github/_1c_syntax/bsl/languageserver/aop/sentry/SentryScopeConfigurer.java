@@ -24,13 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 import io.sentry.Scope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.UUID;
 
 /**
