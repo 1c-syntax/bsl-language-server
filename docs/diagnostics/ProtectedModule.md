@@ -1,4 +1,4 @@
-# <Diagnostic name> (ModuleSourceNotExist)
+# Защищенные модули (ProtectedModule)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
