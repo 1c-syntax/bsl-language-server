@@ -888,6 +888,16 @@
             "title": "Incorrect use of \"StrTemplate\"",
             "$id": "#/definitions/IncorrectUseOfStrTemplate"
         },
+        "InternetAccess": {
+            "description": "Referring to Internet resources",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referring to Internet resources",
+            "$id": "#/definitions/InternetAccess"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,

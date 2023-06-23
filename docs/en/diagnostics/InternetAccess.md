@@ -1,4 +1,4 @@
-# <Diagnostic name> (InternetAccess)
+# Referring to Internet resources (InternetAccess)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
