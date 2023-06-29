@@ -38,7 +38,7 @@ import java.util.Map;
 public class CyclomaticComplexityInlayHintSupplier extends AbstractComplexityInlayHintSupplier {
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   protected Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(

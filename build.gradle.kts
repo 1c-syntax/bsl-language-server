@@ -9,14 +9,14 @@ plugins {
     signing
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "4.2.1.3168"
-    id("io.freefair.lombok") version "6.6.1"
-    id("io.freefair.javadoc-links") version "6.6.1"
-    id("io.freefair.javadoc-utf-8") version "6.6.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
-    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("io.freefair.lombok") version "8.1.0"
+    id("io.freefair.javadoc-links") version "8.1.0"
+    id("io.freefair.javadoc-utf-8") version "8.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
+    id("io.freefair.maven-central.validate-poms") version "8.1.0"
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "3.1.0"
+    id("org.springframework.boot") version "3.1.1"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.23.0")
+        mavenBom("io.sentry:sentry-bom:6.24.0")
     }
 }
 
@@ -143,10 +143,6 @@ dependencies {
 
 lombok {
     version.set("edge-SNAPSHOT")
-}
-
-jacoco {
-    toolVersion = "0.8.10"
 }
 
 java {
@@ -237,7 +233,6 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
-    isFailOnError = false
     options {
         this as StandardJavadocDocletOptions
         links(
