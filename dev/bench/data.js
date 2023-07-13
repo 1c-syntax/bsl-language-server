@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1689268077411,
+  "lastUpdate": 1689281523148,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22816,6 +22816,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4574687771762658",
             "extra": "mean: 56.58761771519979 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fc23d368fbf7d380c741a3de1c500e7e9906e628",
+          "message": "Merge pull request #3094 from Nivanchenko/hotfix/slp4j-cancelation-token-problem\n\ncancelation token problem",
+          "timestamp": "2023-07-13T22:33:18+02:00",
+          "tree_id": "aefecdaaf67a875a7676c7f20d0c497820722f3d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fc23d368fbf7d380c741a3de1c500e7e9906e628"
+        },
+        "date": 1689281515666,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 56.51619402567545,
+            "unit": "sec",
+            "range": "stddev: 0.7435347906334541",
+            "extra": "mean: 56.51619402567545 sec\nrounds: 3"
           }
         ]
       }
