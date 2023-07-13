@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,7 +39,9 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
@@ -73,17 +75,27 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
+import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.PrepareRenameResult;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -108,6 +120,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final CallHierarchyProvider callHierarchyProvider;
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
+  private final RenameProvider renameProvider;
+  private final InlayHintProvider inlayHintProvider;
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -153,7 +167,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> documentSymbolProvider.getDocumentSymbols(documentContext));
+    return CompletableFuture.supplyAsync(() ->
+      documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+        .map(Either::<SymbolInformation, DocumentSymbol>forRight)
+        .collect(Collectors.toList())
+    );
   }
 
   @Override
@@ -290,8 +308,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> inlayHintProvider.getInlayHint(documentContext, params));
+  }
+
+  @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    var documentContext = context.addDocument(params.getTextDocument());
+    var textDocumentItem = params.getTextDocument();
+    var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+
+    context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
@@ -306,7 +338,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.rebuild(params.getContentChanges().get(0).getText(), params.getTextDocument().getVersion());
+    context.rebuildDocument(
+      documentContext,
+      params.getContentChanges().get(0).getText(),
+      params.getTextDocument().getVersion()
+    );
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -320,7 +356,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.clearSecondaryData();
+    context.closeDocument(documentContext);
 
     diagnosticProvider.publishEmptyDiagnosticList(documentContext);
   }
@@ -365,6 +401,27 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       }
       return new Diagnostics(diagnostics, documentContext.getVersion());
     });
+  }
+
+  @Override
+  public CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> prepareRename(PrepareRenameParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() ->
+      Either3.forFirst(renameProvider.getPrepareRename(documentContext, params)));
+  }
+
+  @Override
+  public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> renameProvider.getRename(documentContext, params));
   }
 
   public void reset() {

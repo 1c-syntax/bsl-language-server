@@ -54,6 +54,7 @@ fabric.properties
 *.ps1
 target/
 build/
+bin/
 
 # Scala compiler user settings
 .idea/hydra.xml
@@ -67,6 +68,7 @@ gen/
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
 .idea/checkstyle-idea.xml
+.idea/jpa-buddy.xml
 *.bak
 *.orig
 

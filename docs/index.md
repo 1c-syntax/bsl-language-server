@@ -18,6 +18,7 @@
 * [Руководство контрибьютора](contributing/index.md)
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
+* <a href="#websocket">Запуск в режиме websocket</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
 * <a href="#format">Запуск в режиме форматтера</a>
 * <a href="#configuration">Конфигурационный файл</a>
@@ -49,6 +50,7 @@
 * "Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)
 * Запуск движка диагностик из командной строки
 * Запуск форматирования файлов в каталоге из командной строки
+* Переименование символов
 
 ## Поддерживаемые операции протокола
 
@@ -59,7 +61,7 @@
     | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
     | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
     | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/cross.svg" alt="no" width="20"> |                                                              |
+    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
     | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
     | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
 
@@ -100,8 +102,8 @@
     | [formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [rangeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-    | [rename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-    | [prepareRename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [rename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
+    | [prepareRename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [foldingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [selectionRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [prepareCallHierarchy](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
@@ -110,6 +112,9 @@
     | [semanticTokens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [linkedEditingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [moniker](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [inlayHint](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    | resolveProvider = false | да |
+    | [inlayHint/resolve](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [inlayHint/refresh](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_inlayHint_refresh) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
 
 <a id="cli"></a>
 
@@ -126,15 +131,59 @@ Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]
                Path to language server configuration file
   -h, --help   Show this help message and exit
 Commands:
-  analyze, -a, --analyze  Run analysis and get diagnostic info
-  format, -f, --format    Format files in source directory
-  version, -v, --version  Print version
-  lsp, --lsp              LSP server mode (default)
+  analyze, -a, --analyze      Run analysis and get diagnostic info
+  format, -f, --format        Format files in source directory
+  version, -v, --version      Print version
+  lsp, --lsp                  LSP server mode (default)
+  websocket, -w, --websocket  Websocket server mode
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
 
 По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `language` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
+
+```json
+{
+  "language": "en"
+}
+```
+
+<a id="websocket"></a>
+
+## Запуск в режиме websocket
+
+По умолчанию взаимодействие с сервером идет через стандартные потоки ввода/вывода. 
+Но вы можете запустить BSL Language Server со встроенным веб-сервером и взаимодействовать с ним через websocket.
+
+Для этого необходимо запустить BSL Language Server с ключом `--websocket` или `-w`:
+
+```sh
+Usage: bsl-language-server websocket [-h] [--app.websocket.lsp-path=<path>]
+                                     [-c=<path>] [--server.port=<port>]
+Websocket server mode
+      --app.websocket.lsp-path=<path>
+                             Path to LSP endpoint. Default is /lsp
+  -c, --configuration=<path> Path to language server configuration file
+  -h, --help                 Show this help message and exit
+      --server.port=<port>   Port to listen. Default is 8025
+```
+
+После запуска BSL Language Server будет доступен по адресу `ws://localhost:8025/lsp`.
+
+Для переопределения порта к LSP-серверу необходимо использовать параметр `--server.port`, за которым следует номер желаемого порта.
+Для переопределения пути к LSP-серверу необходимо использовать параметр `--app.websocket.lsp-path`, за которым следует желаемый путь, начинающийся с `/`.
+
+Пример строки запуска BSL Language Server в режиме websocket с указанием порта 8080:
+
+```sh
+java -jar bsl-language-server.jar --websocket --server.port=8080
+```
+
+> При работе с большим проектом рекомендуется дополнительно указывать параметр -Xmx, отвечающий за предел оперативной памяти для java процесса. Размер выделяемой памяти зависит от размера анализируемой кодовой базы.
+
+```sh
+java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+```
 
 <a id="analyze"></a>
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import mockit.Mock;
+import mockit.MockUp;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.RenameCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -44,6 +50,16 @@ class BSLLanguageServerTest {
 
   @Autowired
   private BSLLanguageServer server;
+
+  @BeforeEach
+  void setUp() {
+    new MockUp<System>() {
+      @Mock
+      public void exit(int value) {
+        throw new RuntimeException(String.valueOf(value));
+      }
+    };
+  }
 
   @Test
   void initialize() throws ExecutionException, InterruptedException {
@@ -62,6 +78,28 @@ class BSLLanguageServerTest {
   }
 
   @Test
+  void initializeRename() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
+    params.setWorkspaceFolders(workspaceFolders);
+
+    var capabilities = new ClientCapabilities();
+    params.setCapabilities(capabilities);
+    capabilities.setTextDocument(new TextDocumentClientCapabilities());
+    var textDocument = capabilities.getTextDocument();
+    textDocument.setRename(new RenameCapabilities());
+    textDocument.getRename().setPrepareSupport(true);
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getRenameProvider().isRight()).isTrue();
+  }
+
+  @Test
   void shutdown() throws ExecutionException, InterruptedException {
     CompletableFuture<Object> shutdown = server.shutdown();
 
@@ -69,24 +107,22 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(1)
   void exitWithoutShutdown() {
-    // when
-    server.exit();
-
-    // then ExpectSystemExitWithStatus should not throw exception
+    // when-then
+    assertThatThrownBy(() -> server.exit())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("1");
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void exitWithShutdown() {
     // given
     server.shutdown();
 
-    // when
-    server.exit();
-
-    // then ExpectSystemExitWithStatus should not throw exception
+    // when-then
+    assertThatThrownBy(() -> server.exit())
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
   }
 
 }

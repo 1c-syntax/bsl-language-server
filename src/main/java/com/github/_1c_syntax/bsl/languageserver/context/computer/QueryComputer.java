@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +106,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
-      // добавляем часть строки только в случае находления ее на другой строке файла
+      // добавляем часть строки только в случае нахождения ее на другой строке файла
       if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
         strings.add(partString);
         partString = "";
@@ -143,7 +142,6 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     return ctx;
   }
 
-  @NotNull
   private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
@@ -156,7 +154,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static String trimLastQuote(String text) {
     var quoteCount = text.length() - text.replace("\"", "").length();
-    if (quoteCount % 2 == 1) {
+    if (quoteCount % 2 != 0) {
       String newString;
       var quotePosition = text.lastIndexOf("\"");
       newString = text.substring(0, quotePosition) + " ";

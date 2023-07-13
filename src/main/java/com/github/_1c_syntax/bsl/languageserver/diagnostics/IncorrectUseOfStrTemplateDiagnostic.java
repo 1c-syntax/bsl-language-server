@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,9 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.jetbrains.annotations.NotNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -129,7 +128,6 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     return getStringFromExpression(expressionContext);
   }
 
-  @NotNull
   private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {
     final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;
     return getConstValue(expressionContext, true)
@@ -138,8 +136,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .filter(s -> s.length() > LENGTH_OF_EMPTY_STRING_FROM_AST);
   }
 
-  @NotNull
-  private static Optional<BSLParser.ConstValueContext> getConstValue(Optional<BSLParser.ExpressionContext> expressionContext, 
+  private static Optional<BSLParser.ConstValueContext> getConstValue(Optional<BSLParser.ExpressionContext> expressionContext,
                                                                      boolean isFullSearch) {
     return expressionContext
       .map(BSLParser.ExpressionContext::member)

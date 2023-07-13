@@ -203,6 +203,11 @@
 			<Catalog>Справочник1</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
 			<Document>Документ1</Document>
+			<ScheduledJob>РегламентноеЗадание1</ScheduledJob>
+			<ScheduledJob>РегламентноеЗадание2</ScheduledJob>
+			<ScheduledJob>РегламентноеЗаданиеНесуществующийМетод</ScheduledJob>
+			<ScheduledJob>РегламентноеЗаданиеПриватныйМетод</ScheduledJob>
+			<ScheduledJob>РегламентноеЗаданиеПредопределенноеНесколькоПараметров</ScheduledJob>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

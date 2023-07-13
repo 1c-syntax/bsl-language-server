@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenc
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
@@ -178,7 +178,8 @@ public class ReferenceIndex {
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build();
+      .build()
+      .intern();
 
     var location = new Location(uri, range);
     var symbolOccurrence = SymbolOccurrence.builder()
@@ -218,7 +219,8 @@ public class ReferenceIndex {
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build();
+      .build()
+      .intern();
 
     var location = new Location(uri, range);
 

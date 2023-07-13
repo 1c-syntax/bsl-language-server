@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,12 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -39,10 +43,15 @@ public final class DocumentSymbolProvider {
    */
   public static final String LABEL = "BSL Language Server";
 
-  public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+  private static final Set<VariableKind> supportedVariableKinds = EnumSet.of(
+    VariableKind.MODULE,
+    VariableKind.GLOBAL
+  );
+
+  public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
+      .filter(DocumentSymbolProvider::isSupported)
       .map(DocumentSymbolProvider::toDocumentSymbol)
-      .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());
   }
 
@@ -64,4 +73,11 @@ public final class DocumentSymbolProvider {
     return documentSymbol;
   }
 
+  public static boolean isSupported(Symbol symbol) {
+    var symbolKind = symbol.getSymbolKind();
+    if (symbolKind == SymbolKind.Variable) {
+      return supportedVariableKinds.contains(((VariableSymbol) symbol).getKind());
+    }
+    return true;
+  }
 }

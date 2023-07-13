@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2023
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -19,11 +19,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-/**
- * Сериализация и десериализация классов пакета
- * {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
- */
-@ParametersAreNonnullByDefault
-package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
+class RewriteMethodParameterDiagnosticTest extends AbstractDiagnosticTest<RewriteMethodParameterDiagnostic> {
+  RewriteMethodParameterDiagnosticTest() {
+    super(RewriteMethodParameterDiagnostic.class);
+  }
+
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 4, 10)
+      .hasRange(9, 4, 11)
+      .hasRange(22, 4, 11)
+      .hasRange(29, 4, 11)
+      .hasRange(37, 4, 11)
+      .hasSize(5);
+
+  }
+}
