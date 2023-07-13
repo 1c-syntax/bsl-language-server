@@ -9,11 +9,11 @@
       "languageLevel": 17
     },
     {
-      "name": "bsl-language-server.test",
+      "name": "bsl-language-server.main",
       "languageLevel": 17
     },
     {
-      "name": "bsl-language-server.main",
+      "name": "bsl-language-server.test",
       "languageLevel": 17
     }
   ]
