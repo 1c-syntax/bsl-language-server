@@ -44,7 +44,8 @@ public class GenerateFunctionSupplierTest {
     codeActionContext.setDiagnostics(diagnostics);
 
     CodeActionParams params = new CodeActionParams();
-    params.setRange(Ranges.create(15 , 5, 34));
+    //params.setRange(Ranges.create(15 , 5, 34));
+    params.setRange(Ranges.create(13 , 5, 23));
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
