@@ -54,6 +54,14 @@ val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "6.1"
 
+allprojects {
+    configurations {
+        all {
+            exclude(group = "commons-logging")
+        }
+    }
+}
+
 dependencyManagement {
     imports {
         mavenBom("io.sentry:sentry-bom:6.25.2")
