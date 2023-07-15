@@ -54,14 +54,6 @@ val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "6.1"
 
-allprojects {
-    configurations {
-        all {
-            exclude(group = "commons-logging")
-        }
-    }
-}
-
 dependencyManagement {
     imports {
         mavenBom("io.sentry:sentry-bom:6.25.2")
@@ -96,7 +88,9 @@ dependencies {
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", languageToolVersion)
+    implementation("org.languagetool", "languagetool-core", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
+    }
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
@@ -106,7 +100,9 @@ dependencies {
     // commons utils
     implementation("commons-io", "commons-io", "2.13.0")
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.9.4")
+    implementation("commons-beanutils", "commons-beanutils", "1.9.4"){
+        exclude("commons-logging", "commons-logging")
+    }
     implementation("org.apache.commons", "commons-collections4", "4.4")
     implementation("org.apache.commons", "commons-exec", "1.3")
 
