@@ -45,12 +45,14 @@ public class GenerateFunctionSupplierTest {
 
     CodeActionParams params = new CodeActionParams();
     //params.setRange(Ranges.create(15 , 5, 34));
-    params.setRange(Ranges.create(13 , 5, 23));
+    params.setRange(Ranges.create(12 , 5, 27));
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
     // when
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
+
+    var cahnges = codeActions.get(0).getEdit().getChanges().values().toArray();
 
     assertThat(codeActions)
       .hasSize(1)
