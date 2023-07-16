@@ -1,23 +1,22 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,9 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class GenerateFunctionSupplier implements CodeActionSupplier {
+
+  @Autowired
+  private ReferenceResolver referenceResolver;
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
@@ -38,7 +40,7 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     var parseTree = documentContext.getAst();
     var node = Trees.findTerminalNodeContainsPosition(parseTree, start);
 
-    if(nodeIsMethod(node) && (nodeIsImplemented(node, parseTree) == false)){
+    if(nodeIsMethod(node) && (nodeIsImplemented(documentContext, node.get().getText()) == false)){
       return codeActions(documentContext, parseTree, node);
     }
 
@@ -47,13 +49,13 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
 
   private List<CodeAction> codeActions(DocumentContext documentContext, BSLParser.FileContext parseTree, Optional<TerminalNode> node){
 
-    var position = getMethodPosition(parseTree);
+    var position = getNewMethodPosition(parseTree);
     var methodName = node.get().getText();
 
     var funcCodeAction = codeAction(documentContext, position, "Generate function", getMethodContent(methodName, true));
     var procCodeAction = codeAction(documentContext, position, "Generate procedure", getMethodContent(methodName, false));
 
-    var codeActions = List.of(procCodeAction);
+    var codeActions = List.of(funcCodeAction);
    // codeActions.add(procCodeAction);
 
     return codeActions;
@@ -81,8 +83,8 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
   private String getMethodContent(String methodName, boolean isFunction){
 
     var methodText = String.format(isFunction ? functionTemplate() : procedureTemplate(),methodName);
-
     return methodText;
+
   }
 
   private String functionTemplate(){
@@ -92,21 +94,21 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
   private String procedureTemplate(){
     return "%n%nПроцедура %s()%n%n    //TODO: содержание метода%n%nКонецПроцедуры";
   }
-  private Range getMethodPosition(BSLParser.FileContext parseTree){
-
+  private Range getNewMethodPosition(BSLParser.FileContext parseTree){
     return Ranges.create(parseTree.getStop());
-
   }
 
-  private boolean nodeIsImplemented(Optional<TerminalNode> node, BSLParser.FileContext parseTree) {
-    return false;
+  private boolean nodeIsImplemented(DocumentContext documentContext, String methodName) {
+    return documentContext.getSymbolTree()
+          .getMethods()
+          .stream().filter(s -> s.getName()
+          .equalsIgnoreCase(methodName))
+          .findAny().isPresent();
   }
 
   private boolean nodeIsMethod(Optional<TerminalNode> node){
-
-    return node
-            .map(TerminalNode::getParent)
-            .filter(BSLParser.MethodNameContext.class::isInstance)
-            .isPresent();
+    return node.map(TerminalNode::getParent)
+                .filter(BSLParser.MethodNameContext.class::isInstance)
+                .isPresent();
   }
 }
