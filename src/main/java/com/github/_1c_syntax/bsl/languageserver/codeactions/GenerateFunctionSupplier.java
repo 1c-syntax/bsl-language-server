@@ -1,7 +1,9 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -34,31 +36,66 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     }
 
     var parseTree = documentContext.getAst();
-
     var node = Trees.findTerminalNodeContainsPosition(parseTree, start);
 
     if(nodeIsMethod(node) && (nodeIsImplemented(node, parseTree) == false)){
-
-      var symbol = node.get().getSymbol();
-
-      TextEdit textEdit = new TextEdit();
-
-      textEdit.setRange(new Range());
-      textEdit.setNewText("generated function");
-
-      WorkspaceEdit edit = new WorkspaceEdit();
-
-      Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), Collections.singletonList(textEdit));
-      edit.setChanges(changes);
-
-      String title = "Generate function";
-      var codeAction = new CodeAction(title);
-      codeAction.setKind(CodeActionKind.Refactor);
-      codeAction.setEdit(edit);
-      return List.of(codeAction);
+      return codeActions(documentContext, parseTree, node);
     }
 
     return Collections.emptyList();
+  }
+
+  private List<CodeAction> codeActions(DocumentContext documentContext, BSLParser.FileContext parseTree, Optional<TerminalNode> node){
+
+    var position = getMethodPosition(parseTree);
+    var methodName = node.get().getText();
+
+    var funcCodeAction = codeAction(documentContext, position, "Generate function", getMethodContent(methodName, true));
+    var procCodeAction = codeAction(documentContext, position, "Generate procedure", getMethodContent(methodName, false));
+
+    var codeActions = List.of(procCodeAction);
+   // codeActions.add(procCodeAction);
+
+    return codeActions;
+  }
+
+  private CodeAction codeAction(DocumentContext documentContext, Range position, String title ,String methodContent){
+
+    TextEdit textEdit = new TextEdit();
+
+    textEdit.setRange(position);
+    textEdit.setNewText(methodContent);
+
+    WorkspaceEdit edit = new WorkspaceEdit();
+
+    Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), Collections.singletonList(textEdit));
+    edit.setChanges(changes);
+
+    var codeAction = new CodeAction(title);
+    codeAction.setKind(CodeActionKind.Refactor);
+    codeAction.setEdit(edit);
+
+    return codeAction;
+  }
+
+  private String getMethodContent(String methodName, boolean isFunction){
+
+    var methodText = String.format(isFunction ? functionTemplate() : procedureTemplate(),methodName);
+
+    return methodText;
+  }
+
+  private String functionTemplate(){
+    return "%n%nФункция %s()%n%n    //TODO: содержание метода%n%n    Возврат Неопределено;%n%nКонецФункции";
+  }
+
+  private String procedureTemplate(){
+    return "%n%nПроцедура %s()%n%n    //TODO: содержание метода%n%nКонецПроцедуры";
+  }
+  private Range getMethodPosition(BSLParser.FileContext parseTree){
+
+    return Ranges.create(parseTree.getStop());
+
   }
 
   private boolean nodeIsImplemented(Optional<TerminalNode> node, BSLParser.FileContext parseTree) {
