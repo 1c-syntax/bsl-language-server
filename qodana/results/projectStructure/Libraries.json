@@ -36,9 +36,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:bsl-parser:0.22.0",
+      "name": "Gradle: com.github.1c-syntax:bsl-parser:bba7c0b091aca562ec082829a49f525a9bb5d7ef",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/0.22.0/95071ea0c85037dc765da27b3b9595fa68c680fe/bsl-parser-0.22.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/bsl-parser/bba7c0b091aca562ec082829a49f525a9bb5d7ef/6bfdfb256d4ea342a214af67cc32f1af2bc96c4a/bsl-parser-bba7c0b091aca562ec082829a49f525a9bb5d7ef.jar!/"
       ],
       "properties": {}
     },
@@ -407,13 +407,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: commons-logging:commons-logging:1.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: commons-validator:commons-validator:1.7",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/commons-validator/commons-validator/1.7/76069c915de3787f3ddd8726a56f47a95bfcbb0e/commons-validator-1.7.jar!/"
@@ -578,6 +571,13 @@
       "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.7/41eb7184ea9d556f23e18b5cb99cad1f8581fc00/slf4j-api-2.0.7.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: commons-logging:commons-logging:1.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar!/"
       ],
       "properties": {}
     },

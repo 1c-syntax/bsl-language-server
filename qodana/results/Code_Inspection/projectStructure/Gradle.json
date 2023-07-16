@@ -42,12 +42,12 @@
       "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:0.22.0",
-      "gradleName": "com.github.1c-syntax:bsl-parser:0.22.0",
+      "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:bba7c0b091aca562ec082829a49f525a9bb5d7ef",
+      "gradleName": "com.github.1c-syntax:bsl-parser:bba7c0b091aca562ec082829a49f525a9bb5d7ef",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "bsl-parser",
-      "version": "0.22.0"
+      "version": "bba7c0b091aca562ec082829a49f525a9bb5d7ef"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.1",
@@ -482,14 +482,6 @@
       "version": "5.1.1"
     },
     {
-      "ideaName": "Gradle: commons-logging:commons-logging:1.2",
-      "gradleName": "commons-logging:commons-logging:1.2",
-      "unresolved": false,
-      "groupId": "commons-logging",
-      "artifactId": "commons-logging",
-      "version": "1.2"
-    },
-    {
       "ideaName": "Gradle: commons-validator:commons-validator:1.7",
       "gradleName": "commons-validator:commons-validator:1.7",
       "unresolved": false,
@@ -680,6 +672,14 @@
       "groupId": "org.slf4j",
       "artifactId": "slf4j-api",
       "version": "2.0.7"
+    },
+    {
+      "ideaName": "Gradle: commons-logging:commons-logging:1.2",
+      "gradleName": "commons-logging:commons-logging:1.2",
+      "unresolved": false,
+      "groupId": "commons-logging",
+      "artifactId": "commons-logging",
+      "version": "1.2"
     },
     {
       "ideaName": "Gradle: commons-collections:commons-collections:3.2.2",
