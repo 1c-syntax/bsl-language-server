@@ -199,14 +199,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 263,
+      "line": 372,
       "offset": 9,
       "length": 4,
       "code": {
-        "startLine": 261,
+        "startLine": 370,
         "length": 4,
-        "offset": 156,
-        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+        "offset": 137,
+        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
       }
     }
   ],
@@ -214,7 +214,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "EmptyStatementBody"
   },
-  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
+  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -261,14 +261,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
-      "line": 372,
+      "line": 263,
       "offset": 9,
       "length": 4,
       "code": {
-        "startLine": 370,
+        "startLine": 261,
         "length": 4,
-        "offset": 137,
-        "surroundingCode": "      } else if (paramType.complexType() != null) {\n        addType(paramDescription, paramType.complexType().getText(), false);\n      } else {\n        // noop\n      }"
+        "offset": 156,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
       }
     }
   ],
@@ -276,7 +276,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "EmptyStatementBody"
   },
-  "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
+  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
