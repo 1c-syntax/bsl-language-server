@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1689496779512,
+  "lastUpdate": 1689497451146,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22971,6 +22971,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.0725362224745887",
             "extra": "mean: 55.81480630238851 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "86607677b6c249dc9d7cc904b5525214fd1e58e6",
+          "message": "Fix jacoco version",
+          "timestamp": "2023-07-16T10:22:00+02:00",
+          "tree_id": "5d80e67e04828584297f8e25698cb085c503fba0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/86607677b6c249dc9d7cc904b5525214fd1e58e6"
+        },
+        "date": 1689497444077,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 42.322407960891724,
+            "unit": "sec",
+            "range": "stddev: 26.208857027183125",
+            "extra": "mean: 42.322407960891724 sec\nrounds: 3"
           }
         ]
       }
