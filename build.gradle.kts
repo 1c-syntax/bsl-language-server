@@ -150,7 +150,7 @@ lombok {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.10"
 }
 
 java {
