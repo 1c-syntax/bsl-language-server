@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
@@ -26,8 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class GenerateFunctionSupplier implements CodeActionSupplier {
 
-  @Autowired
-  private ReferenceResolver referenceResolver;
+  final private ReferenceResolver referenceResolver;
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
@@ -40,7 +38,7 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     var parseTree = documentContext.getAst();
     var node = Trees.findTerminalNodeContainsPosition(parseTree, start);
 
-    if(nodeIsMethod(node) && (nodeIsImplemented(documentContext, node.get().getText()) == false)){
+    if(nodeIsMethod(node) && (referenceResolver.findReference(documentContext.getUri(), start).isEmpty())){
       return codeActions(documentContext, parseTree, node);
     }
 
@@ -96,14 +94,6 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
   }
   private Range getNewMethodPosition(BSLParser.FileContext parseTree){
     return Ranges.create(parseTree.getStop());
-  }
-
-  private boolean nodeIsImplemented(DocumentContext documentContext, String methodName) {
-    return documentContext.getSymbolTree()
-          .getMethods()
-          .stream().filter(s -> s.getName()
-          .equalsIgnoreCase(methodName))
-          .findAny().isPresent();
   }
 
   private boolean nodeIsMethod(Optional<TerminalNode> node){
