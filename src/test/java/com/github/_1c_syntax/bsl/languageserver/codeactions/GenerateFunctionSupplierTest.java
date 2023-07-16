@@ -44,19 +44,43 @@ public class GenerateFunctionSupplierTest {
     codeActionContext.setDiagnostics(diagnostics);
 
     CodeActionParams params = new CodeActionParams();
-    //params.setRange(Ranges.create(15 , 5, 34));
-    params.setRange(Ranges.create(12 , 5, 27));
+    params.setRange(Ranges.create(14 , 5, 24));
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
     // when
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
-    var cahnges = codeActions.get(0).getEdit().getChanges().values().toArray();
-
     assertThat(codeActions)
       .hasSize(1)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Generate function"));
+  }
+
+  @Test
+  void testGetNoCodeActionOnExistsMethod() {
+    // given
+    configuration.setLanguage(Language.EN);
+
+    String filePath = "./src/test/resources/suppliers/GenerateFunctionSupplier.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+
+    List<Diagnostic> diagnostics = new ArrayList<>();
+
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(diagnostics);
+
+    CodeActionParams params = new CodeActionParams();
+    params.setRange(Ranges.create(12 , 5, 22));
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
+
+    assertThat(codeActions)
+      .hasSize(0);
   }
 
 }
