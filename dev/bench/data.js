@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1689363652510,
+  "lastUpdate": 1689496067089,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -22909,6 +22909,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 21.41618067649605",
             "extra": "mean: 34.67204554875692 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "03727db262137da80204dbaf811db15bad126636",
+          "message": "Merge pull request #3098 from Nivanchenko/fix/exclude-commons-logging\n\nИсключил commons-logging.",
+          "timestamp": "2023-07-16T10:07:31+02:00",
+          "tree_id": "ccd9203ef0100daeebebace62ee9e3f6d780f2bf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/03727db262137da80204dbaf811db15bad126636"
+        },
+        "date": 1689496059599,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 56.6361563205719,
+            "unit": "sec",
+            "range": "stddev: 0.8368832512944231",
+            "extra": "mean: 56.6361563205719 sec\nrounds: 3"
           }
         ]
       }
