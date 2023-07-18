@@ -170,19 +170,27 @@
       "version": "0.9.5"
     },
     {
-      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-      "unresolved": false,
-      "groupId": "com.fasterxml.jackson.datatype",
-      "artifactId": "jackson-datatype-jsr310",
-      "version": "2.15.2"
-    },
-    {
       "ideaName": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
       "gradleName": "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
       "unresolved": false,
       "groupId": "com.fasterxml.jackson.dataformat",
       "artifactId": "jackson-dataformat-xml",
+      "version": "2.15.2"
+    },
+    {
+      "ideaName": "Gradle: com.contrastsecurity:java-sarif:2.0",
+      "gradleName": "com.contrastsecurity:java-sarif:2.0",
+      "unresolved": false,
+      "groupId": "com.contrastsecurity",
+      "artifactId": "java-sarif",
+      "version": "2.0"
+    },
+    {
+      "ideaName": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
+      "gradleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
+      "unresolved": false,
+      "groupId": "com.fasterxml.jackson.datatype",
+      "artifactId": "jackson-datatype-jsr310",
       "version": "2.15.2"
     },
     {
@@ -192,14 +200,6 @@
       "groupId": "org.jgrapht",
       "artifactId": "jgrapht-core",
       "version": "1.5.2"
-    },
-    {
-      "ideaName": "Gradle: com.contrastsecurity:java-sarif:2.0",
-      "gradleName": "com.contrastsecurity:java-sarif:2.0",
-      "unresolved": false,
-      "groupId": "com.contrastsecurity",
-      "artifactId": "java-sarif",
-      "version": "2.0"
     },
     {
       "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter:6.25.2",
@@ -410,6 +410,14 @@
       "version": "1.10.0"
     },
     {
+      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
+      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.15.2",
+      "unresolved": false,
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-databind",
+      "version": "2.15.2"
+    },
+    {
       "ideaName": "Gradle: io.grpc:grpc-stub:1.50.2",
       "gradleName": "io.grpc:grpc-stub:1.50.2",
       "unresolved": false,
@@ -440,14 +448,6 @@
       "groupId": "com.carrotsearch",
       "artifactId": "hppc",
       "version": "0.8.2"
-    },
-    {
-      "ideaName": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
-      "gradleName": "com.fasterxml.jackson.core:jackson-databind:2.15.2",
-      "unresolved": false,
-      "groupId": "com.fasterxml.jackson.core",
-      "artifactId": "jackson-databind",
-      "version": "2.15.2"
     },
     {
       "ideaName": "Gradle: com.gitlab.dumonts:hunspell:2.1.1",
@@ -1402,20 +1402,20 @@
       "version": "1.1.2"
     },
     {
-      "ideaName": "Gradle: org.opentest4j:opentest4j:1.2.0",
-      "gradleName": "org.opentest4j:opentest4j:1.2.0",
-      "unresolved": false,
-      "groupId": "org.opentest4j",
-      "artifactId": "opentest4j",
-      "version": "1.2.0"
-    },
-    {
       "ideaName": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
       "gradleName": "org.junit.platform:junit-platform-commons:1.9.3",
       "unresolved": false,
       "groupId": "org.junit.platform",
       "artifactId": "junit-platform-commons",
       "version": "1.9.3"
+    },
+    {
+      "ideaName": "Gradle: org.opentest4j:opentest4j:1.2.0",
+      "gradleName": "org.opentest4j:opentest4j:1.2.0",
+      "unresolved": false,
+      "groupId": "org.opentest4j",
+      "artifactId": "opentest4j",
+      "version": "1.2.0"
     },
     {
       "ideaName": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",

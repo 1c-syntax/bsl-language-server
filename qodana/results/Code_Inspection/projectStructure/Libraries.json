@@ -148,13 +148,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.15.2/30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42/jackson-datatype-jsr310-2.15.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/2.15.2/e7e9038dee5c1adb1ebd07d3669e0e1182ac5b60/jackson-dataformat-xml-2.15.2.jar!/"
@@ -162,16 +155,23 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
+      "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.jgrapht/jgrapht-core/1.5.2/bea9b92d4ff37111f8e3d58cd8cf0714e5c83774/jgrapht-core-1.5.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.contrastsecurity/java-sarif/2.0/10ec66304d18dac10c3c8a2dd71ac9b6c241766e/java-sarif-2.0.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+      "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.contrastsecurity/java-sarif/2.0/10ec66304d18dac10c3c8a2dd71ac9b6c241766e/java-sarif-2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.15.2/30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42/jackson-datatype-jsr310-2.15.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.jgrapht/jgrapht-core/1.5.2/bea9b92d4ff37111f8e3d58cd8cf0714e5c83774/jgrapht-core-1.5.2.jar!/"
       ],
       "properties": {}
     },
@@ -344,6 +344,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.15.2/9353b021f10c307c00328f52090de2bdb4b6ff9c/jackson-databind-2.15.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: io.grpc:grpc-stub:1.50.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.grpc/grpc-stub/1.50.2/5b114195e7f426b9df1b093a618b80a8a8711b19/grpc-stub-1.50.2.jar!/"
@@ -368,13 +375,6 @@
       "name": "Gradle: com.carrotsearch:hppc:0.8.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.carrotsearch/hppc/0.8.2/ccb3ef933ead6b5d766fa571582ddb9b447e48c4/hppc-0.8.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.15.2/9353b021f10c307c00328f52090de2bdb4b6ff9c/jackson-databind-2.15.2.jar!/"
       ],
       "properties": {}
     },
@@ -1240,16 +1240,16 @@
       "properties": {}
     },
     {
-      "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
+      "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.2.0/28c11eb91f9b6d8e200631d46e20a7f407f2a046/opentest4j-1.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.9.3/36b2e26a90c41603be7f0094bee80e3f8a2cd4d4/junit-platform-commons-1.9.3.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
+      "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.9.3/36b2e26a90c41603be7f0094bee80e3f8a2cd4d4/junit-platform-commons-1.9.3.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.2.0/28c11eb91f9b6d8e200631d46e20a7f407f2a046/opentest4j-1.2.0.jar!/"
       ],
       "properties": {}
     },

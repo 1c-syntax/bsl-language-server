@@ -150,19 +150,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
+          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
@@ -270,6 +270,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-stub:1.50.2",
           "type": "Library"
         },
@@ -283,10 +287,6 @@
         },
         {
           "name": "Gradle: com.carrotsearch:hppc:0.8.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
           "type": "Library"
         },
         {
@@ -766,11 +766,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
+          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
+          "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
           "type": "Library"
         },
         {
@@ -938,19 +938,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
+          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
@@ -1050,6 +1050,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-stub:1.50.2",
           "type": "Library"
         },
@@ -1063,10 +1067,6 @@
         },
         {
           "name": "Gradle: com.carrotsearch:hppc:0.8.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
           "type": "Library"
         },
         {
@@ -1594,19 +1594,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
+          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.contrastsecurity:java-sarif:2.0",
+          "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.jgrapht:jgrapht-core:1.5.2",
           "type": "Library"
         },
         {
@@ -1766,15 +1766,15 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.grpc:grpc-stub:1.50.2",
           "type": "Library"
         },
         {
           "name": "Gradle: com.carrotsearch:hppc:0.8.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.15.2",
           "type": "Library"
         },
         {
@@ -2114,11 +2114,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
+          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
           "type": "Library"
         },
         {
-          "name": "Gradle: org.junit.platform:junit-platform-commons:1.9.3",
+          "name": "Gradle: org.opentest4j:opentest4j:1.2.0",
           "type": "Library"
         },
         {
