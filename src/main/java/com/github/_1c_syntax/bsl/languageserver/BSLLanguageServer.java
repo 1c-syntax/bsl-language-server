@@ -72,6 +72,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -85,6 +87,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+
+  private final ExecutorService executorService = Executors.newCachedThreadPool();
+
   private boolean shutdownWasCalled;
 
   @Override
@@ -93,7 +98,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
     setConfigurationRoot(params);
-    CompletableFuture.runAsync(context::populateContext);
+    CompletableFuture.runAsync(context::populateContext, executorService);
 
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());

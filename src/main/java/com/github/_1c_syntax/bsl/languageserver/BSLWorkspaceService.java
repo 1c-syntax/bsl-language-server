@@ -39,6 +39,8 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @RequiredArgsConstructor
@@ -48,9 +50,14 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
 
+  private final ExecutorService executorService = Executors.newCachedThreadPool();
+
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
-    return CompletableFuture.supplyAsync(() -> Either.forRight(symbolProvider.getSymbols(params)));
+    return CompletableFuture.supplyAsync(
+      () -> Either.forRight(symbolProvider.getSymbols(params)),
+      executorService
+    );
   }
 
   @Override
@@ -71,6 +78,9 @@ public class BSLWorkspaceService implements WorkspaceService {
   public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
     var arguments = commandProvider.extractArguments(params);
 
-    return CompletableFuture.supplyAsync(() -> commandProvider.executeCommand(arguments));
+    return CompletableFuture.supplyAsync(
+      () -> commandProvider.executeCommand(arguments),
+      executorService
+    );
   }
 }
