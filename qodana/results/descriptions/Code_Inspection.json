@@ -1180,16 +1180,16 @@
           "description": "Reports non-final fields that are accessed in both `synchronized` and non-`synchronized` contexts. `volatile` fields as well as accesses in constructors and initializers are ignored by this inspection.\n\n\nSuch \"partially synchronized\" access is often the result of a coding oversight\nand may lead to unexpectedly inconsistent data structures.\n\n**Example:**\n\n\n      public class Program {\n        Console console; // warning: Field 'console' is accessed in both synchronized and unsynchronized contexts\n\n        public synchronized void execute() {\n          console.print(\"running\");\n        }\n\n        public void check() {\n          console.check();\n        }\n      }\n\n\nUse the option to specify if simple getters and setters are counted as accesses too."
         },
         {
-          "shortName": "WaitCalledOnCondition",
-          "displayName": "'wait()' called on 'java.util.concurrent.locks.Condition' object",
-          "enabled": false,
-          "description": "Reports calls to `wait()` made on a `java.util.concurrent.locks.Condition` object. This is probably a programming error, and some variant of the `await()` method was intended instead.\n\n**Example:**\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.wait();\n        }\n      }\n\nGood code would look like this:\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.await();\n        }\n      }\n"
-        },
-        {
           "shortName": "NonSynchronizedMethodOverridesSynchronizedMethod",
           "displayName": "Unsynchronized method overrides 'synchronized' method",
           "enabled": false,
           "description": "Reports non-`synchronized` methods overriding `synchronized` methods.\n\n\nThe overridden method will not be automatically synchronized if the superclass method\nis declared as `synchronized`. This may result in unexpected race conditions when using the subclass.\n\n**Example:**\n\n\n      class Super {\n        synchronized void process() {}\n      }\n      class Sub extends Super {\n        // Unsynchronized method 'process()' overrides synchronized method\n        void process() {}\n      }  \n"
+        },
+        {
+          "shortName": "WaitCalledOnCondition",
+          "displayName": "'wait()' called on 'java.util.concurrent.locks.Condition' object",
+          "enabled": false,
+          "description": "Reports calls to `wait()` made on a `java.util.concurrent.locks.Condition` object. This is probably a programming error, and some variant of the `await()` method was intended instead.\n\n**Example:**\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.wait();\n        }\n      }\n\nGood code would look like this:\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.await();\n        }\n      }\n"
         },
         {
           "shortName": "WaitNotifyNotInSynchronizedContext",
@@ -2705,16 +2705,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ClassGetClass",
-          "displayName": "Suspicious 'Class.getClass()' call",
-          "enabled": true,
-          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
-        },
-        {
           "shortName": "ResultOfObjectAllocationIgnored",
           "displayName": "Result of object allocation ignored",
           "enabled": false,
           "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
+        },
+        {
+          "shortName": "ClassGetClass",
+          "displayName": "Suspicious 'Class.getClass()' call",
+          "enabled": true,
+          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
         },
         {
           "shortName": "MisspelledEquals",
@@ -5512,71 +5512,6 @@
       ]
     },
     {
-      "name": "Properties files",
-      "inspections": [
-        {
-          "shortName": "UnusedMessageFormatParameter",
-          "displayName": "Missing message format parameter",
-          "enabled": false,
-          "description": "Reports properties values that look like `java.text.MessageFormat` format strings but do not use some the parameters of the `{xx}` kind.\n\nExample:\n\n\n    # parameter {0} is not used\n    error.message=Something happened in line {1}\n      \n"
-        },
-        {
-          "shortName": "InconsistentResourceBundle",
-          "displayName": "Inconsistent resource bundle",
-          "enabled": false,
-          "description": "Reports problems in the properties files contained in the resource bundle.\n\n* **Report missing translation**\n\noption controls search for an untranslated properties.   \nIt reports properties contained in parent properties file that are missing in inherited (unless it's a language dialect).   \nE.g. having this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : empty   \nProperty **abc** will be reported as untranslated.\n\n* **Report inconsistent properties**\n\noption controls invalid resource bundle structure inspection.   \nIt reports properties contained in inherited properties file that are missing in parent (or in sibling if there is no parent).   \nE.g. having this resource bundle:   \n**messages.properties** : empty   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** translation here is not available for any language except French, and, thus, will be reported as missing in the (default) properties file **messages.properties** .\n\n* **Report properties overridden with the same value**\n\noption checks for properties which are copy-pasted into several properties files verbatim.   \nE.g. in this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** will be reported as unnecessarily inherited in the file **messages_fr.properties** .   \n\n* **Report properties overridden with different placeholders**\n\noption checks for properties which are overridden for placeholder consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**qwe={0}xxx{1}**   \n**abc={0}yyy{1}**   \n**messages_fr.properties** :   \n**qwe={0}xxx{0}xxx{1}**   \n**abc={0}yyy**   \nProperty **abc** will be reported as property contains message format placeholders with value not corresponding to **messages.properties** .   \n\n* **Report properties overridden with different values endings**\n\noption checks for properties which are overridden for ending consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**abc=xxxzzz**   \n**messages_fr.properties** :   \n**abc=xxx;**   \nProperty **abc** will be reported as property contains special signs ( **'!'** , **'?'** , **'.'** , **':'** or **';'** ) at the end of value but value in **messages.properties** doesn't.   "
-        },
-        {
-          "shortName": "SuspiciousLocalesLanguages",
-          "displayName": "Suspicious resource bundle locale languages",
-          "enabled": false,
-          "description": "Reports locales with language codes that are not supported by Java."
-        },
-        {
-          "shortName": "UseEllipsisInPropertyInspection",
-          "displayName": "Three dot characters instead of the ellipsis",
-          "enabled": false,
-          "description": "Reports three \"dot\" characters which are used instead of the ellipsis character for UTF-8 properties files."
-        },
-        {
-          "shortName": "AlphaUnsortedPropertiesFile",
-          "displayName": "Properties file or resource bundle is alphabetically unsorted",
-          "enabled": false,
-          "description": "Reports alphabetically unsorted resource bundles or .properties files."
-        },
-        {
-          "shortName": "TrailingSpacesInProperty",
-          "displayName": "Trailing spaces in property",
-          "enabled": false,
-          "description": "Reports properties whose keys or values end with a whitespace."
-        },
-        {
-          "shortName": "UnusedProperty",
-          "displayName": "Unused property",
-          "enabled": false,
-          "description": "Reports properties that are not referenced outside of the .properties file they are contained in."
-        },
-        {
-          "shortName": "WrongPropertyKeyValueDelimiter",
-          "displayName": "Property key/value delimiter doesn't match code style settings",
-          "enabled": false,
-          "description": "Reports properties in which key or value delimiters do not match code style settings."
-        },
-        {
-          "shortName": "DuplicatePropertyInspection",
-          "displayName": "Duplicate property",
-          "enabled": false,
-          "description": "Reports duplicate property keys with different values, duplicate keys, or duplicate property values.\n\nExample:\n\n\n    property1=value;\n    property2=value;\n\nThe **Options** list allows selecting the area in which the inspection should search for duplicates."
-        },
-        {
-          "shortName": "UnresolvedPropertyKey",
-          "displayName": "Invalid property key",
-          "enabled": true,
-          "description": "Reports invalid arguments that are passed to methods with parameters annotated as `@PropertyKey`.\n\nThese arguments should be valid property keys in corresponding properties files.\nAlso, the inspection verifies that the `resourceBundle`\nargument of the `@PropertyKey` annotation is an existing resource bundle.\n\n\nUse the quick-fix to create a new property or to select an existing one.\n\nExample:\n\n\n      @PropertyKey(resourceBundle = \"myBundle\") String value = \"invalid.key\";\n"
-        }
-      ]
-    },
-    {
       "name": "EditorConfig",
       "inspections": [
         {
@@ -5746,6 +5681,71 @@
           "displayName": "Unused declaration",
           "enabled": false,
           "description": "Reports unused declarations. Such declarations can be removed."
+        }
+      ]
+    },
+    {
+      "name": "Properties files",
+      "inspections": [
+        {
+          "shortName": "UnusedMessageFormatParameter",
+          "displayName": "Missing message format parameter",
+          "enabled": false,
+          "description": "Reports properties values that look like `java.text.MessageFormat` format strings but do not use some the parameters of the `{xx}` kind.\n\nExample:\n\n\n    # parameter {0} is not used\n    error.message=Something happened in line {1}\n      \n"
+        },
+        {
+          "shortName": "InconsistentResourceBundle",
+          "displayName": "Inconsistent resource bundle",
+          "enabled": false,
+          "description": "Reports problems in the properties files contained in the resource bundle.\n\n* **Report missing translation**\n\noption controls search for an untranslated properties.   \nIt reports properties contained in parent properties file that are missing in inherited (unless it's a language dialect).   \nE.g. having this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : empty   \nProperty **abc** will be reported as untranslated.\n\n* **Report inconsistent properties**\n\noption controls invalid resource bundle structure inspection.   \nIt reports properties contained in inherited properties file that are missing in parent (or in sibling if there is no parent).   \nE.g. having this resource bundle:   \n**messages.properties** : empty   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** translation here is not available for any language except French, and, thus, will be reported as missing in the (default) properties file **messages.properties** .\n\n* **Report properties overridden with the same value**\n\noption checks for properties which are copy-pasted into several properties files verbatim.   \nE.g. in this resource bundle:   \n**messages.properties** : **abc=xxx**   \n**messages_fr.properties** : **abc=xxx**   \nProperty **abc** will be reported as unnecessarily inherited in the file **messages_fr.properties** .   \n\n* **Report properties overridden with different placeholders**\n\noption checks for properties which are overridden for placeholder consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**qwe={0}xxx{1}**   \n**abc={0}yyy{1}**   \n**messages_fr.properties** :   \n**qwe={0}xxx{0}xxx{1}**   \n**abc={0}yyy**   \nProperty **abc** will be reported as property contains message format placeholders with value not corresponding to **messages.properties** .   \n\n* **Report properties overridden with different values endings**\n\noption checks for properties which are overridden for ending consistency.   \nE.g. in this resource bundle:   \n**messages.properties** :   \n**abc=xxxzzz**   \n**messages_fr.properties** :   \n**abc=xxx;**   \nProperty **abc** will be reported as property contains special signs ( **'!'** , **'?'** , **'.'** , **':'** or **';'** ) at the end of value but value in **messages.properties** doesn't.   "
+        },
+        {
+          "shortName": "SuspiciousLocalesLanguages",
+          "displayName": "Suspicious resource bundle locale languages",
+          "enabled": false,
+          "description": "Reports locales with language codes that are not supported by Java."
+        },
+        {
+          "shortName": "UseEllipsisInPropertyInspection",
+          "displayName": "Three dot characters instead of the ellipsis",
+          "enabled": false,
+          "description": "Reports three \"dot\" characters which are used instead of the ellipsis character for UTF-8 properties files."
+        },
+        {
+          "shortName": "AlphaUnsortedPropertiesFile",
+          "displayName": "Properties file or resource bundle is alphabetically unsorted",
+          "enabled": false,
+          "description": "Reports alphabetically unsorted resource bundles or .properties files."
+        },
+        {
+          "shortName": "TrailingSpacesInProperty",
+          "displayName": "Trailing spaces in property",
+          "enabled": false,
+          "description": "Reports properties whose keys or values end with a whitespace."
+        },
+        {
+          "shortName": "UnusedProperty",
+          "displayName": "Unused property",
+          "enabled": false,
+          "description": "Reports properties that are not referenced outside of the .properties file they are contained in."
+        },
+        {
+          "shortName": "WrongPropertyKeyValueDelimiter",
+          "displayName": "Property key/value delimiter doesn't match code style settings",
+          "enabled": false,
+          "description": "Reports properties in which key or value delimiters do not match code style settings."
+        },
+        {
+          "shortName": "DuplicatePropertyInspection",
+          "displayName": "Duplicate property",
+          "enabled": false,
+          "description": "Reports duplicate property keys with different values, duplicate keys, or duplicate property values.\n\nExample:\n\n\n    property1=value;\n    property2=value;\n\nThe **Options** list allows selecting the area in which the inspection should search for duplicates."
+        },
+        {
+          "shortName": "UnresolvedPropertyKey",
+          "displayName": "Invalid property key",
+          "enabled": true,
+          "description": "Reports invalid arguments that are passed to methods with parameters annotated as `@PropertyKey`.\n\nThese arguments should be valid property keys in corresponding properties files.\nAlso, the inspection verifies that the `resourceBundle`\nargument of the `@PropertyKey` annotation is an existing resource bundle.\n\n\nUse the quick-fix to create a new property or to select an existing one.\n\nExample:\n\n\n      @PropertyKey(resourceBundle = \"myBundle\") String value = \"invalid.key\";\n"
         }
       ]
     },
@@ -8544,16 +8544,16 @@
           "description": "Reports anonymous capturing groups and numeric back references in a RegExp. These are only reported when the RegExp dialect supports named group and named group references. Named groups and named back references improve code readability and are recommended to use instead. When a capture is not needed, matching can be more performant and use less memory by using a non-capturing group, i.e. `(?:xxx)` instead of `(xxx)`.\n\n**Example:**\n\n\n      (\\d\\d\\d\\d)\\1\n\nA better regex pattern could look like this:\n\n\n      (?<quad>\\d\\d\\d\\d)\\k<quad>\n\nNew in 2017.2"
         },
         {
-          "shortName": "RegExpDuplicateAlternationBranch",
-          "displayName": "Duplicate branch in alternation",
-          "enabled": true,
-          "description": "Reports duplicate branches in a RegExp alternation. Duplicate branches slow down matching and obscure the intent of the expression.\n\n**Example:**\n\n\n      (alpha|bravo|charlie|alpha)\n\nAfter the quick-fix is applied:\n\n\n      (alpha|bravo|charlie)\n\nNew in 2017.1"
-        },
-        {
           "shortName": "RegExpRepeatedSpace",
           "displayName": "Consecutive spaces",
           "enabled": true,
           "description": "Reports multiple consecutive spaces in a RegExp. Because spaces are not visible by default, it can be hard to see how many spaces are required. The RegExp can be made more clear by replacing the consecutive spaces with a single space and a counted quantifier.\n\n**Example:**\n\n\n      (     )\n\nAfter the quick-fix is applied:\n\n\n      ( {5})\n\n\nNew in 2017.1"
+        },
+        {
+          "shortName": "RegExpDuplicateAlternationBranch",
+          "displayName": "Duplicate branch in alternation",
+          "enabled": true,
+          "description": "Reports duplicate branches in a RegExp alternation. Duplicate branches slow down matching and obscure the intent of the expression.\n\n**Example:**\n\n\n      (alpha|bravo|charlie|alpha)\n\nAfter the quick-fix is applied:\n\n\n      (alpha|bravo|charlie)\n\nNew in 2017.1"
         }
       ]
     },
