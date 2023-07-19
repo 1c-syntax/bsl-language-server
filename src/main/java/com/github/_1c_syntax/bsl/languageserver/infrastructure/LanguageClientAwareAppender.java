@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
@@ -29,16 +30,25 @@ import lombok.Setter;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class LanguageClientAwareAppender
   extends ConsoleAppender<ILoggingEvent> {
 
   protected static LanguageClientAwareAppender INSTANCE;
 
-  @Setter
+  private static final Map<Level, MessageType> loggingLevels = Map.of(
+      Level.DEBUG, MessageType.Log,
+    Level.ERROR, MessageType.Error,
+    Level.INFO, MessageType.Info,
+    Level.WARN, MessageType.Warning
+  );
+
   @Nullable
+  @Setter(onMethod_ = {@Autowired})
   private LanguageClientHolder clientHolder;
 
   public LanguageClientAwareAppender() {
@@ -52,7 +62,14 @@ public class LanguageClientAwareAppender
     if (clientHolder != null && clientHolder.isConnected()) {
       LanguageClient languageClient = clientHolder.getClient().orElseThrow();
 
-      var params = new MessageParams(MessageType.Info, event.getFormattedMessage());
+      var messageType = loggingLevels.getOrDefault(event.getLevel(), MessageType.Log);
+      String message = "[%s] [%s] [%s]: %s".formatted(
+        event.getLevel(),
+        event.getThreadName(),
+        event.getLoggerName(),
+        event.getFormattedMessage()
+      );
+      var params = new MessageParams(messageType, message);
       languageClient.logMessage(params);
 
       return;
