@@ -8,7 +8,7 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "4.2.1.3168"
+    id("org.sonarqube") version "4.3.0.3225"
     id("io.freefair.lombok") version "8.1.0"
     id("io.freefair.javadoc-links") version "8.1.0"
     id("io.freefair.javadoc-utf-8") version "8.1.0"
@@ -17,7 +17,7 @@ plugins {
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
     id("org.springframework.boot") version "3.1.1"
-    id("io.spring.dependency-management") version "1.1.1"
+    id("io.spring.dependency-management") version "1.1.2"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.25.2")
+        mavenBom("io.sentry:sentry-bom:6.26.0")
     }
 }
 
@@ -147,6 +147,10 @@ dependencies {
 
 lombok {
     version.set("edge-SNAPSHOT")
+}
+
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 java {
