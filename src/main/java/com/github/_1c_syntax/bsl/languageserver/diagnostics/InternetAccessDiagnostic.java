@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -32,12 +33,13 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
+  type = DiagnosticType.VULNERABILITY,
   severity = DiagnosticSeverity.MINOR,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.SUSPICIOUS
-  }
+  },
+  activatedByDefault = false
 )
 
 public class InternetAccessDiagnostic extends AbstractVisitorDiagnostic {
@@ -48,13 +50,12 @@ public class InternetAccessDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    var typeNameContext = ctx.typeName();
-    if (typeNameContext != null) {
-      var matcherTypeName = PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText());
+    Constructors.typeName(ctx).ifPresent((String typeName) -> {
+      var matcherTypeName = PATTERN_NEW_EXPRESSION.matcher(typeName);
       if (matcherTypeName.matches()) {
         diagnosticStorage.addDiagnostic(ctx);
       }
-    }
+    });
     return super.visitNewExpression(ctx);
   }
 }
