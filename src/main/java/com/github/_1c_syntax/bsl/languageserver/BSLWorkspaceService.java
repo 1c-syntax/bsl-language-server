@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +51,7 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool();
+  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {

@@ -93,6 +93,7 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -124,7 +125,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool();
+  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
