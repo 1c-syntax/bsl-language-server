@@ -199,6 +199,37 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
       "language": "JAVA",
+      "line": 263,
+      "offset": 9,
+      "length": 4,
+      "code": {
+        "startLine": 261,
+        "length": 4,
+        "offset": 156,
+        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "EmptyStatementBody"
+  },
+  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
+},{
+  "tool": "Code Inspection",
+  "category": "Probable bugs",
+  "type": "Statement with empty body",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "'else' statement has empty body",
+  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
+      "language": "JAVA",
       "line": 124,
       "offset": 9,
       "length": 4,
@@ -246,37 +277,6 @@
     "inspectionName": "EmptyStatementBody"
   },
   "hash": "afac6956d55abd8bcd728a92b79ed0b4280a00b2107ba85419780ba3380edfb7"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Statement with empty body",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "'else' statement has empty body",
-  "detailsInfo": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/description/DescriptionReader.java",
-      "language": "JAVA",
-      "line": 263,
-      "offset": 9,
-      "length": 4,
-      "code": {
-        "startLine": 261,
-        "length": 4,
-        "offset": 156,
-        "surroundingCode": "      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа\n        current.addSubParameter(string.subParameter());\n      } else { // прочее - пустая строка\n        // noop\n      }"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "EmptyStatementBody"
-  },
-  "hash": "cfe77286b84db65fe7eb570f50a05fbf1a83934a6d87ca90808073f679fbcb1f"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
