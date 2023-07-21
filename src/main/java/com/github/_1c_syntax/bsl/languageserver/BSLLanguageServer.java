@@ -62,6 +62,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -72,6 +73,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -85,6 +88,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+
   private boolean shutdownWasCalled;
 
   @Override
@@ -93,7 +97,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
     setConfigurationRoot(params);
-    CompletableFuture.runAsync(context::populateContext);
+    ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("populate-context-"));
+    CompletableFuture.runAsync(context::populateContext, executorService);
 
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
