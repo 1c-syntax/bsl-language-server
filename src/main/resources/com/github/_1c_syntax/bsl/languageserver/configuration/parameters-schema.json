@@ -500,6 +500,16 @@
             "title": "Deprecated ManagedForm type",
             "$id": "#/definitions/DeprecatedTypeManagedForm"
         },
+        "DisableSafeMode": {
+            "description": "Disable safe mode",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Disable safe mode",
+            "$id": "#/definitions/DisableSafeMode"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": true,
