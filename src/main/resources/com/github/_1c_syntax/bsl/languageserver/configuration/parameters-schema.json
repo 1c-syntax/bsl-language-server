@@ -642,6 +642,16 @@
             "title": "Ban export global module variables",
             "$id": "#/definitions/ExportVariables"
         },
+        "ExternalAppStarting": {
+            "description": "External applications starting",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "External applications starting",
+            "$id": "#/definitions/ExternalAppStarting"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
