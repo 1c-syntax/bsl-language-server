@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -41,15 +43,34 @@ import java.util.regex.Pattern;
 
 )
 public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic  {
-  private static final Pattern messagePattern = CaseInsensitivePattern.compile(
+  private static final String MAIN_PATTERN_STRING =
     "КомандаСистемы|System|ЗапуститьПриложение|RunApp|НачатьЗапускПриложения|BeginRunningApplication" +
-      "|ЗапуститьПриложениеАсинх|RunAppAsync|ПерейтиПоНавигационнойСсылке|GotoURL" +
-      "|ОткрытьНавигационнуюСсылку|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл"
-  );
+      "|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл";
+  private static final String PATTERN_STRING_FOR_NAVI =
+    "|ПерейтиПоНавигационнойСсылке|GotoURL|ОткрытьНавигационнуюСсылку";
   // TODO Использование COM объектов "Wscript.Shell" и "Shell.Application" + документация в описании правила
+  private static final Pattern MAIN_PATTERN = CaseInsensitivePattern.compile(MAIN_PATTERN_STRING);
+  private static final Pattern FULL_PATTERN = CaseInsensitivePattern.compile(
+    MAIN_PATTERN_STRING + PATTERN_STRING_FOR_NAVI);
+  private static final boolean CHECK_GOTO_URL = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_GOTO_URL
+  )
+  private boolean checkGotoUrl = CHECK_GOTO_URL;
 
   public ExternalAppStartingDiagnostic() {
-    super(messagePattern);
+    super(FULL_PATTERN);
   }
 
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
+    if (checkGotoUrl){
+      setMethodPattern(FULL_PATTERN);
+    } else {
+      setMethodPattern(MAIN_PATTERN);
+    }
+  }
 }
