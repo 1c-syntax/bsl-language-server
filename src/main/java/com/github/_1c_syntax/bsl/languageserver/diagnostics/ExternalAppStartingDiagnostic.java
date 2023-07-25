@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 )
 public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic  {
   private static final String MAIN_PATTERN_STRING =
-    "КомандаСистемы|System|ЗапуститьПриложение|RunApp|НачатьЗапускПриложения|BeginRunningApplication" +
+    "КомандаСистемы|System|ЗапуститьСистему|RunSystem|ЗапуститьПриложение|RunApp|НачатьЗапускПриложения|BeginRunningApplication" +
       "|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл";
   private static final String PATTERN_STRING_FOR_NAVI =
     "|ПерейтиПоНавигационнойСсылке|GotoURL|ОткрытьНавигационнуюСсылку";

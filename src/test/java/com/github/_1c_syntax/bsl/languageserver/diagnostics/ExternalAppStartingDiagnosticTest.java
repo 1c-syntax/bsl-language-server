@@ -55,7 +55,12 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
       .hasRange(24, 26, 37)
       .hasRange(25, 26, 37)
       .hasRange(35, 10, 34)
-      .hasSize(15);
+
+      .hasRange(53, 4, 20)
+      .hasRange(54, 4, 20)
+      .hasRange(55, 4, 20)
+      .hasRange(56, 4, 20)
+      .hasSize(19);
   }
 
   @Test
@@ -81,7 +86,12 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
       .hasRange(24, 26, 37)
       .hasRange(25, 26, 37)
       .hasRange(35, 10, 34)
-      .hasSize(12);
+
+      .hasRange(53, 4, 20)
+      .hasRange(54, 4, 20)
+      .hasRange(55, 4, 20)
+      .hasRange(56, 4, 20)
+      .hasSize(16);
   }
 
   @Test
