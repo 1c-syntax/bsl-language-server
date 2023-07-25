@@ -48,8 +48,6 @@ public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic 
       "|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл";
   private static final String PATTERN_STRING_FOR_NAVI =
     "|ПерейтиПоНавигационнойСсылке|GotoURL|ОткрытьНавигационнуюСсылку";
-  // TODO Использование COM объектов "Wscript.Shell" и "Shell.Application" + документация в описании правила
-  private static final Pattern MAIN_PATTERN = CaseInsensitivePattern.compile(MAIN_PATTERN_STRING);
   private static final Pattern FULL_PATTERN = CaseInsensitivePattern.compile(
     MAIN_PATTERN_STRING + PATTERN_STRING_FOR_NAVI);
   private static final boolean CHECK_GOTO_URL = true;
@@ -60,6 +58,12 @@ public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic 
   )
   private boolean checkGotoUrl = CHECK_GOTO_URL;
 
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = MAIN_PATTERN_STRING
+  )
+  private String userPatternString = MAIN_PATTERN_STRING;
+
   public ExternalAppStartingDiagnostic() {
     super(FULL_PATTERN);
   }
@@ -67,10 +71,10 @@ public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic 
   @Override
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
+    var pattern = userPatternString;
     if (checkGotoUrl){
-      setMethodPattern(FULL_PATTERN);
-    } else {
-      setMethodPattern(MAIN_PATTERN);
+      pattern += PATTERN_STRING_FOR_NAVI;
     }
+    setMethodPattern(CaseInsensitivePattern.compile(pattern));
   }
 }
