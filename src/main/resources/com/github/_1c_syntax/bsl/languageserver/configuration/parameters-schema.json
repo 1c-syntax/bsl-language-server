@@ -650,6 +650,20 @@
                 "object"
             ],
             "title": "External applications starting",
+            "properties": {
+                "checkGotoUrl": {
+                    "description": "Check navigation links",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check navigation links"
+                },
+                "userPatternString": {
+                    "description": "User regex pattern",
+                    "default": "\u041a\u043e\u043c\u0430\u043d\u0434\u0430\u0421\u0438\u0441\u0442\u0435\u043c\u044b|System|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u0421\u0438\u0441\u0442\u0435\u043c\u0443|RunSystem|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041d\u0430\u0447\u0430\u0442\u044c\u0417\u0430\u043f\u0443\u0441\u043a\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f|BeginRunningApplication|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0410\u0441\u0438\u043d\u0445|RunAppAsync|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0443|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u041f\u0440\u043e\u0432\u043e\u0434\u043d\u0438\u043a|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u0424\u0430\u0439\u043b",
+                    "type": "string",
+                    "title": "User regex pattern"
+                }
+            },
             "$id": "#/definitions/ExternalAppStarting"
         },
         "ExtraCommas": {
