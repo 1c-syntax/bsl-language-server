@@ -53,11 +53,32 @@ public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
     "ЗначениеВФайл|ValueToFile|КопироватьФайл|FileCopy|ОбъединитьФайлы|MergeFiles|ПереместитьФайл|MoveFile" +
       "|РазделитьФайл|SplitFile|СоздатьКаталог|CreateDirectory|УдалитьФайлы|DeleteFiles" +
       "|КаталогПрограммы|BinDir|КаталогВременныхФайлов|TempFilesDir|КаталогДокументов|DocumentsDir" +
-      "|РабочийКаталогДанныхПользователя|UserDataWorkDir");
-  // TODO добавить глобальные асинхронные методы работы с файлами
+      "|РабочийКаталогДанныхПользователя|UserDataWorkDir" +
+      "|НачатьПодключениеРасширенияРаботыСФайлами|BeginAttachingFileSystemExtension" +
+      "|НачатьУстановкуРасширенияРаботыСФайлами|BeginInstallFileSystemExtension" +
+      "|УстановитьРасширениеРаботыСФайлами|InstallFileSystemExtension" +
+      "|УстановитьРасширениеРаботыСФайламиАсинх|InstallFileSystemExtensionAsync" +
+      "|ПодключитьРасширениеРаботыСФайламиАсинх|AttachFileSystemExtensionAsync|" +
+      "КаталогВременныхФайловАсинх|TempFilesDirAsync|КаталогДокументовАсинх|DocumentsDirAsync" +
+      "|НачатьПолучениеКаталогаВременныхФайлов|BeginGettingTempFilesDir" +
+      "|НачатьПолучениеКаталогаДокументов|BeginGettingDocumentsDir" +
+      "|НачатьПолучениеРабочегоКаталогаДанныхПользователя|BeginGettingUserDataWorkDir" +
+      "|РабочийКаталогДанныхПользователяАсинх|UserDataWorkDirAsync" +
+      "|КопироватьФайлАсинх|CopyFileAsync|НайтиФайлыАсинх|FindFilesAsync|НачатьКопированиеФайла|BeginCopyingFile" +
+      "|НачатьПеремещениеФайла|BeginMovingFile|НачатьПоискФайлов|BeginFindingFiles" +
+      "|НачатьСозданиеДвоичныхДанныхИзФайла|BeginCreateBinaryDataFromFile" +
+      "|НачатьСозданиеКаталога|BeginCreatingDirectory" +
+      "|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайлАсинх|MoveFileAsync" +
+      "|СоздатьДвоичныеДанныеИзФайлаАсинх|CreateBinaryDataFromFileAsync|СоздатьКаталогАсинх|CreateDirectoryAsync" +
+      "|УдалитьФайлыАсинх|DeleteFilesAsync");
 
   public FileSystemAccessDiagnostic() {
     super(GLOBAL_METHODS);
+  }
+
+  @Override
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return false;
   }
 
   @Override
@@ -69,10 +90,5 @@ public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
       }
     });
     return super.visitNewExpression(ctx);
-  }
-
-  @Override
-  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
-    return false;
   }
 }
