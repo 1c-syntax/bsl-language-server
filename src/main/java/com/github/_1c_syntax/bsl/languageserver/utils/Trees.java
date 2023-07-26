@@ -386,6 +386,42 @@ public final class Trees {
   }
 
   /**
+   * Получает "первые" дочерние ноды с нужными типами
+   * ВАЖНО: поиск вглубь найденной ноды с нужными индексами не выполняется
+   * Например, если указать RULE_codeBlock, то найдется только самый верхнеуровневый блок кода, все вложенные найдены не будут
+   * ВАЖНО: начальная нода не проверяется на условие, т.к. тогда она единственная и вернется в результате
+   *
+   * @param root - начальный узел дерева
+   * @param indexes - коллекция индексов
+   * @return найденные узлы
+   */
+  public static Collection<ParserRuleContext> findAllTopLevelDescendantNodes(ParserRuleContext root,
+                                                                             Collection<Integer> indexes) {
+    var result = new ArrayList<ParserRuleContext>();
+
+    root.children.stream()
+      .map(node -> findAllTopLevelDescendantNodesInner(node, indexes))
+      .forEach(result::addAll);
+
+    return result;
+  }
+
+  private static Collection<ParserRuleContext> findAllTopLevelDescendantNodesInner(ParseTree root,
+                                                                                   Collection<Integer> indexes) {
+    if (root instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) root).getRuleIndex())) {
+      return List.of((ParserRuleContext) root);
+    }
+
+    List<ParserRuleContext> result = new ArrayList<>();
+    IntStream.range(0, root.getChildCount())
+      .mapToObj(i -> findAllTopLevelDescendantNodesInner(root.getChild(i), indexes))
+      .forEachOrdered(result::addAll);
+
+    return result;
+  }
+
+  /**
    * Проверяет наличие дочерней ноды с указанным типом
    */
   public static boolean nodeContains(ParseTree t, Integer... index) {

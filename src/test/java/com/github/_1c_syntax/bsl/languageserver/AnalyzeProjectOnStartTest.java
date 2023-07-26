@@ -87,7 +87,7 @@ class AnalyzeProjectOnStartTest {
     configuration.getDiagnosticsOptions().setAnalyzeOnStart(true);
     languageClientHolder.connect(languageClient);
 
-    var documentContext = TestUtils.getDocumentContext("A = 0", serverContext);
+    TestUtils.getDocumentContext("A = 0", serverContext);
 
     // when
     analyzeProjectOnStart.handleEvent(new ServerContextPopulatedEvent(serverContext));

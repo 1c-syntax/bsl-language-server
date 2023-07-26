@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 
 import java.util.regex.Matcher;
 
@@ -45,9 +45,7 @@ import java.util.regex.Matcher;
     DiagnosticTag.UNPREDICTABLE,
     DiagnosticTag.DESIGN
   }
-
 )
-
 public class CommonModuleInvalidTypeDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
   public CommonModuleInvalidTypeDiagnostic(LanguageServerConfiguration serverConfiguration) {
@@ -55,7 +53,7 @@ public class CommonModuleInvalidTypeDiagnostic extends AbstractCommonModuleNameD
   }
 
   @Override
-  protected boolean flagsCheck(MDCommonModule commonModule) {
+  protected boolean flagsCheck(CommonModule commonModule) {
 
     return !isServer(commonModule)
       && !isServerCall(commonModule)

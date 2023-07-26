@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,10 +50,9 @@ class ServerContextTest {
 
   @Test
   void testConfigurationMetadata() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
 
@@ -67,15 +64,12 @@ class ServerContextTest {
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    var mdotype = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
-    var type = ModuleType.valueOf(mdotype.name());
+    ModuleType type = configurationMetadata.getModuleTypeByURI(Absolute.uri(file.toURI()));
     assertThat(type).isEqualTo(ModuleType.CommonModule);
-
   }
 
   @Test
-  void testMdoRefs() throws IOException {
-
+  void testMdoRefs() {
     var path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
@@ -107,10 +101,10 @@ class ServerContextTest {
 
   @Test
   void testErrorConfigurationMetadata() {
-    Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
+    Path path = Absolute.path(PATH_TO_METADATA + "test");
 
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).isEmpty();
@@ -138,5 +132,4 @@ class ServerContextTest {
     serverContext.rebuildDocument(documentContext);
     return documentContext;
   }
-
 }

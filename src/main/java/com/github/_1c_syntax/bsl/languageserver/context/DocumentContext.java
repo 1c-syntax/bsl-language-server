@@ -34,18 +34,19 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeCompu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
-import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Lazy;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -61,7 +62,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -69,7 +69,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -122,8 +121,6 @@ public class DocumentContext {
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   private final Lazy<String> typeName = new Lazy<>(this::computeTypeName, computeLock);
-  private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
-    = new Lazy<>(this::computeSupportVariants, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -246,13 +243,12 @@ public class DocumentContext {
     return typeName.getOrCompute();
   }
 
-  public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
-    return supportVariants.getOrCompute();
+  public SupportVariant getSupportVariant() {
+    return getMdObject().map(MD::getSupportVariant).orElse(SupportVariant.NONE);
   }
 
-  public Optional<AbstractMDObjectBase> getMdObject() {
-    return Optional
-      .ofNullable((AbstractMDObjectBase) getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+  public Optional<MD> getMdObject() {
+    return getServerContext().getConfiguration().findChild(getUri());
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -346,7 +342,6 @@ public class DocumentContext {
       diagnosticsLock.unlock();
       computeLock.unlock();
     }
-
   }
 
   private static FileType computeFileType(URI uri) {
@@ -383,10 +378,6 @@ public class DocumentContext {
   private String computeTypeName() {
 
     return new ModuleTypeComputer(this).computeTypeName();
-  }
-
-  private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
-    return context.getConfiguration().getModuleSupport(uri);
   }
 
   private ComplexityData computeCognitiveComplexity() {

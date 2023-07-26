@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,10 +53,8 @@ public class CommonModuleNameClientDiagnostic extends AbstractCommonModuleNameDi
   }
 
   @Override
-  protected boolean flagsCheck(MDCommonModule commonModule) {
+  protected boolean flagsCheck(CommonModule commonModule) {
     return !commonModule.isGlobal()
       && isClient(commonModule);
   }
-
-
 }

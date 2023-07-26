@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -30,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.beans.ConstructorProperties;
@@ -52,6 +53,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   protected final LanguageServerConfiguration configuration;
+  private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
@@ -69,8 +71,14 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     var methodsComplexity = getMethodsComplexity(documentContext);
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
+
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
-      var command = new Command(title, "");
+      var arguments = new ToggleComplexityInlayHintsCommandArguments(
+        commandSupplier.getId(),
+        data
+      );
+
+      var command = commandSupplier.createCommand(title, arguments);
 
       unresolved.setCommand(command);
     });

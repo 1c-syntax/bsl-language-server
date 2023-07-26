@@ -24,9 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -62,7 +64,7 @@ public class ServerContext {
   private final LanguageServerConfiguration languageServerConfiguration;
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
-  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @Nullable
   @Setter
   private Path configurationRoot;
@@ -257,7 +259,7 @@ public class ServerContext {
     documentContext.clearSecondaryData();
   }
 
-  public Configuration getConfiguration() {
+  public CF getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
@@ -272,24 +274,26 @@ public class ServerContext {
     return documentContext;
   }
 
-  private Configuration computeConfigurationMetadata() {
+  private CF computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return Configuration.create();
+      return (CF) MDClasses.createConfiguration();
     }
 
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    Configuration configuration;
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
+    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+
+    CF configuration;
     try {
-      configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
+      configuration = (CF) executorService.submit(() -> MDClasses.createConfiguration(configurationRoot)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
-      configuration = Configuration.create();
+      configuration = (CF) MDClasses.createConfiguration();
     } catch (InterruptedException e) {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
-      configuration = Configuration.create();
+      configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
     } finally {
       executorService.shutdown();

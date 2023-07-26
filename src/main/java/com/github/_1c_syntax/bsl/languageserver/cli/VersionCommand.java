@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
@@ -34,7 +33,6 @@ import java.util.concurrent.Callable;
  * Ключ команды:
  *  -v, (--version)
  */
-@Slf4j
 @Command(
   name = "version",
   aliases = {"-v", "--version"},

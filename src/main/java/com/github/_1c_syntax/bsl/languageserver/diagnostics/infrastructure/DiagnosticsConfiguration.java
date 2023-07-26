@@ -31,12 +31,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
+import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.MDChild;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDSubsystem;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -47,11 +47,9 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Configuration
 @RequiredArgsConstructor
@@ -64,8 +62,7 @@ public abstract class DiagnosticsConfiguration {
   @Scope("prototype")
   public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
 
-    Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
-
+    var diagnosticInfos = diagnosticInfos();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
@@ -110,9 +107,7 @@ public abstract class DiagnosticsConfiguration {
       return true;
     }
 
-    var subsystemsNames = subsystemFlatList(mdoObject.get().getIncludedSubsystems()).stream()
-      .map(AbstractMDObjectBase::getName)
-      .collect(Collectors.toList());
+    var subsystemsNames = getSubsystemNames(documentContext.getServerContext().getConfiguration(), mdoObject.get());
 
     var include = subsystemsFilter.getInclude().isEmpty()
       || subsystemsNames.stream()
@@ -133,16 +128,11 @@ public abstract class DiagnosticsConfiguration {
     }
 
     var configuredSkipSupport = diagnosticsOptions.getSkipSupport();
-
     if (configuredSkipSupport == SkipSupport.NEVER) {
       return true;
     }
 
-    Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
-    var moduleSupportVariant = supportVariants.values().stream()
-      .min(Comparator.naturalOrder())
-      .orElse(SupportVariant.NONE);
-
+    var moduleSupportVariant = documentContext.getSupportVariant();
     if (moduleSupportVariant == SupportVariant.NONE) {
       return true;
     }
@@ -155,7 +145,6 @@ public abstract class DiagnosticsConfiguration {
   }
 
   private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
-
     var mode = diagnosticsOptions.getMode();
     if (mode == Mode.OFF) {
       return false;
@@ -188,7 +177,7 @@ public abstract class DiagnosticsConfiguration {
   }
 
   private static boolean inScope(DiagnosticInfo diagnosticInfo, FileType fileType) {
-    DiagnosticScope scope = diagnosticInfo.getScope();
+    var scope = diagnosticInfo.getScope();
     DiagnosticScope fileScope;
     if (fileType == FileType.OS) {
       fileScope = DiagnosticScope.OS;
@@ -204,13 +193,13 @@ public abstract class DiagnosticsConfiguration {
       return true;
     }
 
-    ModuleType[] diagnosticModules = diagnosticInfo.getModules();
+    var diagnosticModules = diagnosticInfo.getModules();
 
     if (diagnosticModules.length == 0) {
       return true;
     }
 
-    boolean contain = false;
+    var contain = false;
     for (ModuleType module : diagnosticModules) {
       if (module == moduletype) {
         contain = true;
@@ -224,8 +213,7 @@ public abstract class DiagnosticsConfiguration {
     DiagnosticInfo diagnosticInfo,
     CompatibilityMode contextCompatibilityMode
   ) {
-    DiagnosticCompatibilityMode compatibilityMode = diagnosticInfo.getCompatibilityMode();
-
+    var compatibilityMode = diagnosticInfo.getCompatibilityMode();
     if (compatibilityMode == DiagnosticCompatibilityMode.UNDEFINED) {
       return true;
     }
@@ -233,11 +221,20 @@ public abstract class DiagnosticsConfiguration {
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
   }
 
-  // перенести в mdClasses
-  private static List<MDSubsystem> subsystemFlatList(Collection<MDSubsystem> subsystems) {
-    return subsystems.stream()
-      .flatMap(subsys -> Stream.concat(Stream.of(subsys), subsystemFlatList(subsys.getIncludedSubsystems()).stream()))
+  private static List<String> getSubsystemNames(CF configuration, MD mdObject) {
+    var subsystemsNames = configuration
+      .includedSubsystems(mdObject, true)
+      .stream()
+      .map(MD::getName)
       .collect(Collectors.toList());
-  }
 
+    // если объект не обнаружен, попробуем поискать его родителя
+    if (subsystemsNames.isEmpty() && mdObject instanceof MDChild child) {
+      var parent = configuration.findChild(child.getOwner());
+      if (parent.isPresent()) {
+        subsystemsNames = getSubsystemNames(configuration, parent.get());
+      }
+    }
+    return subsystemsNames;
+  }
 }
