@@ -48,7 +48,8 @@ public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
   public static final String NEW_EXPRESSION = "File|Файл|xBase|HTMLWriter|ЗаписьHTML|HTMLReader|ЧтениеHTML" +
     "|FastInfosetReader|ЧтениеFastInfoset|FastInfosetWriter|ЗаписьFastInfoset|XSLTransform|ПреобразованиеXSL" +
     "|ZipFileWriter|ЗаписьZipФайла|ZipFileReader|ЧтениеZipФайла|TextReader|ЧтениеТекста|TextWriter|ЗаписьТекста" +
-    "|TextExtraction|ИзвлечениеТекста|BinaryData|ДвоичныеДанные|FileStream|ФайловыйПоток";
+    "|TextExtraction|ИзвлечениеТекста|BinaryData|ДвоичныеДанные|FileStream|ФайловыйПоток" +
+    "|FileStreamsManager|МенеджерФайловыхПотоков|DataWriter|ЗаписьДанных|DataReader|ЧтениеДанных";
 
   public static final String GLOBAL_METHODS = "ЗначениеВФайл|ValueToFile|КопироватьФайл|FileCopy" +
     "|ОбъединитьФайлы|MergeFiles|ПереместитьФайл|MoveFile|РазделитьФайл|SplitFile|СоздатьКаталог|CreateDirectory|" +

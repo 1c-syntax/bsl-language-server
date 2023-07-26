@@ -36,3 +36,4 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 * [Стандарт Доступ к файловой системе из кода конфигурации](https://its.1c.ru/db/v8std#content:542:hdoc)
 * [Стандарт Безопасность запуска приложений](https://its.1c.ru/db/v8std#content:774:hdoc)
+* [Безопасный режим работы - руководство разработчика](https://its.1c.ru/db/v8323doc#bookmark:dev:TI000000186)
