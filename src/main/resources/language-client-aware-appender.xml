@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--
-Console appender logback configuration provided for import, equivalent to the programmatic
-initialization performed by Boot
--->
-
 <included>
     <appender name="LANGUAGE_CLIENT_AWARE" class="com.github._1c_syntax.bsl.languageserver.infrastructure.LanguageClientAwareAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">

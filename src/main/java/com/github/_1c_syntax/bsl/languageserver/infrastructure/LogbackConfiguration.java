@@ -24,9 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Spring-конфигурация для настройки logback.
+ */
 @Configuration
-public class LanguageClientAwareAppenderConfiguration {
+public class LogbackConfiguration {
 
+  /**
+   * @return Настроенный аппендер сообщений в LanguageClient.
+   */
   @Bean
   public LanguageClientAwareAppender languageClientAwareAppender() {
     return LanguageClientAwareAppender.INSTANCE;
