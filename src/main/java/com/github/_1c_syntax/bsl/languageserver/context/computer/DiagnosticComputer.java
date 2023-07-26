@@ -47,14 +47,7 @@ public abstract class DiagnosticComputer {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
         } catch (RuntimeException e) {
-          /*
-          TODO:
-          В случае если подключен ленг клиент, то логирование ошибки в консоль приводит к падению сервера
-          т.к данный лог идёт в выхлоп не по протоколу.
-          Требуется обернуть логгер в случае подключенного ленг клиента и слать прокольное событие
-          которое запишет ошибку в лог.
-          */
-          String message = String.format(
+          var message = String.format(
             "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
             documentContext.getUri(),
             diagnostic.getInfo().getCode()
