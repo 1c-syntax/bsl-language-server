@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -52,6 +53,11 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final SymbolProvider symbolProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {

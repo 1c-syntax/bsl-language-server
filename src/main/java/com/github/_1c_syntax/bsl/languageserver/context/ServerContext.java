@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.mdclasses.Configuration;
@@ -280,8 +281,10 @@ public class ServerContext {
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
+    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+
     Configuration configuration;
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
     try {
       configuration = executorService.submit(() -> Configuration.create(configurationRoot)).get();
     } catch (ExecutionException e) {
