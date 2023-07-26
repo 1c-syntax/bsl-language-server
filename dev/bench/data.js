@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1690388293815,
+  "lastUpdate": 1690403444577,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -23157,6 +23157,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.49934937323239087",
             "extra": "mean: 56.483285983403526 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fd549a1956676fcc51e9b48bcb56142497338476",
+          "message": "Merge pull request #3120 from 1c-syntax/feature/named-pools\n\nВынос тяжелых parallelStream в отдельный пул потоков, больше именованных пулов",
+          "timestamp": "2023-07-26T22:14:57+02:00",
+          "tree_id": "ddbfc98f8edaf79cf2b3d0801fa06046c0195dfc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fd549a1956676fcc51e9b48bcb56142497338476"
+        },
+        "date": 1690403438960,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.13806668917338,
+            "unit": "sec",
+            "range": "stddev: 0.3777713704532475",
+            "extra": "mean: 58.13806668917338 sec\nrounds: 3"
           }
         ]
       }
