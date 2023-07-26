@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -65,6 +66,22 @@ class FileSystemAccessDiagnosticTest extends AbstractDiagnosticTest<FileSystemAc
       .hasRange(39, 4, 16)
       .hasSize(23)
     ;
-
   }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("globalMethods", "ЗначениеВФайл");
+    configuration.put("newExpression", "File");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 15, 35)
+      .hasRange(29, 4, 17)
+      .hasSize(2);
+  }
+
 }

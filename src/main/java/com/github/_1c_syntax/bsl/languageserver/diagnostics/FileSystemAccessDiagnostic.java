@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -43,37 +45,60 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL
 )
 public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
-  private static final Pattern NEW_EXPRESSION = CaseInsensitivePattern.compile(
-    "File|Файл|xBase|HTMLWriter|ЗаписьHTML|HTMLReader|ЧтениеHTML|FastInfosetReader|ЧтениеFastInfoset" +
-      "|FastInfosetWriter|ЗаписьFastInfoset|XSLTransform|ПреобразованиеXSL" +
-      "|ZipFileWriter|ЗаписьZipФайла|ZipFileReader|ЧтениеZipФайла|TextReader|ЧтениеТекста|TextWriter|ЗаписьТекста" +
-      "|TextExtraction|ИзвлечениеТекста|BinaryData|ДвоичныеДанные|FileStream|ФайловыйПоток");
+  public static final String NEW_EXPRESSION = "File|Файл|xBase|HTMLWriter|ЗаписьHTML|HTMLReader|ЧтениеHTML" +
+    "|FastInfosetReader|ЧтениеFastInfoset|FastInfosetWriter|ЗаписьFastInfoset|XSLTransform|ПреобразованиеXSL" +
+    "|ZipFileWriter|ЗаписьZipФайла|ZipFileReader|ЧтениеZipФайла|TextReader|ЧтениеТекста|TextWriter|ЗаписьТекста" +
+    "|TextExtraction|ИзвлечениеТекста|BinaryData|ДвоичныеДанные|FileStream|ФайловыйПоток";
 
-  private static final Pattern GLOBAL_METHODS = CaseInsensitivePattern.compile(
-    "ЗначениеВФайл|ValueToFile|КопироватьФайл|FileCopy|ОбъединитьФайлы|MergeFiles|ПереместитьФайл|MoveFile" +
-      "|РазделитьФайл|SplitFile|СоздатьКаталог|CreateDirectory|УдалитьФайлы|DeleteFiles" +
-      "|КаталогПрограммы|BinDir|КаталогВременныхФайлов|TempFilesDir|КаталогДокументов|DocumentsDir" +
-      "|РабочийКаталогДанныхПользователя|UserDataWorkDir" +
-      "|НачатьПодключениеРасширенияРаботыСФайлами|BeginAttachingFileSystemExtension" +
-      "|НачатьУстановкуРасширенияРаботыСФайлами|BeginInstallFileSystemExtension" +
-      "|УстановитьРасширениеРаботыСФайлами|InstallFileSystemExtension" +
-      "|УстановитьРасширениеРаботыСФайламиАсинх|InstallFileSystemExtensionAsync" +
-      "|ПодключитьРасширениеРаботыСФайламиАсинх|AttachFileSystemExtensionAsync|" +
-      "КаталогВременныхФайловАсинх|TempFilesDirAsync|КаталогДокументовАсинх|DocumentsDirAsync" +
-      "|НачатьПолучениеКаталогаВременныхФайлов|BeginGettingTempFilesDir" +
-      "|НачатьПолучениеКаталогаДокументов|BeginGettingDocumentsDir" +
-      "|НачатьПолучениеРабочегоКаталогаДанныхПользователя|BeginGettingUserDataWorkDir" +
-      "|РабочийКаталогДанныхПользователяАсинх|UserDataWorkDirAsync" +
-      "|КопироватьФайлАсинх|CopyFileAsync|НайтиФайлыАсинх|FindFilesAsync|НачатьКопированиеФайла|BeginCopyingFile" +
-      "|НачатьПеремещениеФайла|BeginMovingFile|НачатьПоискФайлов|BeginFindingFiles" +
-      "|НачатьСозданиеДвоичныхДанныхИзФайла|BeginCreateBinaryDataFromFile" +
-      "|НачатьСозданиеКаталога|BeginCreatingDirectory" +
-      "|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайлАсинх|MoveFileAsync" +
-      "|СоздатьДвоичныеДанныеИзФайлаАсинх|CreateBinaryDataFromFileAsync|СоздатьКаталогАсинх|CreateDirectoryAsync" +
-      "|УдалитьФайлыАсинх|DeleteFilesAsync");
+  public static final String GLOBAL_METHODS = "ЗначениеВФайл|ValueToFile|КопироватьФайл|FileCopy" +
+    "|ОбъединитьФайлы|MergeFiles|ПереместитьФайл|MoveFile|РазделитьФайл|SplitFile|СоздатьКаталог|CreateDirectory|" +
+    "УдалитьФайлы|DeleteFiles|КаталогПрограммы|BinDir|КаталогВременныхФайлов|TempFilesDir" +
+    "|КаталогДокументов|DocumentsDir|РабочийКаталогДанныхПользователя|UserDataWorkDir" +
+    "|НачатьПодключениеРасширенияРаботыСФайлами|BeginAttachingFileSystemExtension" +
+    "|НачатьУстановкуРасширенияРаботыСФайлами|BeginInstallFileSystemExtension" +
+    "|УстановитьРасширениеРаботыСФайлами|InstallFileSystemExtension" +
+    "|УстановитьРасширениеРаботыСФайламиАсинх|InstallFileSystemExtensionAsync" +
+    "|ПодключитьРасширениеРаботыСФайламиАсинх|AttachFileSystemExtensionAsync|" +
+    "КаталогВременныхФайловАсинх|TempFilesDirAsync|КаталогДокументовАсинх|DocumentsDirAsync" +
+    "|НачатьПолучениеКаталогаВременныхФайлов|BeginGettingTempFilesDir" +
+    "|НачатьПолучениеКаталогаДокументов|BeginGettingDocumentsDir" +
+    "|НачатьПолучениеРабочегоКаталогаДанныхПользователя|BeginGettingUserDataWorkDir" +
+    "|РабочийКаталогДанныхПользователяАсинх|UserDataWorkDirAsync" +
+    "|КопироватьФайлАсинх|CopyFileAsync|НайтиФайлыАсинх|FindFilesAsync|НачатьКопированиеФайла|BeginCopyingFile" +
+    "|НачатьПеремещениеФайла|BeginMovingFile|НачатьПоискФайлов|BeginFindingFiles" +
+    "|НачатьСозданиеДвоичныхДанныхИзФайла|BeginCreateBinaryDataFromFile" +
+    "|НачатьСозданиеКаталога|BeginCreatingDirectory" +
+    "|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайлАсинх|MoveFileAsync" +
+    "|СоздатьДвоичныеДанныеИзФайлаАсинх|CreateBinaryDataFromFileAsync|СоздатьКаталогАсинх|CreateDirectoryAsync" +
+    "|УдалитьФайлыАсинх|DeleteFilesAsync";
+  private static final Pattern GLOBAL_METHODS_PATTERN = getPattern(GLOBAL_METHODS);
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + GLOBAL_METHODS
+  )
+  private String globalMethods = GLOBAL_METHODS;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = NEW_EXPRESSION
+  )
+  private String newExpression = NEW_EXPRESSION;
+  private Pattern newExpressionPattern = getPattern(newExpression);
 
   public FileSystemAccessDiagnostic() {
-    super(GLOBAL_METHODS);
+    super(GLOBAL_METHODS_PATTERN);
+  }
+
+  private static Pattern getPattern(String newExpression) {
+    return CaseInsensitivePattern.compile(newExpression);
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
+    setMethodPattern(getPattern(globalMethods));
+    newExpressionPattern = getPattern(newExpression);
   }
 
   @Override
@@ -84,7 +109,7 @@ public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
     Constructors.typeName(ctx).ifPresent((String typeName) -> {
-      var matcherTypeName = NEW_EXPRESSION.matcher(typeName);
+      var matcherTypeName = newExpressionPattern.matcher(typeName);
       if (matcherTypeName.matches()) {
         diagnosticStorage.addDiagnostic(ctx);
       }
