@@ -13,7 +13,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -80,8 +79,7 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
 
   private String getMethodContent(String methodName, boolean isFunction){
 
-    var methodText = String.format(isFunction ? functionTemplate() : procedureTemplate(),methodName);
-    return methodText;
+    return String.format(isFunction ? functionTemplate() : procedureTemplate(),methodName);
 
   }
 
