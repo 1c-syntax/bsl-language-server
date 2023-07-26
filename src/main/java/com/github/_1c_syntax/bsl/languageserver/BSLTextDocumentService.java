@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
@@ -126,6 +127,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final InlayHintProvider inlayHintProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -278,7 +284,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         }
         return callHierarchyItems;
       },
-      executorService);
+      executorService
+    );
   }
 
   @Override
