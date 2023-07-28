@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1690554218687,
+  "lastUpdate": 1690561180291,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -23219,6 +23219,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8401948513950811",
             "extra": "mean: 58.50595132509867 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a14f3208b502e8d1072a32fedd8d1df89a4cf067",
+          "message": "Merge pull request #3118 from 1c-syntax/feature/language-client-aware-appender\n\nАппендер вывода логов в LanguageClient, если он подключен",
+          "timestamp": "2023-07-28T18:09:12+02:00",
+          "tree_id": "c6974a3e29bf226f10ddf56d0261967b1018bb97",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a14f3208b502e8d1072a32fedd8d1df89a4cf067"
+        },
+        "date": 1690561177232,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.37675062815348,
+            "unit": "sec",
+            "range": "stddev: 1.0895966797098768",
+            "extra": "mean: 58.37675062815348 sec\nrounds: 3"
           }
         ]
       }
