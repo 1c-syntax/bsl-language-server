@@ -18,7 +18,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.47.0"
     id("org.springframework.boot") version "3.1.2"
     id("io.spring.dependency-management") version "1.1.2"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
