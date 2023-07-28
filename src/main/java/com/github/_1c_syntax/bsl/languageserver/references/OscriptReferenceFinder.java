@@ -48,7 +48,9 @@ public class OscriptReferenceFinder implements ReferenceFinder {
   public Optional<Reference> findReference(URI uri, Position position) {
 
     DocumentContext document = serverContext.getDocument(uri);
-    if (document == null || document.isComputedDataFrozen()) {
+    if (document == null
+//      || document.isComputedDataFrozen()
+    ) {
       return Optional.empty();
     }
 
