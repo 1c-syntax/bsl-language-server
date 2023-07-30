@@ -19,33 +19,34 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.inlayhints;
+package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Поставщик подсказок о цикломатической сложности методов.
+ * Фабрика тредов для ForkJoinPool, автоматически добаляющая префикс к имени треда.
  */
-@Component
 @RequiredArgsConstructor
-public class CyclomaticComplexityInlayHintSupplier extends AbstractComplexityInlayHintSupplier {
+public class NamedForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+
+  private static final AtomicLong index = new AtomicLong();
+
+  /**
+   * Префикс для добавления к имени треда.
+   */
+  private final String prefix;
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Map<MethodSymbol, List<ComplexitySecondaryLocation>> getComplexityLocations(
-    DocumentContext documentContext
-  ) {
-    return documentContext
-      .getCyclomaticComplexityData()
-      .getMethodsComplexitySecondaryLocations();
+  public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+    var worker = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+    worker.setName(prefix + index.incrementAndGet());
+    return worker;
   }
 }

@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 /**
  * Абстрактный поставщик подсказок о сложности методов.
- * </p>
+ * <p>
  * По умолчанию подсказки отключены. Для включения нужно вызвать метод {@link #toggleHints(URI, String)}.
  */
 public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSupplier {
@@ -49,9 +49,9 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
 
   /**
    * Получение подсказок о местах увеличения сложности метода.
-   * </p>
+   * <p>
    *
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {

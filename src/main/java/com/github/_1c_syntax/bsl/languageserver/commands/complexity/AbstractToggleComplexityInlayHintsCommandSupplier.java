@@ -47,7 +47,7 @@ public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
    @Override
   public Optional<Object> execute(ToggleComplexityInlayHintsCommandArguments arguments) {
@@ -56,7 +56,7 @@ public abstract class AbstractToggleComplexityInlayHintsCommandSupplier
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public boolean needRefreshInlayHintsAfterExecuteCommand() {

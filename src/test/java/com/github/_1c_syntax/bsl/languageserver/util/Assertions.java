@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAsser
 import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangeAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangesAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.SelectionRangesAssert;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.ColorInformation;
 import org.eclipse.lsp4j.ColorPresentation;
@@ -38,6 +39,7 @@ import org.eclipse.lsp4j.SelectionRange;
 
 import java.util.List;
 
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Assertions extends org.assertj.core.api.Assertions {
 
   public static DiagnosticAssert assertThat(Diagnostic actual) {

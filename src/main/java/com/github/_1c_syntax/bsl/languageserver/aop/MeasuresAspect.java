@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.aop.measures.MeasureCollector;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.aspectj.lang.JoinPoint;
@@ -35,7 +36,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PreDestroy;
 import java.io.File;
 import java.util.Collection;
 

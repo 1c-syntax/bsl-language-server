@@ -8,17 +8,17 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "4.0.0.2929"
-    id("io.freefair.lombok") version "6.6.1"
-    id("io.freefair.javadoc-links") version "6.6.1"
-    id("io.freefair.javadoc-utf-8") version "6.6.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "6.6.1"
-    id("io.freefair.maven-central.validate-poms") version "6.6.1"
+    id("org.sonarqube") version "4.3.0.3225"
+    id("io.freefair.lombok") version "8.1.0"
+    id("io.freefair.javadoc-links") version "8.1.0"
+    id("io.freefair.javadoc-utf-8") version "8.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
+    id("io.freefair.maven-central.validate-poms") version "8.1.0"
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "2.7.12"
-    id("io.spring.dependency-management") version "1.1.0"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
+    id("org.springframework.boot") version "3.1.2"
+    id("io.spring.dependency-management") version "1.1.2"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.22.0")
+        mavenBom("io.sentry:sentry-bom:6.27.0")
     }
 }
 
@@ -71,10 +71,10 @@ dependencies {
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.21.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket", "0.21.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.22.0") {
+    api("com.github.1c-syntax", "bsl-parser", "bba7c0b091aca562ec082829a49f525a9bb5d7ef") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -88,7 +88,9 @@ dependencies {
     api("io.github.1c-syntax", "supportconf", "0.1.1")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", languageToolVersion)
+    implementation("org.languagetool", "languagetool-core", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
+    }
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
@@ -98,7 +100,9 @@ dependencies {
     // commons utils
     implementation("commons-io", "commons-io", "2.13.0")
     implementation("org.apache.commons", "commons-lang3", "3.12.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.9.4")
+    implementation("commons-beanutils", "commons-beanutils", "1.9.4"){
+        exclude("commons-logging", "commons-logging")
+    }
     implementation("org.apache.commons", "commons-collections4", "4.4")
     implementation("org.apache.commons", "commons-exec", "1.3")
 
@@ -150,8 +154,8 @@ jacoco {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
     withJavadocJar()
 }
@@ -237,7 +241,6 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
-    isFailOnError = false
     options {
         this as StandardJavadocDocletOptions
         links(

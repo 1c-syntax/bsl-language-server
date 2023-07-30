@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
@@ -71,7 +70,7 @@ import static picocli.CommandLine.Command;
   havingValue = "true",
   matchIfMissing = true)
 @RequiredArgsConstructor
-public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
+public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -106,7 +105,10 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
       .web(getWebApplicationType(args))
       .run(args);
+
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    launcher.run(args);
+
     if (launcher.getExitCode() >= 0) {
       System.exit(
         SpringApplication.exit(applicationContext)
@@ -114,7 +116,6 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     }
   }
 
-  @Override
   public void run(String... args) {
     var cmd = new CommandLine(this, picocliFactory);
 

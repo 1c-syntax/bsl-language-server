@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -63,7 +64,8 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
+    var factory = new NamedForkJoinWorkerThreadFactory("analyze-on-start-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
 
     try {
       executorService.submit(() ->
