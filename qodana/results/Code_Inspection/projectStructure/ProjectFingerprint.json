@@ -1,0 +1,14 @@
+{
+  "languages": [
+    "Java",
+    "Properties",
+    "JSON",
+    "XML",
+    "Plain text",
+    ".gitignore (GitIgnore)",
+    "JSON5",
+    "EditorConfig",
+    "Lombok.Config",
+    "Kotlin"
+  ]
+}

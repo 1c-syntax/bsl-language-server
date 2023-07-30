@@ -1,0 +1,20 @@
+{
+  "modules": [
+    {
+      "name": "bsl-language-server",
+      "languageLevel": 17
+    },
+    {
+      "name": "bsl-language-server.jmh",
+      "languageLevel": 17
+    },
+    {
+      "name": "bsl-language-server.main",
+      "languageLevel": 17
+    },
+    {
+      "name": "bsl-language-server.test",
+      "languageLevel": 17
+    }
+  ]
+}
