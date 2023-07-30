@@ -17,7 +17,7 @@
         <link rel="next" href="../DiagnosticIgnorance/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -986,146 +986,146 @@ The created file must be specified using the key <code>--configuration</code> <e
 <table>
 <thead>
 <tr>
-<th align="left">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
+<th style="text-align: left;">Name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left"><code>language</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">Set the language for displaying diagnosed comments. Supported languages:<br/><em> <code>ru</code> - for Russian (</em>default<em>)<br/></em> <code>en</code> - for English</td>
+<td style="text-align: left;"><code>language</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Set the language for displaying diagnosed comments. Supported languages:<br/><em> <code>ru</code> - for Russian (</em>default<em>)<br/></em> <code>en</code> - for English</td>
 </tr>
 <tr>
-<td align="left"><code>codeLens</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Contains settings for displaying <code>lenses</code> in advanced code/IDEs <em>(eg <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information above the code block.</td>
+<td style="text-align: left;"><code>codeLens</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains settings for displaying <code>lenses</code> in advanced code/IDEs <em>(eg <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information above the code block.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Collection of lens settings. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is lens key<br/></em> <em>object value</em> - if is boolean, then interpreted as lens off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of lens parameters.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Collection of lens settings. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is lens key<br/></em> <em>object value</em> - if is boolean, then interpreted as lens off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of lens parameters.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
-<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">cognitive complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">cognitive complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
-<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">cyclomatic complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">cyclomatic complexity</a> of the method over its definition. The default is <code>true</code>. Lens options: <code>complexityThreshold</code> - lens response threshold. The default is - <code>-1</code>.</td>
 </tr>
 <tr>
-<td align="left"><code>diagnostics</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Contains diagnostic settings</td>
+<td style="text-align: left;"><code>diagnostics</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains diagnostic settings</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>computeTrigger</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br/><em> <code>onType</code> -when editing a file (online) </em><strong>on large files can significantly slow down editing </strong><em><br/></em> <code>onSave</code> - when saving a file (<em>default</em>)<br/> <code>never</code> - analysis will not be performed</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>computeTrigger</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br/><em> <code>onType</code> -when editing a file (online) </em><strong>on large files can significantly slow down editing </strong><em><br/></em> <code>onSave</code> - when saving a file (<em>default</em>)<br/> <code>never</code> - analysis will not be performed</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>ordinaryAppSupport</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">Ordinary client support. Diagnostics will require taking into account the features of a ordinary application. Values:<br/><em> <code>true</code> - the configuration uses ordinary application </em>(default)<em> <br/></em> <code>false</code> - ignore ordinary application warnings</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>ordinaryAppSupport</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Ordinary client support. Diagnostics will require taking into account the features of a ordinary application. Values:<br/><em> <code>true</code> - the configuration uses ordinary application </em>(default)<em> <br/></em> <code>false</code> - ignore ordinary application warnings</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>skipSupport</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">This parameter sets <strong>1C configuration</strong> file skipping mode <em>(for example files are not analyzed for issues)</em> which are "on support" from vendor configuration. Possible values:<br/><em> <code>withSupport</code> - skip all modules set "on support" </em>(all "locks" types)<em><br/></em> <code>withSupportLocked</code> - skip modules set "on support" with prohibited modification <em>("yellow closed lock")</em><br/><em> <code>never</code> - skip no modules as support mode is not analyzed </em>(set by default)*</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>skipSupport</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">This parameter sets <strong>1C configuration</strong> file skipping mode <em>(for example files are not analyzed for issues)</em> which are "on support" from vendor configuration. Possible values:<br/><em> <code>withSupport</code> - skip all modules set "on support" </em>(all "locks" types)<em><br/></em> <code>withSupportLocked</code> - skip modules set "on support" with prohibited modification <em>("yellow closed lock")</em><br/><em> <code>never</code> - skip no modules as support mode is not analyzed </em>(set by default)*</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>mode</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">Setting for controlling the diagnostic settings accounting mode. Possible options: <br/><em> <code>OFF</code> - All diagnostics are considered to be turned off, regardless of their settings. <br/></em> <code>ON</code> - All diagnostics enabled by default are considered enabled, the rest - depending on personal settings <br/><em> <code>EXCEPT</code> - All diagnostics other than those specified are considered enabled. <br/></em> <code>ONLY</code> - Only the specified diagnostics are considered enabled. <br/>* <code>ALL</code> - All diagnostics are considered enabled</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>mode</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Setting for controlling the diagnostic settings accounting mode. Possible options: <br/><em> <code>OFF</code> - All diagnostics are considered to be turned off, regardless of their settings. <br/></em> <code>ON</code> - All diagnostics enabled by default are considered enabled, the rest - depending on personal settings <br/><em> <code>EXCEPT</code> - All diagnostics other than those specified are considered enabled. <br/></em> <code>ONLY</code> - Only the specified diagnostics are considered enabled. <br/>* <code>ALL</code> - All diagnostics are considered enabled</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is diagnostic key<br/></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is diagnostic key<br/></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Filter by configuration subsystems</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Filter by configuration subsystems</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">Starting the analysis of the entire project at server startup. If enabled, after the context is built on the client, information about diagnostics in all project files will be sent.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Starting the analysis of the entire project at server startup. If enabled, after the context is built on the client, information about diagnostics in all project files will be sent.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
-<td align="center"><code>Array</code> <code>String</code></td>
-<td align="left">List of names of subsystems for which objects the analysis is performed, including child subsystems</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">List of names of subsystems for which objects the analysis is performed, including child subsystems</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
-<td align="center"><code>Array</code> <code>String</code></td>
-<td align="left">List of names of subsystems excluded from analysis, including child subsystems</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">List of names of subsystems excluded from analysis, including child subsystems</td>
 </tr>
 <tr>
-<td align="left"><code>documentLink</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Contains documentation link settings</td>
+<td style="text-align: left;"><code>documentLink</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains documentation link settings</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showDiagnosticDescription</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">Show additional links to diagnostics documentation. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>showDiagnosticDescription</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Show additional links to diagnostics documentation. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>inlayHint</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">ontains settings for displaying <code>inlay hints</code> in advanced code editors/IDEs <em>(for example <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information directly in the code line.</td>
+<td style="text-align: left;"><code>inlayHint</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">ontains settings for displaying <code>inlay hints</code> in advanced code editors/IDEs <em>(for example <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, which displays various information directly in the code line.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">A collection of inlay hints settings. The elements of the collection are json objects of the following structure:<em><br/> </em>object key<em> - a string that is an identifier of inlay hint</em> <br/><em>object value</em> - can take either a boolean value, and then it is interpreted as disabling inlay hint (<code>false</code>) or enabling them with parameters by default (<code>true</code>), or a value of type <code>json-object</code>, which is a set of inlay hint settings.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">A collection of inlay hints settings. The elements of the collection are json objects of the following structure:<em><br/> </em>object key<em> - a string that is an identifier of inlay hint</em> <br/><em>object value</em> - can take either a boolean value, and then it is interpreted as disabling inlay hint (<code>false</code>) or enabling them with parameters by default (<code>true</code>), or a value of type <code>json-object</code>, which is a set of inlay hint settings.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
-<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">Cognitive Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the value of the <a href="../../diagnostics/CognitiveComplexity/">Cognitive Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
-<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td align="left">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">Cyclomatic Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">Cyclomatic Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
-<td align="center"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td align="left">Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left"><code>useDevSite</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
+<td style="text-align: left;"><code>useDevSite</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>siteRoot</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">The path to the root of the site with the documentation. By default, the parameter value is <code>"https://1c-syntax.github.io/bsl-language-server"</code></td>
+<td style="text-align: left;"><code>siteRoot</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">The path to the root of the site with the documentation. By default, the parameter value is <code>"https://1c-syntax.github.io/bsl-language-server"</code></td>
 </tr>
 <tr>
-<td align="left"><code>traceLog</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong> from used editor/IDE, this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br/><br/><strong>WARNING</strong><br/><br/><em> When starting </em><em>BSL Language Server</em><em> overwrites this file <br/></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
+<td style="text-align: left;"><code>traceLog</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong> from used editor/IDE, this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br/><br/><strong>WARNING</strong><br/><br/><em> When starting </em><em>BSL Language Server</em><em> overwrites this file <br/></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
 </tr>
 <tr>
-<td align="left"><code>configurationRoot</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">This parameter is intended to indicate the root directory the 1C configuration files are located in the project directory. It can be useful if there are several configuration directories in the same project directory or when the structure of the project directory is so complex. By default, the parameter is empty and <code>BSL Language Server</code> determines the location of the configuration root directory independently</td>
+<td style="text-align: left;"><code>configurationRoot</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">This parameter is intended to indicate the root directory the 1C configuration files are located in the project directory. It can be useful if there are several configuration directories in the same project directory or when the structure of the project directory is so complex. By default, the parameter is empty and <code>BSL Language Server</code> determines the location of the configuration root directory independently</td>
 </tr>
 <tr>
-<td align="left"><code>sendErrors</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">Mode for sending error messages to BSL Language Server developers. More <a href="../Monitoring/">Monitoring</a>.Possible values:<br/><em> <code>ask</code> - ask permission on every error </em>(set by default)<em>. <br/></em> <code>send</code> - always send error messages.<br/>* <code>never</code> - never send error messages.</td>
+<td style="text-align: left;"><code>sendErrors</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Mode for sending error messages to BSL Language Server developers. More <a href="../Monitoring/">Monitoring</a>.Possible values:<br/><em> <code>ask</code> - ask permission on every error </em>(set by default)<em>. <br/></em> <code>send</code> - always send error messages.<br/>* <code>never</code> - never send error messages.</td>
 </tr>
 </tbody>
 </table>
@@ -1229,10 +1229,10 @@ The created file must be specified using the key <code>--configuration</code> <e
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
           <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>

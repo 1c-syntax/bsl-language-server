@@ -17,7 +17,7 @@
         <link rel="next" href="../DiagnosticIgnorance/">
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -990,146 +990,146 @@
 <table>
 <thead>
 <tr>
-<th align="left">Наименование</th>
-<th align="center">Тип</th>
-<th align="left">Описание</th>
+<th style="text-align: left;">Наименование</th>
+<th style="text-align: center;">Тип</th>
+<th style="text-align: left;">Описание</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left"><code>language</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Этот параметр устанавливает язык отображения диагностированных замечаний. На данный момент поддерживаются два языка:<br/><em> <code>ru</code> - для русского языка (</em>используется по умолчанию<em>)<br/></em> <code>en</code> - для английского языка</td>
+<td style="text-align: left;"><code>language</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Этот параметр устанавливает язык отображения диагностированных замечаний. На данный момент поддерживаются два языка:<br/><em> <code>ru</code> - для русского языка (</em>используется по умолчанию<em>)<br/></em> <code>en</code> - для английского языка</td>
 </tr>
 <tr>
-<td align="left"><code>codeLens</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Содержит настройки отображения <code>линз</code> в продвинутых кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация над блоком кода.</td>
+<td style="text-align: left;"><code>codeLens</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки отображения <code>линз</code> в продвинутых кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация над блоком кода.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Коллекция настроек линз. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся идентификатором линзы<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение линзы (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек линзы.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Коллекция настроек линз. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся идентификатором линзы<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение линзы (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек линзы.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
-<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td align="left">Включает отображение значения <a href="../../diagnostics/CognitiveComplexity/">когнитивной сложности</a> метода над его определением. По умолчанию настройка установлена в <code>true</code>. Доступные параметры линзы: <code>complexityThreshold</code> - порог, после которого линза начинает срабатывать. Значение параметра по умолчанию - <code>-1</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение значения <a href="../../diagnostics/CognitiveComplexity/">когнитивной сложности</a> метода над его определением. По умолчанию настройка установлена в <code>true</code>. Доступные параметры линзы: <code>complexityThreshold</code> - порог, после которого линза начинает срабатывать. Значение параметра по умолчанию - <code>-1</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
-<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td align="left">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода. По умолчанию настройка установлена в <code>true</code>. Доступные параметры линзы: <code>complexityThreshold</code> - порог, после которого линза начинает срабатывать. Значение параметра по умолчанию - <code>-1</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода. По умолчанию настройка установлена в <code>true</code>. Доступные параметры линзы: <code>complexityThreshold</code> - порог, после которого линза начинает срабатывать. Значение параметра по умолчанию - <code>-1</code>.</td>
 </tr>
 <tr>
-<td align="left"><code>diagnostics</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Содержит настройки диагностик</td>
+<td style="text-align: left;"><code>diagnostics</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки диагностик</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>computeTrigger</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">С помощью этого параметра можно указать событие, при котором будет вызвана процедура анализа кода для диагностирования замечаний. Возможные значения:<br/><em> <code>onType</code> - при редактировании файла (онлайн) </em><strong>на больших файлах может ЗНАЧИТЕЛЬНО замедлять редактирование</strong><em><br/></em> <code>onSave</code> - при сохранении файла (<em>используется по умолчанию</em>)<br/>* <code>never</code> - анализ выполняться не будет</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>computeTrigger</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">С помощью этого параметра можно указать событие, при котором будет вызвана процедура анализа кода для диагностирования замечаний. Возможные значения:<br/><em> <code>onType</code> - при редактировании файла (онлайн) </em><strong>на больших файлах может ЗНАЧИТЕЛЬНО замедлять редактирование</strong><em><br/></em> <code>onSave</code> - при сохранении файла (<em>используется по умолчанию</em>)<br/>* <code>never</code> - анализ выполняться не будет</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>ordinaryAppSupport</code></td>
-<td align="center"><code>Булево</code></td>
-<td align="left">Поддержка обычного клиента. Диагностики будут требовать учитывать особенности обычного приложения. Возможные значения:<br/><em> <code>true</code> - конфигурация разрабатывается с поддержкой обычного клиента </em>(установлен по умолчанию)<em> <br/></em> <code>false</code> - игнорировать предупреждения связанные с особенностями обычного клиента</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>ordinaryAppSupport</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Поддержка обычного клиента. Диагностики будут требовать учитывать особенности обычного приложения. Возможные значения:<br/><em> <code>true</code> - конфигурация разрабатывается с поддержкой обычного клиента </em>(установлен по умолчанию)<em> <br/></em> <code>false</code> - игнорировать предупреждения связанные с особенностями обычного клиента</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>skipSupport</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Этим параметром настраивается режим пропуска файлов <em>(т.е. файлы не анализируются на предмет наличия замечаний)</em> <strong>конфигурации 1С</strong>, находящихся "на поддержке" конфигурации поставщика. Возможные значения:<br/><em> <code>withSupport</code> - пропускаются все модули, находящиеся "на поддержке" </em>(все виды "замков")<em><br/></em> <code>withSupportLocked</code> - пропускаются только модули, находящиеся "на поддержке" с запретом изменений <em>("желтый закрытый замок")</em><br/><em> <code>never</code> - режим поддержки не анализируется и модули не пропускаются </em>(установлен по умолчанию)*</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>skipSupport</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Этим параметром настраивается режим пропуска файлов <em>(т.е. файлы не анализируются на предмет наличия замечаний)</em> <strong>конфигурации 1С</strong>, находящихся "на поддержке" конфигурации поставщика. Возможные значения:<br/><em> <code>withSupport</code> - пропускаются все модули, находящиеся "на поддержке" </em>(все виды "замков")<em><br/></em> <code>withSupportLocked</code> - пропускаются только модули, находящиеся "на поддержке" с запретом изменений <em>("желтый закрытый замок")</em><br/><em> <code>never</code> - режим поддержки не анализируется и модули не пропускаются </em>(установлен по умолчанию)*</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>mode</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Настройка для управления режимом учета настроек диагностик. Возможные варианты:<br/><em> <code>OFF</code> - Все диагностики считаются выключенными, вне зависимости от их настроек <br/></em> <code>ON</code> - Все диагностики включенные по умолчанию считаются включенными, остальные - в зависимости от личных настроек <br/><em> <code>EXCEPT</code> - Все диагностистики, кроме указанных, считаются включенными <br/></em> <code>ONLY</code> - Только указанные диагностики считаются включенными <br/>* <code>ALL</code> - Все диагностики считаются включенными</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>mode</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Настройка для управления режимом учета настроек диагностик. Возможные варианты:<br/><em> <code>OFF</code> - Все диагностики считаются выключенными, вне зависимости от их настроек <br/></em> <code>ON</code> - Все диагностики включенные по умолчанию считаются включенными, остальные - в зависимости от личных настроек <br/><em> <code>EXCEPT</code> - Все диагностистики, кроме указанных, считаются включенными <br/></em> <code>ONLY</code> - Только указанные диагностики считаются включенными <br/>* <code>ALL</code> - Все диагностики считаются включенными</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Параметр представляет собой коллекцию настроек диагностик. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся ключом диагностики<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение диагностики (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек диагностики.<br/><br/>Ключ, включена ли по умолчанию, а также описание возможных параметров и примеры для конфигурационного файла представлены на странице с описанием каждой диагностики.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Параметр представляет собой коллекцию настроек диагностик. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся ключом диагностики<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение диагностики (<code>false</code>) или ее включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек диагностики.<br/><br/>Ключ, включена ли по умолчанию, а также описание возможных параметров и примеры для конфигурационного файла представлены на странице с описанием каждой диагностики.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Фильтр по подсистемам конфигурации</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Фильтр по подсистемам конфигурации</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
-<td align="center"><code>Булево</code></td>
-<td align="left">Запустить анализ всего проекта при запуске сервера. Если включено, после построения контекста на клиента будет отправлена информация о диагностиках во всех файлах проекта.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Запустить анализ всего проекта при запуске сервера. Если включено, после построения контекста на клиента будет отправлена информация о диагностиках во всех файлах проекта.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
-<td align="center"><code>Массив</code> <code>Строка</code></td>
-<td align="left">Список имен подсистем по объектам которых выполняется анализ, включая подчиненные подсистемы</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Список имен подсистем по объектам которых выполняется анализ, включая подчиненные подсистемы</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
-<td align="center"><code>Массив</code> <code>Строка</code></td>
-<td align="left">Список имен подсистем исключенных из анализа, включая подчиненные подсистемы</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>exclude</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Список имен подсистем исключенных из анализа, включая подчиненные подсистемы</td>
 </tr>
 <tr>
-<td align="left"><code>documentLink</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Содержит настройки ссылок на документацию</td>
+<td style="text-align: left;"><code>documentLink</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки ссылок на документацию</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>showDiagnosticDescription</code></td>
-<td align="center"><code>Булево</code></td>
-<td align="left">Показывать дополнительные ссылки на документацию по диагностикам. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>showDiagnosticDescription</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Показывать дополнительные ссылки на документацию по диагностикам. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>inlayHint</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Содержит настройки отображения <code>inlay hints</code> в продвинутых редакторах кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация прямо в строке с кодом.</td>
+<td style="text-align: left;"><code>inlayHint</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки отображения <code>inlay hints</code> в продвинутых редакторах кода/IDE <em>(например <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, в которых выводится различная информация прямо в строке с кодом.</td>
 </tr>
 <tr>
-<td align="left">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
-<td align="center"><code>JSON-Объект</code></td>
-<td align="left">Коллекция настроек inlay hints. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся идентификатором inlay hint<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение inlay hint (<code>false</code>) или их включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек inlay hint.</td>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>parameters</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Коллекция настроек inlay hints. Элементами коллекции являются json-объекты следующей структуры:<br/><em> </em>ключ объекта<em> - строка, являющаяся идентификатором inlay hint<br/></em> <em>значение объекта</em> - может принимать либо булево значение, и тогда интерпретируется как отключение inlay hint (<code>false</code>) или их включение с параметрами по умолчанию (<code>true</code>), либо значение типа <code>json-объект</code>, представляющего собой набор настроек inlay hint.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
-<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td align="left">Включает отображение значения <a href="../../diagnostics/CognitiveComplexity/">когнитивной сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cognitiveComplexity</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение значения <a href="../../diagnostics/CognitiveComplexity/">когнитивной сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
-<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td align="left">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>cyclomaticComplexity</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
-<td align="center"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td align="left">Включает отображение параметров вызываемого метожа конфигурации/библиотеки в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение параметров вызываемого метожа конфигурации/библиотеки в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
 </tr>
 <tr>
-<td align="left"><code>useDevSite</code></td>
-<td align="center"><code>Булево</code></td>
-<td align="left">При включении настройки формирующиеся ссылки на документацию будут вести на develop-версию сайта. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>
+<td style="text-align: left;"><code>useDevSite</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">При включении настройки формирующиеся ссылки на документацию будут вести на develop-версию сайта. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>siteRoot</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Путь к корню сайта с документацией. По умолчанию параметр имеет значение <code>"https://1c-syntax.github.io/bsl-language-server"</code></td>
+<td style="text-align: left;"><code>siteRoot</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Путь к корню сайта с документацией. По умолчанию параметр имеет значение <code>"https://1c-syntax.github.io/bsl-language-server"</code></td>
 </tr>
 <tr>
-<td align="left"><code>traceLog</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Для логирования всех запросов <em>(входящих и исходящих)</em> между <strong>BSL Language Server</strong> и <strong>Language Client</strong> из используемого редактора/IDE, в этом параметре можно указать путь к файлу лога. Путь можно указывать как абсолютный, так и относительный <em>(от корня анализируемого проекта)</em>, по умолчанию значение не заполнено.<br/><br/><strong>ВНИМАНИЕ</strong><br/><br/><em> При запуске </em><em>BSL Language Server</em><em> перезаписывает указанный файл<br/></em> Скорость взаимодействия между клиентом и сервером <strong>ЗНАЧИТЕЛЬНО ЗАМЕДЛЯЕТСЯ</strong></td>
+<td style="text-align: left;"><code>traceLog</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Для логирования всех запросов <em>(входящих и исходящих)</em> между <strong>BSL Language Server</strong> и <strong>Language Client</strong> из используемого редактора/IDE, в этом параметре можно указать путь к файлу лога. Путь можно указывать как абсолютный, так и относительный <em>(от корня анализируемого проекта)</em>, по умолчанию значение не заполнено.<br/><br/><strong>ВНИМАНИЕ</strong><br/><br/><em> При запуске </em><em>BSL Language Server</em><em> перезаписывает указанный файл<br/></em> Скорость взаимодействия между клиентом и сервером <strong>ЗНАЧИТЕЛЬНО ЗАМЕДЛЯЕТСЯ</strong></td>
 </tr>
 <tr>
-<td align="left"><code>configurationRoot</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Данный параметр предназначен для указания корневого каталога, в котором находятся файлы конфигурации 1С в каталоге проекта. Может быть полезен в случае нахождения нескольких каталогов конфигураций в одном каталоге проекта либо при сложной структуре каталога проекта. По умолчанию параметр не заполнен и <code>BSL Language Server</code> самостоятельно определяет расположение корневого каталога конфигурации</td>
+<td style="text-align: left;"><code>configurationRoot</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Данный параметр предназначен для указания корневого каталога, в котором находятся файлы конфигурации 1С в каталоге проекта. Может быть полезен в случае нахождения нескольких каталогов конфигураций в одном каталоге проекта либо при сложной структуре каталога проекта. По умолчанию параметр не заполнен и <code>BSL Language Server</code> самостоятельно определяет расположение корневого каталога конфигурации</td>
 </tr>
 <tr>
-<td align="left"><code>sendErrors</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left">Режим отправки сообщений об ошибках разработчикам BSL Language Server. Подробнее - на странице <a href="../Monitoring/">Мониторинг и отправка ошибок</a>. Возможные значения:<br/><em> <code>ask</code> - спрашивать разрешение при каждой ошибке </em>(установлен по умолчанию)<em>. <br/></em> <code>send</code> - всегда отправлять сообщения об ошибках. <br/>* <code>never</code> - никогда не отправлять сообщения об ошибках.</td>
+<td style="text-align: left;"><code>sendErrors</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Режим отправки сообщений об ошибках разработчикам BSL Language Server. Подробнее - на странице <a href="../Monitoring/">Мониторинг и отправка ошибок</a>. Возможные значения:<br/><em> <code>ask</code> - спрашивать разрешение при каждой ошибке </em>(установлен по умолчанию)<em>. <br/></em> <code>send</code> - всегда отправлять сообщения об ошибках. <br/>* <code>never</code> - никогда не отправлять сообщения об ошибках.</td>
 </tr>
 </tbody>
 </table>
@@ -1233,10 +1233,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
           <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
