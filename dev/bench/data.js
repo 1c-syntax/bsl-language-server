@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1690561180291,
+  "lastUpdate": 1690703021676,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -23250,6 +23250,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0895966797098768",
             "extra": "mean: 58.37675062815348 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00d2a4e797f590cda9e45bb831733c54962736f1",
+          "message": "Поднял дефолтный лимит памяти до 3g",
+          "timestamp": "2023-07-30T09:31:32+02:00",
+          "tree_id": "9aa8432da10da5b3ce4d4c5ae3eaa2b7f549f377",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/00d2a4e797f590cda9e45bb831733c54962736f1"
+        },
+        "date": 1690703015667,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.86775533358256,
+            "unit": "sec",
+            "range": "stddev: 0.9021319469519188",
+            "extra": "mean: 58.86775533358256 sec\nrounds: 3"
           }
         ]
       }
