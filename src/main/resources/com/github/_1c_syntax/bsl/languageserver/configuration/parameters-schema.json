@@ -420,6 +420,16 @@
             "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "$id": "#/definitions/DeletingCollectionItem"
         },
+        "DenyIncompleteValues": {
+            "description": "Deny incomplete values for dimensions",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deny incomplete values for dimensions",
+            "$id": "#/definitions/DenyIncompleteValues"
+        },
         "DeprecatedAttributes8312": {
             "description": "Deprecated 8.3.12 platform features.",
             "default": true,
@@ -1783,6 +1793,16 @@
                 }
             },
             "$id": "#/definitions/TooManyReturns"
+        },
+        "TransferringParametersBetweenClientAndServer": {
+            "description": "Transferring parameters between the client and the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Transferring parameters between the client and the server",
+            "$id": "#/definitions/TransferringParametersBetweenClientAndServer"
         },
         "TryNumber": {
             "description": "Cast to number of try catch block",

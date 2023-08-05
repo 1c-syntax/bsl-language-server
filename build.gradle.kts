@@ -16,9 +16,9 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "8.1.0"
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "3.1.1"
+    id("org.springframework.boot") version "3.1.2"
     id("io.spring.dependency-management") version "1.1.2"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.2"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.26.0")
+        mavenBom("io.sentry:sentry-bom:6.27.0")
     }
 }
 
@@ -74,7 +74,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "bba7c0b091aca562ec082829a49f525a9bb5d7ef") {
+    api("com.github.1c-syntax", "bsl-parser", "0.22.1") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")

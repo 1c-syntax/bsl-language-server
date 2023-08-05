@@ -23,7 +23,7 @@ def build_image(base_dir, image_prefix, executable_file):
     cmd_args.append('--type')
     cmd_args.append('app-image')
     cmd_args.append('--java-options')
-    cmd_args.append('-Xmx2g')
+    cmd_args.append('-Xmx3g')
 
     cmd = ' '.join(cmd_args)
     os.system(cmd)

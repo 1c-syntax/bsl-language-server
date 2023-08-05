@@ -27,6 +27,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +44,7 @@ public class SentryAspect {
 
   @PostConstruct
   private void init() {
-    executorService = Executors.newCachedThreadPool();
+    executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("sentry-"));
   }
 
   @PreDestroy
