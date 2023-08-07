@@ -70,6 +70,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.28.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.2",
           "type": "Library"
         },
@@ -166,11 +170,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-logback:6.27.0",
+          "name": "Gradle: io.sentry:sentry-logback:6.28.0",
           "type": "Library"
         },
         {
@@ -191,6 +191,10 @@
         },
         {
           "name": "Gradle: info.picocli:picocli:4.7.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.28.0",
           "type": "Library"
         },
         {
@@ -438,11 +442,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry:6.27.0",
+          "name": "Gradle: io.sentry:sentry:6.28.0",
           "type": "Library"
         },
         {
@@ -479,6 +479,10 @@
         },
         {
           "name": "Gradle: org.apache.commons:commons-math3:3.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring:6.28.0",
           "type": "Library"
         },
         {
@@ -858,6 +862,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.28.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.2",
           "type": "Library"
         },
@@ -954,11 +962,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-logback:6.27.0",
+          "name": "Gradle: io.sentry:sentry-logback:6.28.0",
           "type": "Library"
         },
         {
@@ -971,6 +975,10 @@
         },
         {
           "name": "Gradle: info.picocli:picocli:4.7.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.28.0",
           "type": "Library"
         },
         {
@@ -1218,11 +1226,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry:6.27.0",
+          "name": "Gradle: io.sentry:sentry:6.28.0",
           "type": "Library"
         },
         {
@@ -1243,6 +1247,10 @@
         },
         {
           "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring:6.28.0",
           "type": "Library"
         },
         {
@@ -1514,6 +1522,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.28.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.2",
           "type": "Library"
         },
@@ -1610,11 +1622,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-logback:6.27.0",
+          "name": "Gradle: io.sentry:sentry-logback:6.28.0",
           "type": "Library"
         },
         {
@@ -1639,6 +1647,10 @@
         },
         {
           "name": "Gradle: info.picocli:picocli:4.7.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.28.0",
           "type": "Library"
         },
         {
@@ -1934,11 +1946,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.27.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry:6.27.0",
+          "name": "Gradle: io.sentry:sentry:6.28.0",
           "type": "Library"
         },
         {
@@ -1963,6 +1971,10 @@
         },
         {
           "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring:6.28.0",
           "type": "Library"
         },
         {

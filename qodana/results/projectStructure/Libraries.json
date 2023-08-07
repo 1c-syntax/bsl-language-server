@@ -8,6 +8,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.28.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.28.0/dd763581f104452801de89bee90548993cb1fabe/sentry-spring-boot-starter-6.28.0.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.1.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-websocket/3.1.2/38921a9f21f02774f4c8c2e546b13e0bb8b27e85/spring-boot-starter-websocket-3.1.2.jar!/"
@@ -176,16 +183,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.27.0",
+      "name": "Gradle: io.sentry:sentry-logback:6.28.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/6.27.0/2c8ebd15c084922a731fca1e3204de12fe2d39ec/sentry-spring-boot-starter-6.27.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: io.sentry:sentry-logback:6.27.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.27.0/7b4bf67df362ccd07771c0e472cf430d24c02973/sentry-logback-6.27.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/6.28.0/8d2b7c903ecc00f3941932411fea4a947c8ecc97/sentry-logback-6.28.0.jar!/"
       ],
       "properties": {}
     },
@@ -199,7 +199,7 @@
     {
       "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/a2ff5da8bcd8b1b26f36b806ced63213362c6dcc/lombok-edge-SNAPSHOT.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/2cf893241326b966a7f022c95268ac45f26499fe/lombok-edge-SNAPSHOT.jar!/"
       ],
       "properties": {}
     },
@@ -207,6 +207,13 @@
       "name": "Gradle: info.picocli:picocli:4.7.4",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.4/6c036f65c4534c87c4b7f47ed659ee625bee79d4/picocli-4.7.4.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-spring-boot:6.28.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot/6.28.0/85a87741d32b4bbc5412c71d9e6c0f761a813ca1/sentry-spring-boot-6.28.0.jar!/"
       ],
       "properties": {}
     },
@@ -638,16 +645,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring:6.27.0",
+      "name": "Gradle: io.sentry:sentry:6.28.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.27.0/14ccda73771b3680e5b66434e9a2078bf84a4107/sentry-spring-6.27.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: io.sentry:sentry:6.27.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.27.0/4458aac070f183e9afe8a9e2edecde8821e0dc74/sentry-6.27.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/6.28.0/419b6576bede3f9bbadf8b6038de0850ec1d26b8/sentry-6.28.0.jar!/"
       ],
       "properties": {}
     },
@@ -683,6 +683,13 @@
       "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.google.j2objc/j2objc-annotations/2.8/c85270e307e7b822f1086b93689124b89768e273/j2objc-annotations-2.8.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-spring:6.28.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/6.28.0/baf094b30d2c048cb4d71f63ff2126a2a1edce1f/sentry-spring-6.28.0.jar!/"
       ],
       "properties": {}
     },
