@@ -11,7 +11,7 @@ plugins {
     id("org.sonarqube") version "4.3.0.3225"
     id("io.freefair.lombok") version "8.1.0"
     id("io.freefair.javadoc-links") version "8.1.0"
-    id("io.freefair.javadoc-utf-8") version "8.1.0"
+    id("io.freefair.javadoc-utf-8") version "8.2.1"
     id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
     id("io.freefair.maven-central.validate-poms") version "8.1.0"
     id("me.qoomon.git-versioning") version "6.4.2"
