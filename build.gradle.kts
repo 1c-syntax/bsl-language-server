@@ -10,7 +10,7 @@ plugins {
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "4.3.0.3225"
     id("io.freefair.lombok") version "8.1.0"
-    id("io.freefair.javadoc-links") version "8.1.0"
+    id("io.freefair.javadoc-links") version "8.3"
     id("io.freefair.javadoc-utf-8") version "8.1.0"
     id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
     id("io.freefair.maven-central.validate-poms") version "8.1.0"
