@@ -2,8 +2,8 @@ name: Sentry
 on:
   push:
     branches-ignore:
-      - "translations_*"
-      - "dependabot/*"
+      - "translations_**"
+      - "dependabot/**"
 jobs:
 
   sentry:
