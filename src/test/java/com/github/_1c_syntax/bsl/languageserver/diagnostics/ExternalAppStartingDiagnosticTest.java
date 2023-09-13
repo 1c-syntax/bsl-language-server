@@ -44,39 +44,6 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
       .hasRange(9, 4, 23)
       .hasRange(10, 4, 23)
       .hasRange(12, 4, 26)
-      .hasRange(14, 4, 32)
-      .hasRange(15, 26, 52)
-      .hasRange(16, 26, 52)
-      .hasRange(18, 26, 44)
-      .hasRange(19, 26, 44)
-      .hasRange(20, 20, 38)
-      .hasRange(21, 20, 38)
-      .hasRange(23, 26, 42)
-      .hasRange(24, 26, 37)
-      .hasRange(25, 26, 37)
-      .hasRange(35, 10, 34)
-
-      .hasRange(53, 4, 20)
-      .hasRange(54, 4, 20)
-      .hasRange(55, 4, 20)
-      .hasRange(56, 4, 20)
-      .hasSize(19);
-  }
-
-  @Test
-  void testConfigure_checkGotoUrl() {
-
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("checkGotoUrl", false);
-    diagnosticInstance.configure(configuration);
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics, true)
-      .hasRange(8, 4, 18)
-      .hasRange(9, 4, 23)
-      .hasRange(10, 4, 23)
-      .hasRange(12, 4, 26)
 
       .hasRange(18, 26, 44)
       .hasRange(19, 26, 44)
@@ -92,6 +59,39 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
       .hasRange(55, 4, 20)
       .hasRange(56, 4, 20)
       .hasSize(16);
+  }
+
+  @Test
+  void testConfigure_checkGotoUrl() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("checkGotoUrl", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+    .hasRange(8, 4, 18)
+    .hasRange(9, 4, 23)
+    .hasRange(10, 4, 23)
+    .hasRange(12, 4, 26)
+    .hasRange(14, 4, 32)
+    .hasRange(15, 26, 52)
+    .hasRange(16, 26, 52)
+    .hasRange(18, 26, 44)
+    .hasRange(19, 26, 44)
+    .hasRange(20, 20, 38)
+    .hasRange(21, 20, 38)
+    .hasRange(23, 26, 42)
+    .hasRange(24, 26, 37)
+    .hasRange(25, 26, 37)
+    .hasRange(35, 10, 34)
+
+    .hasRange(53, 4, 20)
+    .hasRange(54, 4, 20)
+    .hasRange(55, 4, 20)
+    .hasRange(56, 4, 20)
+    .hasSize(19);
   }
 
   @Test

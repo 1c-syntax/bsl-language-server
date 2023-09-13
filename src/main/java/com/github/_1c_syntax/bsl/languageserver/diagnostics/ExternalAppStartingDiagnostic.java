@@ -51,7 +51,7 @@ public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic 
     "|ПерейтиПоНавигационнойСсылке|GotoURL|ОткрытьНавигационнуюСсылку";
   private static final Pattern FULL_PATTERN = CaseInsensitivePattern.compile(
     MAIN_PATTERN_STRING + PATTERN_STRING_FOR_NAVI);
-  private static final boolean CHECK_GOTO_URL = true;
+  private static final boolean CHECK_GOTO_URL = false;
 
   @DiagnosticParameter(
     type = Boolean.class,
