@@ -8,7 +8,6 @@
     ".gitignore (GitIgnore)",
     "JSON5",
     "EditorConfig",
-    "Lombok.Config",
     "Kotlin"
   ]
 }
