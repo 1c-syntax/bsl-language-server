@@ -48,7 +48,8 @@ import java.util.stream.Collectors;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   modules = {
-    ModuleType.CommonModule
+    ModuleType.CommonModule,
+    ModuleType.ObjectModule
   },
   minutesToFix = 1,
   tags = {
@@ -74,6 +75,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     AnnotationKind.BEFORE,
     AnnotationKind.CHANGEANDVALIDATE
   );
+  private static final boolean CHECK_OBJECT_MODULE = false;
 
   @DiagnosticParameter(
     type = String.class,
@@ -81,10 +83,18 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Pattern attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(ATTACHABLE_METHOD_PREFIXES);
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_OBJECT_MODULE
+  )
+  private boolean checkObjectModule = CHECK_OBJECT_MODULE;
+
   @Override
   public void configure(Map<String, Object> configuration) {
     this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
       (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
+
+    this.checkObjectModule = (boolean) configuration.getOrDefault("checkObjectModule", CHECK_OBJECT_MODULE);
   }
 
   private boolean isAttachable(MethodSymbol methodSymbol) {
@@ -104,6 +114,10 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+    var moduleType = documentContext.getModuleType();
+    if (!checkObjectModule && moduleType == ModuleType.ObjectModule) {
+      return ctx;
+    }
 
     List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
