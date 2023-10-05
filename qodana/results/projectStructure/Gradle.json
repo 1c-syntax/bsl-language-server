@@ -66,12 +66,20 @@
       "version": "0.5.1"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.10.3",
-      "gradleName": "com.github.1c-syntax:mdclasses:0.10.3",
+      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
+      "gradleName": "com.github.1c-syntax:mdclasses:0.10.4",
       "unresolved": false,
       "groupId": "com.github.1c-syntax",
       "artifactId": "mdclasses",
-      "version": "0.10.3"
+      "version": "0.10.4"
+    },
+    {
+      "ideaName": "Gradle: io.github.1c-syntax:supportconf:0.12.1",
+      "gradleName": "io.github.1c-syntax:supportconf:0.12.1",
+      "unresolved": false,
+      "groupId": "io.github.1c-syntax",
+      "artifactId": "supportconf",
+      "version": "0.12.1"
     },
     {
       "ideaName": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
@@ -80,14 +88,6 @@
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-common-library",
       "version": "0.3.0"
-    },
-    {
-      "ideaName": "Gradle: io.github.1c-syntax:supportconf:0.1.1",
-      "gradleName": "io.github.1c-syntax:supportconf:0.1.1",
-      "unresolved": false,
-      "groupId": "io.github.1c-syntax",
-      "artifactId": "supportconf",
-      "version": "0.1.1"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
