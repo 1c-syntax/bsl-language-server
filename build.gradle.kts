@@ -10,9 +10,9 @@ plugins {
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "4.3.0.3225"
     id("io.freefair.lombok") version "8.3"
-    id("io.freefair.javadoc-links") version "8.1.0"
+    id("io.freefair.javadoc-links") version "8.3"
     id("io.freefair.javadoc-utf-8") version "8.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.3"
     id("io.freefair.maven-central.validate-poms") version "8.3"
     id("me.qoomon.git-versioning") version "6.4.2"
     id("com.github.ben-manes.versions") version "0.47.0"
@@ -83,9 +83,9 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.5.1")
-    api("com.github.1c-syntax", "mdclasses", "0.10.3")
+    api("com.github.1c-syntax", "mdclasses", "0.10.4")
     api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
-    api("io.github.1c-syntax", "supportconf", "0.1.1")
+    api("io.github.1c-syntax", "supportconf", "0.12.1")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
