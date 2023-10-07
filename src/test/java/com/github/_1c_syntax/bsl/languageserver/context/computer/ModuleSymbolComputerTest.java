@@ -23,9 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -68,7 +68,7 @@ class ModuleSymbolComputerTest {
     var mdoReference = mock(MdoReference.class);
     when(mdoReference.getMdoRef()).thenReturn("Document.Document1");
 
-    AbstractMDObjectBase mdObject = mock(AbstractMDObjectBase.class);
+    var mdObject = mock(MD.class);
     when(mdObject.getMdoReference()).thenReturn(mdoReference);
 
     doReturn(Optional.of(mdObject)).when(documentContext).getMdObject();

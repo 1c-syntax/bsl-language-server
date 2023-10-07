@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -114,7 +115,6 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 
   @Test
   void testUse() {
-
     var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
@@ -127,7 +127,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     initServerContext(path);
     var serverContext = spy(context);
     var configuration = spy(serverContext.getConfiguration());
-    when(configuration.getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
+    when(((Configuration) configuration).getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
     when(serverContext.getConfiguration()).thenReturn(configuration);
 
     var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
@@ -135,5 +135,4 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 
     return documentContext;
   }
-
 }

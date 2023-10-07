@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,7 +47,6 @@ import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 )
 public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-
   private static final String REGEXP = "повторноеиспользование|повтисп|cached";
 
   public CommonModuleNameCachedDiagnostic(LanguageServerConfiguration serverConfiguration) {
@@ -55,9 +54,8 @@ public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDi
   }
 
   @Override
-  protected boolean flagsCheck(MDCommonModule commonModule) {
+  protected boolean flagsCheck(CommonModule commonModule) {
     return commonModule.getReturnValuesReuse() == ReturnValueReuse.DURING_REQUEST
       || commonModule.getReturnValuesReuse() == ReturnValueReuse.DURING_SESSION;
   }
-
 }

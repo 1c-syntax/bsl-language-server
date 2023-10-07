@@ -28,14 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.TabularSection;
+import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
@@ -154,7 +153,8 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   private Map<String, List<String>> calcDataSourceWithTabularSectionNames(
-    Stream<? extends SDBLParser.DataSourceContext> dataSources) {
+    Stream<? extends SDBLParser.DataSourceContext> dataSources
+  ) {
 
     return dataSources
       .map(dataSourceContext -> new TabularSectionTable(getTableNameOrAlias(dataSourceContext),
@@ -177,7 +177,9 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     );
   }
 
-  private static Collection<SDBLParser.DataSourceContext> getInnerDataSource(SDBLParser.DataSourceContext dataSourceContext) {
+  private static Collection<SDBLParser.DataSourceContext> getInnerDataSource(
+    SDBLParser.DataSourceContext dataSourceContext
+  ) {
     var result = new ArrayList<SDBLParser.DataSourceContext>();
     Optional.ofNullable(dataSourceContext.dataSource())
       .map(RefOveruseDiagnostic::getInnerDataSource)
@@ -242,18 +244,18 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return Collections.emptyList();
     }
     return MDOType.fromValue(mdo.type.getText()).stream()
-      .map(mdoType1 -> MdoReference.create(mdoType1, mdo.tableName.getText()))
-      .map(mdoReference -> configuration.getChildrenByMdoRef().get(mdoReference))
-      .filter(AbstractMDObjectComplex.class::isInstance)
-      .map(AbstractMDObjectComplex.class::cast)
+      .map(mdoTypeTabular -> MdoReference.create(mdoTypeTabular, mdo.tableName.getText()))
+      .map(configuration::findChild)
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .map(TabularSectionOwner.class::cast)
       .flatMap(RefOveruseDiagnostic::getTabularSectionNames)
       .collect(Collectors.toList());
   }
 
-  private static Stream<String> getTabularSectionNames(AbstractMDObjectComplex mdObjectComplex) {
-    return mdObjectComplex.getAttributes().stream()
-      .filter(TabularSection.class::isInstance)
-      .map(AbstractMDObjectBase::getName);
+  private static Stream<String> getTabularSectionNames(TabularSectionOwner tabularSectionOwner) {
+    return tabularSectionOwner.getTabularSections().stream()
+      .map(TabularSection::getName);
   }
 
   private static Stream<SDBLParser.ColumnContext> getSimpleOverused(List<SDBLParser.ColumnContext> columnsCollection) {

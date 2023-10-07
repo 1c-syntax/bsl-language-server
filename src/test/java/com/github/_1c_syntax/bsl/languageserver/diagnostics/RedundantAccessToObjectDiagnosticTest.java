@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -86,7 +86,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
     );
 
     var configuration = context.getConfiguration();
-    var module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    var module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
 
     when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_SESSION);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));

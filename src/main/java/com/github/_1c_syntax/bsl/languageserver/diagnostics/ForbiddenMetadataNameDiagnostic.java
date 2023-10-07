@@ -28,15 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.ChildrenOwner;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -131,23 +129,15 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
   private final LanguageServerConfiguration serverConfiguration;
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MD mdo) {
 
     // проверка имени метаданного
     checkName(mdo.getName(), mdo.getMdoReference());
 
-    if (mdo instanceof AbstractMDObjectComplex) {
-      // проверка имен реквизитов и табличных частей
-      ((AbstractMDObjectComplex) mdo).getAttributes()
-        .forEach(attribute -> checkName(attribute.getName(), attribute.getMdoReference()));
-
-      // проверка имен реквизитов табличных частей
-      ((AbstractMDObjectComplex) mdo).getAttributes().stream()
-        .filter(TabularSection.class::isInstance)
-        .map(TabularSection.class::cast)
-        .map(TabularSection::getAttributes)
-        .flatMap(Collection::stream)
-        .forEach(attribute -> checkName(attribute.getName(), attribute.getMdoReference()));
+    // проверка имен реквизитов и табличных частей
+    if (mdo instanceof ChildrenOwner childrenOwner) {
+      childrenOwner.getMDOPlainChildren()
+        .forEach(child -> checkName(child.getName(), child.getMdoReference()));
     }
   }
 

@@ -23,23 +23,22 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.Module;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.mdo.ScheduledJob;
 import com.github._1c_syntax.bsl.mdo.support.Handler;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.MDScheduledJob;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -168,21 +167,21 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
       var spyMDO = spy(mdo);
-      if (mdo instanceof MDScheduledJob) {
-        when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler(methodPath));
+      if (mdo instanceof ScheduledJob) {
+        when(((ScheduledJob) spyMDO).getMethodName()).thenReturn(new Handler(methodPath));
 
         if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
           children.add(spyMDO);
         }
-      } else if (mdo instanceof AbstractMDObjectComplex) {
-        List<MDOModule> modules = ((AbstractMDObjectComplex) mdo).getModules().stream()
+      } else if (mdo instanceof ModuleOwner moduleOwner) {
+        List<Module> modules = moduleOwner.getModules().stream()
           .filter(mdoModule -> mdoModule.getModuleType() == ModuleType.ManagerModule)
           .collect(Collectors.toList());
-        when(((AbstractMDObjectComplex) spyMDO).getModules()).thenReturn(modules);
+        when(((ModuleOwner) spyMDO).getModules()).thenReturn(modules);
       }
     });
 

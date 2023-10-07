@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
@@ -68,18 +68,14 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }
 
-  private boolean isCashed(DocumentContext documentContext) {
+  private static boolean isCashed(DocumentContext documentContext) {
     return documentContext.getMdObject()
-      .filter(MDCommonModule.class::isInstance)
-      .map(MDCommonModule.class::cast)
-      .map(MDCommonModule::getReturnValuesReuse)
-      .filter(this::isReuseValue)
+      .filter(CommonModule.class::isInstance)
+      .map(CommonModule.class::cast)
+      .map(CommonModule::getReturnValuesReuse)
+      .filter(value -> value == ReturnValueReuse.DURING_REQUEST
+        || value == ReturnValueReuse.DURING_SESSION)
       .isPresent();
-  }
-
-  private Boolean isReuseValue(ReturnValueReuse value) {
-    return value == ReturnValueReuse.DURING_REQUEST
-      || value == ReturnValueReuse.DURING_SESSION;
   }
 
 }
