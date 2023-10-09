@@ -16,5 +16,5 @@ updates:
     groups:
       freefair:
         patterns:
-          - "io.freefair*"
+          - "io.freefair.*"
  
