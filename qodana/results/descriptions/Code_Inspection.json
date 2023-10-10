@@ -72,6 +72,101 @@
       ]
     },
     {
+      "name": "JVM languages",
+      "inspections": [
+        {
+          "shortName": "OverrideOnly",
+          "displayName": "Method can only be overridden",
+          "enabled": true,
+          "description": "Reports calls to API methods marked with `@ApiStatus.OverrideOnly`.\n\n\nThe `@ApiStatus.OverrideOnly` annotation indicates that the method is part of SPI (Service Provider Interface).\nClients of the declaring library should implement or override such methods, not call them directly.\nMarking a class or interface with this annotation is the same as marking every method with it."
+        },
+        {
+          "shortName": "MissingDeprecatedAnnotationOnScheduledForRemovalApi",
+          "displayName": "Missing '@Deprecated' annotation on scheduled for removal API",
+          "enabled": true,
+          "description": "Reports declarations marked with `@ApiStatus.ScheduledForRemoval` without `@Deprecated`.\n\nExample:\n\n\n      @ApiStatus.ScheduledForRemoval(inVersion = \"2017.3\")\n      public void myLegacyMethod() { }\n\nAfter the quick-fix is applied the result looks like:\n\n\n      @Deprecated\n      @ApiStatus.ScheduledForRemoval(inVersion = \"2017.3\")\n      public void myLegacyMethod() { }\n"
+        },
+        {
+          "shortName": "SourceToSinkFlow",
+          "displayName": "Non-safe string is passed to safe method",
+          "enabled": true,
+          "description": "Reports cases when a non-safe string is passed to a method with a parameter marked with `@Untainted` annotations, returned from annotated methods or assigned to annotated fields, parameters, or local variables. Kotlin `set` and `get` methods for fields are not supported as entry points.\n\n\nA safe object (in the same class) is:\n\n* a string literal, interface instance, or enum object\n* a result of a call of a method that is marked as `@Untainted`\n* a private field, which is assigned only with a string literal and has a safe initializer\n* a final field, which has a safe initializer\n* local variable or parameter that are marked as `@Untainted` and are not assigned from non-safe objects\nThis field, local variable, or parameter must not be passed as arguments to methods or used as a qualifier or must be a primitive, its wrapper or immutable.\n\nAlso static final fields are considered as safe.\n\n\nThe analysis is performed only inside one file. To process dependencies from other classes, use options.\nThe analysis extends to private or static methods and has a limit of depth propagation.\n\n\nExample:\n\n\n      void doSmth(boolean b) {\n        String s = safe();\n        String s1 = \"other\";\n        if (b) s1 = s;\n        sink(s);\n      }\n\n      String sink(@Untainted String s) {}\n\n\nHere we do not have non-safe string assignments to `s` so a warning is not produced. On the other hand:\n\n\n      void doSmth(boolean b) {\n        String s = safe();\n        String s1 = \"other\";\n        s1 = foo();\n        if (b) s = s1;\n        sink(s);        // warning here\n      }\n\n      String foo();\n\n      String sink(@Untainted String s) {}\n\n\nHere we have a warning since `s1` has an unknown state after `foo` call result assignment.\n\nNew in 2021.2"
+        },
+        {
+          "shortName": "SerializableHasSerialVersionUIDField",
+          "displayName": "Serializable class without 'serialVersionUID'",
+          "enabled": false,
+          "description": "Reports classes that implement `Serializable` and do not declare a `serialVersionUID` field.\n\n\nWithout a `serialVersionUID` field, any change to the class will make previously serialized versions unreadable.\n\n**Example:**\n\n\n      class Main implements Serializable {\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        private static final long serialVersionUID = -1446398935944895849L;\n      }\n\nWhen using a language level of JDK 14 or higher, the quickfix will also add the `java.io.Serial` annotation.\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
+        },
+        {
+          "shortName": "Dependency",
+          "displayName": "Illegal package dependencies",
+          "enabled": true,
+          "description": "Reports illegal dependencies between scopes according to the dependency rules given. Dependency rules can be used to prohibit usage from a scope to another scope.\n\nUse the **Configure dependency rules** button below to customize validation rules."
+        },
+        {
+          "shortName": "ThreadRun",
+          "displayName": "Call to 'Thread.run()'",
+          "enabled": true,
+          "description": "Reports calls to `run()` on `java.lang.Thread` or any of its subclasses.\n\n\nWhile occasionally intended, this is usually a mistake, because `run()` doesn't start a new thread.\nTo execute the code in a separate thread, `start()` should be used."
+        },
+        {
+          "shortName": "UnstableApiUsage",
+          "displayName": "Unstable API Usage",
+          "enabled": true,
+          "description": "Reports usages of an API marked with one of the annotations as unstable. Such an API may be changed or removed in future versions, breaking the code that uses it.\n\nThe annotations which are used to mark unstable APIs are shown in the list below.\n\nBy default, the inspection ignores usages of unstable APIs\nif their declarations are located in sources of the same project. In such cases it'll be possible to update the usages when you change APIs.\nHowever, it may be inconvenient if the project is big, so one can switch off the **Ignore API declared in this project** option to report\nthe usages of unstable APIs declared in both the project sources and libraries."
+        },
+        {
+          "shortName": "Since15",
+          "displayName": "Usages of API which isn't available at the configured language level",
+          "enabled": false,
+          "description": "Reports usages of the API that is unavailable at the configured language level. This inspection does 3 things:\n\n* Highlight usage of generified classes when the language level is below Java 7.\n* Highlight when default methods are not overridden and the language level is below Java 8.\n* Highlight usage of API when the language level is lower than marked using the `@since` tag in the documentation.\n\n\nUse the **Forbid API usages** option to forbid usages of the API in respect to the project or custom language level."
+        },
+        {
+          "shortName": "MustAlreadyBeRemovedApi",
+          "displayName": "API must already be removed",
+          "enabled": true,
+          "description": "Reports declarations marked with `@ApiStatus.ScheduledForRemoval` that should have been removed in the current version of the declaring library.\n\nIt compares the specified scheduled removal version with the version that you can set below.\n\n\nSpecify the version as a string separated with dots and optionally postfixed with\n`alpha`, `beta`, `snapshot`, or `eap`.\n\nExamples of valid versions: `1.0`, `2.3.1`, `2018.1`, `7.5-snapshot`, `3.0-eap`.\n\n\nVersion comparison is intuitive: `1.0 < 2.0`, `1.0-eap < 1.0`, `2.3-snapshot < 2.3` and so on.\nFor detailed comparison logic, refer to the implementation of [VersionComparatorUtil](https://github.com/JetBrains/intellij-community/blob/master/platform/util-rt/src/com/intellij/util/text/VersionComparatorUtil.java)."
+        },
+        {
+          "shortName": "UnstableTypeUsedInSignature",
+          "displayName": "Unstable type is used in signature",
+          "enabled": false,
+          "description": "Reports declarations of classes, methods, and fields that reference an unstable API type in the signature, but are not marked with the same unstable annotation.\n\n\nThis inspection ensures that the signatures of a public API do not expose any *unstable* (internal, experimental) types.\nFor example, if a method returns an *experimental* class, the method itself is considered *experimental*\nbecause incompatible changes of the type (deletion or move to another package) lead to incompatible method signature changes.\n\nUse the list below to specify which annotations mark an unstable API."
+        },
+        {
+          "shortName": "UrlHashCode",
+          "displayName": "Call to 'equals()' or 'hashCode()' on 'URL' object",
+          "enabled": true,
+          "description": "Reports `hashCode()` and `equals()` calls on `java.net.URL` objects and calls that add `URL` objects to maps and sets.\n\n\n`URL`'s `equals()` and `hashCode()` methods can perform a DNS lookup to resolve the host name.\nThis may cause significant delays, depending on the availability and speed of the network and the DNS server.\nUsing `java.net.URI` instead of `java.net.URL` will avoid the DNS lookup.\n\n**Example:**\n\n\n      boolean urlEquals(URL url1, URL url2) {\n          return url1.equals(url2);\n      }\n"
+        },
+        {
+          "shortName": "BlockingMethodInNonBlockingContext",
+          "displayName": "Possibly blocking call in non-blocking context",
+          "enabled": true,
+          "description": "Reports thread-blocking method calls in code fragments where threads should not be blocked.\n\n**Example (Project Reactor):**\n\n\n    Flux.just(\"1\").flatMap(f -> {\n        Flux<String> just = loadUsersFromDatabase();\n        just.toIterable(); // Error: blocking operator call in non-blocking scope\n        return just;\n      }\n    );\n\nConsider running blocking code [with a proper\nscheduler](https://projectreactor.io/docs/core/release/reference/#faq.wrap-blocking), for example `Schedulers.boundedElastic()`, or try to find an alternative non-blocking API.\n\n**Example (Kotlin Coroutines):**\n\n\n    suspend fun exampleFun() {\n        Thread.sleep(100); // Error: blocking method call inside suspend function\n    }\n\nConsider running blocking code [with a special dispatcher](https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html),\nfor example `Dispatchers.IO`, or try to find an alternative non-blocking API.\n\nConfigure the inspection:\n\n* In the **Blocking Annotations** list, specify annotations that mark thread-blocking methods.\n* In the **Non-Blocking Annotations** list, specify annotations that mark non-blocking methods.\n\nSpecified annotations can be used as [External Annotations](https://www.jetbrains.com/help/idea/external-annotations.html)"
+        },
+        {
+          "shortName": "NonExtendableApiUsage",
+          "displayName": "Class, interface, or method should not be extended",
+          "enabled": true,
+          "description": "Reports classes, interfaces and methods that extend, implement, or override API elements marked with `@ApiStatus.NonExtendable`.\n\n\nThe `@ApiStatus.NonExtendable` annotation indicates that the class, interface, or method **must not be extended,\nimplemented, or overridden** .\nSince casting such interfaces and classes to the internal library implementation is rather common,\nif a client provides a different implementation, you will get `ClassCastException`.\nAdding new abstract methods to such classes and interfaces will break the compatibility with the client's implementations."
+        },
+        {
+          "shortName": "IllegalDependencyOnInternalPackage",
+          "displayName": "Illegal dependency on internal package",
+          "enabled": false,
+          "description": "Reports references in modules without `module-info.java` on packages which are not exported from named modules.\n\nSuch configuration may occur when some modules in the project are already migrated to Java modules but others are still non-modular.\nBy analogy to the JDK, such non-modular code should not get access to the code in named modules which is not explicitly exported."
+        },
+        {
+          "shortName": "UsagesOfObsoleteApi",
+          "displayName": "Usages of ApiStatus.@Obsolete",
+          "enabled": false,
+          "description": "Reports declarations (classes, methods, fields) annotated as `@ApiStatus.Obsolete`.\n\n\nSometimes it's impossible to delete the current API, though it might not work correctly, there is a newer, or better, or more generic API.\nThis way, it's a weaker variant of `@Deprecated` annotation.\nThe annotated API is not supposed to be used in the new code, but it's permitted to postpone the migration of the existing code,\ntherefore the usage is not considered a warning."
+        }
+      ]
+    },
+    {
       "name": "Kotlin",
       "inspections": [
         {
@@ -422,16 +517,16 @@
           "description": "Reports `isEmpty`, `isBlank`, `isNotEmpty`, or `isNotBlank` calls in an `if` statement to assign a default value.\n\nThe quick-fix replaces the `if` condition with `ifEmpty` or `ifBlank` calls.\n\n**Example:**\n\n\n      fun test(list: List<Int>): List<Int> {\n          return if (list.isEmpty()) {\n              println()\n              foo()\n          } else {\n              list\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(list: List<Int>): List<Int> {\n          return list.ifEmpty {\n              println()\n              foo()\n          }\n      }\n\nThis inspection only reports if the Kotlin language version of the project or module is 1.3 or higher."
         },
         {
-          "shortName": "ReplaceNegatedIsEmptyWithIsNotEmpty",
-          "displayName": "Negated call can be simplified",
-          "enabled": false,
-          "description": "Reports negation `isEmpty()` and `isNotEmpty()` for collections and `String`, or `isBlank()` and `isNotBlank()` for `String`.\n\nUsing corresponding functions makes your code simpler.\n\nThe quick-fix replaces the negation call with the corresponding call from the Standard Library.\n\n**Example:**\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (!list.isEmpty()) {\n              // do smth\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (list.isNotEmpty()) {\n              // do smth\n          }\n      }\n"
-        },
-        {
           "shortName": "ReplaceWithImportAlias",
           "displayName": "Fully qualified name can be replaced with existing import alias",
           "enabled": false,
           "description": "Reports fully qualified names that can be replaced with an existing import alias.\n\n**Example:**\n\n\n    import foo.Foo as Bar\n    fun main() {\n        foo.Foo()\n    }\n\nAfter the quick-fix is applied:\n\n\n    import foo.Foo as Bar\n    fun main() {\n        Bar()\n    }\n"
+        },
+        {
+          "shortName": "ReplaceNegatedIsEmptyWithIsNotEmpty",
+          "displayName": "Negated call can be simplified",
+          "enabled": false,
+          "description": "Reports negation `isEmpty()` and `isNotEmpty()` for collections and `String`, or `isBlank()` and `isNotBlank()` for `String`.\n\nUsing corresponding functions makes your code simpler.\n\nThe quick-fix replaces the negation call with the corresponding call from the Standard Library.\n\n**Example:**\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (!list.isEmpty()) {\n              // do smth\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (list.isNotEmpty()) {\n              // do smth\n          }\n      }\n"
         },
         {
           "shortName": "SimplifyBooleanWithConstants",
@@ -672,101 +767,6 @@
           "displayName": "Multiple operators with different precedence",
           "enabled": false,
           "description": "Reports binary expressions that consist of different operators without parentheses.\n\nSuch expressions can be less readable due to different [precedence rules](https://kotlinlang.org/docs/reference/grammar.html#expressions) of operators.\n\nExample:\n\n```\n  fun foo(b: Boolean?, i: Int?) {\n      val x = b ?: i == null // evaluated as `(b ?: i) == null`\n      val y = i ?: 0 + 1 // evaluated as `i ?: (0 + 1)`\n  }\n```"
-        }
-      ]
-    },
-    {
-      "name": "JVM languages",
-      "inspections": [
-        {
-          "shortName": "OverrideOnly",
-          "displayName": "Method can only be overridden",
-          "enabled": true,
-          "description": "Reports calls to API methods marked with `@ApiStatus.OverrideOnly`.\n\n\nThe `@ApiStatus.OverrideOnly` annotation indicates that the method is part of SPI (Service Provider Interface).\nClients of the declaring library should implement or override such methods, not call them directly.\nMarking a class or interface with this annotation is the same as marking every method with it."
-        },
-        {
-          "shortName": "MissingDeprecatedAnnotationOnScheduledForRemovalApi",
-          "displayName": "Missing '@Deprecated' annotation on scheduled for removal API",
-          "enabled": true,
-          "description": "Reports declarations marked with `@ApiStatus.ScheduledForRemoval` without `@Deprecated`.\n\nExample:\n\n\n      @ApiStatus.ScheduledForRemoval(inVersion = \"2017.3\")\n      public void myLegacyMethod() { }\n\nAfter the quick-fix is applied the result looks like:\n\n\n      @Deprecated\n      @ApiStatus.ScheduledForRemoval(inVersion = \"2017.3\")\n      public void myLegacyMethod() { }\n"
-        },
-        {
-          "shortName": "SourceToSinkFlow",
-          "displayName": "Non-safe string is passed to safe method",
-          "enabled": true,
-          "description": "Reports cases when a non-safe string is passed to a method with a parameter marked with `@Untainted` annotations, returned from annotated methods or assigned to annotated fields, parameters, or local variables. Kotlin `set` and `get` methods for fields are not supported as entry points.\n\n\nA safe object (in the same class) is:\n\n* a string literal, interface instance, or enum object\n* a result of a call of a method that is marked as `@Untainted`\n* a private field, which is assigned only with a string literal and has a safe initializer\n* a final field, which has a safe initializer\n* local variable or parameter that are marked as `@Untainted` and are not assigned from non-safe objects\nThis field, local variable, or parameter must not be passed as arguments to methods or used as a qualifier or must be a primitive, its wrapper or immutable.\n\nAlso static final fields are considered as safe.\n\n\nThe analysis is performed only inside one file. To process dependencies from other classes, use options.\nThe analysis extends to private or static methods and has a limit of depth propagation.\n\n\nExample:\n\n\n      void doSmth(boolean b) {\n        String s = safe();\n        String s1 = \"other\";\n        if (b) s1 = s;\n        sink(s);\n      }\n\n      String sink(@Untainted String s) {}\n\n\nHere we do not have non-safe string assignments to `s` so a warning is not produced. On the other hand:\n\n\n      void doSmth(boolean b) {\n        String s = safe();\n        String s1 = \"other\";\n        s1 = foo();\n        if (b) s = s1;\n        sink(s);        // warning here\n      }\n\n      String foo();\n\n      String sink(@Untainted String s) {}\n\n\nHere we have a warning since `s1` has an unknown state after `foo` call result assignment.\n\nNew in 2021.2"
-        },
-        {
-          "shortName": "SerializableHasSerialVersionUIDField",
-          "displayName": "Serializable class without 'serialVersionUID'",
-          "enabled": false,
-          "description": "Reports classes that implement `Serializable` and do not declare a `serialVersionUID` field.\n\n\nWithout a `serialVersionUID` field, any change to the class will make previously serialized versions unreadable.\n\n**Example:**\n\n\n      class Main implements Serializable {\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        private static final long serialVersionUID = -1446398935944895849L;\n      }\n\nWhen using a language level of JDK 14 or higher, the quickfix will also add the `java.io.Serial` annotation.\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
-        },
-        {
-          "shortName": "Dependency",
-          "displayName": "Illegal package dependencies",
-          "enabled": true,
-          "description": "Reports illegal dependencies between scopes according to the dependency rules given. Dependency rules can be used to prohibit usage from a scope to another scope.\n\nUse the **Configure dependency rules** button below to customize validation rules."
-        },
-        {
-          "shortName": "ThreadRun",
-          "displayName": "Call to 'Thread.run()'",
-          "enabled": true,
-          "description": "Reports calls to `run()` on `java.lang.Thread` or any of its subclasses.\n\n\nWhile occasionally intended, this is usually a mistake, because `run()` doesn't start a new thread.\nTo execute the code in a separate thread, `start()` should be used."
-        },
-        {
-          "shortName": "UnstableApiUsage",
-          "displayName": "Unstable API Usage",
-          "enabled": true,
-          "description": "Reports usages of an API marked with one of the annotations as unstable. Such an API may be changed or removed in future versions, breaking the code that uses it.\n\nThe annotations which are used to mark unstable APIs are shown in the list below.\n\nBy default, the inspection ignores usages of unstable APIs\nif their declarations are located in sources of the same project. In such cases it'll be possible to update the usages when you change APIs.\nHowever, it may be inconvenient if the project is big, so one can switch off the **Ignore API declared in this project** option to report\nthe usages of unstable APIs declared in both the project sources and libraries."
-        },
-        {
-          "shortName": "Since15",
-          "displayName": "Usages of API which isn't available at the configured language level",
-          "enabled": false,
-          "description": "Reports usages of the API that is unavailable at the configured language level. This inspection does 3 things:\n\n* Highlight usage of generified classes when the language level is below Java 7.\n* Highlight when default methods are not overridden and the language level is below Java 8.\n* Highlight usage of API when the language level is lower than marked using the `@since` tag in the documentation.\n\n\nUse the **Forbid API usages** option to forbid usages of the API in respect to the project or custom language level."
-        },
-        {
-          "shortName": "MustAlreadyBeRemovedApi",
-          "displayName": "API must already be removed",
-          "enabled": true,
-          "description": "Reports declarations marked with `@ApiStatus.ScheduledForRemoval` that should have been removed in the current version of the declaring library.\n\nIt compares the specified scheduled removal version with the version that you can set below.\n\n\nSpecify the version as a string separated with dots and optionally postfixed with\n`alpha`, `beta`, `snapshot`, or `eap`.\n\nExamples of valid versions: `1.0`, `2.3.1`, `2018.1`, `7.5-snapshot`, `3.0-eap`.\n\n\nVersion comparison is intuitive: `1.0 < 2.0`, `1.0-eap < 1.0`, `2.3-snapshot < 2.3` and so on.\nFor detailed comparison logic, refer to the implementation of [VersionComparatorUtil](https://github.com/JetBrains/intellij-community/blob/master/platform/util-rt/src/com/intellij/util/text/VersionComparatorUtil.java)."
-        },
-        {
-          "shortName": "UnstableTypeUsedInSignature",
-          "displayName": "Unstable type is used in signature",
-          "enabled": false,
-          "description": "Reports declarations of classes, methods, and fields that reference an unstable API type in the signature, but are not marked with the same unstable annotation.\n\n\nThis inspection ensures that the signatures of a public API do not expose any *unstable* (internal, experimental) types.\nFor example, if a method returns an *experimental* class, the method itself is considered *experimental*\nbecause incompatible changes of the type (deletion or move to another package) lead to incompatible method signature changes.\n\nUse the list below to specify which annotations mark an unstable API."
-        },
-        {
-          "shortName": "UrlHashCode",
-          "displayName": "Call to 'equals()' or 'hashCode()' on 'URL' object",
-          "enabled": true,
-          "description": "Reports `hashCode()` and `equals()` calls on `java.net.URL` objects and calls that add `URL` objects to maps and sets.\n\n\n`URL`'s `equals()` and `hashCode()` methods can perform a DNS lookup to resolve the host name.\nThis may cause significant delays, depending on the availability and speed of the network and the DNS server.\nUsing `java.net.URI` instead of `java.net.URL` will avoid the DNS lookup.\n\n**Example:**\n\n\n      boolean urlEquals(URL url1, URL url2) {\n          return url1.equals(url2);\n      }\n"
-        },
-        {
-          "shortName": "BlockingMethodInNonBlockingContext",
-          "displayName": "Possibly blocking call in non-blocking context",
-          "enabled": true,
-          "description": "Reports thread-blocking method calls in code fragments where threads should not be blocked.\n\n**Example (Project Reactor):**\n\n\n    Flux.just(\"1\").flatMap(f -> {\n        Flux<String> just = loadUsersFromDatabase();\n        just.toIterable(); // Error: blocking operator call in non-blocking scope\n        return just;\n      }\n    );\n\nConsider running blocking code [with a proper\nscheduler](https://projectreactor.io/docs/core/release/reference/#faq.wrap-blocking), for example `Schedulers.boundedElastic()`, or try to find an alternative non-blocking API.\n\n**Example (Kotlin Coroutines):**\n\n\n    suspend fun exampleFun() {\n        Thread.sleep(100); // Error: blocking method call inside suspend function\n    }\n\nConsider running blocking code [with a special dispatcher](https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html),\nfor example `Dispatchers.IO`, or try to find an alternative non-blocking API.\n\nConfigure the inspection:\n\n* In the **Blocking Annotations** list, specify annotations that mark thread-blocking methods.\n* In the **Non-Blocking Annotations** list, specify annotations that mark non-blocking methods.\n\nSpecified annotations can be used as [External Annotations](https://www.jetbrains.com/help/idea/external-annotations.html)"
-        },
-        {
-          "shortName": "NonExtendableApiUsage",
-          "displayName": "Class, interface, or method should not be extended",
-          "enabled": true,
-          "description": "Reports classes, interfaces and methods that extend, implement, or override API elements marked with `@ApiStatus.NonExtendable`.\n\n\nThe `@ApiStatus.NonExtendable` annotation indicates that the class, interface, or method **must not be extended,\nimplemented, or overridden** .\nSince casting such interfaces and classes to the internal library implementation is rather common,\nif a client provides a different implementation, you will get `ClassCastException`.\nAdding new abstract methods to such classes and interfaces will break the compatibility with the client's implementations."
-        },
-        {
-          "shortName": "IllegalDependencyOnInternalPackage",
-          "displayName": "Illegal dependency on internal package",
-          "enabled": false,
-          "description": "Reports references in modules without `module-info.java` on packages which are not exported from named modules.\n\nSuch configuration may occur when some modules in the project are already migrated to Java modules but others are still non-modular.\nBy analogy to the JDK, such non-modular code should not get access to the code in named modules which is not explicitly exported."
-        },
-        {
-          "shortName": "UsagesOfObsoleteApi",
-          "displayName": "Usages of ApiStatus.@Obsolete",
-          "enabled": false,
-          "description": "Reports declarations (classes, methods, fields) annotated as `@ApiStatus.Obsolete`.\n\n\nSometimes it's impossible to delete the current API, though it might not work correctly, there is a newer, or better, or more generic API.\nThis way, it's a weaker variant of `@Deprecated` annotation.\nThe annotated API is not supposed to be used in the new code, but it's permitted to postpone the migration of the existing code,\ntherefore the usage is not considered a warning."
         }
       ]
     },
@@ -2514,16 +2514,16 @@
           "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
         },
         {
-          "shortName": "Singleton",
-          "displayName": "Singleton",
-          "enabled": false,
-          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
-        },
-        {
           "shortName": "NonFinalUtilityClass",
           "displayName": "Utility class is not 'final'",
           "enabled": false,
           "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "Singleton",
+          "displayName": "Singleton",
+          "enabled": false,
+          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
         },
         {
           "shortName": "StaticNonFinalField",
@@ -3095,12 +3095,6 @@
           "description": "Reports suspicious indentation of statements after a control statement without braces.\n\n\nSuch indentation can make it look like the statement is inside the control statement,\nwhen in fact it will be executed unconditionally after the control statement.\n\n**Example:**\n\n\n      class Bar {\n          void foo(int i) {\n              if (i == 0)\n                  System.out.println(\"foo\");\n                  System.out.println(\"bar\"); // warning\n              if (i == 1);\n                  System.out.println(\"great\"); // warning\n              if (i == 42)\n                  System.out.println(\"answer\");\n                      System.out.println(\"question\"); // warning\n          }\n      }\n"
         },
         {
-          "shortName": "MagicConstant",
-          "displayName": "Magic Constant",
-          "enabled": true,
-          "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
-        },
-        {
           "shortName": "ClassNewInstance",
           "displayName": "Unsafe call to 'Class.newInstance()'",
           "enabled": false,
@@ -3111,6 +3105,12 @@
           "displayName": "Suspicious date format pattern",
           "enabled": true,
           "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
+        },
+        {
+          "shortName": "MagicConstant",
+          "displayName": "Magic Constant",
+          "enabled": true,
+          "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
         },
         {
           "shortName": "StaticFieldReferenceOnSubclass",
@@ -3209,16 +3209,16 @@
           "description": "Reports `if`, `while`, `do`, `for`, and `switch` statements with empty bodies.\n\nWhile occasionally intended, such code is confusing and is often the result of a typo.\n\nThis inspection is disabled in JSP files."
         },
         {
-          "shortName": "IteratorHasNextCallsIteratorNext",
-          "displayName": "'Iterator.hasNext()' which calls 'next()'",
-          "enabled": true,
-          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
-        },
-        {
           "shortName": "EqualsAndHashcode",
           "displayName": "'equals()' and 'hashCode()' not paired",
           "enabled": false,
           "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
+        },
+        {
+          "shortName": "IteratorHasNextCallsIteratorNext",
+          "displayName": "'Iterator.hasNext()' which calls 'next()'",
+          "enabled": true,
+          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
         },
         {
           "shortName": "CastConflictsWithInstanceof",
@@ -4376,6 +4376,35 @@
       ]
     },
     {
+      "name": "GPath",
+      "inspections": [
+        {
+          "shortName": "GroovyListSetCanBeKeyedAccess",
+          "displayName": "Call to List.set can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapPutCanBeKeyedAccess",
+          "displayName": "Call to Map.put can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapGetCanBeKeyedAccess",
+          "displayName": "Call to Map.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
+        },
+        {
+          "shortName": "GroovyListGetCanBeKeyedAccess",
+          "displayName": "Call to List.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
+        }
+      ]
+    },
+    {
       "name": "Embedded",
       "inspections": [
         {
@@ -4443,35 +4472,6 @@
           "displayName": "Large array allocation with no OutOfMemoryError check",
           "enabled": false,
           "description": "Reports large array allocations which do not check for `java.lang.OutOfMemoryError`. In memory constrained environments, allocations of large data objects should probably be checked for memory depletion.\n\n\nThis inspection is intended for Java ME and other highly resource constrained environments.\nApplying the results of this inspection without consideration might have negative effects on code clarity and design.\n\n\nUse the option to specify the maximum number of elements to allow in unchecked array allocations."
-        }
-      ]
-    },
-    {
-      "name": "GPath",
-      "inspections": [
-        {
-          "shortName": "GroovyListSetCanBeKeyedAccess",
-          "displayName": "Call to List.set can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapPutCanBeKeyedAccess",
-          "displayName": "Call to Map.put can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapGetCanBeKeyedAccess",
-          "displayName": "Call to Map.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
-        },
-        {
-          "shortName": "GroovyListGetCanBeKeyedAccess",
-          "displayName": "Call to List.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
         }
       ]
     },
@@ -6804,6 +6804,77 @@
       ]
     },
     {
+      "name": "Logging",
+      "inspections": [
+        {
+          "shortName": "LoggingConditionDisagreesWithLogLevelStatement",
+          "displayName": "Log condition does not match logging call",
+          "enabled": false,
+          "description": "Reports *is log enabled for* conditions of `if` statements that do not match the log level of the contained logging call.\n\n\nFor example:\n\n\n      if (LOG.isTraceEnabled()) {\n        // debug level logged, but checked for trace level\n        LOG.debug(\"some log message\");\n      }\n\nThis inspection understands the *java.util.logging* , *Log4j* , *Log4j2* , *Apache Commons Logging*\nand the *SLF4J* logging frameworks."
+        },
+        {
+          "shortName": "LoggingPlaceholderCountMatchesArgumentCount",
+          "displayName": "Number of placeholders does not match number of arguments in logging call",
+          "enabled": true,
+          "description": "Reports SLF4J, Log4j2 and akka.event.LoggingAdapter logging calls, such as `logger.info(\"{}: {}\", key)` where the number of `{}` placeholders in the logger message doesn't match the number of other arguments to the logging call.\n\n\nUse the inspection option to specify which implementation SLF4J uses.\nIf **Check automatically** is chosen, then `org.apache.logging.slf4j.Log4jLogger` is searched in the classpath.\nIf this file is founded or **Yes** is chosen, then cases, when the last parameter with an exception type has a placeholder, will\nnot be reported for SLFJ4 API.\nFor example:\n\n\n    // will not be reported\n    log.error(\"For id {}: {}\", id, new RuntimeException());\n\nThis option works only for SLF4J."
+        },
+        {
+          "shortName": "LoggingStringTemplateAsArgument",
+          "displayName": "String template as argument to logging call",
+          "enabled": true,
+          "description": "Reports string templates that are used as arguments to **SLF4J** and **Log4j 2** logging methods. The method `org.apache.logging.log4j.Logger.log()` and its overloads are supported only for **all log levels** option. String templates are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: $variable1\")\n\n**After the quick-fix is applied (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: {}\", variable1)\n\n\nNote that the suggested replacement might not be equivalent to the original code, for example,\nwhen string templates contain method calls or assignment expressions.\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be always enabled, and the arguments will always be evaluated.\n* Use the **Do not warn when only expressions with primitive types, their wrappers or String are included** option to ignore string templates, which contain only expressions with primitive types, their wrappers or String. For example, it could be useful to prevent loading lazy collections. Note that, creating string even only with expressions with primitive types, their wrappers or String at runtime can negatively impact performance.\n\nNew in 2023.1"
+        },
+        {
+          "shortName": "LogStatementGuardedByLogCondition",
+          "displayName": "Logging call not guarded by log condition",
+          "enabled": false,
+          "description": "Reports logging calls with non-constant arguments that are not surrounded by a guard condition. The evaluation of the arguments of a logging call can be expensive. Surrounding a logging call with a guard clause prevents that cost when logging is disabled for the level used by the logging statement. This is especially useful for the least serious level (trace, debug, finest) of logging calls, because those are most often disabled in a production environment.\n\n**Example:**\n\n\n      public class Principal {\n        void bad(Object object) {\n          if (true) {\n            LOG.debug(\"log log log \" + expensiveCalculation(object));\n          }\n          LOG.debug(\"some more logging \" + expensiveCalculation(1));\n        }\n\n        void good(Object) {\n          if (LOG.isDebug()) {\n            LOG.debug(\"value: \" + expensiveCalculation(object));\n          }\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** field to specify the logger class name used.\n*\n  Use the table to specify the logging methods this inspection should warn on, with the corresponding log condition text.\n\n* Use the **Flag all unguarded logging calls** option to have the inspection flag all unguarded log calls, not only those with non-constant arguments."
+        },
+        {
+          "shortName": "NonStaticFinalLogger",
+          "displayName": "Non-constant logger",
+          "enabled": false,
+          "description": "Reports logger fields that are not declared `static` and/or `final`. Ensuring that every class logger is effectively constant and bound to that class simplifies the task of providing a unified logging implementation for an application.\n\nA quick-fix is provided to change the logger modifiers to `static final`.\n\n**Example:**\n\n\n      public class Significant {\n        private Logger LOG = Logger.getLogger(Critical.class);\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Significant {\n        private static final Logger LOG = Logger.getLogger(Critical.class);\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** table to specify logger class names. The inspection will report the fields that are not `static` and `final` and are of the type equal to one of the specified class names."
+        },
+        {
+          "shortName": "PublicMethodWithoutLogging",
+          "displayName": "'public' method without logging",
+          "enabled": false,
+          "description": "Reports any public methods that do not contain a logging statement. This inspection does not report simple getters and setters.\n\nFor example:\n\n\n      public class Crucial {\n        private static finalLogger LOG = LoggerFactory.getLogger(Crucial.class);\n        public void doImportantStuff() {\n          // warning on this method\n        }\n\n        public void doOtherStuff() {\n          LOG.info(\"do other stuff\");\n        }\n      }\n\n\nUse the table below to specify Logger class names.\nPublic methods that do not use instance methods of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "ClassWithMultipleLoggers",
+          "displayName": "Class with multiple loggers",
+          "enabled": false,
+          "description": "Reports classes that have multiple loggers declared. Ensuring that every class has a single dedicated logger is an important step in providing a unified logging implementation for an application.\n\nFor example:\n\n\n      public class Critical {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        protected static final Logger myLogger = Logger.getLogger(getClass());\n      }\n\n\nUse the table below to specify Logger class names.\nClasses which declare multiple fields that have the type of one of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "LoggerInitializedWithForeignClass",
+          "displayName": "Logger initialized with foreign class",
+          "enabled": false,
+          "description": "Reports `Logger` instances that are initialized with a `class` literal from a different class than the `Logger` is contained in. This can easily happen when copy-pasting some code from another class and may result in logging events under an unexpected category and cause filters to be applied incorrectly.\n\nA quick-fix is provided to replace the foreign class literal with one from the surrounding class.\n\n**Example:**\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        // ... other fields and methods\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Paramount.class);\n\n        // ... other fields and methods\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the logger factory classes and logger factory methods recognized by this inspection.\n* Use the **Ignore loggers initialized with a superclass** option to ignore loggers that are initialized with a superclass of the class containing the logger.\n* Use the **Ignore loggers in non-public classes** to only warn on loggers in `public` classes."
+        },
+        {
+          "shortName": "ClassWithoutLogger",
+          "displayName": "Class without logger",
+          "enabled": false,
+          "description": "Reports classes which do not have a declared logger.\n\nEnsuring that every class has a dedicated logger is an important step in providing a unified logging\nimplementation for an application. Interfaces, enumerations, annotations, inner classes, and abstract classes are not reported by this inspection.\n\nFor example:\n\n\n      public class NoLoggerDeclared {\n\n        int calculateNthDigitOfPi(int n) {\n          // todo\n          return 1;\n        }\n      }\n\n\nUse the table in the **Options** section to specify logger class names.\nClasses which do not declare a field with the type of one of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "StringConcatenationArgumentToLogCall",
+          "displayName": "Non-constant string concatenation as argument to logging call",
+          "enabled": false,
+          "description": "Reports non-constant string concatenations that are used as arguments to **SLF4J** and **Log4j 2** logging methods. Non-constant concatenations are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example:**\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld(\" + i + \", \" + s + \", \"  + b + \")\");\n          // todo\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld({}, {}, {})\", i, s, b);\n          // todo\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be enabled even in production, and the arguments will always be evaluated."
+        },
+        {
+          "shortName": "KotlinLoggerInitializedWithForeignClass",
+          "displayName": "Logger initialized with foreign class",
+          "enabled": false,
+          "description": "Reports `Logger` instances initialized with a class literal other than the class the `Logger` resides in.\n\n\nThis can happen when copy-pasting from another class.\nIt may result in logging events under an unexpected category and incorrect filtering.\n\n\nUse the inspection options to specify the logger factory classes and methods recognized by this inspection.\n\n**Example:**\n\n\n    class AnotherService\n    class MyService {\n        private val logger = LoggerFactory.getLogger(AnotherService::class.java)\n    }\n\nAfter the quick-fix is applied:\n\n\n    class MyService {\n        private val logger = LoggerFactory.getLogger(MyService::class.java)\n    }\n"
+        }
+      ]
+    },
+    {
       "name": "Javadoc",
       "inspections": [
         {
@@ -6901,77 +6972,6 @@
           "displayName": "Missing Javadoc",
           "enabled": false,
           "description": "Reports missing Javadoc comments and tags.\n\nExample:\n\n\n      /**\n       * Missing \"@param\" is reported (if configured).\n       */\n      public void sample(int param){\n      }\n\nThe quick-fixes add missing tag or missing Javadoc comment:\n\n\n      /**\n       * Missing \"@param\" is reported (if configured).\n       * @param param\n       */\n      public void sample(int param){\n      }\n\n\nInspection can be configured to ignore deprecated elements or simple accessor methods like `getField()` or `setField()`.\nYou can also use options below to configure required tags and minimal required visibility for the specific code elements like method, field, class, package, module."
-        }
-      ]
-    },
-    {
-      "name": "Logging",
-      "inspections": [
-        {
-          "shortName": "LoggingConditionDisagreesWithLogLevelStatement",
-          "displayName": "Log condition does not match logging call",
-          "enabled": false,
-          "description": "Reports *is log enabled for* conditions of `if` statements that do not match the log level of the contained logging call.\n\n\nFor example:\n\n\n      if (LOG.isTraceEnabled()) {\n        // debug level logged, but checked for trace level\n        LOG.debug(\"some log message\");\n      }\n\nThis inspection understands the *java.util.logging* , *Log4j* , *Log4j2* , *Apache Commons Logging*\nand the *SLF4J* logging frameworks."
-        },
-        {
-          "shortName": "LoggingPlaceholderCountMatchesArgumentCount",
-          "displayName": "Number of placeholders does not match number of arguments in logging call",
-          "enabled": true,
-          "description": "Reports SLF4J, Log4j2 and akka.event.LoggingAdapter logging calls, such as `logger.info(\"{}: {}\", key)` where the number of `{}` placeholders in the logger message doesn't match the number of other arguments to the logging call.\n\n\nUse the inspection option to specify which implementation SLF4J uses.\nIf **Check automatically** is chosen, then `org.apache.logging.slf4j.Log4jLogger` is searched in the classpath.\nIf this file is founded or **Yes** is chosen, then cases, when the last parameter with an exception type has a placeholder, will\nnot be reported for SLFJ4 API.\nFor example:\n\n\n    // will not be reported\n    log.error(\"For id {}: {}\", id, new RuntimeException());\n\nThis option works only for SLF4J."
-        },
-        {
-          "shortName": "LoggingStringTemplateAsArgument",
-          "displayName": "String template as argument to logging call",
-          "enabled": true,
-          "description": "Reports string templates that are used as arguments to **SLF4J** and **Log4j 2** logging methods. The method `org.apache.logging.log4j.Logger.log()` and its overloads are supported only for **all log levels** option. String templates are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: $variable1\")\n\n**After the quick-fix is applied (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: {}\", variable1)\n\n\nNote that the suggested replacement might not be equivalent to the original code, for example,\nwhen string templates contain method calls or assignment expressions.\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be always enabled, and the arguments will always be evaluated.\n* Use the **Do not warn when only expressions with primitive types, their wrappers or String are included** option to ignore string templates, which contain only expressions with primitive types, their wrappers or String. For example, it could be useful to prevent loading lazy collections. Note that, creating string even only with expressions with primitive types, their wrappers or String at runtime can negatively impact performance.\n\nNew in 2023.1"
-        },
-        {
-          "shortName": "LogStatementGuardedByLogCondition",
-          "displayName": "Logging call not guarded by log condition",
-          "enabled": false,
-          "description": "Reports logging calls with non-constant arguments that are not surrounded by a guard condition. The evaluation of the arguments of a logging call can be expensive. Surrounding a logging call with a guard clause prevents that cost when logging is disabled for the level used by the logging statement. This is especially useful for the least serious level (trace, debug, finest) of logging calls, because those are most often disabled in a production environment.\n\n**Example:**\n\n\n      public class Principal {\n        void bad(Object object) {\n          if (true) {\n            LOG.debug(\"log log log \" + expensiveCalculation(object));\n          }\n          LOG.debug(\"some more logging \" + expensiveCalculation(1));\n        }\n\n        void good(Object) {\n          if (LOG.isDebug()) {\n            LOG.debug(\"value: \" + expensiveCalculation(object));\n          }\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** field to specify the logger class name used.\n*\n  Use the table to specify the logging methods this inspection should warn on, with the corresponding log condition text.\n\n* Use the **Flag all unguarded logging calls** option to have the inspection flag all unguarded log calls, not only those with non-constant arguments."
-        },
-        {
-          "shortName": "NonStaticFinalLogger",
-          "displayName": "Non-constant logger",
-          "enabled": false,
-          "description": "Reports logger fields that are not declared `static` and/or `final`. Ensuring that every class logger is effectively constant and bound to that class simplifies the task of providing a unified logging implementation for an application.\n\nA quick-fix is provided to change the logger modifiers to `static final`.\n\n**Example:**\n\n\n      public class Significant {\n        private Logger LOG = Logger.getLogger(Critical.class);\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Significant {\n        private static final Logger LOG = Logger.getLogger(Critical.class);\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** table to specify logger class names. The inspection will report the fields that are not `static` and `final` and are of the type equal to one of the specified class names."
-        },
-        {
-          "shortName": "PublicMethodWithoutLogging",
-          "displayName": "'public' method without logging",
-          "enabled": false,
-          "description": "Reports any public methods that do not contain a logging statement. This inspection does not report simple getters and setters.\n\nFor example:\n\n\n      public class Crucial {\n        private static finalLogger LOG = LoggerFactory.getLogger(Crucial.class);\n        public void doImportantStuff() {\n          // warning on this method\n        }\n\n        public void doOtherStuff() {\n          LOG.info(\"do other stuff\");\n        }\n      }\n\n\nUse the table below to specify Logger class names.\nPublic methods that do not use instance methods of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "ClassWithMultipleLoggers",
-          "displayName": "Class with multiple loggers",
-          "enabled": false,
-          "description": "Reports classes that have multiple loggers declared. Ensuring that every class has a single dedicated logger is an important step in providing a unified logging implementation for an application.\n\nFor example:\n\n\n      public class Critical {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        protected static final Logger myLogger = Logger.getLogger(getClass());\n      }\n\n\nUse the table below to specify Logger class names.\nClasses which declare multiple fields that have the type of one of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "LoggerInitializedWithForeignClass",
-          "displayName": "Logger initialized with foreign class",
-          "enabled": false,
-          "description": "Reports `Logger` instances that are initialized with a `class` literal from a different class than the `Logger` is contained in. This can easily happen when copy-pasting some code from another class and may result in logging events under an unexpected category and cause filters to be applied incorrectly.\n\nA quick-fix is provided to replace the foreign class literal with one from the surrounding class.\n\n**Example:**\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        // ... other fields and methods\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Paramount.class);\n\n        // ... other fields and methods\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the logger factory classes and logger factory methods recognized by this inspection.\n* Use the **Ignore loggers initialized with a superclass** option to ignore loggers that are initialized with a superclass of the class containing the logger.\n* Use the **Ignore loggers in non-public classes** to only warn on loggers in `public` classes."
-        },
-        {
-          "shortName": "ClassWithoutLogger",
-          "displayName": "Class without logger",
-          "enabled": false,
-          "description": "Reports classes which do not have a declared logger.\n\nEnsuring that every class has a dedicated logger is an important step in providing a unified logging\nimplementation for an application. Interfaces, enumerations, annotations, inner classes, and abstract classes are not reported by this inspection.\n\nFor example:\n\n\n      public class NoLoggerDeclared {\n\n        int calculateNthDigitOfPi(int n) {\n          // todo\n          return 1;\n        }\n      }\n\n\nUse the table in the **Options** section to specify logger class names.\nClasses which do not declare a field with the type of one of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "StringConcatenationArgumentToLogCall",
-          "displayName": "Non-constant string concatenation as argument to logging call",
-          "enabled": false,
-          "description": "Reports non-constant string concatenations that are used as arguments to **SLF4J** and **Log4j 2** logging methods. Non-constant concatenations are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example:**\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld(\" + i + \", \" + s + \", \"  + b + \")\");\n          // todo\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld({}, {}, {})\", i, s, b);\n          // todo\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be enabled even in production, and the arguments will always be evaluated."
-        },
-        {
-          "shortName": "KotlinLoggerInitializedWithForeignClass",
-          "displayName": "Logger initialized with foreign class",
-          "enabled": false,
-          "description": "Reports `Logger` instances initialized with a class literal other than the class the `Logger` resides in.\n\n\nThis can happen when copy-pasting from another class.\nIt may result in logging events under an unexpected category and incorrect filtering.\n\n\nUse the inspection options to specify the logger factory classes and methods recognized by this inspection.\n\n**Example:**\n\n\n    class AnotherService\n    class MyService {\n        private val logger = LoggerFactory.getLogger(AnotherService::class.java)\n    }\n\nAfter the quick-fix is applied:\n\n\n    class MyService {\n        private val logger = LoggerFactory.getLogger(MyService::class.java)\n    }\n"
         }
       ]
     },
