@@ -1,31 +1,31 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Code maturity",
-  "type": "Commented out code",
-  "severity": "Moderate",
-  "comment": "Commented out code (6 lines)",
-  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
+  "category": "Class structure",
+  "type": "Field can be local",
+  "severity": "High",
+  "comment": "Field can be converted to a local variable",
+  "detailsInfo": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractFindMethodDiagnostic.java",
       "language": "JAVA",
-      "line": 72,
-      "offset": 1,
-      "length": 2,
+      "line": 45,
+      "offset": 19,
+      "length": 13,
       "code": {
-        "startLine": 70,
-        "length": 2,
-        "offset": 36,
-        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
+        "startLine": 43,
+        "length": 13,
+        "offset": 38,
+        "surroundingCode": "  @Getter\n  @Setter\n  private Pattern methodPattern;\n\n  /**"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "CommentedOutCode"
+    "inspectionName": "FieldCanBeLocal"
   },
-  "hash": "5f0674d74495771954e4a3d3cbe6882a73d6c81eae51abc3ad43b4d2c3b0eb28"
+  "hash": "fa7f0813ab7be14d221be86650a32efb5120843d80ce66d79056533dc482bcca"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
@@ -87,21 +87,21 @@
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'skipAnnotatedMethods' may be 'final'",
+  "comment": "Field 'allowMagicIndexes' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NonExportMethodsInApiRegionDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MagicNumberDiagnostic.java",
       "language": "JAVA",
-      "line": 60,
+      "line": 63,
       "offset": 19,
-      "length": 20,
+      "length": 17,
       "code": {
-        "startLine": 58,
-        "length": 20,
-        "offset": 69,
-        "surroundingCode": "    defaultValue = \"\" + SKIP_ANNOTATED_METHODS\n  )\n  private boolean skipAnnotatedMethods = SKIP_ANNOTATED_METHODS;\n\n  @Override"
+        "startLine": 61,
+        "length": 17,
+        "offset": 73,
+        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOW_MAGIC_NUMBER\n  )\n  private boolean allowMagicIndexes = DEFAULT_ALLOW_MAGIC_NUMBER;\n\n  @Override"
       }
     }
   ],
@@ -109,27 +109,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "498975085a7e70049d1baf8654924a79d2f93d3ac5e5335113da02937f0ddee7"
+  "hash": "30bd7ea161247d581adf409d5eab08b84dd3f7ac8af959dc7d8239df688c91d2"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'allowShortDescriptionReturnValues' may be 'final'",
+  "comment": "Field 'allowTrailingPartsInAnotherLanguage' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingReturnedValueDescriptionDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LatinAndCyrillicSymbolInWordDiagnostic.java",
       "language": "JAVA",
-      "line": 54,
+      "line": 97,
       "offset": 19,
-      "length": 33,
+      "length": 35,
       "code": {
-        "startLine": 52,
-        "length": 33,
-        "offset": 84,
-        "surroundingCode": "    defaultValue = \"\" + ALLOW_SHORT_DESCRIPTION_RETURN_VALUES\n  )\n  private boolean allowShortDescriptionReturnValues = ALLOW_SHORT_DESCRIPTION_RETURN_VALUES;\n\n  /**"
+        "startLine": 95,
+        "length": 35,
+        "offset": 91,
+        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOW_TRAILING_PARTS_IN_ANOTHER_LANG\n  )\n  private boolean allowTrailingPartsInAnotherLanguage = DEFAULT_ALLOW_TRAILING_PARTS_IN_ANOTHER_LANG;\n\n  private static Pattern createExcludeWordPattern(String words) {"
       }
     }
   ],
@@ -137,7 +137,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "4bea86eece7f4d689a5bf164149222994f8d8ffa80d73dcf2228269fc4d7ccbb"
+  "hash": "4a2bcd1e6dd658cb348f1bde4298947c7e98027c2abc82ad190bb1c29a40d978"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
@@ -166,6 +166,34 @@
     "inspectionName": "FieldMayBeFinal"
   },
   "hash": "4c28ea190dd62d3f3d454eb16431e07c7b95a3a44b93503d3206d4129b213245"
+},{
+  "tool": "Code Inspection",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
+  "severity": "High",
+  "comment": "Field 'maxParamsCount' may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfParamsDiagnostic.java",
+      "language": "JAVA",
+      "line": 49,
+      "offset": 15,
+      "length": 14,
+      "code": {
+        "startLine": 47,
+        "length": 14,
+        "offset": 59,
+        "surroundingCode": "    defaultValue = \"\" + MAX_PARAMS_COUNT\n  )\n  private int maxParamsCount = MAX_PARAMS_COUNT;\n\n  @Override"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldMayBeFinal"
+  },
+  "hash": "65645f1e257b134306f5b0361bcfe093957d6c56066c1ca9b2456efcc88af1dc"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
@@ -227,21 +255,21 @@
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'allowOneliner' may be 'final'",
+  "comment": "Field 'parameters' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/inlayhints/InlayHintOptions.java",
       "language": "JAVA",
-      "line": 61,
-      "offset": 19,
-      "length": 13,
+      "line": 49,
+      "offset": 61,
+      "length": 10,
       "code": {
-        "startLine": 59,
-        "length": 13,
-        "offset": 69,
-        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOW_ONELINER\n  )\n  private boolean allowOneliner = DEFAULT_ALLOW_ONELINER;\n\n  @DiagnosticParameter("
+        "startLine": 47,
+        "length": 10,
+        "offset": 123,
+        "surroundingCode": "   */\n  @JsonDeserialize(using = ParametersDeserializer.class)\n  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();\n}\n"
       }
     }
   ],
@@ -249,7 +277,63 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "d90a0f8919473908e6206b92603c8afc258fd23f6f41953540f9809e8758dcfc"
+  "hash": "b635c8a07ffa4ed2069d04a214bf30f4d8692f014541d72d051032438d3f1048"
+},{
+  "tool": "Code Inspection",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
+  "severity": "High",
+  "comment": "Field 'methodPattern' may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractFindMethodDiagnostic.java",
+      "language": "JAVA",
+      "line": 45,
+      "offset": 19,
+      "length": 13,
+      "code": {
+        "startLine": 43,
+        "length": 13,
+        "offset": 38,
+        "surroundingCode": "  @Getter\n  @Setter\n  private Pattern methodPattern;\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldMayBeFinal"
+  },
+  "hash": "cf84819f339902603b36a0444f5a874ab84d01b78a229b3969c6a59b45e62af7"
+},{
+  "tool": "Code Inspection",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
+  "severity": "High",
+  "comment": "Field 'interner' may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/references/model/Symbol.java",
+      "language": "JAVA",
+      "line": 41,
+      "offset": 42,
+      "length": 8,
+      "code": {
+        "startLine": 39,
+        "length": 8,
+        "offset": 94,
+        "surroundingCode": "public class Symbol implements Comparable<Symbol> {\n\n  private static GenericInterner<Symbol> interner = new GenericInterner<>();\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldMayBeFinal"
+  },
+  "hash": "de9508a49d7d8d66f38f036c679006edf2c16b717987018138bfafe229e18309"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
@@ -280,32 +364,32 @@
   "hash": "e595d4c2ddc63ac5783e7ebb56eed6d7b295e25c0bacf86b80a95e921b7df563"
 },{
   "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
+  "category": "Verbose or redundant code constructs",
+  "type": "Stream API call chain can be simplified",
   "severity": "High",
-  "comment": "Field 'allowedMethodNames' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
+  "comment": "'collect(toUnmodifiableList())' can be replaced with 'toList()'",
+  "detailsInfo": "Reports stream API call chains that can be simplified. Simplification will often avoid some temporary object creation during collection traversal.\n\n\nThe inspection replaces the following call chains:\n\n* `collection.stream().forEach()` → `collection.forEach()`\n* `collection.stream().collect(toList/toSet/toCollection())` → `new CollectionType<>(collection)`\n* `collection.stream().toArray()` → `collection.toArray()`\n* `Arrays.asList().stream()` → `Arrays.stream()` or `Stream.of()`\n* `IntStream.range(0, array.length).mapToObj(idx -> array[idx])` → `Arrays.stream(array)`\n* `IntStream.range(0, list.size()).mapToObj(idx -> list.get(idx))` → `list.stream()`\n* `Collections.singleton().stream()` → `Stream.of()`\n* `Collections.emptyList().stream()` → `Stream.empty()`\n* `stream.filter().findFirst().isPresent()` → `stream.anyMatch()`\n* `stream.collect(counting())` → `stream.count()`\n* `stream.collect(maxBy())` → `stream.max()`\n* `stream.collect(mapping())` → `stream.map().collect()`\n* `stream.collect(reducing())` → `stream.reduce()`\n* `stream.collect(summingInt())` → `stream.mapToInt().sum()`\n* `stream.mapToObj(x -> x)` → `stream.boxed()`\n* `stream.map(x -> {...; return x;})` → `stream.peek(x -> ...)`\n* `!stream.anyMatch()` → `stream.noneMatch()`\n* `!stream.anyMatch(x -> !(...))` → `stream.allMatch()`\n* `stream.map().anyMatch(Boolean::booleanValue)` → `stream.anyMatch()`\n* `IntStream.range(expr1, expr2).mapToObj(x -> array[x])` → `Arrays.stream(array, expr1, expr2)`\n* `Collection.nCopies(count, ...)` → `Stream.generate().limit(count)`\n* `stream.sorted(comparator).findFirst()` → `Stream.min(comparator)`\n* `optional.orElseGet(() -> { throw new ...; })` → `optional.orElseThrow()`\n\n\nNote that the replacement semantics may have minor differences in some cases. For example,\n`Collections.synchronizedList(...).stream().forEach()` is not synchronized while\n`Collections.synchronizedList(...).forEach()` is synchronized.\nAlso, `collect(Collectors.maxBy())` returns an empty `Optional` if the resulting element is\n`null` while `Stream.max()` throws `NullPointerException` in this case.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NestedFunctionInParametersDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/DuplicatedInsertionIntoCollectionDiagnostic.java",
       "language": "JAVA",
-      "line": 67,
-      "offset": 18,
-      "length": 18,
+      "line": 336,
+      "offset": 10,
+      "length": 40,
       "code": {
-        "startLine": 65,
-        "length": 18,
-        "offset": 61,
-        "surroundingCode": "    defaultValue = ALLOWED_METHOD_NAMES\n  )\n  private String allowedMethodNames = ALLOWED_METHOD_NAMES;\n\n  private static Pattern compilePattern(String allowedNames) {"
+        "startLine": 334,
+        "length": 40,
+        "offset": 139,
+        "surroundingCode": "      blockBreakers = Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES).stream()\n        .map(BSLParserRuleContext.class::cast)\n        .collect(Collectors.toUnmodifiableList());\n    }\n    return blockBreakers;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
+    "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "f8b9804f03041b68ebce3381e3e4dd1d9bb83018f973b5e5095ade042b3afb0d"
+  "hash": "1885f755fcd925bf5a284b6146dd352c554d4271ef145a9e0380cfb1733040cd"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
@@ -316,16 +400,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/BSLLSPLauncher.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/DuplicatedInsertionIntoCollectionDiagnostic.java",
       "language": "JAVA",
-      "line": 130,
+      "line": 355,
       "offset": 10,
       "length": 28,
       "code": {
-        "startLine": 128,
+        "startLine": 353,
         "length": 28,
-        "offset": 172,
-        "surroundingCode": "      var unmatchedArgs = parseResult.unmatched().stream()\n        .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))\n        .collect(Collectors.toList());\n\n      if (!unmatchedArgs.isEmpty()) {"
+        "offset": 161,
+        "surroundingCode": "        .map(BSLParser.ComplexIdentifierContext.class::cast)\n        .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)\n        .collect(Collectors.toList());\n      final var reducedIdentifiers = new ArrayList<String>();\n      for (BSLParser.ComplexIdentifierContext identifier : identifiers) {"
       }
     }
   ],
@@ -333,27 +417,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "168b8e1791c81be0d5565ac9821e6c52c01470e4a78df830dcf977c7ca1281a3"
+  "hash": "4513d0aa8d54a9e2b0612af01bb5ae8a2dcce0f8c8c616ca26133c4cb2ea335a"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
   "type": "Stream API call chain can be simplified",
   "severity": "High",
-  "comment": "Can be replaced with 'peek'",
+  "comment": "'collect(toUnmodifiableList())' can be replaced with 'toList()'",
   "detailsInfo": "Reports stream API call chains that can be simplified. Simplification will often avoid some temporary object creation during collection traversal.\n\n\nThe inspection replaces the following call chains:\n\n* `collection.stream().forEach()` → `collection.forEach()`\n* `collection.stream().collect(toList/toSet/toCollection())` → `new CollectionType<>(collection)`\n* `collection.stream().toArray()` → `collection.toArray()`\n* `Arrays.asList().stream()` → `Arrays.stream()` or `Stream.of()`\n* `IntStream.range(0, array.length).mapToObj(idx -> array[idx])` → `Arrays.stream(array)`\n* `IntStream.range(0, list.size()).mapToObj(idx -> list.get(idx))` → `list.stream()`\n* `Collections.singleton().stream()` → `Stream.of()`\n* `Collections.emptyList().stream()` → `Stream.empty()`\n* `stream.filter().findFirst().isPresent()` → `stream.anyMatch()`\n* `stream.collect(counting())` → `stream.count()`\n* `stream.collect(maxBy())` → `stream.max()`\n* `stream.collect(mapping())` → `stream.map().collect()`\n* `stream.collect(reducing())` → `stream.reduce()`\n* `stream.collect(summingInt())` → `stream.mapToInt().sum()`\n* `stream.mapToObj(x -> x)` → `stream.boxed()`\n* `stream.map(x -> {...; return x;})` → `stream.peek(x -> ...)`\n* `!stream.anyMatch()` → `stream.noneMatch()`\n* `!stream.anyMatch(x -> !(...))` → `stream.allMatch()`\n* `stream.map().anyMatch(Boolean::booleanValue)` → `stream.anyMatch()`\n* `IntStream.range(expr1, expr2).mapToObj(x -> array[x])` → `Arrays.stream(array, expr1, expr2)`\n* `Collection.nCopies(count, ...)` → `Stream.generate().limit(count)`\n* `stream.sorted(comparator).findFirst()` → `Stream.min(comparator)`\n* `optional.orElseGet(() -> { throw new ...; })` → `optional.orElseThrow()`\n\n\nNote that the replacement semantics may have minor differences in some cases. For example,\n`Collections.synchronizedList(...).stream().forEach()` is not synchronized while\n`Collections.synchronizedList(...).forEach()` is synchronized.\nAlso, `collect(Collectors.maxBy())` returns an empty `Optional` if the resulting element is\n`null` while `Stream.max()` throws `NullPointerException` in this case.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ScheduledJobHandlerDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/DuplicatedInsertionIntoCollectionDiagnostic.java",
       "language": "JAVA",
-      "line": 89,
-      "offset": 8,
-      "length": 3,
+      "line": 327,
+      "offset": 10,
+      "length": 40,
       "code": {
-        "startLine": 87,
-        "length": 3,
-        "offset": 111,
-        "surroundingCode": "    scheduledJobHandlers.values().stream()\n      .filter(mdScheduledJobs -> mdScheduledJobs.size() > 1)\n      .map((List<MDScheduledJob> mdScheduledJobs) -> {\n        mdScheduledJobs.sort(Comparator.comparing(AbstractMDObjectBase::getName));\n        return mdScheduledJobs;"
+        "startLine": 325,
+        "length": 40,
+        "offset": 148,
+        "surroundingCode": "      blockAssignments = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment).stream()\n        .map(AssignmentContext.class::cast)\n        .collect(Collectors.toUnmodifiableList());\n    }\n    return blockAssignments;"
       }
     }
   ],
@@ -361,61 +445,33 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "823ed7dbd83188d778df42de4a3cd29f1b3aa5522ea30adcbb2249f6749dfef4"
+  "hash": "786cf5cdd6a3110b29f4f62d5476c61aaa03b01516b945a804774566845a866b"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
-  "type": "Concatenation with empty string",
+  "type": "Stream API call chain can be simplified",
   "severity": "High",
-  "comment": "Empty string used in concatenation",
-  "detailsInfo": "Reports string concatenations where one of the arguments is the empty string. Such a concatenation is unnecessary. Sometimes, it's used as an idiom for converting non-`String` objects or primitives into `String`s, but in this case, it's clearer to use a method like `String.valueOf`.\n\n\nA quick-fix is suggested to simplify the concatenation.\n\n**Example:**\n\n\n      void foo(int x, int y) {\n        String s = \"\" + x + \" ; \" + y;\n      }\n\nAfter the quick-fix is applied:\n\n\n      void foo(int x, int y) {\n        String s = x + \" ; \" + y;\n      }\n\n\nUse the **Report only cases when empty string can be deleted without other changes**\noption to only report cases when empty string can be deleted\nwithout conversion other operands with `String.valueOf`.",
+  "comment": "'collect(toUnmodifiableList())' can be replaced with 'toList()'",
+  "detailsInfo": "Reports stream API call chains that can be simplified. Simplification will often avoid some temporary object creation during collection traversal.\n\n\nThe inspection replaces the following call chains:\n\n* `collection.stream().forEach()` → `collection.forEach()`\n* `collection.stream().collect(toList/toSet/toCollection())` → `new CollectionType<>(collection)`\n* `collection.stream().toArray()` → `collection.toArray()`\n* `Arrays.asList().stream()` → `Arrays.stream()` or `Stream.of()`\n* `IntStream.range(0, array.length).mapToObj(idx -> array[idx])` → `Arrays.stream(array)`\n* `IntStream.range(0, list.size()).mapToObj(idx -> list.get(idx))` → `list.stream()`\n* `Collections.singleton().stream()` → `Stream.of()`\n* `Collections.emptyList().stream()` → `Stream.empty()`\n* `stream.filter().findFirst().isPresent()` → `stream.anyMatch()`\n* `stream.collect(counting())` → `stream.count()`\n* `stream.collect(maxBy())` → `stream.max()`\n* `stream.collect(mapping())` → `stream.map().collect()`\n* `stream.collect(reducing())` → `stream.reduce()`\n* `stream.collect(summingInt())` → `stream.mapToInt().sum()`\n* `stream.mapToObj(x -> x)` → `stream.boxed()`\n* `stream.map(x -> {...; return x;})` → `stream.peek(x -> ...)`\n* `!stream.anyMatch()` → `stream.noneMatch()`\n* `!stream.anyMatch(x -> !(...))` → `stream.allMatch()`\n* `stream.map().anyMatch(Boolean::booleanValue)` → `stream.anyMatch()`\n* `IntStream.range(expr1, expr2).mapToObj(x -> array[x])` → `Arrays.stream(array, expr1, expr2)`\n* `Collection.nCopies(count, ...)` → `Stream.generate().limit(count)`\n* `stream.sorted(comparator).findFirst()` → `Stream.min(comparator)`\n* `optional.orElseGet(() -> { throw new ...; })` → `optional.orElseThrow()`\n\n\nNote that the replacement semantics may have minor differences in some cases. For example,\n`Collections.synchronizedList(...).stream().forEach()` is not synchronized while\n`Collections.synchronizedList(...).forEach()` is synchronized.\nAlso, `collect(Collectors.maxBy())` returns an empty `Optional` if the resulting element is\n`null` while `Stream.max()` throws `NullPointerException` in this case.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractMultilingualStringDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/DuplicatedInsertionIntoCollectionDiagnostic.java",
       "language": "JAVA",
-      "line": 37,
-      "offset": 20,
-      "length": 2,
-      "code": {
-        "startLine": 35,
-        "length": 2,
-        "offset": 68,
-        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = \"\" + DECLARED_LANGUAGES_DEFAULT\n  )\n  private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "TrivialStringConcatenation"
-  },
-  "hash": "20195ba09049ad15b7c208759bf36e85246e87c58ea036e693c91d634dff1698"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "severity": "High",
-  "comment": "Unused import 'import org.antlr.v4.runtime.RuleContext;'",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codeactions/ExtractStructureConstructorSupplier.java",
-      "language": "JAVA",
-      "line": 35,
-      "offset": 1,
+      "line": 345,
+      "offset": 10,
       "length": 40,
       "code": {
-        "startLine": 33,
+        "startLine": 343,
         "length": 40,
-        "offset": 101,
-        "surroundingCode": "import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;\nimport lombok.RequiredArgsConstructor;\nimport org.antlr.v4.runtime.RuleContext;\nimport org.antlr.v4.runtime.tree.TerminalNode;\nimport org.eclipse.lsp4j.CodeAction;"
+        "offset": 145,
+        "surroundingCode": "      blockCallParams = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_callParam).stream()\n        .map(CallParamContext.class::cast)\n        .collect(Collectors.toUnmodifiableList());\n    }\n    return blockCallParams;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
+    "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "d6d2b7e443732e19ee62238a2dead2c4681ee40bdc2e748a9be2e70ac5045a33"
+  "hash": "d0705236022c38f06c0983cf0660d2e00eab0831b7fe3e287633601d435aaf2c"
 }]}
