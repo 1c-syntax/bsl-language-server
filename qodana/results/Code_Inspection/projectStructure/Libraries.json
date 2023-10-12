@@ -1282,6 +1282,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.8.0/75c7ab7a89c154486f24a769bd5b95326297437f/spotbugs-annotations-4.8.0.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.36",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-generator-bytecode/1.36/b8ab8b88a6b48a0cb540ede365fa84876e6608bf/jmh-generator-bytecode-1.36.jar!/"

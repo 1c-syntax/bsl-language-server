@@ -110,7 +110,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.0",
           "type": "Library"
         },
         {
@@ -683,6 +683,10 @@
         },
         {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.4",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
           "type": "Library"
         },
         {

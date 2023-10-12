@@ -90,12 +90,12 @@
       "version": "0.3.0"
     },
     {
-      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
-      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.0",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.8.0",
       "unresolved": false,
       "groupId": "com.github.spotbugs",
       "artifactId": "spotbugs-annotations",
-      "version": "4.7.3"
+      "version": "4.8.0"
     },
     {
       "ideaName": "Gradle: org.languagetool:language-en:6.1",
@@ -1240,6 +1240,14 @@
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-test",
       "version": "3.1.4"
+    },
+    {
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.7.3",
+      "unresolved": false,
+      "groupId": "com.github.spotbugs",
+      "artifactId": "spotbugs-annotations",
+      "version": "4.7.3"
     },
     {
       "ideaName": "Gradle: org.jmockit:jmockit:1.49",
