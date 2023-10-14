@@ -42,7 +42,8 @@ import java.util.regex.Pattern;
   tags = {
     DiagnosticTag.SUSPICIOUS
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  activatedByDefault = false
 )
 public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
   public static final String NEW_EXPRESSION = "File|Файл|xBase|HTMLWriter|ЗаписьHTML|HTMLReader|ЧтениеHTML" +
@@ -76,7 +77,7 @@ public class FileSystemAccessDiagnostic extends AbstractFindMethodDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + GLOBAL_METHODS
+    defaultValue = GLOBAL_METHODS
   )
   private String globalMethods = GLOBAL_METHODS;
 
