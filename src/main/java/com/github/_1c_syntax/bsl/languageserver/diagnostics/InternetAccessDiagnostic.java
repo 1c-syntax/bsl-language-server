@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.VULNERABILITY,
-  severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 60,
   tags = {
     DiagnosticTag.SUSPICIOUS
   },
