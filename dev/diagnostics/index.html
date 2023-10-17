@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.7">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.2.7">
     
     
       
@@ -1191,10 +1191,10 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>167</strong></p>
+<p>Общее количество: <strong>168</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>6</strong></li>
-<li>Уязвимость: <strong>4</strong></li>
+<li>Уязвимость: <strong>5</strong></li>
 <li>Ошибка: <strong>55</strong></li>
 <li>Дефект кода: <strong>102</strong></li>
 </ul>
@@ -1633,6 +1633,14 @@
 <td>Критичный</td>
 <td>Ошибка</td>
 <td><code>sql</code><br><code>suspicious</code><br><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="FileSystemAccess/">FileSystemAccess</a></td>
+<td>Доступ к файловой системе</td>
+<td style="text-align: center;">Нет</td>
+<td>Важный</td>
+<td>Уязвимость</td>
+<td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="ForbiddenMetadataName/">ForbiddenMetadataName</a></td>

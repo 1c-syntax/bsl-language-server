@@ -672,6 +672,16 @@
             "title": "No NULL checks for fields from joined tables",
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
         },
+        "FileSystemAccess": {
+            "description": "FileSystemAccess",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "FileSystemAccess",
+            "$id": "#/definitions/FileSystemAccess"
+        },
         "ForbiddenMetadataName": {
             "description": "Metadata object has a forbidden name",
             "default": true,
@@ -1902,6 +1912,12 @@
                     "default": "\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0430\u0435\u043c\u044b\u0439_,attachable_",
                     "type": "string",
                     "title": "Method prefixes (comma separated)"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check object modules"
                 }
             },
             "$id": "#/definitions/UnusedLocalMethod"
