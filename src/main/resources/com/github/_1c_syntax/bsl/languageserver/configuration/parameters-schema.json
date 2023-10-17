@@ -672,6 +672,16 @@
             "title": "No NULL checks for fields from joined tables",
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
         },
+        "FileSystemAccess": {
+            "description": "FileSystemAccess",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "FileSystemAccess",
+            "$id": "#/definitions/FileSystemAccess"
+        },
         "ForbiddenMetadataName": {
             "description": "Metadata object has a forbidden name",
             "default": true,
