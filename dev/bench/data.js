@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1697223752432,
+  "lastUpdate": 1697514208164,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24025,6 +24025,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1761132410223318",
             "extra": "mean: 59.1045917669932 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "460e4277e5d500b35b44839913f24136c65b9ec4",
+          "message": "Merge pull request #3117 from artbear/file-system-access\n\nПравило Доступ к файловой системе - FileSystemAccess - ГОТОВО",
+          "timestamp": "2023-10-17T06:30:58+03:00",
+          "tree_id": "798ef0197bc0fcad18722515737edbddf3d1dc44",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/460e4277e5d500b35b44839913f24136c65b9ec4"
+        },
+        "date": 1697514201157,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.14335687955221,
+            "unit": "sec",
+            "range": "stddev: 0.6799426680395262",
+            "extra": "mean: 59.14335687955221 sec\nrounds: 3"
           }
         ]
       }
