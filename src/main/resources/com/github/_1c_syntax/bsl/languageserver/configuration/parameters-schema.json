@@ -1470,6 +1470,16 @@
             "title": "Source code parse error",
             "$id": "#/definitions/ParseError"
         },
+        "PrivilegedModuleMethodCall": {
+            "description": "Accessing privileged module methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Accessing privileged module methods",
+            "$id": "#/definitions/PrivilegedModuleMethodCall"
+        },
         "ProcedureReturnsValue": {
             "description": "Procedure should not return Value",
             "default": true,

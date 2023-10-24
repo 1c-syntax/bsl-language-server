@@ -1,4 +1,4 @@
-# <Diagnostic name> (PrivilegedModuleMethodCall)
+# Accessing privileged module methods (PrivilegedModuleMethodCall)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

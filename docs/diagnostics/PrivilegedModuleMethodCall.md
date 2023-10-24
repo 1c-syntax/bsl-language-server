@@ -1,4 +1,4 @@
-# <Diagnostic name> (PrivilegedModuleMethodCall)
+# Обращение к методам привилегированных модулей (PrivilegedModuleMethodCall)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
