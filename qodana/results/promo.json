@@ -1,143 +1,31 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Access static member via instance reference",
+  "category": "Class structure",
+  "type": "Field can be local",
   "severity": "High",
-  "comment": "Static member 'com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.getConfigurationFile(java.nio.file.Path)' accessed via instance reference",
-  "detailsInfo": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n",
+  "comment": "Field can be converted to a local variable",
+  "detailsInfo": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/watcher/ConfigurationFileSystemWatcher.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/Language.java",
       "language": "JAVA",
-      "line": 113,
-      "offset": 26,
-      "length": 38,
+      "line": 53,
+      "offset": 24,
+      "length": 12,
       "code": {
-        "startLine": 111,
-        "length": 38,
-        "offset": 117,
-        "surroundingCode": "  @EventListener\n  public void handleEvent(LanguageServerConfigurationChangedEvent event) {\n    registerWatchService(event.getSource().getConfigurationFile());\n  }\n"
+        "startLine": 51,
+        "length": 12,
+        "offset": 39,
+        "surroundingCode": "   */\n  @Getter\n  private final String languageCode;\n\n  /**"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "AccessStaticViaInstance"
+    "inspectionName": "FieldCanBeLocal"
   },
-  "hash": "67673823f193437f6a4310f63fb89bc57dbfdbd7499ee0e4f289bb2043592cce"
-},{
-  "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Access static member via instance reference",
-  "severity": "High",
-  "comment": "Static member 'com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.getConfigurationFile(java.nio.file.Path)' accessed via instance reference",
-  "detailsInfo": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/watcher/ConfigurationFileSystemWatcher.java",
-      "language": "JAVA",
-      "line": 71,
-      "offset": 26,
-      "length": 34,
-      "code": {
-        "startLine": 69,
-        "length": 34,
-        "offset": 130,
-        "surroundingCode": "  public void init() throws IOException {\n    watchService = FileSystems.getDefault().newWatchService();\n    registerWatchService(configuration.getConfigurationFile());\n  }\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AccessStaticViaInstance"
-  },
-  "hash": "a7473eb1a5e73211e874689b5230b443be72f709e5750b422b2a5261e7efaed8"
-},{
-  "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Access static member via instance reference",
-  "severity": "High",
-  "comment": "Static member 'com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.getConfigurationFile(java.nio.file.Path)' accessed via instance reference",
-  "detailsInfo": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/watcher/ConfigurationFileSystemWatcher.java",
-      "language": "JAVA",
-      "line": 149,
-      "offset": 51,
-      "length": 34,
-      "code": {
-        "startLine": 147,
-        "length": 34,
-        "offset": 157,
-        "surroundingCode": "  private boolean isConfigurationFile(File pathname) {\n    var absolutePathname = Absolute.path(pathname);\n    var absoluteConfigurationFile = Absolute.path(configuration.getConfigurationFile());\n    return absolutePathname.equals(absoluteConfigurationFile);\n  }"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "AccessStaticViaInstance"
-  },
-  "hash": "f0dfc0c46cb0e7161a3722b32fca458036b950a7e0f0537b1db48cabf46f17c9"
-},{
-  "tool": "Code Inspection",
-  "category": "Code maturity",
-  "type": "Commented out code",
-  "severity": "Moderate",
-  "comment": "Commented out code (6 lines)",
-  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
-      "language": "JAVA",
-      "line": 72,
-      "offset": 1,
-      "length": 2,
-      "code": {
-        "startLine": 70,
-        "length": 2,
-        "offset": 36,
-        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "CommentedOutCode"
-  },
-  "hash": "5f0674d74495771954e4a3d3cbe6882a73d6c81eae51abc3ad43b4d2c3b0eb28"
-},{
-  "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Default annotation parameter value",
-  "severity": "High",
-  "comment": "Redundant default parameter value assignment",
-  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/UnaryOperationNode.java",
-      "language": "JAVA",
-      "line": 33,
-      "offset": 32,
-      "length": 5,
-      "code": {
-        "startLine": 31,
-        "length": 5,
-        "offset": 42,
-        "surroundingCode": " */\n@Value\n@EqualsAndHashCode(callSuper = false)\n@ToString(callSuper = true)\npublic class UnaryOperationNode extends BslOperationNode {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "DefaultAnnotationParam"
-  },
-  "hash": "8ea950408217e2f5012398bf6f2515fdc479bc1211c0763141aac0036ee6797a"
+  "hash": "68ab9a9e5b8328ef6181d89f06b473cad424d11ad25d6cf0b23319e49f3221cf"
 },{
   "tool": "Code Inspection",
   "category": "Class structure",
@@ -148,16 +36,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/CfgEdge.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/websocket/WebSocketConfiguration.java",
       "language": "JAVA",
-      "line": 29,
-      "offset": 29,
-      "length": 4,
+      "line": 44,
+      "offset": 18,
+      "length": 12,
       "code": {
-        "startLine": 27,
-        "length": 4,
-        "offset": 87,
-        "surroundingCode": "public final class CfgEdge extends DefaultEdge {\n  @Getter\n  private final CfgEdgeType type;\n\n  public CfgEdge() {"
+        "startLine": 42,
+        "length": 12,
+        "offset": 56,
+        "surroundingCode": "\n  @Value(\"${app.websocket.lsp-path}\")\n  private String endpointPath = \"\";\n\n  @Bean"
       }
     }
   ],
@@ -165,27 +53,55 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldCanBeLocal"
   },
-  "hash": "e20aa76bd385020cfc36fa0f81158a34d9b9d41d5fb732e96575253044b11894"
+  "hash": "6e6ac63a8d8aea473efb9ed37b14656963a083407e457a0f68515393db5d1406"
+},{
+  "tool": "Code Inspection",
+  "category": "Class structure",
+  "type": "Field can be local",
+  "severity": "High",
+  "comment": "Field can be converted to a local variable",
+  "detailsInfo": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/Language.java",
+      "language": "JAVA",
+      "line": 59,
+      "offset": 24,
+      "length": 6,
+      "code": {
+        "startLine": 57,
+        "length": 6,
+        "offset": 39,
+        "surroundingCode": "   */\n  @Getter\n  private final Locale locale;\n\n  /**"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "FieldCanBeLocal"
+  },
+  "hash": "80a1e9c55f42859d3a2f302324bc153978d37a6e5202702ef3274e9b37e83dfa"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'skipSupport' may be 'final'",
+  "comment": "Field 'checkRecordSetModule' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RedundantAccessToObjectDiagnostic.java",
       "language": "JAVA",
-      "line": 46,
-      "offset": 23,
-      "length": 11,
+      "line": 91,
+      "offset": 19,
+      "length": 20,
       "code": {
-        "startLine": 44,
-        "length": 11,
-        "offset": 121,
-        "surroundingCode": "  private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;\n  private boolean analyzeOnStart;\n  private SkipSupport skipSupport = SkipSupport.NEVER;\n  private Mode mode = Mode.ON;\n  private boolean ordinaryAppSupport = true;"
+        "startLine": 89,
+        "length": 20,
+        "offset": 70,
+        "surroundingCode": "    defaultValue = \"\" + CHECK_RECORD_SET_MODULE\n  )\n  private boolean checkRecordSetModule = CHECK_RECORD_SET_MODULE;\n\n  @Override"
       }
     }
   ],
@@ -193,139 +109,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "0c17bb656c01a33fa0fe800dbbe8b63f7e73500ca91b5cb23a73fcc3ea7b33c7"
+  "hash": "787eddc88b3c75fca6882714f3d6810d30d89fc20074abc2ae854152bd6166cc"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'computeTrigger' may be 'final'",
+  "comment": "Field 'checkFormModule' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RedundantAccessToObjectDiagnostic.java",
       "language": "JAVA",
-      "line": 44,
-      "offset": 26,
-      "length": 14,
-      "code": {
-        "startLine": 42,
-        "length": 14,
-        "offset": 103,
-        "surroundingCode": "@JsonIgnoreProperties(ignoreUnknown = true)\npublic class DiagnosticsOptions {\n  private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;\n  private boolean analyzeOnStart;\n  private SkipSupport skipSupport = SkipSupport.NEVER;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "19b70620e5c3232e198998d10dfd30a037696e6d912974b6fe2b401c248dd2bc"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'maxMethodSize' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MethodSizeDiagnostic.java",
-      "language": "JAVA",
-      "line": 49,
-      "offset": 15,
-      "length": 13,
-      "code": {
-        "startLine": 47,
-        "length": 13,
-        "offset": 58,
-        "surroundingCode": "    defaultValue = \"\" + MAX_METHOD_SIZE\n  )\n  private int maxMethodSize = MAX_METHOD_SIZE;\n\n  @Override"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "4047637ed68795101333539ac58ae1af0c101850ff80926c5809e7e7c9a588e1"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'mode' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
-      "language": "JAVA",
-      "line": 47,
-      "offset": 16,
-      "length": 4,
-      "code": {
-        "startLine": 45,
-        "length": 4,
-        "offset": 104,
-        "surroundingCode": "  private boolean analyzeOnStart;\n  private SkipSupport skipSupport = SkipSupport.NEVER;\n  private Mode mode = Mode.ON;\n  private boolean ordinaryAppSupport = true;\n  private SubsystemFilter subsystemsFilter = new SubsystemFilter();"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "4c28ea190dd62d3f3d454eb16431e07c7b95a3a44b93503d3206d4129b213245"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'maxOptionalParamsCount' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfOptionalParamsDiagnostic.java",
-      "language": "JAVA",
-      "line": 49,
-      "offset": 15,
-      "length": 22,
-      "code": {
-        "startLine": 47,
-        "length": 22,
-        "offset": 68,
-        "surroundingCode": "    defaultValue = \"\" + MAX_OPTIONAL_PARAMS_COUNT\n  )\n  private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;\n\n  @Override"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "626d549a87a04b3264ad79e445109b0b77c07aca95ea2852de04225a89481fa9"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'checkModuleBody' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CyclomaticComplexityDiagnostic.java",
-      "language": "JAVA",
-      "line": 65,
+      "line": 85,
       "offset": 19,
       "length": 15,
       "code": {
-        "startLine": 63,
+        "startLine": 83,
         "length": 15,
         "offset": 64,
-        "surroundingCode": "    defaultValue = \"\" + CHECK_MODULE_BODY\n  )\n  private boolean checkModuleBody = CHECK_MODULE_BODY;\n\n  private boolean fileCodeBlockChecked;"
+        "surroundingCode": "    defaultValue = \"\" + CHECK_FORM_MODULE\n  )\n  private boolean checkFormModule = CHECK_FORM_MODULE;\n\n  @DiagnosticParameter("
       }
     }
   ],
@@ -333,83 +137,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "69bb9f7050cc390f21e6e56186e1adf37a3893f81fcbd3cb2b60b8d3c21e91b7"
+  "hash": "a1c1fb8bd085441035e65eb2994dd2d6d61124f630e24b7242e9ac90c833499d"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'parameters' may be 'final'",
+  "comment": "Field 'checkObjectModule' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RedundantAccessToObjectDiagnostic.java",
       "language": "JAVA",
-      "line": 52,
-      "offset": 61,
-      "length": 10,
-      "code": {
-        "startLine": 50,
-        "length": 10,
-        "offset": 118,
-        "surroundingCode": "\n  @JsonDeserialize(using = ParametersDeserializer.class)\n  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();\n}\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "b077b179714a7393d8c94c1b14799e4ec06eb478da1942ecda2dc51e2d7019d5"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'subsystemsFilter' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
-      "language": "JAVA",
-      "line": 49,
-      "offset": 27,
-      "length": 16,
-      "code": {
-        "startLine": 47,
-        "length": 16,
-        "offset": 102,
-        "surroundingCode": "  private Mode mode = Mode.ON;\n  private boolean ordinaryAppSupport = true;\n  private SubsystemFilter subsystemsFilter = new SubsystemFilter();\n\n  @JsonDeserialize(using = ParametersDeserializer.class)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "b24471c1b7a37a3d5a2760883d002e7c5c4898774280c1a49050ab6aa42e75d7"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'userWordsToIgnore' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/TypoDiagnostic.java",
-      "language": "JAVA",
-      "line": 113,
-      "offset": 18,
+      "line": 79,
+      "offset": 19,
       "length": 17,
       "code": {
-        "startLine": 111,
+        "startLine": 77,
         "length": 17,
-        "offset": 45,
-        "surroundingCode": "    type = String.class\n  )\n  private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;\n\n  @Override"
+        "offset": 66,
+        "surroundingCode": "    defaultValue = \"\" + CHECK_OBJECT_MODULE\n  )\n  private boolean checkObjectModule = CHECK_OBJECT_MODULE;\n\n  @DiagnosticParameter("
       }
     }
   ],
@@ -417,55 +165,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "d0c33d66b2817ca1022a1b35f7eb6b6687e0e0f7f1a277e2de77b6af624a641a"
+  "hash": "b9f86ed751a309f93c7f59e8e94a0d5471c0129bced418715ea862af749799a0"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field 'complexityThreshold' may be 'final'",
+  "comment": "Field 'methodPattern' may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CyclomaticComplexityDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractFindMethodDiagnostic.java",
       "language": "JAVA",
-      "line": 59,
-      "offset": 15,
-      "length": 19,
-      "code": {
-        "startLine": 57,
-        "length": 19,
-        "offset": 63,
-        "surroundingCode": "    defaultValue = \"\" + COMPLEXITY_THRESHOLD\n  )\n  private int complexityThreshold = COMPLEXITY_THRESHOLD;\n\n  @DiagnosticParameter("
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "d8c8fb087a44e9713a08c362d6f6f7056a15b608882920b5ef7e1cf210df93a4"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field 'ordinaryAppSupport' may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics/DiagnosticsOptions.java",
-      "language": "JAVA",
-      "line": 48,
+      "line": 45,
       "offset": 19,
-      "length": 18,
+      "length": 13,
       "code": {
-        "startLine": 46,
-        "length": 18,
-        "offset": 104,
-        "surroundingCode": "  private SkipSupport skipSupport = SkipSupport.NEVER;\n  private Mode mode = Mode.ON;\n  private boolean ordinaryAppSupport = true;\n  private SubsystemFilter subsystemsFilter = new SubsystemFilter();\n"
+        "startLine": 43,
+        "length": 13,
+        "offset": 38,
+        "surroundingCode": "  @Getter\n  @Setter\n  private Pattern methodPattern;\n\n  /**"
       }
     }
   ],
@@ -473,35 +193,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "e595d4c2ddc63ac5783e7ebb56eed6d7b295e25c0bacf86b80a95e921b7df563"
-},{
-  "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Redundant type cast",
-  "severity": "High",
-  "comment": "Casting 'expression.getParent()' to 'BSLParser.ElsifBranchContext' is redundant",
-  "detailsInfo": "Reports unnecessary cast expressions.\n\nExample:\n\n\n      static Object toObject(String s) {\n        return (Object) s;\n      }\n\n\nUse the checkbox below to ignore clarifying casts e.g., casts in collection calls where `Object` is expected:\n\n\n      static void removeFromList(List<String> l, Object o) {\n        l.remove((String)o);\n      } \n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AllFunctionPathMustHaveReturnDiagnostic.java",
-      "language": "JAVA",
-      "line": 162,
-      "offset": 27,
-      "length": 28,
-      "code": {
-        "startLine": 160,
-        "length": 28,
-        "offset": 168,
-        "surroundingCode": "    var expression = v.getExpression();\n    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {\n      return Optional.of((BSLParser.ElsifBranchContext) expression.getParent());\n    }\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "RedundantCast"
-  },
-  "hash": "cf16fab86b340461a763ad3df7290cbbae7fb2dfc659c327c423912ebc40f68b"
+  "hash": "cf84819f339902603b36a0444f5a874ab84d01b78a229b3969c6a59b45e62af7"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
@@ -512,16 +204,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CommentedCodeDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CodeAfterAsyncCallDiagnostic.java",
       "language": "JAVA",
-      "line": 207,
-      "offset": 10,
+      "line": 93,
+      "offset": 8,
       "length": 28,
       "code": {
-        "startLine": 205,
+        "startLine": 91,
         "length": 28,
-        "offset": 87,
-        "surroundingCode": "        .map(Token::getType)\n        .filter(t -> t != BSLParser.WHITE_SPACE)\n        .collect(Collectors.toList());\n\n      // Если два идентификатора идут подряд - это не код"
+        "offset": 133,
+        "surroundingCode": "      .filter(statementContext -> statementContext != statement &&\n        statementContext.getStart().getLine() > asyncLine)\n      .collect(Collectors.toList());\n    final var compoundCtx = statements.stream()\n      .findFirst()"
       }
     }
   ],
@@ -529,7 +221,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "29fc005010c69992eed7ddc81a47150a7f36ce1881670170a60dca727a13901d"
+  "hash": "16c6ca7d7fdc516a271f0aee5bbe8ae7ef83a5c12ce56c02fc493c5831f58292"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
@@ -540,16 +232,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RewriteMethodParameterDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/EmptyCodeBlockDiagnostic.java",
       "language": "JAVA",
-      "line": 184,
-      "offset": 10,
+      "line": 90,
+      "offset": 8,
       "length": 28,
       "code": {
-        "startLine": 182,
+        "startLine": 88,
         "length": 28,
-        "offset": 61,
-        "surroundingCode": "        reference.getSelectionRange(),\n        \"+1\"\n      )).collect(Collectors.toList());\n    var resultRefs = new ArrayList<DiagnosticRelatedInformation>();\n    resultRefs.add(RelatedInformation.create("
+        "offset": 134,
+        "surroundingCode": "      .filter(TerminalNode.class::isInstance)\n      .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)\n      .collect(Collectors.toList());\n\n    if (!list.isEmpty()) {"
       }
     }
   ],
@@ -557,7 +249,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "54974f45d0575f20f8528cc62150ef6f99612f9e6f3eaa48bbece33fe40e35eb"
+  "hash": "4053ad039841763d0ec95413724fbbacc07974eb43723b5f6dd8ba7947cf5f66"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
@@ -588,114 +280,30 @@
   "hash": "823ed7dbd83188d778df42de4a3cd29f1b3aa5522ea30adcbb2249f6749dfef4"
 },{
   "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
+  "category": "Verbose or redundant code constructs",
+  "type": "Unnecessary 'continue' statement",
   "severity": "High",
-  "comment": "Unused import 'import org.eclipse.lsp4j.InitializeParams;'",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
+  "comment": "'continue' is unnecessary as the last statement in a loop",
+  "detailsInfo": "Reports `continue` statements if they are the last reachable statements in the loop. These `continue` statements are unnecessary and can be safely removed.\n\nExample:\n\n\n      for (String element: elements) {\n        System.out.println();\n        continue;\n      }\n\nAfter the quick-fix is applied:\n\n\n      for (String element: elements) {\n        System.out.println();\n      }\n\nThe inspection doesn't analyze JSP files.\n\n\nUse the **Ignore in then branch of 'if' statement with 'else' branch** option to ignore\n`continue` statements when they are placed in a `then` branch of a complete\n`if`-`else` statement.\n\nExample:\n\n\n      for (String element: elements) {\n        if(element.isEmpty()) {\n          continue;\n        } else {\n          //...\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunTestCodeLensSupplier.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/ExpressionTreeBuildingVisitor.java",
       "language": "JAVA",
-      "line": 39,
-      "offset": 1,
-      "length": 42,
+      "line": 86,
+      "offset": 11,
+      "length": 8,
       "code": {
-        "startLine": 37,
-        "length": 42,
-        "offset": 69,
-        "surroundingCode": "import org.eclipse.lsp4j.CodeLens;\nimport org.eclipse.lsp4j.Command;\nimport org.eclipse.lsp4j.InitializeParams;\nimport org.springframework.context.event.EventListener;\nimport org.springframework.stereotype.Component;"
+        "startLine": 84,
+        "length": 8,
+        "offset": 144,
+        "surroundingCode": "          visitMember((BSLParser.MemberContext) child);\n        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {\n          continue;\n        } else {\n          throw new IllegalStateException();"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
+    "inspectionName": "UnnecessaryContinue"
   },
-  "hash": "9200c3c9275942f2670217fe8ffbcc549f7ed26013189a082abeca9f65d6efea"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "severity": "High",
-  "comment": "Unused import 'import org.eclipse.lsp4j.ClientInfo;'",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunTestCodeLensSupplier.java",
-      "language": "JAVA",
-      "line": 36,
-      "offset": 1,
-      "length": 36,
-      "code": {
-        "startLine": 34,
-        "length": 36,
-        "offset": 55,
-        "surroundingCode": "import lombok.Value;\nimport lombok.extern.slf4j.Slf4j;\nimport org.eclipse.lsp4j.ClientInfo;\nimport org.eclipse.lsp4j.CodeLens;\nimport org.eclipse.lsp4j.Command;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
-  },
-  "hash": "bff10a98b022a89be051d334f1c3e2cec9c3aa73710a4ae359c979eb4c7ad760"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "severity": "High",
-  "comment": "Unused import 'import org.springframework.context.event.EventListener;'",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunTestCodeLensSupplier.java",
-      "language": "JAVA",
-      "line": 40,
-      "offset": 1,
-      "length": 55,
-      "code": {
-        "startLine": 38,
-        "length": 55,
-        "offset": 77,
-        "surroundingCode": "import org.eclipse.lsp4j.Command;\nimport org.eclipse.lsp4j.InitializeParams;\nimport org.springframework.context.event.EventListener;\nimport org.springframework.stereotype.Component;\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
-  },
-  "hash": "e4dcd5985ca48bedffb99516ce3d1aef2a06ce457c0db764cef766fd6e6a89b1"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "severity": "High",
-  "comment": "Unused import 'import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;'",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunTestCodeLensSupplier.java",
-      "language": "JAVA",
-      "line": 29,
-      "offset": 1,
-      "length": 100,
-      "code": {
-        "startLine": 27,
-        "length": 100,
-        "offset": 143,
-        "surroundingCode": "import com.github._1c_syntax.bsl.languageserver.context.FileType;\nimport com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;\nimport com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;\nimport com.github._1c_syntax.bsl.languageserver.utils.Resources;\nimport lombok.EqualsAndHashCode;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
-  },
-  "hash": "ea230cda8f931b9bc3e0d77e5432233bc482eb51a26d04fbe20b0c1b55c91c63"
+  "hash": "79959b8044413433087bc51789bba8e18263a6b395b55f3c11712fe666edfb4f"
 }]}
