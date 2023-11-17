@@ -1478,6 +1478,14 @@
                 "object"
             ],
             "title": "Accessing privileged module methods",
+            "properties": {
+                "validateNestedCalls": {
+                    "description": "Validate nested method calls from privileged modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Validate nested method calls from privileged modules"
+                }
+            },
             "$id": "#/definitions/PrivilegedModuleMethodCall"
         },
         "ProcedureReturnsValue": {

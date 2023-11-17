@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -49,17 +50,17 @@ import java.util.Optional;
 )
 @RequiredArgsConstructor
 public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
+
+  private static final boolean VALIDATE_NESTED_CALLS = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + VALIDATE_NESTED_CALLS
+  )
+  private boolean validateNestedCalls = VALIDATE_NESTED_CALLS;
+
   private final ReferenceIndex referenceIndex;
   private List<ModuleSymbol> privilegedModuleSymbols = new ArrayList<>();
-
-  private static boolean isReferenceToModules(Reference reference, List<ModuleSymbol> privilegedModuleSymbols) {
-    return reference.getSourceDefinedSymbol()
-      .flatMap(sourceDefinedSymbol -> sourceDefinedSymbol.getRootParent(SymbolKind.Module))
-      .filter(ModuleSymbol.class::isInstance)
-      .map(ModuleSymbol.class::cast)
-      .filter(privilegedModuleSymbols::contains)
-      .isPresent();
-  }
 
   @Override
   protected void check() {
@@ -71,7 +72,7 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
     }
 
     referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
-      .filter(reference -> isReferenceToModules(reference, privilegedModuleSymbols))
+      .filter(this::isReferenceToModules)
       .forEach(this::fireIssue);
   }
 
@@ -87,6 +88,18 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
     return documentContext.getServerContext().getDocument(
         mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
       .map(documentContext1 -> documentContext1.getSymbolTree().getModule());
+  }
+
+  private boolean isReferenceToModules(Reference reference) {
+    if (!validateNestedCalls && reference.getUri().equals(documentContext.getUri())){
+      return false;
+    }
+    return reference.getSourceDefinedSymbol()
+      .flatMap(sourceDefinedSymbol -> sourceDefinedSymbol.getRootParent(SymbolKind.Module))
+      .filter(ModuleSymbol.class::isInstance)
+      .map(ModuleSymbol.class::cast)
+      .filter(privilegedModuleSymbols::contains)
+      .isPresent();
   }
 
   private void fireIssue(Reference reference) {

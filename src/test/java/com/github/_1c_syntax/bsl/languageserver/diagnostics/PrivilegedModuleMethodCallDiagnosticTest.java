@@ -24,22 +24,34 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class PrivilegedModuleMethodCallDiagnosticTest extends AbstractDiagnosticTest<PrivilegedModuleMethodCallDiagnostic> {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/privilegedModules";
+  private static final String PATH_TO_MODULE_FILE = PATH_TO_METADATA + "/CommonModules/ПривилегированныйМодуль1/Ext/Module.bsl";
 
   PrivilegedModuleMethodCallDiagnosticTest() {
     super(PrivilegedModuleMethodCallDiagnostic.class);
   }
 
   @Test
+  void testWithoutMetadata() {
+    var diagnostics = getDiagnostics();
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
   void test() {
     initServerContext(PATH_TO_METADATA);
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    var diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
@@ -48,9 +60,32 @@ class PrivilegedModuleMethodCallDiagnosticTest extends AbstractDiagnosticTest<Pr
   }
 
   @Test
-  void testWithoutMetadata() {
+  void getNestedCalls() {
+    var diagnostics = getDiagnosticsAsCommonModule();
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasMessageOnRange("Проверьте обращение к методу ПубличнаяФункция привилегированного модуля", 15, 15, 31)
+      .hasMessageOnRange("Проверьте обращение к методу ПубличнаяПроцедура привилегированного модуля", 19, 4, 22);
+  }
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+  @Test
+  void testParameterValidateNestedCalls() {
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("validateNestedCalls", false);
+    diagnosticInstance.configure(configuration);
+
+    var diagnostics = getDiagnosticsAsCommonModule();
     assertThat(diagnostics).isEmpty();
+  }
+
+  private List<Diagnostic> getDiagnosticsAsCommonModule() {
+    Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+
+    initServerContext(PATH_TO_METADATA);
+
+    var documentContext = spy(getDocumentContext(diagnosticInstance.getClass().getSimpleName()));
+    when(documentContext.getUri()).thenReturn(moduleFile.toUri());
+
+    return getDiagnostics(documentContext);
   }
 }
