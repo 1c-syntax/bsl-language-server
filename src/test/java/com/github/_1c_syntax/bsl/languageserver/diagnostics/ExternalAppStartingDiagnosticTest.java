@@ -75,10 +75,12 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
     .hasRange(9, 4, 23)
     .hasRange(10, 4, 23)
     .hasRange(12, 4, 26)
-    .hasRange(14, 4, 32)
+
+      .hasRange(14, 4, 32)
     .hasRange(15, 26, 52)
     .hasRange(16, 26, 52)
-    .hasRange(18, 26, 44)
+
+      .hasRange(18, 26, 44)
     .hasRange(19, 26, 44)
     .hasRange(20, 20, 38)
     .hasRange(21, 20, 38)
@@ -105,19 +107,14 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
 
     assertThat(diagnostics, true)
       .hasRange(8, 4, 18)
-
-      .hasRange(14, 4, 32)
-      .hasRange(15, 26, 52)
-      .hasRange(16, 26, 52)
-
-      .hasSize(4);
+      .hasSize(1);
   }
 
   @Test
   void testConfigure_userPatternString_checkGotoUrl() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("checkGotoUrl", false);
+    configuration.put("checkGotoUrl", true);
     configuration.put("userPatternString", "КомандаСистемы");
     diagnosticInstance.configure(configuration);
 
@@ -125,6 +122,11 @@ class ExternalAppStartingDiagnosticTest extends AbstractDiagnosticTest<ExternalA
 
     assertThat(diagnostics, true)
       .hasRange(8, 4, 18)
-      .hasSize(1);
+
+      .hasRange(14, 4, 32)
+      .hasRange(15, 26, 52)
+      .hasRange(16, 26, 52)
+
+      .hasSize(4);
   }
 }

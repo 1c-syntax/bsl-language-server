@@ -43,14 +43,13 @@ import java.util.regex.Pattern;
 
 )
 public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic  {
-  private static final String MAIN_PATTERN_STRING =
+  private static final String DEFAULT_PATTERN_STRING =
     "КомандаСистемы|System|ЗапуститьСистему|RunSystem|ЗапуститьПриложение|RunApp" +
     "|НачатьЗапускПриложения|BeginRunningApplication" +
     "|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл";
   private static final String PATTERN_STRING_FOR_NAVI =
     "|ПерейтиПоНавигационнойСсылке|GotoURL|ОткрытьНавигационнуюСсылку";
-  private static final Pattern FULL_PATTERN = CaseInsensitivePattern.compile(
-    MAIN_PATTERN_STRING + PATTERN_STRING_FOR_NAVI);
+  private static final Pattern DEFAULT_PATTERN = CaseInsensitivePattern.compile(DEFAULT_PATTERN_STRING);
   private static final boolean CHECK_GOTO_URL = false;
 
   @DiagnosticParameter(
@@ -61,12 +60,12 @@ public class ExternalAppStartingDiagnostic extends AbstractFindMethodDiagnostic 
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = MAIN_PATTERN_STRING
+    defaultValue = DEFAULT_PATTERN_STRING
   )
-  private String userPatternString = MAIN_PATTERN_STRING;
+  private String userPatternString = DEFAULT_PATTERN_STRING;
 
   public ExternalAppStartingDiagnostic() {
-    super(FULL_PATTERN);
+    super(DEFAULT_PATTERN);
   }
 
   @Override

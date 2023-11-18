@@ -653,7 +653,7 @@
             "properties": {
                 "checkGotoUrl": {
                     "description": "Check navigation links",
-                    "default": true,
+                    "default": false,
                     "type": "boolean",
                     "title": "Check navigation links"
                 },
