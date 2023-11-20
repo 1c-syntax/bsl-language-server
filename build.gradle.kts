@@ -14,7 +14,7 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "8.4"
     id("io.freefair.aspectj.post-compile-weaving") version "8.4"
     id("io.freefair.maven-central.validate-poms") version "8.4"
-    id("me.qoomon.git-versioning") version "6.4.2"
+    id("me.qoomon.git-versioning") version "6.4.3"
     id("com.github.ben-manes.versions") version "0.49.0"
     id("org.springframework.boot") version "3.1.5"
     id("io.spring.dependency-management") version "1.1.4"
