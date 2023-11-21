@@ -70,7 +70,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.34.0",
           "type": "Library"
         },
         {
@@ -170,7 +170,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.33.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.34.0",
           "type": "Library"
         },
         {
@@ -194,7 +194,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.34.0",
           "type": "Library"
         },
         {
@@ -442,7 +442,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.33.1",
+          "name": "Gradle: io.sentry:sentry:6.34.0",
           "type": "Library"
         },
         {
@@ -482,7 +482,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.34.0",
           "type": "Library"
         },
         {
@@ -866,7 +866,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.34.0",
           "type": "Library"
         },
         {
@@ -966,7 +966,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.33.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.34.0",
           "type": "Library"
         },
         {
@@ -982,7 +982,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.34.0",
           "type": "Library"
         },
         {
@@ -1230,7 +1230,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.33.1",
+          "name": "Gradle: io.sentry:sentry:6.34.0",
           "type": "Library"
         },
         {
@@ -1254,7 +1254,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.34.0",
           "type": "Library"
         },
         {
@@ -1526,7 +1526,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter:6.34.0",
           "type": "Library"
         },
         {
@@ -1626,7 +1626,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:6.33.1",
+          "name": "Gradle: io.sentry:sentry-logback:6.34.0",
           "type": "Library"
         },
         {
@@ -1654,7 +1654,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot:6.34.0",
           "type": "Library"
         },
         {
@@ -1950,7 +1950,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:6.33.1",
+          "name": "Gradle: io.sentry:sentry:6.34.0",
           "type": "Library"
         },
         {
@@ -1978,7 +1978,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring:6.33.1",
+          "name": "Gradle: io.sentry:sentry-spring:6.34.0",
           "type": "Library"
         },
         {
