@@ -368,6 +368,9 @@
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
+                "ReservedParameterNames": {
+                    "$ref": "parameters-schema.json#/definitions/ReservedParameterNames"
+                },
                 "RewriteMethodParameter": {
                     "$ref": "parameters-schema.json#/definitions/RewriteMethodParameter"
                 },
