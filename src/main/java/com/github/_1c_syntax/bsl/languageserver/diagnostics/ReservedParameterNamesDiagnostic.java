@@ -67,8 +67,7 @@ public class ReservedParameterNamesDiagnostic extends AbstractSymbolTreeDiagnost
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    this.reservedWords = CaseInsensitivePattern.compile(
-      (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT));
+    this.reservedWords = CaseInsensitivePattern.compile("^" + (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT) + "$");
   }
 
   @Override
@@ -87,8 +86,8 @@ public class ReservedParameterNamesDiagnostic extends AbstractSymbolTreeDiagnost
     parameters.forEach((ParameterDefinition parameter) -> {
 
       Matcher matcher = reservedWords.matcher(parameter.getName());
-      while (matcher.find()) {
-        diagnosticStorage.addDiagnostic(parameter.getRange(), info.getResourceString("reservedWordMessage", parameter.getName()));
+      if (matcher.find()) {
+        diagnosticStorage.addDiagnostic(parameter.getRange(), info.getMessage(parameter.getName()));
       }
     });
   }

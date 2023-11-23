@@ -38,7 +38,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0); // Проверка количества
+    assertThat(diagnostics).hasSize(0);
 
   }
 
@@ -53,9 +53,33 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasMessageOnRange("Необходимо переименовать параметр \"ВидГруппыФормы\", совпадающий с зарезервированным словом",
+      .hasMessageOnRange("Переименуйте параметр \"ВидГруппыФормы\" чтобы он не совпадал с зарезервированным словом.",
         2, 16, 30);
   
   }
-        
+
+@Test
+  void testConfigureNegative() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("reservedWords", "ВидГруппы");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(0);
+  
+  }
+  
+@Test
+  void testConfigureNegative2() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("reservedWords", "ВидГруппыФормыРасширенный");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(0);
+  
+  }
+
 }
