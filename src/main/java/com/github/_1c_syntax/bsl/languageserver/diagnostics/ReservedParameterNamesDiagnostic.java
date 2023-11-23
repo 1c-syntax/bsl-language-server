@@ -54,18 +54,23 @@ public class ReservedParameterNamesDiagnostic extends AbstractSymbolTreeDiagnost
   @Override
   public void configure(Map<String, Object> configuration) {
     
-    this.reservedWords = CaseInsensitivePattern.compile("^" 
-                       + (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT) 
-                       + "$");
+    var incomingMask = (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT);
+
+    this.reservedWords = CaseInsensitivePattern.compile("^" + incomingMask.trim() + "$");
+  }
+
+  @Override
+  protected void check() {
+
+    if (reservedWords.pattern().isBlank()) {
+      return;
+    }
+    super.check();
   }
 
   @Override
   public void visitMethod(MethodSymbol methodSymbol) {
 
-    if (reservedWords.pattern().isBlank()) {
-      return;
-    }
-  
     List<ParameterDefinition> parameters = methodSymbol.getParameters();
     checkParameterName(parameters);
   }

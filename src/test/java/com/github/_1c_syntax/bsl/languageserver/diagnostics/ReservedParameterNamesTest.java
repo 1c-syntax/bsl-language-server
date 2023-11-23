@@ -59,6 +59,18 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   }
 
 @Test
+  void testConfigure2() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("reservedWords", " ");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).isEmpty();
+  
+  }
+
+@Test
   void testConfigureNegative() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
