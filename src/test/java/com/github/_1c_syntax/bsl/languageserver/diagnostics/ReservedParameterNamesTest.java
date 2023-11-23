@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<ReservedParameterNamesDiagnostic> {
@@ -35,7 +38,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   }
 
   @Test
-  void test() {
+  void testEmpty() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).isEmpty();
@@ -43,7 +46,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   }
 
   @Test
-  void testConfigure() {
+  void testPositive() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("reservedWords", "ВидГруппыФормы");
@@ -58,35 +61,12 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   
   }
 
-@Test
-  void testConfigure2() {
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "ВидГруппы", "ВидГруппыФормыРасширенный"})  
+  void testNegative(String testWord) {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("reservedWords", " ");
-    diagnosticInstance.configure(configuration);
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).isEmpty();
-  
-  }
-
-@Test
-  void testConfigureNegative() {
-
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("reservedWords", "ВидГруппы");
-    diagnosticInstance.configure(configuration);
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).isEmpty();
-  
-  }
-  
-@Test
-  void testConfigureNegative2() {
-
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("reservedWords", "ВидГруппыФормыРасширенный");
+    configuration.put("reservedWords", testWord);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
