@@ -23,27 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -59,33 +48,33 @@ public class ReservedParameterNamesDiagnostic extends AbstractSymbolTreeDiagnost
 
   private static final String RESERVED_WORDS_DEFAULT = "";
 
-  @DiagnosticParameter(
-    type = String.class,
-    defaultValue = RESERVED_WORDS_DEFAULT
-  )
+  @DiagnosticParameter(type = String.class)
   private Pattern reservedWords = CaseInsensitivePattern.compile(RESERVED_WORDS_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    this.reservedWords = CaseInsensitivePattern.compile("^" + (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT) + "$");
+    
+    this.reservedWords = CaseInsensitivePattern.compile("^" 
+                       + (String) configuration.getOrDefault("reservedWords", RESERVED_WORDS_DEFAULT) 
+                       + "$");
   }
 
   @Override
   public void visitMethod(MethodSymbol methodSymbol) {
+
     if (reservedWords.pattern().isBlank()) {
       return;
     }
   
     List<ParameterDefinition> parameters = methodSymbol.getParameters();
-    checkParameterName(methodSymbol, parameters);
+    checkParameterName(parameters);
   }
 
-  private void checkParameterName(MethodSymbol methodSymbol,
-                                         List<ParameterDefinition> parameters) {
+  private void checkParameterName(List<ParameterDefinition> parameters) {
 
     parameters.forEach((ParameterDefinition parameter) -> {
 
-      Matcher matcher = reservedWords.matcher(parameter.getName());
+      var matcher = reservedWords.matcher(parameter.getName());
       if (matcher.find()) {
         diagnosticStorage.addDiagnostic(parameter.getRange(), info.getMessage(parameter.getName()));
       }

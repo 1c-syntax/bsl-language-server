@@ -38,7 +38,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -66,7 +66,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   
   }
   
@@ -78,7 +78,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   
   }
 
