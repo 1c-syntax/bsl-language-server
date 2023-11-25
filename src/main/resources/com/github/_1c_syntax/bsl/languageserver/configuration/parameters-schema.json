@@ -47,6 +47,12 @@
             ],
             "title": "Prohibited words",
             "properties": {
+                "findInComments": {
+                    "description": "Find in comments",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Find in comments"
+                },
                 "badWords": {
                     "description": "Regular expression for prohibited words.",
                     "default": "",
