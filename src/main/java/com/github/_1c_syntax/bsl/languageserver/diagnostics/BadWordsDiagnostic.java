@@ -28,8 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -44,6 +47,7 @@ import java.util.regex.Pattern;
 public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   private static final String BAD_WORDS_DEFAULT = "";
+  private static final boolean FIND_IN_COMMENTS = true;
 
   @DiagnosticParameter(
     type = String.class,
@@ -51,10 +55,17 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   )
   private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);
 
-    @Override
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + FIND_IN_COMMENTS
+  )
+  private boolean findInComments = FIND_IN_COMMENTS;
+
+  @Override
   public void configure(Map<String, Object> configuration) {
     this.badWords = CaseInsensitivePattern.compile(
       (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT));
+    this.findInComments = (boolean) configuration.getOrDefault("findInComments", FIND_IN_COMMENTS);
   }
 
   @Override
@@ -64,12 +75,50 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    String[] moduleLines = documentContext.getContentList();
-    for (int i = 0; i < moduleLines.length; i++) {
-      Matcher matcher = badWords.matcher(moduleLines[i]);
+    var moduleLines = getContentList();
+    for (var i = 0; i < moduleLines.length; i++) {
+      final var moduleLine = moduleLines[i];
+      if (moduleLine.isEmpty()) {
+        continue;
+      }
+      var matcher = badWords.matcher(moduleLine);
       while (matcher.find()) {
         diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
       }
     }
+  }
+
+  private String[] getContentList() {
+    final var moduleLines = documentContext.getContentList();
+    if (findInComments) {
+      return moduleLines;
+    }
+    final var lineNumbersWithoutComments = getLineNumbersWithoutComments();
+    if (lineNumbersWithoutComments.isEmpty()) {
+      return moduleLines;
+    }
+    final List<String> result = new ArrayList<>(lineNumbersWithoutComments.size());
+    for (var i = 0; i < moduleLines.length; i++) {
+      if (lineNumbersWithoutComments.contains(i)) {
+        result.add(moduleLines[i]);
+      } else {
+        result.add("");
+      }
+    }
+    return result.toArray(new String[0]);
+  }
+
+  private Set<Integer> getLineNumbersWithoutComments() {
+    var result = new HashSet<Integer>();
+    final var tokens = documentContext.getTokensFromDefaultChannel();
+    int lastLine = -1;
+    for (var token : tokens) {
+      var line = token.getLine();
+      if (line > lastLine) {
+        lastLine = line;
+        result.add(line - 1); // т.к. в токенах нумерация строк с 1
+      }
+    }
+    return result;
   }
 }

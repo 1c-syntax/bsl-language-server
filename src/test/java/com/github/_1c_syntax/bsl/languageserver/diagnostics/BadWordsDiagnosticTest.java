@@ -38,7 +38,7 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0); // Проверка количества
+    assertThat(diagnostics).isEmpty(); // Проверка количества
   }
 
   @Test
@@ -52,11 +52,29 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
     assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
-      .hasRange(0, 42, 0, 47)
-      .hasRange(0, 48, 0, 54)
-      .hasRange(4, 4, 4, 9)
-      .hasRange(6, 24, 6, 29)
-      .hasRange(6, 34, 6, 39)
-      .hasRange(8, 4, 8, 10);
+      .hasRange(0, 42, 47)
+      .hasRange(0, 48, 54)
+      .hasRange(4, 4, 9)
+      .hasRange(6, 24, 29)
+      .hasRange(6, 34, 39)
+      .hasRange(8, 4, 10);
+  }
+
+  @Test
+  void testFindWithoutComments() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("badWords", "лотус|шмотус");
+    configuration.put("findInComments", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics, true)
+      .hasRange(4, 4, 9)
+      .hasRange(6, 24, 29)
+      .hasRange(6, 34, 39)
+      .hasRange(8, 4, 10);
   }
 }
