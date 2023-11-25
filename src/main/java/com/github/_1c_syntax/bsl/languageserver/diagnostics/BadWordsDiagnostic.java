@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.ArrayList;
@@ -83,7 +84,8 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       }
       var matcher = badWords.matcher(moduleLine);
       while (matcher.find()) {
-        diagnosticStorage.addDiagnostic(i, matcher.start(), i, matcher.end());
+        diagnosticStorage.addDiagnostic(Ranges.create(i, matcher.start(), i, matcher.end()),
+          info.getMessage(matcher.group()));
       }
     }
   }

@@ -52,12 +52,12 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
     assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
-      .hasRange(0, 42, 47)
-      .hasRange(0, 48, 54)
-      .hasRange(4, 4, 9)
-      .hasRange(6, 24, 29)
-      .hasRange(6, 34, 39)
-      .hasRange(8, 4, 10);
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <лотус>.", 0, 42, 0, 47)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <шмотус>.", 0, 48, 0, 54)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 4, 4, 4, 9)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 6, 24, 6, 29)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 6, 34, 6, 39)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Шмотус>.", 8, 4, 8, 10);
   }
 
   @Test
@@ -72,9 +72,9 @@ class BadWordsDiagnosticTest extends AbstractDiagnosticTest<BadWordsDiagnostic>{
 
     assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(4, 4, 9)
-      .hasRange(6, 24, 29)
-      .hasRange(6, 34, 39)
-      .hasRange(8, 4, 10);
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 4, 4, 4, 9)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 6, 24, 6, 29)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Лотус>.", 6, 34, 6, 39)
+      .hasMessageOnRange("В тексте модуля найдено запрещенное слово <Шмотус>.", 8, 4, 8, 10);
   }
 }
