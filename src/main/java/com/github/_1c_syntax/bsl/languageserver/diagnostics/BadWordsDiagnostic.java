@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   private static final String BAD_WORDS_DEFAULT = "";
-  private static final boolean FIND_IN_COMMENTS = true;
+  private static final boolean FIND_IN_COMMENTS_DEFAULT = true;
 
   @DiagnosticParameter(
     type = String.class,
@@ -58,15 +58,15 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + FIND_IN_COMMENTS
+    defaultValue = "" + FIND_IN_COMMENTS_DEFAULT
   )
-  private boolean findInComments = FIND_IN_COMMENTS;
+  private boolean findInComments = FIND_IN_COMMENTS_DEFAULT;
 
   @Override
   public void configure(Map<String, Object> configuration) {
     this.badWords = CaseInsensitivePattern.compile(
       (String) configuration.getOrDefault("badWords", BAD_WORDS_DEFAULT));
-    this.findInComments = (boolean) configuration.getOrDefault("findInComments", FIND_IN_COMMENTS);
+    this.findInComments = (boolean) configuration.getOrDefault("findInComments", FIND_IN_COMMENTS_DEFAULT);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
 
     var moduleLines = getContentList();
     for (var i = 0; i < moduleLines.length; i++) {
-      final var moduleLine = moduleLines[i];
+      var moduleLine = moduleLines[i];
       if (moduleLine.isEmpty()) {
         continue;
       }
@@ -93,15 +93,15 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
   }
 
   private String[] getContentList() {
-    final var moduleLines = documentContext.getContentList();
+    var moduleLines = documentContext.getContentList();
     if (findInComments) {
       return moduleLines;
     }
-    final var lineNumbersWithoutComments = getLineNumbersWithoutComments();
+    var lineNumbersWithoutComments = getLineNumbersWithoutComments();
     if (lineNumbersWithoutComments.isEmpty()) {
       return moduleLines;
     }
-    final List<String> result = new ArrayList<>(lineNumbersWithoutComments.size());
+    List<String> result = new ArrayList<>(lineNumbersWithoutComments.size());
     for (var i = 0; i < moduleLines.length; i++) {
       if (lineNumbersWithoutComments.contains(i)) {
         result.add(moduleLines[i]);
@@ -114,7 +114,7 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
 
   private Set<Integer> getLineNumbersWithoutComments() {
     var result = new HashSet<Integer>();
-    final var tokens = documentContext.getTokensFromDefaultChannel();
+    var tokens = documentContext.getTokensFromDefaultChannel();
     int lastLine = -1;
     for (var token : tokens) {
       var line = token.getLine();
