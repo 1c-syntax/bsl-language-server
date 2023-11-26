@@ -86,7 +86,8 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       while (matcher.find()) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(i, matcher.start(), i, matcher.end()),
-          info.getMessage(matcher.group()));
+          info.getMessage(matcher.group())
+        );
       }
     }
   }
