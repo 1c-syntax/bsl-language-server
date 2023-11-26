@@ -84,7 +84,8 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
       }
       var matcher = badWords.matcher(moduleLine);
       while (matcher.find()) {
-        diagnosticStorage.addDiagnostic(Ranges.create(i, matcher.start(), i, matcher.end()),
+        diagnosticStorage.addDiagnostic(
+          Ranges.create(i, matcher.start(), i, matcher.end()),
           info.getMessage(matcher.group()));
       }
     }
