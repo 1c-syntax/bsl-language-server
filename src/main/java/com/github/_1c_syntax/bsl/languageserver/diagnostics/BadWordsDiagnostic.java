@@ -29,11 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -75,54 +71,39 @@ public class BadWordsDiagnostic extends AbstractDiagnostic {
     if (badWords.pattern().isBlank()) {
       return;
     }
-
-    var moduleLines = getContentList();
-    for (var i = 0; i < moduleLines.length; i++) {
-      var moduleLine = moduleLines[i];
-      if (moduleLine.isEmpty()) {
-        continue;
-      }
-      var matcher = badWords.matcher(moduleLine);
-      while (matcher.find()) {
-        diagnosticStorage.addDiagnostic(
-          Ranges.create(i, matcher.start(), i, matcher.end()),
-          info.getMessage(matcher.group())
-        );
-      }
-    }
-  }
-
-  private String[] getContentList() {
     var moduleLines = documentContext.getContentList();
     if (findInComments) {
-      return moduleLines;
+      checkAllLines(moduleLines);
+      return;
     }
-    var lineNumbersWithoutComments = getLineNumbersWithoutComments();
-    if (lineNumbersWithoutComments.isEmpty()) {
-      return moduleLines;
-    }
-    List<String> result = new ArrayList<>(lineNumbersWithoutComments.size());
-    for (var i = 0; i < moduleLines.length; i++) {
-      if (lineNumbersWithoutComments.contains(i)) {
-        result.add(moduleLines[i]);
-      } else {
-        result.add("");
-      }
-    }
-    return result.toArray(new String[0]);
+    checkLinesWithoutComments(moduleLines);
   }
 
-  private Set<Integer> getLineNumbersWithoutComments() {
-    var result = new HashSet<Integer>();
-    var tokens = documentContext.getTokensFromDefaultChannel();
-    int lastLine = -1;
-    for (var token : tokens) {
-      var line = token.getLine();
-      if (line > lastLine) {
-        lastLine = line;
-        result.add(line - 1); // т.к. в токенах нумерация строк с 1
-      }
+  private void checkAllLines(String[] moduleLines) {
+    for (var i = 0; i < moduleLines.length; i++) {
+      checkLine(moduleLines, i);
     }
-    return result;
+  }
+
+  private void checkLinesWithoutComments(String[] moduleLines) {
+    final var nclocData = documentContext.getMetrics().getNclocData();
+    for (int i : nclocData) {
+      final var moduleNumber = i - 1; // т.к. в токенах нумерация строк с 1, а в moduleLines с 0
+      checkLine(moduleLines, moduleNumber);
+    }
+  }
+
+  private void checkLine(String[] lines, int lineNumber) {
+    var moduleLine = lines[lineNumber];
+    if (moduleLine.isEmpty()) {
+      return;
+    }
+    var matcher = badWords.matcher(moduleLine);
+    while (matcher.find()) {
+      diagnosticStorage.addDiagnostic(
+        Ranges.create(lineNumber, matcher.start(), lineNumber, matcher.end()),
+        info.getMessage(matcher.group())
+      );
+    }
   }
 }
