@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1700590016408,
+  "lastUpdate": 1701067317059,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24335,6 +24335,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.34721240887410515",
             "extra": "mean: 60.413947105407715 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "782ef5ef78e010d54c0276e4cf3e1f4bce425269",
+          "message": "Merge pull request #3190 from artbear/bad-words\n\nДоработка BadWords - опция поиска по комментариям + показ запрещенного слова в замечаниях",
+          "timestamp": "2023-11-27T07:29:59+01:00",
+          "tree_id": "8078d6650fe3756c2c91aee08902fd1ff6f73e08",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/782ef5ef78e010d54c0276e4cf3e1f4bce425269"
+        },
+        "date": 1701067308603,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 60.77969264984131,
+            "unit": "sec",
+            "range": "stddev: 0.34873860295931713",
+            "extra": "mean: 60.77969264984131 sec\nrounds: 3"
           }
         ]
       }
