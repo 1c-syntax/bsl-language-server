@@ -48,7 +48,7 @@ jobs:
         git checkout ${{ github.event.workflow_run.head_branch }}
         git clean -ffdx && git reset --hard HEAD
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: 17
         distribution: 'temurin'
