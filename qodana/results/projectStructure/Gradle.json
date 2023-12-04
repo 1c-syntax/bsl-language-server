@@ -90,12 +90,12 @@
       "version": "0.3.0"
     },
     {
-      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.0",
-      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.8.0",
+      "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.2",
+      "gradleName": "com.github.spotbugs:spotbugs-annotations:4.8.2",
       "unresolved": false,
       "groupId": "com.github.spotbugs",
       "artifactId": "spotbugs-annotations",
-      "version": "4.8.0"
+      "version": "4.8.2"
     },
     {
       "ideaName": "Gradle: org.languagetool:language-en:6.1",
