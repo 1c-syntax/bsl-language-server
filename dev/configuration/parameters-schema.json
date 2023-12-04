@@ -1999,13 +1999,13 @@
             "$id": "#/definitions/UsingExternalCodeTools"
         },
         "UsingFindElementByString": {
-            "description": "Using FindByName and FindByCode",
+          "description": "Using FindByName, FindByCode and FindByNumber",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Using FindByName and FindByCode",
+          "title": "Using FindByName, FindByCode and FindByNumber",
             "$id": "#/definitions/UsingFindElementByString"
         },
         "UsingGoto": {

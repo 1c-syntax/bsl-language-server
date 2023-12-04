@@ -18,7 +18,7 @@
     
     
       
-        <title>Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" (UsingFindElementByString) - BSL Language Server Dev</title>
+        <title>Использование методов "НайтиПоНаименованию", "НайтиПоКоду" и "НайтиПоНомеру" (UsingFindElementByString) - BSL Language Server Dev</title>
       
     
     
@@ -75,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Использование-методов-НайтиПоНаименованию-и-НайтиПоКоду-UsingFindElementByString" class="md-skip">
+        <a href="#Использование-методов-НайтиПоНаименованию-НайтиПоКоду-и-НайтиПоНомеру-UsingFindElementByString" class="md-skip">
           Перейти к содержанию
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" (UsingFindElementByString)
+              Использование методов "НайтиПоНаименованию", "НайтиПоКоду" и "НайтиПоНомеру" (UsingFindElementByString)
             
           </span>
         </div>
@@ -1133,7 +1133,7 @@
   
 
 
-<h1 id="Использование-методов-НайтиПоНаименованию-и-НайтиПоКоду-UsingFindElementByString">Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" (UsingFindElementByString)<a class="headerlink" href="#Использование-методов-НайтиПоНаименованию-и-НайтиПоКоду-UsingFindElementByString" title="Permanent link">&para;</a></h1>
+<h1 id="Использование-методов-НайтиПоНаименованию-НайтиПоКоду-и-НайтиПоНомеру-UsingFindElementByString">Использование методов "НайтиПоНаименованию", "НайтиПоКоду" и "НайтиПоНомеру" (UsingFindElementByString)<a class="headerlink" href="#Использование-методов-НайтиПоНаименованию-НайтиПоКоду-и-НайтиПоНомеру-UsingFindElementByString" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -1158,18 +1158,28 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
-<p>Запрещено использовать методы поиска элементов "НайтиПоНаименованию" или "НайтиПоКоду".</p>
+<p>Правило находит использование методов <code>НайтиПоНаименованию</code>, <code>НайтиПоКоду</code> или <code>НайтиПоНомеру</code> с указанием конкретных и
+уникальных номеров, кодов и названий элементов или документов.
+Скорее всего, подобный код не будет работать в других ИБ, что приведет к ошибкам выполнения.
+Возможно, в финальный код попал тестовый код, что также не рекомендовано.</p>
+<p>Константные значения данных из ИБ рекомендуется указывать в константах ИБ, предопределенных элементах метаданных.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
+<p>Неправильно:
 <div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
 </code></pre></div>
-<p>или</p>
+или
 <div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;00-0000001&quot;</span><span class="p">);</span>
+</code></pre></div></p>
+<p>или</p>
+<div class="highlight"><pre><span></span><code><span class="nv">ОбъектНазначения</span> <span class="o">=</span> <span class="nc">Документы</span><span class="o">.</span><span class="nv">ПередачаТоваровМеждуОрганизациями</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="s">&quot;0000-000001&quot;</span><span class="p">,</span> <span class="nb">ТекущаяДата</span><span class="p">());</span>
 </code></pre></div>
 <p>Допустимо использование:
 <div class="highlight"><pre><span></span><code><span class="nc">Справочники</span><span class="o">.</span><span class="nv">Валюты</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="nc">Справочники</span><span class="o">.</span><span class="nv">КлассификаторБанков</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
 </code></pre></div></p>
+<div class="highlight"><pre><span></span><code><span class="nc">Документы</span><span class="o">.</span><span class="nv">Реализация</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="nv">НомерДокумента</span><span class="p">);</span>
+</code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
