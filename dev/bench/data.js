@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1701676166883,
+  "lastUpdate": 1701676888707,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24397,6 +24397,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9356976320158449",
             "extra": "mean: 61.89604473114014 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e668ba102bb596ef8d5776a0e24e3f56e38c21a0",
+          "message": "Merge pull request #3192 from artbear/findByNumber\n\n[MOD] UsingFindElementByString - замечания на ПоискПоНомеру с параметром-литералом",
+          "timestamp": "2023-12-04T08:44:54+01:00",
+          "tree_id": "d29e440cce650c93c49954e53401cbb379aa1ea1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e668ba102bb596ef8d5776a0e24e3f56e38c21a0"
+        },
+        "date": 1701676882297,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.942928393681846,
+            "unit": "sec",
+            "range": "stddev: 1.0058059485488895",
+            "extra": "mean: 58.942928393681846 sec\nrounds: 3"
           }
         ]
       }
