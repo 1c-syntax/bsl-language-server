@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -48,13 +47,13 @@ import java.util.regex.Pattern;
 public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnostic {
 
   private final Pattern pattern = CaseInsensitivePattern.compile(
-    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)"
+    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode|НайтиПоНомеру|FindByNumber)"
   );
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    Matcher matcher = pattern.matcher(ctx.methodName().getText());
-    if (matcher.find()) {
+    var matcher = pattern.matcher(ctx.methodName().getText());
+    if (matcher.matches()) {
       BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
       if (param.children == null ||
         param.getStart().getType() == BSLParser.STRING ||

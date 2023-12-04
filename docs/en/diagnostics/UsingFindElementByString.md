@@ -1,4 +1,4 @@
-# Using FindByName and FindByCode (UsingFindElementByString)
+# Using FindByName, FindByCode and FindByNumber (UsingFindElementByString)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
