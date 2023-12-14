@@ -58,8 +58,9 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   private static final Pattern paramPattern = CaseInsensitivePattern.compile(
-    "\"\\d{8}.*"
+    "\"[0123]{1}\\d{7}\"|\"[0123]{1}\\d{13}\""
   );
+  private static final Pattern zeroPattern = Pattern.compile("^0+");
 
   private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
     "\\D"
@@ -109,6 +110,43 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
+  private static boolean isValidDate(BSLParser.StringContext ctx) {
+    final var text = ctx.getText();
+    if (!paramPattern.matcher(text).matches()) {
+      return false;
+    }
+    var strDate = text.substring(1, text.length() - 1); // убрать кавычки
+    return isValidDate(strDate);
+  }
+
+  private static boolean isValidDate(String strDate) {
+    var year = parseInt(strDate.substring(0, 4));
+    if (year < 1 || year > 3999) {
+      return false;
+    }
+    var month = parseInt(strDate.substring(4, 6));
+    var day = parseInt(strDate.substring(6, 8));
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+    if (strDate.length() == 8) {
+      return true;
+    }
+    var hh = parseInt(strDate.substring(8, 10));
+    var mm = parseInt(strDate.substring(10, 12));
+    var ss = parseInt(strDate.substring(12, 14));
+    return hh <= 24 && mm <= 60 && ss <= 60;
+  }
+
+  private static int parseInt(String text) {
+    String s = zeroPattern.matcher(text).replaceAll("");
+    try {
+      return Integer.parseInt(s);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
@@ -124,7 +162,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     var tNode = ctx.DATETIME();
     var sNode = ctx.string();
     if ((tNode != null || sNode != null) && isAccepted(ctx)) {
-      if (sNode != null && !paramPattern.matcher(ctx.getText()).matches()) {
+      if (sNode != null && !isValidDate(sNode)) {
         return defaultResult();
       }
 
