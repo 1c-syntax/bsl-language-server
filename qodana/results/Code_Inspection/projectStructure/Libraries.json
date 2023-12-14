@@ -1282,9 +1282,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.2",
+      "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.8.2/54a355bbe1f1563e40ac3bb67c7af8ecca8eee3e/spotbugs-annotations-4.8.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.spotbugs/spotbugs-annotations/4.8.3/5d2dc4ca5b632976371155252499819aea372ed/spotbugs-annotations-4.8.3.jar!/"
       ],
       "properties": {}
     },
