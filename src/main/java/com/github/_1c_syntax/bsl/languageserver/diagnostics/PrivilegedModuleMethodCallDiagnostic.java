@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Optional;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.VULNERABILITY,
+  type = DiagnosticType.SECURITY_HOTSPOT,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 60,
   tags = {
