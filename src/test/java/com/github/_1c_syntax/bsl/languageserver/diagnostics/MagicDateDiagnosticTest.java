@@ -66,13 +66,13 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(12, 12, 28)
       .hasRange(13, 7, 17)
       .hasRange(23, 7, 26)
       .hasRange(27, 22, 32)
-      .hasRange(29, 29, 39);
-
+      .hasRange(29, 29, 39)
+      .hasRange(31, 64, 80);
   }
 }
