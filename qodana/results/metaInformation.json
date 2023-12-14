@@ -1,19 +1,19 @@
 {
-  "total": 150,
+  "total": 17,
   "tools inspection": {
-    "Code Inspection": 150
+    "Code Inspection": 17
   },
   "linter": "QDJVMC",
   "attributes": {
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server.git",
-        "revisionId": "d1f414853521a8c9a1ed06b2638e6d9ae9e19fa2",
+        "revisionId": "92ad6c031ff87ccbd4ebe78d00dd07bad9565109",
         "branch": "refs/heads/develop"
       }
     },
     "deviceId": "200820300000000-b1a5-d275-f8e7-faf9fd093ee8",
-    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/7186143962",
+    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/7204209276",
     "repoUrl": "https://github.com/1c-syntax/bsl-language-server.git"
   }
 }

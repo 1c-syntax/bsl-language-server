@@ -63,7 +63,7 @@
         "jrt://$APPLICATION_HOME_DIR$/jbr!/jogl.all"
       ],
       "sdkType": "JavaSDK",
-      "sdkVersion": "java version \"17.0.8\""
+      "sdkVersion": "java version \"17.0.9\""
     }
   ]
 }

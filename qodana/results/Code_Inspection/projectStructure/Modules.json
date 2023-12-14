@@ -58,14 +58,6 @@
           "type": "Own sources"
         },
         {
-          "name": "bsl-language-server.main",
-          "type": "Module"
-        },
-        {
-          "name": "bsl-language-server.test",
-          "type": "Module"
-        },
-        {
           "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.5",
           "type": "Library"
         },
@@ -680,6 +672,14 @@
         {
           "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
           "type": "Library"
+        },
+        {
+          "name": "bsl-language-server.main",
+          "type": "Module"
+        },
+        {
+          "name": "bsl-language-server.test",
+          "type": "Module"
         },
         {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.1.5",
