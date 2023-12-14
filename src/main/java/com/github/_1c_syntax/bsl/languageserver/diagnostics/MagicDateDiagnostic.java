@@ -71,16 +71,6 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   )
   private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
-    Set<String> authD = Arrays.stream(authorizedDatesString.split(","))
-      .map(String::trim)
-      .collect(Collectors.toSet());
-    authorizedDates.clear();
-    authorizedDates.addAll(authD);
-  }
-
   private static Optional<BSLParserRuleContext> getExpression(Optional<BSLParser.ConstValueContext> contextOptional) {
     return contextOptional
       .map(BSLParserRuleContext::getParent)
@@ -120,27 +110,35 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
+  public void configure(Map<String, Object> configuration) {
+    var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
+    Set<String> authD = Arrays.stream(authorizedDatesString.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
+    authorizedDates.clear();
+    authorizedDates.addAll(authD);
+  }
+
+  @Override
   public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
     var tNode = ctx.DATETIME();
     var sNode = ctx.string();
     if ((tNode != null || sNode != null) && isAccepted(ctx)) {
-      var contextOptional = Optional.of(ctx);
-      if (sNode != null) {
-        contextOptional = contextOptional
-          .filter(constValueContext -> paramPattern.matcher(constValueContext.getText()).matches());
+      if (sNode != null && !paramPattern.matcher(ctx.getText()).matches()) {
+        return defaultResult();
       }
 
-      final var expressionContext = getExpression(contextOptional);
+      final var expressionContext = getExpression(Optional.of(ctx));
       if (!insideSimpleDateAssignment(expressionContext)
         && !insideAssignmentWithDateMethodForSimpleDate(expressionContext)) {
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
       }
     }
 
-    return ctx;
+    return defaultResult();
   }
 
-  private boolean isAccepted(BSLParserRuleContext ctx) {
+  private boolean isAccepted(BSLParser.ConstValueContext ctx) {
     String text = ctx.getText();
     return text != null && !text.isEmpty() && !isExcluded(text);
   }
