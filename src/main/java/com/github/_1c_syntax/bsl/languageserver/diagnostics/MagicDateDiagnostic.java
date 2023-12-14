@@ -29,9 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -83,51 +81,72 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     authorizedDates.addAll(authD);
   }
 
-  @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    Optional.of(ctx)
-      .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
-      .map(BSLParser.GlobalMethodCallContext::doCall)
-      .map(BSLParser.DoCallContext::callParamList)
-      .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(this::checkExclAddDiagnostic);
+  private static Optional<BSLParserRuleContext> getExpression(Optional<BSLParser.ConstValueContext> contextOptional) {
+    return contextOptional
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .filter(BSLParser.ExpressionContext.class::isInstance);
+  }
 
-    return super.visitGlobalMethodCall(ctx);
+  private static boolean insideSimpleDateAssignment(Optional<BSLParserRuleContext> expressionContext) {
+    return expressionContext
+      .map(BSLParserRuleContext::getParent)
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .isPresent();
+  }
+
+  private static boolean insideAssignmentWithDateMethodForSimpleDate(Optional<BSLParserRuleContext> expressionContext) {
+    return expressionContext
+      .map(BSLParserRuleContext::getParent) // callParam
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // callParamList
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // doCall
+      .map(BSLParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
+      .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
+      .map(BSLParser.GlobalMethodCallContext.class::cast)
+      .filter(context -> methodPattern.matcher(context.methodName().getText()).matches())
+      .map(BSLParserRuleContext::getParent) // complexId
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // member
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // expression
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .isPresent();
   }
 
   @Override
   public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
-    TerminalNode tNode = ctx.DATETIME();
-    if (tNode != null) {
-      checkExclAddDiagnostic(ctx);
+    var tNode = ctx.DATETIME();
+    var sNode = ctx.string();
+    if ((tNode != null || sNode != null) && isAccepted(ctx)) {
+      var contextOptional = Optional.of(ctx);
+      if (sNode != null) {
+        contextOptional = contextOptional
+          .filter(constValueContext -> paramPattern.matcher(constValueContext.getText()).matches());
+      }
+
+      final var expressionContext = getExpression(contextOptional);
+      if (!insideSimpleDateAssignment(expressionContext)
+        && !insideAssignmentWithDateMethodForSimpleDate(expressionContext)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
+      }
     }
 
     return ctx;
   }
 
-  private void checkExclAddDiagnostic(BSLParserRuleContext ctx){
-    String checked = ctx.getText();
-    if (checked != null && !isExcluded(checked)) {
-      ParserRuleContext expression;
-      if (ctx instanceof BSLParser.CallParamListContext){
-        expression = ctx.getParent().getParent().getParent().getParent().getParent();
-      } else {
-        expression = ctx.getParent().getParent();
-      }
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isAssignExpression((BSLParser.ExpressionContext) expression))) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
-      }
-    }
+  private boolean isAccepted(BSLParserRuleContext ctx) {
+    String text = ctx.getText();
+    return text != null && !text.isEmpty() && !isExcluded(text);
   }
 
-  private boolean isExcluded(String sIn) {
-    String s = nonNumberPattern.matcher(sIn).replaceAll("");
+  private boolean isExcluded(String text) {
+    String s = nonNumberPattern.matcher(text).replaceAll("");
     return authorizedDates.contains(s);
   }
-
-  private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
-  }
-
 }
