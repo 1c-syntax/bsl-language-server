@@ -72,42 +72,33 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   )
   private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
-  private static Optional<BSLParserRuleContext> getExpression(Optional<BSLParser.ConstValueContext> contextOptional) {
-    return contextOptional
-      .map(BSLParserRuleContext::getParent)
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
-      .filter(context -> context.getChildCount() == 1)
-      .filter(BSLParser.ExpressionContext.class::isInstance);
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
+    Set<String> authD = Arrays.stream(authorizedDatesString.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
+    authorizedDates.clear();
+    authorizedDates.addAll(authD);
   }
 
-  private static boolean insideSimpleDateAssignment(Optional<BSLParserRuleContext> expressionContext) {
-    return expressionContext
-      .map(BSLParserRuleContext::getParent)
-      .filter(BSLParser.AssignmentContext.class::isInstance)
-      .isPresent();
-  }
+  @Override
+  public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
+    var tNode = ctx.DATETIME();
+    var sNode = ctx.string();
+    if ((tNode != null || sNode != null) && isAccepted(ctx)) {
+      if (sNode != null && !isValidDate(sNode)) {
+        return defaultResult();
+      }
 
-  private static boolean insideAssignmentWithDateMethodForSimpleDate(Optional<BSLParserRuleContext> expressionContext) {
-    return expressionContext
-      .map(BSLParserRuleContext::getParent) // callParam
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // callParamList
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // doCall
-      .map(BSLParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
-      .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
-      .map(BSLParser.GlobalMethodCallContext.class::cast)
-      .filter(context -> methodPattern.matcher(context.methodName().getText()).matches())
-      .map(BSLParserRuleContext::getParent) // complexId
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // member
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // expression
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
-      .filter(BSLParser.AssignmentContext.class::isInstance)
-      .isPresent();
+      final var expressionContext = getExpression(Optional.of(ctx));
+      if (!insideSimpleDateAssignment(expressionContext) && !insideReturnSimpleDate(expressionContext)
+        && !insideAssignmentWithDateMethodForSimpleDate(expressionContext)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
+      }
+    }
+
+    return defaultResult();
   }
 
   private static boolean isValidDate(BSLParser.StringContext ctx) {
@@ -147,35 +138,6 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    var authorizedDatesString = (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
-    Set<String> authD = Arrays.stream(authorizedDatesString.split(","))
-      .map(String::trim)
-      .collect(Collectors.toSet());
-    authorizedDates.clear();
-    authorizedDates.addAll(authD);
-  }
-
-  @Override
-  public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
-    var tNode = ctx.DATETIME();
-    var sNode = ctx.string();
-    if ((tNode != null || sNode != null) && isAccepted(ctx)) {
-      if (sNode != null && !isValidDate(sNode)) {
-        return defaultResult();
-      }
-
-      final var expressionContext = getExpression(Optional.of(ctx));
-      if (!insideSimpleDateAssignment(expressionContext)
-        && !insideAssignmentWithDateMethodForSimpleDate(expressionContext)) {
-        diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
-      }
-    }
-
-    return defaultResult();
-  }
-
   private boolean isAccepted(BSLParser.ConstValueContext ctx) {
     String text = ctx.getText();
     return text != null && !text.isEmpty() && !isExcluded(text);
@@ -184,5 +146,53 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private boolean isExcluded(String text) {
     String s = nonNumberPattern.matcher(text).replaceAll("");
     return authorizedDates.contains(s);
+  }
+
+  private static Optional<BSLParser.ExpressionContext> getExpression(Optional<BSLParser.ConstValueContext> constValue) {
+    return constValue
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .filter(BSLParser.ExpressionContext.class::isInstance)
+      .map(BSLParser.ExpressionContext.class::cast);
+  }
+
+  private static boolean insideSimpleDateAssignment(Optional<BSLParser.ExpressionContext> expression) {
+    return insideContext(expression, BSLParser.AssignmentContext.class);
+  }
+
+  private static boolean insideContext(Optional<BSLParser.ExpressionContext> expression,
+                                       Class<? extends BSLParserRuleContext> assignmentContextClass) {
+    return expression
+      .map(BSLParserRuleContext::getParent)
+      .filter(assignmentContextClass::isInstance)
+      .isPresent();
+  }
+
+  private static boolean insideReturnSimpleDate(Optional<BSLParser.ExpressionContext> expression) {
+    return insideContext(expression, BSLParser.ReturnStatementContext.class);
+  }
+
+  private static boolean insideAssignmentWithDateMethodForSimpleDate(Optional<BSLParser.ExpressionContext> expression) {
+    return expression
+      .map(BSLParserRuleContext::getParent) // callParam
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // callParamList
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // doCall
+      .map(BSLParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
+      .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
+      .map(BSLParser.GlobalMethodCallContext.class::cast)
+      .filter(context -> methodPattern.matcher(context.methodName().getText()).matches())
+      .map(BSLParserRuleContext::getParent) // complexId
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // member
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // expression
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .isPresent();
   }
 }
