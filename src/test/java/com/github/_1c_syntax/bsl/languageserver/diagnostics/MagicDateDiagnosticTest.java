@@ -39,7 +39,7 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(13);
+    assertThat(diagnostics).hasSize(18);
     assertThat(diagnostics, true)
       .hasRange(11, 12, 22)
       .hasRange(12, 12, 28)
@@ -53,8 +53,12 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
       .hasRange(28, 19, 35)
       .hasRange(29, 10, 26)
       .hasRange(29, 29, 39)
-      .hasRange(31, 64, 80);
-
+      .hasRange(31, 64, 80)
+      .hasRange(58, 17, 27)
+      .hasRange(58, 29, 45)
+      .hasRange(58, 47, 63)
+      .hasRange(60, 19, 29)
+      .hasRange(65, 22, 32);
   }
 
   @Test
@@ -66,13 +70,17 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(12, 12, 28)
       .hasRange(13, 7, 17)
       .hasRange(23, 7, 26)
       .hasRange(27, 22, 32)
       .hasRange(29, 29, 39)
-      .hasRange(31, 64, 80);
+      .hasRange(31, 64, 80)
+      .hasRange(58, 17, 27)
+      .hasRange(58, 29, 45)
+      .hasRange(58, 47, 63)
+      .hasRange(65, 22, 32);
   }
 }
