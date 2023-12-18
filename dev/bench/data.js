@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1702878748746,
+  "lastUpdate": 1702879312427,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24552,6 +24552,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4743328702690757",
             "extra": "mean: 67.70184183120728 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b174b48f38c3b9815d3b3ae18baeff60037878da",
+          "message": "Merge pull request #3210 from artbear/magic-number\n\n[MOD] MagicNumber - ловим магические числа везде, в т.ч. и при передаче параметров - ГОТОВО",
+          "timestamp": "2023-12-18T08:54:38+03:00",
+          "tree_id": "dd30c9d9591187e55e9b794190c718262d428f77",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b174b48f38c3b9815d3b3ae18baeff60037878da"
+        },
+        "date": 1702879310186,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.37765900293986,
+            "unit": "sec",
+            "range": "stddev: 0.03639547628588274",
+            "extra": "mean: 67.37765900293986 sec\nrounds: 3"
           }
         ]
       }
