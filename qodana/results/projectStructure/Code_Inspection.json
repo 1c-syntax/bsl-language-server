@@ -90,7 +90,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.12.0-rc.5",
           "type": "Library"
         },
         {
@@ -98,7 +98,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
           "type": "Library"
         },
         {
@@ -782,7 +782,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
           "type": "Library"
         },
         {
@@ -894,7 +894,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.12.0-rc.5",
           "type": "Library"
         },
         {
@@ -902,7 +902,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
           "type": "Library"
         },
         {
@@ -1450,7 +1450,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
           "type": "Library"
         },
         {
@@ -1558,7 +1558,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.12.0-rc.5",
           "type": "Library"
         },
         {
@@ -1566,7 +1566,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
           "type": "Library"
         },
         {
@@ -2206,7 +2206,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
           "type": "Library"
         },
         {

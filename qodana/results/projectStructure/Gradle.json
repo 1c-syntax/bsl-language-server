@@ -66,12 +66,12 @@
       "version": "0.5.1"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
-      "gradleName": "com.github.1c-syntax:mdclasses:0.10.4",
+      "ideaName": "Gradle: io.github.1c-syntax:mdclasses:0.12.0-rc.5",
+      "gradleName": "io.github.1c-syntax:mdclasses:0.12.0-rc.5",
       "unresolved": false,
-      "groupId": "com.github.1c-syntax",
+      "groupId": "io.github.1c-syntax",
       "artifactId": "mdclasses",
-      "version": "0.10.4"
+      "version": "0.12.0-rc.5"
     },
     {
       "ideaName": "Gradle: io.github.1c-syntax:supportconf:0.12.1",
@@ -82,12 +82,12 @@
       "version": "0.12.1"
     },
     {
-      "ideaName": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
-      "gradleName": "io.github.1c-syntax:bsl-common-library:0.3.0",
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
+      "gradleName": "io.github.1c-syntax:bsl-common-library:0.5.0",
       "unresolved": false,
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-common-library",
-      "version": "0.3.0"
+      "version": "0.5.0"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.3",
@@ -1434,12 +1434,12 @@
       "version": "1.2.0"
     },
     {
-      "ideaName": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
-      "gradleName": "com.thoughtworks.xstream:xstream:1.4.19",
+      "ideaName": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
+      "gradleName": "com.thoughtworks.xstream:xstream:1.4.20",
       "unresolved": false,
       "groupId": "com.thoughtworks.xstream",
       "artifactId": "xstream",
-      "version": "1.4.19"
+      "version": "1.4.20"
     },
     {
       "ideaName": "Gradle: io.github.classgraph:classgraph:4.8.147",

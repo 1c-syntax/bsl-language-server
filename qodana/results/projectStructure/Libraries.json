@@ -57,9 +57,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:mdclasses:0.10.4",
+      "name": "Gradle: io.github.1c-syntax:mdclasses:0.12.0-rc.5",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/mdclasses/0.10.4/83489554a1e66c96c1ee57365a81d711ebb551e/mdclasses-0.10.4.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/mdclasses/0.12.0-rc.5/362a92c473141739ef9e9decd86b863b48d954b7/mdclasses-0.12.0-rc.5.jar!/"
       ],
       "properties": {}
     },
@@ -71,9 +71,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.3.0",
+      "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-common-library/0.3.0/f4f28ce086280c787359a85f72585e99871a7c07/bsl-common-library-0.3.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-common-library/0.5.0/df014037fb6abfab79683499ba0bf1a5221c7f02/bsl-common-library-0.5.0.jar!/"
       ],
       "properties": {}
     },
@@ -1030,9 +1030,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.19",
+      "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.19/e0e581d812aa92ae12f07234f3398e06af74b112/xstream-1.4.19.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.20/e2315b8b2e95e9f21697833c8e56cdd9c98a5ee/xstream-1.4.20.jar!/"
       ],
       "properties": {}
     },
