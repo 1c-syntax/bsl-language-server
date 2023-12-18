@@ -1,8 +1,7 @@
 # Server-side export form method (ServerSideExportFormMethod)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In a form module, you can declare export methods that are available in the client context (usually, these are form notification event handlers). For export methods of the form, only the compilation directive `AtClient` can be specified, since for the rest there is no practical sense: accessing form methods from outside is available only after calling the method `GetForm`, which is available only on the client.
