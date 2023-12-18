@@ -50,12 +50,12 @@
       "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:bsl-parser:0.22.1",
-      "gradleName": "com.github.1c-syntax:bsl-parser:0.22.1",
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
+      "gradleName": "io.github.1c-syntax:bsl-parser:0.23.3",
       "unresolved": false,
-      "groupId": "com.github.1c-syntax",
+      "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-parser",
-      "version": "0.22.1"
+      "version": "0.23.3"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.1",

@@ -82,7 +82,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:bsl-parser:0.22.1",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
           "type": "Library"
         },
         {
@@ -886,7 +886,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:bsl-parser:0.22.1",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
           "type": "Library"
         },
         {
@@ -1550,7 +1550,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:bsl-parser:0.22.1",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
           "type": "Library"
         },
         {
