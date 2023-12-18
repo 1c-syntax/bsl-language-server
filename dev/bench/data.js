@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1702525909954,
+  "lastUpdate": 1702878748746,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24521,6 +24521,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5264990947165804",
             "extra": "mean: 67.24333826700847 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58dd84ba5fcf5bf83c01982d9f2f2ee823358331",
+          "message": "Merge pull request #3172 from artbear/PrivilegedModuleMethodCall\n\nПравило \"Обращение к методам привилегированных модулей\"",
+          "timestamp": "2023-12-18T08:45:06+03:00",
+          "tree_id": "412599bb017cc1be2bd21db5ed187ebbc28efb94",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/58dd84ba5fcf5bf83c01982d9f2f2ee823358331"
+        },
+        "date": 1702878746240,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.70184183120728,
+            "unit": "sec",
+            "range": "stddev: 1.4743328702690757",
+            "extra": "mean: 67.70184183120728 sec\nrounds: 3"
           }
         ]
       }
