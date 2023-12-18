@@ -289,16 +289,16 @@
           "description": "Reports call arguments with `Boolean` type without explicit parameter names specified.\n\n\nWhen multiple boolean literals are passed sequentially, it's easy to forget parameter ordering that could lead to mistakes.\nExplicit parameter names allow for easier code reading and understanding.\n\n**Example:**\n\n\n      fun check(checkName: Boolean, checkAddress: Boolean, checkPhone: Boolean) {}\n\n      fun usage() {\n          check(true, false, true) // What does this mean?\n      }\n\nThe quick-fix adds missing parameter names:\n\n\n      fun check(checkName: Boolean, checkAddress: Boolean, checkPhone: Boolean) {}\n\n      fun usage() {\n          check(checkName = true, checkAddress = false, checkPhone = true)\n      }\n"
         },
         {
-          "shortName": "ReplaceSizeZeroCheckWithIsEmpty",
-          "displayName": "Size zero check can be replaced with 'isEmpty()'",
-          "enabled": false,
-          "description": "Reports `size == 0` checks on `Collections/Array/String` that should be replaced with `isEmpty()`.\n\nUsing `isEmpty()` makes your code simpler.\n\nThe quick-fix replaces the size check with `isEmpty()`.\n\n**Example:**\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.size == 0\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.isEmpty()\n      }\n"
-        },
-        {
           "shortName": "ReplaceGuardClauseWithFunctionCall",
           "displayName": "Guard clause can be replaced with Kotlin's function call",
           "enabled": false,
           "description": "Reports guard clauses that can be replaced with a function call.\n\n**Example:**\n\n      fun test(foo: Int?) {\n          if (foo == null) throw IllegalArgumentException(\"foo\") // replaceable clause\n      }\n\nAfter the quick-fix is applied:\n\n      fun test(foo: Int?) {\n          checkNotNull(foo)\n      }\n"
+        },
+        {
+          "shortName": "ReplaceSizeZeroCheckWithIsEmpty",
+          "displayName": "Size zero check can be replaced with 'isEmpty()'",
+          "enabled": false,
+          "description": "Reports `size == 0` checks on `Collections/Array/String` that should be replaced with `isEmpty()`.\n\nUsing `isEmpty()` makes your code simpler.\n\nThe quick-fix replaces the size check with `isEmpty()`.\n\n**Example:**\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.size == 0\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun foo() {\n          val arrayOf = arrayOf(1, 2, 3)\n          arrayOf.isEmpty()\n      }\n"
         },
         {
           "shortName": "ReplaceToStringWithStringTemplate",
@@ -523,16 +523,16 @@
           "description": "Reports `isEmpty`, `isBlank`, `isNotEmpty`, or `isNotBlank` calls in an `if` statement to assign a default value.\n\nThe quick-fix replaces the `if` condition with `ifEmpty` or `ifBlank` calls.\n\n**Example:**\n\n\n      fun test(list: List<Int>): List<Int> {\n          return if (list.isEmpty()) {\n              println()\n              foo()\n          } else {\n              list\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(list: List<Int>): List<Int> {\n          return list.ifEmpty {\n              println()\n              foo()\n          }\n      }\n\nThis inspection only reports if the Kotlin language version of the project or module is 1.3 or higher."
         },
         {
-          "shortName": "ReplaceWithImportAlias",
-          "displayName": "Fully qualified name can be replaced with existing import alias",
-          "enabled": false,
-          "description": "Reports fully qualified names that can be replaced with an existing import alias.\n\n**Example:**\n\n\n    import foo.Foo as Bar\n    fun main() {\n        foo.Foo()\n    }\n\nAfter the quick-fix is applied:\n\n\n    import foo.Foo as Bar\n    fun main() {\n        Bar()\n    }\n"
-        },
-        {
           "shortName": "ReplaceNegatedIsEmptyWithIsNotEmpty",
           "displayName": "Negated call can be simplified",
           "enabled": false,
           "description": "Reports negation `isEmpty()` and `isNotEmpty()` for collections and `String`, or `isBlank()` and `isNotBlank()` for `String`.\n\nUsing corresponding functions makes your code simpler.\n\nThe quick-fix replaces the negation call with the corresponding call from the Standard Library.\n\n**Example:**\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (!list.isEmpty()) {\n              // do smth\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val list = listOf(1,2,3)\n          if (list.isNotEmpty()) {\n              // do smth\n          }\n      }\n"
+        },
+        {
+          "shortName": "ReplaceWithImportAlias",
+          "displayName": "Fully qualified name can be replaced with existing import alias",
+          "enabled": false,
+          "description": "Reports fully qualified names that can be replaced with an existing import alias.\n\n**Example:**\n\n\n    import foo.Foo as Bar\n    fun main() {\n        foo.Foo()\n    }\n\nAfter the quick-fix is applied:\n\n\n    import foo.Foo as Bar\n    fun main() {\n        Bar()\n    }\n"
         },
         {
           "shortName": "SimplifyBooleanWithConstants",
@@ -1276,16 +1276,16 @@
           "description": "Reports [double-checked locking](https://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html).\n\n\nDouble-checked locking tries to initialize a field on demand and in a thread-safe manner, while avoiding the cost of synchronization.\nUnfortunately it is not thread-safe when used on a field that is not declared `volatile`.\nWhen using Java 1.4 or earlier, double-checked locking doesn't work even with a `volatile` field.\nRead the article linked above for a detailed explanation of the problem.\n\nExample of incorrect double-checked locking:\n\n\n      class Foo {\n        private Helper helper = null;\n        public Helper getHelper() {\n          if (helper == null)\n            synchronized(this) {\n              if (helper == null) helper = new Helper();\n            }\n            return helper;\n          }\n        }\n        // other functions and members...\n      }\n"
         },
         {
-          "shortName": "ThreadLocalNotStaticFinal",
-          "displayName": "'ThreadLocal' field not declared 'static final'",
-          "enabled": false,
-          "description": "Reports fields of type `java.lang.ThreadLocal` that are not declared `static final`.\n\n\nIn the most common case, a `java.lang.ThreadLocal` instance associates state with a thread.\nA non-static non-final `java.lang.ThreadLocal` field associates state with an instance-thread combination.\nThis is usually unnecessary and quite often is a bug that can cause memory leaks and incorrect behavior.\n\n\nA quick-fix is suggested to make the field `static final`.\n\n\n**Example:**\n\n\n      private ThreadLocal tl = ThreadLocal.withInitial(() -> Boolean.TRUE);\n"
-        },
-        {
           "shortName": "ConditionSignal",
           "displayName": "Call to 'signal()' instead of 'signalAll()'",
           "enabled": false,
           "description": "Reports calls to `java.util.concurrent.locks.Condition.signal()`. While occasionally useful, in almost all cases `signalAll()` is a better and safer choice."
+        },
+        {
+          "shortName": "ThreadLocalNotStaticFinal",
+          "displayName": "'ThreadLocal' field not declared 'static final'",
+          "enabled": false,
+          "description": "Reports fields of type `java.lang.ThreadLocal` that are not declared `static final`.\n\n\nIn the most common case, a `java.lang.ThreadLocal` instance associates state with a thread.\nA non-static non-final `java.lang.ThreadLocal` field associates state with an instance-thread combination.\nThis is usually unnecessary and quite often is a bug that can cause memory leaks and incorrect behavior.\n\n\nA quick-fix is suggested to make the field `static final`.\n\n\n**Example:**\n\n\n      private ThreadLocal tl = ThreadLocal.withInitial(() -> Boolean.TRUE);\n"
         },
         {
           "shortName": "CallToNativeMethodWhileLocked",
@@ -1659,16 +1659,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "UnnecessaryUnicodeEscape",
-          "displayName": "Unnecessary unicode escape sequence",
-          "enabled": false,
-          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
-        },
-        {
           "shortName": "StringTokenizer",
           "displayName": "Use of 'StringTokenizer'",
           "enabled": false,
           "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
+        },
+        {
+          "shortName": "UnnecessaryUnicodeEscape",
+          "displayName": "Unnecessary unicode escape sequence",
+          "enabled": false,
+          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
         },
         {
           "shortName": "NumericToString",
@@ -2735,16 +2735,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ClassGetClass",
-          "displayName": "Suspicious 'Class.getClass()' call",
-          "enabled": true,
-          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
-        },
-        {
           "shortName": "ResultOfObjectAllocationIgnored",
           "displayName": "Result of object allocation ignored",
           "enabled": false,
           "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
+        },
+        {
+          "shortName": "ClassGetClass",
+          "displayName": "Suspicious 'Class.getClass()' call",
+          "enabled": true,
+          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
         },
         {
           "shortName": "MisspelledEquals",
@@ -3107,6 +3107,12 @@
           "description": "Reports suspicious indentation of statements after a control statement without braces.\n\n\nSuch indentation can make it look like the statement is inside the control statement,\nwhen in fact it will be executed unconditionally after the control statement.\n\n**Example:**\n\n\n      class Bar {\n          void foo(int i) {\n              if (i == 0)\n                  System.out.println(\"foo\");\n                  System.out.println(\"bar\"); // warning\n              if (i == 1);\n                  System.out.println(\"great\"); // warning\n              if (i == 42)\n                  System.out.println(\"answer\");\n                      System.out.println(\"question\"); // warning\n          }\n      }\n"
         },
         {
+          "shortName": "SuspiciousDateFormat",
+          "displayName": "Suspicious date format pattern",
+          "enabled": true,
+          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
+        },
+        {
           "shortName": "MagicConstant",
           "displayName": "Magic constant",
           "enabled": true,
@@ -3117,12 +3123,6 @@
           "displayName": "Unsafe call to 'Class.newInstance()'",
           "enabled": false,
           "description": "Reports calls to `java.lang.Class.newInstance()`.\n\n\nThis method propagates exceptions thrown by\nthe no-arguments constructor, including checked exceptions. Usages of this method\neffectively bypass the compile-time exception checking that would\notherwise be performed by the compiler.\n\n\nA quick-fix is suggested to replace the call with a call to the\n`java.lang.reflect.Constructor.newInstance()` method, which\navoids this problem by wrapping any exception thrown by the constructor in a\n(checked) `java.lang.reflect.InvocationTargetException`.\n\n**Example:**\n\n\n      clazz.newInstance()\n\nAfter the quick-fix is applied:\n\n\n      clazz.getConstructor().newInstance();\n"
-        },
-        {
-          "shortName": "SuspiciousDateFormat",
-          "displayName": "Suspicious date format pattern",
-          "enabled": true,
-          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
         },
         {
           "shortName": "StaticFieldReferenceOnSubclass",
@@ -3287,16 +3287,16 @@
           "description": "Reports `instanceof` expressions where the expression that is checked has a class/interface type that neither extends/implements the class/interface type on the right-side of the `instanceof` expression, nor has subclasses that do.\n\n\nAlthough it could be intended for e.g. library code, such a construct is likely erroneous,\nbecause no instance of any class declared in the project could pass this `instanceof` test.\n\n**Example:**\n\n\n      class Foo { }\n\n      interface Bar { }\n      \n      class Main {\n          void test(Foo f, Bar b) {\n              if (f instanceof Bar) { // problem\n                  System.out.println(\"fail\");\n              }\n              if (b instanceof Foo) { // problem\n                  System.out.println(\"fail\");\n              }\n          }\n      }\n"
         },
         {
-          "shortName": "InfiniteRecursion",
-          "displayName": "Infinite recursion",
-          "enabled": true,
-          "description": "Reports methods that call themselves infinitely unless an exception is thrown.\n\n\nMethods reported by this inspection cannot return normally.\nWhile such behavior may be intended, in many cases this is just an oversight.\n\n**Example:**\n\n      int baz() {\n          return baz();\n      }\n"
-        },
-        {
           "shortName": "NullArgumentToVariableArgMethod",
           "displayName": "Confusing argument to varargs method",
           "enabled": true,
           "description": "Reports calls to variable arity methods that have a single argument in the vararg parameter position, which is either a `null` or an array of a subtype of the vararg parameter. Such an argument may be confusing as it is unclear if a varargs or non-varargs call is desired.\n\n**Example:**\n\n\n      String[] ss = new String[]{\"foo\", \"bar\"};\n      System.out.printf(\"%s\", ss);\n\nIn this example only the first element of the array will be printed, not the entire array."
+        },
+        {
+          "shortName": "InfiniteRecursion",
+          "displayName": "Infinite recursion",
+          "enabled": true,
+          "description": "Reports methods that call themselves infinitely unless an exception is thrown.\n\n\nMethods reported by this inspection cannot return normally.\nWhile such behavior may be intended, in many cases this is just an oversight.\n\n**Example:**\n\n      int baz() {\n          return baz();\n      }\n"
         },
         {
           "shortName": "VariableNotUsedInsideIf",
@@ -4388,35 +4388,6 @@
       ]
     },
     {
-      "name": "GPath",
-      "inspections": [
-        {
-          "shortName": "GroovyListSetCanBeKeyedAccess",
-          "displayName": "Call to List.set can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapPutCanBeKeyedAccess",
-          "displayName": "Call to Map.put can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
-        },
-        {
-          "shortName": "GroovyMapGetCanBeKeyedAccess",
-          "displayName": "Call to Map.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
-        },
-        {
-          "shortName": "GroovyListGetCanBeKeyedAccess",
-          "displayName": "Call to List.get can be keyed access",
-          "enabled": false,
-          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
-        }
-      ]
-    },
-    {
       "name": "Embedded",
       "inspections": [
         {
@@ -4484,6 +4455,35 @@
           "displayName": "Large array allocation with no OutOfMemoryError check",
           "enabled": false,
           "description": "Reports large array allocations which do not check for `java.lang.OutOfMemoryError`. In memory constrained environments, allocations of large data objects should probably be checked for memory depletion.\n\n\nThis inspection is intended for Java ME and other highly resource constrained environments.\nApplying the results of this inspection without consideration might have negative effects on code clarity and design.\n\n\nUse the option to specify the maximum number of elements to allow in unchecked array allocations."
+        }
+      ]
+    },
+    {
+      "name": "GPath",
+      "inspections": [
+        {
+          "shortName": "GroovyListSetCanBeKeyedAccess",
+          "displayName": "Call to List.set can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.set()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    list.set(0, \"bar\") // list.set(0, \"bar\") could be replaced with list[0] = \"bar\"\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    list[0] = \"bar\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapPutCanBeKeyedAccess",
+          "displayName": "Call to Map.put can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.put()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    map.put(\"foo\", \"baz\") // map.put(\"foo\", \"baz\") could be replaced with map[\"foo\"] = \"baz\"\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    map[\"foo\"] = \"baz\"\n\n"
+        },
+        {
+          "shortName": "GroovyMapGetCanBeKeyedAccess",
+          "displayName": "Call to Map.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.Map.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map.get(\"foo\") // map.get(\"foo\") could be replaced with map[\"foo\"]\n\nAfter the quick-fix is applied:\n\n\n    def map = [\"foo\": \"bar\"]\n    def str = map[\"foo\"]\n\n"
+        },
+        {
+          "shortName": "GroovyListGetCanBeKeyedAccess",
+          "displayName": "Call to List.get can be keyed access",
+          "enabled": false,
+          "description": "Reports calls to `java.util.List.get()` methods. Such calls could be replaced by the shorter and clearer keyed access form.\n\n**Example:**\n\n\n    def list = [\"foo\"]\n    def str = list.get(0) // list.get(0) could be replaced with list[0]\n\nAfter the quick-fix is applied:\n\n\n    def list = [\"foo\"]\n    def str = list[0]\n\n"
         }
       ]
     },
@@ -4752,16 +4752,16 @@
           "description": "Reports equality expressions which are negated by a prefix expression.\n\nSuch expressions can be simplified using the `!=` operator.\n\nExample:\n\n\n      !(i == 1)\n\nAfter the quick-fix is applied:\n\n\n      i != 1\n"
         },
         {
-          "shortName": "DoubleNegation",
-          "displayName": "Double negation",
-          "enabled": true,
-          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
-        },
-        {
           "shortName": "AssertionCanBeIf",
           "displayName": "Assertion can be replaced with 'if' statement",
           "enabled": false,
           "description": "Reports `assert` statements and suggests replacing them with `if` statements that throw `java.lang.AssertionError`.\n\nExample:\n\n\n      assert param != null;\n\nAfter the quick-fix is applied:\n\n\n      if (param == null) throw new AssertionError();\n"
+        },
+        {
+          "shortName": "DoubleNegation",
+          "displayName": "Double negation",
+          "enabled": true,
+          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
         },
         {
           "shortName": "BreakStatement",
@@ -6433,16 +6433,16 @@
           "description": "Reports cases where the minimum or the maximum of two numbers can be calculated using a `Math.max()` or `Math.min()` call, instead of doing it manually.\n\n**Example:**\n\n\n      public int min(int a, int b) {\n        return b < a ? b : a;\n      }\n\nAfter the quick-fix is applied:\n\n\n      public int min(int a, int b) {\n        return Math.min(a, b);\n      }\n\n\nUse the **Disable for float and double** option to disable this inspection for `double` and `float` types.\nThis is useful because the quick-fix may slightly change the semantics for `float`/\n`double` types when handling `NaN`. Nevertheless, in most cases this will actually fix\na subtle bug where `NaN` is not taken into account.\n\nNew in 2019.2"
         },
         {
-          "shortName": "RedundantEmbeddedExpression",
-          "displayName": "Redundant embedded expression in string template",
-          "enabled": false,
-          "description": "Reports redundant embedded expressions in `STR` templates, such as trivial literals or empty expressions.\n\nExample:\n\n\n      System.out.println(STR.\"Hello \\{\"world\"}\");\n\nAfter the quick-fix is applied:\n\n\n      System.out.println(STR.\"Hello world\");\n\nThis inspection only reports if the language level of the project or module is 21 or higher.\n\nNew in 2023.3"
-        },
-        {
           "shortName": "RedundantComparatorComparing",
           "displayName": "Comparator method can be simplified",
           "enabled": false,
           "description": "Reports `Comparator` combinator constructs that can be simplified.\n\nExample:\n\n\n      c.thenComparing(Comparator.comparing(function));\n\n      Comparator.comparing(Map.Entry::getKey);\n\n      Collections.max(list, Comparator.reverseOrder());\n\nAfter the quick-fixes are applied:\n\n\n      c.thenComparing(function)\n\n      Map.Entry.comparingByKey()\n\n      Collections.min(list, Comparator.naturalOrder());\n\nNew in 2018.1"
+        },
+        {
+          "shortName": "RedundantEmbeddedExpression",
+          "displayName": "Redundant embedded expression in string template",
+          "enabled": false,
+          "description": "Reports redundant embedded expressions in `STR` templates, such as trivial literals or empty expressions.\n\nExample:\n\n\n      System.out.println(STR.\"Hello \\{\"world\"}\");\n\nAfter the quick-fix is applied:\n\n\n      System.out.println(STR.\"Hello world\");\n\nThis inspection only reports if the language level of the project or module is 21 or higher.\n\nNew in 2023.3"
         },
         {
           "shortName": "ExcessiveRangeCheck",
@@ -6852,6 +6852,77 @@
       ]
     },
     {
+      "name": "Logging",
+      "inspections": [
+        {
+          "shortName": "LoggingConditionDisagreesWithLogLevelStatement",
+          "displayName": "Log condition does not match logging call",
+          "enabled": false,
+          "description": "Reports *is log enabled for* conditions of `if` statements that do not match the log level of the contained logging call.\n\n\nFor example:\n\n\n      if (LOG.isTraceEnabled()) {\n        // debug level logged, but checked for trace level\n        LOG.debug(\"some log message\");\n      }\n\nThis inspection understands the *java.util.logging* , *Log4j* , *Log4j2* , *Apache Commons Logging*\nand the *SLF4J* logging frameworks."
+        },
+        {
+          "shortName": "LoggingPlaceholderCountMatchesArgumentCount",
+          "displayName": "Number of placeholders does not match number of arguments in logging call",
+          "enabled": true,
+          "description": "Reports SLF4J, Log4j2 and akka.event.LoggingAdapter logging calls, such as `logger.info(\"{}: {}\", key)` where the number of `{}` placeholders in the logger message doesn't match the number of other arguments to the logging call.\n\n\nUse the inspection option to specify which implementation SLF4J uses.\nIf **Check automatically** is chosen, then `org.apache.logging.slf4j.Log4jLogger` is searched in the classpath.\nIf this file is founded or **Yes** is chosen, then cases, when the last parameter with an exception type has a placeholder,\nwill not be reported for SLFJ4 API.  \n\nFor example:\n\n\n    //this case will not be reported with \"Yes\" option\n    log.error(\"For id {}: {}\", \"1\", new RuntimeException());\n\nIn this case 'new RuntimeException()' will be printed using 'toString()', (its stacktrace will not be printed):\n\n\n    For id 1: java.lang.RuntimeException\n\nOtherwise, it will be highlighted because the last placeholder is not used:\n\n\n    For id 1: {}\n    java.lang.RuntimeException: null\n\n**No** option can be used to always highlight such cases when a placeholder is used for an exception even if `org.apache.logging.slf4j.Log4jLogger` is used as a backend.  \nThis option works only for SLF4J."
+        },
+        {
+          "shortName": "LoggingStringTemplateAsArgument",
+          "displayName": "String template as argument to logging call",
+          "enabled": true,
+          "description": "Reports string templates that are used as arguments to **SLF4J** and **Log4j 2** logging methods. The method `org.apache.logging.log4j.Logger.log()` and its overloads are supported only for **all log levels** option. String templates are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: $variable1\")\n\n**After the quick-fix is applied (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: {}\", variable1)\n\n\nNote that the suggested replacement might not be equivalent to the original code, for example,\nwhen string templates contain method calls or assignment expressions.\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be always enabled, and the arguments will always be evaluated.\n* Use the **Do not warn when only expressions with primitive types, their wrappers or String are included** option to ignore string templates, which contain only expressions with primitive types, their wrappers or String. For example, it could be useful to prevent loading lazy collections. Note that, creating string even only with expressions with primitive types, their wrappers or String at runtime can negatively impact performance.\n\nNew in 2023.1"
+        },
+        {
+          "shortName": "LogStatementGuardedByLogCondition",
+          "displayName": "Logging call not guarded by log condition",
+          "enabled": false,
+          "description": "Reports logging calls with non-constant arguments that are not surrounded by a guard condition. The evaluation of the arguments of a logging call can be expensive. Surrounding a logging call with a guard clause prevents that cost when logging is disabled for the level used by the logging statement. This is especially useful for the least serious level (trace, debug, finest) of logging calls, because those are most often disabled in a production environment.\n\n**Example:**\n\n\n      public class Principal {\n        void bad(Object object) {\n          if (true) {\n            LOG.debug(\"log log log \" + expensiveCalculation(object));\n          }\n          LOG.debug(\"some more logging \" + expensiveCalculation(1));\n        }\n\n        void good(Object) {\n          if (LOG.isDebug()) {\n            LOG.debug(\"value: \" + expensiveCalculation(object));\n          }\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** field to specify the logger class name used.\n*\n  Use the table to specify the logging methods this inspection should warn on, with the corresponding log condition text.\n\n* Use the **Flag all unguarded logging calls** option to have the inspection flag all unguarded log calls, not only those with non-constant arguments."
+        },
+        {
+          "shortName": "NonStaticFinalLogger",
+          "displayName": "Non-constant logger",
+          "enabled": false,
+          "description": "Reports logger fields that are not declared `static` and/or `final`. Ensuring that every class logger is effectively constant and bound to that class simplifies the task of providing a unified logging implementation for an application.\n\nA quick-fix is provided to change the logger modifiers to `static final`.\n\n**Example:**\n\n\n      public class Significant {\n        private Logger LOG = Logger.getLogger(Critical.class);\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Significant {\n        private static final Logger LOG = Logger.getLogger(Critical.class);\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** table to specify logger class names. The inspection will report the fields that are not `static` and `final` and are of the type equal to one of the specified class names."
+        },
+        {
+          "shortName": "PublicMethodWithoutLogging",
+          "displayName": "'public' method without logging",
+          "enabled": false,
+          "description": "Reports any public methods that do not contain a logging statement. This inspection does not report simple getters and setters.\n\nFor example:\n\n\n      public class Crucial {\n        private static finalLogger LOG = LoggerFactory.getLogger(Crucial.class);\n        public void doImportantStuff() {\n          // warning on this method\n        }\n\n        public void doOtherStuff() {\n          LOG.info(\"do other stuff\");\n        }\n      }\n\n\nUse the table below to specify Logger class names.\nPublic methods that do not use instance methods of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "ClassWithMultipleLoggers",
+          "displayName": "Class with multiple loggers",
+          "enabled": false,
+          "description": "Reports classes that have multiple loggers declared. Ensuring that every class has a single dedicated logger is an important step in providing a unified logging implementation for an application.\n\nFor example:\n\n\n      public class Critical {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        protected static final Logger myLogger = Logger.getLogger(getClass());\n      }\n\n\nUse the table below to specify Logger class names.\nClasses which declare multiple fields that have the type of one of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "LoggerInitializedWithForeignClass",
+          "displayName": "Logger initialized with foreign class",
+          "enabled": false,
+          "description": "Reports `Logger` instances that are initialized with a `class` literal from a different class than the `Logger` is contained in. This can easily happen when copy-pasting some code from another class and may result in logging events under an unexpected category and cause filters to be applied incorrectly.\n\nA quick-fix is provided to replace the foreign class literal with one from the surrounding class.\n\n**Example:**\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        // ... other fields and methods\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Paramount.class);\n\n        // ... other fields and methods\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the logger factory classes and logger factory methods recognized by this inspection.\n* Use the **Ignore loggers initialized with a superclass** option to ignore loggers that are initialized with a superclass of the class containing the logger.\n* Use the **Ignore loggers in non-public classes** to only warn on loggers in `public` classes."
+        },
+        {
+          "shortName": "ClassWithoutLogger",
+          "displayName": "Class without logger",
+          "enabled": false,
+          "description": "Reports classes which do not have a declared logger.\n\nEnsuring that every class has a dedicated logger is an important step in providing a unified logging\nimplementation for an application. Interfaces, enumerations, annotations, inner classes, and abstract classes are not reported by this inspection.\n\nFor example:\n\n\n      public class NoLoggerDeclared {\n\n        int calculateNthDigitOfPi(int n) {\n          // todo\n          return 1;\n        }\n      }\n\n\nUse the table in the **Options** section to specify logger class names.\nClasses which do not declare a field with the type of one of the specified classes will be reported by this inspection."
+        },
+        {
+          "shortName": "StringConcatenationArgumentToLogCall",
+          "displayName": "Non-constant string concatenation as argument to logging call",
+          "enabled": false,
+          "description": "Reports non-constant string concatenations that are used as arguments to **SLF4J** and **Log4j 2** logging methods. Non-constant concatenations are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example:**\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld(\" + i + \", \" + s + \", \"  + b + \")\");\n          // todo\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld({}, {}, {})\", i, s, b);\n          // todo\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be enabled even in production, and the arguments will always be evaluated."
+        },
+        {
+          "shortName": "KotlinLoggerInitializedWithForeignClass",
+          "displayName": "Logger initialized with foreign class",
+          "enabled": false,
+          "description": "Reports `Logger` instances initialized with a class literal other than the class the `Logger` resides in.\n\n\nThis can happen when copy-pasting from another class.\nIt may result in logging events under an unexpected category and incorrect filtering.\n\n\nUse the inspection options to specify the logger factory classes and methods recognized by this inspection.\n\n**Example:**\n\n\n    class AnotherService\n    class MyService {\n        private val logger = LoggerFactory.getLogger(AnotherService::class.java)\n    }\n\nAfter the quick-fix is applied:\n\n\n    class MyService {\n        private val logger = LoggerFactory.getLogger(MyService::class.java)\n    }\n"
+        }
+      ]
+    },
+    {
       "name": "Javadoc",
       "inspections": [
         {
@@ -6949,77 +7020,6 @@
           "displayName": "Missing Javadoc",
           "enabled": false,
           "description": "Reports missing Javadoc comments and tags.\n\nExample:\n\n\n      /**\n       * Missing \"@param\" is reported (if configured).\n       */\n      public void sample(int param){\n      }\n\nThe quick-fixes add missing tag or missing Javadoc comment:\n\n\n      /**\n       * Missing \"@param\" is reported (if configured).\n       * @param param\n       */\n      public void sample(int param){\n      }\n\n\nInspection can be configured to ignore deprecated elements or simple accessor methods like `getField()` or `setField()`.\nYou can also use options below to configure required tags and minimal required visibility for the specific code elements like method, field, class, package, module."
-        }
-      ]
-    },
-    {
-      "name": "Logging",
-      "inspections": [
-        {
-          "shortName": "LoggingConditionDisagreesWithLogLevelStatement",
-          "displayName": "Log condition does not match logging call",
-          "enabled": false,
-          "description": "Reports *is log enabled for* conditions of `if` statements that do not match the log level of the contained logging call.\n\n\nFor example:\n\n\n      if (LOG.isTraceEnabled()) {\n        // debug level logged, but checked for trace level\n        LOG.debug(\"some log message\");\n      }\n\nThis inspection understands the *java.util.logging* , *Log4j* , *Log4j2* , *Apache Commons Logging*\nand the *SLF4J* logging frameworks."
-        },
-        {
-          "shortName": "LoggingPlaceholderCountMatchesArgumentCount",
-          "displayName": "Number of placeholders does not match number of arguments in logging call",
-          "enabled": true,
-          "description": "Reports SLF4J, Log4j2 and akka.event.LoggingAdapter logging calls, such as `logger.info(\"{}: {}\", key)` where the number of `{}` placeholders in the logger message doesn't match the number of other arguments to the logging call.\n\n\nUse the inspection option to specify which implementation SLF4J uses.\nIf **Check automatically** is chosen, then `org.apache.logging.slf4j.Log4jLogger` is searched in the classpath.\nIf this file is founded or **Yes** is chosen, then cases, when the last parameter with an exception type has a placeholder,\nwill not be reported for SLFJ4 API.  \n\nFor example:\n\n\n    //this case will not be reported with \"Yes\" option\n    log.error(\"For id {}: {}\", \"1\", new RuntimeException());\n\nIn this case 'new RuntimeException()' will be printed using 'toString()', (its stacktrace will not be printed):\n\n\n    For id 1: java.lang.RuntimeException\n\nOtherwise, it will be highlighted because the last placeholder is not used:\n\n\n    For id 1: {}\n    java.lang.RuntimeException: null\n\n**No** option can be used to always highlight such cases when a placeholder is used for an exception even if `org.apache.logging.slf4j.Log4jLogger` is used as a backend.  \nThis option works only for SLF4J."
-        },
-        {
-          "shortName": "LoggingStringTemplateAsArgument",
-          "displayName": "String template as argument to logging call",
-          "enabled": true,
-          "description": "Reports string templates that are used as arguments to **SLF4J** and **Log4j 2** logging methods. The method `org.apache.logging.log4j.Logger.log()` and its overloads are supported only for **all log levels** option. String templates are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: $variable1\")\n\n**After the quick-fix is applied (for Kotlin):**\n\n\n          val variable1 = getVariable()\n          logger.info(\"variable1: {}\", variable1)\n\n\nNote that the suggested replacement might not be equivalent to the original code, for example,\nwhen string templates contain method calls or assignment expressions.\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be always enabled, and the arguments will always be evaluated.\n* Use the **Do not warn when only expressions with primitive types, their wrappers or String are included** option to ignore string templates, which contain only expressions with primitive types, their wrappers or String. For example, it could be useful to prevent loading lazy collections. Note that, creating string even only with expressions with primitive types, their wrappers or String at runtime can negatively impact performance.\n\nNew in 2023.1"
-        },
-        {
-          "shortName": "LogStatementGuardedByLogCondition",
-          "displayName": "Logging call not guarded by log condition",
-          "enabled": false,
-          "description": "Reports logging calls with non-constant arguments that are not surrounded by a guard condition. The evaluation of the arguments of a logging call can be expensive. Surrounding a logging call with a guard clause prevents that cost when logging is disabled for the level used by the logging statement. This is especially useful for the least serious level (trace, debug, finest) of logging calls, because those are most often disabled in a production environment.\n\n**Example:**\n\n\n      public class Principal {\n        void bad(Object object) {\n          if (true) {\n            LOG.debug(\"log log log \" + expensiveCalculation(object));\n          }\n          LOG.debug(\"some more logging \" + expensiveCalculation(1));\n        }\n\n        void good(Object) {\n          if (LOG.isDebug()) {\n            LOG.debug(\"value: \" + expensiveCalculation(object));\n          }\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** field to specify the logger class name used.\n*\n  Use the table to specify the logging methods this inspection should warn on, with the corresponding log condition text.\n\n* Use the **Flag all unguarded logging calls** option to have the inspection flag all unguarded log calls, not only those with non-constant arguments."
-        },
-        {
-          "shortName": "NonStaticFinalLogger",
-          "displayName": "Non-constant logger",
-          "enabled": false,
-          "description": "Reports logger fields that are not declared `static` and/or `final`. Ensuring that every class logger is effectively constant and bound to that class simplifies the task of providing a unified logging implementation for an application.\n\nA quick-fix is provided to change the logger modifiers to `static final`.\n\n**Example:**\n\n\n      public class Significant {\n        private Logger LOG = Logger.getLogger(Critical.class);\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Significant {\n        private static final Logger LOG = Logger.getLogger(Critical.class);\n      }\n\n\nConfigure the inspection:\n\n* Use the **Logger class name** table to specify logger class names. The inspection will report the fields that are not `static` and `final` and are of the type equal to one of the specified class names."
-        },
-        {
-          "shortName": "PublicMethodWithoutLogging",
-          "displayName": "'public' method without logging",
-          "enabled": false,
-          "description": "Reports any public methods that do not contain a logging statement. This inspection does not report simple getters and setters.\n\nFor example:\n\n\n      public class Crucial {\n        private static finalLogger LOG = LoggerFactory.getLogger(Crucial.class);\n        public void doImportantStuff() {\n          // warning on this method\n        }\n\n        public void doOtherStuff() {\n          LOG.info(\"do other stuff\");\n        }\n      }\n\n\nUse the table below to specify Logger class names.\nPublic methods that do not use instance methods of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "ClassWithMultipleLoggers",
-          "displayName": "Class with multiple loggers",
-          "enabled": false,
-          "description": "Reports classes that have multiple loggers declared. Ensuring that every class has a single dedicated logger is an important step in providing a unified logging implementation for an application.\n\nFor example:\n\n\n      public class Critical {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        protected static final Logger myLogger = Logger.getLogger(getClass());\n      }\n\n\nUse the table below to specify Logger class names.\nClasses which declare multiple fields that have the type of one of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "LoggerInitializedWithForeignClass",
-          "displayName": "Logger initialized with foreign class",
-          "enabled": false,
-          "description": "Reports `Logger` instances that are initialized with a `class` literal from a different class than the `Logger` is contained in. This can easily happen when copy-pasting some code from another class and may result in logging events under an unexpected category and cause filters to be applied incorrectly.\n\nA quick-fix is provided to replace the foreign class literal with one from the surrounding class.\n\n**Example:**\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Critical.class);\n\n        // ... other fields and methods\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Paramount {\n        protected static final Logger LOG = Logger.getLogger(Paramount.class);\n\n        // ... other fields and methods\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the logger factory classes and logger factory methods recognized by this inspection.\n* Use the **Ignore loggers initialized with a superclass** option to ignore loggers that are initialized with a superclass of the class containing the logger.\n* Use the **Ignore loggers in non-public classes** to only warn on loggers in `public` classes."
-        },
-        {
-          "shortName": "ClassWithoutLogger",
-          "displayName": "Class without logger",
-          "enabled": false,
-          "description": "Reports classes which do not have a declared logger.\n\nEnsuring that every class has a dedicated logger is an important step in providing a unified logging\nimplementation for an application. Interfaces, enumerations, annotations, inner classes, and abstract classes are not reported by this inspection.\n\nFor example:\n\n\n      public class NoLoggerDeclared {\n\n        int calculateNthDigitOfPi(int n) {\n          // todo\n          return 1;\n        }\n      }\n\n\nUse the table in the **Options** section to specify logger class names.\nClasses which do not declare a field with the type of one of the specified classes will be reported by this inspection."
-        },
-        {
-          "shortName": "StringConcatenationArgumentToLogCall",
-          "displayName": "Non-constant string concatenation as argument to logging call",
-          "enabled": false,
-          "description": "Reports non-constant string concatenations that are used as arguments to **SLF4J** and **Log4j 2** logging methods. Non-constant concatenations are evaluated at runtime even when the logging message is not logged; this can negatively impact performance. It is recommended to use a parameterized log message instead, which will not be evaluated when logging is disabled.\n\n**Example:**\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld(\" + i + \", \" + s + \", \"  + b + \")\");\n          // todo\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Vital {\n        private static final Logger LOG = LoggerFactory.getLogger(Vital.class);\n\n        public void saveTheWorld(int i, String s, boolean b) {\n          LOG.info(\"saveTheWorld({}, {}, {})\", i, s, b);\n          // todo\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the **Warn on** list to ignore certain higher logging levels. Higher logging levels may be enabled even in production, and the arguments will always be evaluated."
-        },
-        {
-          "shortName": "KotlinLoggerInitializedWithForeignClass",
-          "displayName": "Logger initialized with foreign class",
-          "enabled": false,
-          "description": "Reports `Logger` instances initialized with a class literal other than the class the `Logger` resides in.\n\n\nThis can happen when copy-pasting from another class.\nIt may result in logging events under an unexpected category and incorrect filtering.\n\n\nUse the inspection options to specify the logger factory classes and methods recognized by this inspection.\n\n**Example:**\n\n\n    class AnotherService\n    class MyService {\n        private val logger = LoggerFactory.getLogger(AnotherService::class.java)\n    }\n\nAfter the quick-fix is applied:\n\n\n    class MyService {\n        private val logger = LoggerFactory.getLogger(MyService::class.java)\n    }\n"
         }
       ]
     },
@@ -7354,29 +7354,6 @@
       ]
     },
     {
-      "name": "Workspace model",
-      "inspections": [
-        {
-          "shortName": "WorkspaceEntityMutableField",
-          "displayName": "Unsupported 'var' field in entity",
-          "enabled": false,
-          "description": "Detects unsupported `var` fields in the inheritors of `WorkspaceEntity` interface\n\n\nInterface implementing `WorkspaceEntity` have to have only `val` fields because it's immutable.\nImplementation of `WorkspaceEntity.Builder` will be generated for the mutation"
-        },
-        {
-          "shortName": "WorkspaceImplObsolete",
-          "displayName": "Obsolete version of entity implementation",
-          "enabled": false,
-          "description": "Reports existence of the obsolete implementation for the entity.\n\n\nVerifies that existing implementation for entities has the same API version as described at `com.intellij.platform.workspace.storage.CodeGeneratorVersions` from dependencies.\n\n\nSuggests regenerating implementation for the whole entities in the current module."
-        },
-        {
-          "shortName": "WorkspaceImplAbsent",
-          "displayName": "Absent entity implementation",
-          "enabled": false,
-          "description": "Reports absent of implementation for the entity.\n\n\nVerifies that each entity in the project has the implementation.\n\n\nSuggests generation implementation for the whole entities in the current module."
-        }
-      ]
-    },
-    {
       "name": "Visibility",
       "inspections": [
         {
@@ -7480,6 +7457,29 @@
           "displayName": "Usage of service not declared in 'module-info'",
           "enabled": true,
           "description": "Reports situations in which a service is loaded with `java.util.ServiceLoader` but it isn't declared with the `uses` clause in the `module-info.java` file and suggests inserting it.\n\nNew in 2018.1"
+        }
+      ]
+    },
+    {
+      "name": "Workspace model",
+      "inspections": [
+        {
+          "shortName": "WorkspaceEntityMutableField",
+          "displayName": "Unsupported 'var' field in entity",
+          "enabled": false,
+          "description": "Detects unsupported `var` fields in the inheritors of `WorkspaceEntity` interface\n\n\nInterface implementing `WorkspaceEntity` have to have only `val` fields because it's immutable.\nImplementation of `WorkspaceEntity.Builder` will be generated for the mutation"
+        },
+        {
+          "shortName": "WorkspaceImplObsolete",
+          "displayName": "Obsolete version of entity implementation",
+          "enabled": false,
+          "description": "Reports existence of the obsolete implementation for the entity.\n\n\nVerifies that existing implementation for entities has the same API version as described at `com.intellij.platform.workspace.storage.CodeGeneratorVersions` from dependencies.\n\n\nSuggests regenerating implementation for the whole entities in the current module."
+        },
+        {
+          "shortName": "WorkspaceImplAbsent",
+          "displayName": "Absent entity implementation",
+          "enabled": false,
+          "description": "Reports absent of implementation for the entity.\n\n\nVerifies that each entity in the project has the implementation.\n\n\nSuggests generation implementation for the whole entities in the current module."
         }
       ]
     },
@@ -8712,16 +8712,16 @@
           "description": "Reports anonymous capturing groups and numeric back references in a RegExp. These are only reported when the RegExp dialect supports named group and named group references. Named groups and named back references improve code readability and are recommended to use instead. When a capture is not needed, matching can be more performant and use less memory by using a non-capturing group, i.e. `(?:xxx)` instead of `(xxx)`.\n\n**Example:**\n\n\n      (\\d\\d\\d\\d)\\1\n\nA better regex pattern could look like this:\n\n\n      (?<quad>\\d\\d\\d\\d)\\k<quad>\n\nNew in 2017.2"
         },
         {
-          "shortName": "RegExpRepeatedSpace",
-          "displayName": "Consecutive spaces",
-          "enabled": true,
-          "description": "Reports multiple consecutive spaces in a RegExp. Because spaces are not visible by default, it can be hard to see how many spaces are required. The RegExp can be made more clear by replacing the consecutive spaces with a single space and a counted quantifier.\n\n**Example:**\n\n\n      (     )\n\nAfter the quick-fix is applied:\n\n\n      ( {5})\n\n\nNew in 2017.1"
-        },
-        {
           "shortName": "RegExpDuplicateAlternationBranch",
           "displayName": "Duplicate branch in alternation",
           "enabled": true,
           "description": "Reports duplicate branches in a RegExp alternation. Duplicate branches slow down matching and obscure the intent of the expression.\n\n**Example:**\n\n\n      (alpha|bravo|charlie|alpha)\n\nAfter the quick-fix is applied:\n\n\n      (alpha|bravo|charlie)\n\nNew in 2017.1"
+        },
+        {
+          "shortName": "RegExpRepeatedSpace",
+          "displayName": "Consecutive spaces",
+          "enabled": true,
+          "description": "Reports multiple consecutive spaces in a RegExp. Because spaces are not visible by default, it can be hard to see how many spaces are required. The RegExp can be made more clear by replacing the consecutive spaces with a single space and a counted quantifier.\n\n**Example:**\n\n\n      (     )\n\nAfter the quick-fix is applied:\n\n\n      ( {5})\n\n\nNew in 2017.1"
         }
       ]
     },
@@ -9074,16 +9074,16 @@
           "description": "Reports non-`abstract` test cases without any test methods. Such test cases usually indicate unfinished code or could be a refactoring leftover that should be removed.\n\nExample:\n\n\n      public class CrucialTest {\n        @Before\n        public void setUp() {\n          System.out.println(\"setting up\");\n        }\n      }\n\n\nUse the **Ignore test cases which have superclasses with test methods** option to ignore test cases which have super classes\nwith test methods."
         },
         {
-          "shortName": "TestMethodWithoutAssertion",
-          "displayName": "Test method without assertions",
-          "enabled": false,
-          "description": "Reports test methods that do not contain any assertions. Such methods may indicate either incomplete or weak test cases.\n\n**Example:**\n\n\n      public class ExtensiveTest {\n\n        @Test\n        public void testAlive() {\n          System.out.println(\"nothing\");\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the combinations of fully qualified class name and method name regular expression that should qualify as assertions. Class names also match subclasses.\n* Use the **'assert' keyword is considered an assertion** option to specify if the Java `assert` statements using the `assert` keyword should be considered an assertion.\n* Use the **Ignore test methods which declare exceptions** option to ignore the test methods that declare exceptions. This can be useful when you have tests that will throw an exception on failure and thus don't need any assertions."
-        },
-        {
           "shortName": "JUnitMixedFramework",
           "displayName": "JUnit API usage from multiple versions in a single TestCase",
           "enabled": true,
           "description": "Reports JUnit annotated methods when used in a test case from a different JUnit version. To determine the framework version for a test case the inspection checks the framework version of the super class when available. When a super class is not available it will use the most used framework in the test case.\n\nExample (JUnit 4 annotation in JUnit 3 test case):\n\n\n      public class MyTest extends TestCase {\n          @Test\n          public void foo() { }\n\n          @Test\n          @Ignore\n          public void testBar() { }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class MyTest extends TestCase {\n          public void testFoo() {}\n\n          public void _testBar() {}\n      }\n\nExample (JUnit 5 annotation in JUnit 4 test case):\n\n\n      public class MyTest {\n          @BeforeAll // JUnit 5 lifecycle method\n          public void initialize() { }\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void test() {}\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void testWouldBeExecuted() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class MyTest {\n          @BeforeClass // JUnit 4 lifecycle method\n          public void initialize() { }\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void test() {}\n\n          @org.junit.Test  // JUnit 4 test annotation\n          public void testWouldBeExecuted() {}\n      }\n"
+        },
+        {
+          "shortName": "TestMethodWithoutAssertion",
+          "displayName": "Test method without assertions",
+          "enabled": false,
+          "description": "Reports test methods that do not contain any assertions. Such methods may indicate either incomplete or weak test cases.\n\n**Example:**\n\n\n      public class ExtensiveTest {\n\n        @Test\n        public void testAlive() {\n          System.out.println(\"nothing\");\n        }\n      }\n\n\nConfigure the inspection:\n\n* Use the table to specify the combinations of fully qualified class name and method name regular expression that should qualify as assertions. Class names also match subclasses.\n* Use the **'assert' keyword is considered an assertion** option to specify if the Java `assert` statements using the `assert` keyword should be considered an assertion.\n* Use the **Ignore test methods which declare exceptions** option to ignore the test methods that declare exceptions. This can be useful when you have tests that will throw an exception on failure and thus don't need any assertions."
         },
         {
           "shortName": "TestFailedLine",
@@ -9217,16 +9217,16 @@
           "description": "Reports methods whose number of statements exceeds the specified maximum.\n\nMethods with too many statements may be confusing and are a good sign that refactoring is necessary.\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Maximum statements per method** field to specify the maximum allowed number of statements in a method."
         },
         {
-          "shortName": "ParametersPerMethod",
-          "displayName": "Method with too many parameters",
-          "enabled": false,
-          "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
-        },
-        {
           "shortName": "OverlyLongLambda",
           "displayName": "Overly long lambda expression",
           "enabled": false,
           "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
+        },
+        {
+          "shortName": "ParametersPerMethod",
+          "displayName": "Method with too many parameters",
+          "enabled": false,
+          "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
         },
         {
           "shortName": "MethodCoupling",
