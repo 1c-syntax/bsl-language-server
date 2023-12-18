@@ -65,6 +65,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
     "\\D"
   );
+  public static final int MAX_YEAR_BY_1C = 3999;
 
   @DiagnosticParameter(
     type = String.class,
@@ -112,7 +113,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isValidDate(String strDate) {
     var year = parseInt(strDate.substring(0, 4));
-    if (year < 1 || year > 3999) {
+    if (year < 1 || year > MAX_YEAR_BY_1C) {
       return false;
     }
     var month = parseInt(strDate.substring(4, 6));
