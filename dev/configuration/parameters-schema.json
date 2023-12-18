@@ -1496,6 +1496,24 @@
             "title": "Source code parse error",
             "$id": "#/definitions/ParseError"
         },
+        "PrivilegedModuleMethodCall": {
+            "description": "Accessing privileged module methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Accessing privileged module methods",
+            "properties": {
+                "validateNestedCalls": {
+                    "description": "Validate nested method calls from privileged modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Validate nested method calls from privileged modules"
+                }
+            },
+            "$id": "#/definitions/PrivilegedModuleMethodCall"
+        },
         "ProcedureReturnsValue": {
             "description": "Procedure should not return Value",
             "default": true,
