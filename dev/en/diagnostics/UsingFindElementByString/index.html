@@ -1158,18 +1158,27 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>It is forbidden to use the search methods for elements "FindByName" or "FindByCode".</p>
+<p>The rule finds the use of the <code>FindByName</code>, <code>FindByCode</code> or <code>FindByNumber</code> methods using specific numbers, codes and names of elements or documents. 
+Similar code may not work correctly in other databases.
+Often such code is test code included in the release version, which is also not recommended.</p>
+<p>It is recommended to specify constant data values ​​from the database in "Сonstants" or predefined metadata elements.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<p>Incorrect:
 <div class="highlight"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nf">FindByName</span><span class="p">(</span><span class="s">&quot;Senior Accountant&quot;</span><span class="p">);</span>
 </code></pre></div>
-<p>or</p>
+or
 <div class="highlight"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;00-0000001&quot;</span><span class="p">);</span>
+</code></pre></div></p>
+<p>or</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Object</span> <span class="o">=</span> <span class="nc">Documents</span><span class="o">.</span><span class="nv">Invoice</span><span class="o">.</span><span class="nf">FindByNumber</span><span class="p">(</span><span class="s">&quot;0000-000001&quot;</span><span class="p">,</span> <span class="nb">CurrentDate</span><span class="p">());</span>
 </code></pre></div>
 <p>Acceptable use:
 <div class="highlight"><pre><span></span><code><span class="nc">Catalogs</span><span class="o">.</span><span class="nv">Currencies</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="nv">CurrentData</span><span class="o">.</span><span class="nv">CurrencyCodeDigital</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="nc">Catalogs</span><span class="o">.</span><span class="nv">BankClassifier</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="nv">BankDetails</span><span class="o">.</span><span class="nv">BIK</span><span class="p">);</span>
 </code></pre></div></p>
+<div class="highlight"><pre><span></span><code><span class="nc">Documents</span><span class="o">.</span><span class="nv">Invoice</span><span class="o">.</span><span class="nf">FindByNumber</span><span class="p">(</span><span class="nv">Number</span><span class="p">);</span>
+</code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
