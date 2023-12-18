@@ -27,14 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.Register;
+import com.github._1c_syntax.bsl.mdo.children.Dimension;
 import com.github._1c_syntax.bsl.types.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.Dimension;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   activatedByDefault = false,
@@ -54,23 +52,18 @@ public class DenyIncompleteValuesDiagnostic extends AbstractMetadataDiagnostic {
       MDOType.ACCUMULATION_REGISTER,
       MDOType.ACCOUNTING_REGISTER,
       MDOType.CALCULATION_REGISTER
-      ));
+    ));
   }
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
-    getWrongDimensions((AbstractMDObjectComplex) mdo)
-      .forEach((Dimension dimension) -> {
-        var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, mdo);
-        addDiagnostic(info.getMessage(dimension.getName(), ownerMDOName));
-      });
-  }
-
-  @NotNull
-  private static Stream<Dimension> getWrongDimensions(AbstractMDObjectComplex mdo) {
-    return mdo.getChildren().stream()
-      .filter(Dimension.class::isInstance)
-      .map(Dimension.class::cast)
-      .filter(dimension -> !dimension.isDenyIncompleteValues());
+  protected void checkMetadata(MD mdo) {
+    if (mdo instanceof Register register) {
+      register.getDimensions().stream()
+        .filter(dimension -> !dimension.isDenyIncompleteValues())
+        .forEach((Dimension dimension) -> {
+          var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, mdo);
+          addDiagnostic(info.getMessage(dimension.getName(), ownerMDOName));
+        });
+    }
   }
 }

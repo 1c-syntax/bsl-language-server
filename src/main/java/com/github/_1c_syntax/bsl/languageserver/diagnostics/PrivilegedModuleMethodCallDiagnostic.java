@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -64,10 +64,10 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    if (privilegedModuleSymbols.isEmpty()){
+    if (privilegedModuleSymbols.isEmpty()) {
       privilegedModuleSymbols = getPrivilegedModuleSymbols();
     }
-    if (privilegedModuleSymbols.isEmpty()){
+    if (privilegedModuleSymbols.isEmpty()) {
       return;
     }
 
@@ -78,20 +78,20 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
 
   private List<ModuleSymbol> getPrivilegedModuleSymbols() {
     return documentContext.getServerContext().getConfiguration().getCommonModules()
-      .values().stream()
-      .filter(MDCommonModule::isPrivileged)
+      .stream()
+      .filter(CommonModule::isPrivileged)
       .flatMap(mdCommonModule -> getPrivilegedModuleSymbol(mdCommonModule).stream())
       .toList();
   }
 
-  private Optional<ModuleSymbol> getPrivilegedModuleSymbol(MDCommonModule mdCommonModule) {
+  private Optional<ModuleSymbol> getPrivilegedModuleSymbol(CommonModule mdCommonModule) {
     return documentContext.getServerContext().getDocument(
         mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
       .map(documentContext1 -> documentContext1.getSymbolTree().getModule());
   }
 
   private boolean isReferenceToModules(Reference reference) {
-    if (!validateNestedCalls && reference.getUri().equals(documentContext.getUri())){
+    if (!validateNestedCalls && reference.getUri().equals(documentContext.getUri())) {
       return false;
     }
     return reference.getSourceDefinedSymbol()

@@ -29,7 +29,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
-    maven(url = "https://projectlombok.org/edge-releases") 
+    maven(url = "https://projectlombok.org/edge-releases")
 }
 
 group = "io.github.1c-syntax"
@@ -83,8 +83,8 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.5.1")
-    api("com.github.1c-syntax", "mdclasses", "0.10.4")
-    api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
+    api("io.github.1c-syntax", "mdclasses", "0.12.0-rc.5")
+    api("io.github.1c-syntax", "bsl-common-library", "0.5.0")
     api("io.github.1c-syntax", "supportconf", "0.12.1")
 
     // JLanguageTool

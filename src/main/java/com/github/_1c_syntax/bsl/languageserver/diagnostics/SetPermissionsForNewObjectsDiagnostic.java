@@ -28,8 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Role;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDRole;
 
 import java.util.Map;
 import java.util.Set;
@@ -68,8 +68,8 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     }
 
     documentContext.getServerContext().getConfiguration().getRoles().stream()
-      .filter(role -> role.getRoleData().isSetForNewObjects())
-      .map(MDRole::getName)
+      .filter(role -> role.getData().isSetForNewObjects())
+      .map(Role::getName)
       .filter(Predicate.not(namesFullAccessRole::contains))
       .map(info::getMessage)
       .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage)

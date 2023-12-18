@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,12 +42,12 @@ class ServerSideExportFormMethodDiagnosticTest extends AbstractDiagnosticTest<Se
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
-  private AbstractMDOForm form;
+  private Form form;
 
   @BeforeEach
   void beforeTest() {
     initServerContext(Absolute.path(PATH_TO_METADATA));
-    form = spy((AbstractMDOForm) context.getConfiguration().getChildren().stream()
+    form = spy((Form) context.getConfiguration().getPlainChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
       .findFirst()
       .get());

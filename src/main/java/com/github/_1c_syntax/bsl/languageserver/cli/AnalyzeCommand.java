@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -208,7 +208,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
     var mdoRef = documentContext.getMdObject()
-      .map(AbstractMDObjectBase::getMdoReference)
+      .map(MD::getMdoReference)
       .map(MdoReference::getMdoRef)
       .orElse("");
 

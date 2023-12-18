@@ -27,10 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.children.Form;
 import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import org.eclipse.lsp4j.Range;
 
@@ -50,7 +50,6 @@ import java.util.stream.Stream;
   tags = {
     DiagnosticTag.UNPREDICTABLE,
   }
-
 )
 public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
@@ -65,9 +64,9 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
     }
   }
 
-  private static boolean wrongDataPath(FormItem formItem) {
-    return formItem.getDataPath().getSegment().startsWith("~");
-  }
+//  private static boolean wrongDataPath(FormItem formItem) {
+//    return formItem.getDataPath().getSegment().startsWith("~");
+//  }
 
   private static boolean haveFormModules(Form form) {
     return !form.getModules().isEmpty();
@@ -85,11 +84,12 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkAllFormsWithoutModules() {
-    checkMdoObjectStream(form -> !haveFormModules(form),
-      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream());
+    // todo формы не доделаны
+//    checkMdoObjectStream(form -> !haveFormModules(form),
+//      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream());
   }
 
-  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<AbstractMDObjectBase> stream) {
+  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<MD> stream) {
 
     stream
       .filter(Form.class::isInstance)
@@ -101,15 +101,15 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   private void checkForm(Form form) {
 
     var formData = form.getData();
-    if (formData == null) {
+    if (formData.isEmpty()) {
       return;
     }
-
-    formData.getPlainChildren()
-      .stream()
-      .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
-      .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
-        info.getMessage(formItem.getName(), getMdoRef(form))));
+// todo формы не доделаны
+//    formData.getPlainChildren()
+//      .stream()
+//      .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
+//      .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
+//        info.getMessage(formItem.getName(), getMdoRef(form))));
   }
 
   private String getMdoRef(Form form) {

@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -47,8 +47,9 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   private static final String PATH_TO_MODULE_FILE = PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_MODULE_CONTENT = "src/test/resources/diagnostics/UnusedLocalMethodDiagnostic.bsl";
 
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
+
   UnusedLocalMethodDiagnosticTest() {
     super(UnusedLocalMethodDiagnostic.class);
   }
@@ -131,6 +132,6 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
       context
     ));
 
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
+    module = spy((CommonModule) configuration.findChild(moduleFile.toUri()).get());
   }
 }

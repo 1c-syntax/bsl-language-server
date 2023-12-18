@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
@@ -64,16 +65,15 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkProperties(Range range) {
-
     var configuration = documentContext.getServerContext().getConfiguration();
-    if (!configuration.isUseManagedFormInOrdinaryApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
-    }
+    if (configuration instanceof Configuration cf) { // у расширения нет таких атрибутов
+      if (!cf.isUseManagedFormInOrdinaryApplication()) {
+        diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
+      }
 
-    if (configuration.isUseOrdinaryFormInManagedApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("ordinaryFormInManagedApp"));
+      if (cf.isUseOrdinaryFormInManagedApplication()) {
+        diagnosticStorage.addDiagnostic(range, info.getResourceString("ordinaryFormInManagedApp"));
+      }
     }
-
   }
-
 }

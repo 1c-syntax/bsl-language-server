@@ -26,13 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -50,17 +49,14 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
 
   @Override
   public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
-
     if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
       return ctx;
     }
-
     return super.visitQueryPackage(ctx);
   }
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
-
     if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,
         info.getMessage(mdo.getText()));
@@ -72,13 +68,9 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
     return getMdo(mdoType, mdoName).isEmpty();
   }
 
-  private Optional<AbstractMDObjectBase> getMdo(String mdoTypeName, String mdoName) {
+  private Optional<MD> getMdo(String mdoTypeName, String mdoName) {
     return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
-      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().entrySet().stream()
-        .filter(entry -> entry.getKey().getType() == mdoType
-          && mdoName.equalsIgnoreCase(entry.getValue().getName()))
-        .map(Map.Entry::getValue)
-        .findFirst()
-    );
+      documentContext.getServerContext().getConfiguration().findChild(mdo -> mdo.getMdoType() == mdoType
+        && mdoName.equalsIgnoreCase(mdo.getName())));
   }
 }

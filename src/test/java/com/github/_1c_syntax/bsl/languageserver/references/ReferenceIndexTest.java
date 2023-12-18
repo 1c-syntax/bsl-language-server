@@ -82,7 +82,9 @@ class ReferenceIndexTest {
   @Test
   void getReferencesToLocalMethodFromFormModule() {
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule).orElseThrow();
+    var documentContext = serverContext
+      .getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule)
+      .orElseThrow();
     var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
     var module = documentContext.getSymbolTree().getModule();
 
