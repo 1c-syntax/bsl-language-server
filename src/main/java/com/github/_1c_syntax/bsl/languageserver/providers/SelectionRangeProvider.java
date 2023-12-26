@@ -28,14 +28,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
-import org.eclipse.lsp4j.util.Positions;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -213,56 +208,6 @@ public class SelectionRangeProvider {
     var ifBranch = (BSLParser.IfBranchContext) ctx;
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
-  }
-
-  public static Optional<TerminalNode> findNodeContainsPosition(BSLParserRuleContext tree, Position position) {
-
-    if (tree.getTokens().isEmpty()) {
-      return Optional.empty();
-    }
-
-    var start = tree.getStart();
-    var stop = tree.getStop();
-
-    if (!(positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop))) {
-      return Optional.empty();
-    }
-
-    var children = Trees.getChildren(tree);
-
-    for (Tree child : children) {
-      if (child instanceof TerminalNode) {
-        var terminalNode = (TerminalNode) child;
-        var token = terminalNode.getSymbol();
-        if (tokenContainsPosition(token, position)) {
-          return Optional.of(terminalNode);
-        }
-      } else {
-        Optional<TerminalNode> node = findNodeContainsPosition((BSLParserRuleContext) child, position);
-        if (node.isPresent()) {
-          return node;
-        }
-      }
-    }
-
-    return Optional.empty();
-  }
-
-  private static boolean tokenContainsPosition(Token token, Position position) {
-    var tokenRange = Ranges.create(token);
-    return Ranges.containsPosition(tokenRange, position);
-  }
-
-  private static boolean positionIsBeforeOrOnToken(Position position, Token token) {
-    var tokenRange = Ranges.create(token);
-    var end = tokenRange.getEnd();
-    return Positions.isBefore(position, end) || end.equals(position);
-  }
-
-  private static boolean positionIsAfterOrOnToken(Position position, Token token) {
-    var tokenRange = Ranges.create(token);
-    var start = tokenRange.getStart();
-    return Positions.isBefore(start, position) || start.equals(position);
   }
 
 }
