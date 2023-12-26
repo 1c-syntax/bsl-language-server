@@ -83,7 +83,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.5.1")
-    api("io.github.1c-syntax", "mdclasses", "0.12.0-rc.5")
+    api("io.github.1c-syntax", "mdclasses", "0.12.0-rc.6")
     api("io.github.1c-syntax", "bsl-common-library", "0.5.0")
     api("io.github.1c-syntax", "supportconf", "0.12.1")
 
