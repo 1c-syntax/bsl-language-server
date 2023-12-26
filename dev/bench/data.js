@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1703585189412,
+  "lastUpdate": 1703588132513,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -24676,6 +24676,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.135111008498196",
             "extra": "mean: 69.64554643630981 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "29390f14dfcb7c51dd19958437175a64b6cab5c5",
+          "message": "Merge pull request #3115 from artbear/ExternalAppStarting\n\nПравило \"Запуск внешних приложений\" - ExternalAppStarting",
+          "timestamp": "2023-12-26T13:48:10+03:00",
+          "tree_id": "e0282ab13adaa3e652dc30a14ce85322dfb3625f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/29390f14dfcb7c51dd19958437175a64b6cab5c5"
+        },
+        "date": 1703588130470,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.25308831532796,
+            "unit": "sec",
+            "range": "stddev: 1.5205113415976432",
+            "extra": "mean: 68.25308831532796 sec\nrounds: 3"
           }
         ]
       }
