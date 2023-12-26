@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Optional;
 
-
 @Component
 @RequiredArgsConstructor
 public class OscriptReferenceFinder implements ReferenceFinder {
@@ -47,17 +46,16 @@ public class OscriptReferenceFinder implements ReferenceFinder {
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
 
-    DocumentContext document = serverContext.getDocument(uri);
+    var document = serverContext.getDocument(uri);
     if (document == null) {
       return Optional.empty();
     }
-
-    if(document.isComputedDataFrozen()) {
-      document.unfreezeComputedData();
-      serverContext.rebuildDocument(document);
+    var documentState = serverContext.getDocumentState(document);
+    if (documentState == DocumentState.WITHOUT_CONTENT) {
+      return Optional.empty();
     }
 
-    var node = SelectionRangeProvider.findNodeContainsPosition(document.getAst(), position);
+    var node = Trees.findTerminalNodeContainsPosition(document.getAst(), position);
 
     if (node.isEmpty()) {
       return Optional.empty();
@@ -65,7 +63,7 @@ public class OscriptReferenceFinder implements ReferenceFinder {
 
     return serverContext.getDocuments().values().stream()
       .filter(documentContext -> documentContext.getTypeName().equals(node.get().getText()))
-      .filter(d -> filterByType(node, d.getModuleType()))
+      .filter(documentContext -> filterByType(node, documentContext.getModuleType()))
       .map(documentContext -> new Reference(
         documentContext.getSymbolTree().getModule(),
         documentContext.getSymbolTree().getModule(),

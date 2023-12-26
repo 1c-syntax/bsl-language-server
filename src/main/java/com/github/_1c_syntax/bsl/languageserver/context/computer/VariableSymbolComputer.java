@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -282,11 +283,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private String typeName(BSLParser.AssignmentContext ctx) {
     var typeName = "";
     var newCtx = Trees.getNextNode(ctx.expression(), ctx.expression(), BSLParser.RULE_newExpression);
-    if (newCtx instanceof BSLParser.NewExpressionContext) {
-      var typeNamectx = ((BSLParser.NewExpressionContext) newCtx).typeName();
-      if (typeNamectx != null) {
-        typeName = typeNamectx.getText();
-      }
+    if (newCtx instanceof BSLParser.NewExpressionContext newExpression) {
+      typeName = Constructors.typeName(newExpression).orElse("");
     }
     return typeName;
   }

@@ -73,7 +73,7 @@ public class ServerContext {
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
-  private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
+  private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
   public void populateContext() {
@@ -214,12 +214,12 @@ public class ServerContext {
    * @param documentContext документ, который необходимо перестроить.
    */
   public void rebuildDocument(DocumentContext documentContext) {
-    if (states.get(documentContext) == State.WITH_CONTENT) {
+    if (states.get(documentContext) == DocumentState.WITH_CONTENT) {
       return;
     }
 
     documentContext.rebuild();
-    states.put(documentContext, State.WITH_CONTENT);
+    states.put(documentContext, DocumentState.WITH_CONTENT);
   }
 
   /**
@@ -231,7 +231,11 @@ public class ServerContext {
    */
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
-    states.put(documentContext, State.WITH_CONTENT);
+    states.put(documentContext, DocumentState.WITH_CONTENT);
+  }
+
+  public DocumentState getDocumentState(DocumentContext documentContext) {
+    return states.get(documentContext);
   }
 
   /**
@@ -244,7 +248,7 @@ public class ServerContext {
       return;
     }
 
-    states.put(documentContext, State.WITHOUT_CONTENT);
+    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
   }
 
@@ -255,7 +259,7 @@ public class ServerContext {
    */
   public void closeDocument(DocumentContext documentContext) {
     openedDocuments.remove(documentContext);
-    states.put(documentContext, State.WITHOUT_CONTENT);
+    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
   }
 
@@ -330,20 +334,6 @@ public class ServerContext {
 
   private String getMessage(String key) {
     return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
-  }
-
-  /**
-   * Состояние документа в контексте.
-   */
-  private enum State {
-    /**
-     * В документе отсутствует контент или он был очищен.
-     */
-    WITHOUT_CONTENT,
-    /**
-     * В документе присутствует контент.
-     */
-    WITH_CONTENT
   }
 
 }
