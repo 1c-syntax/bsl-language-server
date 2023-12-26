@@ -78,6 +78,11 @@ public final class MethodSymbolComputer
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
+    var firstToken =
+      declaration.children.stream()
+        .filter(chld -> !(chld instanceof BSLParser.PreprocessorContext))
+        .findFirst().get();
+
     TerminalNode startNode = declaration.FUNCTION_KEYWORD();
     TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
 
@@ -90,6 +95,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
+      Trees.getTokens(firstToken).get(0),
       startNode,
       stopNode,
       declaration.subName().getStart(),
@@ -108,6 +114,11 @@ public final class MethodSymbolComputer
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
+    var firstToken =
+      declaration.children.stream()
+        .filter(chld -> !(chld instanceof BSLParser.PreprocessorContext))
+        .findFirst().get();
+
     TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
     TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
 
@@ -120,6 +131,7 @@ public final class MethodSymbolComputer
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
+      Trees.getTokens(firstToken).get(0),
       startNode,
       stopNode,
       declaration.subName().getStart(),
@@ -180,6 +192,7 @@ public final class MethodSymbolComputer
   }
 
   private MethodSymbol createMethodSymbol(
+    Token startToken,
     TerminalNode startNode,
     TerminalNode stopNode,
     Token subName,
@@ -189,7 +202,7 @@ public final class MethodSymbolComputer
     Optional<CompilerDirectiveKind> compilerDirective,
     List<Annotation> annotations
   ) {
-    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    Optional<MethodDescription> description = createDescription(startToken);
     boolean deprecated = description
       .map(MethodDescription::isDeprecated)
       .orElse(false);
