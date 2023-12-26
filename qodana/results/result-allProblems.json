@@ -138,11 +138,11 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/RefOveruseDiagnostic.java",
       "language": "JAVA",
-      "line": 123,
+      "line": 122,
       "offset": 10,
       "length": 12,
       "code": {
-        "startLine": 121,
+        "startLine": 120,
         "length": 12,
         "offset": 224,
         "surroundingCode": "      .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)\n      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)\n        .getRuleIndex() == SDBLParser.RULE_query)\n      .map(SDBLParser.ColumnContext.class::cast)\n      .collect(Collectors.toList());"
@@ -153,7 +153,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "DataFlowIssue"
   },
-  "hash": "ca36652f98b13d10a9d71d59ef8e81f6de236ead3dbff7870a46477290c3b88a"
+  "hash": "164b5a389c35175375ad8fdd7d9479e25085f5085907566b912986aabf9be8e3"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
@@ -339,7 +339,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "MismatchedArrayReadWrite"
   },
-  "hash": "e241e797acffd455e52ad9ea6a7b498cbd4fb1e3c82d3de338883db0a8224afb"
+  "hash": "44d8d19297653ffc4a97ad0cfc176da2fc40f91235b3926e89e001a97c1e6f58"
 },{
   "tool": "Code Inspection",
   "category": "Probable bugs",
