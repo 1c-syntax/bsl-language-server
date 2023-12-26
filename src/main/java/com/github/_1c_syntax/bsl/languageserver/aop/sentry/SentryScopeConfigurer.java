@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import io.sentry.Scope;
+import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 import jakarta.annotation.PostConstruct;
@@ -48,7 +48,7 @@ public class SentryScopeConfigurer {
 
   @PostConstruct
   public void init() {
-    Sentry.configureScope((Scope scope) -> {
+    Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
       scope.setUser(user);
