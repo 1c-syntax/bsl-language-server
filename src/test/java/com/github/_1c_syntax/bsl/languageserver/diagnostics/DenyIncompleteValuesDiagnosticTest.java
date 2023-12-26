@@ -86,17 +86,16 @@ class DenyIncompleteValuesDiagnosticTest extends AbstractDiagnosticTest<DenyInco
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(type);
 
-    final var infoReg = spy(context.getConfiguration().findChild(MdoReference.create(MDOType.INFORMATION_REGISTER,
-      "РегистрСведений1")).get()
+    final var infoReg = spy((InformationRegister) context.getConfiguration().findChild(MdoReference.create(MDOType.INFORMATION_REGISTER,
+      "РегистрСведений1")).orElseThrow()
     );
-    var spyMdo = spy((InformationRegister) infoReg);
 
-    when(documentContext.getMdObject()).thenReturn(Optional.of(spyMdo));
+    when(documentContext.getMdObject()).thenReturn(Optional.of(infoReg));
 
     if (noneModules) {
-      when(spyMdo.getModules()).thenReturn(Collections.emptyList());
+      when(infoReg.getModules()).thenReturn(Collections.emptyList());
 
-      List<MD> children = List.of(spyMdo);
+      List<MD> children = List.of(infoReg);
 
       var configuration = spy(context.getConfiguration());
       when(configuration.getChildren()).thenReturn(children);
