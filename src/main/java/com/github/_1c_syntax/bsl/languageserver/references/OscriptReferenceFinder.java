@@ -48,10 +48,13 @@ public class OscriptReferenceFinder implements ReferenceFinder {
   public Optional<Reference> findReference(URI uri, Position position) {
 
     DocumentContext document = serverContext.getDocument(uri);
-    if (document == null
-//      || document.isComputedDataFrozen()
-    ) {
+    if (document == null) {
       return Optional.empty();
+    }
+
+    if(document.isComputedDataFrozen()) {
+      document.unfreezeComputedData();
+      serverContext.rebuildDocument(document);
     }
 
     var node = SelectionRangeProvider.findNodeContainsPosition(document.getAst(), position);
@@ -86,7 +89,5 @@ public class OscriptReferenceFinder implements ReferenceFinder {
       return (node.get().getParent() instanceof BSLParser.ComplexIdentifierContext)
         && moduleType == ModuleType.OScriptModule;
     }
-
   }
-
 }

@@ -95,6 +95,9 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   Optional<VariableDescription> description;
 
+  /**
+   * Тип переменной
+   */
   String type;
 
   @Override

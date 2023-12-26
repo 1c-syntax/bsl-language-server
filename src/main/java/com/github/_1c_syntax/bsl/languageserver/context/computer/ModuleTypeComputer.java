@@ -51,7 +51,7 @@ public class ModuleTypeComputer {
 
   private ModuleType computeBSL() {
     var type = documentContext.getServerContext()
-      .getConfiguration().getModuleType(documentContext.getUri());
+      .getConfiguration().getModuleTypeByURI(documentContext.getUri());
     return ModuleType.valueOf(type.name());
   }
 

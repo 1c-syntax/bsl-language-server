@@ -114,7 +114,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
       .map(graph::getEdgeSource)
       .map(vertex -> nonExplicitReturnNode(vertex, graph))
       .flatMap(Optional::stream)
-      .collect(Collectors.toList());
+      .toList();
 
     if (incomingVertices.isEmpty()) {
       return;
@@ -136,12 +136,12 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v, ControlFlowGraph graph) {
-    if (v instanceof BasicBlockVertex) {
-      return checkBasicBlockExitingNode((BasicBlockVertex) v);
-    } else if (v instanceof LoopVertex) {
-      return checkLoopExitingNode((LoopVertex) v);
-    } else if (v instanceof ConditionalVertex) {
-      return checkElseIfClauseExitingNode((ConditionalVertex) v, graph);
+    if (v instanceof BasicBlockVertex basicBlockVertex) {
+      return checkBasicBlockExitingNode(basicBlockVertex);
+    } else if (v instanceof LoopVertex loopVertex) {
+      return checkLoopExitingNode(loopVertex);
+    } else if (v instanceof ConditionalVertex conditionalVertex) {
+      return checkElseIfClauseExitingNode(conditionalVertex, graph);
     }
 
     return v.getAst();
@@ -178,22 +178,19 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<BSLParserRuleContext> checkLoopExitingNode(LoopVertex v) {
-    if (v instanceof WhileLoopVertex) {
-      var whileLoop = (WhileLoopVertex) v;
-      if (isEndlessLoop(whileLoop)) {
-        return Optional.empty();
-      }
+    if (v instanceof WhileLoopVertex whileLoop && isEndlessLoop(whileLoop)) {
+      return Optional.empty();
     }
 
     if (loopsExecutedAtLeastOnce) {
-      // из цикла в exit может придти только falseBranch или пустое тело цикла
+      // из цикла в exit может прийти только falseBranch или пустое тело цикла
       // и то и другое не нужно нам в рамках диагностики
       return Optional.empty();
     }
     return v.getAst();
   }
 
-  private boolean isEndlessLoop(WhileLoopVertex whileLoop) {
+  private static boolean isEndlessLoop(WhileLoopVertex whileLoop) {
     var expression = whileLoop.getExpression();
     return expression.getChildCount() == 1
       && expression.member(0).constValue() != null
