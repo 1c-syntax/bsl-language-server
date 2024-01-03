@@ -23,11 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -55,36 +57,41 @@ public class OscriptReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
 
-    var node = Trees.findTerminalNodeContainsPosition(document.getAst(), position);
+    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(document.getAst(), position);
 
-    if (node.isEmpty()) {
+    if (maybeTerminalNode.isEmpty()) {
       return Optional.empty();
     }
 
+    var terminalNode = maybeTerminalNode.get();
+
+    var sub = (BSLParser.SubContext) Trees.getAncestorByRuleIndex((BSLParserRuleContext) terminalNode.getParent().getRuleContext(), BSLParser.RULE_sub);
+    var symbolTree = document.getSymbolTree();
+    var from = Optional.ofNullable(sub)
+      .flatMap(symbolTree::getMethodSymbol)
+      .map(SourceDefinedSymbol.class::cast)
+      .orElse(symbolTree.getModule());
+
     return serverContext.getDocuments().values().stream()
-      .filter(documentContext -> documentContext.getTypeName().equals(node.get().getText()))
-      .filter(documentContext -> filterByType(node, documentContext.getModuleType()))
+      .filter(documentContext -> documentContext.getTypeName().equals(terminalNode.getText()))
+      .filter(documentContext -> filterByType(terminalNode, documentContext.getModuleType()))
       .map(documentContext -> new Reference(
-        documentContext.getSymbolTree().getModule(),
+        // todo: было бы здорово сохранить эту информацию в ReferenceIndex вместо поиска напрямую.
+        from,
         documentContext.getSymbolTree().getModule(),
         documentContext.getUri(),
-        Ranges.create(0, 0, 0, 0),
+        Ranges.create(terminalNode),
         OccurrenceType.DEFINITION)
       ).findAny();
 
   }
 
-  private boolean filterByType(Optional<TerminalNode> node, ModuleType moduleType) {
-
-    if (node.isEmpty()) {
-      return false;
-    }
-
-    if ((node.get().getParent() instanceof BSLParser.TypeNameContext)
+  private boolean filterByType(TerminalNode node, ModuleType moduleType) {
+    if ((node.getParent() instanceof BSLParser.TypeNameContext)
       && moduleType == ModuleType.OScriptClass) {
       return true;
     } else {
-      return (node.get().getParent() instanceof BSLParser.ComplexIdentifierContext)
+      return (node.getParent() instanceof BSLParser.ComplexIdentifierContext)
         && moduleType == ModuleType.OScriptModule;
     }
   }
