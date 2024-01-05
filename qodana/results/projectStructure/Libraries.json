@@ -50,9 +50,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
+      "name": "Gradle: com.github.1c-syntax:utils:0.5.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.5.1/6a28103225784d2fbcca95cc2b16d38e807632bf/utils-0.5.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.5.2/15c65e6d3ed992a4f97b403ee1766c72502f9be1/utils-0.5.2.jar!/"
       ],
       "properties": {}
     },

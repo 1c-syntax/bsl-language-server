@@ -3,21 +3,21 @@
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `reportersOptions` may be 'final'",
+  "comment": "Field `exitPoint` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cli/AnalyzeCommand.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/ControlFlowGraph.java",
       "language": "JAVA",
-      "line": 135,
-      "offset": 20,
-      "length": 16,
+      "line": 35,
+      "offset": 22,
+      "length": 9,
       "code": {
-        "startLine": 133,
-        "length": 16,
-        "offset": 128,
-        "surroundingCode": "    completionCandidates = ReportersKeys.class,\n    description = \"Reporter key (${COMPLETION-CANDIDATES})\")\n  private String[] reportersOptions = {};\n\n  @Option("
+        "startLine": 33,
+        "length": 9,
+        "offset": 32,
+        "surroundingCode": "\n  @Getter\n  private ExitVertex exitPoint;\n\n  ControlFlowGraph() {"
       }
     }
   ],
@@ -25,27 +25,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "6a5122158a03c7e5ee6c22be00e5b0f1018b301007e63771f7e4299d5b13149d"
+  "hash": "40c820e0fb4c5f45838e7b2b43b3ac6d63b45412d9c2589ab2f9078101c813bd"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `validateNestedCalls` may be 'final'",
+  "comment": "Field `maxOptionalParamsCount` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/PrivilegedModuleMethodCallDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfOptionalParamsDiagnostic.java",
       "language": "JAVA",
-      "line": 60,
-      "offset": 19,
-      "length": 19,
+      "line": 49,
+      "offset": 15,
+      "length": 22,
       "code": {
-        "startLine": 58,
-        "length": 19,
+        "startLine": 47,
+        "length": 22,
         "offset": 68,
-        "surroundingCode": "    defaultValue = \"\" + VALIDATE_NESTED_CALLS\n  )\n  private boolean validateNestedCalls = VALIDATE_NESTED_CALLS;\n\n  private final ReferenceIndex referenceIndex;"
+        "surroundingCode": "    defaultValue = \"\" + MAX_OPTIONAL_PARAMS_COUNT\n  )\n  private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;\n\n  @Override"
       }
     }
   ],
@@ -53,35 +53,119 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "d1f280781daac21137305fea5680e8ca2a3cf5724eedd1806e37acf85093d3fa"
+  "hash": "626d549a87a04b3264ad79e445109b0b77c07aca95ea2852de04225a89481fa9"
 },{
   "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Lombok @Setter may be used",
+  "category": "Code style issues",
+  "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Class 'ClientCapabilitiesHolder' may use Lombok @Setter",
-  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
+  "comment": "Field `maxValuesCount` may be 'final'",
+  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/ClientCapabilitiesHolder.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfValuesInStructureConstructorDiagnostic.java",
       "language": "JAVA",
-      "line": 43,
-      "offset": 14,
-      "length": 24,
+      "line": 55,
+      "offset": 15,
+      "length": 14,
       "code": {
-        "startLine": 41,
-        "length": 24,
-        "offset": 42,
-        "surroundingCode": "@ToString\n@EqualsAndHashCode\npublic class ClientCapabilitiesHolder {\n\n  /**"
+        "startLine": 53,
+        "length": 14,
+        "offset": 59,
+        "surroundingCode": "    defaultValue = \"\" + MAX_VALUES_COUNT\n  )\n  private int maxValuesCount = MAX_VALUES_COUNT;\n\n  @Override"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "LombokSetterMayBeUsed"
+    "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "1599d1ed085eda694e1bb94418af70287c1721e8628e5dc827a905ae3a1b0944"
+  "hash": "ec68ed0a204f7f685e81eeca8aa301ce7a24aae533f9ccb9e6022a3f0c87a5c8"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Lombok @Getter may be used",
+  "severity": "High",
+  "comment": "Class 'DiagnosticParameterInfo' may use Lombok @Getter",
+  "detailsInfo": "Reports standard getter method that can be replaced by the lombok `@Getter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Returns the date.\n         *\n         * @return The date\n         */\n        public Date getProcessDate() {\n          return processDate;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Getter;\n      import java.util.Date;\n\n      @Getter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- GETTER --\n         * Returns the date.\n         *\n         * @return The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticParameterInfo.java",
+      "language": "JAVA",
+      "line": 29,
+      "offset": 20,
+      "length": 23,
+      "code": {
+        "startLine": 27,
+        "length": 23,
+        "offset": 56,
+        "surroundingCode": "import java.util.stream.Collectors;\n\npublic final class DiagnosticParameterInfo {\n\n  private final Class<?> type;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "LombokGetterMayBeUsed"
+  },
+  "hash": "5cb022f90be56918d6fb27c6fc92481f50143e88fe0b88b2946b43f5330a2727"
+},{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "'protected' member in 'final' class",
+  "severity": "High",
+  "comment": "Class member declared `protected` in 'final' class",
+  "detailsInfo": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/TernaryOperatorNode.java",
+      "language": "JAVA",
+      "line": 40,
+      "offset": 3,
+      "length": 9,
+      "code": {
+        "startLine": 38,
+        "length": 9,
+        "offset": 30,
+        "surroundingCode": "  BslExpression falsePart;\n\n  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {\n    super(ExpressionNodeType.TERNARY_OP);\n    this.condition = condition;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "ProtectedMemberInFinalClass"
+  },
+  "hash": "d9c993d92b4291aaeef7c252b06070217bdf419d186aff75c238630e051b7199"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Redundant type cast",
+  "severity": "High",
+  "comment": "Casting `expression.getParent()` to `BSLParser.ElsifBranchContext` is redundant",
+  "detailsInfo": "Reports unnecessary cast expressions.\n\nExample:\n\n\n      static Object toObject(String s) {\n        return (Object) s;\n      }\n\n\nUse the checkbox below to ignore clarifying casts e.g., casts in collection calls where `Object` is expected:\n\n\n      static void removeFromList(List<String> l, Object o) {\n        l.remove((String)o);\n      } \n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AllFunctionPathMustHaveReturnDiagnostic.java",
+      "language": "JAVA",
+      "line": 162,
+      "offset": 27,
+      "length": 28,
+      "code": {
+        "startLine": 160,
+        "length": 28,
+        "offset": 168,
+        "surroundingCode": "    var expression = v.getExpression();\n    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {\n      return Optional.of((BSLParser.ElsifBranchContext) expression.getParent());\n    }\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RedundantCast"
+  },
+  "hash": "cf16fab86b340461a763ad3df7290cbbae7fb2dfc659c327c423912ebc40f68b"
 },{
   "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
@@ -92,16 +176,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/FunctionOutParameterDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/IfElseDuplicatedCodeBlockDiagnostic.java",
       "language": "JAVA",
-      "line": 64,
+      "line": 101,
       "offset": 8,
       "length": 28,
       "code": {
-        "startLine": 62,
+        "startLine": 99,
         "length": 28,
-        "offset": 85,
-        "surroundingCode": "      .flatMap(Collection::stream)\n      .filter(param -> !param.isByValue())\n      .collect(Collectors.toList());\n\n    if (parameters.isEmpty()) {"
+        "offset": 172,
+        "surroundingCode": "          && !(currentCodeBlock.children == null && codeBlockContext.children == null)\n          && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))\n      .collect(Collectors.toList());\n\n    if (identicalCodeBlocks.isEmpty()) {"
       }
     }
   ],
@@ -109,5 +193,5 @@
     "module": "bsl-language-server.main",
     "inspectionName": "SimplifyStreamApiCallChains"
   },
-  "hash": "b12418d5cd0b86c075202f711c19bf66ce90df3f2cf4c49e4e50a9f8ec995795"
+  "hash": "05b29191503611088ac39de29570c2ded1de9f64ff9e59ebf38d3e0516519e8a"
 }]}
