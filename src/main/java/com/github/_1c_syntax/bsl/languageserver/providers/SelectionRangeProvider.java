@@ -75,7 +75,7 @@ public class SelectionRangeProvider {
    * Получение данных о {@link SelectionRange} по позиции в документе.
    *
    * @param documentContext контекст документа.
-   * @param params параметры вызова.
+   * @param params          параметры вызова.
    * @return список найденных диапазонов.
    */
   public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
@@ -138,7 +138,7 @@ public class SelectionRangeProvider {
 
   @Nullable
   private static BSLParserRuleContext getDefaultParent(ParseTree ctx) {
-    return  (BSLParserRuleContext) ctx.getParent();
+    return (BSLParserRuleContext) ctx.getParent();
   }
 
   private static BSLParserRuleContext getStatementParent(BSLParser.StatementContext statement) {

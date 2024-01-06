@@ -106,7 +106,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
 
-    if (!isAllowedMethodADD){
+    if (!isAllowedMethodADD) {
       methodPattern = INSERT_METHOD_PATTERN;
     }
   }
@@ -153,7 +153,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     final TerminalNode identifierContext;
     final String parens;
-    if (callStatement.IDENTIFIER() != null){
+    if (callStatement.IDENTIFIER() != null) {
       identifierContext = callStatement.IDENTIFIER();
       parens = "";
     } else {
@@ -257,8 +257,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     return getAllInnerIdentifiersWithDot(groupingData.firstParamContext).stream()
       .anyMatch(identifierWithDot ->
-          startWithIgnoreCase(identifierWithDot, expressionWithDot)
-        || startWithIgnoreCase(expressionWithDot, identifierWithDot)
+        startWithIgnoreCase(identifierWithDot, expressionWithDot)
+          || startWithIgnoreCase(expressionWithDot, identifierWithDot)
       );
   }
 

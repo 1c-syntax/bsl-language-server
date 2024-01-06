@@ -195,7 +195,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       var callStatement = (BSLParser.CallStatementContext) parent;
 
-      modifiers =callStatement.modifier();
+      modifiers = callStatement.modifier();
       if (callStatement.globalMethodCall() != null) {
         prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
       } else {

@@ -145,7 +145,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .flatMap(memberContext -> calcStringForMemberContext(memberContext, isFullSearch));
   }
 
-  private static Optional<BSLParser.ConstValueContext> calcStringForMemberContext(BSLParser.MemberContext memberContext, 
+  private static Optional<BSLParser.ConstValueContext> calcStringForMemberContext(BSLParser.MemberContext memberContext,
                                                                                   boolean isFullSearch) {
     final var constValue = memberContext.constValue();
     if (constValue != null) {
@@ -161,8 +161,8 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   }
 
   private static Optional<BSLParser.ConstValueContext> calcAssignedValueForIdentifier(
-          BSLParser.ComplexIdentifierContext complexIdentifier) {
-    
+    BSLParser.ComplexIdentifierContext complexIdentifier) {
+
     final var identifier = complexIdentifier.IDENTIFIER();
     if (identifier == null) {
       return Optional.empty();
@@ -172,9 +172,9 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getRootParent(complexIdentifier,
       BSLParser.RULE_statement));
     while (true) {
-      prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement), 
+      prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement),
         BSLParser.RULE_statement);
-      
+
       if (prevStatement == null) {
         break;
       }

@@ -239,4 +239,17 @@ class DocumentContextTest {
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
   }
+
+  @Test
+  void testOSTypes(){
+
+    // given
+    var documentContext = getDocumentContext("./src/test/resources/metadata/oscript/Классы/ТестовыйКласс.os");
+    // when
+    var typeName = documentContext.getTypeName();
+    // then
+    assertThat(typeName).isEqualTo("ТестовыйКласс");
+
+  }
+
 }

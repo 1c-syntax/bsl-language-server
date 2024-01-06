@@ -97,7 +97,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     final var returnAfterAsync = compoundCtx
       .map(BSLParser.CompoundStatementContext::returnStatement)
       .isPresent();
-    if (returnAfterAsync){
+    if (returnAfterAsync) {
       return false;
     }
     final var breakAfterAsync = compoundCtx

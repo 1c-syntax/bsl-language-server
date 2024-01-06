@@ -48,8 +48,7 @@ public enum DiagnosticCompatibilityMode {
   COMPATIBILITY_MODE_8_3_18(3, 18),
   COMPATIBILITY_MODE_8_3_19(3, 19),
   COMPATIBILITY_MODE_8_3_20(3, 20),
-  COMPATIBILITY_MODE_8_3_21(3, 21)
-  ;
+  COMPATIBILITY_MODE_8_3_21(3, 21);
 
   private final CompatibilityMode compatibilityMode;
 

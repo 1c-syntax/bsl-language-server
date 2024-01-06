@@ -40,9 +40,11 @@ public class UnaryOperationNode extends BslOperationNode {
     this.operand = operand;
   }
 
-  /** Конструирует унарную операцию
-   * @param operator оператор
-   * @param expression аргумент операции
+  /**
+   * Конструирует унарную операцию
+   *
+   * @param operator         оператор
+   * @param expression       аргумент операции
    * @param operationContext строковое представление оператора,
    *                         как он указан в коде с учетом регистра и языка.
    *                         Используется в диагностических сообщениях.

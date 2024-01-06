@@ -105,11 +105,11 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private void checkExclAddDiagnostic(BSLParserRuleContext ctx){
+  private void checkExclAddDiagnostic(BSLParserRuleContext ctx) {
     String checked = ctx.getText();
     if (checked != null && !isExcluded(checked)) {
       ParserRuleContext expression;
-      if (ctx instanceof BSLParser.CallParamListContext){
+      if (ctx instanceof BSLParser.CallParamListContext) {
         expression = ctx.getParent().getParent().getParent().getParent().getParent();
       } else {
         expression = ctx.getParent().getParent();

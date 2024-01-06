@@ -95,6 +95,11 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   Optional<VariableDescription> description;
 
+  /**
+   * Тип переменной
+   */
+  String type;
+
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Variable;
@@ -189,7 +194,8 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           (short) endCharacter,
           (short) variableNameLine,
           (short) variableNameStartCharacter,
-          (short) variableNameEndCharacter
+          (short) variableNameEndCharacter,
+          type
         );
       } else {
         return new IntBasedVariableSymbol(
@@ -207,7 +213,8 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           endCharacter,
           variableNameLine,
           variableNameStartCharacter,
-          variableNameEndCharacter
+          variableNameEndCharacter,
+          type
         );
       }
     }

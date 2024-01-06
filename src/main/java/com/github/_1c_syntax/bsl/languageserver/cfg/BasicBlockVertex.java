@@ -41,7 +41,7 @@ public class BasicBlockVertex extends CfgVertex {
 
   @Override
   public Optional<BSLParserRuleContext> getAst() {
-    if(statements.isEmpty()) {
+    if (statements.isEmpty()) {
       return super.getAst();
     }
 

@@ -75,9 +75,10 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     short endCharacter,
     short variableNameLine,
     short variableNameStartCharacter,
-    short variableNameEndCharacter
+    short variableNameEndCharacter,
+    String type
   ) {
-    super(name, scope, owner, parent, children, kind, export, description);
+    super(name, scope, owner, parent, children, kind, export, description, type);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;
