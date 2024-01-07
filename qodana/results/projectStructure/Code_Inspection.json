@@ -82,7 +82,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
           "type": "Library"
         },
         {
@@ -99,6 +99,10 @@
         },
         {
           "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
           "type": "Library"
         },
         {
@@ -798,6 +802,22 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:ST4:4.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:antlr-runtime:3.5.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.github.x-stream:mxparser:1.2.2",
           "type": "Library"
         },
@@ -886,7 +906,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
           "type": "Library"
         },
         {
@@ -903,6 +923,10 @@
         },
         {
           "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
           "type": "Library"
         },
         {
@@ -1458,6 +1482,22 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:ST4:4.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:antlr-runtime:3.5.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: io.github.x-stream:mxparser:1.2.2",
           "type": "Library"
         },
@@ -1550,7 +1590,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
+          "name": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
           "type": "Library"
         },
         {
@@ -1567,6 +1607,10 @@
         },
         {
           "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.5.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
           "type": "Library"
         },
         {
@@ -2219,6 +2263,22 @@
         },
         {
           "name": "Gradle: org.objenesis:objenesis:3.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:ST4:4.3",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.antlr:antlr-runtime:3.5.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
           "type": "Library"
         },
         {

@@ -50,12 +50,12 @@
       "version": "0.21.0"
     },
     {
-      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser:0.23.3",
-      "gradleName": "io.github.1c-syntax:bsl-parser:0.23.3",
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
+      "gradleName": "io.github.1c-syntax:bsl-parser:0.24.0",
       "unresolved": false,
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-parser",
-      "version": "0.23.3"
+      "version": "0.24.0"
     },
     {
       "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.2",
@@ -88,6 +88,14 @@
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-common-library",
       "version": "0.5.0"
+    },
+    {
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
+      "gradleName": "io.github.1c-syntax:bsl-parser-core:0.1.0",
+      "unresolved": false,
+      "groupId": "io.github.1c-syntax",
+      "artifactId": "bsl-parser-core",
+      "version": "0.1.0"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.3",
@@ -1464,6 +1472,38 @@
       "groupId": "org.objenesis",
       "artifactId": "objenesis",
       "version": "3.3"
+    },
+    {
+      "ideaName": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+      "gradleName": "com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+      "unresolved": false,
+      "groupId": "com.tunnelvisionlabs",
+      "artifactId": "antlr4-annotations",
+      "version": "4.9.0"
+    },
+    {
+      "ideaName": "Gradle: org.antlr:ST4:4.3",
+      "gradleName": "org.antlr:ST4:4.3",
+      "unresolved": false,
+      "groupId": "org.antlr",
+      "artifactId": "ST4",
+      "version": "4.3"
+    },
+    {
+      "ideaName": "Gradle: org.antlr:antlr-runtime:3.5.2",
+      "gradleName": "org.antlr:antlr-runtime:3.5.2",
+      "unresolved": false,
+      "groupId": "org.antlr",
+      "artifactId": "antlr-runtime",
+      "version": "3.5.2"
+    },
+    {
+      "ideaName": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
+      "gradleName": "org.abego.treelayout:org.abego.treelayout.core:1.0.1",
+      "unresolved": false,
+      "groupId": "org.abego.treelayout",
+      "artifactId": "org.abego.treelayout.core",
+      "version": "1.0.1"
     },
     {
       "ideaName": "Gradle: io.github.x-stream:mxparser:1.2.2",
