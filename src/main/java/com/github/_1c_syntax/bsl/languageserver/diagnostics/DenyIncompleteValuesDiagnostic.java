@@ -42,7 +42,8 @@ import java.util.List;
   tags = {
     DiagnosticTag.BADPRACTICE
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
 public class DenyIncompleteValuesDiagnostic extends AbstractMetadataDiagnostic {
 

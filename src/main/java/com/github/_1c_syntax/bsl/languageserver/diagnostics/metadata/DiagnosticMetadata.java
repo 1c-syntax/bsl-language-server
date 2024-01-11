@@ -39,19 +39,48 @@ import java.lang.annotation.Target;
 @Primary
 @Scope("prototype")
 public @interface DiagnosticMetadata {
+  /**
+   * Тип диагностики
+   */
   DiagnosticType type() default DiagnosticType.ERROR;
 
+  /**
+   * Серьезность замечания
+   */
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
 
+  /**
+   * Область применения диагностики по диалекту языка (bsl или oscript)
+   */
   DiagnosticScope scope() default DiagnosticScope.ALL;
 
+  /**
+   * Типы модулей, анализируемых диагностикой
+   */
   ModuleType[] modules() default {};
 
+  /**
+   * Время, необходимое для исправления замечания
+   */
   int minutesToFix() default 0;
 
+  /**
+   * Признак включения диагностики в профиле по умолчанию
+   */
   boolean activatedByDefault() default true;
 
+  /**
+   * Версия платформы 1С:Предприятие, с которой диагностика применяется
+   */
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
 
+  /**
+   * Перечень меток (тегов) диагностики
+   */
   DiagnosticTag[] tags() default {};
+
+  /**
+   * Замечания диагностики могут быть прикреплены на уровень анализируемого проекта (в частности в SonarQube)
+   */
+  boolean canLocateOnProject() default false;
 }

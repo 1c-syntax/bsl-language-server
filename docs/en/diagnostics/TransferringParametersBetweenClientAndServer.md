@@ -1,8 +1,7 @@
-# Transferring parameters between client and server (TransferringParametersBetweenClientAndServer)
+# Transferring parameters between the client and the server (TransferringParametersBetweenClientAndServer)
 
-<!-- Blocks above are included automatically, do not touch -->
-## Diagnostic description
-<!-- Diagnostic description is filled in manually. It is necessary to describe the meaning an understandable language -->
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 When transferring control from the client to the server (and vice versa), copies of the parameters are always transferred.
 

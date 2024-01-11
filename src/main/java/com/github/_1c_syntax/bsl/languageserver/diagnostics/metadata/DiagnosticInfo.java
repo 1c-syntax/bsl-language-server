@@ -194,6 +194,10 @@ public class DiagnosticInfo {
     return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findAny();
   }
 
+  public boolean canLocateOnProject() {
+    return diagnosticMetadata.canLocateOnProject();
+  }
+
   public Map<String, Object> getDefaultConfiguration() {
     return diagnosticParameters.stream()
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));

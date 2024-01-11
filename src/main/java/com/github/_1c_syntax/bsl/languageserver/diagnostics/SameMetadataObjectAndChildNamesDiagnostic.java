@@ -54,8 +54,8 @@ import java.util.List;
     ModuleType.ObjectModule,
     ModuleType.SessionModule
   },
-  scope = DiagnosticScope.BSL
-
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
 public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataDiagnostic {
 

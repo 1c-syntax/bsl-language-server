@@ -48,7 +48,8 @@ import java.util.Map;
   tags = {
     DiagnosticTag.ERROR
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
 public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
