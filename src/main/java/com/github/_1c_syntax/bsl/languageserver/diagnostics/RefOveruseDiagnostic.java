@@ -248,6 +248,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .map(configuration::findChild)
       .filter(Optional::isPresent)
       .map(Optional::get)
+      .filter(TabularSectionOwner.class::isInstance)
       .map(TabularSectionOwner.class::cast)
       .flatMap(RefOveruseDiagnostic::getTabularSectionNames)
       .collect(Collectors.toList());
