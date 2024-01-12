@@ -52,7 +52,8 @@ import java.util.regex.Pattern;
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
 @RequiredArgsConstructor
 public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic {

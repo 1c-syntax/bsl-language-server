@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes8312Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.ForbiddenMetadataNameDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -35,8 +36,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -52,7 +51,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameter() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -66,25 +65,25 @@ class DiagnosticInfoTest {
     Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.ALL);
     Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(5);
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
-    Assertions.assertThat(diagnosticInfo.getTags().size()).isPositive();
+    Assertions.assertThat(diagnosticInfo.getTags()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getLSPTags()).isEmpty();
+    Assertions.assertThat(diagnosticInfo.canLocateOnProject()).isFalse();
 
-    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isPositive();
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration()).isNotEmpty();
 
-
-    DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
+    var parameter = diagnosticInfo.getParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
 
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
 
-    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
+    var maybeParameter = diagnosticInfo.getParameter(parameter.getName());
     assertThat(maybeParameter)
       .isPresent()
       .hasValue(parameter);
 
-    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
+    var maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
     assertThat(maybeFakeParameter).isEmpty();
   }
 
@@ -102,10 +101,11 @@ class DiagnosticInfoTest {
     // then
     assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Deprecated);
   }
+
   @Test
   void testParameterSuper() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration, stringInterner);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -118,26 +118,43 @@ class DiagnosticInfoTest {
     Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.BSL);
     Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(2);
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
-    Assertions.assertThat(diagnosticInfo.getTags().size()).isNotZero();
+    Assertions.assertThat(diagnosticInfo.getTags()).isNotEmpty();
 
-    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isNotZero();
-    Assertions.assertThat(diagnosticInfo.getParameters().size()).isEqualTo(1);
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getParameters()).hasSize(1);
+    Assertions.assertThat(diagnosticInfo.canLocateOnProject()).isFalse();
 
-
-    DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
+    var parameter = diagnosticInfo.getParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Заявленные языки");
 
     assertThat(parameter.getDefaultValue()).isEqualTo("ru");
     assertThat(parameter.getType()).isEqualTo(String.class);
 
-    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
+    var maybeParameter = diagnosticInfo.getParameter(parameter.getName());
     assertThat(maybeParameter)
       .isPresent()
       .hasValue(parameter);
 
-    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
+    var maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
     assertThat(maybeFakeParameter).isEmpty();
+  }
+
+  @Test
+  void testCanLocateOnProject() {
+    var diagnosticInfo = new DiagnosticInfo(ForbiddenMetadataNameDiagnostic.class, configuration, stringInterner);
+    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("ForbiddenMetadataName"));
+    Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.ERROR);
+    Assertions.assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.BLOCKER);
+    Assertions.assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+    Assertions.assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
+    Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.BSL);
+    Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(30);
+    Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
+    Assertions.assertThat(diagnosticInfo.getTags()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.canLocateOnProject()).isTrue();
   }
 
   @Test
@@ -147,12 +164,10 @@ class DiagnosticInfoTest {
     configuration.setLanguage(Language.EN);
 
     // when
-    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
 
     // then
     assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
-
   }
-
 }
