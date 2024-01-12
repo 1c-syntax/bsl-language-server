@@ -32,7 +32,6 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -65,7 +64,6 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     SourceDefinedSymbol scope,
     DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
-    List<SourceDefinedSymbol> children,
     byte kind,
     boolean export,
     Optional<VariableDescription> description,
@@ -77,7 +75,7 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     short variableNameStartCharacter,
     short variableNameEndCharacter
   ) {
-    super(name, scope, owner, parent, children, kind, export, description);
+    super(name, scope, owner, parent, kind, export, description);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;
