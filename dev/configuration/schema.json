@@ -176,11 +176,17 @@
                 "ExportVariables": {
                     "$ref": "parameters-schema.json#/definitions/ExportVariables"
                 },
+                "ExternalAppStarting": {
+                    "$ref": "parameters-schema.json#/definitions/ExternalAppStarting"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
                 "FieldsFromJoinsWithoutIsNull": {
                     "$ref": "parameters-schema.json#/definitions/FieldsFromJoinsWithoutIsNull"
+                },
+                "FileSystemAccess": {
+                    "$ref": "parameters-schema.json#/definitions/FileSystemAccess"
                 },
                 "ForbiddenMetadataName": {
                     "$ref": "parameters-schema.json#/definitions/ForbiddenMetadataName"
@@ -349,6 +355,9 @@
                 },
                 "ParseError": {
                     "$ref": "parameters-schema.json#/definitions/ParseError"
+                },
+                "PrivilegedModuleMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/PrivilegedModuleMethodCall"
                 },
                 "ProcedureReturnsValue": {
                     "$ref": "parameters-schema.json#/definitions/ProcedureReturnsValue"

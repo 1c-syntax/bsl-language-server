@@ -1158,9 +1158,6 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<h1 id="Using-of-the-deprecated-method-CurrentDate-DeprecatedCurrentDate_1">Using of the deprecated method "CurrentDate" (DeprecatedCurrentDate)<a class="headerlink" href="#Using-of-the-deprecated-method-CurrentDate-DeprecatedCurrentDate_1" title="Permanent link">&para;</a></h1>
-<!-- Blocks above are filled in automatically, do not touch -->
-<h2 id="Diagnostic-description">Diagnostic description<a class="headerlink" href="#Diagnostic-description" title="Permanent link">&para;</a></h2>
 <p>The configurations must be designed to work in conditions where the time zone on the server computer does not match the real time zone of the infobase users. For example, employees of a company from Vladivostok work with a server located in Moscow, and all operations in the system must be performed in local time (Vladivostok).</p>
 <p>Such a work scenario is often in demand in client-server infobases and in applied solutions in the service model (SaaS).</p>
 <p>In all server procedures and functions, instead of the CurrentDate function, which returns the server computer's date and time, you should use the CurrentSessionDate function, which converts the server's time to the user's session time zone.</p>
