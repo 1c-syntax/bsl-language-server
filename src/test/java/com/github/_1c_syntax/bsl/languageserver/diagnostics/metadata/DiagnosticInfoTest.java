@@ -155,6 +155,7 @@ class DiagnosticInfoTest {
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
     Assertions.assertThat(diagnosticInfo.getTags()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.canLocateOnProject()).isTrue();
+    Assertions.assertThat(diagnosticInfo.getExtraMinForComplexity()).isZero();
   }
 
   @Test

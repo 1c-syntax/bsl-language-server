@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
   minutesToFix = 15,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
-  }
+  },
+  extraMinForComplexity = 1
 )
 public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -99,28 +100,6 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       Integer methodComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
-
-        List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-        relatedInformation.add(RelatedInformation.create(
-          documentContext.getUri(),
-          methodSymbol.getSubNameRange(),
-          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-        ));
-
-        List<ComplexitySecondaryLocation> secondaryLocations =
-          documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
-
-        secondaryLocations.stream()
-          .map((ComplexitySecondaryLocation secondaryLocation) ->
-            RelatedInformation.create(
-              documentContext.getUri(),
-              secondaryLocation.getRange(),
-              secondaryLocation.getMessage()
-            )
-          )
-          .collect(Collectors.toCollection(() -> relatedInformation));
-
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
           info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),

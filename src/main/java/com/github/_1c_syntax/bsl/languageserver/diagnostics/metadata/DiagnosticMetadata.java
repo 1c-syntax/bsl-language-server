@@ -83,4 +83,9 @@ public @interface DiagnosticMetadata {
    * Замечания диагностики могут быть прикреплены на уровень анализируемого проекта (в частности в SonarQube)
    */
   boolean canLocateOnProject() default false;
+
+  /**
+   * Надбавка ко времени исправления замечания за повышенную сложность
+   */
+  double extraMinForComplexity() default 0;
 }
