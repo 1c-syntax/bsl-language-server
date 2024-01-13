@@ -199,10 +199,7 @@ public class DiagnosticInfo {
   }
 
   public double getExtraMinForComplexity() {
-    if (diagnosticMetadata.extraMinForComplexity() > 0) {
-      return diagnosticMetadata.extraMinForComplexity();
-    }
-    return 0;
+    return diagnosticMetadata.extraMinForComplexity();
   }
 
   public Map<String, Object> getDefaultConfiguration() {
