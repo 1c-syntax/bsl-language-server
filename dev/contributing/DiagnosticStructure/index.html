@@ -1269,12 +1269,15 @@
 <ul>
 <li>Тип диагностики <code>type</code> и ее важность <code>severity</code>, для каждой диагностики обязательно их определение. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к <a href="../DiagnosticTypeAndSeverity/">статье</a>.</li>
 <li>Время на исправление замечания <code>minutesToFix</code> (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.</li>
+<li>С помощью параметра <code>extraMinForComplexity</code> можно динамически увеличивать время на исправление замечания для диагностик, в которых учитывается несколько нарушающих правило мест, например при расчете сложности метода.  </li>
 <li>Набор тэгов <code>tag</code> диагностики, указывающих группы, к котором она относится. Подробнее о тэга в <a href="../DiagnosticTag/">статье</a>.</li>
 <li>Границы применимости <code>scope</code> (по умолчанию <code>ALL</code>, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу. </li>
 <li>Активность правила по-умолчанию <code>activatedByDefault</code> (по умолчанию <code>Истина</code>). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.</li>
 <li>Режим совместимости <code>compatibilityMode</code>, по которому фильтруются диагностики при использовании метаданных. По умолчанию <code>UNDEFINED</code>.</li>
+<li>Список типов модулей <code>modules</code> для возможности ограничить анализируемую диагностикой область</li>
+<li>Признак возможности установить замечания на весь проект <code>canLocateOnProject</code>. Используется для диагностик не связанных с модулем исходного кода. На данный момент опция воспринимается только SonarQube, остальные инструменты игнорируют.
+Последние два могут быть опущены.</li>
 </ul>
-<p>Последние два могут быть опущены.</p>
 <p>Пример аннотации</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
 <span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w">    </span><span class="c1">// Тип Дефект кода</span>
@@ -1285,7 +1288,12 @@
 <span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span><span class="c1">// Режим проверки совместимости с 8.3.3</span>
 <span class="w">  </span><span class="n">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span><span class="c1">// Относится к диагностикам нарушения стандарта 1С</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="n">modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w">            </span><span class="c1">// Анализируются только общие модули</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span><span class="c1">// Замечание будет размещено только в привязке к модулю</span>
+<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">            </span><span class="c1">// За каждую дополнительную позицию замечания (`DiagnosticRelatedInformation`) будет добавлено по одной минуте</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
