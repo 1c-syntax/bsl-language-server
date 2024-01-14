@@ -198,6 +198,10 @@ public class DiagnosticInfo {
     return diagnosticMetadata.canLocateOnProject();
   }
 
+  public double getExtraMinForComplexity() {
+    return diagnosticMetadata.extraMinForComplexity();
+  }
+
   public Map<String, Object> getDefaultConfiguration() {
     return diagnosticParameters.stream()
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));

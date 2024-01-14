@@ -106,10 +106,11 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     return calcNotAssignedParams(method, parameterDefinitions);
   }
 
-  private List<ParameterDefinition> calcNotAssignedParams(MethodSymbol method, List<ParameterDefinition> parameterDefinitions) {
+  private List<ParameterDefinition> calcNotAssignedParams(MethodSymbol method,
+                                                          List<ParameterDefinition> parameterDefinitions) {
     return parameterDefinitions.stream()
       .filter(parameterDefinition -> isAssignedParam(method, parameterDefinition))
-      .collect(Collectors.toUnmodifiableList());
+      .toList();
   }
 
   private boolean isAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
@@ -118,7 +119,8 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
         .anyMatch(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION));
   }
 
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
+                                                               ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
       // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
@@ -159,7 +161,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   private static List<ParameterDefinition> getMethodParamsByRef(MethodSymbol methodSymbol) {
     return methodSymbol.getParameters().stream()
       .filter(parameterDefinition -> !parameterDefinition.isByValue())
-      .collect(Collectors.toUnmodifiableList());
+      .toList();
   }
 
   private static List<DiagnosticRelatedInformation> getRelatedInformation(List<Reference> references) {

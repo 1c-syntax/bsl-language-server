@@ -209,10 +209,10 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext) {
-      addDiagnostic((BSLParserRuleContext) tree);
-    } else if (tree instanceof TerminalNode) {
-      addDiagnostic((TerminalNode) tree);
+    if (tree instanceof BSLParserRuleContext parserRuleContext) {
+      addDiagnostic(parserRuleContext);
+    } else if (tree instanceof TerminalNode terminalNode) {
+      addDiagnostic(terminalNode);
     } else {
       throw new IllegalArgumentException("Unsupported parameter type " + tree);
     }
@@ -253,5 +253,4 @@ public class DiagnosticStorage {
     }
     return diagnostic;
   }
-
 }

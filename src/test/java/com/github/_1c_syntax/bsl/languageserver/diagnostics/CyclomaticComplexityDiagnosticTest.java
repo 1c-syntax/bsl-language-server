@@ -37,6 +37,8 @@ class CyclomaticComplexityDiagnosticTest extends AbstractDiagnosticTest<Cyclomat
   @Test
   void test() {
 
+    assertThat(diagnosticInstance.getInfo().getExtraMinForComplexity()).isEqualTo(1);
+
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
@@ -45,7 +47,6 @@ class CyclomaticComplexityDiagnosticTest extends AbstractDiagnosticTest<Cyclomat
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 32);
     assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(21);
-
   }
 
   @Test
