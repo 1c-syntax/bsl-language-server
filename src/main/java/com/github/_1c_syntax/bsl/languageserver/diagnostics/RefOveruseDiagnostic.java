@@ -188,12 +188,12 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     var joinDataSources = dataSourceContext.joinPart().stream()
       .map(SDBLParser.JoinPartContext::dataSource)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .toList();
     result.addAll(joinDataSources);
 
     var dataSourcesFromJoins = joinDataSources.stream()
       .flatMap(dataSourceContext1 -> getInnerDataSource(dataSourceContext1).stream())
-      .collect(Collectors.toList());
+      .toList();
 
     result.addAll(dataSourcesFromJoins);
     return result;
@@ -212,7 +212,6 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
         .map(tableContext -> (ParseTree) tableContext.parameter()))
       .map(ParseTree::getText)
       .orElse("");
-
   }
 
   private List<String> getTabularSectionNames(SDBLParser.DataSourceContext dataSourceContext) {
@@ -287,7 +286,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     var children = extractFirstMetadataTypeName(ctx);
     var refIndex = findLastRef(children);
 
-    final int childCount = children.size();
+    final var childCount = children.size();
     final var lastIndex = childCount - 1;
     if (refIndex == lastIndex) {
       var penultimateIdentifierName = children.get(lastIndex - LAST_INDEX_OF_TABLE_DOT_REF).getText();

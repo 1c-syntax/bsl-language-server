@@ -34,7 +34,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DECLARED_LANGUAGES_DEFAULT
+    defaultValue = DECLARED_LANGUAGES_DEFAULT
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
   protected MultilingualStringAnalyser parser = new MultilingualStringAnalyser(DECLARED_LANGUAGES_DEFAULT);

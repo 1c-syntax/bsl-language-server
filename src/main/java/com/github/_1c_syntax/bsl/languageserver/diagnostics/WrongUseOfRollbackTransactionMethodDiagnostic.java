@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.STANDARD
   }
-
 )
 public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
@@ -65,7 +63,7 @@ public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindM
     var methodsList = Trees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .map(e -> e.methodName().getText())
-      .collect(Collectors.toList());
+      .toList();
 
     if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
       return methodsList.indexOf(ctx.methodName().getText()) != 0;

@@ -64,19 +64,21 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
 
   @Test
   void testMultiString() {
-    String module = "//в строке ниже неразрывный пробел\n" +
-      "А = \" \n" +
-      "|// минусы с ошибками\n" +
-      "|//СреднееТире = \n" +
-      "|–;\n" +
-      "|//ЦифровоеТире = \n" +
-      "|‒;\n" +
-      "|//ДлинноеТире = \n" +
-      "|—;\n" +
-      "|//ГоризонтальнаяЛиния = \n" +
-      "|―;\n" +
-      "|//НеправильныйМинус = \n" +
-      "|−;\";\n";
+    String module = """
+      //в строке ниже неразрывный пробел
+      А = " 
+      |// минусы с ошибками
+      |//СреднееТире =\s
+      |–;
+      |//ЦифровоеТире =\s
+      |‒;
+      |//ДлинноеТире =\s
+      |—;
+      |//ГоризонтальнаяЛиния =\s
+      |―;
+      |//НеправильныйМинус =\s
+      |−;";
+      """;
 
     var documentContext = TestUtils.getDocumentContext(module);
     var diagnostics = getDiagnostics(documentContext);

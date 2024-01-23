@@ -295,9 +295,10 @@ class ExpressionParseTreeRewriterTest {
 
   @Test
   void realLifeHardExpression() {
-    var code = "СодержитПоля = ВложенныеЭлементы.Количество() > 0\n" +
-      "И Не (ВложенныеЭлементы.Количество() = 1\n" +
-      "И ТипЗнч(ВложенныеЭлементы[0]) = Тип(\"АвтоВыбранноеПолеКомпоновкиДанных\"));";
+    var code = """
+      СодержитПоля = ВложенныеЭлементы.Количество() > 0
+      И Не (ВложенныеЭлементы.Количество() = 1
+      И ТипЗнч(ВложенныеЭлементы[0]) = Тип("АвтоВыбранноеПолеКомпоновкиДанных"));""";
 
     var expressionTree = getExpressionTree(code);
     var binary = (BinaryOperationNode) expressionTree;

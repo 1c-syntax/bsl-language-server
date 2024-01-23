@@ -37,12 +37,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -119,11 +117,11 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+    var collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
       .map(parseTree ->
         ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
-      .collect(Collectors.toList());
+      .toList();
 
     documentContext.getSymbolTree().getMethods()
       .stream()

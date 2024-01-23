@@ -137,7 +137,7 @@ class DocumentContextTest {
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // then
-    assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
+    assertThat(regions).anyMatch(regionSymbol -> !regionSymbol.getMethods().isEmpty());
   }
 
   @Test

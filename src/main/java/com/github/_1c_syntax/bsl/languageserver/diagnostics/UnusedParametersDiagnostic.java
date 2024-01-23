@@ -30,12 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,14 +60,14 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    List<TerminalNode> params = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
+    var params = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
       .map(BSLParser.ParamContext.class::cast)
       .map(BSLParser.ParamContext::IDENTIFIER)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .toList();
 
-    List<String> paramsNames = params
+    var paramsNames = params
       .stream()
       .map(ind -> ind.getText().toLowerCase(Locale.getDefault()))
       .collect(Collectors.toList());
@@ -93,15 +90,11 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
-
-    Optional<ParseTree> subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
-
-    String subName = "";
+    var subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
+    var subName = "";
     if (subNames.isPresent()) {
       subName = subNames.get().getText();
     }
-
     return HANDLER_PATTERN.matcher(subName).matches();
   }
-
 }

@@ -32,10 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
@@ -84,10 +81,10 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     int lineOfStop = ctx.getStop().getLine();
 
-    List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
+    var list = Trees.getChildren(ctx.getParent()).stream()
       .filter(TerminalNode.class::isInstance)
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
-      .collect(Collectors.toList());
+      .toList();
 
     if (!list.isEmpty()) {
       TerminalNode first = (TerminalNode) list.get(0);

@@ -90,8 +90,7 @@ class ReferenceResolverTest {
       ReferenceFinder zeroLineReferenceFinder,
       ReferenceFinder firstLineReferenceFinder
     ) {
-      var referenceResolver = new ReferenceResolver(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
-      return referenceResolver;
+      return new ReferenceResolver(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
     }
 
     @Bean
