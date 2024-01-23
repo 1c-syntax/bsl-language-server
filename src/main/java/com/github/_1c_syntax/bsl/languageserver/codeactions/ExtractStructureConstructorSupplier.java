@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +80,8 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     var parameters = maybeDoCall
       .map(BSLParser.DoCallContext::callParamList)
       .map(callParamListContext -> callParamListContext.children)
+      .orElse(Collections.emptyList())
       .stream()
-      .flatMap(Collection::stream)
       .filter(Predicate.not(TerminalNode.class::isInstance))
       .map(BSLParser.CallParamContext.class::cast)
       .toList();

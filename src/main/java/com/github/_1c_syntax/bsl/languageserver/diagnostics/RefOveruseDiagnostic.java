@@ -286,8 +286,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     var children = extractFirstMetadataTypeName(ctx);
     var refIndex = findLastRef(children);
 
-    final var childCount = children.size();
-    final var lastIndex = childCount - 1;
+    final var lastIndex = children.size() - 1;
     if (refIndex == lastIndex) {
       var penultimateIdentifierName = children.get(lastIndex - LAST_INDEX_OF_TABLE_DOT_REF).getText();
       return dataSourceWithTabularSectionNames.get(penultimateIdentifierName) == null;
