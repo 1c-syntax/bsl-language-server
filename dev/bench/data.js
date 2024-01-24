@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706024143022,
+  "lastUpdate": 1706071454242,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -25017,6 +25017,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8291879911014114",
             "extra": "mean: 68.37885308265686 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "640a2c54622e1fde13e624ca823f1d782de83f8c",
+          "message": "Merge pull request #3233 from 1c-syntax/feature/sq_and_mdclasses_013rc1\n\nFixes & bumps",
+          "timestamp": "2024-01-24T07:36:56+03:00",
+          "tree_id": "e260b023b5ce97f9e0211cb6f3a260b45a876594",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/640a2c54622e1fde13e624ca823f1d782de83f8c"
+        },
+        "date": 1706071451888,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.27771385510762,
+            "unit": "sec",
+            "range": "stddev: 1.9532759857582505",
+            "extra": "mean: 68.27771385510762 sec\nrounds: 3"
           }
         ]
       }
