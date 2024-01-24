@@ -83,10 +83,10 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    */
   protected String getMessage(BSLParserRuleContext ctx) {
 
-    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
-      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
-    } else if (ctx instanceof BSLParser.MethodCallContext) {
-      return info.getMessage(((BSLParser.MethodCallContext) ctx).methodName().getText());
+    if (ctx instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+      return info.getMessage(globalMethodCallContext.methodName().getText());
+    } else if (ctx instanceof BSLParser.MethodCallContext methodCallContext) {
+      return info.getMessage(methodCallContext.methodName().getText());
     } else {
       return info.getMessage();
     }

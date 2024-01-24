@@ -197,11 +197,9 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
     var selectionRange = reference.getSelectionRange();
 
-    if (doCallParent instanceof BSLParser.MethodCallContext) {
-      var methodCallContext = (BSLParser.MethodCallContext) doCallParent;
+    if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
       return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
-    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext) {
-      var globalMethodCallContext = (BSLParser.GlobalMethodCallContext) doCallParent;
+    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
       return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
     } else {
       return false;

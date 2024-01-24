@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE,
     DiagnosticTag.SUSPICIOUS
   }
-
 )
 public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -114,7 +113,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
       .map(graph::getEdgeSource)
       .map(vertex -> nonExplicitReturnNode(vertex, graph))
       .flatMap(Optional::stream)
-      .collect(Collectors.toList());
+      .toList();
 
     if (incomingVertices.isEmpty()) {
       return;
@@ -136,12 +135,12 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v, ControlFlowGraph graph) {
-    if (v instanceof BasicBlockVertex) {
-      return checkBasicBlockExitingNode((BasicBlockVertex) v);
-    } else if (v instanceof LoopVertex) {
-      return checkLoopExitingNode((LoopVertex) v);
-    } else if (v instanceof ConditionalVertex) {
-      return checkElseIfClauseExitingNode((ConditionalVertex) v, graph);
+    if (v instanceof BasicBlockVertex basicBlock) {
+      return checkBasicBlockExitingNode(basicBlock);
+    } else if (v instanceof LoopVertex loop) {
+      return checkLoopExitingNode(loop);
+    } else if (v instanceof ConditionalVertex conditional) {
+      return checkElseIfClauseExitingNode(conditional, graph);
     }
 
     return v.getAst();
@@ -158,14 +157,14 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     }
 
     var expression = v.getExpression();
-    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {
-      return Optional.of((BSLParser.ElsifBranchContext) expression.getParent());
+    if (expression.getParent() instanceof BSLParser.ElsifBranchContext elsifBranch && !ignoreMissingElseOnExit) {
+      return Optional.of(elsifBranch.getParent());
     }
 
     return Optional.empty();
   }
 
-  private Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
+  private static Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
     if (!block.statements().isEmpty()) {
       var lastStatement = block.statements().get(block.statements().size() - 1);
 
@@ -178,22 +177,19 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<BSLParserRuleContext> checkLoopExitingNode(LoopVertex v) {
-    if (v instanceof WhileLoopVertex) {
-      var whileLoop = (WhileLoopVertex) v;
-      if (isEndlessLoop(whileLoop)) {
-        return Optional.empty();
-      }
+    if (v instanceof WhileLoopVertex whileLoop && isEndlessLoop(whileLoop)) {
+      return Optional.empty();
     }
 
     if (loopsExecutedAtLeastOnce) {
-      // из цикла в exit может придти только falseBranch или пустое тело цикла
+      // из цикла в exit может прийти только falseBranch или пустое тело цикла
       // и то и другое не нужно нам в рамках диагностики
       return Optional.empty();
     }
     return v.getAst();
   }
 
-  private boolean isEndlessLoop(WhileLoopVertex whileLoop) {
+  private static boolean isEndlessLoop(WhileLoopVertex whileLoop) {
     var expression = whileLoop.getExpression();
     return expression.getChildCount() == 1
       && expression.member(0).constValue() != null

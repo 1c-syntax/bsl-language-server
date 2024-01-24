@@ -60,10 +60,10 @@ import java.util.stream.Stream;
     DiagnosticTag.SUSPICIOUS,
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern INSERT_ADD_METHOD_PATTERN = CaseInsensitivePattern.compile("вставить|добавить|insert|add");
+  private static final Pattern INSERT_ADD_METHOD_PATTERN =
+    CaseInsensitivePattern.compile("вставить|добавить|insert|add");
   private static final Pattern INSERT_METHOD_PATTERN = CaseInsensitivePattern.compile("вставить|insert");
   private static final Pattern IGNORED_BSL_VALUES_PATTERN = CaseInsensitivePattern.compile(
     "неопределено|undefined|0|символы\\.[\\wа-яё]+|chars\\.[\\wа-яё]+");
@@ -106,7 +106,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
 
-    if (!isAllowedMethodADD){
+    if (!isAllowedMethodADD) {
       methodPattern = INSERT_METHOD_PATTERN;
     }
   }
@@ -114,7 +114,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext codeBlock) {
     this.codeBlock = codeBlock;
-    final List<GroupingData> possibleDuplicateStatements = getPossibleDuplicates();
+    final var possibleDuplicateStatements = getPossibleDuplicates();
 
     if (!possibleDuplicateStatements.isEmpty()) {
       blockRange = Ranges.create(codeBlock);
@@ -135,11 +135,11 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .collect(Collectors.toList());
   }
 
-  private @Nullable
-  GroupingData groupingCalls(BSLParser.CallStatementContext callStatement, BSLParser.AccessCallContext accessCallContext) {
+  private @Nullable GroupingData groupingCalls(BSLParser.CallStatementContext callStatement,
+                                               BSLParser.AccessCallContext accessCallContext) {
     final var methodCallContext = accessCallContext.methodCall();
     final var callParams = methodCallContext.doCall().callParamList().callParam();
-    final CallParamContext firstParamContext = callParams.get(0);
+    final var firstParamContext = callParams.get(0);
     if (firstParamContext.getChildCount() == 0) {
       return null;
     }
@@ -153,7 +153,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     final TerminalNode identifierContext;
     final String parens;
-    if (callStatement.IDENTIFIER() != null){
+    if (callStatement.IDENTIFIER() != null) {
       identifierContext = callStatement.IDENTIFIER();
       parens = "";
     } else {
@@ -204,7 +204,6 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   }
 
   private List<GroupingData> excludeValidChanges(List<GroupingData> duplicates) {
-
     var result = new ArrayList<GroupingData>();
     for (var i = 0; i < duplicates.size(); i++) {
       if (!excludeValidElements(duplicates, i, result)) {
@@ -257,8 +256,8 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     }
     return getAllInnerIdentifiersWithDot(groupingData.firstParamContext).stream()
       .anyMatch(identifierWithDot ->
-          startWithIgnoreCase(identifierWithDot, expressionWithDot)
-        || startWithIgnoreCase(expressionWithDot, identifierWithDot)
+        startWithIgnoreCase(identifierWithDot, expressionWithDot)
+          || startWithIgnoreCase(expressionWithDot, identifierWithDot)
       );
   }
 
@@ -352,7 +351,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       final var identifiers = Trees.findAllRuleNodes(param, BSLParser.RULE_complexIdentifier).stream()
         .map(BSLParser.ComplexIdentifierContext.class::cast)
         .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
-        .collect(Collectors.toList());
+        .toList();
       final var reducedIdentifiers = new ArrayList<String>();
       for (BSLParser.ComplexIdentifierContext identifier : identifiers) {
         final List<? extends BSLParser.ModifierContext> modifiers = identifier.modifier();
@@ -361,9 +360,9 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
         reducedIdentifiers.add(fullIdentifier);
 
         var reducedIdentifier = firstIdentifier;
-        for (BSLParser.ModifierContext modifier : modifiers) {
-          var modfifier = modifier.getText();
-          reducedIdentifier = reducedIdentifier.concat(".").concat(modfifier);
+        for (var modifier : modifiers) {
+          var text = modifier.getText();
+          reducedIdentifier = reducedIdentifier.concat(".").concat(text);
           reducedIdentifiers.add(reducedIdentifier);
         }
       }

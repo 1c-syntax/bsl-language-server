@@ -25,13 +25,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
+@Getter
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
-  @Getter
   @Setter
   private CfgVertex entryPoint;
 
-  @Getter
   private ExitVertex exitPoint;
 
   ControlFlowGraph() {

@@ -52,7 +52,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
+    defaultValue = DEFAULT_AUTHORIZED_NUMBERS
   )
   private final List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 

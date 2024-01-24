@@ -82,9 +82,9 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("com.github.1c-syntax", "utils", "0.5.2")
-    api("io.github.1c-syntax", "mdclasses", "0.12.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.5.0")
-    api("io.github.1c-syntax", "supportconf", "0.12.1")
+    api("io.github.1c-syntax", "mdclasses", "0.13.0-rc.1")
+    api("io.github.1c-syntax", "bsl-common-library", "0.5.1")
+    api("io.github.1c-syntax", "supportconf", "0.13.1")
     api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool

@@ -30,27 +30,23 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import java.util.EnumMap;
 import java.util.Map;
 
+@Getter
 class TSLintReportEntry {
-  @Getter
+
+  private static final Map<DiagnosticSeverity, String> SEVERITY_MAP = new EnumMap<>(DiagnosticSeverity.class);
+
   private final EntryPosition startPosition;
-  @Getter
   private final EntryPosition endPosition;
-  @Getter
   private final String failure;
-  @Getter
   private final String name;
-  @Getter
   private final String ruleName;
-  @Getter
   private final String ruleSeverity;
 
-  private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
-
   static {
-    severityMap.put(DiagnosticSeverity.Error, "error");
-    severityMap.put(DiagnosticSeverity.Hint, "warn");
-    severityMap.put(DiagnosticSeverity.Information, "warn");
-    severityMap.put(DiagnosticSeverity.Warning, "warn");
+    SEVERITY_MAP.put(DiagnosticSeverity.Error, "error");
+    SEVERITY_MAP.put(DiagnosticSeverity.Hint, "warn");
+    SEVERITY_MAP.put(DiagnosticSeverity.Information, "warn");
+    SEVERITY_MAP.put(DiagnosticSeverity.Warning, "warn");
   }
 
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
@@ -58,7 +54,7 @@ class TSLintReportEntry {
     failure = diagnostic.getMessage();
     name = fileName;
     ruleName = DiagnosticCode.getStringValue(diagnostic.getCode());
-    ruleSeverity = severityMap.get(diagnostic.getSeverity());
+    ruleSeverity = SEVERITY_MAP.get(diagnostic.getSeverity());
     startPosition = new EntryPosition(diagnostic.getRange().getStart());
   }
 
@@ -78,12 +74,10 @@ class TSLintReportEntry {
     this.ruleSeverity = ruleSeverity;
   }
 
+  @Getter
   static class EntryPosition {
-    @Getter
     private final int character;
-    @Getter
     private final int line;
-    @Getter
     private final int position;
 
     EntryPosition(org.eclipse.lsp4j.Position position) {

@@ -67,11 +67,12 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void checkMessage() {
-    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")";
+    var code = """
+      А = ТипДокумента = Тип("ДокументСсылка.ПриходнаяНакладная")
+      Или ТипДокумента = Тип("ДокументСсылка.СчетНаОплатуПоставщика")
+      Или ТипДокумента = Тип("ДокументСсылка.КорректировкаПоступления")
+      Или ТипДокумента = Тип("ДокументСсылка.ЗаказПоставщику")
+      Или ТипДокумента = Тип("ДокументСсылка.СчетНаОплатуПоставщика")""";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
@@ -81,9 +82,10 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void testThatPopularQuantificationSkipped() {
-    var code = "А = Байты / 1024 / 1024;\n" +
-      "В = Время / 24 / 60 / 60;\n" +
-      "Б = Байты = 1024 / \"1024\"";
+    var code = """
+      А = Байты / 1024 / 1024;
+      В = Время / 24 / 60 / 60;
+      Б = Байты = 1024 / "1024\"""";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
@@ -93,9 +95,10 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void testThatConfiguredPopularQuantificationSkipped() {
-    var code = "А = Байты / 1024 / 1024;\n" +
-      "В = Время / 24 / 60 / 60;\n" +
-      "Б = Байты = 1024 / \"1024\"";
+    var code = """
+      А = Байты / 1024 / 1024;
+      В = Время / 24 / 60 / 60;
+      Б = Байты = 1024 / "1024\"""";
 
     // получение текущей конфигурации диагностики
     var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();

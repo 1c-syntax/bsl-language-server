@@ -84,7 +84,7 @@ class DiagnosticInfosTest {
   void testAllDiagnosticsHaveTags() {
     assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
       -> assertThat(
-      diagnosticInfo.getTags().size() > 0
+      !diagnosticInfo.getTags().isEmpty()
         && diagnosticInfo.getTags().size() <= 3)
       .isTrue()))
       .doesNotThrowAnyException();

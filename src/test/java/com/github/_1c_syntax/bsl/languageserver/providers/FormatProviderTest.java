@@ -31,7 +31,6 @@ import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextEdit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -216,7 +215,7 @@ class FormatProviderTest {
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
-    
+
     var configuration = new LanguageServerConfiguration();
     configuration.setLanguage(Language.EN);
     documentContext.setConfiguration(configuration);

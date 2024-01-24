@@ -72,7 +72,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       .collect(Collectors.toCollection(() -> codeBlocks));
 
 
-    BSLParser.ElseBranchContext elseBranch = ctx.elseBranch();
+    var elseBranch = ctx.elseBranch();
     if (elseBranch != null) {
       codeBlocks.add(elseBranch.codeBlock());
     }
@@ -90,23 +90,21 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void checkCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts, int i) {
-    BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
+    var currentCodeBlock = codeBlockContexts.get(i);
 
-    List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
+    var identicalCodeBlocks = codeBlockContexts.stream()
       .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
           && !(currentCodeBlock.children == null && codeBlockContext.children == null)
           && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
-      .collect(Collectors.toList());
+      .toList();
 
     if (identicalCodeBlocks.isEmpty()) {
       return;
     }
 
-    identicalCodeBlocks.stream()
-      .collect(Collectors.toCollection(() -> checkedBlocks));
-
+    identicalCodeBlocks.stream().collect(Collectors.toCollection(() -> checkedBlocks));
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     relatedInformation.add(RelatedInformation.create(

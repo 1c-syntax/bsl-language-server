@@ -236,7 +236,9 @@ public class DescriptionReader {
     return strings.toString().strip();
   }
 
-  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+  private List<ParameterDescription> getParametersStrings(
+    List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+
     List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
 

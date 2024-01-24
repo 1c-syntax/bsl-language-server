@@ -55,16 +55,16 @@ public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
       return 0;
     }
     final var uriCompare = location.getUri().compareTo(o.location.getUri());
-    if (uriCompare != 0){
+    if (uriCompare != 0) {
       return uriCompare;
     }
     final var rangesCompare = Ranges.compare(location.getRange(), o.location.getRange());
-    if (rangesCompare != 0){
+    if (rangesCompare != 0) {
       return rangesCompare;
     }
-    final var occurenceCompare = occurrenceType.compareTo(o.occurrenceType);
-    if (occurenceCompare != 0){
-      return occurenceCompare;
+    final var occurrenceCompare = occurrenceType.compareTo(o.occurrenceType);
+    if (occurrenceCompare != 0) {
+      return occurrenceCompare;
     }
     return symbol.compareTo(o.symbol);
   }

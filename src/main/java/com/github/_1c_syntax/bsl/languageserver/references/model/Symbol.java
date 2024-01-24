@@ -41,7 +41,7 @@ public class Symbol implements Comparable<Symbol> {
   private static GenericInterner<Symbol> interner = new GenericInterner<>();
 
   /**
-   * Cсылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
+   * Ссылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
    */
   String mdoRef;
 
@@ -98,5 +98,4 @@ public class Symbol implements Comparable<Symbol> {
     compareResult = symbolName.compareTo(o.symbolName);
     return compareResult;
   }
-
 }

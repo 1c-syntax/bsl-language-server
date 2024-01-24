@@ -62,10 +62,11 @@ class ControlFlowGraphBuilderTest {
   @Test
   void branchingWithOneBranch() {
 
-    var code = "А = 1;\n" +
-      "Если Б = 2 Тогда\n" +
-      "    В = 4;\n" +
-      "КонецЕсли;";
+    var code = """
+      А = 1;
+      Если Б = 2 Тогда
+          В = 4;
+      КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -97,12 +98,12 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void conditionWithElse() {
-    var code = "А = 1;\n" +
-      "Если Б = 2 Тогда\n" +
-      "    В = 4;\n" +
-      "Иначе\n" +
-      "    В = 5;" +
-      "КонецЕсли;";
+    var code = """
+      А = 1;
+      Если Б = 2 Тогда
+          В = 4;
+      Иначе
+          В = 5;КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -129,15 +130,14 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void multipleConditionsTest() {
-    var code = "Если Б = 1 Тогда\n" +
-      "    В = 1;\n" +
-      "ИначеЕсли Б = 2 Тогда\n" +
-      "    В = 2;\n" +
-      "ИначеЕсли Б = 3 Тогда\n" +
-      "    В = 3;" +
-      "Иначе\n" +
-      "    В = 4;" +
-      "КонецЕсли;";
+    var code = """
+      Если Б = 1 Тогда
+          В = 1;
+      ИначеЕсли Б = 2 Тогда
+          В = 2;
+      ИначеЕсли Б = 3 Тогда
+          В = 3;Иначе
+          В = 4;КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -181,10 +181,11 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void whileLoopTest() {
-    var code = "А = 1;\n" +
-      "Пока Б = 1 Цикл\n" +
-      "    В = 1;\n" +
-      "КонецЦикла;";
+    var code = """
+      А = 1;
+      Пока Б = 1 Цикл
+          В = 1;
+      КонецЦикла;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -218,19 +219,20 @@ class ControlFlowGraphBuilderTest {
   @Test
   void testInnerLoops() {
 
-    var code = "А = 1;\n" +
-      "Пока Б = 1 Цикл\n" +
-      "   В = 1;\n" +
-      "   Если А = 1 Тогда\n" +
-      "     Продолжить;\n" +
-      "   КонецЕсли;\n" +
-      "   Для Сч = 1 По 5 Цикл\n" +
-      "     Б = 1;\n" +
-      "     Прервать;\n" +
-      "     В = 2;\n" +
-      "   КонецЦикла;\n" +
-      "   Прервано = Истина;\n" +
-      "КонецЦикла;";
+    var code = """
+      А = 1;
+      Пока Б = 1 Цикл
+         В = 1;
+         Если А = 1 Тогда
+           Продолжить;
+         КонецЕсли;
+         Для Сч = 1 По 5 Цикл
+           Б = 1;
+           Прервать;
+           В = 2;
+         КонецЦикла;
+         Прервано = Истина;
+      КонецЦикла;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -288,11 +290,12 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void tryHandlerFlowTest() {
-    var code = "Попытка\n" +
-      "   А = 1;\n" +
-      "Исключение\n" +
-      "   Б = 1;\n" +
-      "КонецПопытки";
+    var code = """
+      Попытка
+         А = 1;
+      Исключение
+         Б = 1;
+      КонецПопытки""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -315,10 +318,11 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void linearBlockWithLabel() {
-    var code = "А = 1;\n" +
-      "Б = 2;\n" +
-      "~Прыг:\n" +
-      "В = 4;";
+    var code = """
+      А = 1;
+      Б = 2;
+      ~Прыг:
+      В = 4;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -339,12 +343,13 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void linearBlockWithJumpToLabel() {
-    var code = "А = 1;\n" +
-      "Б = 2;\n" +
-      "~Прыг:\n" +
-      "В = 4;\n" +
-      "Перейти ~Прыг;\n" +
-      "МертвыйКод = Истина;";
+    var code = """
+      А = 1;
+      Б = 2;
+      ~Прыг:
+      В = 4;
+      Перейти ~Прыг;
+      МертвыйКод = Истина;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -376,7 +381,7 @@ class ControlFlowGraphBuilderTest {
 
     var list = graph.vertexSet().stream()
       .filter(x -> x instanceof BasicBlockVertex)
-      .filter(x -> ((BasicBlockVertex) x).statements().size() == 0)
+      .filter(x -> ((BasicBlockVertex) x).statements().isEmpty())
       .collect(Collectors.toList());
 
     assertThat(list).isEmpty();
@@ -385,11 +390,12 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorSingleIfBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -414,13 +420,13 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorIfWithElseBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#Иначе\n" +
-      "   Б = 3;" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #Иначе
+         Б = 3;#КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -447,17 +453,17 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorIfWithElseIfBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#ИначеЕсли ВебКлиент Тогда\n" +
-      "   Б = 3;\n" +
-      "#ИначеЕсли МобильныйКлиент Тогда\n" +
-      "   Б = 4;\n" +
-      "#Иначе\n" +
-      "   Б = 5;" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #ИначеЕсли ВебКлиент Тогда
+         Б = 3;
+      #ИначеЕсли МобильныйКлиент Тогда
+         Б = 4;
+      #Иначе
+         Б = 5;#КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();

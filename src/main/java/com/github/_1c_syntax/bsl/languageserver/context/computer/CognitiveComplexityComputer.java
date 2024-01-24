@@ -97,7 +97,7 @@ public class CognitiveComplexityComputer
     methodsComplexity.clear();
     ignoredContexts.clear();
 
-    ParseTreeWalker walker = new ParseTreeWalker();
+    var walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
     return new ComplexityData(
@@ -265,7 +265,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.MethodNameContext methodNameContext = ctx.methodName();
+    var methodNameContext = ctx.methodName();
     if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
       if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
@@ -286,7 +286,7 @@ public class CognitiveComplexityComputer
     final List<Token> flattenExpression = flattenExpression(ctx);
 
     int emptyTokenType = -1;
-    AtomicInteger lastOperationType = new AtomicInteger(emptyTokenType);
+    var lastOperationType = new AtomicInteger(emptyTokenType);
 
     flattenExpression.forEach((Token token) -> {
       int currentOperationType = token.getType();
@@ -309,15 +309,14 @@ public class CognitiveComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext)) {
+      if (!(tree instanceof BSLParserRuleContext parserRule)) {
         continue;
       }
 
-      BSLParserRuleContext parserRule = ((BSLParserRuleContext) tree);
-      if (parserRule instanceof BSLParser.MemberContext) {
-        flattenMember(result, (BSLParser.MemberContext) parserRule);
-      } else if (parserRule instanceof BSLParser.OperationContext) {
-        flattenOperation(result, (BSLParser.OperationContext) parserRule);
+      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+        flattenMember(result, memberContext);
+      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+        flattenOperation(result, operationContext);
       }
     }
 
@@ -339,7 +338,7 @@ public class CognitiveComplexityComputer
     final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
 
     if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
-      final CommonToken splitter = new CommonToken(-1);
+      final var splitter = new CommonToken(-1);
       result.add(splitter);
       result.addAll(nestedTokens);
       result.add(splitter);

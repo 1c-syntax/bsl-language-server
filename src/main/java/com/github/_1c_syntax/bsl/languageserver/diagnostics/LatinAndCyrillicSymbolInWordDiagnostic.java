@@ -86,7 +86,7 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_EXCLUDE_WORDS
+    defaultValue = DEFAULT_EXCLUDE_WORDS
   )
   private Pattern excludeWords = createExcludeWordPattern(DEFAULT_EXCLUDE_WORDS);
 

@@ -75,7 +75,7 @@ public class SelectionRangeProvider {
    * Получение данных о {@link SelectionRange} по позиции в документе.
    *
    * @param documentContext контекст документа.
-   * @param params параметры вызова.
+   * @param params          параметры вызова.
    * @return список найденных диапазонов.
    */
   public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
@@ -129,8 +129,8 @@ public class SelectionRangeProvider {
   }
 
   private static BSLParserRuleContext getParentContext(ParseTree ctx) {
-    if (ctx instanceof BSLParser.StatementContext) {
-      return getStatementParent((BSLParser.StatementContext) ctx);
+    if (ctx instanceof BSLParser.StatementContext statementContext) {
+      return getStatementParent(statementContext);
     }
 
     return getDefaultParent(ctx);
@@ -138,7 +138,7 @@ public class SelectionRangeProvider {
 
   @Nullable
   private static BSLParserRuleContext getDefaultParent(ParseTree ctx) {
-    return  (BSLParserRuleContext) ctx.getParent();
+    return (BSLParserRuleContext) ctx.getParent();
   }
 
   private static BSLParserRuleContext getStatementParent(BSLParser.StatementContext statement) {
@@ -201,13 +201,11 @@ public class SelectionRangeProvider {
   }
 
   private static boolean ifBranchMatchesIfStatement(BSLParserRuleContext ctx) {
-    if (!(ctx instanceof BSLParser.IfBranchContext)) {
+    if (!(ctx instanceof BSLParser.IfBranchContext ifBranch)) {
       return false;
     }
 
-    var ifBranch = (BSLParser.IfBranchContext) ctx;
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
-
 }

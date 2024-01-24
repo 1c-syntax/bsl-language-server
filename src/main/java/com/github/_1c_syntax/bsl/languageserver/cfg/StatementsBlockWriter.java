@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.Getter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -42,6 +43,8 @@ class StatementsBlockWriter {
 
     private BasicBlockVertex statements = new BasicBlockVertex();
     private final Deque<CfgVertex> buildStack = new ArrayDeque<>();
+
+    @Getter
     private final JumpInformationRecord jumpContext;
 
     public StatementsBlockRecord() {
@@ -60,10 +63,6 @@ class StatementsBlockWriter {
 
     public Deque<CfgVertex> getBuildParts() {
       return buildStack;
-    }
-
-    public JumpInformationRecord getJumpContext() {
-      return jumpContext;
     }
 
     public void split() {

@@ -44,7 +44,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       return bean;
     }
 
-    BSLDiagnostic diagnostic = (BSLDiagnostic) bean;
+    var diagnostic = (BSLDiagnostic) bean;
 
     var info = diagnosticInfos.get(diagnostic.getClass());
     diagnostic.setInfo(info);
