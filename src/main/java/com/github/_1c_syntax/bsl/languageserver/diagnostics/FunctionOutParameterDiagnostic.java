@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -33,6 +34,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -50,7 +52,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    var parameters = documentContext
+    List<ParameterDefinition> parameters = documentContext
       .getSymbolTree()
       .getMethodSymbol(ctx.getParent())
       .stream()

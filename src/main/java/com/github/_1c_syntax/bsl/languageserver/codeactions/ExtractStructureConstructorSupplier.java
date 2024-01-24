@@ -121,14 +121,14 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     var constructorEdit = new TextEdit(Ranges.create(doCall), "()");
     changes.add(constructorEdit);
 
-    var intendSize = Ranges.create(lValue).getStart().getCharacter();
+    var indentSize = Ranges.create(lValue).getStart().getCharacter();
 
     var rparenRange = Ranges.create(doCall.RPAREN());
     var constructorLine = rparenRange.getEnd().getLine();
     var position = new Position(constructorLine + 1, 0);
     var range = new Range(position, position);
 
-    var indent = documentContext.getContentList()[constructorLine].substring(0, intendSize);
+    var indent = documentContext.getContentList()[constructorLine].substring(0, indentSize);
 
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i].trim();
