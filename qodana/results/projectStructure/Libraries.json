@@ -8,9 +8,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot-starter:7.2.0",
+      "name": "Gradle: io.sentry:sentry-spring-boot-starter:7.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/7.2.0/e664e947709f62a6ccdf1917f7c4b779ca5436b7/sentry-spring-boot-starter-7.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter/7.3.0/ad424d8ded2e8de352c0aff46a782dc620a5608a/sentry-spring-boot-starter-7.3.0.jar!/"
       ],
       "properties": {}
     },
@@ -190,9 +190,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-logback:7.2.0",
+      "name": "Gradle: io.sentry:sentry-logback:7.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/7.2.0/160d114a9efa373ff2d3e0b2bbab2950395b8466/sentry-logback-7.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/7.3.0/dac52f109aa7ddc4a7a17d0b471e579867cca971/sentry-logback-7.3.0.jar!/"
       ],
       "properties": {}
     },
@@ -218,9 +218,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot:7.2.0",
+      "name": "Gradle: io.sentry:sentry-spring-boot:7.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot/7.2.0/1ad268dcf872e49375cfbab7a945231220336f1c/sentry-spring-boot-7.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot/7.3.0/4b6477a138f3c6f8f6e57a648d1dbdb80c9a9b76/sentry-spring-boot-7.3.0.jar!/"
       ],
       "properties": {}
     },
@@ -652,9 +652,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry:7.2.0",
+      "name": "Gradle: io.sentry:sentry:7.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/7.2.0/c95209f89665f6083780856507b504a0e4a7740/sentry-7.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/7.3.0/3c90387bee6649cfc39c1cb1a9cd9d8c2dbbe2f7/sentry-7.3.0.jar!/"
       ],
       "properties": {}
     },
@@ -694,9 +694,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring:7.2.0",
+      "name": "Gradle: io.sentry:sentry-spring:7.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/7.2.0/6073205c51c5c4a90c0f6c4e937ba1963e90a9dd/sentry-spring-7.2.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring/7.3.0/329a1b882b9087dc0e044ae8a9ead1b398c75151/sentry-spring-7.3.0.jar!/"
       ],
       "properties": {}
     },
