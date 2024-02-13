@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,7 +46,7 @@ import java.util.Optional;
 @NonFinal
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
+@ToString(exclude = {"parent"})
 public abstract class AbstractVariableSymbol implements VariableSymbol {
 
   /**
@@ -75,12 +75,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   Optional<SourceDefinedSymbol> parent;
 
   /**
-   * Список "детей" символа - символов, которые располагаются внутри данного символа.
-   */
-  @Getter
-  List<SourceDefinedSymbol> children;
-
-  /**
    * Тип переменной.
    */
   byte kind;
@@ -94,6 +88,11 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    * Описание переменной.
    */
   Optional<VariableDescription> description;
+
+  @Override
+  public List<SourceDefinedSymbol> getChildren() {
+    return Collections.emptyList();
+  }
 
   @Override
   public SymbolKind getSymbolKind() {
@@ -128,10 +127,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
     @Setter
     @Accessors(fluent = true, chain = true)
     Optional<SourceDefinedSymbol> parent = Optional.empty();
-
-    @Setter
-    @Accessors(fluent = true, chain = true)
-    List<SourceDefinedSymbol> children = Collections.emptyList();
 
     private int startLine;
     private int startCharacter;
@@ -179,7 +174,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           scope,
           owner,
           parent,
-          children,
           (byte) kind.ordinal(),
           export,
           description,
@@ -197,7 +191,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           scope,
           owner,
           parent,
-          children,
           (byte) kind.ordinal(),
           export,
           description,

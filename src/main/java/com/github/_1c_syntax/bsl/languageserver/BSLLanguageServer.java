@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -72,6 +73,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 @Slf4j
 @Component
@@ -85,6 +87,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+
   private boolean shutdownWasCalled;
 
   @Override
@@ -93,7 +96,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
     setConfigurationRoot(params);
-    CompletableFuture.runAsync(context::populateContext);
+
+    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+    CompletableFuture
+      .runAsync(context::populateContext, executorService)
+      .thenAccept(unused -> executorService.shutdown())
+    ;
 
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());

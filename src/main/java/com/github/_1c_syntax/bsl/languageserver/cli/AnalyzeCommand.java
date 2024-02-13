@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -37,7 +36,6 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -205,10 +203,10 @@ public class AnalyzeCommand implements Callable<Integer> {
     context.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));
-    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
-    MetricStorage metrics = documentContext.getMetrics();
+    var diagnostics = documentContext.getDiagnostics();
+    var metrics = documentContext.getMetrics();
     var mdoRef = documentContext.getMdObject()
-      .map(AbstractMDObjectBase::getMdoReference)
+      .map(MD::getMdoReference)
       .map(MdoReference::getMdoRef)
       .orElse("");
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,18 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.mdo.InformationRegister;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDInformationRegister;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -86,17 +86,16 @@ class DenyIncompleteValuesDiagnosticTest extends AbstractDiagnosticTest<DenyInco
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(type);
 
-    final var mdObjectBase = context.getConfiguration().getChildrenByMdoRef().get(
-      MdoReference.create(MDOType.INFORMATION_REGISTER,
-      "РегистрСведений1"));
-    var spyMdo = spy((MDInformationRegister) mdObjectBase);
+    final var infoReg = spy((InformationRegister) context.getConfiguration().findChild(MdoReference.create(MDOType.INFORMATION_REGISTER,
+      "РегистрСведений1")).orElseThrow()
+    );
 
-    when(documentContext.getMdObject()).thenReturn(Optional.of(spyMdo));
+    when(documentContext.getMdObject()).thenReturn(Optional.of(infoReg));
 
-    if (noneModules){
-      when(spyMdo.getModules()).thenReturn(Collections.emptyList());
+    if (noneModules) {
+      when(infoReg.getModules()).thenReturn(Collections.emptyList());
 
-      Set<AbstractMDObjectBase> children = Set.of(spyMdo);
+      List<MD> children = List.of(infoReg);
 
       var configuration = spy(context.getConfiguration());
       when(configuration.getChildren()).thenReturn(children);

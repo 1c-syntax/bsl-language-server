@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -43,7 +43,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    CodeBlockVisitor codeBlockVisitor = new CodeBlockVisitor();
+    var codeBlockVisitor = new CodeBlockVisitor();
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
@@ -104,7 +104,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       int stopLine = stop.getSymbol().getLine();
 
       if (stopLine > startLine) {
-        FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
 
         regionRanges.add(foldingRange);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,19 +39,53 @@ import java.lang.annotation.Target;
 @Primary
 @Scope("prototype")
 public @interface DiagnosticMetadata {
+  /**
+   * Тип диагностики
+   */
   DiagnosticType type() default DiagnosticType.ERROR;
 
+  /**
+   * Серьезность замечания
+   */
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
 
+  /**
+   * Область применения диагностики по диалекту языка (bsl или oscript)
+   */
   DiagnosticScope scope() default DiagnosticScope.ALL;
 
+  /**
+   * Типы модулей, анализируемых диагностикой
+   */
   ModuleType[] modules() default {};
 
+  /**
+   * Время, необходимое для исправления замечания
+   */
   int minutesToFix() default 0;
 
+  /**
+   * Признак включения диагностики в профиле по умолчанию
+   */
   boolean activatedByDefault() default true;
 
+  /**
+   * Версия платформы 1С:Предприятие, с которой диагностика применяется
+   */
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
 
+  /**
+   * Перечень меток (тегов) диагностики
+   */
   DiagnosticTag[] tags() default {};
+
+  /**
+   * Замечания диагностики могут быть прикреплены на уровень анализируемого проекта (в частности в SonarQube)
+   */
+  boolean canLocateOnProject() default false;
+
+  /**
+   * Надбавка ко времени исправления замечания за повышенную сложность
+   */
+  double extraMinForComplexity() default 0;
 }

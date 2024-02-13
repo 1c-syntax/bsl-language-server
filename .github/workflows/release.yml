@@ -28,10 +28,10 @@ jobs:
 
         steps:
             - name: Checkout source
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Set up JDK
-              uses: actions/setup-java@v3
+              uses: actions/setup-java@v4
               with:
                 java-version: 20
                 distribution: 'temurin'
@@ -43,13 +43,13 @@ jobs:
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
 
             - name: Upload assets to release
-              uses: AButler/upload-release-assets@v2.0
+              uses: AButler/upload-release-assets@v3.0
               with:
                   files: './bsl-language-server_${{ matrix.prefix }}.zip'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
 
             - name: Upload jar to release
               if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v2.0
+              uses: AButler/upload-release-assets@v3.0
               with:
                   files: './build/libs/*.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}

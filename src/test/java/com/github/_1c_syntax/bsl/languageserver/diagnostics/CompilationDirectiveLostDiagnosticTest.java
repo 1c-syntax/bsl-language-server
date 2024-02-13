@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -56,11 +56,10 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   void testOriginalFormModule() {
     final var PATH_TO_METADATA = "src/test/resources/metadata/designer";
     initServerContext(Absolute.path(PATH_TO_METADATA));
-    var form = spy((AbstractMDOForm) context.getConfiguration().getChildren().stream()
+    var form = spy((Form) context.getConfiguration().getPlainChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
       .findFirst()
       .get());
-
 
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
@@ -71,5 +70,4 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
 
     assertThat(diagnostics).isEmpty();
   }
-
 }

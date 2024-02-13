@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,9 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.Configuration;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -43,15 +41,14 @@ public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
 
-    TerminalNode identifier = ctx.IDENTIFIER();
+    var identifier = ctx.IDENTIFIER();
 
-    if (identifier == null
-      || ctx.acceptor() != null) {
+    if (identifier == null || ctx.acceptor() != null) {
       return ctx;
     }
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getCommonModule(identifier.getText()).isPresent()) {
+    var configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration.findCommonModule(identifier.getText()).isPresent()) {
       diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
     }
 

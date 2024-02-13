@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,7 +32,6 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -65,7 +64,6 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     SourceDefinedSymbol scope,
     DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
-    List<SourceDefinedSymbol> children,
     byte kind,
     boolean export,
     Optional<VariableDescription> description,
@@ -77,7 +75,7 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     short variableNameStartCharacter,
     short variableNameEndCharacter
   ) {
-    super(name, scope, owner, parent, children, kind, export, description);
+    super(name, scope, owner, parent, kind, export, description);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -81,9 +81,9 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
 
     List<Object> thresholdVariants = new ArrayList<>();
-    thresholdVariants.add(Float.valueOf(1f));
-    thresholdVariants.add(Double.valueOf(1));
-    thresholdVariants.add(Integer.valueOf(1));
+    thresholdVariants.add(1f);
+    thresholdVariants.add(1.0);
+    thresholdVariants.add(1);
 
     for (Object threshold : thresholdVariants){
       configuration.put("threshold", threshold);

@@ -2,14 +2,15 @@ name: Sentry
 on:
   push:
     branches-ignore:
-      - "translations_*"
+      - "translations_**"
+      - "dependabot/**"
 jobs:
 
   sentry:
     name: Sentry
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Create Sentry release
         uses: getsentry/action-release@v1
         env:

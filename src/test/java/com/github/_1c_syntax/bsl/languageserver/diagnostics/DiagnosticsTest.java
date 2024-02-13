@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.supconf.SupportConfiguration;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +47,6 @@ import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 @SpringBootTest
@@ -146,78 +143,77 @@ class DiagnosticsTest {
 
     // given
     documentContext = spy(TestUtils.getDocumentContext("А = 0"));
-    var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
-    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext)
+      .getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
+    doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
   }
 
   @Test
   void testDiagnosticModeOff() {
-
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.OFF);
 
@@ -226,7 +222,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticModeOn() {
-
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.ON);
 
@@ -238,7 +233,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticModeAll() {
-
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.ALL);
 
@@ -250,7 +244,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticModeOnly() {
-
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
     Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
@@ -269,7 +262,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticModeExcept() {
-
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
     Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
@@ -289,7 +281,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticSubsystemsIncludeCheck() {
-
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
     context.clear();
     context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
@@ -297,7 +288,7 @@ class DiagnosticsTest {
 
     documentContext = spy(TestUtils.getDocumentContext("А = 0"));
 
-    var form = context.getConfiguration().getChildren().stream()
+    var form = context.getConfiguration().getPlainChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
       .findFirst();
 
@@ -340,13 +331,11 @@ class DiagnosticsTest {
       .setInclude(new TreeSet<>(List.of("Подсистема3")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
-
   }
 
   //
   @Test
   void testDiagnosticSubsystemsExcludeCheck() {
-
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
     context.clear();
     context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
@@ -375,7 +364,6 @@ class DiagnosticsTest {
 
   @Test
   void testDiagnosticSubsystemsIncludeExcludeCheck() {
-
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
     context.clear();
     context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
@@ -404,5 +392,4 @@ class DiagnosticsTest {
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
   }
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -197,11 +197,9 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
     var selectionRange = reference.getSelectionRange();
 
-    if (doCallParent instanceof BSLParser.MethodCallContext) {
-      var methodCallContext = (BSLParser.MethodCallContext) doCallParent;
+    if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
       return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
-    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext) {
-      var globalMethodCallContext = (BSLParser.GlobalMethodCallContext) doCallParent;
+    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
       return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
     } else {
       return false;
