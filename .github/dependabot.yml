@@ -9,6 +9,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    groups:
+      freefair:
+        patterns:
+          - "io.freefair.*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

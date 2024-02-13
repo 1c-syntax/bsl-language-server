@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.AbstractMDOAttribute;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,10 +31,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -58,33 +54,32 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
   void testCatalog() {
     var documentContext = spy(getDocumentContext());
 
-    var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
-      .filter(mdo -> mdo.getMdoReference().getMdoRefRu().equalsIgnoreCase("Справочник.Справочник1"))
-      .findFirst()
+    var spyCatalog = spy(context.getConfiguration()
+      .findCatalog(catalog -> catalog.getName().equalsIgnoreCase("Справочник1"))
       .get());
 
     when(documentContext.getModuleType()).thenReturn(ModuleType.ManagerModule);
-    when(mdObjectBase.getName()).thenReturn("Справочник");
+    when(spyCatalog.getName()).thenReturn("Справочник");
 
-    List<AbstractMDOAttribute> attributes = new ArrayList<>();
+    List<MD> children = new ArrayList<>();
+    spyCatalog.getMDOPlainChildren()
+      .forEach(mdo -> {
+        var spyMDO = spy(mdo);
+        when(spyMDO.getName()).thenReturn("РегистрСведений");
+        var mdoRef = spy(mdo.getMdoReference());
+        when(mdoRef.getMdoRefRu())
+          .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
+        when(spyMDO.getMdoReference()).thenReturn(mdoRef);
+        when(spyMDO.getName()).thenReturn("РегистрСведений");
+        children.add(spyMDO);
+      });
 
-    ((AbstractMDObjectComplex) mdObjectBase).getAttributes().forEach(mdo -> {
-      var spyMDO = spy(mdo);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      var mdoRef = spy(mdo.getMdoReference());
-      when(mdoRef.getMdoRefRu())
-        .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
-      when(spyMDO.getMdoReference()).thenReturn(mdoRef);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      attributes.add(spyMDO);
-    });
-
-    when(((AbstractMDObjectComplex) mdObjectBase).getAttributes()).thenReturn(attributes);
-    when(documentContext.getMdObject()).thenReturn(Optional.of(mdObjectBase));
+    when(spyCatalog.getMDOPlainChildren()).thenReturn(children);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(spyCatalog));
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasMessageOnRange("Запрещено использовать имя `Справочник` для `Справочник.Справочник1`", 0, 0, 9)
       .hasMessageOnRange(
@@ -100,7 +95,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
   void testOtherMDO() {
     var documentContext = spy(getDocumentContext());
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
       var spyMDO = spy(mdo);
@@ -132,7 +127,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
   void testAllMDO() {
     var documentContext = spy(getDocumentContext());
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
       var spyMDO = spy(mdo);
@@ -142,8 +137,8 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
         .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
       when(spyMDO.getMdoReference()).thenReturn(mdoRef);
       when(spyMDO.getName()).thenReturn("РегистрСведений");
-      if (mdo instanceof AbstractMDObjectBSL) {
-        when(((AbstractMDObjectBSL) spyMDO).getModules()).thenReturn(Collections.emptyList());
+      if (mdo instanceof ModuleOwner) {
+        when(((ModuleOwner) spyMDO).getModules()).thenReturn(Collections.emptyList());
       }
       children.add(spyMDO);
     });

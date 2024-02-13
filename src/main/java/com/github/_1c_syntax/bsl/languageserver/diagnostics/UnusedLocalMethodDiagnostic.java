@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,18 +37,17 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   modules = {
-    ModuleType.CommonModule
+    ModuleType.CommonModule,
+    ModuleType.ObjectModule
   },
   minutesToFix = 1,
   tags = {
@@ -74,6 +73,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     AnnotationKind.BEFORE,
     AnnotationKind.CHANGEANDVALIDATE
   );
+  private static final boolean CHECK_OBJECT_MODULE = false;
 
   @DiagnosticParameter(
     type = String.class,
@@ -81,10 +81,18 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Pattern attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(ATTACHABLE_METHOD_PREFIXES);
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_OBJECT_MODULE
+  )
+  private boolean checkObjectModule = CHECK_OBJECT_MODULE;
+
   @Override
   public void configure(Map<String, Object> configuration) {
     this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
       (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
+
+    this.checkObjectModule = (boolean) configuration.getOrDefault("checkObjectModule", CHECK_OBJECT_MODULE);
   }
 
   private boolean isAttachable(MethodSymbol methodSymbol) {
@@ -104,12 +112,16 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+    var moduleType = documentContext.getModuleType();
+    if (!checkObjectModule && moduleType == ModuleType.ObjectModule) {
+      return ctx;
+    }
 
-    List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+    var collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
       .map(parseTree ->
         ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
-      .collect(Collectors.toList());
+      .toList();
 
     documentContext.getSymbolTree().getMethods()
       .stream()

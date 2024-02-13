@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import io.sentry.Scope;
+import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 import jakarta.annotation.PostConstruct;
@@ -48,7 +48,7 @@ public class SentryScopeConfigurer {
 
   @PostConstruct
   public void init() {
-    Sentry.configureScope((Scope scope) -> {
+    Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
       scope.setUser(user);

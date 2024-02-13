@@ -47,6 +47,12 @@
             ],
             "title": "Prohibited words",
             "properties": {
+                "findInComments": {
+                    "description": "Find in comments",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Find in comments"
+                },
                 "badWords": {
                     "description": "Regular expression for prohibited words.",
                     "default": "",
@@ -652,6 +658,30 @@
             "title": "Ban export global module variables",
             "$id": "#/definitions/ExportVariables"
         },
+        "ExternalAppStarting": {
+            "description": "External applications starting",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "External applications starting",
+            "properties": {
+                "checkGotoUrl": {
+                    "description": "Check navigation links",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check navigation links"
+                },
+                "userPatternString": {
+                    "description": "User regex pattern",
+                    "default": "\u041a\u043e\u043c\u0430\u043d\u0434\u0430\u0421\u0438\u0441\u0442\u0435\u043c\u044b|System|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u0421\u0438\u0441\u0442\u0435\u043c\u0443|RunSystem|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041d\u0430\u0447\u0430\u0442\u044c\u0417\u0430\u043f\u0443\u0441\u043a\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f|BeginRunningApplication|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0410\u0441\u0438\u043d\u0445|RunAppAsync|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0443|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u041f\u0440\u043e\u0432\u043e\u0434\u043d\u0438\u043a|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u0424\u0430\u0439\u043b",
+                    "type": "string",
+                    "title": "User regex pattern"
+                }
+            },
+            "$id": "#/definitions/ExternalAppStarting"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
@@ -671,6 +701,30 @@
             ],
             "title": "No NULL checks for fields from joined tables",
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
+        },
+        "FileSystemAccess": {
+            "description": "FileSystemAccess",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "FileSystemAccess",
+            "properties": {
+                "globalMethods": {
+                    "description": "Global methods pattern (regex)",
+                    "default": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435\u0412\u0424\u0430\u0439\u043b|ValueToFile|\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0424\u0430\u0439\u043b|FileCopy|\u041e\u0431\u044a\u0435\u0434\u0438\u043d\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|MergeFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile|\u0420\u0430\u0437\u0434\u0435\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b|SplitFile|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u041a\u0430\u0442\u0430\u043b\u043e\u0433|CreateDirectory|\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u044b|BinDir|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432|TempFilesDir|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432|DocumentsDir|\u0420\u0430\u0431\u043e\u0447\u0438\u0439\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f|UserDataWorkDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|BeginAttachingFileSystemExtension|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0443\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|BeginInstallFileSystemExtension|\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|InstallFileSystemExtension|\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438\u0410\u0441\u0438\u043d\u0445|InstallFileSystemExtensionAsync|\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438\u0410\u0441\u0438\u043d\u0445|AttachFileSystemExtensionAsync|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432\u0410\u0441\u0438\u043d\u0445|TempFilesDirAsync|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432\u0410\u0441\u0438\u043d\u0445|DocumentsDirAsync|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432|BeginGettingTempFilesDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432|BeginGettingDocumentsDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0447\u0435\u0433\u043e\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f|BeginGettingUserDataWorkDir|\u0420\u0430\u0431\u043e\u0447\u0438\u0439\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u0410\u0441\u0438\u043d\u0445|UserDataWorkDirAsync|\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0424\u0430\u0439\u043b\u0410\u0441\u0438\u043d\u0445|CopyFileAsync|\u041d\u0430\u0439\u0442\u0438\u0424\u0430\u0439\u043b\u044b\u0410\u0441\u0438\u043d\u0445|FindFilesAsync|\u041d\u0430\u0447\u0430\u0442\u044c\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u0430|BeginCopyingFile|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u0430|BeginMovingFile|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u0438\u0441\u043a\u0424\u0430\u0439\u043b\u043e\u0432|BeginFindingFiles|\u041d\u0430\u0447\u0430\u0442\u044c\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0445\u0414\u0430\u043d\u043d\u044b\u0445\u0418\u0437\u0424\u0430\u0439\u043b\u0430|BeginCreateBinaryDataFromFile|\u041d\u0430\u0447\u0430\u0442\u044c\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430|BeginCreatingDirectory|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u043e\u0432|BeginDeletingFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u0410\u0441\u0438\u043d\u0445|MoveFileAsync|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0435\u0414\u0430\u043d\u043d\u044b\u0435\u0418\u0437\u0424\u0430\u0439\u043b\u0430\u0410\u0441\u0438\u043d\u0445|CreateBinaryDataFromFileAsync|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0410\u0441\u0438\u043d\u0445|CreateDirectoryAsync|\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b\u0410\u0441\u0438\u043d\u0445|DeleteFilesAsync",
+                    "type": "string",
+                    "title": "Global methods pattern (regex)"
+                },
+                "newExpression": {
+                    "description": "Class names pattern (regex)",
+                    "default": "File|\u0424\u0430\u0439\u043b|xBase|HTMLWriter|\u0417\u0430\u043f\u0438\u0441\u044cHTML|HTMLReader|\u0427\u0442\u0435\u043d\u0438\u0435HTML|FastInfosetReader|\u0427\u0442\u0435\u043d\u0438\u0435FastInfoset|FastInfosetWriter|\u0417\u0430\u043f\u0438\u0441\u044cFastInfoset|XSLTransform|\u041f\u0440\u0435\u043e\u0431\u0440\u0430\u0437\u043e\u0432\u0430\u043d\u0438\u0435XSL|ZipFileWriter|\u0417\u0430\u043f\u0438\u0441\u044cZip\u0424\u0430\u0439\u043b\u0430|ZipFileReader|\u0427\u0442\u0435\u043d\u0438\u0435Zip\u0424\u0430\u0439\u043b\u0430|TextReader|\u0427\u0442\u0435\u043d\u0438\u0435\u0422\u0435\u043a\u0441\u0442\u0430|TextWriter|\u0417\u0430\u043f\u0438\u0441\u044c\u0422\u0435\u043a\u0441\u0442\u0430|TextExtraction|\u0418\u0437\u0432\u043b\u0435\u0447\u0435\u043d\u0438\u0435\u0422\u0435\u043a\u0441\u0442\u0430|BinaryData|\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0435\u0414\u0430\u043d\u043d\u044b\u0435|FileStream|\u0424\u0430\u0439\u043b\u043e\u0432\u044b\u0439\u041f\u043e\u0442\u043e\u043a|FileStreamsManager|\u041c\u0435\u043d\u0435\u0434\u0436\u0435\u0440\u0424\u0430\u0439\u043b\u043e\u0432\u044b\u0445\u041f\u043e\u0442\u043e\u043a\u043e\u0432|DataWriter|\u0417\u0430\u043f\u0438\u0441\u044c\u0414\u0430\u043d\u043d\u044b\u0445|DataReader|\u0427\u0442\u0435\u043d\u0438\u0435\u0414\u0430\u043d\u043d\u044b\u0445",
+                    "type": "string",
+                    "title": "Class names pattern (regex)"
+                }
+            },
+            "$id": "#/definitions/FileSystemAccess"
         },
         "ForbiddenMetadataName": {
             "description": "Metadata object has a forbidden name",
@@ -1480,6 +1534,24 @@
             "title": "Source code parse error",
             "$id": "#/definitions/ParseError"
         },
+        "PrivilegedModuleMethodCall": {
+            "description": "Accessing privileged module methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Accessing privileged module methods",
+            "properties": {
+                "validateNestedCalls": {
+                    "description": "Validate nested method calls from privileged modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Validate nested method calls from privileged modules"
+                }
+            },
+            "$id": "#/definitions/PrivilegedModuleMethodCall"
+        },
         "ProcedureReturnsValue": {
             "description": "Procedure should not return Value",
             "default": true,
@@ -1902,6 +1974,12 @@
                     "default": "\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0430\u0435\u043c\u044b\u0439_,attachable_",
                     "type": "string",
                     "title": "Method prefixes (comma separated)"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check object modules"
                 }
             },
             "$id": "#/definitions/UnusedLocalMethod"
@@ -1977,13 +2055,13 @@
             "$id": "#/definitions/UsingExternalCodeTools"
         },
         "UsingFindElementByString": {
-            "description": "Using FindByName and FindByCode",
+            "description": "Using FindByName, FindByCode and FindByNumber",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Using FindByName and FindByCode",
+            "title": "Using FindByName, FindByCode and FindByNumber",
             "$id": "#/definitions/UsingFindElementByString"
         },
         "UsingGoto": {

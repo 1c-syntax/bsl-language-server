@@ -8,28 +8,28 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "4.3.0.3225"
-    id("io.freefair.lombok") version "8.1.0"
-    id("io.freefair.javadoc-links") version "8.1.0"
-    id("io.freefair.javadoc-utf-8") version "8.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
-    id("io.freefair.maven-central.validate-poms") version "8.1.0"
-    id("me.qoomon.git-versioning") version "6.4.2"
-    id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "3.1.2"
-    id("io.spring.dependency-management") version "1.1.2"
+    id("org.sonarqube") version "4.4.1.3373"
+    id("io.freefair.lombok") version "8.4"
+    id("io.freefair.javadoc-links") version "8.4"
+    id("io.freefair.javadoc-utf-8") version "8.4"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.4"
+    id("io.freefair.maven-central.validate-poms") version "8.4"
+    id("me.qoomon.git-versioning") version "6.4.3"
+    id("com.github.ben-manes.versions") version "0.51.0"
+    id("org.springframework.boot") version "3.2.2"
+    id("io.spring.dependency-management") version "1.1.4"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
     id("ru.vyarus.pom") version "2.2.2"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
-    id("me.champeau.jmh") version "0.7.1"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
-    maven(url = "https://projectlombok.org/edge-releases") 
+    maven(url = "https://projectlombok.org/edge-releases")
 }
 
 group = "io.github.1c-syntax"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.27.0")
+        mavenBom("io.sentry:sentry-bom:7.3.0")
     }
 }
 
@@ -67,25 +67,25 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.4")
+    api("info.picocli:picocli-spring-boot-starter:4.7.5")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.21.0")
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.22.1") {
+    api("io.github.1c-syntax", "bsl-parser", "0.24.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
-        exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.5.1")
-    api("com.github.1c-syntax", "mdclasses", "0.10.3")
-    api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
-    api("io.github.1c-syntax", "supportconf", "0.1.1")
+    api("com.github.1c-syntax", "utils", "0.5.2")
+    api("io.github.1c-syntax", "mdclasses", "0.13.0-rc.1")
+    api("io.github.1c-syntax", "bsl-common-library", "0.5.1")
+    api("io.github.1c-syntax", "supportconf", "0.13.1")
+    api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
@@ -131,7 +131,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.8.3")
 
     // TEST
 

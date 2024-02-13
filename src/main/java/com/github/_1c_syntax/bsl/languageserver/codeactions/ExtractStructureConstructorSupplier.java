@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -44,12 +43,10 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -80,16 +77,14 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    var doCall = maybeDoCall.get();
-
-    List<BSLParser.CallParamContext> parameters = maybeDoCall
+    var parameters = maybeDoCall
       .map(BSLParser.DoCallContext::callParamList)
       .map(callParamListContext -> callParamListContext.children)
+      .orElse(Collections.emptyList())
       .stream()
-      .flatMap(Collection::stream)
       .filter(Predicate.not(TerminalNode.class::isInstance))
       .map(BSLParser.CallParamContext.class::cast)
-      .collect(Collectors.toList());
+      .toList();
 
     if (parameters.isEmpty()) {
       return Collections.emptyList();
@@ -105,6 +100,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
+    var doCall = maybeDoCall.get();
     var assignment = (BSLParser.AssignmentContext) Trees.getAncestorByRuleIndex(doCall, BSLParser.RULE_assignment);
     if (assignment == null || isParentAssignment(doCall, assignment)) {
       return Collections.emptyList();
@@ -118,24 +114,24 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     var lValueName = lValue.getText();
     var insert = Resources.getResourceString(configuration.getLanguage(), getClass(), "insert");
 
-    String[] keys = Strings.trimQuotes(firstToken.getText()).split(",");
+    var keys = Strings.trimQuotes(firstToken.getText()).split(",");
     var workspaceEdit = new WorkspaceEdit();
     var changes = new ArrayList<TextEdit>();
 
     var constructorEdit = new TextEdit(Ranges.create(doCall), "()");
     changes.add(constructorEdit);
 
-    int intendSize = Ranges.create(lValue).getStart().getCharacter();
+    var indentSize = Ranges.create(lValue).getStart().getCharacter();
 
     var rparenRange = Ranges.create(doCall.RPAREN());
     var constructorLine = rparenRange.getEnd().getLine();
     var position = new Position(constructorLine + 1, 0);
     var range = new Range(position, position);
 
-    var indent = documentContext.getContentList()[constructorLine].substring(0, intendSize);
+    var indent = documentContext.getContentList()[constructorLine].substring(0, indentSize);
 
     for (var i = 0; i < keys.length; i++) {
-      String key = keys[i].trim();
+      var key = keys[i].trim();
       var value = "";
       var separator = "";
       if (parameters.size() > i + 1) {

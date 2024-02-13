@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -69,7 +69,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_DATES
+    defaultValue = DEFAULT_AUTHORIZED_DATES
   )
   private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
@@ -105,17 +105,17 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private void checkExclAddDiagnostic(BSLParserRuleContext ctx){
+  private void checkExclAddDiagnostic(BSLParserRuleContext ctx) {
     String checked = ctx.getText();
     if (checked != null && !isExcluded(checked)) {
       ParserRuleContext expression;
-      if (ctx instanceof BSLParser.CallParamListContext){
+      if (ctx instanceof BSLParser.CallParamListContext) {
         expression = ctx.getParent().getParent().getParent().getParent().getParent();
       } else {
         expression = ctx.getParent().getParent();
       }
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isAssignExpression((BSLParser.ExpressionContext) expression))) {
+      if (expression instanceof BSLParser.ExpressionContext expressionContext
+        && (!isAssignExpression(expressionContext))) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
@@ -129,5 +129,4 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
     return (expression.getChildCount() <= 1);
   }
-
 }

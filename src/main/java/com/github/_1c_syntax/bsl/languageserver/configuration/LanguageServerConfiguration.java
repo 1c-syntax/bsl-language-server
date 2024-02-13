@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -56,7 +56,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
@@ -147,7 +146,7 @@ public class LanguageServerConfiguration {
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    var pathFromConfiguration = configuration.getConfigurationRoot();
 
     if (pathFromConfiguration == null) {
       rootPath = Absolute.path(srcDir);
@@ -161,7 +160,7 @@ public class LanguageServerConfiguration {
     }
 
     if (rootPath != null) {
-      File fileConfiguration = getConfigurationFile(rootPath);
+      var fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
         if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
           rootPath = Optional.of(fileConfiguration.toPath())
@@ -178,7 +177,6 @@ public class LanguageServerConfiguration {
     }
 
     return rootPath;
-
   }
 
   @SuppressFBWarnings(
@@ -190,7 +188,7 @@ public class LanguageServerConfiguration {
     List<Path> listPath = new ArrayList<>();
     try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
       basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
+      listPath = stream.toList();
     } catch (IOException e) {
       LOGGER.error("Error on read configuration file", e);
     }
@@ -219,7 +217,6 @@ public class LanguageServerConfiguration {
     }
 
     this.configurationFile = configurationFile;
-
     copyPropertiesFrom(configuration);
   }
 
@@ -233,5 +230,4 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
   }
-
 }

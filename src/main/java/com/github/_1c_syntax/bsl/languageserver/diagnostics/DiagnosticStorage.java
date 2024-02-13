@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -209,10 +209,10 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext) {
-      addDiagnostic((BSLParserRuleContext) tree);
-    } else if (tree instanceof TerminalNode) {
-      addDiagnostic((TerminalNode) tree);
+    if (tree instanceof BSLParserRuleContext parserRuleContext) {
+      addDiagnostic(parserRuleContext);
+    } else if (tree instanceof TerminalNode terminalNode) {
+      addDiagnostic(terminalNode);
     } else {
       throw new IllegalArgumentException("Unsupported parameter type " + tree);
     }
@@ -253,5 +253,4 @@ public class DiagnosticStorage {
     }
     return diagnostic;
   }
-
 }
