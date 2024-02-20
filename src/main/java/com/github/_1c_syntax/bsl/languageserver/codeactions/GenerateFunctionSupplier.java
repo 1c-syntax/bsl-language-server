@@ -121,7 +121,7 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     if (!methods.isEmpty()){
       var lastMethod = methods.get(methods.size() - 1);
       var line = lastMethod.getRange().getEnd().getLine() + 1;
-      return Ranges.create(line, 1, line, 1);
+      return Ranges.create(line, 0, line, 0);
     }
 
     var variables = documentContext.getSymbolTree().getVariables()
@@ -130,7 +130,7 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     if (!variables.isEmpty()){
       var lastVariable = variables.get(variables.size() - 1);
       var line = lastVariable.getRange().getEnd().getLine() + 1;
-      return Ranges.create(line, 1, line, 1);
+      return Ranges.create(line, 0, line, 0);
     }
 
     var annotations = documentContext.getAst().moduleAnnotations();
@@ -140,11 +140,11 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
       if (!uses.isEmpty()) {
         var lastUse = uses.get(uses.size() - 1);
         var line = lastUse.stop.getLine();
-        return Ranges.create(line, 1, line, 1);
+        return Ranges.create(line, 0, line, 0);
       }
     }
 
-    return Ranges.create(1, 1, 1, 1);
+    return Ranges.create(0, 0, 0, 0);
 
   }
 

@@ -82,7 +82,7 @@ public class GenerateFunctionSupplierTest {
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat((((List<?>) (codeActions.get(0).getEdit().getChanges().values()).toArray()[0])))
-      .allMatch(textedit -> ((TextEdit) textedit).getRange().getStart().getLine() == 1)
+      .allMatch(textedit -> ((TextEdit) textedit).getRange().getStart().getLine() == 0)
     ;
 
   }
