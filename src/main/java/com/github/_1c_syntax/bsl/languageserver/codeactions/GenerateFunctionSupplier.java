@@ -1,6 +1,8 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -19,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 @Component
 @RequiredArgsConstructor
@@ -46,16 +49,18 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
 
   private List<CodeAction> codeActions(DocumentContext documentContext, BSLParser.FileContext parseTree, Optional<TerminalNode> node){
 
-    var position = getNewMethodPosition(parseTree);
-    var methodName = node.get().getText();
+    var methodContext = ((BSLParser.GlobalMethodCallContext) node.get().getParent().getParent());
+    var methodName = methodContext.methodName().getText();
+    var methodParams = getMethodParams(methodContext);
 
-    var funcCodeAction = codeAction(documentContext, position, "Generate function", getMethodContent(methodName, true));
-    var procCodeAction = codeAction(documentContext, position, "Generate procedure", getMethodContent(methodName, false));
+    // TODO: Корректное позиционирование - после текущего метода, после переменных, после инклудов, в начале.
+    var position = getNewMethodPosition(documentContext, methodContext);
 
-    var codeActions = List.of(funcCodeAction);
-   // codeActions.add(procCodeAction);
+    // TODO: Двуязычность.
+    var funcCodeAction = codeAction(documentContext, position, "Generate function", getMethodContent(methodName, methodParams, true));
+    var procCodeAction = codeAction(documentContext, position, "Generate procedure", getMethodContent(methodName, methodParams, false));
 
-    return codeActions;
+    return List.of(funcCodeAction, procCodeAction);
   }
 
   private CodeAction codeAction(DocumentContext documentContext, Range position, String title ,String methodContent){
@@ -77,21 +82,70 @@ public class GenerateFunctionSupplier implements CodeActionSupplier {
     return codeAction;
   }
 
-  private String getMethodContent(String methodName, boolean isFunction){
+  private String getMethodParams(BSLParser.GlobalMethodCallContext methodContext){
 
-    return String.format(isFunction ? functionTemplate() : procedureTemplate(),methodName);
+    var callParams = methodContext.doCall().callParamList().callParam();
+    var joiner = new StringJoiner(", ");
+
+    for (BSLParser.CallParamContext callParam: callParams) {
+      joiner.add(callParam.getText());
+    }
+
+    return joiner.toString();
+  }
+
+  private String getMethodContent(String methodName, String methodParams, boolean isFunction){
+
+    return String.format(isFunction ? functionTemplate() : procedureTemplate(), methodName, methodParams);
 
   }
 
   private String functionTemplate(){
-    return "%n%nФункция %s()%n%n    //TODO: содержание метода%n%n    Возврат Неопределено;%n%nКонецФункции";
+    return "%nФункция %s(%s)%n%n    //TODO: содержание метода%n%n    Возврат Неопределено;%n%nКонецФункции%n";
   }
 
   private String procedureTemplate(){
-    return "%n%nПроцедура %s()%n%n    //TODO: содержание метода%n%nКонецПроцедуры";
+    return "%nПроцедура %s(%s)%n%n    //TODO: содержание метода%n%nКонецПроцедуры%n";
   }
-  private Range getNewMethodPosition(BSLParser.FileContext parseTree){
-    return Ranges.create(parseTree.getStop());
+  private Range getNewMethodPosition(DocumentContext documentContext, BSLParser.GlobalMethodCallContext methodContext){
+
+    var ancestorRuleSub = Trees.getAncestorByRuleIndex(methodContext, BSLParser.RULE_sub);
+
+    if (ancestorRuleSub != null){
+      var line = ancestorRuleSub.getStop().getLine();
+      return Ranges.create(line, 1, line, 1);
+    }
+
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    if (!methods.isEmpty()){
+      var lastMethod = methods.get(methods.size() - 1);
+      var line = lastMethod.getRange().getEnd().getLine() + 1;
+      return Ranges.create(line, 1, line, 1);
+    }
+
+    var variables = documentContext.getSymbolTree().getVariables()
+      .stream().filter(e -> e.getKind() == VariableKind.MODULE).toList();
+
+    if (!variables.isEmpty()){
+      var lastVariable = variables.get(variables.size() - 1);
+      var line = lastVariable.getRange().getEnd().getLine() + 1;
+      return Ranges.create(line, 1, line, 1);
+    }
+
+    var annotations = documentContext.getAst().moduleAnnotations();
+    if (annotations != null) {
+      var uses = annotations.use();
+
+      if (!uses.isEmpty()) {
+        var lastUse = uses.get(uses.size() - 1);
+        var line = lastUse.stop.getLine();
+        return Ranges.create(line, 1, line, 1);
+      }
+    }
+
+    return Ranges.create(1, 1, 1, 1);
+
   }
 
   private boolean nodeIsMethod(Optional<TerminalNode> node){
