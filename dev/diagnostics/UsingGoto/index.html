@@ -1164,7 +1164,7 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Плохо:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Сч</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
-<span class="nl">~Петля</span><span class="p">:</span> <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="s">&quot;Сч = %1&quot;</span><span class="p">,</span> <span class="nv">Сч</span><span class="p">));</span>
+<span class="nl">~Петля</span><span class="p">:</span> <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="s">&quot;Сч = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">Сч</span><span class="p">));</span>
 <span class="nv">Сч</span> <span class="o">=</span> <span class="nv">Сч</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span>
 
 <span class="k">Если</span> <span class="nv">Сч</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Тогда</span>
@@ -1176,7 +1176,7 @@
 <p>Хорошо:</p>
 <div class="highlight"><pre><span></span><code><span class="k">Для</span> <span class="nv">Сч</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="m">10</span> <span class="k">Цикл</span>
 
-   <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="s">&quot;Сч = %1&quot;</span><span class="p">,</span> <span class="nv">Сч</span><span class="p">))</span>
+   <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="s">&quot;Сч = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">Сч</span><span class="p">))</span>
 
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>

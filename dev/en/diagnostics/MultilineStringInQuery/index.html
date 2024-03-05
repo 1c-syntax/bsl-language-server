@@ -1168,8 +1168,8 @@
 <div class="highlight"><pre><span></span><code><span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
 <span class="s">|   OrderGoods.Cargo AS Cargo,</span>
-<span class="s">|   ISNULL(OrderGoods.Cargo.Code, &quot;&quot;) AS CargoCode, // quote error here, should be &quot;&quot;&quot;&quot;</span>
-<span class="s">|   ISNULL(OrderGoods.Cargo.Name, &quot;&quot;) AS CargoName</span>
+<span class="s">|   ISNULL(OrderGoods.Cargo.Code, </span><span class="se">&quot;&quot;</span><span class="s">) AS CargoCode, // quote error here, should be </span><span class="se">&quot;&quot;&quot;&quot;</span>
+<span class="s">|   ISNULL(OrderGoods.Cargo.Name, </span><span class="se">&quot;&quot;</span><span class="s">) AS CargoName</span>
 <span class="s">|FROM</span>
 <span class="s">|   Document.Order.Goods AS OrderGoods</span>
 <span class="s">|WHERE</span>

@@ -1213,7 +1213,7 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
 <span class="c1">// Тернарный оператор</span>
-<span class="nv">Значение</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="nv">ЗначениеИстина</span><span class="p">,</span> <span class="nv">ЗначениеЛожь</span><span class="p">);</span> <span class="c1">// +1</span>
+<span class="nv">Значение</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="nv">ЗначениеИстина</span><span class="p">,</span> <span class="nv">ЗначениеЛожь</span><span class="p">);</span> <span class="c1">// +1</span>
 
 <span class="k">Попытка</span>
 <span class="c1">// Обработка исключения</span>
@@ -1235,7 +1235,7 @@
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
-<span class="nv">Значение</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span> <span class="k">ИЛИ</span> <span class="nv">Условие2</span> <span class="k">ИЛИ</span> <span class="k">НЕ</span> <span class="nv">Условие3</span><span class="p">,</span>   <span class="c1">// +3</span>
+<span class="nv">Значение</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Условие</span> <span class="k">ИЛИ</span> <span class="nv">Условие2</span> <span class="k">ИЛИ</span> <span class="k">НЕ</span> <span class="nv">Условие3</span><span class="p">,</span>   <span class="c1">// +3</span>
                 <span class="nv">ЗначениеИстина</span><span class="p">,</span> <span class="nv">ЗначениеЛожь</span><span class="p">);</span> 
 
 <span class="nv">Значение</span> <span class="o">=</span> <span class="nv">Одно</span> <span class="k">ИЛИ</span> <span class="nv">Второе</span><span class="p">;</span>                          <span class="c1">// +1</span>
@@ -1261,7 +1261,7 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
 <span class="c1">// Тернарный оператор</span>
-<span class="nv">Значение</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="nv">ЗначениеИстина</span><span class="p">,</span> <span class="nv">ЗначениеЛожь</span><span class="p">);</span>
+<span class="nv">Значение</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="nv">ЗначениеИстина</span><span class="p">,</span> <span class="nv">ЗначениеЛожь</span><span class="p">);</span>
 
 <span class="k">Попытка</span>
 <span class="c1">// Обработка исключения</span>
@@ -1308,8 +1308,8 @@
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">Пример2</span><span class="p">(</span><span class="nv">Документ</span><span class="p">)</span>
     <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
-    <span class="nv">НадоПровести</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">Проведен</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span>                                                        <span class="c1">// +1, тернарный оператор</span>
-                                        <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">ПометкаУдаления</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">));</span>                  <span class="c1">// +2, вложенный тернарный оператор, вложенность 1</span>
+    <span class="nv">НадоПровести</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">Проведен</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span>                                                        <span class="c1">// +1, тернарный оператор</span>
+                                        <span class="err">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">ПометкаУдаления</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">));</span>                  <span class="c1">// +2, вложенный тернарный оператор, вложенность 1</span>
     <span class="k">Попытка</span>                                                                                          <span class="c1">// +0, попытка, повышает уровень вложенности</span>
         <span class="nv">ДокументОбъект</span> <span class="o">=</span> <span class="nv">Документ</span><span class="o">.</span><span class="nf">ПолучитьОбъект</span><span class="p">();</span>
         <span class="k">Если</span> <span class="nv">ДокументОбъект</span><span class="o">.</span><span class="nv">Проведен</span> <span class="k">Тогда</span>                                                           <span class="c1">// +2, вложенное условие, вложенность 1</span>

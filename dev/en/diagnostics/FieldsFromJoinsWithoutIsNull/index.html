@@ -1173,56 +1173,56 @@ It should be remembered that simple checks in a query are performed a little fas
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Example showing NULL comparison problems - joining 2 tables incorrectly and showing different comparison methods
-<div class="highlight"><pre><span></span><code>SELECT
-  CASE
-    WHEN LeftTable.Fld2 = 0 THEN &quot;Equals 0 - does not work&quot;
-    WHEN LeftTable.Fld2 &lt;&gt; 0 THEN &quot;NOT Equals 0 - does not work&quot;
-    WHEN LeftTable.Fld2 = NULL THEN &quot;Equals NULL - does not work&quot;
-    WHEN LeftTable.Fld2 IS NULL THEN &quot;IS NULL - it works&quot;
-    WHEN ISNULL(LeftTable.Fld2, 0) = 0  THEN &quot;ISNULL() - and this works too&quot;
-    ELSE &quot;else&quot;
-  END
-ИЗ
-  First AS First
-  LEFT JOIN LeftTable AS LeftTable
-  ON FALSE
+<div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
+  <span class="nv">CASE</span>
+    <span class="nv">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">=</span> <span class="nv">0</span> <span class="nv">THEN</span> <span class="err">&quot;</span><span class="nv">Equals</span> <span class="nv">0</span> <span class="err">-</span> <span class="nv">does</span> <span class="nv">not</span> <span class="nv">work</span><span class="err">&quot;</span>
+    <span class="nv">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">&lt;&gt;</span> <span class="nv">0</span> <span class="nv">THEN</span> <span class="err">&quot;</span><span class="nv">NOT</span> <span class="nv">Equals</span> <span class="nv">0</span> <span class="err">-</span> <span class="nv">does</span> <span class="nv">not</span> <span class="nv">work</span><span class="err">&quot;</span>
+    <span class="nv">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">=</span> <span class="kc">NULL</span> <span class="nv">THEN</span> <span class="err">&quot;</span><span class="nv">Equals</span> <span class="kc">NULL</span> <span class="err">-</span> <span class="nv">does</span> <span class="nv">not</span> <span class="nv">work</span><span class="err">&quot;</span>
+    <span class="nv">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="nv">IS</span> <span class="kc">NULL</span> <span class="nv">THEN</span> <span class="err">&quot;</span><span class="nv">IS</span> <span class="kc">NULL</span> <span class="err">-</span> <span class="nv">it</span> <span class="nv">works</span><span class="err">&quot;</span>
+    <span class="nv">WHEN</span> <span class="nv">ISNULL</span><span class="p">(</span><span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="err">=</span> <span class="nv">0</span>  <span class="nv">THEN</span> <span class="err">&quot;</span><span class="nv">ISNULL</span><span class="p">()</span> <span class="err">-</span> <span class="nv">and</span> <span class="nv">this</span> <span class="nv">works</span> <span class="nv">too</span><span class="err">&quot;</span>
+    <span class="nv">ELSE</span> <span class="err">&quot;</span><span class="nv">else</span><span class="err">&quot;</span>
+  <span class="nv">END</span>
+<span class="kd">ИЗ</span>
+  <span class="nv">First</span> <span class="kd">AS</span> <span class="nv">First</span>
+  <span class="nv">LEFT</span> <span class="nv">JOIN</span> <span class="nv">LeftTable</span> <span class="kd">AS</span> <span class="nv">LeftTable</span>
+  <span class="nv">ON</span> <span class="kc">FALSE</span>
 </code></pre></div></p>
 <p>Suspicious code for accessing an joined table attribute
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  РегистрПродажи.Сумма КАК Сумма // здесь ошибка
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span> <span class="c1">// здесь ошибка</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Correct
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  ЕстьNULL(РегистрПродажи.Сумма, 0) КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Also correct:
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  ВЫБОР КОГДА РегистрПродажи.Сумма Есть NULL ТОГДА 0
-  ИНАЧЕ  РегистрПродажи.Сумма 
-  КОНЕЦ КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">ВЫБОР</span> <span class="nv">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="nv">Есть</span> <span class="kc">NULL</span> <span class="nv">ТОГДА</span> <span class="nv">0</span>
+  <span class="nv">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> 
+  <span class="nv">КОНЕЦ</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Possible variant
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  РегистрПродажи.Сумма КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
-ГДЕ
-    РегистрПродажи.Документ ЕСТЬ НЕ NULL
-    //или НЕ РегистрПродажи.Документ ЕСТЬ NULL
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+<span class="nv">ГДЕ</span>
+    <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span> <span class="nv">ЕСТЬ</span> <span class="nv">НЕ</span> <span class="kc">NULL</span>
+    <span class="c1">//или НЕ РегистрПродажи.Документ ЕСТЬ NULL</span>
 </code></pre></div>
 The last one is not the best, because it actually emulates an inner join.
 It is more correct to explicitly specify <code>INNER JOIN</code> instead of using a left join with a <code>IS NOT NULL</code> or <code>NOT IS NULL</code> check</p>

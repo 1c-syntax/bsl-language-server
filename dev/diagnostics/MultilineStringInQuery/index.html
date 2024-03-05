@@ -1168,8 +1168,8 @@
 <div class="highlight"><pre><span></span><code><span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
 <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;ВЫБРАТЬ</span>
 <span class="s">|   ПриходныйОрдерНоменклатура.Номенклатура КАК Номенклатура,</span>
-<span class="s">|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Код, &quot;&quot;) КАК НоменклатураКод, // здесь ошибка с кавычками, должно быть &quot;&quot;&quot;&quot;</span>
-<span class="s">|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Наименование, &quot;&quot;) КАК НоменклатураНаименование</span>
+<span class="s">|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Код, </span><span class="se">&quot;&quot;</span><span class="s">) КАК НоменклатураКод, // здесь ошибка с кавычками, должно быть </span><span class="se">&quot;&quot;&quot;&quot;</span>
+<span class="s">|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Наименование, </span><span class="se">&quot;&quot;</span><span class="s">) КАК НоменклатураНаименование</span>
 <span class="s">|ИЗ</span>
 <span class="s">|   Документ.ПриходныйОрдер.Номенклатура КАК ПриходныйОрдерНоменклатура</span>
 <span class="s">|ГДЕ</span>

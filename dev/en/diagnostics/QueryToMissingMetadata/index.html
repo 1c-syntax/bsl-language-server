@@ -1163,18 +1163,18 @@ Also, errors can occur when you manually change queries, without checking with t
 <p>When accessing non-existent metadata in a query, a runtime error will occur.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Query for an already deleted register:
-<div class="highlight"><pre><span></span><code>SELECT
-    Table.Field1 AS Field1
-FROM
-    InformationRegister.InfoRegOld AS Table
+<div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
+    <span class="nv">Table</span><span class="err">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
+<span class="kd">FROM</span>
+    <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">Table</span>
 </code></pre></div>
 Query with a join to the renamed register:
-<div class="highlight"><pre><span></span><code>SELECT
-    Table.Field1 AS Field1
-FROM
-     InformationRegister.InfoReg AS Table 
-     INNER JOIN InformationRegister.InfoRegOld AS FilterTable
-     ON FilterTable.Field2 = Table.Field2
+<div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
+    <span class="nv">Table</span><span class="err">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
+<span class="kd">FROM</span>
+     <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoReg</span> <span class="kd">AS</span> <span class="nv">Table</span> 
+     <span class="nv">INNER</span> <span class="nv">JOIN</span> <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">FilterTable</span>
+     <span class="nv">ON</span> <span class="nv">FilterTable</span><span class="err">.</span><span class="nv">Field2</span> <span class="err">=</span> <span class="nv">Table</span><span class="err">.</span><span class="nv">Field2</span>
 </code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

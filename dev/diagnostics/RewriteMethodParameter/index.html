@@ -1166,20 +1166,20 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Подозрительный код
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Конфигуратор</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">СтрокаПодключения</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пользователь</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пароль</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Экспорт</span>
-  <span class="nv">СтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span> <span class="c1">// Здесь</span>
+  <span class="nv">СтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Здесь</span>
 <span class="o">...</span>
 <span class="k">КонецФункции</span>
 </code></pre></div></p>
 <p>Исправленный код
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Конфигуратор</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">КаталогБазы</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пользователь</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пароль</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Экспорт</span>
-  <span class="nv">СтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span> <span class="c1">// Здесь</span>
+  <span class="nv">СтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Здесь</span>
 <span class="o">...</span>
 <span class="k">КонецФункции</span>
 </code></pre></div>
 или
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Конфигуратор</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">КаталогБазы</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пользователь</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">Пароль</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">)</span> <span class="k">Экспорт</span>
   <span class="k">Если</span> <span class="k">Не</span> <span class="nb">ПустаяСтрока</span><span class="p">(</span><span class="nv">КаталогБазы</span><span class="p">)</span> <span class="k">Тогда</span>
-   <span class="nv">НоваяСтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F&quot;&quot;&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;&quot;&quot;&quot;</span><span class="p">;</span>
+   <span class="nv">НоваяСтрокаПодключения</span> <span class="o">=</span> <span class="s">&quot;/F</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nv">КаталогБазы</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">&quot;&quot;</span><span class="s">&quot;</span><span class="p">;</span>
   <span class="k">Иначе</span>
    <span class="nv">НоваяСтрокаПодключения</span> <span class="o">=</span> <span class="nv">СтрокаПодключения</span><span class="p">;</span>
   <span class="k">КонецЕсли</span><span class="p">;</span>

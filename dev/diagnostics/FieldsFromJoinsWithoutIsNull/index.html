@@ -1173,56 +1173,56 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Пример, показывающий проблемы сравнения с NULL - в примере 2 таблицы соединяются заведомо неверно и приведены разные способы сравнения
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ
-  ВЫБОР
-    КОГДА Левая.Поле2 = 0 ТОГДА &quot;Равно 0 - не работает&quot;
-    КОГДА Левая.Поле2 &lt;&gt; 0 ТОГДА &quot;НЕ Равно 0 - не работает&quot;
-    КОГДА Левая.Поле2 = NULL ТОГДА &quot;Равно NULL - не работает&quot;
-    КОГДА Левая.Поле2 ЕСТЬ NULL ТОГДА &quot;ЕСТЬ NULL - этот вариант работает&quot;
-    КОГДА ЕСТЬNULL(Левая.Поле2, 0) = 0  ТОГДА &quot;ЕСТЬNULL() - этот вариант также работает&quot;
-    ИНАЧЕ &quot;Иначе&quot;
-  КОНЕЦ
-ИЗ
-  Первая КАК Первая
-  ЛЕВОЕ СОЕДИНЕНИЕ Левая КАК Левая
-  ПО Ложь // чтобы не было соединения
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
+  <span class="nv">ВЫБОР</span>
+    <span class="nv">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">=</span> <span class="nv">0</span> <span class="nv">ТОГДА</span> <span class="err">&quot;</span><span class="nv">Равно</span> <span class="nv">0</span> <span class="err">-</span> <span class="nv">не</span> <span class="nv">работает</span><span class="err">&quot;</span>
+    <span class="nv">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">&lt;&gt;</span> <span class="nv">0</span> <span class="nv">ТОГДА</span> <span class="err">&quot;</span><span class="nv">НЕ</span> <span class="nv">Равно</span> <span class="nv">0</span> <span class="err">-</span> <span class="nv">не</span> <span class="nv">работает</span><span class="err">&quot;</span>
+    <span class="nv">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">=</span> <span class="kc">NULL</span> <span class="nv">ТОГДА</span> <span class="err">&quot;</span><span class="nv">Равно</span> <span class="kc">NULL</span> <span class="err">-</span> <span class="nv">не</span> <span class="nv">работает</span><span class="err">&quot;</span>
+    <span class="nv">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="nv">ЕСТЬ</span> <span class="kc">NULL</span> <span class="nv">ТОГДА</span> <span class="err">&quot;</span><span class="nv">ЕСТЬ</span> <span class="kc">NULL</span> <span class="err">-</span> <span class="nv">этот</span> <span class="nv">вариант</span> <span class="nv">работает</span><span class="err">&quot;</span>
+    <span class="nv">КОГДА</span> <span class="nv">ЕСТЬNULL</span><span class="p">(</span><span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="err">=</span> <span class="nv">0</span>  <span class="nv">ТОГДА</span> <span class="err">&quot;</span><span class="nv">ЕСТЬNULL</span><span class="p">()</span> <span class="err">-</span> <span class="nv">этот</span> <span class="nv">вариант</span> <span class="nv">также</span> <span class="nv">работает</span><span class="err">&quot;</span>
+    <span class="nv">ИНАЧЕ</span> <span class="err">&quot;</span><span class="nv">Иначе</span><span class="err">&quot;</span>
+  <span class="nv">КОНЕЦ</span>
+<span class="kd">ИЗ</span>
+  <span class="nv">Первая</span> <span class="kd">КАК</span> <span class="nv">Первая</span>
+  <span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">Левая</span> <span class="kd">КАК</span> <span class="nv">Левая</span>
+  <span class="nv">ПО</span> <span class="kc">Ложь</span> <span class="c1">// чтобы не было соединения</span>
 </code></pre></div></p>
 <p>Подозрительный код обращения к реквизиту присоединенной таблицы
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  РегистрПродажи.Сумма КАК Сумма // здесь ошибка
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span> <span class="c1">// здесь ошибка</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Правильно
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  ЕстьNULL(РегистрПродажи.Сумма, 0) КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Также правильно
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  ВЫБОР КОГДА РегистрПродажи.Сумма Есть NULL ТОГДА 0
-  ИНАЧЕ  РегистрПродажи.Сумма 
-  КОНЕЦ КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">ВЫБОР</span> <span class="nv">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="nv">Есть</span> <span class="kc">NULL</span> <span class="nv">ТОГДА</span> <span class="nv">0</span>
+  <span class="nv">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> 
+  <span class="nv">КОНЕЦ</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
 </code></pre></div>
 И еще возможный вариант
-<div class="highlight"><pre><span></span><code>ВЫБРАТЬ 
-  ДокументыПродажи.Ссылка КАК ДокПродажи,
-  РегистрПродажи.Сумма КАК Сумма
-ИЗ Документ.РеализацияТоваровУслуг КАК ДокументыПродажи
-ЛЕВОЕ СОЕДИНЕНИЕ  РегистрНакопления.Продажи КАК РегистрПродажи
-ПО ДокументыПродажи.Ссылка = РегистрПродажи.Документ
-ГДЕ
-    РегистрПродажи.Документ ЕСТЬ НЕ NULL
-    //или НЕ РегистрПродажи.Документ ЕСТЬ NULL
+<div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
+  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="nv">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+<span class="nv">ГДЕ</span>
+    <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span> <span class="nv">ЕСТЬ</span> <span class="nv">НЕ</span> <span class="kc">NULL</span>
+    <span class="c1">//или НЕ РегистрПродажи.Документ ЕСТЬ NULL</span>
 </code></pre></div>
 Последний вариант - не самый лучший, т.к. в нем фактически эмулируется внутреннее соединение. 
 И проще явно указать <code>ВНУТРЕННЕЕ СОЕДИНЕНИЕ</code> вместо использования левого соединения с проверкой <code>ЕСТЬ НЕ NULL</code> или <code>НЕ ЕСТЬ NULL</code></p>

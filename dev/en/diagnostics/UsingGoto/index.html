@@ -1163,7 +1163,7 @@ Structured control flow statements such as <code>if</code>, <code>for</code>, <c
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bad:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">I</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
- <span class="nl">~loop</span><span class="p">:</span> <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;i = %1&quot;</span><span class="p">,</span> <span class="nv">i</span><span class="p">));</span>
+ <span class="nl">~loop</span><span class="p">:</span> <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;i = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">i</span><span class="p">));</span>
  <span class="nv">i</span> <span class="o">=</span> <span class="nv">i</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span>
 
  <span class="k">If</span> <span class="nv">i</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Then</span>
@@ -1175,7 +1175,7 @@ Structured control flow statements such as <code>if</code>, <code>for</code>, <c
 <p>Good:</p>
 <div class="highlight"><pre><span></span><code><span class="k">For</span> <span class="nv">Counter</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="k">Do</span>
 
-   <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;Counter = %1&quot;</span><span class="p">,</span> <span class="nv">Counter</span><span class="p">))</span>
+   <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;Counter = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">Counter</span><span class="p">))</span>
 
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
