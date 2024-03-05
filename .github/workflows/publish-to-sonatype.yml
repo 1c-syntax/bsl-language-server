@@ -18,6 +18,7 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
+          cache: gradle
       - name: Publish to Sonatype
         run: ./gradlew publishMavenPublicationToSonatypeRepository -PsimplifyVersion
         env:
