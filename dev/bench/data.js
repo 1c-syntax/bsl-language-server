@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709607033565,
+  "lastUpdate": 1709665817670,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -25234,6 +25234,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.776412694986201",
             "extra": "mean: 74.56959660847981 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "756002388ccea27bfa3f39d0326ad9db66cacb4c",
+          "message": "Merge pull request #3245 from 1c-syntax/nixel2007-patch-1\n\nДобавлено кэширование градля",
+          "timestamp": "2024-03-05T20:02:20+01:00",
+          "tree_id": "1fc0c19836abe169e35de992db2c3b9cff803d06",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/756002388ccea27bfa3f39d0326ad9db66cacb4c"
+        },
+        "date": 1709665814826,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.10543203353882,
+            "unit": "sec",
+            "range": "stddev: 0.7843181143072878",
+            "extra": "mean: 69.10543203353882 sec\nrounds: 3"
           }
         ]
       }
