@@ -17,6 +17,7 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
+          cache: gradle
 
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v1
