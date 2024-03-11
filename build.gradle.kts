@@ -19,7 +19,7 @@ plugins {
     id("org.springframework.boot") version "3.2.3"
     id("io.spring.dependency-management") version "1.1.4"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
-    id("ru.vyarus.pom") version "2.2.2"
+    id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
     id("me.champeau.jmh") version "0.7.2"
