@@ -516,6 +516,16 @@
             "title": "Deprecated ManagedForm type",
             "$id": "#/definitions/DeprecatedTypeManagedForm"
         },
+        "DisableAllDiagnostics": {
+            "description": "Disable all diagnostics for module",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Disable all diagnostics for module",
+            "$id": "#/definitions/DisableAllDiagnostics"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": true,

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -37,6 +38,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -74,6 +76,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
+  private final List<org.eclipse.lsp4j.Range> ignoreOffList = new ArrayList<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -86,14 +89,12 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     ignoranceStack.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
-    if (codeTokens.isEmpty()) {
-      return new Data(diagnosticIgnorance);
+    if (!codeTokens.isEmpty()) {
+      computeCommentsIgnorance(codeTokens);
+      computeExtensionIgnorance();
     }
+    return new Data(diagnosticIgnorance, ignoreOffList);
 
-    computeCommentsIgnorance(codeTokens);
-    computeExtensionIgnorance();
-
-    return new Data(diagnosticIgnorance);
   }
 
   private void computeExtensionIgnorance() {
@@ -197,6 +198,10 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
     stack.push(comment.getLine());
 
+    if (ignoreOff.equals(IGNORE_ALL_OFF)){
+      ignoreOffList.add(Ranges.create(comment));
+    }
+
     return key;
   }
 
@@ -245,6 +250,11 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   @AllArgsConstructor
   public static class Data {
     private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
+    private final List<org.eclipse.lsp4j.Range> ignoreOffList;
+
+    public List<org.eclipse.lsp4j.Range> getIgnoreOffList() {
+      return Collections.unmodifiableList(ignoreOffList);
+    }
 
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
       if (diagnosticIgnorance.isEmpty()) {
