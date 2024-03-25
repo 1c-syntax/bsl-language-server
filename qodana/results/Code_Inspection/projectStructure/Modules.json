@@ -86,15 +86,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:utils:0.5.2",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.1",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.13.1",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
           "type": "Library"
         },
         {
@@ -794,6 +794,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.2",
           "type": "Library"
         },
@@ -910,15 +914,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:utils:0.5.2",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.1",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.13.1",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
           "type": "Library"
         },
         {
@@ -1482,6 +1486,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
           "type": "Library"
         },
@@ -1594,15 +1602,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.1c-syntax:utils:0.5.2",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.0",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.1",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.13.1",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
           "type": "Library"
         },
         {
@@ -2255,6 +2263,10 @@
         },
         {
           "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
           "type": "Library"
         },
         {

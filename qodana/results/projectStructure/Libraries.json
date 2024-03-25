@@ -50,23 +50,23 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:utils:0.5.2",
+      "name": "Gradle: io.github.1c-syntax:utils:0.6.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.5.2/15c65e6d3ed992a4f97b403ee1766c72502f9be1/utils-0.5.2.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/utils/0.6.0/44ab4359f7563d5c8362a2e9b2e604aa9eefd405/utils-0.6.0.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.1",
+      "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0-rc.2",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/mdclasses/0.13.0-rc.1/e1dc12f7304cb066f5dec197f31f5ea932566c79/mdclasses-0.13.0-rc.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/mdclasses/0.13.0-rc.2/3c51f824487783a7d8dc88c36b3c0c1182646cee/mdclasses-0.13.0-rc.2.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: io.github.1c-syntax:supportconf:0.13.1",
+      "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/supportconf/0.13.1/1d926383c42a282d12de21ae0f7c5fac00b0de39/supportconf-0.13.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/supportconf/0.14.0/76f8ed124ed03ddea085786b61f6a39daec0f80/supportconf-0.14.0.jar!/"
       ],
       "properties": {}
     },
@@ -1047,6 +1047,13 @@
       "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.classgraph/classgraph/4.8.147/c9cc4804e9a9bfa45e62e96d0bb5cff17882e320/classgraph-4.8.147.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.5.1/6a28103225784d2fbcca95cc2b16d38e807632bf/utils-0.5.1.jar!/"
       ],
       "properties": {}
     },
