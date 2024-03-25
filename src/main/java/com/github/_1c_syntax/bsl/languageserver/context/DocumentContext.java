@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -366,10 +365,7 @@ public class DocumentContext {
 
 
   private ModuleType computeModuleType() {
-    return context.getConfiguration()
-      .getModuleByUri(uri)
-      .map(Module::getModuleType)
-      .orElse(ModuleType.UNKNOWN);
+    return context.getConfiguration().getModuleTypeByURI(uri);
   }
 
   private ComplexityData computeCognitiveComplexity() {

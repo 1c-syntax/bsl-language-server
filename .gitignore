@@ -80,3 +80,5 @@ public/
 bsl-language-server/
 bsl-language-server_*.zip
 /.idea/misc.xml
+*.log
+*.hprof

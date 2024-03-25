@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.ChildrenOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
@@ -136,8 +137,8 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
     checkName(mdo.getName(), mdo.getMdoReference());
 
     // проверка имен реквизитов и табличных частей
-    if (mdo instanceof ChildrenOwner childrenOwner) {
-      childrenOwner.getMDOPlainChildren()
+    if (mdo instanceof AttributeOwner childrenOwner) {
+      childrenOwner.getPlainStorageFields()
         .forEach(child -> checkName(child.getName(), child.getMdoReference()));
     }
   }

@@ -62,7 +62,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     when(spyCatalog.getName()).thenReturn("Справочник");
 
     List<MD> children = new ArrayList<>();
-    spyCatalog.getMDOPlainChildren()
+    spyCatalog.getPlainStorageFields()
       .forEach(mdo -> {
         var spyMDO = spy(mdo);
         when(spyMDO.getName()).thenReturn("РегистрСведений");
@@ -74,7 +74,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
         children.add(spyMDO);
       });
 
-    when(spyCatalog.getMDOPlainChildren()).thenReturn(children);
+    when(spyCatalog.getPlainStorageFields()).thenReturn(children);
     when(documentContext.getMdObject()).thenReturn(Optional.of(spyCatalog));
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
