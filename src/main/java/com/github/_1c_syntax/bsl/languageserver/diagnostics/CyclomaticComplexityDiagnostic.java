@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
   minutesToFix = 25,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
-  }
+  },
+  extraMinForComplexity = 1
 )
 public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private static final int COMPLEXITY_THRESHOLD = 20;

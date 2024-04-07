@@ -43,7 +43,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    CodeBlockVisitor codeBlockVisitor = new CodeBlockVisitor();
+    var codeBlockVisitor = new CodeBlockVisitor();
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
@@ -104,7 +104,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       int stopLine = stop.getSymbol().getLine();
 
       if (stopLine > startLine) {
-        FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
 
         regionRanges.add(foldingRange);

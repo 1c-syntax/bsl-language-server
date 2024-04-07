@@ -129,8 +129,8 @@ public class SelectionRangeProvider {
   }
 
   private static BSLParserRuleContext getParentContext(ParseTree ctx) {
-    if (ctx instanceof BSLParser.StatementContext) {
-      return getStatementParent((BSLParser.StatementContext) ctx);
+    if (ctx instanceof BSLParser.StatementContext statementContext) {
+      return getStatementParent(statementContext);
     }
 
     return getDefaultParent(ctx);
@@ -201,13 +201,11 @@ public class SelectionRangeProvider {
   }
 
   private static boolean ifBranchMatchesIfStatement(BSLParserRuleContext ctx) {
-    if (!(ctx instanceof BSLParser.IfBranchContext)) {
+    if (!(ctx instanceof BSLParser.IfBranchContext ifBranch)) {
       return false;
     }
 
-    var ifBranch = (BSLParser.IfBranchContext) ctx;
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
-
 }

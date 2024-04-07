@@ -42,7 +42,8 @@ import java.util.List;
   scope = DiagnosticScope.BSL,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  canLocateOnProject = true
 )
 public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnostic {
 

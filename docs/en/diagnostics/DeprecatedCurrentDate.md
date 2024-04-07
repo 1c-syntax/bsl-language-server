@@ -1,7 +1,8 @@
 # Using of the deprecated method "CurrentDate" (DeprecatedCurrentDate)
 
-<!-- Blocks above are filled in automatically, do not touch -->
-## Diagnostic description
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
 The configurations must be designed to work in conditions where the time zone on the server computer does not match the real time zone of the infobase users. For example, employees of a company from Vladivostok work with a server located in Moscow, and all operations in the system must be performed in local time (Vladivostok).
 
 Such a work scenario is often in demand in client-server infobases and in applied solutions in the service model (SaaS).

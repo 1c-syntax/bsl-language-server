@@ -85,22 +85,20 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void checkExpression(List<BSLParser.ExpressionContext> expressionContexts, int i) {
-    BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
+    var currentExpression = expressionContexts.get(i);
 
-    List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
+    var identicalExpressions = expressionContexts.stream()
       .skip(i)
       .filter(expressionContext ->
         !expressionContext.equals(currentExpression)
           && DiagnosticHelper.equalNodes(currentExpression, expressionContext))
-      .collect(Collectors.toList());
+      .toList();
 
     if (identicalExpressions.isEmpty()) {
       return;
     }
 
-    identicalExpressions.stream()
-      .collect(Collectors.toCollection(() -> checkedConditions));
-
+    identicalExpressions.stream().collect(Collectors.toCollection(() -> checkedConditions));
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     relatedInformation.add(RelatedInformation.create(
@@ -121,6 +119,4 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
     diagnosticStorage.addDiagnostic(currentExpression, relatedInformation);
   }
-
 }
-

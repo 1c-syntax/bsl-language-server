@@ -8,18 +8,18 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "4.4.1.3373"
-    id("io.freefair.lombok") version "8.4"
-    id("io.freefair.javadoc-links") version "8.4"
-    id("io.freefair.javadoc-utf-8") version "8.4"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.4"
-    id("io.freefair.maven-central.validate-poms") version "8.4"
+    id("org.sonarqube") version "5.0.0.4638"
+    id("io.freefair.lombok") version "8.6"
+    id("io.freefair.javadoc-links") version "8.6"
+    id("io.freefair.javadoc-utf-8") version "8.6"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.6"
+    id("io.freefair.maven-central.validate-poms") version "8.6"
     id("me.qoomon.git-versioning") version "6.4.3"
-    id("com.github.ben-manes.versions") version "0.50.0"
-    id("org.springframework.boot") version "3.2.1"
+    id("com.github.ben-manes.versions") version "0.51.0"
+    id("org.springframework.boot") version "3.2.4"
     id("io.spring.dependency-management") version "1.1.4"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
-    id("ru.vyarus.pom") version "2.2.2"
+    id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
     id("io.codearte.nexus-staging") version "0.30.0"
     id("me.champeau.jmh") version "0.7.2"
@@ -56,7 +56,7 @@ val languageToolVersion = "6.1"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:7.1.0")
+        mavenBom("io.sentry:sentry-bom:7.6.0")
     }
 }
 
@@ -74,18 +74,18 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.23.3") {
+    api("io.github.1c-syntax", "bsl-parser", "0.24.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
-        exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.5.1")
-    api("io.github.1c-syntax", "mdclasses", "0.12.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.5.0")
-    api("io.github.1c-syntax", "supportconf", "0.12.1")
+    api("io.github.1c-syntax", "utils", "0.6.0")
+    api("io.github.1c-syntax", "mdclasses", "0.13.0-rc.2")
+    api("io.github.1c-syntax", "bsl-common-library", "0.5.1")
+    api("io.github.1c-syntax", "supportconf", "0.14.0")
+    api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
@@ -120,7 +120,7 @@ dependencies {
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // Sentry
-    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-spring-boot-starter-jakarta")
     implementation("io.sentry:sentry-logback")
 
     // CONSTRAINTS

@@ -62,9 +62,9 @@ public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
     if (rangesCompare != 0) {
       return rangesCompare;
     }
-    final var occurenceCompare = occurrenceType.compareTo(o.occurrenceType);
-    if (occurenceCompare != 0) {
-      return occurenceCompare;
+    final var occurrenceCompare = occurrenceType.compareTo(o.occurrenceType);
+    if (occurrenceCompare != 0) {
+      return occurrenceCompare;
     }
     return symbol.compareTo(o.symbol);
   }

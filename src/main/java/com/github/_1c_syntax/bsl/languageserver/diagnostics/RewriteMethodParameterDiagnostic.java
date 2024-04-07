@@ -84,7 +84,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(parameterDefinition -> Pair.of(methodSymbol, parameterDefinition));
   }
 
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
+                                                               ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
       // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
@@ -181,7 +182,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
         documentContext.getUri(),
         reference.getSelectionRange(),
         "+1"
-      )).collect(Collectors.toList());
+      )).toList();
     var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
     resultRefs.add(RelatedInformation.create(
       documentContext.getUri(),

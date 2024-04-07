@@ -52,6 +52,7 @@ jobs:
       with:
         java-version: 17
         distribution: 'temurin'
+        cache: gradle
     - name: SonarCloud Scan on PR
       if: github.event.workflow_run.event == 'pull_request'
       run: ./gradlew check sonar -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} -Dsonar.pullrequest.key=${{ fromJson(steps.get_pr_data.outputs.data).number }} -Dsonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }} -Dsonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}

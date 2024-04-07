@@ -55,7 +55,7 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + NAMES_FULL_ACCESS_ROLE
+    defaultValue = NAMES_FULL_ACCESS_ROLE
   )
 
   private Set<String> namesFullAccessRole = getSetFromString(NAMES_FULL_ACCESS_ROLE);

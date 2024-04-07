@@ -45,6 +45,7 @@ public final class DocumentSymbolProvider {
 
   private static final Set<VariableKind> supportedVariableKinds = EnumSet.of(
     VariableKind.MODULE,
+    VariableKind.LOCAL,
     VariableKind.GLOBAL
   );
 
@@ -64,6 +65,7 @@ public final class DocumentSymbolProvider {
     );
 
     List<DocumentSymbol> children = symbol.getChildren().stream()
+      .filter(DocumentSymbolProvider::isSupported)
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 

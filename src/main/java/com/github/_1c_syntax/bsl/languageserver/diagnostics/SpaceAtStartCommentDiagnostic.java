@@ -72,7 +72,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
+    defaultValue = DEFAULT_COMMENTS_ANNOTATION
   )
   private Pattern commentsAnnotation = DiagnosticHelper.createPatternFromString(DEFAULT_COMMENTS_ANNOTATION);
 
@@ -116,7 +116,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      String currentText = documentContext.getText(range);
+      var currentText = documentContext.getText(range);
 
       var textEdit = new TextEdit(
         range,

@@ -29,6 +29,7 @@ import java.util.Locale;
  * Язык для сообщений, ресурсов и прочих взаимодействий между
  * BSL Language Server и пользователем.
  */
+@Getter
 public enum Language {
 
   /**
@@ -49,13 +50,11 @@ public enum Language {
   /**
    * Код языка в соответствии с {@link java.util.Locale#getLanguage()}.
    */
-  @Getter
   private final String languageCode;
 
   /**
    * Локаль языка.
    */
-  @Getter
   private final Locale locale;
 
   /**

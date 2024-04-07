@@ -143,4 +143,13 @@ class SmokyTest {
     assertThat(diagnosticErrors).isEmpty();
   }
 
+  @Test
+  void testExtraMinForComplexity() {
+    // нельзя ставить отрицательное значение
+    diagnosticInfos.forEach(diagnosticInfo ->
+      assertThat(diagnosticInfo.getExtraMinForComplexity())
+        .as(diagnosticInfo.getCode().getStringValue())
+        .isNotNegative()
+    );
+  }
 }

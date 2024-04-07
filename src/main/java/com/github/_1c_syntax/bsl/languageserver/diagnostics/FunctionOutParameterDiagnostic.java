@@ -35,7 +35,6 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -47,7 +46,6 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.DESIGN
   }
-
 )
 public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -61,14 +59,13 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
       .filter(param -> !param.isByValue())
-      .collect(Collectors.toList());
+      .toList();
 
     if (parameters.isEmpty()) {
       return ctx;
     }
 
-    Map<String, BSLParserRuleContext> lvalues = Trees
-      .findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
+    var lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
       .stream()
       .collect(
         Collectors.toMap(

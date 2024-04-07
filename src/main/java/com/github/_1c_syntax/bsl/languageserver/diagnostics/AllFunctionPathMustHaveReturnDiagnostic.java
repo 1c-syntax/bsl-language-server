@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE,
     DiagnosticTag.SUSPICIOUS
   }
-
 )
 public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -136,12 +135,12 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<BSLParserRuleContext> nonExplicitReturnNode(CfgVertex v, ControlFlowGraph graph) {
-    if (v instanceof BasicBlockVertex basicBlockVertex) {
-      return checkBasicBlockExitingNode(basicBlockVertex);
-    } else if (v instanceof LoopVertex loopVertex) {
-      return checkLoopExitingNode(loopVertex);
-    } else if (v instanceof ConditionalVertex conditionalVertex) {
-      return checkElseIfClauseExitingNode(conditionalVertex, graph);
+    if (v instanceof BasicBlockVertex basicBlock) {
+      return checkBasicBlockExitingNode(basicBlock);
+    } else if (v instanceof LoopVertex loop) {
+      return checkLoopExitingNode(loop);
+    } else if (v instanceof ConditionalVertex conditional) {
+      return checkElseIfClauseExitingNode(conditional, graph);
     }
 
     return v.getAst();
@@ -158,14 +157,14 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     }
 
     var expression = v.getExpression();
-    if (expression.getParent() instanceof BSLParser.ElsifBranchContext && !ignoreMissingElseOnExit) {
-      return Optional.of(expression.getParent());
+    if (expression.getParent() instanceof BSLParser.ElsifBranchContext elsifBranch && !ignoreMissingElseOnExit) {
+      return Optional.of(elsifBranch.getParent());
     }
 
     return Optional.empty();
   }
 
-  private Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
+  private static Optional<BSLParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
     if (!block.statements().isEmpty()) {
       var lastStatement = block.statements().get(block.statements().size() - 1);
 

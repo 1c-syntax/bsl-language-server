@@ -69,7 +69,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_DATES
+    defaultValue = DEFAULT_AUTHORIZED_DATES
   )
   private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
@@ -114,8 +114,8 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
       } else {
         expression = ctx.getParent().getParent();
       }
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isAssignExpression((BSLParser.ExpressionContext) expression))) {
+      if (expression instanceof BSLParser.ExpressionContext expressionContext
+        && (!isAssignExpression(expressionContext))) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
@@ -129,5 +129,4 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
     return (expression.getChildCount() <= 1);
   }
-
 }
