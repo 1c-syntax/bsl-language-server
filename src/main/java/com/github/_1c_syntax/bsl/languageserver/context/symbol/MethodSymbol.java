@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
@@ -48,9 +49,6 @@ import java.util.Optional;
 public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
   @EqualsAndHashCode.Include
   String name;
-
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Method;
 
   @EqualsAndHashCode.Include
   DocumentContext owner;
@@ -93,6 +91,21 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
   @Builder.Default
   List<Annotation> annotations = new ArrayList<>();
+
+  // TODO: Добавить SourceDefinedSymbolKind/наш SymbolKind, который будет мапиться на lsp4j вариант здесь же или DocumentSymbolProvider/SymbolProvider.
+
+  @Override
+  public SymbolKind getSymbolKind() {
+    if (owner.getFileType() == FileType.BSL) {
+      return SymbolKind.Method;
+    }
+
+    if (name.equalsIgnoreCase("ПриСозданииОбъекта") || name.equalsIgnoreCase("OnObjectCreate")) {
+      return SymbolKind.Constructor;
+    }
+
+    return SymbolKind.Method;
+  }
 
   @Override
   public Range getRange() {
