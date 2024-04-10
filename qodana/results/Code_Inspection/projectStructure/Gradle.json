@@ -10,12 +10,12 @@
       "version": "4.7.5"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.6.0",
-      "gradleName": "io.sentry:sentry-spring-boot-starter-jakarta:7.6.0",
+      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.8.0",
+      "gradleName": "io.sentry:sentry-spring-boot-starter-jakarta:7.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring-boot-starter-jakarta",
-      "version": "7.6.0"
+      "version": "7.8.0"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.2.4",
@@ -218,12 +218,12 @@
       "version": "1.5.2"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-logback:7.6.0",
-      "gradleName": "io.sentry:sentry-logback:7.6.0",
+      "ideaName": "Gradle: io.sentry:sentry-logback:7.8.0",
+      "gradleName": "io.sentry:sentry-logback:7.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-logback",
-      "version": "7.6.0"
+      "version": "7.8.0"
     },
     {
       "ideaName": "Gradle: com.google.guava:guava:32.0.1-jre",
@@ -266,12 +266,12 @@
       "version": "4.7.5"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.6.0",
-      "gradleName": "io.sentry:sentry-spring-boot-jakarta:7.6.0",
+      "ideaName": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.8.0",
+      "gradleName": "io.sentry:sentry-spring-boot-jakarta:7.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring-boot-jakarta",
-      "version": "7.6.0"
+      "version": "7.8.0"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:3.2.4",
@@ -762,12 +762,12 @@
       "version": "1.10.1"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry:7.6.0",
-      "gradleName": "io.sentry:sentry:7.6.0",
+      "ideaName": "Gradle: io.sentry:sentry:7.8.0",
+      "gradleName": "io.sentry:sentry:7.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry",
-      "version": "7.6.0"
+      "version": "7.8.0"
     },
     {
       "ideaName": "Gradle: com.google.guava:failureaccess:1.0.1",
@@ -842,12 +842,12 @@
       "version": "3.2"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-jakarta:7.6.0",
-      "gradleName": "io.sentry:sentry-spring-jakarta:7.6.0",
+      "ideaName": "Gradle: io.sentry:sentry-spring-jakarta:7.8.0",
+      "gradleName": "io.sentry:sentry-spring-jakarta:7.8.0",
       "unresolved": false,
       "groupId": "io.sentry",
       "artifactId": "sentry-spring-jakarta",
-      "version": "7.6.0"
+      "version": "7.8.0"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-json:3.2.4",
