@@ -74,8 +74,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.24.0") {
-        exclude("com.tunnelvisionlabs", "antlr4-annotations")
+    api("io.github.1c-syntax", "bsl-parser", "0.25.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
@@ -85,7 +84,7 @@ dependencies {
     api("io.github.1c-syntax", "mdclasses", "0.13.0")
     api("io.github.1c-syntax", "bsl-common-library", "0.6.0")
     api("io.github.1c-syntax", "supportconf", "0.14.0")
-    api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
+    api("io.github.1c-syntax", "bsl-parser-core", "0.2.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
