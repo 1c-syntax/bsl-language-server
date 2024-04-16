@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1712773283323,
+  "lastUpdate": 1713265519331,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -25513,6 +25513,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0002783195090168",
             "extra": "mean: 70.48782046635945 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "30f1c3e7a307d5c957bb4ad2a8a3b6b5b6f82063",
+          "message": "Merge pull request #3109 from artbear/disableSafeMode2\n\nПравило \"Отключение безопасного режима\" - DisableSafeMode - ГОТОВО",
+          "timestamp": "2024-04-16T13:46:11+03:00",
+          "tree_id": "fe58b8a52baf544eccc2d1bc6bee24e0cf7114d4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/30f1c3e7a307d5c957bb4ad2a8a3b6b5b6f82063"
+        },
+        "date": 1713265517423,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.90858054161072,
+            "unit": "sec",
+            "range": "stddev: 0.9554808750725052",
+            "extra": "mean: 70.90858054161072 sec\nrounds: 3"
           }
         ]
       }
