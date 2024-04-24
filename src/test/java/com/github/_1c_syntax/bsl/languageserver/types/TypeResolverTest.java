@@ -41,7 +41,7 @@ class TypeResolverTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
 
     // when
-    var types = typeResolver.findTypes(documentContext.getUri(), new Position(2, 10));
+    var types = typeResolver.findTypes(documentContext.getUri(), new Position(5, 10));
 
     // then
     assertThat(types).hasSize(1);
@@ -53,7 +53,7 @@ class TypeResolverTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
 
     // when
-    var types = typeResolver.findTypes(documentContext.getUri(), new Position(5, 4));
+    var types = typeResolver.findTypes(documentContext.getUri(), new Position(8, 4));
 
     // then
     assertThat(types).hasSize(2);
@@ -65,7 +65,7 @@ class TypeResolverTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
 
     // when
-    var types = typeResolver.findTypes(documentContext.getUri(), new Position(7, 10));
+    var types = typeResolver.findTypes(documentContext.getUri(), new Position(10, 10));
 
     // then
     assertThat(types).hasSize(2);
@@ -98,7 +98,7 @@ class TypeResolverTest {
   }
 
   @Test
-  void array() {
+  void newArray() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("ДругоеИмяМассива", documentContext.getSymbolTree().getModule()).orElseThrow();
@@ -109,6 +109,34 @@ class TypeResolverTest {
     // then
     assertThat(types).hasSize(1);
     assertThat(types.get(0).getName()).isEqualTo("Массив");
+  }
+
+  @Test
+  void globalMethodCall() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
+    var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("РезультатФункции", documentContext.getSymbolTree().getModule()).orElseThrow();
+
+    // when
+    var types = typeResolver.findTypes(variableSymbol);
+
+    // then
+    assertThat(types).hasSize(1);
+    assertThat(types.get(0).getName()).isEqualTo("Строка");
+  }
+
+  @Test
+  void varWithDescription() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
+    var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("ПеременнаяСОписанием", documentContext.getSymbolTree().getModule()).orElseThrow();
+
+    // when
+    var types = typeResolver.findTypes(variableSymbol);
+
+    // then
+    assertThat(types).hasSize(1);
+    assertThat(types.get(0).getName()).isEqualTo("Строка");
   }
 
 }

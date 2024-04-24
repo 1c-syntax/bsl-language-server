@@ -24,11 +24,14 @@ package com.github._1c_syntax.bsl.languageserver.types;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -41,6 +44,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @Component
@@ -74,20 +79,34 @@ public class TypeResolver {
       if (maybeDescription.isPresent()) {
         var description = maybeDescription.get();
         if (description instanceof VariableDescription variableDescription) {
-          // TODO: extract types from type description and return.
+          // TODO: use new type information from new bsp-parser
+          var purposeDescription = variableDescription.getPurposeDescription();
+          var typeName = Pattern.compile("^(\\S+)").matcher(purposeDescription).results()
+            .findFirst()
+            .map(MatchResult::group)
+            .orElse("");
+
+          if (!typeName.isEmpty()) {
+            return List.of(new Type(typeName));
+          }
         }
       }
     }
 
     // reference-based type resolver
+    var uri = symbol.getOwner().getUri();
     var ast = symbol.getOwner().getAst();
+    if (ast == null) {
+      return Collections.emptyList();
+    }
+
     var position = symbol.getSelectionRange().getStart();
 
-    var typesOfCurrentReference = calculateTypes(ast, position);
+    var typesOfCurrentReference = calculateTypes(uri, ast, position);
 
     var typesOfOtherReferences = referenceIndex.getReferencesTo(symbol).stream()
       .filter(referenceTo -> referenceTo.getOccurrenceType() == OccurrenceType.DEFINITION)
-      .map(referenceTo -> calculateTypes(ast, referenceTo.getSelectionRange().getStart()))
+      .map(referenceTo -> calculateTypes(uri, ast, referenceTo.getSelectionRange().getStart()))
       .flatMap(Collection::stream)
       .toList();
 
@@ -107,25 +126,28 @@ public class TypeResolver {
     if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
       var document = serverContext.getDocument(uri);
       var ast = document.getAst();
+      if (ast == null) {
+        return Collections.emptyList();
+      }
       var position = reference.getSelectionRange().getStart();
-      return calculateTypes(ast, position);
+      return calculateTypes(uri, ast, position);
     }
 
     // no-op
     return Collections.emptyList();
   }
 
-  private List<Type> calculateTypes(BSLParser.FileContext ast, Position position) {
+  private List<Type> calculateTypes(URI uri, BSLParser.FileContext ast, Position position) {
     return Trees.findTerminalNodeContainsPosition(ast, position)
       .map(TerminalNode::getParent)
       .map(ruleNode -> Trees.getRootParent(ruleNode, BSLParser.RULE_assignment))
       .map(BSLParser.AssignmentContext.class::cast)
       .map(BSLParser.AssignmentContext::expression)
-      .map(this::calculateTypes)
+      .map(expression -> calculateTypes(uri, expression))
       .orElseGet(Collections::emptyList);
   }
 
-  private List<Type> calculateTypes(BSLParser.ExpressionContext expression) {
+  private List<Type> calculateTypes(URI uri, BSLParser.ExpressionContext expression) {
 
     // only simple cases for now. Use ExpressionTree in the future.
     if (!expression.operation().isEmpty()) {
@@ -133,10 +155,16 @@ public class TypeResolver {
     }
 
     // new-resolver
-    var typeName = typeName(expression);
+    var typeName = newTypeName(expression);
     if (!typeName.isEmpty()) {
       Type type = new Type(typeName);
       return List.of(type);
+    }
+
+    // globalMethodCall resolver
+    var typeNames = returnedValue(uri, expression);
+    if (!typeNames.isEmpty()) {
+      return typeNames;
     }
 
     // const-value resolver
@@ -168,14 +196,48 @@ public class TypeResolver {
 
   }
 
-  private String typeName(BSLParser.ExpressionContext ctx) {
+  private String newTypeName(BSLParser.ExpressionContext expression) {
     var typeName = "";
-    var newCtx = Trees.getNextNode(ctx, ctx, BSLParser.RULE_newExpression);
+    var newCtx = Trees.getNextNode(expression, expression, BSLParser.RULE_newExpression);
     if (newCtx instanceof BSLParser.NewExpressionContext newExpression) {
       typeName = Constructors.typeName(newExpression).orElse("");
     }
     return typeName;
   }
 
+  private List<Type> returnedValue(URI uri, BSLParser.ExpressionContext expression) {
+    var complexIdentifier = expression.member(0).complexIdentifier();
+
+    if (complexIdentifier == null) {
+      return Collections.emptyList();
+    }
+
+    if (!complexIdentifier.modifier().isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    var globalMethodCall = complexIdentifier.globalMethodCall();
+
+    if (globalMethodCall == null) {
+      return Collections.emptyList();
+    }
+
+    var calledMethod = referenceResolver.findReference(uri, Ranges.create(globalMethodCall.methodName()).getStart());
+
+    return calledMethod.filter(Reference::isSourceDefinedSymbolReference)
+      .flatMap(Reference::getSourceDefinedSymbol)
+      .filter(Describable.class::isInstance)
+      .map(Describable.class::cast)
+      .flatMap(Describable::getDescription)
+      .filter(MethodDescription.class::isInstance)
+      .map(MethodDescription.class::cast)
+      .map(MethodDescription::getReturnedValue)
+      .stream()
+      .flatMap(List::stream)
+      .map(TypeDescription::getName)
+      .map(Type::new)
+      .toList();
+
+  }
 
 }
