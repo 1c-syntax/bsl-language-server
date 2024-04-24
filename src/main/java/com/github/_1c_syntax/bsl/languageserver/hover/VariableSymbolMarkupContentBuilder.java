@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.Type;
+import com.github._1c_syntax.bsl.languageserver.types.TypeResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,9 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -40,6 +44,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
 
+  private final TypeResolver typeResolver;
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
@@ -75,6 +80,10 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
       .map(VariableDescription::getPurposeDescription)
       .ifPresent(trailingDescription -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, trailingDescription));
 
+    var types = typeResolver.findTypes(symbol);
+    var typeDescription = getTypeDescription(types);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typeDescription);
+
     var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
@@ -95,6 +104,18 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
         ? getResourceString("dynamicVariableOfModule")
         : getResourceString("dynamicVariableOfMethod").formatted(symbol.getScope().getName());
     };
+  }
+
+  private static String getTypeDescription(List<Type> types) {
+    var typeDescription = types.stream()
+      .map(Type::getName)
+      .collect(Collectors.joining(" | "));
+
+    if (!typeDescription.isEmpty()) {
+      typeDescription = "`" + typeDescription + "`";
+    }
+
+    return typeDescription;
   }
 
   private String getResourceString(String key) {
