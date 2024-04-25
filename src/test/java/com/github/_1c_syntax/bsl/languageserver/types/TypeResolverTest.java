@@ -21,7 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +39,8 @@ class TypeResolverTest {
 
   @Autowired
   private TypeResolver typeResolver;
+
+  public static final String PATH_TO_FILE = "./src/test/resources/types/TypeResolver.os";
 
   @Test
   void simpleType() {
@@ -76,9 +83,10 @@ class TypeResolverTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("ДваТипа", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = getReference(documentContext, variableSymbol);
 
     // when
-    var types = typeResolver.findTypes(variableSymbol);
+    var types = typeResolver.findTypes(reference);
 
     // then
     assertThat(types).hasSize(2);
@@ -89,9 +97,10 @@ class TypeResolverTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("Переприсваивание", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = getReference(documentContext, variableSymbol);
 
     // when
-    var types = typeResolver.findTypes(variableSymbol);
+    var types = typeResolver.findTypes(reference);
 
     // then
     assertThat(types).hasSize(1);
@@ -102,9 +111,10 @@ class TypeResolverTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("ДругоеИмяМассива", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = getReference(documentContext, variableSymbol);
 
     // when
-    var types = typeResolver.findTypes(variableSymbol);
+    var types = typeResolver.findTypes(reference);
 
     // then
     assertThat(types).hasSize(1);
@@ -116,9 +126,10 @@ class TypeResolverTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("РезультатФункции", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = getReference(documentContext, variableSymbol);
 
     // when
-    var types = typeResolver.findTypes(variableSymbol);
+    var types = typeResolver.findTypes(reference);
 
     // then
     assertThat(types).hasSize(1);
@@ -128,15 +139,24 @@ class TypeResolverTest {
   @Test
   void varWithDescription() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var variableSymbol = documentContext.getSymbolTree().getVariableSymbol("ПеременнаяСОписанием", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = getReference(documentContext, variableSymbol);
 
     // when
-    var types = typeResolver.findTypes(variableSymbol);
+    var types = typeResolver.findTypes(reference);
 
     // then
     assertThat(types).hasSize(1);
     assertThat(types.get(0).getName()).isEqualTo("Строка");
   }
 
+  private static Reference getReference(DocumentContext documentContext, VariableSymbol variableSymbol) {
+    return Reference.of(
+      documentContext.getSymbolTree().getModule(),
+      variableSymbol,
+      new Location(documentContext.getUri().toString(), variableSymbol.getSelectionRange()),
+      OccurrenceType.DEFINITION
+    );
+  }
 }

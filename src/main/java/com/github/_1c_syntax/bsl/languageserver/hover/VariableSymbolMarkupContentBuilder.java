@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.Type;
 import com.github._1c_syntax.bsl.languageserver.types.TypeResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -49,7 +50,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private final LanguageServerConfiguration configuration;
 
   @Override
-  public MarkupContent getContent(VariableSymbol symbol) {
+  public MarkupContent getContent(Reference reference, VariableSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура
@@ -74,7 +75,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
       .map(VariableDescription::getPurposeDescription)
       .ifPresent(trailingDescription -> addSectionIfNotEmpty(markupBuilder, trailingDescription));
 
-    var types = typeResolver.findTypes(symbol);
+    var types = typeResolver.findTypes(reference);
     var typeDescription = getTypeDescription(types);
     addSectionIfNotEmpty(markupBuilder, typeDescription);
 

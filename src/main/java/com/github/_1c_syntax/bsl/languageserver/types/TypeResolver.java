@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
@@ -58,20 +59,26 @@ public class TypeResolver {
 
   // TODO: Create LRU cache for calculated types.
 
-  // TODO: Use reference instead of symbol. Refactor hover provider to pass references to markup content builders.
-  public List<Type> findTypes(SourceDefinedSymbol symbol) {
-    return calculateTypes(symbol);
+  public List<Type> findTypes(Reference reference) {
+    return calculateTypes(reference.getUri(), reference.getSymbol());
   }
 
   public List<Type> findTypes(URI uri, Position position) {
     return referenceResolver.findReference(uri, position)
       .stream()
-      .flatMap(reference -> calculateTypes(uri, reference).stream())
+      .flatMap(reference -> calculateTypes(reference).stream())
       .distinct()
       .toList();
   }
 
-  private List<Type> calculateTypes(SourceDefinedSymbol symbol) {
+  private List<Type> calculateTypes(URI uri, Symbol symbol) {
+    if (symbol instanceof SourceDefinedSymbol sourceDefinedSymbol) {
+      return calculateTypes(uri, sourceDefinedSymbol);
+    }
+    return Collections.emptyList();
+  }
+
+  private List<Type> calculateTypes(URI uri, SourceDefinedSymbol symbol) {
 
     // variable description resolver
     if (symbol instanceof Describable describableSymbol) {
@@ -94,7 +101,9 @@ public class TypeResolver {
     }
 
     // reference-based type resolver
-    var uri = symbol.getOwner().getUri();
+    if (symbol.getOwner().getContent() == null) {
+      return Collections.emptyList();
+    }
     var ast = symbol.getOwner().getAst();
     if (ast == null) {
       return Collections.emptyList();
@@ -115,12 +124,15 @@ public class TypeResolver {
       .toList();
   }
 
-  private List<Type> calculateTypes(URI uri, Reference reference) {
+  private List<Type> calculateTypes(Reference reference) {
+
+    var uri = reference.getUri();
 
     // source defined symbol resolver
     if (reference.isSourceDefinedSymbolReference()) {
-      return calculateTypes(reference.getSourceDefinedSymbol().orElseThrow());
+      return calculateTypes(uri, reference.getSourceDefinedSymbol().orElseThrow());
     }
+
 
     // expression tree resolver
     if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
