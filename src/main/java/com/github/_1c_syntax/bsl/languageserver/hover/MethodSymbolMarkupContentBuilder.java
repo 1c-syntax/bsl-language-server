@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -39,7 +40,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
-  public MarkupContent getContent(MethodSymbol symbol) {
+  public MarkupContent getContent(Reference reference, MethodSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура

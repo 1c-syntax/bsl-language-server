@@ -21,11 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import jakarta.annotation.PostConstruct;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,9 +65,10 @@ class VariableSymbolMarkupContentBuilderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("ИмяБезОписания", symbolTree.getModule()).orElseThrow();
+    var reference = getReference(documentContext, varSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, varSymbol).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -91,9 +97,10 @@ class VariableSymbolMarkupContentBuilderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСправаОднойСтрокой", symbolTree.getModule()).orElseThrow();
+    var reference = getReference(documentContext, varSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, varSymbol).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -127,9 +134,10 @@ class VariableSymbolMarkupContentBuilderTest {
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуДвеСтроки_Функция", methodSymbol).orElseThrow();
+    var reference = getReference(documentContext, varSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, varSymbol).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -165,9 +173,10 @@ class VariableSymbolMarkupContentBuilderTest {
     final var symbolTree = documentContext.getSymbolTree();
     var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция", methodSymbol).orElseThrow();
+    var reference = getReference(documentContext, varSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, varSymbol).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -202,9 +211,10 @@ class VariableSymbolMarkupContentBuilderTest {
     var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("ВалютаУчета", symbolTree.getModule()).orElseThrow();
+    var reference = getReference(documentContext, varSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, varSymbol).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -225,4 +235,12 @@ class VariableSymbolMarkupContentBuilderTest {
     assertThat(blocks.get(2)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
   }
 
+  private static Reference getReference(DocumentContext documentContext, VariableSymbol variableSymbol) {
+    return Reference.of(
+      documentContext.getSymbolTree().getModule(),
+      variableSymbol,
+      new Location(documentContext.getUri().toString(), variableSymbol.getSelectionRange()),
+      OccurrenceType.DEFINITION
+    );
+  }
 }
