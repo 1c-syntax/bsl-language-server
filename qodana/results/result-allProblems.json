@@ -280,68 +280,6 @@
   "hash": "228a887bfb7de8968995726425f78a9cf9b2f8fd68a618140a617b66df637b06"
 },{
   "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Mismatched query and update of collection",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Contents of collection `reporters` are queried, but never updated",
-  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
-      "language": "JAVA",
-      "line": 40,
-      "offset": 36,
-      "length": 9,
-      "code": {
-        "startLine": 38,
-        "length": 9,
-        "offset": 49,
-        "surroundingCode": "\n  @Autowired\n  private List<DiagnosticReporter> reporters;\n\n  @Autowired"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "MismatchedCollectionQueryUpdate"
-  },
-  "hash": "3df83e56f8cd4f26c7e882de81756363030a4d94c53973fba3d38f170da9a252"
-},{
-  "tool": "Code Inspection",
-  "category": "Probable bugs",
-  "type": "Mismatched query and update of collection",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Contents of collection `filteredReporters` are queried, but never updated",
-  "detailsInfo": "Reports collections whose contents are either queried and not updated, or updated and not queried.\n\n\nSuch inconsistent queries and updates are pointless and may indicate\neither dead code or a typo.\n\n\nUse the inspection settings to specify name patterns that correspond to update/query methods.\nQuery methods that return an element are automatically detected, and only\nthose that write data to an output parameter (for example, an `OutputStream`) need to be specified.\n\n\n**Example:**\n\nSuppose you have your custom `FixedStack` class with method `store()`:\n\n\n      public class FixedStack<T> extends Collection<T> {\n        public T store(T t) {\n          // implementation\n        }\n      }\n\nYou can add `store` to the update methods table in order to report mismatched queries like:\n\n\n      void test(int i) {\n        FixedStack<Integer> stack = new FixedStack<>();\n        stack.store(i);\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
-      "language": "JAVA",
-      "line": 46,
-      "offset": 36,
-      "length": 17,
-      "code": {
-        "startLine": 44,
-        "length": 17,
-        "offset": 144,
-        "surroundingCode": "  @Lazy\n  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.\n  private List<DiagnosticReporter> filteredReporters;\n\n  public void report(AnalysisInfo analysisInfo, Path outputDir) {"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "MismatchedCollectionQueryUpdate"
-  },
-  "hash": "d15acb8b7f7932122a92996b4039ddb46a7a3359060f098085c3c54a58a42765"
-},{
-  "tool": "Code Inspection",
   "category": "Serialization issues",
   "type": "'@Serial' annotation could be used",
   "tags": [
@@ -349,7 +287,7 @@
   ],
   "severity": "High",
   "comment": "`serialVersionUID` can be annotated with '@Serial' annotation",
-  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection depends on the Java feature '@Serial annotation' which is available since Java 14.\n\nNew in 2020.3",
   "sources": [
     {
       "type": "file",
@@ -380,7 +318,7 @@
   ],
   "severity": "High",
   "comment": "`serialVersionUID` can be annotated with '@Serial' annotation",
-  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection depends on the Java feature '@Serial annotation' which is available since Java 14.\n\nNew in 2020.3",
   "sources": [
     {
       "type": "file",
@@ -411,7 +349,7 @@
   ],
   "severity": "High",
   "comment": "`serialVersionUID` can be annotated with '@Serial' annotation",
-  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection depends on the Java feature '@Serial annotation' which is available since Java 14.\n\nNew in 2020.3",
   "sources": [
     {
       "type": "file",
@@ -442,7 +380,7 @@
   ],
   "severity": "High",
   "comment": "`serialVersionUID` can be annotated with '@Serial' annotation",
-  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection only reports if the language level of the project or module is 14 or higher.\n\nNew in 2020.3",
+  "detailsInfo": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer the documentation for `java.io.Serial`.\n\nThis inspection depends on the Java feature '@Serial annotation' which is available since Java 14.\n\nNew in 2020.3",
   "sources": [
     {
       "type": "file",
@@ -464,4 +402,345 @@
     "inspectionName": "MissingSerialAnnotation"
   },
   "hash": "c8e898133b1bd904acc5eeb3982546589c7926b0b578b56666c7d4ca4aef1d76"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/test/resources/application-measures.properties",
+      "language": "Properties",
+      "line": 21,
+      "offset": 1,
+      "length": 28,
+      "code": {
+        "startLine": 19,
+        "length": 28,
+        "offset": 117,
+        "surroundingCode": "logging.level.org.springframework.boot.test.context.SpringBootTestContextBootstrapper=warn\napp.measures.enabled=true\napp.globalConfiguration.path=\napp.configuration.path=\napp.websocket.lsp-path=/lsp"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.test",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "2aef5efcf52ab53dd5097c0759737d5452fe314eabbfe3c33d5f2e74f1fef5a1"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/resources/application.properties",
+      "language": "Properties",
+      "line": 14,
+      "offset": 1,
+      "length": 28,
+      "code": {
+        "startLine": 12,
+        "length": 28,
+        "offset": 131,
+        "surroundingCode": "logging.level.org.springframework.core.LocalVariableTableParameterNameDiscoverer=error\nspring.application.name=BSL Language Server\napp.globalConfiguration.path=${user.home}/.bsl-language-server.json\napp.configuration.path=.bsl-language-server.json\nlogging.level.org.eclipse.lsp4j.jsonrpc.RemoteEndpoint=fatal"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "3ffe7294a90d0455d083f72024cfdf2cdc6df22b51464ca58a89cd16e511b0fc"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.measures.enabled'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/test/resources/application-measures.properties",
+      "language": "Properties",
+      "line": 20,
+      "offset": 1,
+      "length": 20,
+      "code": {
+        "startLine": 18,
+        "length": 20,
+        "offset": 173,
+        "surroundingCode": "logging.level.org.springframework.test.context.support.AbstractContextLoader=warn\nlogging.level.org.springframework.boot.test.context.SpringBootTestContextBootstrapper=warn\napp.measures.enabled=true\napp.globalConfiguration.path=\napp.configuration.path="
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.test",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "456a188469ce3a39d3cb0c4815baaeff44169cbdc74f3328d7357811d08d64f0"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/test/resources/application-websocket.properties",
+      "language": "Properties",
+      "line": 19,
+      "offset": 1,
+      "length": 28,
+      "code": {
+        "startLine": 17,
+        "length": 28,
+        "offset": 175,
+        "surroundingCode": "logging.level.org.springframework.test.context.support.AbstractContextLoader=warn\r\nlogging.level.org.springframework.boot.test.context.SpringBootTestContextBootstrapper=warn\r\napp.globalConfiguration.path=\r\napp.configuration.path=\r\napp.websocket.lsp-path=/lsp\r"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.test",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "8cb191da383ec86c0cb7090cdab5ace7f4bc20cf896fc9769d9be10a5ee04174"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'picocli.disable.closures'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/resources/application.properties",
+      "language": "Properties",
+      "line": 23,
+      "offset": 1,
+      "length": 24,
+      "code": {
+        "startLine": 21,
+        "length": 24,
+        "offset": 78,
+        "surroundingCode": "sentry.attach-server-name=false\nsentry.logging.minimum-breadcrumb-level=debug\npicocli.disable.closures=true\n\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "e5b3e1e8827b3124842ed8c38d81266525eedb186ff3df263fca029f48010315"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/test/resources/application.properties",
+      "language": "Properties",
+      "line": 20,
+      "offset": 1,
+      "length": 28,
+      "code": {
+        "startLine": 18,
+        "length": 28,
+        "offset": 175,
+        "surroundingCode": "logging.level.org.springframework.test.context.support.AbstractContextLoader=warn\r\nlogging.level.org.springframework.boot.test.context.SpringBootTestContextBootstrapper=warn\r\napp.globalConfiguration.path=\r\napp.configuration.path=\r\napp.websocket.lsp-path=/lsp\r"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.test",
+    "inspectionName": "SpringBootApplicationProperties"
+  },
+  "hash": "fd657ff54558f88a1e941d85f44b5e2a1bfa383d27798d16be49c55c2e374317"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Non recommended 'field' injections",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Field injection is not recommended",
+  "detailsInfo": "Reports injected or autowired fields in Spring components.\n\nThe quick-fix suggests the recommended constructor-based dependency injection in beans\nand assertions for mandatory fields.\n\n**Example:**\n\n\n    class MyComponent {\n      @Inject MyCollaborator collaborator; // injected field\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // throws NullPointerException\n      }\n    }\n\nAfter applying the quick-fix:\n\n\n    class MyComponent {\n\n      private final MyCollaborator collaborator;\n\n      @Inject\n      public MyComponent(MyCollaborator collaborator) {\n        Assert.notNull(collaborator, \"MyCollaborator must not be null!\");\n        this.collaborator = collaborator;\n      }\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // now this call is safe\n      }\n    }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 39,
+      "offset": 3,
+      "length": 10,
+      "code": {
+        "startLine": 37,
+        "length": 10,
+        "offset": 38,
+        "surroundingCode": "public class ReportersAggregator {\n\n  @Autowired\n  private List<DiagnosticReporter> reporters;\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaAutowiredFieldsWarningInspection"
+  },
+  "hash": "dcb83b272633a56713a712d486d56e67069b140bacbd57fb64d5eb9cdbd6b740"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Non recommended 'field' injections",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Field injection is not recommended",
+  "detailsInfo": "Reports injected or autowired fields in Spring components.\n\nThe quick-fix suggests the recommended constructor-based dependency injection in beans\nand assertions for mandatory fields.\n\n**Example:**\n\n\n    class MyComponent {\n      @Inject MyCollaborator collaborator; // injected field\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // throws NullPointerException\n      }\n    }\n\nAfter applying the quick-fix:\n\n\n    class MyComponent {\n\n      private final MyCollaborator collaborator;\n\n      @Inject\n      public MyComponent(MyCollaborator collaborator) {\n        Assert.notNull(collaborator, \"MyCollaborator must not be null!\");\n        this.collaborator = collaborator;\n      }\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // now this call is safe\n      }\n    }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/ReportersAggregator.java",
+      "language": "JAVA",
+      "line": 42,
+      "offset": 3,
+      "length": 10,
+      "code": {
+        "startLine": 40,
+        "length": 10,
+        "offset": 49,
+        "surroundingCode": "  private List<DiagnosticReporter> reporters;\n\n  @Autowired\n  @Qualifier(\"filteredReporters\")\n  @Lazy"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaAutowiredFieldsWarningInspection"
+  },
+  "hash": "e21c7575c86856e1e73e72ca14d5bb6d4c620335b95855adcc1146e5b98ae0fb"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Incorrect autowiring in Spring bean components",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Critical",
+  "comment": "Could not autowire. No beans of 'URI' type found.",
+  "detailsInfo": "Reports autowiring problems on injection points of Spring beans\n[@Component](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html),\n[@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html),\nand so on.\n\n* More than one bean of 'concrete' type\n* No beans of 'concrete' type\n* No bean with qualifier\n* Incorrect usages of `@Autowired` on Spring bean constructors\n* Injected or autowired fields/methods in classes that are not valid Spring beans\n\n**Example:**\n\n\n    public interface FooInterface {...}\n      @Component public class FooBean implements FooInterface {...}\n      @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tFooInterface foo;  // \"Could not autowire. There is more than one bean of 'FooInterface' type.\n                         // Beans: fooBean(FooBean.java), otherBean(OtherBean.java)\"\n    }\n\n**Example:**\n\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tpublic MyComponent(BarBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n\n    \t@Autowired\n    \tpublic MyComponent(FooBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n    }\n\n    @Component\n    public class MyFactory {  // reports ' No matching @Autowired constructor'\n    \tpublic MyFactory(String str) {...}\n    \tpublic MyFactory(int count) {...}\n    }\n\n**Example:**\n\n\n    public class FooBeanClass {\n      @Autowired   // reports 'Autowired members must be defined in valid Spring beans: @Component, @Service, and so on'\n      ServiceBean bean;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 87,
+      "offset": 21,
+      "length": 3,
+      "code": {
+        "startLine": 85,
+        "length": 3,
+        "offset": 31,
+        "surroundingCode": "\n  @Getter\n  private final URI uri;\n\n  @Nullable"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaInjectionPointsAutowiringInspection"
+  },
+  "hash": "36c9b96fb03e23518ea35a037b73a870e6147b5f27c305e1481dc11d80fb0109"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Incorrect autowiring in Spring bean components",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Critical",
+  "comment": "Could not autowire. No beans of 'Map\\>' type found.",
+  "detailsInfo": "Reports autowiring problems on injection points of Spring beans\n[@Component](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html),\n[@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html),\nand so on.\n\n* More than one bean of 'concrete' type\n* No beans of 'concrete' type\n* No bean with qualifier\n* Incorrect usages of `@Autowired` on Spring bean constructors\n* Injected or autowired fields/methods in classes that are not valid Spring beans\n\n**Example:**\n\n\n    public interface FooInterface {...}\n      @Component public class FooBean implements FooInterface {...}\n      @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tFooInterface foo;  // \"Could not autowire. There is more than one bean of 'FooInterface' type.\n                         // Beans: fooBean(FooBean.java), otherBean(OtherBean.java)\"\n    }\n\n**Example:**\n\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tpublic MyComponent(BarBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n\n    \t@Autowired\n    \tpublic MyComponent(FooBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n    }\n\n    @Component\n    public class MyFactory {  // reports ' No matching @Autowired constructor'\n    \tpublic MyFactory(String str) {...}\n    \tpublic MyFactory(int count) {...}\n    }\n\n**Example:**\n\n\n    public class FooBeanClass {\n      @Autowired   // reports 'Autowired members must be defined in valid Spring beans: @Component, @Service, and so on'\n      ServiceBean bean;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/HoverProvider.java",
+      "language": "JAVA",
+      "line": 44,
+      "offset": 63,
+      "length": 21,
+      "code": {
+        "startLine": 42,
+        "length": 21,
+        "offset": 116,
+        "surroundingCode": "\n  private final ReferenceResolver referenceResolver;\n  private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;\n\n  public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaInjectionPointsAutowiringInspection"
+  },
+  "hash": "a235cc05ff772e251c2881958a80ed64b01477584e910eea9812db834ca06089"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Incorrectly referenced bean in @Lookup annotation of Spring component",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Critical",
+  "comment": "Cannot resolve bean 'diagnostics'",
+  "detailsInfo": "Reports incorrect bean references in the `value` parameter of the\n[@Lookup](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/annotation/Lookup.html)\nannotation.\n\n**Example:**\n\n\n      @Component public class FooBean {...}\n      @Component public class OtherBean {...}\n\n      @Component public class MyComponent {\n      @Lookup(\"fooBean\")\n      public FooBean fooBean() {...}\n\n      @Lookup(\"fooBean\") // reports \"Bean must be of 'OtherBean' type\"\n      public OtherBean otherBean() {...}\n\n      @Lookup(\"unknown\") // reports \"Cannot resolve bean 'unknown'\"\n      public OtherBean fooBean() {...}\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/DiagnosticComputer.java",
+      "language": "JAVA",
+      "line": 87,
+      "offset": 11,
+      "length": 13,
+      "code": {
+        "startLine": 85,
+        "length": 13,
+        "offset": 15,
+        "surroundingCode": "  }\n\n  @Lookup(\"diagnostics\")\n  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);\n}"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringLookupInjectionInspection"
+  },
+  "hash": "e1e04aa002a10fe4b3a599183ec145bdf184f0fa62a4d744b3b5eca92d9f5b90"
 }]}
