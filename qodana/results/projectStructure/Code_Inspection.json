@@ -106,7 +106,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.4",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.5",
           "type": "Library"
         },
         {
