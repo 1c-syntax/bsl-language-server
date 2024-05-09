@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2024-05-09T10:07:51Z"
+    "created": "2024-05-09T10:14:20Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "2d6187f2e2d23a15c2a1d4ec19acb69210cef293"
+          "checksumValue": "2d37862ed5107646da7aa20d6fdedf36eeb4d1e9"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -35,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.main",
       "name": "bsl-language-server.main",
-      "versionInfo": "develop-2d6187f-DIRTY",
+      "versionInfo": "develop-2d37862-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "2d6187f2e2d23a15c2a1d4ec19acb69210cef293"
+          "checksumValue": "2d37862ed5107646da7aa20d6fdedf36eeb4d1e9"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +56,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-2d6187f-DIRTY",
+      "versionInfo": "develop-2d37862-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "2d6187f2e2d23a15c2a1d4ec19acb69210cef293"
+          "checksumValue": "2d37862ed5107646da7aa20d6fdedf36eeb4d1e9"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -977,9 +977,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-picocli-spring-boot-starter-4.7.5",
+      "SPDXID": "SPDXRef-picocli-spring-boot-starter-4.7.6",
       "name": "info.picocli:picocli-spring-boot-starter",
-      "versionInfo": "4.7.5",
+      "versionInfo": "4.7.6",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -988,20 +988,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "picocli-spring-boot-starter-4.7.5.jar",
+      "packageFileName": "picocli-spring-boot-starter-4.7.6.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "28fd1631d64ba4f0ff660377d50f53600ebbab701d3b695fc42abd361654fad4"
+          "checksumValue": "84db7451dcc2d778b5bf45a52dfab2bec4385a037d794db8efc25e9de78c1620"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-picocli-4.7.5",
+      "SPDXID": "SPDXRef-picocli-4.7.6",
       "name": "info.picocli:picocli",
-      "versionInfo": "4.7.5",
+      "versionInfo": "4.7.6",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1010,12 +1010,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "picocli-4.7.5.jar",
+      "packageFileName": "picocli-4.7.6.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e83a906fb99b57091d1d68ac11f7c3d2518bd7a81a9c71b259e2c00d1564c8e8"
+          "checksumValue": "ed441183f309b93f104ca9e071e314a4062a893184e18a3c7ad72ec9cba12ba0"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -4946,7 +4946,7 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.5"
+      "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
@@ -5109,12 +5109,12 @@
       "relatedSpdxElement": "SPDXRef-spring-websocket-6.1.5"
     },
     {
-      "spdxElementId": "SPDXRef-picocli-spring-boot-starter-4.7.5",
+      "spdxElementId": "SPDXRef-picocli-spring-boot-starter-4.7.6",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-picocli-4.7.5"
+      "relatedSpdxElement": "SPDXRef-picocli-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-picocli-spring-boot-starter-4.7.5",
+      "spdxElementId": "SPDXRef-picocli-spring-boot-starter-4.7.6",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.2.4"
     },
@@ -5486,7 +5486,7 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.5"
+      "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",

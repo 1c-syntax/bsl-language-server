@@ -58,7 +58,7 @@
           "type": "Own sources"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.5",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.6",
           "type": "Library"
         },
         {
@@ -186,7 +186,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.5",
+          "name": "Gradle: info.picocli:picocli:4.7.6",
           "type": "Library"
         },
         {
@@ -886,7 +886,7 @@
           "type": "Own sources"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.5",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.6",
           "type": "Library"
         },
         {
@@ -1006,7 +1006,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.5",
+          "name": "Gradle: info.picocli:picocli:4.7.6",
           "type": "Library"
         },
         {
@@ -1570,7 +1570,7 @@
           "type": "Module"
         },
         {
-          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.5",
+          "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.6",
           "type": "Library"
         },
         {
@@ -1702,7 +1702,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: info.picocli:picocli:4.7.5",
+          "name": "Gradle: info.picocli:picocli:4.7.6",
           "type": "Library"
         },
         {
