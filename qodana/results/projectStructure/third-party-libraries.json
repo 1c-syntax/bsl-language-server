@@ -309,7 +309,7 @@
   },
   {
     "name": "jul-to-slf4j",
-    "version": "2.0.12",
+    "version": "2.0.13",
     "url": "http://www.slf4j.org",
     "license": "MIT",
     "licenseUrl": "http://opensource.org/licenses/mit-license.php"
@@ -379,28 +379,28 @@
   },
   {
     "name": "micrometer-commons",
-    "version": "1.12.4",
+    "version": "1.12.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "micrometer-core",
-    "version": "1.12.4",
+    "version": "1.12.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "micrometer-observation",
-    "version": "1.12.4",
+    "version": "1.12.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "micrometer-registry-prometheus",
-    "version": "1.12.4",
+    "version": "1.12.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
@@ -512,7 +512,7 @@
   },
   {
     "name": "slf4j-api",
-    "version": "2.0.12",
+    "version": "2.0.13",
     "url": "http://www.slf4j.org",
     "license": "MIT",
     "licenseUrl": "http://opensource.org/licenses/mit-license.php"
@@ -526,147 +526,147 @@
   },
   {
     "name": "spring-aop",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-beans",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-autoconfigure",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter-json",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter-logging",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter-tomcat",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter-web",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter-websocket",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot-starter",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-boot",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-context",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-core",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-expression",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-jcl",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-messaging",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-web",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-webmvc",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "spring-websocket",
-    "version": "6.1.5",
+    "version": "6.1.6",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "tomcat-embed-core",
-    "version": "10.1.19",
+    "version": "10.1.20",
     "url": "",
     "license": "Apache-2.0, CDDL-1.0, PROPRIETARY-LICENSE",
     "licenseUrl": "http://www.apache.org/licenses/, http://www.sun.com/cddl/, "
   },
   {
     "name": "tomcat-embed-el",
-    "version": "10.1.19",
+    "version": "10.1.20",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "tomcat-embed-websocket",
-    "version": "10.1.19",
+    "version": "10.1.20",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
