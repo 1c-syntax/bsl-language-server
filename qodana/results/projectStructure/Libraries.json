@@ -206,7 +206,7 @@
     {
       "name": "Gradle: org.projectlombok:lombok:edge-SNAPSHOT",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/17d46b3e205515e1e8efd3ee4d57ce8018914163/lombok-edge-SNAPSHOT.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/edge-SNAPSHOT/2b1d52f1154fe7d0d2dd3751807963f064c3e4cb/lombok-edge-SNAPSHOT.jar!/"
       ],
       "properties": {}
     },

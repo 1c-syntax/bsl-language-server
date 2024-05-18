@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2024-05-09T10:28:14Z"
+    "created": "2024-05-18T18:23:59Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "6f776a35fb5ad8c44a0eb2ac3cf4c4d7f87e8e46"
+          "checksumValue": "8a1578b24dfed0344848d195f7c8a05b5b009cae"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -35,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.main",
       "name": "bsl-language-server.main",
-      "versionInfo": "develop-6f776a3-DIRTY",
+      "versionInfo": "develop-8a1578b",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "6f776a35fb5ad8c44a0eb2ac3cf4c4d7f87e8e46"
+          "checksumValue": "8a1578b24dfed0344848d195f7c8a05b5b009cae"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +56,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-6f776a3-DIRTY",
+      "versionInfo": "develop-8a1578b",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "6f776a35fb5ad8c44a0eb2ac3cf4c4d7f87e8e46"
+          "checksumValue": "8a1578b24dfed0344848d195f7c8a05b5b009cae"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -2899,7 +2899,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "97574674e2a25f567a313736ace00df8787d443de316407d57fc877d9f19a65d"
+          "checksumValue": "f0e9d384a99d1e982a0ffcd9ca74671e80f2c24f893f8963c3ea8a271e19b8ca"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -4520,11 +4520,11 @@
     },
     {
       "SPDXID": "SPDXRef-lombok-edge-snapshot-LicenseRef-BSD-3-CLAUSE-NO-TRADEMARK",
-      "fileName": "./17d46b3e205515e1e8efd3ee4d57ce8018914163/lombok-edge-SNAPSHOT.jar!",
+      "fileName": "./2b1d52f1154fe7d0d2dd3751807963f064c3e4cb/lombok-edge-SNAPSHOT.jar!",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "97574674e2a25f567a313736ace00df8787d443de316407d57fc877d9f19a65d"
+          "checksumValue": "f0e9d384a99d1e982a0ffcd9ca74671e80f2c24f893f8963c3ea8a271e19b8ca"
         }
       ],
       "fileTypes": [
@@ -4538,11 +4538,11 @@
     },
     {
       "SPDXID": "SPDXRef-lombok-edge-snapshot-MIT",
-      "fileName": "./17d46b3e205515e1e8efd3ee4d57ce8018914163/lombok-edge-SNAPSHOT.jar!",
+      "fileName": "./2b1d52f1154fe7d0d2dd3751807963f064c3e4cb/lombok-edge-SNAPSHOT.jar!",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "97574674e2a25f567a313736ace00df8787d443de316407d57fc877d9f19a65d"
+          "checksumValue": "f0e9d384a99d1e982a0ffcd9ca74671e80f2c24f893f8963c3ea8a271e19b8ca"
         }
       ],
       "fileTypes": [
