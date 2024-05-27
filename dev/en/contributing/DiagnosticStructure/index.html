@@ -816,8 +816,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#Diagnostics-description" class="md-nav__link">
-    Diagnostics description
+  <a href="#Description" class="md-nav__link">
+    Description
   </a>
   
 </li>
@@ -1269,23 +1269,31 @@ To create necessary files in right places, should run command <code>gradlew newD
 <ul>
 <li>The type of diagnostics is <code>type</code> and its importance is <code>severity</code>, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to <a href="../DiagnosticTypeAndSeverity/">article</a>.</li>
 <li>Time to fix issue <code>minutesToFix</code> (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.</li>
+<li>Using the <code>extraMinForComplexity</code> parameter, you can dynamically increase the time to correct a comment for diagnostics that take into account several places that violate the rule, for example, when calculating the complexity of a method.</li>
 <li>A set of diagnostics tags <code>tag</code> that indicate the group to which it belongs. Read more about tags in the <a href="../DiagnosticTag/">article</a>.</li>
 <li>Applicability limit <code>scope</code> (by default <code>ALL</code>, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.</li>
 <li>Default diagnostic active <code>activatedByDefault</code> (default <code>True</code>). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.</li>
 <li>Compatibility mode <code>compatibilityMode</code>, by which diagnostics are filtered when using metadata. The default is <code>UNDEFINED</code>.</li>
+<li>List of module types <code>modules</code> for the ability to limit the area analyzed by diagnostics</li>
+<li>Sign of the ability to set issues on the entire project <code>canLocateOnProject</code>. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
+The last two can be omitted.</li>
 </ul>
-<p>The last two can be omitted.</p>
 <p>Annotation example</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
-<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
-<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span><span class="c1">// Deactivated by default</span>
-<span class="w">  </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span><span class="w">         </span><span class="c1">// Applicable only for BSL</span>
-<span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span><span class="c1">// 8.3.3 compatibility mode</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w"> </span>
+<span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span><span class="w"> </span>
+<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">                    </span>
+<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">   </span>
+<span class="w">  </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span>
 <span class="w">  </span><span class="n">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span><span class="c1">// This is a diagnosis for violation of the 1C standard</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="n">modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w">       </span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span>
+<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="c1">// For each additional note position (`DiagnosticRelatedInformation`) one minute will be added</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Class should implement the interface <code>BSLDiagnostic</code>. If diagnostic bases on AST, that class should extends at one of classes, that implement <code>BSLDiagnostic</code> below:</p>
@@ -1387,7 +1395,7 @@ This rule will save application resources without making a meaningless call.</p>
 <li>Diagnostics for a condition or region block must call the <code>super-method</code>, as they exist and are used (e.g. <code>return super.visitSub(ctx)</code> for methods)</li>
 </ul>
 <h3 id="Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic">Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic<a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractSDBLVisitorDiagnostic" title="Permanent link">&para;</a></h3>
-<p>The diagnostic class implements the necessary <code>AST visitors</code>, according to the grammar of the query language (see <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4">BSLParser</a>). The complete list of visitor methods is in the <code>SDBLParserBaseVisitor</code> class.</p>
+<p>The diagnostic class implements the necessary <code>AST visitors</code>, according to the grammar of the query language (see <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4">BSLParser</a>). The complete list of visitor methods is in the <code>SDBLParserBaseVisitor</code> class.</p>
 <p>The rest of the rules are identical to <code>AbstractVisitorDiagnostic</code>.</p>
 <h3 id="Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress">Diagnostics class, inherits from AbstractListenerDiagnostic <strong>(Work in Progress)</strong><a class="headerlink" href="#Diagnostics-class-inherits-from-AbstractListenerDiagnostic-Work-in-Progress" title="Permanent link">&para;</a></h3>
 <p><em><strong><Work in Progress></strong></em></p>
@@ -1492,7 +1500,7 @@ Before setting new values ​​for diagnostic parameters, you must get the defa
 <h2 id="Diagnostics-test-resources">Diagnostics test resources<a class="headerlink" href="#Diagnostics-test-resources" title="Permanent link">&para;</a></h2>
 <p>The fixtures are the contents of the test resource file located in the <code>src/test/resources</code> directory in the <code>diagnostics</code> package. The file must contain the necessary code examples in 1C language <em>(or oscript language)</em>. </p>
 <p>It is necessary to add both erroneous and correct code, <strong>marking the places of errors with comments</strong>. It is best if the test cases are <code>real</code>, from practice, and not synthetic, invented <code>for diagnostics</code>.</p>
-<h2 id="Diagnostics-description">Diagnostics description<a class="headerlink" href="#Diagnostics-description" title="Permanent link">&para;</a></h2>
+<h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>The diagnostic description is created in the <a href="https://ru.wikipedia.org/wiki/Markdown">Markdown</a> format in two versions - for Russian and English. The files are located in the <code>docs/diagnostics</code> directory for Russian, for English in <code>docs/en/diagnostics</code>. 
 The file has the structure</p>
 <ul>
