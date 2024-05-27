@@ -110,38 +110,39 @@ EndTry;
 Bellow are code examples and their cognitive complexity calculation.
 
 ```bsl
-Функция Пример1(ТипКласса)
-    Если ТипКласса.Неизвестен() Тогда                                                  // +1, условие, вложенности нет
-        Возврат Символы.НеизвестныйСимвол;
-    КонецЕсли;
+Function Example1(ClassType)
+    If ClassType.Unknown() Then                                                  // +1, condition expression, no nesting
+        Return Chars.UnknownSymbol;
+    EndIf;
 
-    НеизвестностьНайдена = Ложь;
-    СписокСимволов = ТипКласса.ПолучитьСимвол().Потомки.Поиск("имя");
-    Для Каждого Символ Из СписокСимволов Цикл                                          // +1, цикл, вложенности нет
-        Если Символ.ИмеетТип(Символы.Странное)                                         // +2, условие вложенное в цикл, вложенность 1
-            И НЕ Символы.Экспортный() Тогда                                            // +1, логическая операция, вложенность не учитывается
+    AmbiguityFound = False;
+    ListSymbols = ClassType.GetSymbol().Children.Find("name");
+    For Each Symbol in ListSymbols Do
+// +1, loop, no nesting
+        If Symbol.HasType(Symbols.Strage)                                         // +2, condition nested in loop, nesting 1
+            AND NOT Symbols.Export() Then                                            // +1, logival operation, nesting not taken into account
 
-            Если МожноПереопределить(Символ) Тогда                                     // +3, вложенное условие, вложенность 2
-                Переопределяемость = ПроверитьПереопределяемость(Символ, ТипКласса);
-                Если Переопределяемость = Неопределено Тогда                           // +4, вложенное условие, вложенность 3
-                    Если НЕ НеизвестностьНайдена Тогда                                 // +5, вложенное условие, вложенность 4
-                        НеизвестностьНайдена = Истина;
-                    КонецЕсли;
-                ИначеЕсли Переопределяемость Тогда                                     // +1, альтернативная ветвь условия, вложенность не учитывается
-                    Возврат Символ;
-                КонецЕсли;
-            Иначе                                                                      // +1, ветвь по-умолчанию, вложенность не учитывается
-                Продолжить;
-            КонецЕсли;
-        КонецЕсли;
-    КонецЦикла;
+            If CanOverride(Symbol) Then                                     // +3, nested condition, nesting 2
+                Overrideability = CheckOverrideability(Symbol, ClassType);
+                If Overrideability = Undefined Then                           // +4, nested condition, nesting 3
+                    If NOT AmbiguityFound Then                                 // +5, nested condition, nesting 4
+                        AmbiguityFound = True;
+                    EndIf;
+                ElseIf Overrideability Then                                     // +1, alternative condition branch, nesting not taken into account
+                    Return Symbol;
+                EndIf;
+            Else                                                                      // +1, default branch, nesting not taken into account
+                Continue;
+            EndIf;
+        EndIf;
+    EndDo;
 
-    Если НеизвестностьНайдена Тогда                                                   // +1, вложенности нет
-        Возврат Символы.НеизвестныйСимвол;
-    КонецЕсли;
+    If AmbiguityFound Then                                                   // +1, no nesting
+        Return Symbols.UnknownSymbol;
+    EndIf;
 
-    Возврат Неопределено;
-КонецФункции
+    Return Undefined;
+EndFunction
 
 ```
 
