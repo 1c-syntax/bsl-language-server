@@ -1,7 +1,7 @@
 # Global context method names collision (GlobalContextMethodCollision8312)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Описание диагностики
+## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The platform version `8.3.12` implements new methods of the global context, which may coincide with the configuration functions of the application solution.
