@@ -1203,6 +1203,26 @@
 
       <span class="k">Raise</span><span class="p">;</span>
     <span class="k">EndTry</span><span class="p">;</span>
+</code></pre></div>
+If an outer attempt makes a log entry, then there is no need to do it again in a nested attempt:
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ЗагрузитьДанные</span><span class="p">()</span> <span class="k">Экспорт</span>
+    <span class="k">Попытка</span>
+        <span class="nf">ВыполнитьЗаписьДанных</span><span class="p">();</span>
+    <span class="k">Исключение</span>
+        <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">();</span> <span class="c1">// &lt;- исключение подавляется с записью в ЖР</span>
+    <span class="k">КонецПопытки</span><span class="p">;</span>
+<span class="k">КонецПроцедуры</span>
+
+<span class="k">Процедура</span> <span class="nf">ВыполнитьЗаписьДанных</span><span class="p">()</span>
+    <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
+    <span class="k">Попытка</span>
+        <span class="c1">// ...</span>
+        <span class="nb">ЗафиксироватьТранзакцию</span><span class="p">();</span>
+    <span class="k">Исключение</span>
+        <span class="nb">ОтменитьТранзакцию</span><span class="p">();</span>
+        <span class="k">ВызватьИсключение</span><span class="p">;</span> <span class="c1">// &lt;- вложенная попытка, запись в ЖР не требуется</span>
+    <span class="k">КонецПопытки</span><span class="p">;</span>
+<span class="k">КонецПроцедуры</span>
 </code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
