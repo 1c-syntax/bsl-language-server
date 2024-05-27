@@ -1,7 +1,7 @@
 # Disable safe mode (DisableSafeMode)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Examples
+## Description
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 In addition to configuration code, the application solution can execute third-party program code, which can be connected in various ways (external reports and data processing, extensions, external components, etc.). The developer cannot guarantee the reliability of this code. An attacker can include various destructive actions in it that can harm user computers, servers, and data in the program.
 
