@@ -1184,18 +1184,77 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>To improve the quality and security of 1C solutions, it is necessary to control the launch of external applications from 1C code.</p>
+<p>This rule applies to all methods of launching external programs, including:
+- System
+- RunSystem
+- RunApp
+- BeginRunningApplication
+- RunAppAsync
+- GotoURL or FileSystems.OpenURL
+- FileSystemsClient.RunApp (for client side) and FileSystems.RunApp (for server side)
+- FileSystemClient.OpenExplorer
+- FileSystemClient.OpenFile</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Метод</span><span class="p">()</span>
+    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">ДождатьсяЗавершения</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
+    <span class="nv">ОписаниеОповещения</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
+    <span class="nv">ПараметрыКоманды</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
 
+    <span class="nb">КомандаСистемы</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nb">ЗапуститьПриложение</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nb">ЗапуститьПриложение</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+
+    <span class="nb">НачатьЗапускПриложения</span><span class="p">(</span><span class="nv">ОписаниеОповещения</span><span class="p">,</span> <span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">,</span> <span class="nv">ДождатьсяЗавершения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+
+    <span class="nb">ПерейтиПоНавигационнойСсылке</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьНавигационнуюСсылку</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьНавигационнуюСсылку</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ОписаниеОповещения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="s">&quot;ping 127.0.0.1 -n 5&quot;</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистема</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистема</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьПроводник</span><span class="p">(</span><span class="s">&quot;C:\Users&quot;</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьФайл</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьФайл</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ОписаниеОповещения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+
+<span class="k">КонецПроцедуры</span>
+
+<span class="nd">&amp;НаКлиенте</span>
+<span class="k">Асинх</span> <span class="k">Процедура</span> <span class="nf">Подключить</span><span class="p">()</span>
+    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">ДождатьсяЗавершения</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
+
+    <span class="k">Ждать</span> <span class="nf">ЗапуститьПриложениеАсинх</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">,</span> <span class="nv">ДождатьсяЗавершения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+<span class="k">КонецПроцедуры</span>
+
+<span class="nd">&amp;НаКлиенте</span>
+<span class="k">Процедура</span> <span class="nf">ПроверкаЗапуститьСистему</span><span class="p">(</span><span class="nv">ДополнительныеПараметрыКоманднойСтроки</span><span class="p">,</span> <span class="nv">КодВозврата</span><span class="p">)</span>
+    <span class="nv">ДождатьсяЗавершения</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
+
+    <span class="nb">ЗапуститьСистему</span><span class="p">();</span> <span class="c1">// есть замечание</span>
+    <span class="nb">ЗапуститьСистему</span><span class="p">(</span><span class="nv">ДополнительныеПараметрыКоманднойСтроки</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nb">ЗапуститьСистему</span><span class="p">(</span><span class="nv">ДополнительныеПараметрыКоманднойСтроки</span><span class="p">,</span> <span class="nv">ДождатьсяЗавершения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nb">ЗапуститьСистему</span><span class="p">(</span><span class="nv">ДополнительныеПараметрыКоманднойСтроки</span><span class="p">,</span> <span class="nv">ДождатьсяЗавершения</span><span class="p">,</span> <span class="nv">КодВозврата</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+<span class="k">КонецПроцедуры</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:774:hdoc">Standard: Application launch security (RU)</a></li>
+<li>Standard: <a href="https://its.1c.ru/db/v8std/content/669/hdoc">Restriction on the execution of "external" code (RU)</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
