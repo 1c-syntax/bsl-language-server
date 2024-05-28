@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2024-05-27T14:20:03Z"
+    "created": "2024-05-28T07:34:44Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "214389497921f535f4fda0df44c346b6e45ca843"
+          "checksumValue": "56580081c0aefdfc458146dc41808ea5acba4f19"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -35,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.main",
       "name": "bsl-language-server.main",
-      "versionInfo": "develop-1171ce7",
+      "versionInfo": "develop-5658008-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "214389497921f535f4fda0df44c346b6e45ca843"
+          "checksumValue": "56580081c0aefdfc458146dc41808ea5acba4f19"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +56,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-1171ce7",
+      "versionInfo": "develop-5658008-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "214389497921f535f4fda0df44c346b6e45ca843"
+          "checksumValue": "56580081c0aefdfc458146dc41808ea5acba4f19"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -1021,9 +1021,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-bsl-common-library-0.5.1",
+      "SPDXID": "SPDXRef-bsl-common-library-0.6.0",
       "name": "io.github.1c-syntax:bsl-common-library",
-      "versionInfo": "0.5.1",
+      "versionInfo": "0.6.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1032,12 +1032,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "bsl-common-library-0.5.1.jar",
+      "packageFileName": "bsl-common-library-0.6.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "13d8ea0f7b0b92e99581ca0fdc2586fb5db2bc06c31ff65aab81df73ae8a78e4"
+          "checksumValue": "4384867f0d479aff4b79a05c6d015cd2b31d0c13f61d42156dd7ffd60e29333a"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -1087,9 +1087,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "SPDXID": "SPDXRef-mdclasses-0.13.0-rc.3",
       "name": "io.github.1c-syntax:mdclasses",
-      "versionInfo": "0.13.0-rc.2",
+      "versionInfo": "0.13.0-rc.3",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1098,12 +1098,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "mdclasses-0.13.0-rc.2.jar",
+      "packageFileName": "mdclasses-0.13.0-rc.3.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f8420acd4b4473205e9797d6923f419ea764d0c23ee07ad427f49c4849ba564d"
+          "checksumValue": "dadbd157855845cf09c4d2bb5443f340e244b14d1deda76cb130e0616756c18b"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -1131,9 +1131,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-utils-0.6.0",
+      "SPDXID": "SPDXRef-utils-0.6.1",
       "name": "io.github.1c-syntax:utils",
-      "versionInfo": "0.6.0",
+      "versionInfo": "0.6.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1142,12 +1142,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "utils-0.6.0.jar",
+      "packageFileName": "utils-0.6.1.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f45bda67c9e466ed9ff2a2dadd6f182fc03221c84712bb2eb025f5bab5b3052e"
+          "checksumValue": "980210e32456e5807ba6c948723733f8847102ecfd57039638c22370c124ed09"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -4966,17 +4966,17 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-utils-0.6.0"
+      "relatedSpdxElement": "SPDXRef-utils-0.6.1"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-mdclasses-0.13.0-rc.2"
+      "relatedSpdxElement": "SPDXRef-mdclasses-0.13.0-rc.3"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.5.1"
+      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.6.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
@@ -5139,64 +5139,64 @@
       "relatedSpdxElement": "SPDXRef-antlr4-4.9.0"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-xstream-1.4.20"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-slf4j-api-2.0.13"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.13.0"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-utils-0.6.0"
+      "relatedSpdxElement": "SPDXRef-utils-0.6.1"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.5.1"
+      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.6.0"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.0"
     },
     {
-      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.2",
+      "spdxElementId": "SPDXRef-mdclasses-0.13.0-rc.3",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-classgraph-4.8.147"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-common-library-0.5.1",
+      "spdxElementId": "SPDXRef-bsl-common-library-0.6.0",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-common-library-0.5.1",
+      "spdxElementId": "SPDXRef-bsl-common-library-0.6.0",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.5.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-common-library-0.5.1",
+      "spdxElementId": "SPDXRef-bsl-common-library-0.6.0",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-slf4j-api-2.0.13"
     },
     {
       "spdxElementId": "SPDXRef-supportconf-0.14.0",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.5.1"
+      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.6.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-parser-core-0.1.0",
@@ -5506,17 +5506,17 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-utils-0.6.0"
+      "relatedSpdxElement": "SPDXRef-utils-0.6.1"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-mdclasses-0.13.0-rc.2"
+      "relatedSpdxElement": "SPDXRef-mdclasses-0.13.0-rc.3"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.5.1"
+      "relatedSpdxElement": "SPDXRef-bsl-common-library-0.6.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
