@@ -149,10 +149,6 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
       dispatchChild.accept(this);
     }
 
-    if (unaryModifier != null) {
-      buildOperation();
-    }
-
     return ctx;
   }
 
