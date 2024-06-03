@@ -317,6 +317,25 @@ class ExpressionParseTreeRewriterTest {
     assertThat(binary.getRight().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
   }
 
+  @Test
+  void notOperatorPriority() {
+    var code = "А = Не Разыменование.Метод() = Неопределено";
+
+    var expressionTree = getExpressionTree(code);
+
+    assertThat(expressionTree.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+
+    var unary = expressionTree.<UnaryOperationNode>cast();
+    assertThat(unary.getOperator()).isEqualTo(BslOperator.NOT);
+    assertThat(unary.getOperand()).isInstanceOf(BinaryOperationNode.class);
+
+    var binary = unary.getOperand().<BinaryOperationNode>cast();
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(binary.getLeft().getNodeType()).isEqualTo(ExpressionNodeType.CALL);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+
+  }
+
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
     return ExpressionParseTreeRewriter.buildExpressionTree(expression);
