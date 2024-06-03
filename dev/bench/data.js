@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1717320413101,
+  "lastUpdate": 1717437813900,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -25823,6 +25823,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9404988777206661",
             "extra": "mean: 72.7238335609436 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6aa378b6671f137c47996ed394eaf2476365d119",
+          "message": "Merge pull request #3276 from qtLex/fix/VariableDiscriptionInForEachStatement\n\nНеверное описание переменной в цикле \"Для каждого\"",
+          "timestamp": "2024-06-03T20:53:09+03:00",
+          "tree_id": "e9b91a4d5c6433b8398882f3f5196f76619080f4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6aa378b6671f137c47996ed394eaf2476365d119"
+        },
+        "date": 1717437810405,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.31155904134114,
+            "unit": "sec",
+            "range": "stddev: 0.9712030324897047",
+            "extra": "mean: 72.31155904134114 sec\nrounds: 3"
           }
         ]
       }
