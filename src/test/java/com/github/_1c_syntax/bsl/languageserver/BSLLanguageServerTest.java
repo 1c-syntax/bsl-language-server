@@ -66,7 +66,7 @@ class BSLLanguageServerTest {
     // given
     InitializeParams params = new InitializeParams();
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
     List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
     params.setWorkspaceFolders(workspaceFolders);
 
@@ -82,7 +82,7 @@ class BSLLanguageServerTest {
     // given
     InitializeParams params = new InitializeParams();
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
     List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
     params.setWorkspaceFolders(workspaceFolders);
 
