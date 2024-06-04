@@ -32,7 +32,7 @@ A built-in language constructs, keywords must be written canonically.
 | Неопределено       | Undefined     |
 | Перейти            | Goto          |
 | Перем              | Var           |
-| По                 | For           |
+| По                 | To            |
 | Пока               | While         |
 | Попытка            | Try           |
 | Процедура          | Procedure     |

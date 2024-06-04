@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.websocket;
 
+import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
+import org.eclipse.lsp4j.websocket.jakarta.WebSocketEndpoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +31,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 import org.springframework.web.socket.server.standard.ServerEndpointRegistration;
-
-import javax.websocket.server.ServerEndpointConfig;
 
 /**
  * Конфигурация модуля веб-сокетов.

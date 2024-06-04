@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,10 +39,12 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
@@ -74,6 +76,8 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
@@ -90,13 +94,15 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @RequiredArgsConstructor
@@ -118,6 +124,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
+  private final InlayHintProvider inlayHintProvider;
+
+  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -125,8 +139,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    return CompletableFuture.supplyAsync(() ->
-      hoverProvider.getHover(documentContext, params).orElse(null)
+    return CompletableFuture.supplyAsync(
+      () -> hoverProvider.getHover(documentContext, params).orElse(null),
+      executorService
     );
   }
 
@@ -139,8 +154,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
     }
 
-    return CompletableFuture.supplyAsync(() ->
-      Either.forRight(definitionProvider.getDefinition(documentContext, params))
+    return CompletableFuture.supplyAsync(
+      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params)),
+      executorService
     );
   }
 
@@ -151,11 +167,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> referencesProvider.getReferences(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> referencesProvider.getReferences(documentContext, params),
+      executorService
+    );
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
@@ -164,10 +182,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() ->
-      documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+    return CompletableFuture.supplyAsync(
+      () -> documentSymbolProvider.getDocumentSymbols(documentContext).stream()
         .map(Either::<SymbolInformation, DocumentSymbol>forRight)
-        .collect(Collectors.toList())
+        .toList(),
+      executorService
     );
   }
 
@@ -178,7 +197,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> codeActionProvider.getCodeActions(params, documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> codeActionProvider.getCodeActions(params, documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -188,7 +210,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> codeLensProvider.getCodeLens(documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -198,7 +223,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(unresolved);
     }
-    return CompletableFuture.supplyAsync(() -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data));
+    return CompletableFuture.supplyAsync(
+      () -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data),
+      executorService
+    );
   }
 
   @Override
@@ -208,8 +236,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = formatProvider.getFormatting(params, documentContext);
-    return CompletableFuture.completedFuture(edits);
+    return CompletableFuture.supplyAsync(
+      () -> formatProvider.getFormatting(params, documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -219,8 +249,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = formatProvider.getRangeFormatting(params, documentContext);
-    return CompletableFuture.completedFuture(edits);
+    return CompletableFuture.supplyAsync(
+      () -> formatProvider.getRangeFormatting(params, documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -230,7 +262,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> foldingRangeProvider.getFoldingRange(documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -241,13 +276,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> {
-      List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
-      if (callHierarchyItems.isEmpty()) {
-        return null;
-      }
-      return callHierarchyItems;
-    });
+    return CompletableFuture.supplyAsync(
+      () -> {
+        List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
+        if (callHierarchyItems.isEmpty()) {
+          return null;
+        }
+        return callHierarchyItems;
+      },
+      executorService
+    );
   }
 
   @Override
@@ -259,7 +297,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.incomingCalls(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> callHierarchyProvider.incomingCalls(documentContext, params),
+      executorService
+    );
   }
 
   @Override
@@ -271,7 +312,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.outgoingCalls(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> callHierarchyProvider.outgoingCalls(documentContext, params),
+      executorService
+    );
   }
 
   @Override
@@ -281,7 +325,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> selectionRangeProvider.getSelectionRange(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> selectionRangeProvider.getSelectionRange(documentContext, params),
+      executorService
+    );
   }
 
   @Override
@@ -291,7 +338,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> colorProvider.getDocumentColor(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> colorProvider.getDocumentColor(documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -301,7 +351,23 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> colorProvider.getColorPresentation(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> colorProvider.getColorPresentation(documentContext, params),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> inlayHintProvider.getInlayHint(documentContext, params),
+      executorService
+    );
   }
 
   @Override
@@ -367,7 +433,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> documentLinkProvider.getDocumentLinks(documentContext),
+      executorService
+    );
   }
 
   @Override
@@ -384,7 +453,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       if (range != null) {
         diagnostics = diagnostics.stream()
           .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
-          .collect(Collectors.toList());
+          .toList();
       }
       return new Diagnostics(diagnostics, documentContext.getVersion());
     });
@@ -397,8 +466,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() ->
-      Either3.forFirst(renameProvider.getPrepareRename(documentContext, params)));
+    return CompletableFuture.supplyAsync(
+      () -> Either3.forFirst(renameProvider.getPrepareRename(documentContext, params)),
+      executorService
+    );
   }
 
   @Override
@@ -408,7 +479,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> renameProvider.getRename(documentContext, params));
+    return CompletableFuture.supplyAsync(
+      () -> renameProvider.getRename(documentContext, params),
+      executorService
+    );
   }
 
   public void reset() {

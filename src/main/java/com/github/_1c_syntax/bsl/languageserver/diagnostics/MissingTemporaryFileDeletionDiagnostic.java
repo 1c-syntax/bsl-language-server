@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -120,15 +120,15 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       .stream()
       .map(BSLParserRuleContext.class::cast)
       .filter((BSLParserRuleContext node) -> node.getStart().getLine() > filterLine)
-      .collect(Collectors.toList());
+      .toList();
 
     for (var node : listCallStatements) {
       String fullCallMethod;
       BSLParser.DoCallContext doCallContext;
 
-      if (node instanceof BSLParser.GlobalMethodCallContext) {
-        fullCallMethod = ((BSLParser.GlobalMethodCallContext) node).methodName().getText();
-        doCallContext = ((BSLParser.GlobalMethodCallContext) node).doCall();
+      if (node instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+        fullCallMethod = globalMethodCallContext.methodName().getText();
+        doCallContext = globalMethodCallContext.doCall();
       } else {
         fullCallMethod = getFullMethodName((BSLParser.AccessCallContext) node);
         doCallContext = ((BSLParser.AccessCallContext) node).methodCall().doCall();
@@ -136,7 +136,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       if (doCallContext != null) {
         var matcher = searchDeleteFileMethod.matcher(fullCallMethod);
-        if (matcher.matches() && fullCallMethod.length() > 0
+        if (matcher.matches() && !fullCallMethod.isEmpty()
           && foundVariableInCallParams(doCallContext, variableName)) {
           result = true;
           break;
@@ -191,11 +191,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     var prefix = "";
     List<? extends BSLParser.ModifierContext> modifiers;
 
-    if (parent instanceof BSLParser.CallStatementContext) {
+    if (parent instanceof BSLParser.CallStatementContext callStatement) {
 
-      var callStatement = (BSLParser.CallStatementContext) parent;
-
-      modifiers =callStatement.modifier();
+      modifiers = callStatement.modifier();
       if (callStatement.globalMethodCall() != null) {
         prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
       } else {
@@ -203,9 +201,8 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       }
 
     } else if (parent instanceof BSLParser.ModifierContext
-      && parent.getParent() instanceof BSLParser.ComplexIdentifierContext) {
+      && parent.getParent() instanceof BSLParser.ComplexIdentifierContext root) {
 
-      var root = (BSLParser.ComplexIdentifierContext) parent.getParent();
       modifiers = root.modifier();
 
       var terminalNode = root.IDENTIFIER();

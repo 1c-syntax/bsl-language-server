@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.children.ObjectModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -35,12 +37,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -53,7 +54,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
-  private AbstractMDObjectBase module;
+  private MD module;
   private DocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {
@@ -156,19 +157,19 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
     documentContext = spy(getDocumentContext());
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
     List.of("CommandGroup.ГруппаКоманд1",
       "EventSubscription.ВерсионированиеПриЗаписи",
       "Role.ПолныеПрава").forEach((String mdoName) -> {
 
-      var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
+      var spyMdo = spy(context.getConfiguration().getChildren().stream()
         .filter(mdo -> mdo.getMdoReference().getMdoRef().equalsIgnoreCase(mdoName))
         .findFirst()
         .get());
 
       // given
-      when(mdObjectBase.getName()).thenReturn(LONG_NAME);
-      children.add(mdObjectBase);
+      when(spyMdo.getName()).thenReturn(LONG_NAME);
+      children.add(spyMdo);
     });
 
     var configuration = spy(context.getConfiguration());
@@ -190,7 +191,14 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
     documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
-    module = spy((AbstractMDObjectBase) Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
+    var moduleByUri = Objects.requireNonNull(context).getConfiguration()
+      .getModuleByUri(documentContext.getUri()).get();
+    if (moduleByUri instanceof CommonModule) {
+      module = spy((CommonModule) moduleByUri);
+    } else {
+      module = spy(Objects.requireNonNull(context).getConfiguration().findChild(((ObjectModule) moduleByUri).getOwner())
+        .get());
+    }
   }
 
   static Stream<Arguments> contentProvider() {

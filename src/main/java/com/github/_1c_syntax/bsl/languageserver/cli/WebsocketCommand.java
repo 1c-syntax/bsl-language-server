@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -48,7 +47,6 @@ import static picocli.CommandLine.Option;
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket.
  *
  */
-@Slf4j
 @Command(
   name = "websocket",
   aliases = {"-w", "--websocket"},

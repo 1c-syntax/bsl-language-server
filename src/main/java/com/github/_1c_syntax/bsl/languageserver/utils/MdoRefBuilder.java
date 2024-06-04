@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,20 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
-import com.github._1c_syntax.mdclasses.utils.MDOUtils;
 import com.github._1c_syntax.utils.StringInterner;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,7 +54,7 @@ public class MdoRefBuilder {
 
   public static String getMdoRef(DocumentContext documentContext) {
     var mdoRef = documentContext.getMdObject()
-      .map(AbstractMDObjectBase::getMdoReference)
+      .map(MD::getMdoReference)
       .map(MdoReference::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
     return stringInterner.intern(mdoRef);
@@ -68,7 +67,7 @@ public class MdoRefBuilder {
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
-      TerminalNode identifier,
+    TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
 
@@ -81,8 +80,7 @@ public class MdoRefBuilder {
         Optional.ofNullable(identifier)
           .map(ParseTree::getText)
           .flatMap(MDOType::fromValue)
-          .filter(mdoType -> MDOUtils.getModuleTypesForMdoTypes()
-            .getOrDefault(mdoType, Collections.emptySet())
+          .filter(mdoType -> ModuleType.byMDOType(mdoType)
             .contains(ModuleType.ManagerModule))
           .map(mdoType -> getMdoRef(mdoType, getMdoName(modifiers)))
       )
@@ -91,11 +89,44 @@ public class MdoRefBuilder {
     return stringInterner.intern(mdoRef.get());
   }
 
+  /**
+   * Получить mdoRef в языке конфигурации
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale mdoRef
+   */
+  public String getLocaleMdoRef(DocumentContext documentContext, MD mdo) {
+    final var mdoReference = mdo.getMdoReference();
+    final String result;
+    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
+      result = mdoReference.getMdoRef();
+    } else {
+      result = mdoReference.getMdoRefRu();
+    }
+    return stringInterner.intern(result);
+  }
+
+  /**
+   * Получить имя родителя метаданного в языке конфигурации.
+   *
+   * @param documentContext the document context
+   * @param mdo             the mdo
+   * @return the locale owner mdo name
+   */
+  public String getLocaleOwnerMdoName(DocumentContext documentContext, MD mdo) {
+    final var names = getLocaleMdoRef(documentContext, mdo).split("\\.");
+    if (names.length <= 1) {
+      return "";
+    }
+    return stringInterner.intern(names[0].concat(".").concat(names[1]));
+  }
+
   private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
     return documentContext.getServerContext()
       .getConfiguration()
-      .getCommonModule(commonModuleName)
-      .map(MDCommonModule::getMdoReference)
+      .findCommonModule(commonModuleName)
+      .map(CommonModule::getMdoReference)
       .map(MdoReference::getMdoRef);
   }
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.ToggleCyclomaticComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -34,8 +35,11 @@ import java.util.Map;
 @Component
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
-  public CyclomaticComplexityCodeLensSupplier(LanguageServerConfiguration configuration) {
-    super(configuration);
+  public CyclomaticComplexityCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier
+  ) {
+    super(configuration, commandSupplier);
   }
 
   @Override

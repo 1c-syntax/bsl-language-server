@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,13 +39,11 @@ import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "testsuites")
@@ -66,7 +64,7 @@ class JUnitTestSuites {
     testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
       .map(JUnitTestSuite::new)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   public JUnitTestSuites(
@@ -91,7 +89,7 @@ class JUnitTestSuites {
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
-      Map<Either<String, Integer>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
+      var groupedDiagnostics = diagnostics.stream()
         .collect(Collectors.groupingBy(
           Diagnostic::getCode,
           Collectors.toList())
@@ -128,8 +126,8 @@ class JUnitTestSuites {
       this.classname = classname;
       List<String> value = new ArrayList<>();
 
-      String type = "";
-      String message = "";
+      var type = "";
+      var message = "";
 
       for (Diagnostic diagnostic : diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
@@ -178,9 +176,9 @@ class JUnitTestSuites {
     public JUnitFailure deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
       JsonNode node = jp.getCodec().readTree(jp);
 
-      String type = node.get("type").asText("");
-      String message = node.get("message").asText("");
-      String value = node.get("").asText("");
+      var type = node.get("type").asText("");
+      var message = node.get("message").asText("");
+      var value = node.get("").asText("");
 
       return new JUnitFailure(type, message, value);
     }

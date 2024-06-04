@@ -54,6 +54,7 @@ fabric.properties
 *.ps1
 target/
 build/
+bin/
 
 # Scala compiler user settings
 .idea/hydra.xml
@@ -67,6 +68,7 @@ gen/
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
 .idea/checkstyle-idea.xml
+.idea/jpa-buddy.xml
 *.bak
 *.orig
 
@@ -78,3 +80,6 @@ public/
 bsl-language-server/
 bsl-language-server_*.zip
 /.idea/misc.xml
+*.log
+*.hprof
+/.idea/material_theme_project_new.xml

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -72,7 +72,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
+    defaultValue = DEFAULT_COMMENTS_ANNOTATION
   )
   private Pattern commentsAnnotation = DiagnosticHelper.createPatternFromString(DEFAULT_COMMENTS_ANNOTATION);
 
@@ -116,7 +116,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      String currentText = documentContext.getText(range);
+      var currentText = documentContext.getText(range);
 
       var textEdit = new TextEdit(
         range,

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,23 +23,45 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import lombok.RequiredArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public abstract class DiagnosticComputer {
 
-  public List<Diagnostic> compute(DocumentContext documentContext) {
+  private ExecutorService executorService;
 
+  @PostConstruct
+  private void init() {
+    var factory = new NamedForkJoinWorkerThreadFactory("diagnostic-computer-");
+    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+  }
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
+
+  public List<Diagnostic> compute(DocumentContext documentContext) {
+    return CompletableFuture
+      .supplyAsync(() -> internalCompute(documentContext), executorService)
+      .join();
+  }
+
+  private List<Diagnostic> internalCompute(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     return diagnostics(documentContext).parallelStream()
@@ -47,7 +69,7 @@ public abstract class DiagnosticComputer {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
         } catch (RuntimeException e) {
-          String message = String.format(
+          var message = String.format(
             "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
             documentContext.getUri(),
             diagnostic.getInfo().getCode()
@@ -57,9 +79,8 @@ public abstract class DiagnosticComputer {
           return Stream.empty();
         }
       })
-      .filter((Diagnostic diagnostic) ->
-        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-      .collect(Collectors.toList());
+      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .toList();
 
   }
 

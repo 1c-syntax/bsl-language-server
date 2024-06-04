@@ -1,0 +1,51 @@
+name: Check making image
+
+on:
+    push:
+        branches:
+            - develop
+            - feature/check-package
+
+
+jobs:
+    build:
+        strategy:
+            fail-fast: true
+            matrix:
+               os: [windows-latest, ubuntu-latest, macOS-latest]
+               include:
+                    - os: windows-latest
+                      displayName: Windows
+                      prefix: win
+                      app-image: bsl-language-server
+                    - os: ubuntu-latest
+                      displayName: Linux
+                      prefix: nix
+                      app-image: bsl-language-server
+                    - os: macOS-latest
+                      displayName: MacOS
+                      prefix: mac
+                      app-image: bsl-language-server.app
+        runs-on: ${{ matrix.os }}
+        name: (${{ matrix.displayName }}) create image app version
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v4
+
+            - name: Set up JDK
+              uses: actions/setup-java@v4
+              with:
+                java-version: 20
+                distribution: 'temurin'
+                cache: gradle
+
+            - name: Build bootJar with Gradle
+              run: ./gradlew check build
+
+            - name: Build jpackage application image
+              run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
+
+
+                  
+                  

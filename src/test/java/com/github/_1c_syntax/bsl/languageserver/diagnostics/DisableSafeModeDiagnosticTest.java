@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -19,26 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.codelenses.databind;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.net.URI;
+import java.util.List;
 
-/**
- * Адаптер для (де)сериализации типа {@link URI} для библиотеки GSON.
- */
-public class URITypeAdapter extends TypeAdapter<URI> {
-  @Override
-  public void write(JsonWriter out, URI uri) throws IOException {
-    out.value(uri.toString());
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
+class DisableSafeModeDiagnosticTest extends AbstractDiagnosticTest<DisableSafeModeDiagnostic> {
+  DisableSafeModeDiagnosticTest() {
+    super(DisableSafeModeDiagnostic.class);
   }
 
-  @Override
-  public URI read(JsonReader in) throws IOException {
-    return URI.create(in.nextString());
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasRange(2, 4, 29)
+      .hasRange(5, 4, 29)
+      .hasRange(9, 4, 41)
+      .hasRange(12, 4, 41)
+      .hasSize(4);
+
   }
 }

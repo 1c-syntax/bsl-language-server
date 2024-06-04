@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,10 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,7 +72,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       .collect(Collectors.toCollection(() -> codeBlocks));
 
 
-    BSLParser.ElseBranchContext elseBranch = ctx.elseBranch();
+    var elseBranch = ctx.elseBranch();
     if (elseBranch != null) {
       codeBlocks.add(elseBranch.codeBlock());
     }
@@ -90,23 +90,21 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void checkCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts, int i) {
-    BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
+    var currentCodeBlock = codeBlockContexts.get(i);
 
-    List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
+    var identicalCodeBlocks = codeBlockContexts.stream()
       .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
           && !(currentCodeBlock.children == null && codeBlockContext.children == null)
           && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
-      .collect(Collectors.toList());
+      .toList();
 
     if (identicalCodeBlocks.isEmpty()) {
       return;
     }
 
-    identicalCodeBlocks.stream()
-      .collect(Collectors.toCollection(() -> checkedBlocks));
-
+    identicalCodeBlocks.stream().collect(Collectors.toCollection(() -> checkedBlocks));
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     relatedInformation.add(RelatedInformation.create(

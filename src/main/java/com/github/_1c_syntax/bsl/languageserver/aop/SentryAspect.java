@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,12 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import io.sentry.Sentry;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +44,7 @@ public class SentryAspect {
 
   @PostConstruct
   private void init() {
-    executorService = Executors.newCachedThreadPool();
+    executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("sentry-"));
   }
 
   @PreDestroy

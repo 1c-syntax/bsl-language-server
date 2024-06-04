@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -128,14 +128,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private String getParametersSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
-    var level = 0;
-    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-        if (parameterDefinition.getDescription().isPresent()) {
-          result.add(parameterToString(parameterDefinition.getDescription().get(), level));
-        } else {
-          result.add(parameterToString(parameterDefinition));
-        }
-      }
+    methodSymbol.getParameters().forEach(parameterDefinition ->
+      result.add(parameterToString(parameterDefinition))
     );
 
     var parameters = result.toString();
@@ -279,7 +273,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
   }
 
-  private static String parameterToString(ParameterDescription parameter, int level) {
+  public static String parameterToString(ParameterDescription parameter, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
     var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
@@ -295,7 +289,12 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return result.toString();
   }
 
-  private static String parameterToString(ParameterDefinition parameterDefinition) {
+  public static String parameterToString(ParameterDefinition parameterDefinition) {
+    int level = 0;
+    if (parameterDefinition.getDescription().isPresent()) {
+      return parameterToString(parameterDefinition.getDescription().get(), level);
+    }
+
     return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
   }
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,7 +51,7 @@ public class CommonModuleNameGlobalClientDiagnostic extends AbstractCommonModule
   }
 
   @Override
-  protected boolean flagsCheck(MDCommonModule commonModule) {
+  protected boolean flagsCheck(CommonModule commonModule) {
     return commonModule.isGlobal() && isClient(commonModule);
   }
 }

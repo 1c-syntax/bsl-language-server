@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_codeBlock;
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
@@ -56,7 +55,6 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_subCodeBlock;
     ModuleType.FormModule,
     ModuleType.ManagedApplicationModule
   }
-
 )
 public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern ASYNC_METHODS = CaseInsensitivePattern.compile(
@@ -90,7 +88,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     final var statements = codeBlock.statement().stream()
       .filter(statementContext -> statementContext != statement &&
         statementContext.getStart().getLine() > asyncLine)
-      .collect(Collectors.toList());
+      .toList();
     final var compoundCtx = statements.stream()
       .findFirst()
       .map(BSLParser.StatementContext::compoundStatement);

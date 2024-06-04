@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
@@ -119,10 +120,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     ParserRuleContext parent = modifier.getParent();
-    if (parent instanceof BSLParser.ComplexIdentifierContext) {
-      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
-    } else if (parent instanceof BSLParser.CallStatementContext) {
-      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
+    if (parent instanceof BSLParser.ComplexIdentifierContext complexIdentifierContext) {
+      return getComplexPathName(complexIdentifierContext, modifier);
+    } else if (parent instanceof BSLParser.CallStatementContext parentCall) {
 
       return parentCall.modifier().stream()
         .takeWhile(e -> !e.equals(modifier))
@@ -235,11 +235,10 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     String variableName = null;
     BSLParserRuleContext errorContext = null;
     BSLParserRuleContext parent = ctx.getParent();
-    if (parent instanceof BSLParser.CallStatementContext) {
+    if (parent instanceof BSLParser.CallStatementContext callStatementContext) {
       errorContext = parent;
-      variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
-    } else if (parent instanceof BSLParser.ModifierContext) {
-      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
+      variableName = getVariableNameFromCallStatementContext(callStatementContext);
+    } else if (parent instanceof BSLParser.ModifierContext callModifier) {
       errorContext = callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
@@ -320,6 +319,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class Scope {
+    @Getter
     private final String name;
 
     private final HashMap<String, VariableDefinition> variables = new HashMap<>();
@@ -340,10 +340,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
           return key;
         });
-    }
-
-    public String getName() {
-      return name;
     }
   }
 

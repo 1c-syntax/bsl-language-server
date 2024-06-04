@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -36,7 +35,6 @@ import java.io.OutputStream;
  * Конфигурация для создания объектов из lsp4j-слоя.
  */
 @Configuration
-@Slf4j
 public class LanguageServerLauncherConfiguration {
 
   @Bean
