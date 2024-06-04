@@ -1190,6 +1190,16 @@
     <span class="nv">HoverBoardIsReal</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
+<p>Also, a good solution is to use a special method with "telling name" that returns
+constant</p>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">DateInventionHover</span><span class="p">()</span>
+    <span class="k">Return</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span>
+<span class="k">EndFunction</span>
+
+<span class="k">If</span> <span class="nv">CurrentDate</span> <span class="o">&lt;</span> <span class="nf">DateInventionHover</span><span class="p">()</span> <span class="k">Then</span>
+    <span class="nv">HoverBoardWillBeInvented</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
+<span class="k">EndIf</span><span class="p">;</span>
+</code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
