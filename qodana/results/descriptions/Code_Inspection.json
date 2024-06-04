@@ -260,16 +260,16 @@
           "description": "Reports calls to `assertTrue()` and `assertFalse()` that can be replaced with assert equality functions.\n\n\n`assertEquals()`, `assertSame()`, and their negating counterparts (-Not-) provide more informative messages on\nfailure.\n\n**Example:**\n\n      assertTrue(a == b)\n\nAfter the quick-fix is applied:\n\n      assertEquals(a, b)\n"
         },
         {
-          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
-          "displayName": "Not-null assertion can be replaced with 'return'",
-          "enabled": false,
-          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
-        },
-        {
           "shortName": "ReplaceStringFormatWithLiteral",
           "displayName": "'String.format' call can be replaced with string templates",
           "enabled": false,
           "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
+        },
+        {
+          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
+          "displayName": "Not-null assertion can be replaced with 'return'",
+          "enabled": false,
+          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
         },
         {
           "shortName": "ReplaceSubstringWithSubstringBefore",
@@ -1164,16 +1164,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "UnnecessaryUnicodeEscape",
-          "displayName": "Unnecessary unicode escape sequence",
-          "enabled": false,
-          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
-        },
-        {
           "shortName": "StringTokenizer",
           "displayName": "Use of 'StringTokenizer'",
           "enabled": false,
           "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
+        },
+        {
+          "shortName": "UnnecessaryUnicodeEscape",
+          "displayName": "Unnecessary unicode escape sequence",
+          "enabled": false,
+          "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
         },
         {
           "shortName": "NumericToString",
@@ -1222,6 +1222,262 @@
           "displayName": "Lossy encoding",
           "enabled": false,
           "description": "Reports characters that cannot be displayed because of the current document encoding.\n\nExamples:\n\n* If you type international characters in a document with the **US-ASCII** charset, some characters will be lost on save.\n* If you load a **UTF-8** -encoded file using the **ISO-8859-1** one-byte charset, some characters will be displayed incorrectly.\n\nYou can fix this by changing the file encoding\neither by specifying the encoding directly in the file, e.g. by editing `encoding=` attribute in the XML prolog of XML file,\nor by changing the corresponding options in **Settings \\| Editor \\| File Encodings**."
+        }
+      ]
+    },
+    {
+      "name": "Spring Core",
+      "inspections": [
+        {
+          "shortName": "SpringElStaticFieldInjectionInspection",
+          "displayName": "Incorrect injecting of SpEL in a static field",
+          "enabled": true,
+          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
+        },
+        {
+          "shortName": "SpringElInspection",
+          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
+          "enabled": true,
+          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
+        },
+        {
+          "shortName": "SpringHandlersSchemasHighlighting",
+          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
+          "enabled": true,
+          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
+        }
+      ]
+    },
+    {
+      "name": "XML",
+      "inspections": [
+        {
+          "shortName": "SpringBeanConstructorArgInspection",
+          "displayName": "Incorrect constructor injection in XML Spring bean",
+          "enabled": true,
+          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanInstantiationInspection",
+          "displayName": "Invalid non-abstract bean instantiation",
+          "enabled": true,
+          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
+        },
+        {
+          "shortName": "RequiredBeanTypeInspection",
+          "displayName": "Incorrect injected bean type",
+          "enabled": true,
+          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
+        },
+        {
+          "shortName": "ContextComponentScanInconsistencyInspection",
+          "displayName": "Invalid filter definition in XML-based component scans",
+          "enabled": true,
+          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
+        },
+        {
+          "shortName": "UtilSchemaInspection",
+          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
+          "enabled": true,
+          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringScopesInspection",
+          "displayName": "Unknown <bean> scope",
+          "enabled": true,
+          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPublicFactoryMethodInspection",
+          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringFactoryMethodInspection",
+          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringXmlModelInspection",
+          "displayName": "Incorrect Spring Core XML-based application context",
+          "enabled": true,
+          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
+        },
+        {
+          "shortName": "SpringBeanAttributesInspection",
+          "displayName": "Conflicting Spring bean attribute",
+          "enabled": true,
+          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInactiveProfileHighlightingInspection",
+          "displayName": "Inactive profile highlighting",
+          "enabled": true,
+          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueStyleInspection",
+          "displayName": "Injection value in XML application context violates conventions",
+          "enabled": true,
+          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "InjectionValueTypeInspection",
+          "displayName": "Unassignable injection point type in XML application context",
+          "enabled": true,
+          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueConsistencyInspection",
+          "displayName": "Inconsistent injection value in XML application context",
+          "enabled": true,
+          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "DuplicatedBeanNamesInspection",
+          "displayName": "Duplicated bean names in XML-based application context",
+          "enabled": true,
+          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringIncorrectResourceTypeInspection",
+          "displayName": "Incorrect resource type",
+          "enabled": true,
+          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringRequiredPropertyInspection",
+          "displayName": "Missing @Required property injections in the spring xml bean declaration",
+          "enabled": true,
+          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
+        },
+        {
+          "shortName": "SpringXmlAutowiringInspection",
+          "displayName": "Incorrect XML Spring bean autowiring",
+          "enabled": true,
+          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanNameConventionInspection",
+          "displayName": "Spring bean name violates conventions",
+          "enabled": true,
+          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
+        },
+        {
+          "shortName": "UnparsedCustomBeanInspection",
+          "displayName": "Unparsed custom Spring beans",
+          "enabled": true,
+          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
+        },
+        {
+          "shortName": "SpringXmlAutowireExplicitlyInspection",
+          "displayName": "Unnecessary autowired dependency in XML application context",
+          "enabled": true,
+          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPlaceholdersInspection",
+          "displayName": "Unresolved placeholders configured in the Spring XML application context",
+          "enabled": true,
+          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanLookupMethodInspection",
+          "displayName": "Incorrectly configured XML bean lookup-method",
+          "enabled": true,
+          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "AbstractBeanReferencesInspection",
+          "displayName": "Incorrect reference to abstract bean",
+          "enabled": true,
+          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
+        },
+        {
+          "shortName": "DeprecatedClassUsageInspection",
+          "displayName": "Deprecated API usage in XML",
+          "enabled": false,
+          "description": "Reports usages of deprecated classes and methods in XML files."
+        },
+        {
+          "shortName": "CheckXmlFileWithXercesValidator",
+          "displayName": "Failed external validation",
+          "enabled": false,
+          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
+        },
+        {
+          "shortName": "XmlUnusedNamespaceDeclaration",
+          "displayName": "Unused schema declaration",
+          "enabled": false,
+          "description": "Reports an unused namespace declaration or location hint in XML."
+        },
+        {
+          "shortName": "XmlDefaultAttributeValue",
+          "displayName": "Redundant attribute with default value",
+          "enabled": false,
+          "description": "Reports a redundant assignment of the default value to an XML attribute."
+        },
+        {
+          "shortName": "CheckDtdRefs",
+          "displayName": "Unresolved DTD reference",
+          "enabled": false,
+          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
+        },
+        {
+          "shortName": "CheckTagEmptyBody",
+          "displayName": "Empty element content",
+          "enabled": false,
+          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
+        },
+        {
+          "shortName": "XmlInvalidId",
+          "displayName": "Unresolved 'id' reference",
+          "enabled": false,
+          "description": "Reports an unresolved `id` reference in XML."
+        },
+        {
+          "shortName": "XmlDeprecatedElement",
+          "displayName": "Deprecated symbol",
+          "enabled": false,
+          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
+        },
+        {
+          "shortName": "XmlUnresolvedReference",
+          "displayName": "Unresolved references",
+          "enabled": false,
+          "description": "Reports an unresolved references in XML."
+        },
+        {
+          "shortName": "XmlWrongRootElement",
+          "displayName": "Wrong root element",
+          "enabled": false,
+          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
+        },
+        {
+          "shortName": "XmlHighlighting",
+          "displayName": "XML highlighting",
+          "enabled": false,
+          "description": "Reports XML validation problems in the results of a batch code inspection."
+        },
+        {
+          "shortName": "XmlDuplicatedId",
+          "displayName": "Duplicate 'id' attribute",
+          "enabled": false,
+          "description": "Reports a duplicate `id` attribute in XML."
+        },
+        {
+          "shortName": "XmlUnboundNsPrefix",
+          "displayName": "Unbound namespace prefix",
+          "enabled": false,
+          "description": "Reports an unbound namespace prefix in XML."
+        },
+        {
+          "shortName": "XmlPathReference",
+          "displayName": "Unresolved file reference",
+          "enabled": false,
+          "description": "Reports an unresolved file reference in XML."
         }
       ]
     },
@@ -1503,262 +1759,6 @@
           "displayName": "'StringBuilder.toString()' in concatenation",
           "enabled": false,
           "description": "Reports `StringBuffer.toString()` or `StringBuilder.toString()` calls in string concatenations. Such calls are unnecessary when concatenating and can be removed, saving a method call and an object allocation, which may improve performance."
-        }
-      ]
-    },
-    {
-      "name": "Spring Core",
-      "inspections": [
-        {
-          "shortName": "SpringElStaticFieldInjectionInspection",
-          "displayName": "Incorrect injecting of SpEL in a static field",
-          "enabled": true,
-          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
-        },
-        {
-          "shortName": "SpringElInspection",
-          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
-          "enabled": true,
-          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
-        },
-        {
-          "shortName": "SpringHandlersSchemasHighlighting",
-          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
-          "enabled": true,
-          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
-        }
-      ]
-    },
-    {
-      "name": "XML",
-      "inspections": [
-        {
-          "shortName": "SpringBeanConstructorArgInspection",
-          "displayName": "Incorrect constructor injection in XML Spring bean",
-          "enabled": true,
-          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanInstantiationInspection",
-          "displayName": "Invalid non-abstract bean instantiation",
-          "enabled": true,
-          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
-        },
-        {
-          "shortName": "RequiredBeanTypeInspection",
-          "displayName": "Incorrect injected bean type",
-          "enabled": true,
-          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
-        },
-        {
-          "shortName": "ContextComponentScanInconsistencyInspection",
-          "displayName": "Invalid filter definition in XML-based component scans",
-          "enabled": true,
-          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
-        },
-        {
-          "shortName": "UtilSchemaInspection",
-          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
-          "enabled": true,
-          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringScopesInspection",
-          "displayName": "Unknown <bean> scope",
-          "enabled": true,
-          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPublicFactoryMethodInspection",
-          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringFactoryMethodInspection",
-          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringXmlModelInspection",
-          "displayName": "Incorrect Spring Core XML-based application context",
-          "enabled": true,
-          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
-        },
-        {
-          "shortName": "SpringBeanAttributesInspection",
-          "displayName": "Conflicting Spring bean attribute",
-          "enabled": true,
-          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInactiveProfileHighlightingInspection",
-          "displayName": "Inactive profile highlighting",
-          "enabled": true,
-          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueStyleInspection",
-          "displayName": "Injection value in XML application context violates conventions",
-          "enabled": true,
-          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "InjectionValueTypeInspection",
-          "displayName": "Unassignable injection point type in XML application context",
-          "enabled": true,
-          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueConsistencyInspection",
-          "displayName": "Inconsistent injection value in XML application context",
-          "enabled": true,
-          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "DuplicatedBeanNamesInspection",
-          "displayName": "Duplicated bean names in XML-based application context",
-          "enabled": true,
-          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringIncorrectResourceTypeInspection",
-          "displayName": "Incorrect resource type",
-          "enabled": true,
-          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringRequiredPropertyInspection",
-          "displayName": "Missing @Required property injections in the spring xml bean declaration",
-          "enabled": true,
-          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
-        },
-        {
-          "shortName": "SpringXmlAutowiringInspection",
-          "displayName": "Incorrect XML Spring bean autowiring",
-          "enabled": true,
-          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanNameConventionInspection",
-          "displayName": "Spring bean name violates conventions",
-          "enabled": true,
-          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
-        },
-        {
-          "shortName": "UnparsedCustomBeanInspection",
-          "displayName": "Unparsed custom Spring beans",
-          "enabled": true,
-          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
-        },
-        {
-          "shortName": "SpringXmlAutowireExplicitlyInspection",
-          "displayName": "Unnecessary autowired dependency in XML application context",
-          "enabled": true,
-          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPlaceholdersInspection",
-          "displayName": "Unresolved placeholders configured in the Spring XML application context",
-          "enabled": true,
-          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanLookupMethodInspection",
-          "displayName": "Incorrectly configured XML bean lookup-method",
-          "enabled": true,
-          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "AbstractBeanReferencesInspection",
-          "displayName": "Incorrect reference to abstract bean",
-          "enabled": true,
-          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
-        },
-        {
-          "shortName": "DeprecatedClassUsageInspection",
-          "displayName": "Deprecated API usage in XML",
-          "enabled": false,
-          "description": "Reports usages of deprecated classes and methods in XML files."
-        },
-        {
-          "shortName": "CheckXmlFileWithXercesValidator",
-          "displayName": "Failed external validation",
-          "enabled": false,
-          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
-        },
-        {
-          "shortName": "XmlUnusedNamespaceDeclaration",
-          "displayName": "Unused schema declaration",
-          "enabled": false,
-          "description": "Reports an unused namespace declaration or location hint in XML."
-        },
-        {
-          "shortName": "XmlDefaultAttributeValue",
-          "displayName": "Redundant attribute with default value",
-          "enabled": false,
-          "description": "Reports a redundant assignment of the default value to an XML attribute."
-        },
-        {
-          "shortName": "CheckDtdRefs",
-          "displayName": "Unresolved DTD reference",
-          "enabled": false,
-          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
-        },
-        {
-          "shortName": "CheckTagEmptyBody",
-          "displayName": "Empty element content",
-          "enabled": false,
-          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
-        },
-        {
-          "shortName": "XmlInvalidId",
-          "displayName": "Unresolved 'id' reference",
-          "enabled": false,
-          "description": "Reports an unresolved `id` reference in XML."
-        },
-        {
-          "shortName": "XmlDeprecatedElement",
-          "displayName": "Deprecated symbol",
-          "enabled": false,
-          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
-        },
-        {
-          "shortName": "XmlUnresolvedReference",
-          "displayName": "Unresolved references",
-          "enabled": false,
-          "description": "Reports an unresolved references in XML."
-        },
-        {
-          "shortName": "XmlWrongRootElement",
-          "displayName": "Wrong root element",
-          "enabled": false,
-          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
-        },
-        {
-          "shortName": "XmlHighlighting",
-          "displayName": "XML highlighting",
-          "enabled": false,
-          "description": "Reports XML validation problems in the results of a batch code inspection."
-        },
-        {
-          "shortName": "XmlDuplicatedId",
-          "displayName": "Duplicate 'id' attribute",
-          "enabled": false,
-          "description": "Reports a duplicate `id` attribute in XML."
-        },
-        {
-          "shortName": "XmlUnboundNsPrefix",
-          "displayName": "Unbound namespace prefix",
-          "enabled": false,
-          "description": "Reports an unbound namespace prefix in XML."
-        },
-        {
-          "shortName": "XmlPathReference",
-          "displayName": "Unresolved file reference",
-          "enabled": false,
-          "description": "Reports an unresolved file reference in XML."
         }
       ]
     },
@@ -2787,6 +2787,155 @@
       ]
     },
     {
+      "name": "Declaration redundancy",
+      "inspections": [
+        {
+          "shortName": "UnusedReturnValue",
+          "displayName": "Method can be made 'void'",
+          "enabled": false,
+          "description": "Reports methods whose return values are never used when called. The return type of such methods can be made `void`.\n\nMethods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation will not be reported.\nThe quick-fix updates the method signature and removes `return` statements from inside the method.\n\n**Example:**\n\n\n      // reported if visibility setting is Protected or Public\n      protected String myToUpperCase(String s) {\n        return s.toUpperCase();\n      }\n\n      // simple setter, reporting depends on setting\n      public String setStr(String str) {\n        myStr = str;\n        return myStr;\n      }\n\n      void test() {\n        setStr(\"value\");          // return value is unused\n        myToUpperCase(\"result\");  // return value is unused\n      }\n\nAfter the quick-fix is applied to both methods:\n\n\n        protected void myToUpperCase(String s) {\n          // 'return' removed completely\n          // as 's.toUpperCase()' has no side effect\n        }\n\n        public void setStr(String str) {\n          myStr = str;\n          // 'return' removed\n        }\n      ...\n\n\n**NOTE:** Some methods might not be reported during in-editor highlighting due to performance reasons.\nTo see all results, run the inspection using **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**\\>\n\nUse the **Ignore chainable methods** option to ignore unused return values from chainable calls.\n\nUse the **Maximal reported method visibility** option to control the maximum visibility of methods to be reported."
+        },
+        {
+          "shortName": "UnusedLibrary",
+          "displayName": "Unused library",
+          "enabled": false,
+          "description": "Reports libraries attached to the specified inspection scope that are not used directly in code."
+        },
+        {
+          "shortName": "RedundantLambdaParameterType",
+          "displayName": "Redundant lambda parameter types",
+          "enabled": false,
+          "description": "Reports lambda formal parameter types that are redundant because they can be inferred from the context.\n\n**Example:**\n\n\n      Map<String, Integer> map = ...\n      map.forEach((String s, Integer i) -> log.info(s + \"=\" + i));\n\nThe quick-fix removes the parameter types from the lambda.\n\n\n      Map<String, Integer> map = ...\n      map.forEach((s, i) -> log.info(s + \"=\" + i));\n"
+        },
+        {
+          "shortName": "CanBeFinal",
+          "displayName": "Declaration can have 'final' modifier",
+          "enabled": false,
+          "description": "Reports fields, methods, or classes that may have the `final` modifier added to their declarations.\n\nFinal classes can't be extended, final methods can't be overridden, and final fields can't be reassigned.\n\n**Example:**\n\n\n      public class Person {\n        private String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n\n        public String toString() {\n          return getName();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public final String getName() {\n          return name;\n        }\n\n        public final String toString() {\n          return getName();\n        }\n      }\n\nUse the **Report classes** and **Report methods** options to define which declarations are to be reported."
+        },
+        {
+          "shortName": "RedundantExplicitClose",
+          "displayName": "Redundant 'close()'",
+          "enabled": false,
+          "description": "Reports unnecessary calls to `close()` at the end of a try-with-resources block and suggests removing them.\n\n**Example**:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n        ac.close();\n      }\n\nAfter the quick-fix is applied:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n      }\n\nNew in 2018.1"
+        },
+        {
+          "shortName": "UnusedLabel",
+          "displayName": "Unused label",
+          "enabled": false,
+          "description": "Reports labels that are not targets of any `break` or `continue` statements.\n\n**Example:**\n\n\n      label: for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n\nAfter the quick-fix is applied, the label is removed:\n\n\n      for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n"
+        },
+        {
+          "shortName": "DefaultAnnotationParam",
+          "displayName": "Default annotation parameter value",
+          "enabled": false,
+          "description": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n"
+        },
+        {
+          "shortName": "WeakerAccess",
+          "displayName": "Declaration access can be weaker",
+          "enabled": false,
+          "description": "Reports fields, methods or classes that may have their access modifier narrowed down.\n\nExample:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        void bar(String x, String y) { } // can be private\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        private void bar(String x, String y) { }\n      }\n\nUse the inspection's options to define the rules for the modifier change suggestions."
+        },
+        {
+          "shortName": "Java9RedundantRequiresStatement",
+          "displayName": "Redundant 'requires' directive in module-info",
+          "enabled": false,
+          "description": "Reports redundant `requires` directives in Java Platform Module System `module-info.java` files. A `requires` directive is redundant when a module `A` requires a module `B`, but the code in module `A` doesn't import any packages or classes from `B`. Furthermore, all modules have an implicitly declared dependence on the `java.base` module, therefore a `requires java.base;` directive is always redundant.\n\n\nThe quick-fix deletes the redundant `requires` directive.\nIf the deleted dependency re-exported modules that are actually used, the fix adds a `requires` directives for these modules.\n\nThis inspection only reports if the language level of the project or module is 9 or higher.\n\nNew in 2017.1"
+        },
+        {
+          "shortName": "FunctionalExpressionCanBeFolded",
+          "displayName": "Functional expression can be folded",
+          "enabled": false,
+          "description": "Reports method references or lambda expressions that point to a method of their own functional interface type and hence can be replaced with their qualifiers removing unnecessary object allocation.\n\nExample:\n\n\n      SwingUtilities.invokeLater(r::run);\n      SwingUtilities.invokeAndWait(() -> r.run());\n\nAfter the quick-fix is applied:\n\n\n      SwingUtilities.invokeLater(r);\n      SwingUtilities.invokeAndWait(r);\n\nThis inspection reports only if the language level of the project or module is 8 or higher."
+        },
+        {
+          "shortName": "unused",
+          "displayName": "Unused declaration",
+          "enabled": false,
+          "description": "Reports classes, methods, or fields that are not used or unreachable from the entry points.\n\nAn entry point can be a main method, tests, classes from outside the specified scope, classes accessible from\n`module-info.java`, and so on. It is possible to configure custom entry points by using name patterns or annotations.\n\n**Example:**\n\n\n      public class Department {\n        private Organization myOrganization;\n      }\n\nIn this example, `Department` explicitly references `Organization` but if `Department` class itself is unused, then inspection will report both classes.\n\n\nThe inspection also reports parameters that are not used by their methods and all method implementations and overriders, as well as local\nvariables that are declared but not used.\n\n\n**Note:** Some unused members may not be reported during in-editor code highlighting. For performance reasons, a non-private member is\nchecked only when its name rarely occurs in the project.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the visibility settings below to configure members to be reported. For example, configuring report `private` methods only means\nthat `public` methods of `private` inner class will be reported but `protected` methods of top level class\nwill be ignored.\n\n\nUse the **entry points** tab to configure entry points to be considered during the inspection run.\n\nYou can add entry points manually when inspection results are ready.\n\nIf your code uses unsupported frameworks, there are several options:\n\n* If the framework relies on annotations, use the **Annotations...** button to configure the framework's annotations.\n* If the framework doesn't rely on annotations, try to configure class name patterns that are expected by the framework.\n\nThis way the annotated code accessible by the framework internals will be treated as used."
+        },
+        {
+          "shortName": "ProtectedMemberInFinalClass",
+          "displayName": "'protected' member in 'final' class",
+          "enabled": false,
+          "description": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
+        },
+        {
+          "shortName": "EmptyInitializer",
+          "displayName": "Empty class initializer",
+          "enabled": false,
+          "description": "Reports empty class initializer blocks."
+        },
+        {
+          "shortName": "TrivialFunctionalExpressionUsage",
+          "displayName": "Trivial usage of functional expression",
+          "enabled": false,
+          "description": "Reports functional interface methods calls that are directly invoked on the definition of the lambda, method reference, or anonymous class. Such method calls can be replaced with the body of the functional interface implementation.\n\n**Example:**\n\n\n      boolean contains(List<String> names, String name) {\n        return ((Predicate<String>)x -> {\n          return names.contains(x);\n        }).test(name);\n      }\n\nWhen the quick-fix is applied, the method call changes to:\n\n\n      boolean contains(List<String> names, String name) {\n        return names.contains(name);\n      }\n"
+        },
+        {
+          "shortName": "AccessStaticViaInstance",
+          "displayName": "Access static member via instance reference",
+          "enabled": false,
+          "description": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n"
+        },
+        {
+          "shortName": "UnnecessaryModuleDependencyInspection",
+          "displayName": "Unnecessary module dependency",
+          "enabled": false,
+          "description": "Reports dependencies on modules that are not used. The quick-fix safely removes such unused dependencies."
+        },
+        {
+          "shortName": "RedundantThrows",
+          "displayName": "Redundant 'throws' clause",
+          "enabled": false,
+          "description": "Reports exceptions that are declared in a method's signature but never thrown by the method itself or its implementations and overriding methods.\n\nThe inspection ignores methods related to serialization, for example the methods `readObject()` and `writeObject()`.\n\n**Example:**\n\n\n      void method() throws InterruptedException {\n        System.out.println();\n      }\n\nThe quick-fix removes unnecessary exceptions from the declaration and normalizes redundant `try`-`catch` statements:\n\n\n      void method() {\n        System.out.println();\n      }\n\n\n**Note:** Some exceptions may not be reported during in-editor highlighting for performance reasons.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the **Ignore exceptions thrown by entry point methods** option to not report exceptions thrown by\nfor example `main()` methods.\nEntry point methods can be configured in the settings of the\n[Java \\| Declaration redundancy \\| Unused declaration](settings://Errors?Unused%20Declaration%20entry%20point) inspection."
+        },
+        {
+          "shortName": "DuplicateThrows",
+          "displayName": "Duplicate throws",
+          "enabled": false,
+          "description": "Reports duplicate exceptions in a method `throws` list.\n\nExample:\n\n\n      void f() throws Exception, Exception {}\n\nAfter the quick-fix is applied:\n\n\n      void f() throws Exception {}\n\n\nUse the **Ignore exceptions subclassing others** option to ignore exceptions subclassing other exceptions."
+        },
+        {
+          "shortName": "SameParameterValue",
+          "displayName": "Method parameter always has the same value",
+          "enabled": false,
+          "description": "Reports method parameters that always have the same constant value.\n\nExample:\n\n\n      static void printPoint(int x, int y) { // x is always 0\n        System.out.println(x + \", \" + y);\n      }\n\n      public static void main(String[] args) {\n        printPoint(0, 1);\n        printPoint(0, 2);\n      }\n\nThe quick-fix inlines the constant value. This may simplify the method implementation.\n\n\nUse the **Ignore when a quick-fix can not be provided** option to suppress the inspections when:\n\n* the parameter is modified inside the method\n* the parameter value that is being passed is a reference to an inaccessible field (Java ony)\n* the parameter is a vararg (Java only)\n\n\nUse the **Maximal method visibility** option to control the maximum visibility of methods to be reported.\n\n\nUse the **Minimal method usage count to report parameter** field to specify the minimal number of method usages with the same parameter value."
+        },
+        {
+          "shortName": "SameReturnValue",
+          "displayName": "Method always returns the same value",
+          "enabled": false,
+          "description": "Reports methods and method hierarchies that always return the same constant.\n\n\nThe inspection works differently in batch-mode\n(from **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**)\nand on-the-fly in the editor:\n\n* In batch-mode, the inspection reports methods and method hierarchies that always return the same constant.\n* In the editor, the inspection only reports methods that have more than one `return` statement, do not have super methods, and cannot be overridden. If a method overrides or implements a method, a contract may require it to return a specific constant, but at the same time, we may want to have several exit points. If a method can be overridden, it is possible that a different value will be returned in subclasses.\n\n**Example:**\n\n\n      class X {\n                    // Warn only in batch-mode:\n        int xxx() { // Method 'xxx()' and all its overriding methods always return '0'\n          return 0;\n        }\n      }\n\n      class Y extends X {\n        @Override\n        int xxx() {\n            return 0;\n        }\n\n                    // Warn only in batch-mode:\n        int yyy() { // Method 'yyy()' always returns '0'\n            return 0;\n        }\n\n                                      // Warn both in batch-mode and on-the-fly:\n        final int zzz(boolean flag) { // Method 'zzz()' always returns '0'\n            if (Math.random() > 0.5) {\n                return 0;\n            }\n            return 0;\n        }\n      }\n"
+        },
+        {
+          "shortName": "RedundantRecordConstructor",
+          "displayName": "Redundant record constructor",
+          "enabled": false,
+          "description": "Reports redundant constructors declared inside Java records.\n\n**Example 1:**\n\n\n      record Point(int x, int y) {\n        public Point {} // could be removed\n      }\n      \n      record Point(int x, int y) {\n        public Point(int x, int y) { // could be removed\n          this.x = x;\n          this.y = y;\n        }\n      }\n\nThe quick-fix removes the redundant constructors.\n\n**Example 2:**\n\n\n       // could be converted to compact constructor\n      record Range(int from, int to) {\n        public Range(int from, int to) {\n          if (from > to) throw new IllegalArgumentException();\n          this.from = from;\n          this.to = to;\n        }\n      }\n\nThe quick-fix converts this code into a compact constructor.\n\nThis inspection depends on the Java feature 'Records' which is available since Java 16.\n\nNew in 2020.1"
+        },
+        {
+          "shortName": "FinalMethodInFinalClass",
+          "displayName": "'final' method in 'final' class",
+          "enabled": false,
+          "description": "Reports `final` methods in `final` classes.\n\nSince `final` classes cannot be inherited, marking a method as `final`\nmay be unnecessary and confusing.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      public final int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      public int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
+        },
+        {
+          "shortName": "SillyAssignment",
+          "displayName": "Variable is assigned to itself",
+          "enabled": false,
+          "description": "Reports assignments of a variable to itself.\n\n**Example:**\n\n\n      a = a;\n\nThe quick-fix removes the assigment."
+        },
+        {
+          "shortName": "GroovyUnusedDeclaration",
+          "displayName": "Unused declaration",
+          "enabled": false,
+          "description": "Reports unused classes, methods and fields.\n\n**Example:**\n\n\n      public class Department {\n          private Organization myOrganization;\n      }\n\nHere `Department` explicitly references `Organization` but if `Department` class itself is unused,\nthen inspection would report both classes.\n\n\nThe inspection also reports parameters, which are not used by their methods and all method implementations/overriders, as well as local\nvariables, which are declared but not used.\n\nFor more information, see the same inspection in Java."
+        }
+      ]
+    },
+    {
       "name": "Error handling",
       "inspections": [
         {
@@ -2998,274 +3147,6 @@
           "displayName": "Empty 'finally' block",
           "enabled": false,
           "description": "Reports empty `finally` blocks. Empty `finally` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    finally {\n    }\n\n"
-        }
-      ]
-    },
-    {
-      "name": "Declaration redundancy",
-      "inspections": [
-        {
-          "shortName": "UnusedReturnValue",
-          "displayName": "Method can be made 'void'",
-          "enabled": false,
-          "description": "Reports methods whose return values are never used when called. The return type of such methods can be made `void`.\n\nMethods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation will not be reported.\nThe quick-fix updates the method signature and removes `return` statements from inside the method.\n\n**Example:**\n\n\n      // reported if visibility setting is Protected or Public\n      protected String myToUpperCase(String s) {\n        return s.toUpperCase();\n      }\n\n      // simple setter, reporting depends on setting\n      public String setStr(String str) {\n        myStr = str;\n        return myStr;\n      }\n\n      void test() {\n        setStr(\"value\");          // return value is unused\n        myToUpperCase(\"result\");  // return value is unused\n      }\n\nAfter the quick-fix is applied to both methods:\n\n\n        protected void myToUpperCase(String s) {\n          // 'return' removed completely\n          // as 's.toUpperCase()' has no side effect\n        }\n\n        public void setStr(String str) {\n          myStr = str;\n          // 'return' removed\n        }\n      ...\n\n\n**NOTE:** Some methods might not be reported during in-editor highlighting due to performance reasons.\nTo see all results, run the inspection using **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**\\>\n\nUse the **Ignore chainable methods** option to ignore unused return values from chainable calls.\n\nUse the **Maximal reported method visibility** option to control the maximum visibility of methods to be reported."
-        },
-        {
-          "shortName": "UnusedLibrary",
-          "displayName": "Unused library",
-          "enabled": false,
-          "description": "Reports libraries attached to the specified inspection scope that are not used directly in code."
-        },
-        {
-          "shortName": "RedundantLambdaParameterType",
-          "displayName": "Redundant lambda parameter types",
-          "enabled": false,
-          "description": "Reports lambda formal parameter types that are redundant because they can be inferred from the context.\n\n**Example:**\n\n\n      Map<String, Integer> map = ...\n      map.forEach((String s, Integer i) -> log.info(s + \"=\" + i));\n\nThe quick-fix removes the parameter types from the lambda.\n\n\n      Map<String, Integer> map = ...\n      map.forEach((s, i) -> log.info(s + \"=\" + i));\n"
-        },
-        {
-          "shortName": "CanBeFinal",
-          "displayName": "Declaration can have 'final' modifier",
-          "enabled": false,
-          "description": "Reports fields, methods, or classes that may have the `final` modifier added to their declarations.\n\nFinal classes can't be extended, final methods can't be overridden, and final fields can't be reassigned.\n\n**Example:**\n\n\n      public class Person {\n        private String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n\n        public String toString() {\n          return getName();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public final String getName() {\n          return name;\n        }\n\n        public final String toString() {\n          return getName();\n        }\n      }\n\nUse the **Report classes** and **Report methods** options to define which declarations are to be reported."
-        },
-        {
-          "shortName": "RedundantExplicitClose",
-          "displayName": "Redundant 'close()'",
-          "enabled": false,
-          "description": "Reports unnecessary calls to `close()` at the end of a try-with-resources block and suggests removing them.\n\n**Example**:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n        ac.close();\n      }\n\nAfter the quick-fix is applied:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n      }\n\nNew in 2018.1"
-        },
-        {
-          "shortName": "UnusedLabel",
-          "displayName": "Unused label",
-          "enabled": false,
-          "description": "Reports labels that are not targets of any `break` or `continue` statements.\n\n**Example:**\n\n\n      label: for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n\nAfter the quick-fix is applied, the label is removed:\n\n\n      for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n"
-        },
-        {
-          "shortName": "DefaultAnnotationParam",
-          "displayName": "Default annotation parameter value",
-          "enabled": false,
-          "description": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n"
-        },
-        {
-          "shortName": "WeakerAccess",
-          "displayName": "Declaration access can be weaker",
-          "enabled": false,
-          "description": "Reports fields, methods or classes that may have their access modifier narrowed down.\n\nExample:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        void bar(String x, String y) { } // can be private\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        private void bar(String x, String y) { }\n      }\n\nUse the inspection's options to define the rules for the modifier change suggestions."
-        },
-        {
-          "shortName": "Java9RedundantRequiresStatement",
-          "displayName": "Redundant 'requires' directive in module-info",
-          "enabled": false,
-          "description": "Reports redundant `requires` directives in Java Platform Module System `module-info.java` files. A `requires` directive is redundant when a module `A` requires a module `B`, but the code in module `A` doesn't import any packages or classes from `B`. Furthermore, all modules have an implicitly declared dependence on the `java.base` module, therefore a `requires java.base;` directive is always redundant.\n\n\nThe quick-fix deletes the redundant `requires` directive.\nIf the deleted dependency re-exported modules that are actually used, the fix adds a `requires` directives for these modules.\n\nThis inspection only reports if the language level of the project or module is 9 or higher.\n\nNew in 2017.1"
-        },
-        {
-          "shortName": "FunctionalExpressionCanBeFolded",
-          "displayName": "Functional expression can be folded",
-          "enabled": false,
-          "description": "Reports method references or lambda expressions that point to a method of their own functional interface type and hence can be replaced with their qualifiers removing unnecessary object allocation.\n\nExample:\n\n\n      SwingUtilities.invokeLater(r::run);\n      SwingUtilities.invokeAndWait(() -> r.run());\n\nAfter the quick-fix is applied:\n\n\n      SwingUtilities.invokeLater(r);\n      SwingUtilities.invokeAndWait(r);\n\nThis inspection reports only if the language level of the project or module is 8 or higher."
-        },
-        {
-          "shortName": "unused",
-          "displayName": "Unused declaration",
-          "enabled": false,
-          "description": "Reports classes, methods, or fields that are not used or unreachable from the entry points.\n\nAn entry point can be a main method, tests, classes from outside the specified scope, classes accessible from\n`module-info.java`, and so on. It is possible to configure custom entry points by using name patterns or annotations.\n\n**Example:**\n\n\n      public class Department {\n        private Organization myOrganization;\n      }\n\nIn this example, `Department` explicitly references `Organization` but if `Department` class itself is unused, then inspection will report both classes.\n\n\nThe inspection also reports parameters that are not used by their methods and all method implementations and overriders, as well as local\nvariables that are declared but not used.\n\n\n**Note:** Some unused members may not be reported during in-editor code highlighting. For performance reasons, a non-private member is\nchecked only when its name rarely occurs in the project.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the visibility settings below to configure members to be reported. For example, configuring report `private` methods only means\nthat `public` methods of `private` inner class will be reported but `protected` methods of top level class\nwill be ignored.\n\n\nUse the **entry points** tab to configure entry points to be considered during the inspection run.\n\nYou can add entry points manually when inspection results are ready.\n\nIf your code uses unsupported frameworks, there are several options:\n\n* If the framework relies on annotations, use the **Annotations...** button to configure the framework's annotations.\n* If the framework doesn't rely on annotations, try to configure class name patterns that are expected by the framework.\n\nThis way the annotated code accessible by the framework internals will be treated as used."
-        },
-        {
-          "shortName": "ProtectedMemberInFinalClass",
-          "displayName": "'protected' member in 'final' class",
-          "enabled": false,
-          "description": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
-        },
-        {
-          "shortName": "EmptyInitializer",
-          "displayName": "Empty class initializer",
-          "enabled": false,
-          "description": "Reports empty class initializer blocks."
-        },
-        {
-          "shortName": "TrivialFunctionalExpressionUsage",
-          "displayName": "Trivial usage of functional expression",
-          "enabled": false,
-          "description": "Reports functional interface methods calls that are directly invoked on the definition of the lambda, method reference, or anonymous class. Such method calls can be replaced with the body of the functional interface implementation.\n\n**Example:**\n\n\n      boolean contains(List<String> names, String name) {\n        return ((Predicate<String>)x -> {\n          return names.contains(x);\n        }).test(name);\n      }\n\nWhen the quick-fix is applied, the method call changes to:\n\n\n      boolean contains(List<String> names, String name) {\n        return names.contains(name);\n      }\n"
-        },
-        {
-          "shortName": "AccessStaticViaInstance",
-          "displayName": "Access static member via instance reference",
-          "enabled": false,
-          "description": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n"
-        },
-        {
-          "shortName": "UnnecessaryModuleDependencyInspection",
-          "displayName": "Unnecessary module dependency",
-          "enabled": false,
-          "description": "Reports dependencies on modules that are not used. The quick-fix safely removes such unused dependencies."
-        },
-        {
-          "shortName": "RedundantThrows",
-          "displayName": "Redundant 'throws' clause",
-          "enabled": false,
-          "description": "Reports exceptions that are declared in a method's signature but never thrown by the method itself or its implementations and overriding methods.\n\nThe inspection ignores methods related to serialization, for example the methods `readObject()` and `writeObject()`.\n\n**Example:**\n\n\n      void method() throws InterruptedException {\n        System.out.println();\n      }\n\nThe quick-fix removes unnecessary exceptions from the declaration and normalizes redundant `try`-`catch` statements:\n\n\n      void method() {\n        System.out.println();\n      }\n\n\n**Note:** Some exceptions may not be reported during in-editor highlighting for performance reasons.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the **Ignore exceptions thrown by entry point methods** option to not report exceptions thrown by\nfor example `main()` methods.\nEntry point methods can be configured in the settings of the\n[Java \\| Declaration redundancy \\| Unused declaration](settings://Errors?Unused%20Declaration%20entry%20point) inspection."
-        },
-        {
-          "shortName": "DuplicateThrows",
-          "displayName": "Duplicate throws",
-          "enabled": false,
-          "description": "Reports duplicate exceptions in a method `throws` list.\n\nExample:\n\n\n      void f() throws Exception, Exception {}\n\nAfter the quick-fix is applied:\n\n\n      void f() throws Exception {}\n\n\nUse the **Ignore exceptions subclassing others** option to ignore exceptions subclassing other exceptions."
-        },
-        {
-          "shortName": "SameParameterValue",
-          "displayName": "Method parameter always has the same value",
-          "enabled": false,
-          "description": "Reports method parameters that always have the same constant value.\n\nExample:\n\n\n      static void printPoint(int x, int y) { // x is always 0\n        System.out.println(x + \", \" + y);\n      }\n\n      public static void main(String[] args) {\n        printPoint(0, 1);\n        printPoint(0, 2);\n      }\n\nThe quick-fix inlines the constant value. This may simplify the method implementation.\n\n\nUse the **Ignore when a quick-fix can not be provided** option to suppress the inspections when:\n\n* the parameter is modified inside the method\n* the parameter value that is being passed is a reference to an inaccessible field (Java ony)\n* the parameter is a vararg (Java only)\n\n\nUse the **Maximal method visibility** option to control the maximum visibility of methods to be reported.\n\n\nUse the **Minimal method usage count to report parameter** field to specify the minimal number of method usages with the same parameter value."
-        },
-        {
-          "shortName": "SameReturnValue",
-          "displayName": "Method always returns the same value",
-          "enabled": false,
-          "description": "Reports methods and method hierarchies that always return the same constant.\n\n\nThe inspection works differently in batch-mode\n(from **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**)\nand on-the-fly in the editor:\n\n* In batch-mode, the inspection reports methods and method hierarchies that always return the same constant.\n* In the editor, the inspection only reports methods that have more than one `return` statement, do not have super methods, and cannot be overridden. If a method overrides or implements a method, a contract may require it to return a specific constant, but at the same time, we may want to have several exit points. If a method can be overridden, it is possible that a different value will be returned in subclasses.\n\n**Example:**\n\n\n      class X {\n                    // Warn only in batch-mode:\n        int xxx() { // Method 'xxx()' and all its overriding methods always return '0'\n          return 0;\n        }\n      }\n\n      class Y extends X {\n        @Override\n        int xxx() {\n            return 0;\n        }\n\n                    // Warn only in batch-mode:\n        int yyy() { // Method 'yyy()' always returns '0'\n            return 0;\n        }\n\n                                      // Warn both in batch-mode and on-the-fly:\n        final int zzz(boolean flag) { // Method 'zzz()' always returns '0'\n            if (Math.random() > 0.5) {\n                return 0;\n            }\n            return 0;\n        }\n      }\n"
-        },
-        {
-          "shortName": "RedundantRecordConstructor",
-          "displayName": "Redundant record constructor",
-          "enabled": false,
-          "description": "Reports redundant constructors declared inside Java records.\n\n**Example 1:**\n\n\n      record Point(int x, int y) {\n        public Point {} // could be removed\n      }\n      \n      record Point(int x, int y) {\n        public Point(int x, int y) { // could be removed\n          this.x = x;\n          this.y = y;\n        }\n      }\n\nThe quick-fix removes the redundant constructors.\n\n**Example 2:**\n\n\n       // could be converted to compact constructor\n      record Range(int from, int to) {\n        public Range(int from, int to) {\n          if (from > to) throw new IllegalArgumentException();\n          this.from = from;\n          this.to = to;\n        }\n      }\n\nThe quick-fix converts this code into a compact constructor.\n\nThis inspection depends on the Java feature 'Records' which is available since Java 16.\n\nNew in 2020.1"
-        },
-        {
-          "shortName": "FinalMethodInFinalClass",
-          "displayName": "'final' method in 'final' class",
-          "enabled": false,
-          "description": "Reports `final` methods in `final` classes.\n\nSince `final` classes cannot be inherited, marking a method as `final`\nmay be unnecessary and confusing.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      public final int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      public int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
-        },
-        {
-          "shortName": "SillyAssignment",
-          "displayName": "Variable is assigned to itself",
-          "enabled": false,
-          "description": "Reports assignments of a variable to itself.\n\n**Example:**\n\n\n      a = a;\n\nThe quick-fix removes the assigment."
-        },
-        {
-          "shortName": "GroovyUnusedDeclaration",
-          "displayName": "Unused declaration",
-          "enabled": false,
-          "description": "Reports unused classes, methods and fields.\n\n**Example:**\n\n\n      public class Department {\n          private Organization myOrganization;\n      }\n\nHere `Department` explicitly references `Organization` but if `Department` class itself is unused,\nthen inspection would report both classes.\n\n\nThe inspection also reports parameters, which are not used by their methods and all method implementations/overriders, as well as local\nvariables, which are declared but not used.\n\nFor more information, see the same inspection in Java."
-        }
-      ]
-    },
-    {
-      "name": "Migration",
-      "inspections": [
-        {
-          "shortName": "NonExhaustiveWhenStatementMigration",
-          "displayName": "Non-exhaustive 'when' statements will be prohibited since 1.7",
-          "enabled": false,
-          "description": "Reports a non-exhaustive `when` statements that will lead to compilation error since 1.7.\n\nMotivation types:\n\n* Problematic/meaningless usage patterns need to be discouraged/blocked (e.g. counterintuitive behaviors)\n  * Code is error-prone\n* Inconsistency in the design (things are done differently in different contexts)\n\nImpact types:\n\n* Compilation. Some code that used to compile won't compile any more\n  * There were cases when such code worked with no exceptions\n    * Some such code could compile without any warnings\n\n**More details:** [KT-47709: Make when statements with enum, sealed, and Boolean subjects exhaustive by default](https://youtrack.jetbrains.com/issue/KT-47709)\n\nThe quick-fix adds the missing `else -> {}` branch.\n\n**Example:**\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n              else -> {}\n          }\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
-        },
-        {
-          "shortName": "AmbiguousExpressionInWhenBranchMigration",
-          "displayName": "Ambiguous logical expressions in 'when' branches since 1.7",
-          "enabled": false,
-          "description": "Reports ambiguous logical expressions in `when` branches which cause compilation errors in Kotlin 1.8 and later.\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          this in (4..7) -> true // is ambiguous\n          else -> false\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          (this in (4..7)) -> true // wrapped in parentheses\n          else -> false\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
-        },
-        {
-          "shortName": "CastDueToProgressionResolutionChangeMigration",
-          "displayName": "Progression resolution change since 1.9",
-          "enabled": false,
-          "description": "Reports overloaded function calls where an argument requires an explicit cast to resolve to a proper declaration.\nThe current compiler warning (available since Kotlin 1.6.20) will become an error in Kotlin 1.8.\n\n\nProgressions and ranges types (`kotlin.ranges`) will start implementing the `Collection` interface in Kotlin\n1.9 and later. This update will cause a change in resolution for overloaded functions. For instance, in the example below, the\n`test(1..5)` call will be resolved to `test(t: Any)` in Kotlin 1.8 and earlier and to\n`test(t: Collection<*>)` in Kotlin 1.9 and later.\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n      fun invoke() {\n        test(1..5) // IntRange becomes Collection in 1.9\n      }\n\nThe provided quick-fix captures the behaviour specific to the compiler of version 1.8 and earlier:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test(1..5) // resolved to 'test(t: T)' before Kotlin 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test((1..5) as Iterable<Int>) // resolved to 'test(t: T)' in Kotlin 1.9\n      }\n\nInspection is available for the Kotlin language level starting from 1.6."
-        },
-        {
-          "shortName": "AddConversionCallMigration",
-          "displayName": "Explicit conversion from `Int` needed since 1.9",
-          "enabled": false,
-          "description": "Reports expressions that will be of type `Int`, thus causing compilation errors in Kotlin 1.9 and later.\n\nExample:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte(1 + 1) // will be resolved to Int in 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte((1 + 1).toByte()) // will be resolved to Int in 1.9\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
-        },
-        {
-          "shortName": "WarningOnMainUnusedParameterMigration",
-          "displayName": "Unused 'args' on 'main' since 1.4",
-          "enabled": false,
-          "description": "Reports `main` function with an unused single parameter.\n\nSince Kotlin 1.4, it is possible to use the `main` function without parameter as the entry point to the Kotlin program.\nThe compiler reports a warning for the `main` function with an unused parameter."
-        },
-        {
-          "shortName": "RedundantLabelMigration",
-          "displayName": "Redundant label",
-          "enabled": false,
-          "description": "Reports redundant labels which cause compilation errors since Kotlin 1.4.\n\nSince Kotlin 1.0, one can mark any statement with a label:\n\n\n      fun foo() {\n        L1@ val x = L2@bar()\n      }\n\nHowever, these labels can be referenced only in a limited number of ways:\n\n* break / continue from a loop\n* non-local return from an inline lambda or inline anonymous function\n\nSuch labels are prohibited since Kotlin 1.4.\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "NoConstructorMigration",
-          "displayName": "Forbidden constructor call",
-          "enabled": false,
-          "description": "Reports a constructor calls on functional supertypes that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* The implementation does not abide by a published spec or documentation\n\n**More details:** [KT-46344: No error for a super class constructor call on a function interface in supertypes list](https://youtrack.jetbrains.com/issue/KT-46344)\n\nThe quick-fix removes a constructor call.\n\n**Example:**\n\n\n      abstract class A : () -> Int()\n\nAfter the quick-fix is applied:\n\n\n      abstract class A : () -> Int\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
-        },
-        {
-          "shortName": "ProhibitTypeParametersForLocalVariablesMigration",
-          "displayName": "Local variable with type parameters",
-          "enabled": false,
-          "description": "Reports local variables with type parameters.\n\nA type parameter for a local variable doesn't make sense because it can't be specialized.\n\n**Example:**\n\n\n      fun main() {\n          val <T> x = \"\"\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val x = \"\"\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "InlineClassDeprecatedMigration",
-          "displayName": "Inline classes are deprecated since 1.5",
-          "enabled": false,
-          "description": "Reports inline classes that are deprecated and cause compilation warnings in Kotlin 1.5 and later.\nSee [What's new in Kotlin 1.5.0](https://kotlinlang.org/docs/whatsnew15.html#inline-classes)\n\nExample:\n\n\n      inline class Password(val s: String)\n\nAfter the quick-fix is applied:\n\n\n      @JvmInline\n      value class Password(val s: String)\n\nInspection is available for Kotlin language level starting from 1.5."
-        },
-        {
-          "shortName": "ProhibitJvmOverloadsOnConstructorsOfAnnotationClassesMigration",
-          "displayName": "'@JvmOverloads' annotation cannot be used on constructors of annotation classes since 1.4",
-          "enabled": false,
-          "description": "Reports `@JvmOverloads` on constructors of annotation classes because it's meaningless.\n\n\nThere is no footprint of `@JvmOverloads` in the generated bytecode and Kotlin metadata,\nso `@JvmOverloads` doesn't affect the generated bytecode and the code behavior.\n\n`@JvmOverloads` on constructors of annotation classes causes a compilation error since Kotlin 1.4.\n\n**Example:**\n\n\n      annotation class A @JvmOverloads constructor(val x: Int = 1)\n\nAfter the quick-fix is applied:\n\n\n      annotation class A constructor(val x: Int = 1)\n"
-        },
-        {
-          "shortName": "KotlinDeprecation",
-          "displayName": "Usage of redundant or deprecated syntax or deprecated symbols",
-          "enabled": false,
-          "description": "Reports obsolete language features and unnecessarily verbose code constructs during the code cleanup operation (**Code \\| Code Cleanup** ).\n\n\nThe quick-fix automatically replaces usages of obsolete language features or unnecessarily verbose code constructs with compact and up-to-date syntax.\n\n\nIt also replaces deprecated symbols with their proposed substitutions."
-        },
-        {
-          "shortName": "OverrideDeprecatedMigration",
-          "displayName": "Do not propagate method deprecation through overrides since 1.9",
-          "enabled": false,
-          "description": "Reports a declarations that are propagated by `@Deprecated` annotation that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* Implementation changes are required for implementation design/architectural reasons\n* Inconsistency in the design (things are done differently in different contexts)\n\n**More details:** [KT-47902: Do not propagate method deprecation through overrides](https://youtrack.jetbrains.com/issue/KT-47902)\n\nThe quick-fix copies `@Deprecated` annotation from the parent declaration.\n\n**Example:**\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          override fun foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          @Deprecated(\"Don't use\")\n          override fun foo() {}\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
-        },
-        {
-          "shortName": "ObsoleteExperimentalCoroutines",
-          "displayName": "Experimental coroutines usages are deprecated since 1.3",
-          "enabled": false,
-          "description": "Reports code that uses experimental coroutines.\n\nSuch usages are incompatible with Kotlin 1.3+ and should be updated."
-        },
-        {
-          "shortName": "FromClosedRangeMigration",
-          "displayName": "MIN_VALUE step in fromClosedRange() since 1.3",
-          "enabled": false,
-          "description": "Reports `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with `MIN_VALUE` step.\n\n\nIt is prohibited to call `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with\n`MIN_VALUE` step. All such calls should be checked during migration to Kotlin 1.3+.\n\n**Example:**\n\n\n      IntProgression.fromClosedRange(12, 143, Int.MIN_VALUE)\n\nTo fix the problem change the step of the progression."
-        },
-        {
-          "shortName": "DeclaringClassMigration",
-          "displayName": "Deprecated 'Enum.declaringClass' property",
-          "enabled": false,
-          "description": "Reports 'declaringClass' property calls on Enum that will lead to compilation error since 1.9.\n\n'Enum.getDeclaringClass' is among \"hidden\" Java functions which aren't normally visible by resolve. However, it's visible via synthetic\nproperty that is a front-end bug.\n\n**More details:** [KT-49653 Deprecate and remove Enum.declaringClass synthetic\nproperty](https://youtrack.jetbrains.com/issue/KT-49653)\n\nThe quick-fix replaces a call with 'declaringJavaClass'.\n\n**Example:**\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringClass)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringJavaClass)\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
-        },
-        {
-          "shortName": "ProhibitUseSiteTargetAnnotationsOnSuperTypesMigration",
-          "displayName": "Meaningless annotations targets on superclass",
-          "enabled": false,
-          "description": "Reports meaningless annotation targets on superclasses since Kotlin 1.4.\n\nAnnotation targets such as `@get:` are meaningless on superclasses and are prohibited.\n\n**Example:**\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : @field:Ann @get:Ann @set:Ann @setparam:Ann Foo\n\nAfter the quick-fix is applied:\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : Foo\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "ObsoleteKotlinJsPackages",
-          "displayName": "'kotlin.browser' and 'kotlin.dom' packages are deprecated since 1.4",
-          "enabled": false,
-          "description": "Reports usages of `kotlin.dom` and `kotlin.browser` packages.\n\nThese packages were moved to `kotlinx.dom` and `kotlinx.browser`\nrespectively in Kotlin 1.4+."
-        },
-        {
-          "shortName": "RestrictReturnStatementTargetMigration",
-          "displayName": "Target label does not denote a function since 1.4",
-          "enabled": false,
-          "description": "Reports labels that don't points to a functions.\n\nIt's forbidden to declare a target label that does not denote a function.\n\nThe quick-fix removes the label.\n\n**Example:**\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return@L }\n          fn()\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return }\n          fn()\n      }\n\nThis inspection only reports if the language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "ProhibitRepeatedUseSiteTargetAnnotationsMigration",
-          "displayName": "Repeated annotation which is not marked as '@Repeatable'",
-          "enabled": false,
-          "description": "Reports the repeated use of a non-`@Repeatable` annotation on property accessors.\n\n\nAs a result of using non-`@Repeatable` annotation multiple times, both annotation usages\nwill appear in the bytecode leading to an ambiguity in reflection calls.\n\n\nSince Kotlin 1.4 it's mandatory to either mark annotation as `@Repeatable` or not\nrepeat the annotation, otherwise it will lead to compilation error.\n\n**Example:**\n\n\n      annotation class Foo(val x: Int)\n\n      @get:Foo(10)\n      val a: String\n          @Foo(20) get() = \"foo\" // annotation repeated twice but not marked as @Repeatable\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
         }
       ]
     },
@@ -3861,16 +3742,16 @@
           "description": "Reports expressions and conditions that always produce the same result, like true, false, null, or zero. Such expressions could be replaced with the corresponding constant value. Very often though they signal about a bug in the code.\n\nExamples:\n\n      // always true\n      // root cause: || is used instead of &&\n      if (x > 0 || x < 10) {}\n\n      System.out.println(str.trim());\n      // always false\n      // root cause: variable was dereferenced before null-check\n      if (str == null) {}\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when constant is stored in variable** option to display warnings when variable is used, whose value is known to be a constant.\n\n\nBefore IntelliJ IDEA 2022.3, this inspection was part of \"Constant Conditions \\& Exceptions\" inspection. Now, it split into two inspections:\n\"Constant Values\" and \"Nullability and data flow problems\"."
         },
         {
-          "shortName": "IteratorHasNextCallsIteratorNext",
-          "displayName": "'Iterator.hasNext()' which calls 'next()'",
-          "enabled": true,
-          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
-        },
-        {
           "shortName": "EqualsAndHashcode",
           "displayName": "'equals()' and 'hashCode()' not paired",
           "enabled": false,
           "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
+        },
+        {
+          "shortName": "IteratorHasNextCallsIteratorNext",
+          "displayName": "'Iterator.hasNext()' which calls 'next()'",
+          "enabled": true,
+          "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
         },
         {
           "shortName": "MathRoundingWithIntArgument",
@@ -4445,6 +4326,125 @@
       ]
     },
     {
+      "name": "Migration",
+      "inspections": [
+        {
+          "shortName": "NonExhaustiveWhenStatementMigration",
+          "displayName": "Non-exhaustive 'when' statements will be prohibited since 1.7",
+          "enabled": false,
+          "description": "Reports a non-exhaustive `when` statements that will lead to compilation error since 1.7.\n\nMotivation types:\n\n* Problematic/meaningless usage patterns need to be discouraged/blocked (e.g. counterintuitive behaviors)\n  * Code is error-prone\n* Inconsistency in the design (things are done differently in different contexts)\n\nImpact types:\n\n* Compilation. Some code that used to compile won't compile any more\n  * There were cases when such code worked with no exceptions\n    * Some such code could compile without any warnings\n\n**More details:** [KT-47709: Make when statements with enum, sealed, and Boolean subjects exhaustive by default](https://youtrack.jetbrains.com/issue/KT-47709)\n\nThe quick-fix adds the missing `else -> {}` branch.\n\n**Example:**\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n              else -> {}\n          }\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
+        },
+        {
+          "shortName": "AmbiguousExpressionInWhenBranchMigration",
+          "displayName": "Ambiguous logical expressions in 'when' branches since 1.7",
+          "enabled": false,
+          "description": "Reports ambiguous logical expressions in `when` branches which cause compilation errors in Kotlin 1.8 and later.\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          this in (4..7) -> true // is ambiguous\n          else -> false\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          (this in (4..7)) -> true // wrapped in parentheses\n          else -> false\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
+        },
+        {
+          "shortName": "CastDueToProgressionResolutionChangeMigration",
+          "displayName": "Progression resolution change since 1.9",
+          "enabled": false,
+          "description": "Reports overloaded function calls where an argument requires an explicit cast to resolve to a proper declaration.\nThe current compiler warning (available since Kotlin 1.6.20) will become an error in Kotlin 1.8.\n\n\nProgressions and ranges types (`kotlin.ranges`) will start implementing the `Collection` interface in Kotlin\n1.9 and later. This update will cause a change in resolution for overloaded functions. For instance, in the example below, the\n`test(1..5)` call will be resolved to `test(t: Any)` in Kotlin 1.8 and earlier and to\n`test(t: Collection<*>)` in Kotlin 1.9 and later.\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n      fun invoke() {\n        test(1..5) // IntRange becomes Collection in 1.9\n      }\n\nThe provided quick-fix captures the behaviour specific to the compiler of version 1.8 and earlier:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test(1..5) // resolved to 'test(t: T)' before Kotlin 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test((1..5) as Iterable<Int>) // resolved to 'test(t: T)' in Kotlin 1.9\n      }\n\nInspection is available for the Kotlin language level starting from 1.6."
+        },
+        {
+          "shortName": "AddConversionCallMigration",
+          "displayName": "Explicit conversion from `Int` needed since 1.9",
+          "enabled": false,
+          "description": "Reports expressions that will be of type `Int`, thus causing compilation errors in Kotlin 1.9 and later.\n\nExample:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte(1 + 1) // will be resolved to Int in 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte((1 + 1).toByte()) // will be resolved to Int in 1.9\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
+        },
+        {
+          "shortName": "WarningOnMainUnusedParameterMigration",
+          "displayName": "Unused 'args' on 'main' since 1.4",
+          "enabled": false,
+          "description": "Reports `main` function with an unused single parameter.\n\nSince Kotlin 1.4, it is possible to use the `main` function without parameter as the entry point to the Kotlin program.\nThe compiler reports a warning for the `main` function with an unused parameter."
+        },
+        {
+          "shortName": "RedundantLabelMigration",
+          "displayName": "Redundant label",
+          "enabled": false,
+          "description": "Reports redundant labels which cause compilation errors since Kotlin 1.4.\n\nSince Kotlin 1.0, one can mark any statement with a label:\n\n\n      fun foo() {\n        L1@ val x = L2@bar()\n      }\n\nHowever, these labels can be referenced only in a limited number of ways:\n\n* break / continue from a loop\n* non-local return from an inline lambda or inline anonymous function\n\nSuch labels are prohibited since Kotlin 1.4.\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "NoConstructorMigration",
+          "displayName": "Forbidden constructor call",
+          "enabled": false,
+          "description": "Reports a constructor calls on functional supertypes that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* The implementation does not abide by a published spec or documentation\n\n**More details:** [KT-46344: No error for a super class constructor call on a function interface in supertypes list](https://youtrack.jetbrains.com/issue/KT-46344)\n\nThe quick-fix removes a constructor call.\n\n**Example:**\n\n\n      abstract class A : () -> Int()\n\nAfter the quick-fix is applied:\n\n\n      abstract class A : () -> Int\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
+        },
+        {
+          "shortName": "ProhibitTypeParametersForLocalVariablesMigration",
+          "displayName": "Local variable with type parameters",
+          "enabled": false,
+          "description": "Reports local variables with type parameters.\n\nA type parameter for a local variable doesn't make sense because it can't be specialized.\n\n**Example:**\n\n\n      fun main() {\n          val <T> x = \"\"\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val x = \"\"\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "InlineClassDeprecatedMigration",
+          "displayName": "Inline classes are deprecated since 1.5",
+          "enabled": false,
+          "description": "Reports inline classes that are deprecated and cause compilation warnings in Kotlin 1.5 and later.\nSee [What's new in Kotlin 1.5.0](https://kotlinlang.org/docs/whatsnew15.html#inline-classes)\n\nExample:\n\n\n      inline class Password(val s: String)\n\nAfter the quick-fix is applied:\n\n\n      @JvmInline\n      value class Password(val s: String)\n\nInspection is available for Kotlin language level starting from 1.5."
+        },
+        {
+          "shortName": "ProhibitJvmOverloadsOnConstructorsOfAnnotationClassesMigration",
+          "displayName": "'@JvmOverloads' annotation cannot be used on constructors of annotation classes since 1.4",
+          "enabled": false,
+          "description": "Reports `@JvmOverloads` on constructors of annotation classes because it's meaningless.\n\n\nThere is no footprint of `@JvmOverloads` in the generated bytecode and Kotlin metadata,\nso `@JvmOverloads` doesn't affect the generated bytecode and the code behavior.\n\n`@JvmOverloads` on constructors of annotation classes causes a compilation error since Kotlin 1.4.\n\n**Example:**\n\n\n      annotation class A @JvmOverloads constructor(val x: Int = 1)\n\nAfter the quick-fix is applied:\n\n\n      annotation class A constructor(val x: Int = 1)\n"
+        },
+        {
+          "shortName": "KotlinDeprecation",
+          "displayName": "Usage of redundant or deprecated syntax or deprecated symbols",
+          "enabled": false,
+          "description": "Reports obsolete language features and unnecessarily verbose code constructs during the code cleanup operation (**Code \\| Code Cleanup** ).\n\n\nThe quick-fix automatically replaces usages of obsolete language features or unnecessarily verbose code constructs with compact and up-to-date syntax.\n\n\nIt also replaces deprecated symbols with their proposed substitutions."
+        },
+        {
+          "shortName": "OverrideDeprecatedMigration",
+          "displayName": "Do not propagate method deprecation through overrides since 1.9",
+          "enabled": false,
+          "description": "Reports a declarations that are propagated by `@Deprecated` annotation that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* Implementation changes are required for implementation design/architectural reasons\n* Inconsistency in the design (things are done differently in different contexts)\n\n**More details:** [KT-47902: Do not propagate method deprecation through overrides](https://youtrack.jetbrains.com/issue/KT-47902)\n\nThe quick-fix copies `@Deprecated` annotation from the parent declaration.\n\n**Example:**\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          override fun foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          @Deprecated(\"Don't use\")\n          override fun foo() {}\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
+        },
+        {
+          "shortName": "ObsoleteExperimentalCoroutines",
+          "displayName": "Experimental coroutines usages are deprecated since 1.3",
+          "enabled": false,
+          "description": "Reports code that uses experimental coroutines.\n\nSuch usages are incompatible with Kotlin 1.3+ and should be updated."
+        },
+        {
+          "shortName": "FromClosedRangeMigration",
+          "displayName": "MIN_VALUE step in fromClosedRange() since 1.3",
+          "enabled": false,
+          "description": "Reports `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with `MIN_VALUE` step.\n\n\nIt is prohibited to call `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with\n`MIN_VALUE` step. All such calls should be checked during migration to Kotlin 1.3+.\n\n**Example:**\n\n\n      IntProgression.fromClosedRange(12, 143, Int.MIN_VALUE)\n\nTo fix the problem change the step of the progression."
+        },
+        {
+          "shortName": "DeclaringClassMigration",
+          "displayName": "Deprecated 'Enum.declaringClass' property",
+          "enabled": false,
+          "description": "Reports 'declaringClass' property calls on Enum that will lead to compilation error since 1.9.\n\n'Enum.getDeclaringClass' is among \"hidden\" Java functions which aren't normally visible by resolve. However, it's visible via synthetic\nproperty that is a front-end bug.\n\n**More details:** [KT-49653 Deprecate and remove Enum.declaringClass synthetic\nproperty](https://youtrack.jetbrains.com/issue/KT-49653)\n\nThe quick-fix replaces a call with 'declaringJavaClass'.\n\n**Example:**\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringClass)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringJavaClass)\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
+        },
+        {
+          "shortName": "ProhibitUseSiteTargetAnnotationsOnSuperTypesMigration",
+          "displayName": "Meaningless annotations targets on superclass",
+          "enabled": false,
+          "description": "Reports meaningless annotation targets on superclasses since Kotlin 1.4.\n\nAnnotation targets such as `@get:` are meaningless on superclasses and are prohibited.\n\n**Example:**\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : @field:Ann @get:Ann @set:Ann @setparam:Ann Foo\n\nAfter the quick-fix is applied:\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : Foo\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "ObsoleteKotlinJsPackages",
+          "displayName": "'kotlin.browser' and 'kotlin.dom' packages are deprecated since 1.4",
+          "enabled": false,
+          "description": "Reports usages of `kotlin.dom` and `kotlin.browser` packages.\n\nThese packages were moved to `kotlinx.dom` and `kotlinx.browser`\nrespectively in Kotlin 1.4+."
+        },
+        {
+          "shortName": "RestrictReturnStatementTargetMigration",
+          "displayName": "Target label does not denote a function since 1.4",
+          "enabled": false,
+          "description": "Reports labels that don't points to a functions.\n\nIt's forbidden to declare a target label that does not denote a function.\n\nThe quick-fix removes the label.\n\n**Example:**\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return@L }\n          fn()\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return }\n          fn()\n      }\n\nThis inspection only reports if the language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "ProhibitRepeatedUseSiteTargetAnnotationsMigration",
+          "displayName": "Repeated annotation which is not marked as '@Repeatable'",
+          "enabled": false,
+          "description": "Reports the repeated use of a non-`@Repeatable` annotation on property accessors.\n\n\nAs a result of using non-`@Repeatable` annotation multiple times, both annotation usages\nwill appear in the bytecode leading to an ambiguity in reflection calls.\n\n\nSince Kotlin 1.4 it's mandatory to either mark annotation as `@Repeatable` or not\nrepeat the annotation, otherwise it will lead to compilation error.\n\n**Example:**\n\n\n      annotation class Foo(val x: Int)\n\n      @get:Foo(10)\n      val a: String\n          @Foo(20) get() = \"foo\" // annotation repeated twice but not marked as @Repeatable\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        }
+      ]
+    },
+    {
       "name": "Spring Cloud",
       "inspections": [
         {
@@ -4584,16 +4584,16 @@
           "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
         },
         {
-          "shortName": "NonFinalUtilityClass",
-          "displayName": "Utility class is not 'final'",
-          "enabled": false,
-          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
-        },
-        {
           "shortName": "Singleton",
           "displayName": "Singleton",
           "enabled": false,
           "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
+        },
+        {
+          "shortName": "NonFinalUtilityClass",
+          "displayName": "Utility class is not 'final'",
+          "enabled": false,
+          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
         },
         {
           "shortName": "ParameterCanBeLocal",
@@ -4883,53 +4883,6 @@
       ]
     },
     {
-      "name": "JSON and JSON5",
-      "inspections": [
-        {
-          "shortName": "MongoDBJsonDuplicatePropertyKeys",
-          "displayName": "Duplicate keys in object literals",
-          "enabled": false,
-          "description": "Reports a duplicate key in an object literal."
-        },
-        {
-          "shortName": "JsonSchemaCompliance",
-          "displayName": "Compliance with JSON schema",
-          "enabled": false,
-          "description": "Reports inconsistence between a JSON file and the [JSON schema](https://json-schema.org) that is assigned to it.  "
-        },
-        {
-          "shortName": "JsonStandardCompliance",
-          "displayName": "Compliance with JSON standard",
-          "enabled": false,
-          "description": "Reports the following discrepancies of a JSON file with [the language specification](https://tools.ietf.org/html/rfc7159):\n\n* A line or block comment (configurable).\n* Multiple top-level values (expect for JSON Lines files, configurable for others).\n* A trailing comma in an object or array (configurable).\n* A single quoted string.\n* A property key is a not a double quoted strings.\n* A NaN or Infinity/-Infinity numeric value as a floating point literal (configurable)."
-        },
-        {
-          "shortName": "JsonSchemaRefReference",
-          "displayName": "Unresolved '$ref' and '$schema' references",
-          "enabled": false,
-          "description": "Reports an unresolved `$ref` or `$schema` path in a JSON schema.  "
-        },
-        {
-          "shortName": "Json5StandardCompliance",
-          "displayName": "Compliance with JSON5 standard",
-          "enabled": false,
-          "description": "Reports inconsistency with [the language specification](http://json5.org) in a JSON5 file."
-        },
-        {
-          "shortName": "JsonSchemaDeprecation",
-          "displayName": "Deprecated JSON property",
-          "enabled": false,
-          "description": "Reports a deprecated property in a JSON file.  \nNote that deprecation mechanism is not defined in the JSON Schema specification yet, and this inspection uses a non-standard extension 'deprecationMessage'."
-        },
-        {
-          "shortName": "JsonDuplicatePropertyKeys",
-          "displayName": "Duplicate keys in object literals",
-          "enabled": false,
-          "description": "Reports a duplicate key in an object literal."
-        }
-      ]
-    },
-    {
       "name": "Maven",
       "inspections": [
         {
@@ -4973,6 +4926,53 @@
           "displayName": "Incompatible kotlinx.coroutines dependency is used with Kotlin 1.3+ in Maven",
           "enabled": false,
           "description": "Reports **kotlinx.coroutines** library dependencies in Maven that should be updated in order to be compatible with Kotlin 1.3 and later."
+        }
+      ]
+    },
+    {
+      "name": "JSON and JSON5",
+      "inspections": [
+        {
+          "shortName": "MongoDBJsonDuplicatePropertyKeys",
+          "displayName": "Duplicate keys in object literals",
+          "enabled": false,
+          "description": "Reports a duplicate key in an object literal."
+        },
+        {
+          "shortName": "JsonSchemaCompliance",
+          "displayName": "Compliance with JSON schema",
+          "enabled": false,
+          "description": "Reports inconsistence between a JSON file and the [JSON schema](https://json-schema.org) that is assigned to it.  "
+        },
+        {
+          "shortName": "JsonStandardCompliance",
+          "displayName": "Compliance with JSON standard",
+          "enabled": false,
+          "description": "Reports the following discrepancies of a JSON file with [the language specification](https://tools.ietf.org/html/rfc7159):\n\n* A line or block comment (configurable).\n* Multiple top-level values (expect for JSON Lines files, configurable for others).\n* A trailing comma in an object or array (configurable).\n* A single quoted string.\n* A property key is a not a double quoted strings.\n* A NaN or Infinity/-Infinity numeric value as a floating point literal (configurable)."
+        },
+        {
+          "shortName": "JsonSchemaRefReference",
+          "displayName": "Unresolved '$ref' and '$schema' references",
+          "enabled": false,
+          "description": "Reports an unresolved `$ref` or `$schema` path in a JSON schema.  "
+        },
+        {
+          "shortName": "Json5StandardCompliance",
+          "displayName": "Compliance with JSON5 standard",
+          "enabled": false,
+          "description": "Reports inconsistency with [the language specification](http://json5.org) in a JSON5 file."
+        },
+        {
+          "shortName": "JsonSchemaDeprecation",
+          "displayName": "Deprecated JSON property",
+          "enabled": false,
+          "description": "Reports a deprecated property in a JSON file.  \nNote that deprecation mechanism is not defined in the JSON Schema specification yet, and this inspection uses a non-standard extension 'deprecationMessage'."
+        },
+        {
+          "shortName": "JsonDuplicatePropertyKeys",
+          "displayName": "Duplicate keys in object literals",
+          "enabled": false,
+          "description": "Reports a duplicate key in an object literal."
         }
       ]
     },
@@ -7934,18 +7934,6 @@
       "name": "Validity issues",
       "inspections": [
         {
-          "shortName": "IncorrectPluginDslStructure",
-          "displayName": "Plugin DSL structure",
-          "enabled": false,
-          "description": "Detects disallowed statements before 'plugins {}' block.\nDue to the limitations of Gradle Plugin DSL, only a restricted set of Groovy statements is available before '`plugins {}`' block. The only options are '`buildscript {}`', '`pluginManagement {}`' and other '`plugins {}`'.   \n[See Gradle documentation](https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations)\n\n**Example:**\n\n\n    import foo.bar.Baz\n    plugins {} // reports 'plugins'\n    plugins {\n      foo() // reports 'foo'\n      id 'java'\n    }\n"
-        },
-        {
-          "shortName": "DeprecatedConfigurations",
-          "displayName": "Deprecated configurations",
-          "enabled": false,
-          "description": "Detects usage of configuration methods that were deprecated.\nConfiguration methods may be deprecated because of two possible reasons:\n\n* The Gradle API has evolved, so old method choices should be avoided;\n* Some plugin provides a better version of the deprecated configuration method.\n\nMost likely there will be an alternative for the deprecated method.\n\n**Example:**\n\n\n    plugins {\n      id 'java'\n    }\n\n    dependencies {\n      archive 'org.gradle.api:gradle:1.0' // reports 'archive'\n    }\n"
-        },
-        {
           "shortName": "BadExpressionStatementJS",
           "displayName": "Expression statement which is not assignment or call",
           "enabled": false,
@@ -7986,6 +7974,18 @@
           "displayName": "Attempt to assign to const or readonly variable",
           "enabled": false,
           "description": "Reports reassigning a value to a constant or a readonly variable."
+        },
+        {
+          "shortName": "IncorrectPluginDslStructure",
+          "displayName": "Plugin DSL structure",
+          "enabled": false,
+          "description": "Detects disallowed statements before 'plugins {}' block.\nDue to the limitations of Gradle Plugin DSL, only a restricted set of Groovy statements is available before '`plugins {}`' block. The only options are '`buildscript {}`', '`pluginManagement {}`' and other '`plugins {}`'.   \n[See Gradle documentation](https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations)\n\n**Example:**\n\n\n    import foo.bar.Baz\n    plugins {} // reports 'plugins'\n    plugins {\n      foo() // reports 'foo'\n      id 'java'\n    }\n"
+        },
+        {
+          "shortName": "DeprecatedConfigurations",
+          "displayName": "Deprecated configurations",
+          "enabled": false,
+          "description": "Detects usage of configuration methods that were deprecated.\nConfiguration methods may be deprecated because of two possible reasons:\n\n* The Gradle API has evolved, so old method choices should be avoided;\n* Some plugin provides a better version of the deprecated configuration method.\n\nMost likely there will be an alternative for the deprecated method.\n\n**Example:**\n\n\n    plugins {\n      id 'java'\n    }\n\n    dependencies {\n      archive 'org.gradle.api:gradle:1.0' // reports 'archive'\n    }\n"
         },
         {
           "shortName": "GroovyDuplicateSwitchBranch",
@@ -9560,6 +9560,41 @@
       ]
     },
     {
+      "name": "Class",
+      "inspections": [
+        {
+          "shortName": "ExceptionNameDoesntEndWithException",
+          "displayName": "Exception class name does not end with 'Exception'",
+          "enabled": false,
+          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "NewClassNamingConvention",
+          "displayName": "Class naming convention",
+          "enabled": false,
+          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
+        },
+        {
+          "shortName": "NonExceptionNameEndsWithException",
+          "displayName": "Non-exception class name ends with 'Exception'",
+          "enabled": false,
+          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNameSameAsAncestorName",
+          "displayName": "Class name same as ancestor name",
+          "enabled": false,
+          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNamePrefixedWithPackageName",
+          "displayName": "Class name prefixed with package name",
+          "enabled": false,
+          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
+        }
+      ]
+    },
+    {
       "name": "HTTP Client",
       "inspections": [
         {
@@ -9627,41 +9662,6 @@
           "displayName": "Missing request separator in YAML body",
           "enabled": false,
           "description": "Reports possible requests in injected YAML body where request separator `###` is missing. The quick fix suggests adding the separator `###` before the request."
-        }
-      ]
-    },
-    {
-      "name": "Class",
-      "inspections": [
-        {
-          "shortName": "ExceptionNameDoesntEndWithException",
-          "displayName": "Exception class name does not end with 'Exception'",
-          "enabled": false,
-          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "NewClassNamingConvention",
-          "displayName": "Class naming convention",
-          "enabled": false,
-          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
-        },
-        {
-          "shortName": "NonExceptionNameEndsWithException",
-          "displayName": "Non-exception class name ends with 'Exception'",
-          "enabled": false,
-          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNameSameAsAncestorName",
-          "displayName": "Class name same as ancestor name",
-          "enabled": false,
-          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNamePrefixedWithPackageName",
-          "displayName": "Class name prefixed with package name",
-          "enabled": false,
-          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
         }
       ]
     },
@@ -11833,16 +11833,16 @@
           "description": "Reports methods whose number of statements exceeds the specified maximum.\n\nMethods with too many statements may be confusing and are a good sign that refactoring is necessary.\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Maximum statements per method** field to specify the maximum allowed number of statements in a method."
         },
         {
-          "shortName": "OverlyLongLambda",
-          "displayName": "Overly long lambda expression",
-          "enabled": false,
-          "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
-        },
-        {
           "shortName": "ParametersPerMethod",
           "displayName": "Method with too many parameters",
           "enabled": false,
           "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
+        },
+        {
+          "shortName": "OverlyLongLambda",
+          "displayName": "Overly long lambda expression",
+          "enabled": false,
+          "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
         },
         {
           "shortName": "MethodCoupling",
@@ -13042,76 +13042,6 @@
       ]
     },
     {
-      "name": "Spring Boot",
-      "inspections": [
-        {
-          "shortName": "SpringBootApplicationYaml",
-          "displayName": "Invalid YAML configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
-        },
-        {
-          "shortName": "SpringBootApplicationSetup",
-          "displayName": "Invalid Spring Boot application setup",
-          "enabled": true,
-          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
-        },
-        {
-          "shortName": "SpringBootAdditionalConfig",
-          "displayName": "Invalid additional-spring-configuration-metadata.json",
-          "enabled": true,
-          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
-        },
-        {
-          "shortName": "SpringBootReactorHooksOnDebug",
-          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
-          "enabled": true,
-          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
-        },
-        {
-          "shortName": "ConfigurationProperties",
-          "displayName": "Invalid @ConfigurationProperties",
-          "enabled": true,
-          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
-        },
-        {
-          "shortName": "SpringBootApplicationProperties",
-          "displayName": "Invalid properties configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
-        }
-      ]
-    },
-    {
-      "name": "Nullability problems",
-      "inspections": [
-        {
-          "shortName": "NotNullFieldNotInitialized",
-          "displayName": "@NotNull field is not initialized",
-          "enabled": false,
-          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
-        },
-        {
-          "shortName": "UnsatisfiedRange",
-          "displayName": "Return value is outside of declared range",
-          "enabled": false,
-          "description": "Reports numeric values returned from methods that don't conform to the declared method return range. You can declare method return range using a number of annotations:\n\n* `org.jetbrains.annotations.Range` from JetBrains annotations package (specify 'from' and 'to')\n* `org.checkerframework.common.value.qual.IntRange` from Checker Framework annotations package (specify 'from' and 'to')\n* `org.checkerframework.checker.index.qual.GTENegativeOne` from Checker Framework annotations package (range is '\\>= -1')\n* `org.checkerframework.checker.index.qual.NonNegative` from Checker Framework annotations package (range is '\\>= 0')\n* `org.checkerframework.checker.index.qual.Positive` from Checker Framework annotations package (range is '\\> 0')\n* `javax.annotation.Nonnegative` from JSR 305 annotations package (range is '\\>= 0')\n* `javax.validation.constraints.Min` (specify minimum value)\n* `javax.validation.constraints.Max` (specify maximum value)\n\nExample:\n\n\n      @Range(from = 0, to = Integer.MAX_VALUE) int getValue() {\n        // Warning: -1 is outside of declared range\n        return -1;\n      }\n\nNew in 2021.2"
-        },
-        {
-          "shortName": "NullableProblems",
-          "displayName": "@NotNull/@Nullable problems",
-          "enabled": false,
-          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
-        },
-        {
-          "shortName": "ReturnNull",
-          "displayName": "Return of 'null'",
-          "enabled": false,
-          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        @Nullable\n        public String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
-        }
-      ]
-    },
-    {
       "name": "Imports and dependencies",
       "inspections": [
         {
@@ -13149,6 +13079,76 @@
           "displayName": "Update package.json dependencies to latest versions",
           "enabled": false,
           "description": "Suggests to upgrade your package.json dependencies to the latest versions, ignoring specified versions."
+        }
+      ]
+    },
+    {
+      "name": "Nullability problems",
+      "inspections": [
+        {
+          "shortName": "NotNullFieldNotInitialized",
+          "displayName": "@NotNull field is not initialized",
+          "enabled": false,
+          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
+        },
+        {
+          "shortName": "UnsatisfiedRange",
+          "displayName": "Return value is outside of declared range",
+          "enabled": false,
+          "description": "Reports numeric values returned from methods that don't conform to the declared method return range. You can declare method return range using a number of annotations:\n\n* `org.jetbrains.annotations.Range` from JetBrains annotations package (specify 'from' and 'to')\n* `org.checkerframework.common.value.qual.IntRange` from Checker Framework annotations package (specify 'from' and 'to')\n* `org.checkerframework.checker.index.qual.GTENegativeOne` from Checker Framework annotations package (range is '\\>= -1')\n* `org.checkerframework.checker.index.qual.NonNegative` from Checker Framework annotations package (range is '\\>= 0')\n* `org.checkerframework.checker.index.qual.Positive` from Checker Framework annotations package (range is '\\> 0')\n* `javax.annotation.Nonnegative` from JSR 305 annotations package (range is '\\>= 0')\n* `javax.validation.constraints.Min` (specify minimum value)\n* `javax.validation.constraints.Max` (specify maximum value)\n\nExample:\n\n\n      @Range(from = 0, to = Integer.MAX_VALUE) int getValue() {\n        // Warning: -1 is outside of declared range\n        return -1;\n      }\n\nNew in 2021.2"
+        },
+        {
+          "shortName": "NullableProblems",
+          "displayName": "@NotNull/@Nullable problems",
+          "enabled": false,
+          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
+        },
+        {
+          "shortName": "ReturnNull",
+          "displayName": "Return of 'null'",
+          "enabled": false,
+          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        @Nullable\n        public String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
+        }
+      ]
+    },
+    {
+      "name": "Spring Boot",
+      "inspections": [
+        {
+          "shortName": "SpringBootApplicationYaml",
+          "displayName": "Invalid YAML configuration",
+          "enabled": true,
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        },
+        {
+          "shortName": "SpringBootApplicationSetup",
+          "displayName": "Invalid Spring Boot application setup",
+          "enabled": true,
+          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "SpringBootAdditionalConfig",
+          "displayName": "Invalid additional-spring-configuration-metadata.json",
+          "enabled": true,
+          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
+        },
+        {
+          "shortName": "SpringBootReactorHooksOnDebug",
+          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
+          "enabled": true,
+          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
+        },
+        {
+          "shortName": "ConfigurationProperties",
+          "displayName": "Invalid @ConfigurationProperties",
+          "enabled": true,
+          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
+        },
+        {
+          "shortName": "SpringBootApplicationProperties",
+          "displayName": "Invalid properties configuration",
+          "enabled": true,
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
         }
       ]
     },
