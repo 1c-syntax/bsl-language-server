@@ -890,7 +890,7 @@
         },
         "InternetAccess": {
             "description": "Referring to Internet resources",
-            "default": true,
+            "default": false,
             "type": [
                 "boolean",
                 "object"
