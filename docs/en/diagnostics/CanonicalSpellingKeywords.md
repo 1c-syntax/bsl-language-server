@@ -25,14 +25,14 @@ A built-in language constructs, keywords must be written canonically.
 | Каждого, каждого   | Each, each    |
 | КонецЕсли          | EndIf         |
 | КонецПопытки       | EndTry        |
-| КонецПроцедуры     | EndProcedure  |
-| КонецФункции       | EndFunction   |
+| EndProcedure     | EndProcedure  |
+| EndFunction       | EndFunction   |
 | КонецЦикла         | EndDo         |
 | НЕ, Не             | NOT, Not      |
 | Неопределено       | Undefined     |
 | Перейти            | Goto          |
 | Перем              | Var           |
-| По                 | For           |
+| По                 | To            |
 | Пока               | While         |
 | Попытка            | Try           |
 | Процедура          | Procedure     |
