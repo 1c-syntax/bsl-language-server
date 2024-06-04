@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
+import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
@@ -144,6 +145,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDiagnosticProvider(getDiagnosticProvider());
     capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
     capabilities.setWorkspace(getWorkspaceCapabilities());
+    capabilities.setCompletionProvider(getCompletionProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -442,4 +444,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceCapabilities;
   }
 
+  private CompletionOptions getCompletionProvider() {
+    var completionOptions = new CompletionOptions();
+    completionOptions.setTriggerCharacters(List.of("."));
+    completionOptions.setResolveProvider(Boolean.FALSE);
+    completionOptions.setWorkDoneProgress(Boolean.FALSE);
+
+    return completionOptions;
+  }
 }

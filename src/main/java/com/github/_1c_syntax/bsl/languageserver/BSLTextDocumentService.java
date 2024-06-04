@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ColorProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentHighlightProvider;
@@ -69,6 +70,9 @@ import org.eclipse.lsp4j.ColorInformation;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -168,6 +172,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SemanticTokensProvider semanticTokensProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
   private final LanguageServerConfiguration configuration;
+  private final CompletionProvider completionProvider;
 
   @Qualifier("textDocumentServiceExecutor")
   private final ThreadPoolTaskExecutor taskExecutor;
@@ -501,6 +506,19 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> inlayHintProvider.getInlayHint(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> completionProvider.getCompletions(documentContext, params),
+      executorService
     );
   }
 
