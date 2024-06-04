@@ -3,21 +3,21 @@
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `checkModuleBody` may be 'final'",
+  "comment": "Field `exitPoint` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CyclomaticComplexityDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/ControlFlowGraph.java",
       "language": "JAVA",
-      "line": 66,
-      "offset": 19,
-      "length": 15,
+      "line": 34,
+      "offset": 22,
+      "length": 9,
       "code": {
-        "startLine": 64,
-        "length": 15,
-        "offset": 64,
-        "surroundingCode": "    defaultValue = \"\" + CHECK_MODULE_BODY\n  )\n  private boolean checkModuleBody = CHECK_MODULE_BODY;\n\n  private boolean fileCodeBlockChecked;"
+        "startLine": 32,
+        "length": 9,
+        "offset": 54,
+        "surroundingCode": "  private CfgVertex entryPoint;\n\n  private ExitVertex exitPoint;\n\n  ControlFlowGraph() {"
       }
     }
   ],
@@ -25,55 +25,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "02cf7dc33f4388e99e19d6bc4f9717684edcde13b09091626b86d3f54b0bcf71"
+  "hash": "2bd2b54bef8aac5b4b20abe81643da7a9c3ede6931656c51a29f2efa5e526495"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `complexityThreshold` may be 'final'",
+  "comment": "Field `commentAsCode` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CyclomaticComplexityDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingCodeTryCatchExDiagnostic.java",
       "language": "JAVA",
-      "line": 60,
-      "offset": 15,
-      "length": 19,
-      "code": {
-        "startLine": 58,
-        "length": 19,
-        "offset": 63,
-        "surroundingCode": "    defaultValue = \"\" + COMPLEXITY_THRESHOLD\n  )\n  private int complexityThreshold = COMPLEXITY_THRESHOLD;\n\n  @DiagnosticParameter("
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "FieldMayBeFinal"
-  },
-  "hash": "093121309f87a872e9c9d8e8b33a9cd3a2e887a2bd8c4844a8d3d3b9df9ccb3d"
-},{
-  "tool": "Code Inspection",
-  "category": "Code style issues",
-  "type": "Field may be 'final'",
-  "severity": "High",
-  "comment": "Field `skipAnnotatedMethods` may be 'final'",
-  "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NonExportMethodsInApiRegionDiagnostic.java",
-      "language": "JAVA",
-      "line": 60,
+      "line": 54,
       "offset": 19,
-      "length": 20,
+      "length": 13,
       "code": {
-        "startLine": 58,
-        "length": 20,
-        "offset": 69,
-        "surroundingCode": "    defaultValue = \"\" + SKIP_ANNOTATED_METHODS\n  )\n  private boolean skipAnnotatedMethods = SKIP_ANNOTATED_METHODS;\n\n  @Override"
+        "startLine": 52,
+        "length": 13,
+        "offset": 70,
+        "surroundingCode": "    defaultValue = \"\" + DEFAULT_COMMENT_AS_CODE\n  )\n  private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;\n\n  @Override"
       }
     }
   ],
@@ -81,7 +53,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "498975085a7e70049d1baf8654924a79d2f93d3ac5e5335113da02937f0ddee7"
+  "hash": "48a46cd0425d823fc72f8be769d5f7ad181483c4820dc2dd87458c7ac25a258d"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
@@ -115,21 +87,21 @@
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `allowMagicIndexes` may be 'final'",
+  "comment": "Field `userWordsToIgnore` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MagicNumberDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/TypoDiagnostic.java",
       "language": "JAVA",
-      "line": 63,
-      "offset": 19,
+      "line": 113,
+      "offset": 18,
       "length": 17,
       "code": {
-        "startLine": 61,
+        "startLine": 111,
         "length": 17,
-        "offset": 73,
-        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOW_MAGIC_NUMBER\n  )\n  private boolean allowMagicIndexes = DEFAULT_ALLOW_MAGIC_NUMBER;\n\n  @Override"
+        "offset": 45,
+        "surroundingCode": "    type = String.class\n  )\n  private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;\n\n  @Override"
       }
     }
   ],
@@ -137,27 +109,27 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "8ae11b6723acee0869499643a1aac6ed4fa4a7493874380c32367ad6ff56a5ef"
+  "hash": "d0c33d66b2817ca1022a1b35f7eb6b6687e0e0f7f1a277e2de77b6af624a641a"
 },{
   "tool": "Code Inspection",
   "category": "Code style issues",
   "type": "Field may be 'final'",
   "severity": "High",
-  "comment": "Field `allowedEmptyLinesCount` may be 'final'",
+  "comment": "Field `maxValuesCount` may be 'final'",
   "detailsInfo": "Reports fields that can be safely made `final`. All `final` fields have a value and this value does not change, which can make the code easier to reason about.\n\nTo avoid too expensive analysis, this inspection only reports if the field has a `private` modifier\nor it is defined in a local or anonymous class.\nA field can be `final` if:\n\n* It is `static` and initialized once in its declaration or in one `static` initializer.\n* It is non-`static` and initialized once in its declaration, in one instance initializer or in every constructor\n\nAnd it is not modified anywhere else.\n\n**Example:**\n\n\n      public class Person {\n        private String name; // can be final\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n      }\n\n\nUse the \"Annotations\" button to modify the list of annotations that assume implicit field write.",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ConsecutiveEmptyLinesDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/NumberOfValuesInStructureConstructorDiagnostic.java",
       "language": "JAVA",
-      "line": 59,
+      "line": 55,
       "offset": 15,
-      "length": 22,
+      "length": 14,
       "code": {
-        "startLine": 57,
-        "length": 22,
-        "offset": 76,
-        "surroundingCode": "    defaultValue = \"\" + DEFAULT_ALLOWED_EMPTY_LINES_COUNT\n  )\n  private int allowedEmptyLinesCount = DEFAULT_ALLOWED_EMPTY_LINES_COUNT;\n\n  @Override"
+        "startLine": 53,
+        "length": 14,
+        "offset": 59,
+        "surroundingCode": "    defaultValue = \"\" + MAX_VALUES_COUNT\n  )\n  private int maxValuesCount = MAX_VALUES_COUNT;\n\n  @Override"
       }
     }
   ],
@@ -165,5 +137,61 @@
     "module": "bsl-language-server.main",
     "inspectionName": "FieldMayBeFinal"
   },
-  "hash": "bc3d8c5b459ef0d3e4288de5c194f5ab08f54dbfd2944e8003651ae125a0f0c5"
+  "hash": "ec68ed0a204f7f685e81eeca8aa301ce7a24aae533f9ccb9e6022a3f0c87a5c8"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Lombok @Getter may be used",
+  "severity": "High",
+  "comment": "Class 'CompilerDirectiveKind' may use Lombok @Getter",
+  "detailsInfo": "Reports standard getter method that can be replaced by the lombok `@Getter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Returns the date.\n         *\n         * @return The date\n         */\n        public Date getProcessDate() {\n          return processDate;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Getter;\n      import java.util.Date;\n\n      @Getter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- GETTER --\n         * Returns the date.\n         *\n         * @return The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/symbol/annotations/CompilerDirectiveKind.java",
+      "language": "JAVA",
+      "line": 33,
+      "offset": 13,
+      "length": 21,
+      "code": {
+        "startLine": 31,
+        "length": 21,
+        "offset": 100,
+        "surroundingCode": " * См. {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}\n */\npublic enum CompilerDirectiveKind {\n  AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL),\n  AT_CLIENT_AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL),"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "LombokGetterMayBeUsed"
+  },
+  "hash": "ac806182907cac940d4345cdd2c15e3b46f28e209549093af42389c6c6d74e86"
+},{
+  "tool": "Code Inspection",
+  "category": "RegExp",
+  "type": "Redundant character escape",
+  "severity": "High",
+  "comment": "Redundant character escape `\\\\*` in RegExp",
+  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "language": "JAVA",
+      "line": 67,
+      "offset": 76,
+      "length": 3,
+      "code": {
+        "startLine": 65,
+        "length": 3,
+        "offset": 81,
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "RegExpRedundantEscape"
+  },
+  "hash": "773d4bfe78dcae4ccaf24d64c6a67d700acfbba1c47d2e6a4bd3401a2492913c"
 }]}
