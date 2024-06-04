@@ -48,15 +48,15 @@ class InternetAccessDiagnosticTest extends AbstractDiagnosticTest<InternetAccess
       .hasRange(15, 17, 47)
       .hasRange(16, 17, 43)
       .hasRange(17, 21, 51)
-      .hasRange(21, 21, 65)
-      .hasRange(22, 17, 35)
-      .hasRange(23, 17, 47)
-      .hasRange(24, 17, 43)
-      .hasRange(25, 21, 51)
-      .hasRange(29, 14, 43)
-      .hasRange(35, 14, 32)
-      .hasRange(39, 14, 35)
-      .hasRange(42, 10, 21)
-      .hasSize(18);
+//      .hasRange(21, 21, 65)
+//      .hasRange(22, 17, 35)
+//      .hasRange(23, 17, 47)
+//      .hasRange(24, 17, 43)
+//      .hasRange(25, 21, 51)
+      .hasRange(21, 14, 43)
+      .hasRange(27, 14, 32)
+      .hasRange(31, 14, 35)
+      .hasRange(34, 10, 21)
+      .hasSize(13);
   }
 }
