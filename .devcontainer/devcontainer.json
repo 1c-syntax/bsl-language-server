@@ -12,6 +12,14 @@
 			"installGradle": "true"
 		},
 		"ghcr.io/devcontainers/features/python:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscjava.vscode-gradle",
+				"GitHub.vscode-github-actions"
+			]
+		}
 	}
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
