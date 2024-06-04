@@ -1190,6 +1190,16 @@
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
+<p>Также хорошим решением является использование специального метода с говорящим названием, который возвращает
+дату-константу</p>
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">ДатаИзобретенияХовера</span><span class="p">()</span>
+    <span class="k">Возврат</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span>
+<span class="k">КонецФункции</span>
+
+<span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="nf">ДатаИзобретенияХовера</span><span class="p">()</span> <span class="k">Тогда</span>
+    <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
+<span class="k">КонецЕсли</span><span class="p">;</span>
+</code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
