@@ -1159,10 +1159,12 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>Check access to Internet resources and the set of transmitted data to prevent the transfer of confidential or protected information.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
+<div class="highlight"><pre><span></span><code><span class="nv">HTTPConnection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">HTTPConnection</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span> <span class="c1">// error</span>
+<span class="nv">FTPConnection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">FTPConnection</span><span class="p">(</span><span class="nv">Server</span><span class="p">,</span> <span class="nv">Port</span><span class="p">,</span> <span class="nv">User</span><span class="p">,</span> <span class="nv">Pwd</span><span class="p">);</span> <span class="c1">// error</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
