@@ -25,7 +25,7 @@ A built-in language constructs, keywords must be written canonically.
 | Каждого, каждого   | Each, each    |
 | КонецЕсли          | EndIf         |
 | КонецПопытки       | EndTry        |
-| EndProcedure     | EndProcedure  |
+| КонецПроцедуры     | EndProcedure  |
 | EndFunction       | EndFunction   |
 | КонецЦикла         | EndDo         |
 | НЕ, Не             | NOT, Not      |
