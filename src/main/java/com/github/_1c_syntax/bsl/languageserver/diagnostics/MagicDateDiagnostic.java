@@ -65,7 +65,7 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
     "\\D"
   );
-  public static final int MAX_YEAR_BY_1C = 3999;
+  public static final int MAX_YEAR_BY_1C = 9999;
 
   @DiagnosticParameter(
     type = String.class,
