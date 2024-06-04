@@ -451,6 +451,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/InternetAccess/</loc>
+         <lastmod>2024-06-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/InvalidCharacterInFile/</loc>
          <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
