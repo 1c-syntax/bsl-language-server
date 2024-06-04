@@ -26,7 +26,7 @@ A built-in language constructs, keywords must be written canonically.
 | КонецЕсли          | EndIf         |
 | КонецПопытки       | EndTry        |
 | КонецПроцедуры     | EndProcedure  |
-| EndFunction       | EndFunction   |
+| КонецФункции       | EndFunction   |
 | КонецЦикла         | EndDo         |
 | НЕ, Не             | NOT, Not      |
 | Неопределено       | Undefined     |
