@@ -146,6 +146,9 @@
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
                 },
+                "DisableSafeMode": {
+                    "$ref": "parameters-schema.json#/definitions/DisableSafeMode"
+                },
                 "DuplicateRegion": {
                     "$ref": "parameters-schema.json#/definitions/DuplicateRegion"
                 },
@@ -238,6 +241,9 @@
                 },
                 "IncorrectUseOfStrTemplate": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
+                "InternetAccess": {
+                    "$ref": "parameters-schema.json#/definitions/InternetAccess"
                 },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
