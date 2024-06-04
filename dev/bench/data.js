@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1717484464691,
+  "lastUpdate": 1717492925869,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -25885,6 +25885,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1816869466554851",
             "extra": "mean: 72.037930727005 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "945317c705b5f5a5bca3dc12756a9fa04028a43b",
+          "message": "Merge pull request #3207 from artbear/magicDate\n\n[MOD] MagicDate - Магические даты находятся в параметрах методов, в т.ч. и платформенном методе Выполнить - ГОТОВО",
+          "timestamp": "2024-06-04T12:10:51+03:00",
+          "tree_id": "ea9322b3acf01913d4258f26f15c0a9b6ecc26a1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/945317c705b5f5a5bca3dc12756a9fa04028a43b"
+        },
+        "date": 1717492923318,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.3650409380595,
+            "unit": "sec",
+            "range": "stddev: 1.9939483290662345",
+            "extra": "mean: 73.3650409380595 sec\nrounds: 3"
           }
         ]
       }
