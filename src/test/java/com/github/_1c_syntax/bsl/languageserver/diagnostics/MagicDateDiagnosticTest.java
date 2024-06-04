@@ -39,30 +39,48 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(18);
     assertThat(diagnostics, true)
-      .hasRange(1, 12, 1, 22)
-      .hasRange(2, 12, 2, 28)
-      .hasRange(3, 7, 3, 17)
-      .hasRange(4, 14, 4, 24)
-      .hasRange(13, 7, 13, 26);
-
+      .hasRange(11, 12, 22)
+      .hasRange(12, 12, 28)
+      .hasRange(13, 7, 17)
+      .hasRange(14, 14, 24)
+      .hasRange(23, 7, 26)
+      .hasRange(25, 87, 97)
+      .hasRange(26, 80, 90)
+      .hasRange(26, 92, 102)
+      .hasRange(27, 22, 32)
+      .hasRange(28, 19, 35)
+      .hasRange(29, 10, 26)
+      .hasRange(29, 29, 39)
+      .hasRange(31, 64, 80)
+      .hasRange(58, 17, 27)
+      .hasRange(58, 29, 45)
+      .hasRange(58, 47, 63)
+      .hasRange(60, 19, 29)
+      .hasRange(65, 22, 32);
   }
 
   @Test
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("authorizedDates", "00010101,00010101000000,000101010000,12340101, 00020101   ,,");
+    configuration.put("authorizedDates", "00010101,00010101000000,000101010000,00050101,00020501121314,12340101, 00020101   ,,");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
-      .hasRange(2, 12, 2, 28)
-      .hasRange(3, 7, 3, 17)
-      .hasRange(13, 7, 13, 26);
-
+      .hasRange(12, 12, 28)
+      .hasRange(13, 7, 17)
+      .hasRange(23, 7, 26)
+      .hasRange(27, 22, 32)
+      .hasRange(29, 29, 39)
+      .hasRange(31, 64, 80)
+      .hasRange(58, 17, 27)
+      .hasRange(58, 29, 45)
+      .hasRange(58, 47, 63)
+      .hasRange(65, 22, 32);
   }
 }
