@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperatio
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -144,6 +144,21 @@ class ExpressionParseTreeRewriterTest {
     assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
     assertThat(((UnaryOperationNode) negation).getOperator()).isEqualTo(BslOperator.NOT);
 
+  }
+
+  @Test
+  void booleanNotPriority() {
+    var code = "Рез = Не Б <> Неопределено И Ложь";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode) expressionTree;
+
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
+
+    var negation = binary.getLeft().<UnaryOperationNode>cast();
+    assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+    assertThat(negation.getOperator()).isEqualTo(BslOperator.NOT);
+
+    assertThat((binary.getLeft()).getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
   }
 
   @Test
@@ -357,6 +372,6 @@ class ExpressionParseTreeRewriterTest {
 
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
-    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
+    return ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
   }
 }

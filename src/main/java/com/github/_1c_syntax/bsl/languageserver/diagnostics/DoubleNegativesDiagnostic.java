@@ -4,9 +4,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -17,22 +21,53 @@ import org.antlr.v4.runtime.tree.ParseTree;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class DoubleNegativesDiagnostic extends AbstractVisitorDiagnostic {
-
-  private static final int MIN_EXPRESSION_SIZE = 3;
+public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic {
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
-
-    if (sufficientSize(ctx))
-      return ctx;
-
-    var tree = ExpressionParseTreeRewriter.buildExpressionTree(ctx);
-
-    return ctx;
+  protected ExpressionVisitorDecision onExpressionEnter(BSLParser.ExpressionContext ctx) {
+    return super.onExpressionEnter(ctx);
   }
 
-  private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
-    return ctx.children.size() < MIN_EXPRESSION_SIZE;
+  @Override
+  protected void visitBinaryOperation(BinaryOperationNode node) {
+
+    if (node.getOperator() != BslOperator.EQUAL && node.getOperator() != BslOperator.NOT_EQUAL) {
+      super.visitBinaryOperation(node);
+      return;
+    }
+
+    var parent = node.getParent();
+
+    if (parent == null || !isNegationOperator(parent)) {
+      super.visitBinaryOperation(node);
+      return;
+    }
+
+    if (node.getOperator() == BslOperator.NOT_EQUAL) {
+      addDiagnostic(node);
+    } else if (isBooleanLiteral(node.getLeft()) || isBooleanLiteral(node.getRight())) {
+      addDiagnostic(node);
+    }
+
+    super.visitBinaryOperation(node);
+  }
+
+  private boolean isBooleanLiteral(BslExpression node) {
+    if (node.getNodeType() != ExpressionNodeType.LITERAL)
+      return false;
+
+    var constant = (BSLParser.ConstValueContext) node.getRepresentingAst();
+    return constant.TRUE() != null || constant.FALSE() != null;
+  }
+
+  private static boolean isNegationOperator(BslExpression parent) {
+    return parent.getNodeType() == ExpressionNodeType.UNARY_OP && parent.<UnaryOperationNode>cast().getOperator() == BslOperator.NOT;
+  }
+
+  private void addDiagnostic(BinaryOperationNode node) {
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst()).stream().findFirst().orElseThrow();
+    var endToken = Trees.getTokens(node.getRight().getRepresentingAst()).stream().reduce((one, two) -> two).orElseThrow();
+
+    diagnosticStorage.addDiagnostic(startToken, endToken);
   }
 }
