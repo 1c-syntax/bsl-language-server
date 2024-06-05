@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -84,7 +84,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(parameterDefinition -> Pair.of(methodSymbol, parameterDefinition));
   }
 
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
+                                                               ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
       // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
@@ -181,7 +182,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
         documentContext.getUri(),
         reference.getSelectionRange(),
         "+1"
-      )).collect(Collectors.toList());
+      )).toList();
     var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
     resultRefs.add(RelatedInformation.create(
       documentContext.getUri(),

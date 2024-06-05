@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.HTTPService;
+import com.github._1c_syntax.bsl.mdo.children.HTTPServiceMethod;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDHttpService;
-import com.github._1c_syntax.mdclasses.mdo.children.HTTPServiceMethod;
 import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
@@ -64,18 +64,16 @@ public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
 
   private void processModule() {
     documentContext.getMdObject()
-      .filter(MDHttpService.class::isInstance)
-      .map(MDHttpService.class::cast)
+      .filter(HTTPService.class::isInstance)
+      .map(HTTPService.class::cast)
       .ifPresent(this::checkService);
   }
 
-  private void checkService(MDHttpService mdHttpService) {
-
-    mdHttpService.getUrlTemplates().stream()
-      .flatMap(httpServiceURLTemplate -> httpServiceURLTemplate.getHttpServiceMethods().stream())
+  private void checkService(HTTPService httpService) {
+    httpService.getUrlTemplates().stream()
+      .flatMap(httpServiceURLTemplate -> httpServiceURLTemplate.getMethods().stream())
       .forEach((HTTPServiceMethod service) -> {
         final var serviceName = service.getMdoReference().getMdoRef();
-
         if (service.getHandler().isEmpty()) {
           addMissingHandlerDiagnostic(serviceName);
           return;

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,8 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
-import org.languagetool.language.AmericanEnglish;
-import org.languagetool.language.Russian;
+import org.languagetool.Languages;
 import org.languagetool.rules.RuleMatch;
 
 import java.io.IOException;
@@ -68,8 +67,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
   private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
-    "en", new JLanguageToolPool(new AmericanEnglish()),
-    "ru", new JLanguageToolPool(new Russian())
+    "en", new JLanguageToolPool(Languages.getLanguageForShortCode("en-US")),
+    "ru", new JLanguageToolPool(Languages.getLanguageForShortCode("ru"))
   );
 
   /**

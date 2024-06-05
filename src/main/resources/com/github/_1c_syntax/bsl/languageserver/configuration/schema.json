@@ -146,6 +146,9 @@
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
                 },
+                "DisableSafeMode": {
+                    "$ref": "parameters-schema.json#/definitions/DisableSafeMode"
+                },
                 "DuplicateRegion": {
                     "$ref": "parameters-schema.json#/definitions/DuplicateRegion"
                 },
@@ -176,11 +179,17 @@
                 "ExportVariables": {
                     "$ref": "parameters-schema.json#/definitions/ExportVariables"
                 },
+                "ExternalAppStarting": {
+                    "$ref": "parameters-schema.json#/definitions/ExternalAppStarting"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
                 "FieldsFromJoinsWithoutIsNull": {
                     "$ref": "parameters-schema.json#/definitions/FieldsFromJoinsWithoutIsNull"
+                },
+                "FileSystemAccess": {
+                    "$ref": "parameters-schema.json#/definitions/FileSystemAccess"
                 },
                 "ForbiddenMetadataName": {
                     "$ref": "parameters-schema.json#/definitions/ForbiddenMetadataName"
@@ -232,6 +241,9 @@
                 },
                 "IncorrectUseOfStrTemplate": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
+                "InternetAccess": {
+                    "$ref": "parameters-schema.json#/definitions/InternetAccess"
                 },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
@@ -349,6 +361,9 @@
                 },
                 "ParseError": {
                     "$ref": "parameters-schema.json#/definitions/ParseError"
+                },
+                "PrivilegedModuleMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/PrivilegedModuleMethodCall"
                 },
                 "ProcedureReturnsValue": {
                     "$ref": "parameters-schema.json#/definitions/ProcedureReturnsValue"

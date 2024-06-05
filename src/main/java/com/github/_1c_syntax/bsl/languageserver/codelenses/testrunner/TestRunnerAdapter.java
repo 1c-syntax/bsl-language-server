@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -83,14 +84,14 @@ public class TestRunnerAdapter {
     var getTestsCommand = new CommandLine(executable).addArguments(arguments, false);
 
     var timeout = 10_000L;
-    var watchdog = new ExecuteWatchdog(timeout);
+    var watchdog = ExecuteWatchdog.builder().setTimeout(Duration.ofMillis(timeout)).get();
 
     var outputStream = new ByteArrayOutputStream();
     var streamHandler = new PumpStreamHandler(outputStream);
 
     var resultHandler = new DefaultExecuteResultHandler();
 
-    var executor = new DefaultExecutor();
+    var executor = DefaultExecutor.builder().get();
     executor.setWatchdog(watchdog);
     executor.setStreamHandler(streamHandler);
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -103,24 +103,25 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
-  protected abstract void checkMetadata(AbstractMDObjectBase mdo);
+  protected abstract void checkMetadata(MD mdo);
 
   private void checkMetadataWithModules() {
     documentContext.getMdObject()
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
-      .filter(AbstractMDObjectBSL.class::isInstance)
+      .filter(ModuleOwner.class::isInstance)
+      .map(ModuleOwner.class::cast)
       .filter(this::haveMatchingModule)
       .ifPresent(this::checkMetadata);
   }
 
-  private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
+  private boolean haveMatchingModule(ModuleOwner mdo) {
     // чтобы не анализировать несколько раз и не выдавать одинаковые результаты для разных модулей,
     // выберем только один модуль, например модуль менеджера
-    if (documentContext.getModuleType() == ModuleType.ManagerModule){
+    if (documentContext.getModuleType() == ModuleType.ManagerModule) {
       return true;
     }
 
-    return ((AbstractMDObjectBSL) mdo).getModules().stream()
+    return mdo.getModules().stream()
       .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
       .count() == 1;
   }
@@ -135,8 +136,8 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   private void checkMetadataWithoutModules() {
     documentContext.getServerContext().getConfiguration().getChildren().stream()
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
-      .filter(mdo -> !(mdo instanceof AbstractMDObjectBSL)
-        || (((AbstractMDObjectBSL) mdo).getModules().stream()
+      .filter(mdo -> !(mdo instanceof ModuleOwner moduleOwner)
+        || (moduleOwner.getModules().stream()
         .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
       .forEach(this::checkMetadata);
   }

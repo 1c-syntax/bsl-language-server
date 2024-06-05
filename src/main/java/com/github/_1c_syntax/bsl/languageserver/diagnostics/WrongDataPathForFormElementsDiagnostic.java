@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,11 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormItem;
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.children.Form;
-import com.github._1c_syntax.mdclasses.mdo.children.form.FormItem;
 import org.eclipse.lsp4j.Range;
 
 import java.util.function.Predicate;
@@ -50,7 +50,6 @@ import java.util.stream.Stream;
   tags = {
     DiagnosticTag.UNPREDICTABLE,
   }
-
 )
 public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
@@ -58,7 +57,6 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-
     var range = documentContext.getSymbolTree().getModule().getSelectionRange();
     if (!Ranges.isEmpty(range)) {
       checkCurrentModule(range);
@@ -66,7 +64,7 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private static boolean wrongDataPath(FormItem formItem) {
-    return formItem.getDataPath().getSegment().startsWith("~");
+    return formItem.getDataPath().getSegments().startsWith("~");
   }
 
   private static boolean haveFormModules(Form form) {
@@ -86,11 +84,10 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
 
   private void checkAllFormsWithoutModules() {
     checkMdoObjectStream(form -> !haveFormModules(form),
-      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().values().stream());
+      documentContext.getServerContext().getConfiguration().getPlainChildren().stream());
   }
 
-  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<AbstractMDObjectBase> stream) {
-
+  private void checkMdoObjectStream(Predicate<Form> formFilter, Stream<MD> stream) {
     stream
       .filter(Form.class::isInstance)
       .map(Form.class::cast)
@@ -99,13 +96,11 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkForm(Form form) {
-
     var formData = form.getData();
-    if (formData == null) {
+    if (formData.isEmpty()) {
       return;
     }
-
-    formData.getPlainChildren()
+    formData.getPlainItems()
       .stream()
       .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
       .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,

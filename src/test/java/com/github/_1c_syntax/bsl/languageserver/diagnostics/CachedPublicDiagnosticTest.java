@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -48,7 +48,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     super(CachedPublicDiagnostic.class);
   }
 
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
@@ -154,8 +154,6 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
       context
     ));
 
-
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
-
+    module = spy((CommonModule) configuration.findChild(moduleFile.toUri()).get());
   }
 }

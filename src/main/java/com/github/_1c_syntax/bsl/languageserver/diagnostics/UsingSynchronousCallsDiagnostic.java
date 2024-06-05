@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -127,9 +128,9 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
-    // если использование синхронных вызовов разрешено (без предупреждение), то
+    // если использование синхронных вызовов разрешено (без предупреждения), то
     // ничего не диагностируется
-    if (configuration.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
+    if (configuration instanceof Configuration cf && cf.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
       return ctx;
     }
 

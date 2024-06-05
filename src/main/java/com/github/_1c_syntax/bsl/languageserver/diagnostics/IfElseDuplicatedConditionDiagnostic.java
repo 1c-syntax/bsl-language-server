@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -85,22 +85,20 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void checkExpression(List<BSLParser.ExpressionContext> expressionContexts, int i) {
-    BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
+    var currentExpression = expressionContexts.get(i);
 
-    List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
+    var identicalExpressions = expressionContexts.stream()
       .skip(i)
       .filter(expressionContext ->
         !expressionContext.equals(currentExpression)
           && DiagnosticHelper.equalNodes(currentExpression, expressionContext))
-      .collect(Collectors.toList());
+      .toList();
 
     if (identicalExpressions.isEmpty()) {
       return;
     }
 
-    identicalExpressions.stream()
-      .collect(Collectors.toCollection(() -> checkedConditions));
-
+    identicalExpressions.stream().collect(Collectors.toCollection(() -> checkedConditions));
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     relatedInformation.add(RelatedInformation.create(
@@ -121,6 +119,4 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
     diagnosticStorage.addDiagnostic(currentExpression, relatedInformation);
   }
-
 }
-

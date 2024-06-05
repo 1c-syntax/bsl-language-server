@@ -1,6 +1,8 @@
+import gradlegitproperties.org.ajoberstar.grgit.Grgit
 import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
+import java.text.SimpleDateFormat
 
 plugins {
     `java-library`
@@ -8,28 +10,28 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "4.3.0.3225"
-    id("io.freefair.lombok") version "8.1.0"
-    id("io.freefair.javadoc-links") version "8.1.0"
-    id("io.freefair.javadoc-utf-8") version "8.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.1.0"
-    id("io.freefair.maven-central.validate-poms") version "8.1.0"
-    id("me.qoomon.git-versioning") version "6.4.2"
-    id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.springframework.boot") version "3.1.2"
-    id("io.spring.dependency-management") version "1.1.2"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.7.3"
-    id("ru.vyarus.pom") version "2.2.2"
-    id("com.gorylenko.gradle-git-properties") version "2.4.1"
+    id("org.sonarqube") version "5.0.0.4638"
+    id("io.freefair.lombok") version "8.6"
+    id("io.freefair.javadoc-links") version "8.6"
+    id("io.freefair.javadoc-utf-8") version "8.6"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.6"
+    id("io.freefair.maven-central.validate-poms") version "8.6"
+    id("me.qoomon.git-versioning") version "6.4.3"
+    id("com.github.ben-manes.versions") version "0.51.0"
+    id("org.springframework.boot") version "3.2.5"
+    id("io.spring.dependency-management") version "1.1.5"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.0"
+    id("ru.vyarus.pom") version "3.0.0"
+    id("com.gorylenko.gradle-git-properties") version "2.4.2"
     id("io.codearte.nexus-staging") version "0.30.0"
-    id("me.champeau.jmh") version "0.7.1"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
-    maven(url = "https://projectlombok.org/edge-releases") 
+    maven(url = "https://projectlombok.org/edge-releases")
 }
 
 group = "io.github.1c-syntax"
@@ -50,13 +52,17 @@ gitVersioning.apply {
     }
 }
 
+gitProperties {
+    customProperty("git.build.time", buildTime())
+}
+
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "6.1"
+val languageToolVersion = "6.4"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:6.27.0")
+        mavenBom("io.sentry:sentry-bom:7.9.0")
     }
 }
 
@@ -67,25 +73,25 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("info.picocli:picocli-spring-boot-starter:4.7.4")
+    api("info.picocli:picocli-spring-boot-starter:4.7.6")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.21.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.21.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.23.1")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.23.1")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.22.1") {
+    api("io.github.1c-syntax", "bsl-parser", "0.24.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
-        exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "0.5.1")
-    api("com.github.1c-syntax", "mdclasses", "0.10.3")
-    api("io.github.1c-syntax", "bsl-common-library", "0.3.0")
-    api("io.github.1c-syntax", "supportconf", "0.1.1")
+    api("io.github.1c-syntax", "utils", "0.6.1")
+    api("io.github.1c-syntax", "mdclasses", "0.13.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.6.0")
+    api("io.github.1c-syntax", "supportconf", "0.14.0")
+    api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
@@ -95,19 +101,19 @@ dependencies {
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.19")
+    implementation("org.aspectj", "aspectjrt", "1.9.22.1")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.13.0")
-    implementation("org.apache.commons", "commons-lang3", "3.12.0")
+    implementation("commons-io", "commons-io", "2.16.1")
+    implementation("org.apache.commons", "commons-lang3", "3.14.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("org.apache.commons", "commons-collections4", "4.4")
-    implementation("org.apache.commons", "commons-exec", "1.3")
+    implementation("org.apache.commons", "commons-exec", "1.4.0")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.5")
+    implementation("me.tongfei", "progressbar", "0.10.1")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -120,18 +126,18 @@ dependencies {
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
     // Sentry
-    implementation("io.sentry:sentry-spring-boot-starter")
+    implementation("io.sentry:sentry-spring-boot-starter-jakarta")
     implementation("io.sentry:sentry-logback")
 
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("32.0.1-jre")
+            strictly("33.2.1-jre")
        }
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.7.3")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.8.5")
 
     // TEST
 
@@ -142,11 +148,11 @@ dependencies {
 
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.49")
-    testImplementation("org.awaitility", "awaitility", "4.2.0")
+    testImplementation("org.awaitility", "awaitility", "4.2.1")
 }
 
 lombok {
-    version.set("edge-SNAPSHOT")
+    version.set("1.18.32")
 }
 
 jacoco {
@@ -384,4 +390,10 @@ nexusStaging {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+fun buildTime(): String {
+    val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(Date())
 }

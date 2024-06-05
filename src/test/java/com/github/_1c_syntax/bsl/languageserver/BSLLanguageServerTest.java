@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2023
+ * Copyright (c) 2018-2024
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -66,7 +66,7 @@ class BSLLanguageServerTest {
     // given
     InitializeParams params = new InitializeParams();
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
     List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
     params.setWorkspaceFolders(workspaceFolders);
 
@@ -82,7 +82,7 @@ class BSLLanguageServerTest {
     // given
     InitializeParams params = new InitializeParams();
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
     List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
     params.setWorkspaceFolders(workspaceFolders);
 

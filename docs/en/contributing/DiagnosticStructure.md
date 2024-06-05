@@ -45,26 +45,33 @@ At the time of this writing, the following properties are available:
 
 - The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. In order to choose the correct type and importance of diagnostics, you can refer to [article](DiagnosticTypeAndSeverity.md).
 - Time to fix issue `minutesToFix` (default 0). This value is used when calculating the total technical debt of the project in labor costs to correct all comments (the sum of time to correct for all detected comments). It is worth indicating the time, as realistic as possible, that the developer should spend on fixing.
+- Using the `extraMinForComplexity` parameter, you can dynamically increase the time to correct a comment for diagnostics that take into account several places that violate the rule, for example, when calculating the complexity of a method.
 - A set of diagnostics tags `tag` that indicate the group to which it belongs. Read more about tags in the [article](DiagnosticTag.md).
 - Applicability limit `scope` (by default `ALL`, i.e. no limit). BSL LS supports multiple languages (oscript and bsl) and diagnostics can be applied to one specific language or to all at once.
 - Default diagnostic active `activatedByDefault` (default `True`). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.
 - Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
-
+- List of module types `modules` for the ability to limit the area analyzed by diagnostics
+- Sign of the ability to set issues on the entire project `canLocateOnProject`. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
 The last two can be omitted.
 
 Annotation example
 
 ```java
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1,
-  activatedByDefault = false,          // Deactivated by default
-  scope = DiagnosticScope.BSL,         // Applicable only for BSL
-  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3, // 8.3.3 compatibility mode
+  type = DiagnosticType.CODE_SMELL, 
+  severity = DiagnosticSeverity.MINOR, 
+  minutesToFix = 1,                    
+  activatedByDefault = false,   
+  scope = DiagnosticScope.BSL,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3, 
   tags = {
-    DiagnosticTag.STANDARD             // This is a diagnosis for violation of the 1C standard
-  }
+    DiagnosticTag.STANDARD             
+  },
+  modules = {
+    ModuleType.CommonModule       
+  },
+  canLocateOnProject = false,          
+  extraMinForComplexity = 1  // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
 )
 ```
 
@@ -217,7 +224,7 @@ Examples:
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser. g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
 The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
@@ -355,7 +362,7 @@ The fixtures are the contents of the test resource file located in the `src/test
 
 It is necessary to add both erroneous and correct code, **marking the places of errors with comments**. It is best if the test cases are `real`, from practice, and not synthetic, invented `for diagnostics`.
 
-## Diagnostics description
+## Description
 
 The diagnostic description is created in the [Markdown](https://ru.wikipedia.org/wiki/Markdown) format in two versions - for Russian and English. The files are located in the `docs/diagnostics` directory for Russian, for English in `docs/en/diagnostics`. 
 The file has the structure
