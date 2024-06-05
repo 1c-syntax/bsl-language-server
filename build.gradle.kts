@@ -2,6 +2,7 @@ import gradlegitproperties.org.ajoberstar.grgit.Grgit
 import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
+import java.text.SimpleDateFormat
 
 plugins {
     `java-library`
@@ -52,7 +53,7 @@ gitVersioning.apply {
 }
 
 gitProperties {
-    customProperty("git.build.time", "2018-03-28T05:13:53Z")
+    customProperty("git.build.time", buildTime())
 }
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
@@ -389,4 +390,10 @@ nexusStaging {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+fun buildTime(): String {
+    val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(Date())
 }
