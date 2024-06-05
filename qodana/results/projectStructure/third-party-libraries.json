@@ -8,14 +8,14 @@
   },
   {
     "name": "aspectjrt",
-    "version": "1.9.19",
+    "version": "1.9.22.1",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "checker-qual",
-    "version": "3.33.0",
+    "version": "3.42.0",
     "url": "",
     "license": "MIT",
     "licenseUrl": "http://opensource.org/licenses/mit-license.php"
@@ -57,21 +57,21 @@
   },
   {
     "name": "commons-exec",
-    "version": "1.3",
-    "url": "http://commons.apache.org/proper/commons-exec/",
+    "version": "1.4.0",
+    "url": "https://commons.apache.org/proper/commons-exec/",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "commons-io",
-    "version": "2.13.0",
+    "version": "2.16.1",
     "url": "https://commons.apache.org/proper/commons-io/",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "commons-lang3",
-    "version": "3.12.0",
+    "version": "3.14.0",
     "url": "https://commons.apache.org/proper/commons-lang/",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
@@ -105,22 +105,22 @@
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
-    "name": "emoji-java",
-    "version": "5.1.1",
-    "url": "https://github.com/vdurmont/emoji-java",
-    "license": "MIT",
-    "licenseUrl": "http://opensource.org/licenses/mit-license.php"
+    "name": "english-pos-dict",
+    "version": "0.3",
+    "url": "https://languagetool.org",
+    "license": "LGPL-2.1-only",
+    "licenseUrl": "http://www.gnu.org/licenses/lgpl-2.1.html"
   },
   {
     "name": "error_prone_annotations",
-    "version": "2.18.0",
+    "version": "2.26.1",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "grpc-netty-shaded",
-    "version": "1.50.2",
+    "version": "1.61.1",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
@@ -134,14 +134,14 @@
   },
   {
     "name": "guava",
-    "version": "32.0.1-jre",
+    "version": "33.2.1-jre",
     "url": "https://github.com/google/guava",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
     "name": "hunspell",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "url": "https://gitlab.com/dumonts/hunspell-java",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
@@ -155,7 +155,7 @@
   },
   {
     "name": "j2objc-annotations",
-    "version": "2.8",
+    "version": "3.0.0",
     "url": "https://github.com/google/j2objc/",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
@@ -231,6 +231,13 @@
     "licenseUrl": "http://www.opensource.org/licenses/BSD-3-Clause"
   },
   {
+    "name": "java-diff-utils",
+    "version": "4.12",
+    "url": "",
+    "license": "Apache-2.0",
+    "licenseUrl": "http://www.apache.org/licenses/"
+  },
+  {
     "name": "java-sarif",
     "version": "2.0",
     "url": "https://github.com/Contrast-Security-OSS/java-sarif",
@@ -280,8 +287,15 @@
     "licenseUrl": "http://www.eclipse.org/legal/epl-v10.html, http://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
   },
   {
-    "name": "jline",
-    "version": "3.21.0",
+    "name": "jline-native",
+    "version": "3.24.1",
+    "url": "",
+    "license": "BSD-3-Clause",
+    "licenseUrl": "http://www.opensource.org/licenses/BSD-3-Clause"
+  },
+  {
+    "name": "jline-terminal",
+    "version": "3.24.1",
     "url": "",
     "license": "BSD-3-Clause",
     "licenseUrl": "http://www.opensource.org/licenses/BSD-3-Clause"
@@ -323,21 +337,21 @@
   },
   {
     "name": "language-en",
-    "version": "6.1",
+    "version": "6.4",
     "url": "https://www.languagetool.org",
     "license": "LGPL-2.0-or-later",
     "licenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
   },
   {
     "name": "language-ru",
-    "version": "6.1",
+    "version": "6.4",
     "url": "https://www.languagetool.org",
     "license": "LGPL-2.0-or-later",
     "licenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
   },
   {
     "name": "languagetool-core",
-    "version": "6.1",
+    "version": "6.4",
     "url": "https://www.languagetool.org",
     "license": "LGPL-2.0-or-later",
     "licenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.0.html"
@@ -358,7 +372,7 @@
   },
   {
     "name": "lombok",
-    "version": "edge-snapshot",
+    "version": "1.18.32",
     "url": "",
     "license": "BSD-3-CLAUSE-NO-TRADEMARK, MIT",
     "licenseUrl": ", http://opensource.org/licenses/mit-license.php"
@@ -449,15 +463,15 @@
   },
   {
     "name": "progressbar",
-    "version": "0.9.5",
+    "version": "0.10.1",
     "url": "http://github.com/ctongfei/progressbar",
     "license": "MIT",
     "licenseUrl": "http://opensource.org/licenses/mit-license.php"
   },
   {
     "name": "proto-google-common-protos",
-    "version": "2.9.0",
-    "url": "https://github.com/googleapis/java-iam/proto-google-common-protos",
+    "version": "2.29.0",
+    "url": "https://github.com/googleapis/sdk-platform-java",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"
   },
