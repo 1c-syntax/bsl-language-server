@@ -17,7 +17,9 @@
 		"vscode": {
 			"extensions": [
 				"vscjava.vscode-gradle",
-				"GitHub.vscode-github-actions"
+				"GitHub.vscode-github-actions",
+				"astrizhachuk.1c-extension-pack",
+				"zhuangtongfa.Material-theme"
 			]
 		}
 	}
