@@ -227,7 +227,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private void addIgnoredRange(DiagnosticCode diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
     // convert antlr4 line numbers (1..n) to lsp (0..n)
-    Range<Integer> ignoreRange = Range.between(ignoreRangeStart - 1, ignoreRangeEnd - 1);
+    Range<Integer> ignoreRange = Range.of(ignoreRangeStart - 1, ignoreRangeEnd - 1);
     final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(diagnosticKey, s -> new ArrayList<>());
     ranges.add(ignoreRange);
   }
