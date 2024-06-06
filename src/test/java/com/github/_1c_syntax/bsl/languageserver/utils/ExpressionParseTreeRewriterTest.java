@@ -158,7 +158,7 @@ class ExpressionParseTreeRewriterTest {
     assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
     assertThat(negation.getOperator()).isEqualTo(BslOperator.NOT);
 
-    assertThat((binary.getLeft()).getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+    assertThat((binary.getRight()).getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
   }
 
   @Test

@@ -52,6 +52,21 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
     super.visitBinaryOperation(node);
   }
 
+  @Override
+  protected void visitUnaryOperation(UnaryOperationNode node) {
+    if (node.getOperator() == BslOperator.NOT &&
+        node.getParent() != null &&
+        node.getParent().getNodeType() == ExpressionNodeType.UNARY_OP) {
+
+      var unaryParent = node.getParent().<UnaryOperationNode>cast();
+      if (unaryParent.getOperator() == BslOperator.NOT) {
+        addDiagnostic(node);
+      }
+    }
+
+    super.visitUnaryOperation(node);
+  }
+
   private boolean isBooleanLiteral(BslExpression node) {
     if (node.getNodeType() != ExpressionNodeType.LITERAL)
       return false;
@@ -67,6 +82,13 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   private void addDiagnostic(BinaryOperationNode node) {
     var startToken = Trees.getTokens(node.getParent().getRepresentingAst()).stream().findFirst().orElseThrow();
     var endToken = Trees.getTokens(node.getRight().getRepresentingAst()).stream().reduce((one, two) -> two).orElseThrow();
+
+    diagnosticStorage.addDiagnostic(startToken, endToken);
+  }
+
+  private void addDiagnostic(UnaryOperationNode node) {
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst()).stream().findFirst().orElseThrow();
+    var endToken = Trees.getTokens(node.getOperand().getRepresentingAst()).stream().reduce((one, two) -> two).orElseThrow();
 
     diagnosticStorage.addDiagnostic(startToken, endToken);
   }

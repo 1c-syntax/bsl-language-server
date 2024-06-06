@@ -26,7 +26,12 @@ class DoubleNegativesDiagnosticTest extends AbstractDiagnosticTest<DoubleNegativ
       .hasRange(11, 4, 11, 42)
       .hasRange(12, 4, 12, 42)
       .hasRange(13, 4, 13, 25)
-      .hasRange(14, 4, 14, 25)
+      .hasRange(14, 4, 14, 24)
+      .hasRange(19, 5, 19, 38)
+      .hasRange(23, 19, 23, 39)
+      .hasRange(32, 4, 32, 26)
+      .hasRange(33, 4, 33, 36)
+      .hasRange(39, 4, 39, 19)
     ;
 
   }

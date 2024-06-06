@@ -192,12 +192,19 @@ public class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTre
       return;
     }
 
-    var lastSeenOperator = operatorsInFly.peek();
-    if (lastSeenOperator.getPriority() > operator.getPriority()) {
+    while (hasHigherPriorityOperatorsInFly(operator)) {
       buildOperation();
     }
 
     operatorsInFly.push(operator);
+  }
+
+  private boolean hasHigherPriorityOperatorsInFly(OperatorInCode operator) {
+    var lastSeenOperator = operatorsInFly.peek();
+    if (lastSeenOperator == null)
+      return false;
+
+    return lastSeenOperator.getPriority() > operator.getPriority();
   }
 
   private static BslOperator getOperator(BSLParser.OperationContext ctx) {
