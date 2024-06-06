@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1717571197842,
+  "lastUpdate": 1717708480202,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26040,6 +26040,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.406443317992318",
             "extra": "mean: 73.22302627563477 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "97288600c10ba8a4c497cca944a5591f3d56266e",
+          "message": "Add sarif from the benchmark to arficats",
+          "timestamp": "2024-06-06T21:01:58Z",
+          "tree_id": "1b746a19385396bf9d839f9450e573d848ef3bf9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/97288600c10ba8a4c497cca944a5591f3d56266e"
+        },
+        "date": 1717708476740,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.03521839777629,
+            "unit": "sec",
+            "range": "stddev: 0.6425837939782468",
+            "extra": "mean: 79.03521839777629 sec\nrounds: 3"
           }
         ]
       }
