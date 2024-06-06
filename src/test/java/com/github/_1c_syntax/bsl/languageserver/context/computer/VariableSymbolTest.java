@@ -52,11 +52,11 @@ class VariableSymbolTest {
   @Test
   void testVariableSymbolDescription() {
 
-    assertThat(variableSymbols).hasSize(19);
+    assertThat(variableSymbols).hasSize(23);
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
-      .hasSize(9)
+      .hasSize(11)
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(12, 6, 34)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(14, 6, 27)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(16, 6, 17)))
@@ -65,11 +65,12 @@ class VariableSymbolTest {
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(32, 31, 59)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(33, 10, 19)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(55, 0, 35)))
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(56, 0, 47)));
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(56, 0, 47)))
+    ;
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isPresent())
-      .hasSize(10)
+      .hasSize(12)
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(2, 6, 32)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(6, 6, 33)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(8, 6, 33)))
@@ -92,7 +93,7 @@ class VariableSymbolTest {
       .collect(Collectors.toList());
 
     assertThat(variableDescriptions)
-      .hasSize(10)
+      .hasSize(12)
       .filteredOn(variableDescription -> !variableDescription.getDescription().equals(""))
       .hasSize(5)
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(1, 0, 18)))
@@ -105,13 +106,15 @@ class VariableSymbolTest {
     assertThat(variableDescriptions)
       .extracting(VariableDescription::getTrailingDescription)
       .filteredOn(Optional::isPresent)
-      .hasSize(7)
+      .hasSize(9)
       .extracting(Optional::get)
       .anyMatch(trailingDescription -> trailingDescription.getRange().equals(Ranges.create(8, 35, 55)))
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(19, 20, 42)))
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(24, 20, 42)))
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(35, 21, 43)))
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(39, 21, 43)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(63, 45, 77)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(71, 38, 70)))
     ;
 
   }
@@ -121,7 +124,7 @@ class VariableSymbolTest {
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
-      .hasSize(9)
+      .hasSize(11)
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(12, 6, 34)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(14, 6, 27)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(16, 6, 17)))
@@ -131,6 +134,8 @@ class VariableSymbolTest {
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(33, 10, 19)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(55, 0, 35)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(56, 0, 47)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(59, 12, 30)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(67, 4, 22)))
     ;
   }
 

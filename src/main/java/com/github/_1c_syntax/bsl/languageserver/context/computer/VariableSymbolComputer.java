@@ -229,6 +229,30 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     );
   }
 
+  private Optional<VariableDescription> createDescription(BSLParser.ForEachStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      new VariableDescription(Collections.emptyList(), trailingComments)
+    );
+  }
+
+  private Optional<VariableDescription> createDescription(BSLParser.ForStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      new VariableDescription(Collections.emptyList(), trailingComments)
+    );
+  }
+
   private Optional<VariableDescription> createDescription(BSLParserRuleContext ctx) {
     List<Token> tokens = documentContext.getTokens();
     List<Token> comments = new ArrayList<>();

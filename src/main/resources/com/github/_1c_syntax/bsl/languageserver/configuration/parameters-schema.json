@@ -713,13 +713,13 @@
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
         },
         "FileSystemAccess": {
-            "description": "FileSystemAccess",
+            "description": "File system access",
             "default": false,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "FileSystemAccess",
+            "title": "File system access",
             "properties": {
                 "globalMethods": {
                     "description": "Global methods pattern (regex)",
@@ -961,6 +961,16 @@
             ],
             "title": "Incorrect use of \"StrTemplate\"",
             "$id": "#/definitions/IncorrectUseOfStrTemplate"
+        },
+        "InternetAccess": {
+            "description": "Referring to Internet resources",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referring to Internet resources",
+            "$id": "#/definitions/InternetAccess"
         },
         "InvalidCharacterInFile": {
             "description": "Invalid character",

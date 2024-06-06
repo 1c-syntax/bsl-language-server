@@ -29,9 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -60,12 +58,14 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   private static final Pattern paramPattern = CaseInsensitivePattern.compile(
-    "\"\\d{8}.*"
+    "\"[0123]{1}\\d{7}\"|\"[0123]{1}\\d{13}\""
   );
+  private static final Pattern zeroPattern = Pattern.compile("^0+");
 
   private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
     "\\D"
   );
+  public static final int MAX_YEAR_BY_1C = 9999;
 
   @DiagnosticParameter(
     type = String.class,
@@ -84,49 +84,116 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    Optional.of(ctx)
-      .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
-      .map(BSLParser.GlobalMethodCallContext::doCall)
-      .map(BSLParser.DoCallContext::callParamList)
-      .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(this::checkExclAddDiagnostic);
-
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  @Override
   public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
-    TerminalNode tNode = ctx.DATETIME();
-    if (tNode != null) {
-      checkExclAddDiagnostic(ctx);
-    }
-
-    return ctx;
-  }
-
-  private void checkExclAddDiagnostic(BSLParserRuleContext ctx) {
-    String checked = ctx.getText();
-    if (checked != null && !isExcluded(checked)) {
-      ParserRuleContext expression;
-      if (ctx instanceof BSLParser.CallParamListContext) {
-        expression = ctx.getParent().getParent().getParent().getParent().getParent();
-      } else {
-        expression = ctx.getParent().getParent();
+    var tNode = ctx.DATETIME();
+    var sNode = ctx.string();
+    if ((tNode != null || sNode != null) && isAccepted(ctx)) {
+      if (sNode != null && !isValidDate(sNode)) {
+        return defaultResult();
       }
-      if (expression instanceof BSLParser.ExpressionContext expressionContext
-        && (!isAssignExpression(expressionContext))) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
+
+      final var expressionContext = getExpression(Optional.of(ctx));
+      if (!insideSimpleDateAssignment(expressionContext) && !insideReturnSimpleDate(expressionContext)
+        && !insideAssignmentWithDateMethodForSimpleDate(expressionContext)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
       }
     }
+
+    return defaultResult();
   }
 
-  private boolean isExcluded(String sIn) {
-    String s = nonNumberPattern.matcher(sIn).replaceAll("");
+  private static boolean isValidDate(BSLParser.StringContext ctx) {
+    final var text = ctx.getText();
+    if (!paramPattern.matcher(text).matches()) {
+      return false;
+    }
+    var strDate = text.substring(1, text.length() - 1); // убрать кавычки
+    return isValidDate(strDate);
+  }
+
+  private static boolean isValidDate(String strDate) {
+    var year = parseInt(strDate.substring(0, 4));
+    if (year < 1 || year > MAX_YEAR_BY_1C) {
+      return false;
+    }
+    var month = parseInt(strDate.substring(4, 6));
+    var day = parseInt(strDate.substring(6, 8));
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+    if (strDate.length() == 8) {
+      return true;
+    }
+    var hh = parseInt(strDate.substring(8, 10));
+    var mm = parseInt(strDate.substring(10, 12));
+    var ss = parseInt(strDate.substring(12, 14));
+    return hh <= 24 && mm <= 60 && ss <= 60;
+  }
+
+  private static int parseInt(String text) {
+    String s = zeroPattern.matcher(text).replaceAll("");
+    try {
+      return Integer.parseInt(s);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
+  private boolean isAccepted(BSLParser.ConstValueContext ctx) {
+    String text = ctx.getText();
+    return text != null && !text.isEmpty() && !isExcluded(text);
+  }
+
+  private boolean isExcluded(String text) {
+    String s = nonNumberPattern.matcher(text).replaceAll("");
     return authorizedDates.contains(s);
   }
 
-  private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
+  private static Optional<BSLParser.ExpressionContext> getExpression(Optional<BSLParser.ConstValueContext> constValue) {
+    return constValue
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .filter(BSLParser.ExpressionContext.class::isInstance)
+      .map(BSLParser.ExpressionContext.class::cast);
+  }
+
+  private static boolean insideSimpleDateAssignment(Optional<BSLParser.ExpressionContext> expression) {
+    return insideContext(expression, BSLParser.AssignmentContext.class);
+  }
+
+  private static boolean insideContext(Optional<BSLParser.ExpressionContext> expression,
+                                       Class<? extends BSLParserRuleContext> assignmentContextClass) {
+    return expression
+      .map(BSLParserRuleContext::getParent)
+      .filter(assignmentContextClass::isInstance)
+      .isPresent();
+  }
+
+  private static boolean insideReturnSimpleDate(Optional<BSLParser.ExpressionContext> expression) {
+    return insideContext(expression, BSLParser.ReturnStatementContext.class);
+  }
+
+  private static boolean insideAssignmentWithDateMethodForSimpleDate(Optional<BSLParser.ExpressionContext> expression) {
+    return expression
+      .map(BSLParserRuleContext::getParent) // callParam
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // callParamList
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // doCall
+      .map(BSLParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
+      .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
+      .map(BSLParser.GlobalMethodCallContext.class::cast)
+      .filter(context -> methodPattern.matcher(context.methodName().getText()).matches())
+      .map(BSLParserRuleContext::getParent) // complexId
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // member
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent) // expression
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(BSLParser.AssignmentContext.class::isInstance)
+      .isPresent();
   }
 }
