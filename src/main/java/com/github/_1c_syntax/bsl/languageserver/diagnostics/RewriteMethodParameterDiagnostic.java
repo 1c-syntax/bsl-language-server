@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
@@ -154,13 +155,14 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
 
     return assignment.flatMap(assignContext ->
         Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
-      .map(TerminalNode::getParent);
+      .map(TerminalNode::getParent)
+      .map(RuleNode.class::cast);
   }
 
   private static boolean isVarNameOnlyIntoExpression(RuleNode refContext) {
@@ -170,7 +172,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
       .filter(BSLParser.MemberContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(expression -> expression.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .isPresent();
