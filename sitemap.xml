@@ -2,1002 +2,1002 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/faq/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/systemRequirements/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnostcAddSettings/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticDevWorkFlow/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticExample/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticQuickFix/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticStructure/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticTag/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticTypeAndSeverity/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/EnvironmentSetting/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/EventsApi/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/FastStart/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/Measures/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/contributing/StyleGuide/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/AllFunctionPathMustHaveReturn/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/AssignAliasFieldsInQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/BadWords/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/BeginTransactionBeforeTryCatch/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CachedPublic/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CanonicalSpellingKeywords/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CodeAfterAsyncCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CodeBlockBeforeSub/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CodeOutOfRegion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CognitiveComplexity/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommandModuleExportMethods/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommentedCode/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommitTransactionOutsideTryCatch/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleAssign/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleInvalidType/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleMissingAPI/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameCached/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameClient/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameClientServer/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameFullAccess/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameGlobal/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameGlobalClient/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameServerCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleNameWords/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CompilationDirectiveLost/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CompilationDirectiveNeedLess/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ConsecutiveEmptyLines/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CrazyMultilineString/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CreateQueryInCycle/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/CyclomaticComplexity/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DataExchangeLoading/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeletingCollectionItem/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DenyIncompleteValues/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedAttributes8312/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedCurrentDate/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedFind/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedMessage/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedMethodCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedMethods8310/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedMethods8317/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DeprecatedTypeManagedForm/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DisableSafeMode/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DuplicateRegion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DuplicateStringLiteral/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/DuplicatedInsertionIntoCollection/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/EmptyCodeBlock/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/EmptyRegion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/EmptyStatement/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExcessiveAutoTestCheck/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExecuteExternalCode/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExecuteExternalCodeInCommonModule/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExportVariables/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExternalAppStarting/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ExtraCommas/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FieldsFromJoinsWithoutIsNull/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FileSystemAccess/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ForbiddenMetadataName/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FormDataToValue/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FullOuterJoinQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FunctionNameStartsWithGet/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FunctionOutParameter/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FunctionReturnsSamePrimitive/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/FunctionShouldHaveReturn/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/GetFormMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/GlobalContextMethodCollision8312/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IdenticalExpressions/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IfConditionComplexity/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IfElseDuplicatedCodeBlock/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IfElseDuplicatedCondition/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IfElseIfEndsWithElse/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IncorrectLineBreak/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IncorrectUseLikeInQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IncorrectUseOfStrTemplate/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/InternetAccess/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/InvalidCharacterInFile/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/IsInRoleMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/JoinWithSubQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/JoinWithVirtualTable/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/LatinAndCyrillicSymbolInWord/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/LineLength/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/LogicalOrInTheWhereSectionOfQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MagicDate/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MagicNumber/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MetadataObjectNameLength/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MethodSize/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissedRequiredParameter/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingCodeTryCatchEx/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingCommonModuleMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingEventSubscriptionHandler/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingParameterDescription/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingReturnedValueDescription/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingSpace/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingTempStorageDeletion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingTemporaryFileDeletion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MissingVariablesDescription/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MultilineStringInQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MultilingualStringHasAllDeclaredLanguages/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/MultilingualStringUsingWithTemplate/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NestedConstructorsInStructureDeclaration/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NestedFunctionInParameters/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NestedStatements/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NestedTernaryOperator/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NonExportMethodsInApiRegion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NonStandardRegion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NumberOfOptionalParams/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NumberOfParams/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/NumberOfValuesInStructureConstructor/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/OSUsersMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/OneStatementPerLine/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/OrderOfParams/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/OrdinaryAppSupport/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/PairingBrokenTransaction/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ParseError/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/PrivilegedModuleMethodCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ProcedureReturnsValue/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/PublicMethodsDescription/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/QueryParseError/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/QueryToMissingMetadata/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/RedundantAccessToObject/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/RefOveruse/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/RewriteMethodParameter/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SameMetadataObjectAndChildNames/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ScheduledJobHandler/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SelectTopWithoutOrderBy/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SelfAssign/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SelfInsertion/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SemicolonPresence/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ServerSideExportFormMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SetPermissionsForNewObjects/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SetPrivilegedMode/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SeveralCompilerDirectives/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/SpaceAtStartComment/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/StyleElementConstructors/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TempFilesDir/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TernaryOperatorUsage/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/ThisObjectAssign/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TimeoutsInExternalResources/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TooManyReturns/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TransferringParametersBetweenClientAndServer/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/TryNumber/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/Typo/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnaryPlusInConcatenation/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnionAll/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnknownPreprocessorSymbol/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnreachableCode/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnsafeSafeModeMethodCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnusedLocalMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnusedLocalVariable/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UnusedParameters/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsageWriteLogEvent/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UseLessForEach/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UseSystemInformation/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingCancelParameter/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingExternalCodeTools/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingFindElementByString/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingGoto/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingHardcodeNetworkAddress/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingHardcodePath/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingHardcodeSecretInformation/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingLikeInQuery/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingModalWindows/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingObjectNotAvailableUnix/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingServiceTag/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingSynchronousCalls/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/UsingThisForm/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/VirtualTableCallWithoutParameters/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/WrongDataPathForFormElements/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/WrongHttpServiceHandler/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/WrongUseFunctionProceedWithCall/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/WrongUseOfRollbackTransactionMethod/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/WrongWebServiceHandler/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/diagnostics/YoLetterUsage/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/features/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/features/ConfigurationFile/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/features/DiagnosticIgnorance/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/features/Monitoring/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/console/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/generic/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/json/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/junit/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/sarif/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/reporters/tslint/</loc>
-         <lastmod>2024-06-05</lastmod>
+         <lastmod>2024-06-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
