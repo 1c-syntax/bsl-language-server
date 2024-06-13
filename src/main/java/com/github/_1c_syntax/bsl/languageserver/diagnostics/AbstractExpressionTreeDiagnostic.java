@@ -58,11 +58,11 @@ public abstract class AbstractExpressionTreeDiagnostic extends ExpressionTreeVis
    * При входе в выражение вызывается данный метод.
    * Переопределяя его можно оценить - имеет ли смысл строить дерево выражения, или данное выражение не подходит.
    * Позволяет сократить время на построение дерева, если это не требуется для данного AST.
+   *
    * @param ctx - выражение, которое в данный момент посещается.
-   * @return
-   *   - если надо прекратить обход в глубину и построить Expression Tree на данном выражении - надо вернуть ACCEPT
-   *   - если надо пройти дальше и посетить дочерние выражения, не затрагивая данное - надо вернуть VISIT_CHILDREN
-   *   - если надо пропустить выражение, не ходить глубже и не строить Expression Tree - надо вернуть SKIP
+   * @return - если надо прекратить обход в глубину и построить Expression Tree на данном выражении - надо вернуть ACCEPT
+   * - если надо пройти дальше и посетить дочерние выражения, не затрагивая данное - надо вернуть VISIT_CHILDREN
+   * - если надо пропустить выражение, не ходить глубже и не строить Expression Tree - надо вернуть SKIP
    */
   protected ExpressionVisitorDecision onExpressionEnter(BSLParser.ExpressionContext ctx) {
     return ExpressionVisitorDecision.ACCEPT;
@@ -96,16 +96,18 @@ public abstract class AbstractExpressionTreeDiagnostic extends ExpressionTreeVis
       var result = onExpressionEnter(ctx);
       return switch (result) {
         case SKIP -> ctx;
-        case ACCEPT -> {
-          super.visitExpression(ctx);
-          var expressionTree = getExpressionTree();
-          if (expressionTree != null) // нашлись выражения в предложенном файле
-            visitTopLevelExpression(expressionTree);
-
-          yield ctx;
-        }
+        case ACCEPT -> processExpression(ctx);
         case VISIT_CHILDREN -> super.visitChildren(ctx);
       };
+    }
+
+    private BSLParser.ExpressionContext processExpression(BSLParser.ExpressionContext ctx) {
+      super.visitExpression(ctx);
+      var expressionTree = getExpressionTree();
+      if (expressionTree != null) // нашлись выражения в предложенном файле
+        visitTopLevelExpression(expressionTree);
+
+      return ctx;
     }
   }
 

@@ -45,11 +45,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic {
 
   @Override
-  protected ExpressionVisitorDecision onExpressionEnter(BSLParser.ExpressionContext ctx) {
-    return super.onExpressionEnter(ctx);
-  }
-
-  @Override
   protected void visitBinaryOperation(BinaryOperationNode node) {
 
     if (node.getOperator() != BslOperator.EQUAL && node.getOperator() != BslOperator.NOT_EQUAL) {
@@ -64,9 +59,7 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
       return;
     }
 
-    if (node.getOperator() == BslOperator.NOT_EQUAL) {
-      addDiagnostic(node);
-    } else if (isBooleanLiteral(node.getLeft()) || isBooleanLiteral(node.getRight())) {
+    if (node.getOperator() == BslOperator.NOT_EQUAL || isBooleanLiteral(node.getLeft()) || isBooleanLiteral(node.getRight())) {
       addDiagnostic(node);
     }
 
@@ -76,8 +69,8 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   @Override
   protected void visitUnaryOperation(UnaryOperationNode node) {
     if (node.getOperator() == BslOperator.NOT &&
-        node.getParent() != null &&
-        node.getParent().getNodeType() == ExpressionNodeType.UNARY_OP) {
+      node.getParent() != null &&
+      node.getParent().getNodeType() == ExpressionNodeType.UNARY_OP) {
 
       var unaryParent = node.getParent().<UnaryOperationNode>cast();
       if (unaryParent.getOperator() == BslOperator.NOT) {
@@ -88,28 +81,44 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
     super.visitUnaryOperation(node);
   }
 
-  private boolean isBooleanLiteral(BslExpression node) {
-    if (node.getNodeType() != ExpressionNodeType.LITERAL)
+  private static boolean isBooleanLiteral(BslExpression node) {
+    if (node.getNodeType() != ExpressionNodeType.LITERAL) {
       return false;
+    }
 
     var constant = (BSLParser.ConstValueContext) node.getRepresentingAst();
     return constant.TRUE() != null || constant.FALSE() != null;
   }
 
   private static boolean isNegationOperator(BslExpression parent) {
-    return parent.getNodeType() == ExpressionNodeType.UNARY_OP && parent.<UnaryOperationNode>cast().getOperator() == BslOperator.NOT;
+    return parent.getNodeType() == ExpressionNodeType.UNARY_OP
+      && parent.<UnaryOperationNode>cast().getOperator() == BslOperator.NOT;
   }
 
   private void addDiagnostic(BinaryOperationNode node) {
-    var startToken = Trees.getTokens(node.getParent().getRepresentingAst()).stream().findFirst().orElseThrow();
-    var endToken = Trees.getTokens(node.getRight().getRepresentingAst()).stream().reduce((one, two) -> two).orElseThrow();
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
+      .stream()
+      .findFirst()
+      .orElseThrow();
+
+    var endToken = Trees.getTokens(node.getRight().getRepresentingAst())
+      .stream()
+      .reduce((one, two) -> two)
+      .orElseThrow();
 
     diagnosticStorage.addDiagnostic(startToken, endToken);
   }
 
   private void addDiagnostic(UnaryOperationNode node) {
-    var startToken = Trees.getTokens(node.getParent().getRepresentingAst()).stream().findFirst().orElseThrow();
-    var endToken = Trees.getTokens(node.getOperand().getRepresentingAst()).stream().reduce((one, two) -> two).orElseThrow();
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
+      .stream()
+      .findFirst()
+      .orElseThrow();
+
+    var endToken = Trees.getTokens(node.getOperand().getRepresentingAst())
+      .stream()
+      .reduce((one, two) -> two)
+      .orElseThrow();
 
     diagnosticStorage.addDiagnostic(startToken, endToken);
   }

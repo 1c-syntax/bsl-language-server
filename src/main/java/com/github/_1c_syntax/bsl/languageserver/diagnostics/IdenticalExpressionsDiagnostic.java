@@ -29,20 +29,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
@@ -225,52 +221,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagno
       collectTokensForUnaryOperation(node.cast(), collection);
     } else {
       collection.addAll(Trees.getTokens(node.getRepresentingAst()));
-    }
-  }
-
-  private static List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
-    var list = new ArrayList<BinaryOperationNode>();
-    gatherBinaryOperations(list, tree);
-    return list;
-  }
-
-  private static void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
-    switch (tree.getNodeType()) {
-      case CALL:
-        for (var expr : tree.<AbstractCallNode>cast().arguments()) {
-          gatherBinaryOperations(list, expr);
-        }
-        break;
-      case UNARY_OP:
-        gatherBinaryOperations(list, tree.<UnaryOperationNode>cast().getOperand());
-        break;
-      case TERNARY_OP:
-        var ternary = (TernaryOperatorNode) tree;
-        gatherBinaryOperations(list, ternary.getCondition());
-        gatherBinaryOperations(list, ternary.getTruePart());
-        gatherBinaryOperations(list, ternary.getFalsePart());
-        break;
-      case BINARY_OP:
-        var binary = (BinaryOperationNode) tree;
-        var operator = binary.getOperator();
-
-        // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
-        // лучше выкинем их сразу
-        if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
-          return;
-        }
-
-        // одинаковые умножения и сложения - не считаем, см. тесты
-        if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
-          list.add(binary);
-        }
-
-        gatherBinaryOperations(list, binary.getLeft());
-        gatherBinaryOperations(list, binary.getRight());
-        break;
-
-      default:
-        break; // для спокойствия сонара
     }
   }
 

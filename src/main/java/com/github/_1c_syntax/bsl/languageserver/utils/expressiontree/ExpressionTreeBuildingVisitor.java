@@ -59,6 +59,7 @@ public class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTre
 
   /**
    * Хелпер построения дерева выражения на основе готового AST выражения
+   *
    * @param ctx AST выражения
    * @return дерево вычисления выражения
    */
@@ -201,8 +202,9 @@ public class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTre
 
   private boolean hasHigherPriorityOperatorsInFly(OperatorInCode operator) {
     var lastSeenOperator = operatorsInFly.peek();
-    if (lastSeenOperator == null)
+    if (lastSeenOperator == null) {
       return false;
+    }
 
     return lastSeenOperator.getPriority() > operator.getPriority();
   }
