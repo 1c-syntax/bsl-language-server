@@ -4,5 +4,9 @@ profile:
   name: qodana.starter
 include:
   - name: CheckDependencyLicenses
+  - name: FieldMayBeFinal
+  - name: NullableProblems
+  - name: LombokGetterMayBeUsed
+  - name: SimplifyStreamApiCallChains
 exclude:
   - name: OptionalUsedAsFieldOrParameterType
