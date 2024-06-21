@@ -149,4 +149,13 @@ class VariableSymbolTest {
 
   }
 
+  @Test
+  void testVariableNewOS() {
+
+    documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/variableSymbolTest.os");
+    variableSymbols = documentContext.getSymbolTree().getVariables();
+
+    assertThat(variableSymbols.get(0).getType()).isEqualTo("МойКласс");
+  }
+
 }

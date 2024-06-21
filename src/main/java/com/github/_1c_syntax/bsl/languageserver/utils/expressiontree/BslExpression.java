@@ -38,11 +38,12 @@ public abstract class BslExpression {
 
   /**
    * Синтаксический-помощник для более удобных downcast-ов
+   *
    * @param <T> тип, к которому надо привести данный узел
    * @return значение заданного типа
    */
   @SuppressWarnings("unchecked")
   public <T extends BslExpression> T cast() {
-    return (T)this;
+    return (T) this;
   }
 }

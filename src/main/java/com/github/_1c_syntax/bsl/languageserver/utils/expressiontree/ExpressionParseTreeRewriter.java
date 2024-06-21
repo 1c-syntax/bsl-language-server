@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
  */
 public final class ExpressionParseTreeRewriter {
 
-  private ExpressionParseTreeRewriter(){
+  private ExpressionParseTreeRewriter() {
   }
 
   /**

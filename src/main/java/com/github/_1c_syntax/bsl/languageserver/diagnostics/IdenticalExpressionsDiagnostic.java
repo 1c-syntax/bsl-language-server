@@ -73,7 +73,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
   private final FormatProvider formatProvider;
-  
+
   private static Set<String> parseCommaSeparatedSet(String values) {
     if (values.trim().isEmpty()) {
       return Collections.emptySet();

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ModuleTypeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -70,7 +71,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -118,6 +118,7 @@ public class DocumentContext {
 
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private final Lazy<String> typeName = new Lazy<>(this::computeTypeName, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -158,13 +159,13 @@ public class DocumentContext {
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
   }
 
   public List<Token> getComments() {
     return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   public String getText(Range range) {
@@ -234,6 +235,10 @@ public class DocumentContext {
 
   public ModuleType getModuleType() {
     return moduleType.getOrCompute();
+  }
+
+  public String getTypeName() {
+    return typeName.getOrCompute();
   }
 
   public SupportVariant getSupportVariant() {
@@ -363,9 +368,14 @@ public class DocumentContext {
     return new SymbolTreeComputer(this).compute();
   }
 
-
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleTypeByURI(uri);
+
+    return new ModuleTypeComputer(this).computeModuleType();
+  }
+
+  private String computeTypeName() {
+
+    return new ModuleTypeComputer(this).computeTypeName();
   }
 
   private ComplexityData computeCognitiveComplexity() {

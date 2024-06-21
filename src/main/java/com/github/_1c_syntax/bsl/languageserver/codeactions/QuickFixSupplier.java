@@ -49,8 +49,8 @@ public class QuickFixSupplier {
     T diagnosticCode
   ) {
     return Optional.ofNullable(
-      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
-    )
+        diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+      )
       .map(DiagnosticInfo::getDiagnosticClass)
       .filter(QuickFixProvider.class::isAssignableFrom)
       .map(aClass -> (Class<? extends QuickFixProvider>) aClass);

@@ -72,6 +72,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
     // Для неизвестных модулей не будем требовать нахождения кода в области
+    // fix me bsl only
     if (documentContext.getModuleType() == ModuleType.UNKNOWN && !checkUnknownModuleType) {
       return ctx;
     }
