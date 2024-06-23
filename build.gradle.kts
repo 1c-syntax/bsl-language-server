@@ -18,7 +18,7 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "8.6"
     id("me.qoomon.git-versioning") version "6.4.3"
     id("com.github.ben-manes.versions") version "0.51.0"
-    id("org.springframework.boot") version "3.2.5"
+    id("org.springframework.boot") version "3.3.1"
     id("io.spring.dependency-management") version "1.1.5"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.0"
     id("ru.vyarus.pom") version "3.0.0"
@@ -252,7 +252,9 @@ tasks.javadoc {
         links(
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
+            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest",
+            "https://docs.spring.io/spring-boot/api/java",
+            "https://javadoc.io/doc/org.springframework.boot/spring-boot/latest"
         )
     }
 }

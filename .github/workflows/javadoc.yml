@@ -25,4 +25,4 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     - name: Check javadoc build
-      run: ./gradlew javadoc --stacktrace
+      run: ./gradlew javadoc --stacktrace --scan --debug
