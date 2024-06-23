@@ -253,7 +253,7 @@ tasks.javadoc {
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
             "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest",
-            "https://docs.spring.io/spring-boot/3.3.0/api/java"
+            "https://docs.spring.io/spring-boot/api/java"
         )
     }
 }
