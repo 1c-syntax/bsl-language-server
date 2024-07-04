@@ -10,7 +10,7 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "5.0.0.4638"
+    id("org.sonarqube") version "5.1.0.4872"
     id("io.freefair.lombok") version "8.6"
     id("io.freefair.javadoc-links") version "8.6"
     id("io.freefair.javadoc-utf-8") version "8.6"
