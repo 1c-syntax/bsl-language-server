@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpressi
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -59,9 +58,7 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
       return;
     }
 
-    if (node.getOperator() == BslOperator.NOT_EQUAL
-      || isBooleanLiteral(node.getLeft())
-      || isBooleanLiteral(node.getRight())) {
+    if (node.getOperator() == BslOperator.NOT_EQUAL) {
       addDiagnostic(node);
     }
 
@@ -81,15 +78,6 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
     }
 
     super.visitUnaryOperation(node);
-  }
-
-  private static boolean isBooleanLiteral(BslExpression node) {
-    if (node.getNodeType() != ExpressionNodeType.LITERAL) {
-      return false;
-    }
-
-    var constant = (BSLParser.ConstValueContext) node.getRepresentingAst();
-    return constant.TRUE() != null || constant.FALSE() != null;
   }
 
   private static boolean isNegationOperator(BslExpression parent) {
