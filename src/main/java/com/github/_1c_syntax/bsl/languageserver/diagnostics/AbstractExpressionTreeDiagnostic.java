@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Getter;
 import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -60,7 +61,8 @@ public abstract class AbstractExpressionTreeDiagnostic extends ExpressionTreeVis
    * Позволяет сократить время на построение дерева, если это не требуется для данного AST.
    *
    * @param ctx - выражение, которое в данный момент посещается.
-   * @return - если надо прекратить обход в глубину и построить Expression Tree на данном выражении - надо вернуть ACCEPT
+   * @return - флаг дальнейшего поведения.
+   * - если надо прекратить обход в глубину и построить Expression Tree на данном выражении - надо вернуть ACCEPT
    * - если надо пройти дальше и посетить дочерние выражения, не затрагивая данное - надо вернуть VISIT_CHILDREN
    * - если надо пропустить выражение, не ходить глубже и не строить Expression Tree - надо вернуть SKIP
    */
@@ -86,26 +88,33 @@ public abstract class AbstractExpressionTreeDiagnostic extends ExpressionTreeVis
     /**
      * Пропустить данное выражение и обойти вложенные в него выражения
      */
-    VISIT_CHILDREN;
+    VISIT_CHILDREN
   }
 
-  private class ExpressionTreeBuilder extends ExpressionTreeBuildingVisitor {
+  private class ExpressionTreeBuilder extends BSLParserBaseVisitor<ParseTree> {
+
     @Override
     public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
+
+      var treeBuildingVisitor = new ExpressionTreeBuildingVisitor();
 
       var result = onExpressionEnter(ctx);
       return switch (result) {
         case SKIP -> ctx;
-        case ACCEPT -> processExpression(ctx);
-        case VISIT_CHILDREN -> super.visitChildren(ctx);
+        case ACCEPT -> processExpression(treeBuildingVisitor, ctx);
+        case VISIT_CHILDREN -> treeBuildingVisitor.visitChildren(ctx);
       };
     }
 
-    private BSLParser.ExpressionContext processExpression(BSLParser.ExpressionContext ctx) {
-      super.visitExpression(ctx);
-      var expressionTree = getExpressionTree();
-      if (expressionTree != null) // нашлись выражения в предложенном файле
+    private BSLParser.ExpressionContext processExpression(
+      ExpressionTreeBuildingVisitor treeBuildingVisitor,
+      BSLParser.ExpressionContext ctx
+    ) {
+      treeBuildingVisitor.visitExpression(ctx);
+      var expressionTree = treeBuildingVisitor.getExpressionTree();
+      if (expressionTree != null) { // нашлись выражения в предложенном файле
         visitTopLevelExpression(expressionTree);
+      }
 
       return ctx;
     }

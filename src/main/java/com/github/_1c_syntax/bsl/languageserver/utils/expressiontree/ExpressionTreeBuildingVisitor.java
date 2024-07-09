@@ -33,13 +33,12 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 
 /**
  * Посетитель AST, который находит выражения и преобразует их в Expression Tree
  */
-public class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
+public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   @Value
   private static class OperatorInCode {
@@ -317,7 +316,7 @@ public class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTre
     if (typeName == null) {
       // function style
       var typeNameArg = args.get(0);
-      args = args.stream().skip(1).collect(Collectors.toList());
+      args = args.stream().skip(1).toList();
       callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
     } else {
       // static style

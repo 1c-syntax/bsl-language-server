@@ -59,7 +59,9 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
       return;
     }
 
-    if (node.getOperator() == BslOperator.NOT_EQUAL || isBooleanLiteral(node.getLeft()) || isBooleanLiteral(node.getRight())) {
+    if (node.getOperator() == BslOperator.NOT_EQUAL
+      || isBooleanLiteral(node.getLeft())
+      || isBooleanLiteral(node.getRight())) {
       addDiagnostic(node);
     }
 
