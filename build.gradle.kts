@@ -20,7 +20,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.51.0"
     id("org.springframework.boot") version "3.2.5"
     id("io.spring.dependency-management") version "1.1.6"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.2"
     id("io.codearte.nexus-staging") version "0.30.0"
