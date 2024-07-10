@@ -22,14 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +40,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class ReferencesProviderTest {
 
   @Autowired
@@ -51,7 +51,7 @@ class ReferencesProviderTest {
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/references.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
     serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
     serverContext.populateContext();

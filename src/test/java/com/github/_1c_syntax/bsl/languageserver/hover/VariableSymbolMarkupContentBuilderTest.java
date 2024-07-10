@@ -147,6 +147,25 @@ class VariableSymbolMarkupContentBuilderTest {
   }
 
   @Test
+  void testMethodVarContentFromDirectFile_type_from_new() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    final var symbolTree = documentContext.getSymbolTree();
+    var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
+    var varSymbol = symbolTree.getVariableSymbol("НовыйКласс", methodSymbol).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(3);
+    assertThat(blocks.get(2)).isEqualTo("ИмяКласса\n\n");
+  }
+
+  @Test
   void testMethodVarContentFromDirectFile_3_comments_strings() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);

@@ -69,7 +69,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
-          .getText())
+            .getText())
           .matches()
       )
       .map(BSLParserRuleContext.class::cast)

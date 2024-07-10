@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -50,6 +49,6 @@ public class ReferencesProvider {
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .map(Reference::toLocation)
-      .collect(Collectors.toList());
+      .toList();
   }
 }

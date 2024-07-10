@@ -69,6 +69,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
       .map(VariableDescription::getPurposeDescription)
       .ifPresent(trailingDescription -> addSectionIfNotEmpty(markupBuilder, trailingDescription));
 
+    // todo: Разобраться, почему здесь может быть null.
+    if (symbol.getType() != null) {
+      addSectionIfNotEmpty(markupBuilder, symbol.getType());
+    }
+
     String content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);

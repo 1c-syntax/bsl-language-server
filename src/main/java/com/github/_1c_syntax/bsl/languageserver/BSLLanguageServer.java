@@ -94,7 +94,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
-    
+
     setConfigurationRoot(params);
 
     var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");

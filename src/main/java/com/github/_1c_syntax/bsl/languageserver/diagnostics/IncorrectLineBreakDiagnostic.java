@@ -104,7 +104,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
     findCommentStarts();
     findQueryFirstLines();
 
-    if (checkFirstSymbol){
+    if (checkFirstSymbol) {
       checkContent(listOfIncorrectFirstSymbol);
     }
     if (checkLastSymbol) {

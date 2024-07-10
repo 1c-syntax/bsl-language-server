@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.SOURCE;
 
-
 @Component
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
@@ -83,14 +82,14 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
           .stream()
           .filter(token -> token.getLine() == selectedLineNumber)
           .max(Comparator.comparingInt(Token::getCharPositionInLine))
-          .ifPresent(token -> {
-            if (params.getRange().getStart().getLine() == params.getRange().getEnd().getLine()) {
-              result.addAll(getDisableActionForLine(params, documentContext, token));
-            } else {
-              result.addAll(getDisableActionForRange(params, documentContext, token));
+          .ifPresent((Token token) -> {
+              if (params.getRange().getStart().getLine() == params.getRange().getEnd().getLine()) {
+                result.addAll(getDisableActionForLine(params, documentContext, token));
+              } else {
+                result.addAll(getDisableActionForRange(params, documentContext, token));
+              }
             }
-          }
-        );
+          );
       }
 
       result.addAll(
@@ -176,13 +175,13 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   private List<TextEdit> createInRegionTextEdits(String diagnosticName, Token last, CodeActionParams params) {
     List<TextEdit> edits = new ArrayList<>();
 
-    Range disableRange = Ranges.create(
+    var disableRange = Ranges.create(
       params.getRange().getStart().getLine(),
       0,
       params.getRange().getStart().getLine(),
       0
     );
-    TextEdit disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS%s-off%n", diagnosticName));
+    var disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS%s-off%n", diagnosticName));
     edits.add(disableTextEdit);
 
     Range enableRange = Ranges.create(
@@ -191,13 +190,13 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getEnd().getLine(),
       last.getCharPositionInLine() + last.getText().length()
     );
-    TextEdit enableTextEdit = new TextEdit(enableRange, String.format("%n// BSLLS%s-on%n", diagnosticName));
+    var enableTextEdit = new TextEdit(enableRange, String.format("%n// BSLLS%s-on%n", diagnosticName));
     edits.add(enableTextEdit);
     return edits;
   }
 
   private List<TextEdit> createInFileTextEdits(String diagnosticName) {
-    TextEdit textEdit = new TextEdit(
+    var textEdit = new TextEdit(
       Ranges.create(0, 0, 0, 0),
       String.format("// BSLLS%s-off%n", diagnosticName)
     );
@@ -206,10 +205,10 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private CodeAction createCodeAction(String title, List<TextEdit> edits, DocumentContext documentContext) {
     Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), edits);
-    WorkspaceEdit edit = new WorkspaceEdit();
+    var edit = new WorkspaceEdit();
     edit.setChanges(changes);
 
-    CodeAction codeAction = new CodeAction(title);
+    var codeAction = new CodeAction(title);
     codeAction.setDiagnostics(new ArrayList<>());
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
@@ -225,15 +224,14 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   }
 
   private static List<TextEdit> createInLineTextEdits(String diagnosticName, Token last, CodeActionParams params) {
-    Range range = Ranges.create(
+    var range = Ranges.create(
       params.getRange().getStart().getLine(),
       last.getCharPositionInLine() + last.getText().length(),
       params.getRange().getStart().getLine(),
       last.getCharPositionInLine() + last.getText().length()
     );
 
-    TextEdit textEdit = new TextEdit(range, String.format(" // BSLLS%s-off", diagnosticName));
+    var textEdit = new TextEdit(range, String.format(" // BSLLS%s-off", diagnosticName));
     return Collections.singletonList(textEdit);
   }
-
 }

@@ -70,7 +70,7 @@ public class ReferenceIndex {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
-    String scopeName = "";
+    var scopeName = "";
 
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
       scopeName = symbol.getRootParent(SymbolKind.Method)
@@ -164,13 +164,14 @@ public class ReferenceIndex {
    * Добавить вызов метода в индекс.
    *
    * @param uri        URI документа, откуда произошел вызов.
-   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение
+   *                   (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    String symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
+    var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -196,12 +197,13 @@ public class ReferenceIndex {
    * Добавить обращение к переменной в индекс.
    *
    * @param uri          URI документа, откуда произошел вызов.
-   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение
+   *                     (например, CommonModule.ОбщийМодуль1).
    * @param moduleType   Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
    * @param variableName Имя переменной, к которой происходит обращение.
    * @param range        Диапазон, в котором происходит обращение к символу.
-   * @param definition     Признак обновления значения переменной.
+   * @param definition   Признак обновления значения переменной.
    */
   public void addVariableUsage(URI uri,
                                String mdoRef,
@@ -210,8 +212,8 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
-    String methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
-    String variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
+    var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
+    var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -252,15 +254,15 @@ public class ReferenceIndex {
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {
     String mdoRef = symbolEntity.getMdoRef();
-    ModuleType moduleType = symbolEntity.getModuleType();
+    var moduleType = symbolEntity.getModuleType();
     String symbolName = symbolEntity.getSymbolName();
 
     if (symbolEntity.getSymbolKind() == SymbolKind.Variable) {
       return serverContext.getDocument(mdoRef, moduleType)
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.getScopeName())
-        .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
-        .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+          .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
+          .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
 
     return serverContext.getDocument(mdoRef, moduleType)

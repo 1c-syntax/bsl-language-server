@@ -45,6 +45,7 @@ public class ConstructorCallNode extends AbstractCallNode {
 
   /**
    * Конструирование статического вызова конструктора
+   *
    * @param typeName терминальный символ имени типа
    * @return ветка конструктора
    */
@@ -54,6 +55,7 @@ public class ConstructorCallNode extends AbstractCallNode {
 
   /**
    * Конструирование вызова конструктора в функциональном стиле
+   *
    * @param typeNameExpression подвыражение с именем типа
    * @return ветка конструктора
    */

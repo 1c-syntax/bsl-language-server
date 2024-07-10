@@ -51,6 +51,8 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
    */
   SourceDefinedSymbol getScope();
 
+  String getType();
+
   static AbstractVariableSymbol.Builder builder() {
     return AbstractVariableSymbol.builder();
   }

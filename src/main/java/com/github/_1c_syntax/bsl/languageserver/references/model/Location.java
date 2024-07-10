@@ -72,7 +72,7 @@ public class Location {
     endCharacter = end.getCharacter();
 
   }
-  
+
   public Range getRange() {
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
   }

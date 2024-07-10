@@ -73,9 +73,10 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
     int endCharacter,
     int variableNameLine,
     int variableNameStartCharacter,
-    int variableNameEndCharacter
+    int variableNameEndCharacter,
+    String type
   ) {
-    super(name, scope, owner, parent, kind, export, description);
+    super(name, scope, owner, parent, kind, export, description, type);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;

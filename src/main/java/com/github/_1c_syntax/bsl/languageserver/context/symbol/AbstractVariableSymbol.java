@@ -89,6 +89,11 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   Optional<VariableDescription> description;
 
+  /**
+   * Тип переменной
+   */
+  String type;
+
   @Override
   public List<SourceDefinedSymbol> getChildren() {
     return Collections.emptyList();
@@ -183,7 +188,8 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           (short) endCharacter,
           (short) variableNameLine,
           (short) variableNameStartCharacter,
-          (short) variableNameEndCharacter
+          (short) variableNameEndCharacter,
+          type
         );
       } else {
         return new IntBasedVariableSymbol(
@@ -200,7 +206,8 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           endCharacter,
           variableNameLine,
           variableNameStartCharacter,
-          variableNameEndCharacter
+          variableNameEndCharacter,
+          type
         );
       }
     }

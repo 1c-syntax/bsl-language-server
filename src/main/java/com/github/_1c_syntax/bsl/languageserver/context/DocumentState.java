@@ -19,27 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.experimental.UtilityClass;
-
-import java.util.regex.Pattern;
-
-@UtilityClass
-public class Modules {
-
-  private static final Pattern THIS_OBJECT_PATTERN = CaseInsensitivePattern.compile(
-    "ЭтотОбъект|ThisObject"
-  );
-
-  public static boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
-    final var identifier = complexIdentifier.IDENTIFIER();
-    if (identifier == null) {
-      return false;
-    }
-    return THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();
-  }
-
+/**
+ * Состояние документа в контексте.
+ */
+public enum DocumentState {
+  /**
+   * В документе отсутствует контент или он был очищен.
+   */
+  WITHOUT_CONTENT,
+  /**
+   * В документе присутствует контент.
+   */
+  WITH_CONTENT
 }
