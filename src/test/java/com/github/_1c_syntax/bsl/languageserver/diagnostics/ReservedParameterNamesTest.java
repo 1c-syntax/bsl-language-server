@@ -39,10 +39,8 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
 
   @Test
   void testEmpty() {
-
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).isEmpty();
-
   }
 
   @Test
