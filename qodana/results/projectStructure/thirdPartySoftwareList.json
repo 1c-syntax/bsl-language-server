@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2024-07-06T10:16:08Z"
+    "created": "2024-07-10T07:55:06Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "cd76b1d53f023f7e9b444110b246727d9420f0d6"
+          "checksumValue": "a8b6669e3f754ae21c21c5129425c1f0c042a3be"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -35,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.main",
       "name": "bsl-language-server.main",
-      "versionInfo": "develop-cd76b1d-DIRTY",
+      "versionInfo": "develop-a8b6669-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "cd76b1d53f023f7e9b444110b246727d9420f0d6"
+          "checksumValue": "a8b6669e3f754ae21c21c5129425c1f0c042a3be"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +56,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-cd76b1d-DIRTY",
+      "versionInfo": "develop-a8b6669-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "cd76b1d53f023f7e9b444110b246727d9420f0d6"
+          "checksumValue": "a8b6669e3f754ae21c21c5129425c1f0c042a3be"
         }
       ],
       "primaryPackagePurpose": "SOURCE"

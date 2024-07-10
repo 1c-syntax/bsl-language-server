@@ -1,57 +1,29 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Lombok @Setter may be used",
+  "category": "Imports",
+  "type": "Unused import",
   "severity": "High",
-  "comment": "Class 'ClientCapabilitiesHolder' may use Lombok @Setter",
-  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
+  "comment": "Unused import `import com.github._1c_syntax.bsl.mdo.ChildrenOwner;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/ClientCapabilitiesHolder.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ForbiddenMetadataNameDiagnostic.java",
       "language": "JAVA",
-      "line": 43,
-      "offset": 14,
-      "length": 24,
+      "line": 32,
+      "offset": 1,
+      "length": 51,
       "code": {
-        "startLine": 41,
-        "length": 24,
-        "offset": 42,
-        "surroundingCode": "@ToString\n@EqualsAndHashCode\npublic class ClientCapabilitiesHolder {\n\n  /**"
+        "startLine": 30,
+        "length": 51,
+        "offset": 138,
+        "surroundingCode": "import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;\nimport com.github._1c_syntax.bsl.mdo.AttributeOwner;\nimport com.github._1c_syntax.bsl.mdo.ChildrenOwner;\nimport com.github._1c_syntax.bsl.mdo.MD;\nimport com.github._1c_syntax.bsl.types.MdoReference;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "LombokSetterMayBeUsed"
+    "inspectionName": "UNUSED_IMPORT"
   },
-  "hash": "1599d1ed085eda694e1bb94418af70287c1721e8628e5dc827a905ae3a1b0944"
-},{
-  "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Redundant character escape",
-  "severity": "High",
-  "comment": "Redundant character escape `\\\\*` in RegExp",
-  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
-      "language": "JAVA",
-      "line": 67,
-      "offset": 76,
-      "length": 3,
-      "code": {
-        "startLine": 65,
-        "length": 3,
-        "offset": 81,
-        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "RegExpRedundantEscape"
-  },
-  "hash": "773d4bfe78dcae4ccaf24d64c6a67d700acfbba1c47d2e6a4bd3401a2492913c"
+  "hash": "dfef9c01f5a92ff4f33eeb0402a9ab04b8065bfbe30c0f7f1628f4c6fa960f1b"
 }]}
