@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1720261239022,
+  "lastUpdate": 1720598798237,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26226,6 +26226,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1257165505513558",
             "extra": "mean: 78.51168473561604 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a8b6669e3f754ae21c21c5129425c1f0c042a3be",
+          "message": "Merge pull request #3320 from 1c-syntax/dependabot/gradle/io.spring.dependency-management-1.1.6\n\nbuild(deps): bump io.spring.dependency-management from 1.1.5 to 1.1.6",
+          "timestamp": "2024-07-10T10:47:35+03:00",
+          "tree_id": "abda7837bc5c08b3027567ac70240612747ec489",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a8b6669e3f754ae21c21c5129425c1f0c042a3be"
+        },
+        "date": 1720598794579,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.03467909495036,
+            "unit": "sec",
+            "range": "stddev: 0.3918849037286808",
+            "extra": "mean: 80.03467909495036 sec\nrounds: 3"
           }
         ]
       }
