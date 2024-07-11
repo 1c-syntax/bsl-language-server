@@ -90,15 +90,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
           "type": "Library"
         },
         {
           "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.6.0",
           "type": "Library"
         },
         {
@@ -942,15 +942,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
           "type": "Library"
         },
         {
           "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.6.0",
           "type": "Library"
         },
         {
@@ -1654,15 +1654,15 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.13.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
           "type": "Library"
         },
         {
           "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.6.0",
           "type": "Library"
         },
         {

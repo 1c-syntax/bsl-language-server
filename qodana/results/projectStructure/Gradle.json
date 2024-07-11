@@ -66,12 +66,20 @@
       "version": "0.6.1"
     },
     {
-      "ideaName": "Gradle: io.github.1c-syntax:mdclasses:0.13.0",
-      "gradleName": "io.github.1c-syntax:mdclasses:0.13.0",
+      "ideaName": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+      "gradleName": "io.github.1c-syntax:mdclasses:0.14.0",
       "unresolved": false,
       "groupId": "io.github.1c-syntax",
       "artifactId": "mdclasses",
-      "version": "0.13.0"
+      "version": "0.14.0"
+    },
+    {
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
+      "gradleName": "io.github.1c-syntax:bsl-common-library:0.7.0",
+      "unresolved": false,
+      "groupId": "io.github.1c-syntax",
+      "artifactId": "bsl-common-library",
+      "version": "0.7.0"
     },
     {
       "ideaName": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
@@ -80,14 +88,6 @@
       "groupId": "io.github.1c-syntax",
       "artifactId": "supportconf",
       "version": "0.14.0"
-    },
-    {
-      "ideaName": "Gradle: io.github.1c-syntax:bsl-common-library:0.6.0",
-      "gradleName": "io.github.1c-syntax:bsl-common-library:0.6.0",
-      "unresolved": false,
-      "groupId": "io.github.1c-syntax",
-      "artifactId": "bsl-common-library",
-      "version": "0.6.0"
     },
     {
       "ideaName": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
