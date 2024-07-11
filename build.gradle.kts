@@ -32,6 +32,7 @@ repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
     maven(url = "https://projectlombok.org/edge-releases")
+    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
 group = "io.github.1c-syntax"
@@ -88,9 +89,11 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.1")
-    api("io.github.1c-syntax", "mdclasses", "0.13.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.6.0")
-    api("io.github.1c-syntax", "supportconf", "0.14.0")
+    api("io.github.1c-syntax", "mdclasses", "0.14.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.7.0")
+    api("io.github.1c-syntax", "supportconf", "0.14.0") {
+        exclude("io.github.1c-syntax", "bsl-common-library")
+    }
     api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool
