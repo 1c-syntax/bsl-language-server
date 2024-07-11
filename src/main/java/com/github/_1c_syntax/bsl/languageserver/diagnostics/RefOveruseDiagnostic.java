@@ -37,8 +37,6 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
@@ -160,8 +158,8 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       .map(dataSourceContext -> new TabularSectionTable(getTableNameOrAlias(dataSourceContext),
         getTabularSectionNames(dataSourceContext)))
       .collect(Collectors.toMap(
-        TabularSectionTable::getTableNameOrAlias,
-        TabularSectionTable::getTabularSectionNames,
+        TabularSectionTable::tableNameOrAlias,
+        TabularSectionTable::tabularSectionNames,
         (existing, replacement) -> existing));
   }
 
@@ -322,10 +320,6 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     return children.subList(1, children.size() - 1);
   }
 
-  @Value
-  @AllArgsConstructor
-  private static class TabularSectionTable {
-    String tableNameOrAlias;
-    List<String> tabularSectionNames;
+  private record TabularSectionTable(String tableNameOrAlias, List<String> tabularSectionNames) {
   }
 }

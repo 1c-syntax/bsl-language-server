@@ -56,9 +56,9 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
       .filter(reference -> reference.getSymbol().isDeprecated())
       .filter(reference -> !reference.getFrom().isDeprecated())
       .forEach((Reference reference) -> {
-        Symbol deprecatedSymbol = reference.getSymbol();
-        String deprecationInfo = getDeprecationInfo(deprecatedSymbol);
-        String message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
+        var deprecatedSymbol = reference.getSymbol();
+        var deprecationInfo = getDeprecationInfo(deprecatedSymbol);
+        var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
         diagnosticStorage.addDiagnostic(reference.getSelectionRange(), message);
       });
   }
