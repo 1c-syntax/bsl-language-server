@@ -10,7 +10,7 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "5.0.0.4638"
+    id("org.sonarqube") version "5.1.0.4882"
     id("io.freefair.lombok") version "8.6"
     id("io.freefair.javadoc-links") version "8.6"
     id("io.freefair.javadoc-utf-8") version "8.6"
@@ -19,8 +19,8 @@ plugins {
     id("me.qoomon.git-versioning") version "6.4.3"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("org.springframework.boot") version "3.2.5"
-    id("io.spring.dependency-management") version "1.1.5"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.0"
+    id("io.spring.dependency-management") version "1.1.6"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.2"
     id("io.codearte.nexus-staging") version "0.30.0"
@@ -32,6 +32,7 @@ repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
     maven(url = "https://projectlombok.org/edge-releases")
+    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
 group = "io.github.1c-syntax"
@@ -62,7 +63,7 @@ val languageToolVersion = "6.4"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:7.9.0")
+        mavenBom("io.sentry:sentry-bom:7.11.0")
     }
 }
 
@@ -88,9 +89,11 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.1")
-    api("io.github.1c-syntax", "mdclasses", "0.13.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.6.0")
-    api("io.github.1c-syntax", "supportconf", "0.14.0")
+    api("io.github.1c-syntax", "mdclasses", "0.14.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.7.0")
+    api("io.github.1c-syntax", "supportconf", "0.14.0") {
+        exclude("io.github.1c-syntax", "bsl-common-library")
+    }
     api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
 
     // JLanguageTool
@@ -137,7 +140,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.8.5")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.8.6")
 
     // TEST
 

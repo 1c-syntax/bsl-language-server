@@ -19,7 +19,10 @@
 				"vscjava.vscode-gradle",
 				"GitHub.vscode-github-actions",
 				"astrizhachuk.1c-extension-pack",
-				"zhuangtongfa.Material-theme"
+				"zhuangtongfa.Material-theme",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"github.vscode-github-actions"
 			]
 		}
 	}

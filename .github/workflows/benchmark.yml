@@ -52,6 +52,12 @@ jobs:
       - name: Analyze ssl
         run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
 
+      - name: Archive results in SARIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: "SARIF report"
+          path: bsl-ls.sarif
+
       - name: Generation badge benchmark
         if: github.event_name == 'push'
         run: python .github/scripts/gen-bandge.py

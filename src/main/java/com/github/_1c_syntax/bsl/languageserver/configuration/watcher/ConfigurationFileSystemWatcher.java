@@ -56,6 +56,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("removal") // SensitivityWatchEventModifier is deprecated in jdk21
 public class ConfigurationFileSystemWatcher {
 
   private final LanguageServerConfiguration configuration;
@@ -131,6 +132,8 @@ public class ConfigurationFileSystemWatcher {
 
     registeredPath = configurationDir;
 
+    // TODO: SensitivityWatchEventModifier is deprecated in java 21 and marked for removal.
+    // We need to drop usage of it here when we change our baseline to jdk 21
     watchKey = registeredPath.register(
       watchService,
       new WatchEvent.Kind[]{
