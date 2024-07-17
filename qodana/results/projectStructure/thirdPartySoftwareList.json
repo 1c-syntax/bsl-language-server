@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2024-07-14T20:33:23Z"
+    "created": "2024-07-17T04:07:39Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "55f2246743d6dc05275aaa53fea0bb134962065a"
+          "checksumValue": "73ed3001cbdb89afdfdecb0338804fee58a3fc5a"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -35,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.main",
       "name": "bsl-language-server.main",
-      "versionInfo": "develop-55f2246-DIRTY",
+      "versionInfo": "develop-73ed300-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "55f2246743d6dc05275aaa53fea0bb134962065a"
+          "checksumValue": "73ed3001cbdb89afdfdecb0338804fee58a3fc5a"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +56,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-55f2246-DIRTY",
+      "versionInfo": "develop-73ed300-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "55f2246743d6dc05275aaa53fea0bb134962065a"
+          "checksumValue": "73ed3001cbdb89afdfdecb0338804fee58a3fc5a"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -1660,9 +1660,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-sentry-logback-7.11.0",
+      "SPDXID": "SPDXRef-sentry-logback-7.12.0",
       "name": "io.sentry:sentry-logback",
-      "versionInfo": "7.11.0",
+      "versionInfo": "7.12.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1671,20 +1671,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "sentry-logback-7.11.0.jar",
+      "packageFileName": "sentry-logback-7.12.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "822f37dadcfc4e96036e9c68d4979bf91f57e03ef06dc7aefcf345478b6a8736"
+          "checksumValue": "58c36ac570e46713b3ce3f29fc16ce13f43492c9d184a53f6ea5129039c3b185"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-sentry-spring-boot-jakarta-7.11.0",
+      "SPDXID": "SPDXRef-sentry-spring-boot-jakarta-7.12.0",
       "name": "io.sentry:sentry-spring-boot-jakarta",
-      "versionInfo": "7.11.0",
+      "versionInfo": "7.12.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1693,20 +1693,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "sentry-spring-boot-jakarta-7.11.0.jar",
+      "packageFileName": "sentry-spring-boot-jakarta-7.12.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "de7deac986c419ee1bf65f82bf8703f6270fa43cd97e62c8ad88696c8ce3c35c"
+          "checksumValue": "09f9e30d5460ef0e727c508902378c215cf2d2c2ca484727047f8d690e9d65ea"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-sentry-spring-boot-starter-jakarta-7.11.0",
+      "SPDXID": "SPDXRef-sentry-spring-boot-starter-jakarta-7.12.0",
       "name": "io.sentry:sentry-spring-boot-starter-jakarta",
-      "versionInfo": "7.11.0",
+      "versionInfo": "7.12.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1715,20 +1715,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "sentry-spring-boot-starter-jakarta-7.11.0.jar",
+      "packageFileName": "sentry-spring-boot-starter-jakarta-7.12.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "933d953dcaf5d72be0c42cdec3ada7b8312e782700b7ccf78cf1ee007f52ae3e"
+          "checksumValue": "9d196f909b69b884da6c83f971f0199de5735182889c2410f9c8197e2ca7f134"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-sentry-spring-jakarta-7.11.0",
+      "SPDXID": "SPDXRef-sentry-spring-jakarta-7.12.0",
       "name": "io.sentry:sentry-spring-jakarta",
-      "versionInfo": "7.11.0",
+      "versionInfo": "7.12.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1737,20 +1737,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "sentry-spring-jakarta-7.11.0.jar",
+      "packageFileName": "sentry-spring-jakarta-7.12.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "76b00cc7191588b7f4e24cb23f43e193d6b5f1c30860a484a86016b5ad4306f6"
+          "checksumValue": "bed3f1831b76b2b5134f60834ac0e977e9488490337f6ecb77d7279feae83096"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-sentry-7.11.0",
+      "SPDXID": "SPDXRef-sentry-7.12.0",
       "name": "io.sentry:sentry",
-      "versionInfo": "7.11.0",
+      "versionInfo": "7.12.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1759,12 +1759,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "sentry-7.11.0.jar",
+      "packageFileName": "sentry-7.12.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5e6482ea39b1c4e59181d550806d8d5e318b75a558391eaf69a024294b9d1bc2"
+          "checksumValue": "01072fa6eb6b79e1ae2e7d750c15b5e184fa59827b510bee04ecff158aa5b474"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -5135,12 +5135,12 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.12.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-logback-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-logback-7.12.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.main",
@@ -5568,19 +5568,19 @@
       "relatedSpdxElement": "SPDXRef-jackson-core-2.15.4"
     },
     {
-      "spdxElementId": "SPDXRef-sentry-spring-boot-starter-jakarta-7.11.0",
+      "spdxElementId": "SPDXRef-sentry-spring-boot-starter-jakarta-7.12.0",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-jakarta-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-jakarta-7.12.0"
     },
     {
-      "spdxElementId": "SPDXRef-sentry-spring-boot-starter-jakarta-7.11.0",
+      "spdxElementId": "SPDXRef-sentry-spring-boot-starter-jakarta-7.12.0",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.2.5"
     },
     {
-      "spdxElementId": "SPDXRef-sentry-logback-7.11.0",
+      "spdxElementId": "SPDXRef-sentry-logback-7.12.0",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-7.12.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
@@ -5700,12 +5700,12 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.12.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-sentry-logback-7.11.0"
+      "relatedSpdxElement": "SPDXRef-sentry-logback-7.12.0"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server.jmh",
