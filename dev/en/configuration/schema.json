@@ -858,7 +858,7 @@
             "type": "object",
             "title": "Formatting configuration.",
             "properties": {
-                "useUpperCaseForOrNotKeywords": {
+                "useUpperCaseForOrNotAndKeywords": {
                     "$id": "#/properties/useUpperCaseForOrNotAndKeywords",
                     "type": "boolean",
                     "default": true,
