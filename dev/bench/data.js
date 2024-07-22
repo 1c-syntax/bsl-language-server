@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1721189611582,
+  "lastUpdate": 1721674734357,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26443,6 +26443,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.09927416251005935",
             "extra": "mean: 78.2635334332784 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d355c35aa7dd3d9150a0bf2e6791f2bef3c3f8e",
+          "message": "Fix #3326. Исправлено имя настройки для перевода логических операторов в апперкейс",
+          "timestamp": "2024-07-22T20:47:42+02:00",
+          "tree_id": "a1dd9fa60ef11cc05f884edb47fe86e474124777",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6d355c35aa7dd3d9150a0bf2e6791f2bef3c3f8e"
+        },
+        "date": 1721674731122,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.73529640833537,
+            "unit": "sec",
+            "range": "stddev: 1.7856575673911768",
+            "extra": "mean: 79.73529640833537 sec\nrounds: 3"
           }
         ]
       }
