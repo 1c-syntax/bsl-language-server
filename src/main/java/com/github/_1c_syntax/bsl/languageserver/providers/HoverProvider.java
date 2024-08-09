@@ -52,7 +52,7 @@ public final class HoverProvider {
         var range = reference.getSelectionRange();
 
         return Optional.ofNullable(markupContentBuilders.get(symbol.getSymbolKind()))
-          .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
+          .map(markupContentBuilder -> markupContentBuilder.getContent(reference, symbol))
           .map(content -> new Hover(content, range));
       });
   }

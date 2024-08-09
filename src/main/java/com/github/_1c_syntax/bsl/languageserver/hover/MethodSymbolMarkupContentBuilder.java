@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +64,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private final LanguageServerConfiguration configuration;
 
   @Override
-  public MarkupContent getContent(MethodSymbol symbol) {
+  public MarkupContent getContent(Reference reference, MethodSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура

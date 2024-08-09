@@ -21,11 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import jakarta.annotation.PostConstruct;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,9 +64,10 @@ class MethodSymbolMarkupContentBuilderTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
+    var reference = getReference(documentContext, methodSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, methodSymbol).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -122,9 +128,10 @@ class MethodSymbolMarkupContentBuilderTest {
     // given
     var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
+    var reference = getReference(documentContext, methodSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, methodSymbol).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -146,9 +153,10 @@ class MethodSymbolMarkupContentBuilderTest {
     // given
     var documentContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+    var reference = getReference(documentContext, methodSymbol);
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(reference, methodSymbol).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -166,4 +174,12 @@ class MethodSymbolMarkupContentBuilderTest {
     assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
+  private static Reference getReference(DocumentContext documentContext, MethodSymbol methodSymbol) {
+    return Reference.of(
+      documentContext.getSymbolTree().getModule(),
+      methodSymbol,
+      new Location(documentContext.getUri().toString(), methodSymbol.getSelectionRange()),
+      OccurrenceType.DEFINITION
+    );
+  }
 }
