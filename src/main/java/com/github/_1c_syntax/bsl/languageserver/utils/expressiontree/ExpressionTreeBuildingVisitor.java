@@ -33,13 +33,12 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 
 /**
- * внутренний, неэкспортируемый класс.
+ * Посетитель AST, который находит выражения и преобразует их в Expression Tree
  */
-class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
+public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   @Value
   private static class OperatorInCode {
@@ -56,6 +55,18 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   private BslExpression resultExpression;
   private int recursionLevel = -1;
+
+  /**
+   * Хелпер построения дерева выражения на основе готового AST выражения
+   *
+   * @param ctx AST выражения
+   * @return дерево вычисления выражения
+   */
+  public static BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.visitExpression(ctx);
+    return instance.getExpressionTree();
+  }
 
   /**
    * @return результирующее выражение в виде дерева вычисления операций
@@ -149,10 +160,6 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
       dispatchChild.accept(this);
     }
 
-    if (unaryModifier != null) {
-      buildOperation();
-    }
-
     return ctx;
   }
 
@@ -185,12 +192,20 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
       return;
     }
 
-    var lastSeenOperator = operatorsInFly.peek();
-    if (lastSeenOperator.getPriority() > operator.getPriority()) {
+    while (hasHigherPriorityOperatorsInFly(operator)) {
       buildOperation();
     }
 
     operatorsInFly.push(operator);
+  }
+
+  private boolean hasHigherPriorityOperatorsInFly(OperatorInCode operator) {
+    var lastSeenOperator = operatorsInFly.peek();
+    if (lastSeenOperator == null) {
+      return false;
+    }
+
+    return lastSeenOperator.getPriority() > operator.getPriority();
   }
 
   private static BslOperator getOperator(BSLParser.OperationContext ctx) {
@@ -301,7 +316,7 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
     if (typeName == null) {
       // function style
       var typeNameArg = args.get(0);
-      args = args.stream().skip(1).collect(Collectors.toList());
+      args = args.stream().skip(1).toList();
       callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
     } else {
       // static style
@@ -362,7 +377,7 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
   }
 
   private static BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
-    return ExpressionParseTreeRewriter.buildExpressionTree(ctx);
+    return buildExpressionTree(ctx);
   }
 
   private static void addCallArguments(AbstractCallNode callNode, List<? extends BSLParser.CallParamContext> args) {
@@ -387,11 +402,16 @@ class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
       var operand = operands.pop();
       var operation = UnaryOperationNode.create(operator.getOperator(), operand, operator.getActualSourceCode());
+      operand.setParent(operation);
       operands.push(operation);
     } else {
       var right = operands.pop();
       var left = operands.pop();
       var binaryOp = BinaryOperationNode.create(operator.getOperator(), left, right, operator.getActualSourceCode());
+
+      left.setParent(binaryOp);
+      right.setParent(binaryOp);
+
       operands.push(binaryOp);
     }
   }

@@ -22,16 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
-import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-@Value
+@Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class BinaryOperationNode extends BslOperationNode {
-  BslExpression left;
-  BslExpression right;
+  private final BslExpression left;
+  private final BslExpression right;
 
   private BinaryOperationNode(BslOperator operator, BslExpression left, BslExpression right, ParseTree actualSourceCode) {
     super(ExpressionNodeType.BINARY_OP, operator, actualSourceCode);
