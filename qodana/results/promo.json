@@ -1,29 +1,57 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
   "severity": "High",
-  "comment": "Unused import `import com.github._1c_syntax.bsl.mdo.ChildrenOwner;`",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ForbiddenMetadataNameDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
       "language": "JAVA",
-      "line": 32,
-      "offset": 1,
-      "length": 51,
+      "line": 51,
+      "offset": 20,
+      "length": 17,
       "code": {
-        "startLine": 30,
-        "length": 51,
-        "offset": 138,
-        "surroundingCode": "import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;\nimport com.github._1c_syntax.bsl.mdo.AttributeOwner;\nimport com.github._1c_syntax.bsl.mdo.ChildrenOwner;\nimport com.github._1c_syntax.bsl.mdo.MD;\nimport com.github._1c_syntax.bsl.types.MdoReference;"
+        "startLine": 49,
+        "length": 17,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
+    "inspectionName": "DefaultAnnotationParam"
   },
-  "hash": "dfef9c01f5a92ff4f33eeb0402a9ab04b8065bfbe30c0f7f1628f4c6fa960f1b"
+  "hash": "ca52c609965d4a073ebaadadda63e9fd15661f8c1aeb89baf1f580f7907adac4"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Unnecessary 'continue' statement",
+  "severity": "High",
+  "comment": "`continue` is unnecessary as the last statement in a loop",
+  "detailsInfo": "Reports `continue` statements if they are the last reachable statements in the loop. These `continue` statements are unnecessary and can be safely removed.\n\nExample:\n\n\n      for (String element: elements) {\n        System.out.println();\n        continue;\n      }\n\nAfter the quick-fix is applied:\n\n\n      for (String element: elements) {\n        System.out.println();\n      }\n\nThe inspection doesn't analyze JSP files.\n\n\nUse the **Ignore in then branch of 'if' statement with 'else' branch** option to ignore\n`continue` statements when they are placed in a `then` branch of a complete\n`if`-`else` statement.\n\nExample:\n\n\n      for (String element: elements) {\n        if(element.isEmpty()) {\n          continue;\n        } else {\n          //...\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/ExpressionTreeBuildingVisitor.java",
+      "language": "JAVA",
+      "line": 88,
+      "offset": 11,
+      "length": 8,
+      "code": {
+        "startLine": 86,
+        "length": 8,
+        "offset": 144,
+        "surroundingCode": "          visitMember((BSLParser.MemberContext) child);\n        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {\n          continue;\n        } else {\n          throw new IllegalStateException();"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnnecessaryContinue"
+  },
+  "hash": "1678974de8ae9e84bea2f4dfbbd77b13aff28fc3afdcfba5b091e63e3d8695ac"
 }]}

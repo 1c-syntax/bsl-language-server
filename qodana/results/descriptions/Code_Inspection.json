@@ -129,16 +129,16 @@
           "description": "Reports calls to `assertTrue()` and `assertFalse()` that can be replaced with assert equality functions.\n\n\n`assertEquals()`, `assertSame()`, and their negating counterparts (-Not-) provide more informative messages on\nfailure.\n\n**Example:**\n\n      assertTrue(a == b)\n\nAfter the quick-fix is applied:\n\n      assertEquals(a, b)\n"
         },
         {
-          "shortName": "ReplaceStringFormatWithLiteral",
-          "displayName": "'String.format' call can be replaced with string templates",
-          "enabled": false,
-          "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
-        },
-        {
           "shortName": "ReplaceNotNullAssertionWithElvisReturn",
           "displayName": "Not-null assertion can be replaced with 'return'",
           "enabled": false,
           "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
+        },
+        {
+          "shortName": "ReplaceStringFormatWithLiteral",
+          "displayName": "'String.format' call can be replaced with string templates",
+          "enabled": false,
+          "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
         },
         {
           "shortName": "ReplaceSubstringWithSubstringBefore",
@@ -2326,6 +2326,370 @@
       ]
     },
     {
+      "name": "Error handling",
+      "inspections": [
+        {
+          "shortName": "UncheckedExceptionClass",
+          "displayName": "Unchecked 'Exception' class",
+          "enabled": false,
+          "description": "Reports subclasses of `java.lang.RuntimeException`.\n\nSome coding standards require that all user-defined exception classes are checked.\n\n**Example:**\n\n\n      class EnigmaException extends RuntimeException {} // warning: Unchecked exception class 'EnigmaException'\n"
+        },
+        {
+          "shortName": "CheckedExceptionClass",
+          "displayName": "Checked exception class",
+          "enabled": false,
+          "description": "Reports checked exception classes (that is, subclasses of `java.lang.Exception` that are not subclasses of `java.lang.RuntimeException`).\n\nSome coding standards suppress checked user-defined exception classes.\n\n**Example:**\n\n\n      class IllegalMoveException extends Exception {}\n"
+        },
+        {
+          "shortName": "NestedTryStatement",
+          "displayName": "Nested 'try' statement",
+          "enabled": false,
+          "description": "Reports nested `try` statements.\n\nNested `try` statements\nmay result in unclear code and should probably have their `catch` and `finally` sections\nmerged."
+        },
+        {
+          "shortName": "BadExceptionThrown",
+          "displayName": "Prohibited exception thrown",
+          "enabled": false,
+          "description": "Reports `throw` statements that throw an inappropriate exception. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.io.IOException`.\n\n**Example:**\n\n\n      void setup(Mode mode) {\n          if (mode == null)\n              throw new RuntimeException(\"Problem during setup\"); // warning: Prohibited exception 'RuntimeException' thrown\n          ...\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
+        },
+        {
+          "shortName": "CaughtExceptionImmediatelyRethrown",
+          "displayName": "Caught exception is immediately rethrown",
+          "enabled": true,
+          "description": "Reports `catch` blocks that immediately rethrow the caught exception without performing any action on it. Such `catch` blocks are unnecessary and have no error handling.\n\n**Example:**\n\n\n            try {\n                new FileInputStream(\"\");\n            } catch (FileNotFoundException e) {\n                throw e;\n            }\n"
+        },
+        {
+          "shortName": "ThrowFromFinallyBlock",
+          "displayName": "'throw' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `throw` statements inside `finally` blocks.\n\nWhile occasionally intended, such `throw` statements may conceal exceptions thrown from `try`-`catch` and thus\ntremendously complicate the debugging process."
+        },
+        {
+          "shortName": "ContinueOrBreakFromFinallyBlock",
+          "displayName": "'continue' or 'break' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `break` or `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and complicate debugging.\n\n**Example:**\n\n\n        while (true) {\n            try {\n              throwingMethod();\n            } finally {\n                continue;\n            }\n        }\n"
+        },
+        {
+          "shortName": "BadExceptionDeclared",
+          "displayName": "Prohibited exception declared",
+          "enabled": false,
+          "description": "Reports methods that declare an inappropriate exception in their `throws` clause. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.lang.Throwable`.\n\n**Example:**\n\n\n      void describeModule(String module) throws Exception {} // warning: Prohibited exception 'Exception' declared\n\nConfigure the inspection:\n\n* Use the **Prohibited exceptions** list to specify which exceptions should be reported.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore exceptions declared by methods that override a library method."
+        },
+        {
+          "shortName": "ReturnFromFinallyBlock",
+          "displayName": "'return' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `return` statements inside of `finally` blocks.\n\nWhile occasionally intended, such `return` statements may mask thrown exceptions\nand complicate debugging.\n\n**Example:**\n\n\n      try {\n        foo();\n      } finally {\n        if (bar()) return;\n      }\n"
+        },
+        {
+          "shortName": "TooBroadThrows",
+          "displayName": "Overly broad 'throws' clause",
+          "enabled": false,
+          "description": "Reports `throws` clauses with exceptions that are more generic than the exceptions that the method actually throws.\n\n**Example:**\n\n\n      public void createFile() throws Exception { // warning: 'throws Exception' is too broad, masking exception 'IOException'\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void createFile() throws IOException {\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nConfigure the inspection:\n\n* Use the **Maximum number of hidden exceptions to warn** field to ignore exceptions, that hide a larger number of other exceptions than specified.\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore overly broad `throws` clauses in methods that override a library method.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown from the method body and thus are technically not overly broad."
+        },
+        {
+          "shortName": "BadExceptionCaught",
+          "displayName": "Prohibited 'Exception' caught",
+          "enabled": false,
+          "description": "Reports `catch` clauses that catch an inappropriate exception.\n\nSome exceptions, for example\n`java.lang.NullPointerException` or\n`java.lang.IllegalMonitorStateException`, represent programming errors\nand therefore almost certainly should not be caught in production code.\n\n**Example:**\n\n\n      try {\n        return component.getMousePosition(true) != null;\n      } catch (NullPointerException e) { // warning: Prohibited exception 'NullPointerException' caught\n        return false;\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
+        },
+        {
+          "shortName": "InstanceofCatchParameter",
+          "displayName": "'instanceof' on 'catch' parameter",
+          "enabled": false,
+          "description": "Reports cases in which an `instanceof` expression is used for testing the type of a parameter in a `catch` block.\n\nTesting the type of `catch` parameters is usually better done by having separate\n`catch` blocks instead of using `instanceof`.\n\n**Example:**\n\n\n      void foo(Runnable runnable) {\n        try {\n            runnable.run();\n        } catch (Throwable throwable) {\n            if (throwable instanceof NoClassDefFoundError) { // warning: 'instanceof' on 'catch' parameter 'throwable'\n                System.out.println(\"Class not found!\");\n            }\n        }\n      }\n"
+        },
+        {
+          "shortName": "FinallyBlockCannotCompleteNormally",
+          "displayName": "'finally' block which can not complete normally",
+          "enabled": true,
+          "description": "Reports `return`, `throw`, `break`, `continue`, and `yield` statements that are used inside `finally` blocks. These cause the `finally` block to not complete normally but to complete abruptly. Any exceptions thrown from the `try` and `catch` blocks of the same `try`-`catch` statement will be suppressed.\n\n**Example:**\n\n\n      void x() {\n        try {\n          throw new RuntimeException();\n        } finally {\n          // if bar() returns true, the RuntimeException will be suppressed\n          if (bar()) return;\n        }\n      }\n"
+        },
+        {
+          "shortName": "EmptyFinallyBlock",
+          "displayName": "Empty 'finally' block",
+          "enabled": true,
+          "description": "Reports empty `finally` blocks.\n\nEmpty `finally` blocks usually indicate coding errors. They may also remain after code refactoring and can safely be removed.\n\nThis inspection doesn't report empty `finally` blocks found in JSP files.\n\n**Example:**\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      } finally {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      }\n"
+        },
+        {
+          "shortName": "ErrorRethrown",
+          "displayName": "'Error' not rethrown",
+          "enabled": false,
+          "description": "Reports `try` statements that catch `java.lang.Error` or any of its subclasses and do not rethrow the error.\n\nStatements that catch `java.lang.ThreadDeath` are not\nreported.\n\n**Example:**\n\n\n      try {\n        executeTests(request);\n      }\n      catch (OutOfMemoryError ex) { // warning: Error 'ex' not rethrown\n        return false;\n      }\n"
+        },
+        {
+          "shortName": "NewExceptionWithoutArguments",
+          "displayName": "Exception constructor called without arguments",
+          "enabled": false,
+          "description": "Reports creation of a exception instance without any arguments specified.\n\nWhen an exception is constructed without any arguments, it contains no information about the problem that occurred, which makes\ndebugging needlessly hard.\n\n**Example:**\n\n\n      throw new IOException(); // warning: exception without arguments\n"
+        },
+        {
+          "shortName": "TooBroadCatch",
+          "displayName": "Overly broad 'catch' block",
+          "enabled": false,
+          "description": "Reports `catch` blocks with parameters that are more generic than the exception thrown by the corresponding `try` block.\n\n**Example:**\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (Exception ex) { // warning: 'catch' of 'Exception' is too broad, masking exceptions 'RuntimeException'\n        return defaultFilePath;\n      }\n\nAfter the quick-fix is applied:\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (RuntimeException ex) {\n        return defaultFilePath;\n      }\n\nConfigure the inspection:\n\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown and thus are technically not overly broad."
+        },
+        {
+          "shortName": "UnnecessaryInitCause",
+          "displayName": "Unnecessary call to 'Throwable.initCause()'",
+          "enabled": true,
+          "description": "Reports calls to `Throwable.initCause()` where an exception constructor also takes a `Throwable cause` argument.\n\nIn this case, the `initCause()` call can be removed and its argument can be added to the call to the exception's constructor.\n\n**Example:**\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\");\n        wrapper.initCause(ex); // Unnecessary call to 'Throwable.initCause()'\n        throw wrapper;\n      }\n\nA quick-fix is available to pass the cause argument to the constructor. After the quick-fix is applied:\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\", ex);\n        throw wrapper;\n      }\n      \n"
+        },
+        {
+          "shortName": "ExceptionFromCatchWhichDoesntWrap",
+          "displayName": "'throw' inside 'catch' block which ignores the caught exception",
+          "enabled": false,
+          "description": "Reports exceptions that are thrown from inside `catch` blocks but do not \"wrap\" the caught exception.\n\nWhen an exception is thrown in response to an exception, wrapping the initial exception prevents losing valuable context information,\nsuch as stack frames and line numbers.\n\n**Example:**\n\n\n      ...\n      catch (IOException e) {\n        closeAllConnections();\n        throw new ConnectException(\"Connection problem.\"); // warning: 'throw' inside 'catch' block ignores the caught exception 'e'\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if result of exception method call is used** option to indicate whether the inspection should ignore exceptions whose argument is the result of a method call on the original exception, such as `getMessage()`.\n* Use the **Ignore if thrown exception cannot wrap an exception** option to ignore `throw` statements that throw exceptions without a constructor that accepts a `Throwable` cause."
+        },
+        {
+          "shortName": "NullThrown",
+          "displayName": "'null' thrown",
+          "enabled": false,
+          "description": "Reports `null` literals that are used as the argument of a `throw` statement.\n\nSuch constructs produce a `java.lang.NullPointerException` that usually should not be thrown programmatically."
+        },
+        {
+          "shortName": "ExtendsThrowable",
+          "displayName": "Class directly extends 'Throwable'",
+          "enabled": false,
+          "description": "Reports classes that directly extend `java.lang.Throwable`.\n\nExtending `java.lang.Throwable` directly is generally considered bad practice.\nIt is usually enough to extend `java.lang.RuntimeException`, `java.lang.Exception`, or - in special\ncases - `java.lang.Error`.\n\n**Example:**\n\n\n      class EnigmaThrowable extends Throwable {} // warning: Class 'EnigmaThrowable' directly extends 'java.lang.Throwable'\n"
+        },
+        {
+          "shortName": "ThreadDeathRethrown",
+          "displayName": "'ThreadDeath' not rethrown",
+          "enabled": false,
+          "description": "Reports `try` statements that catch `java.lang.ThreadDeath` and do not rethrow the exception.\n\n**Example:**\n\n\n      try {\n        executeInParallel(request);\n      } catch (ThreadDeath ex) { // warning: ThreadDeath 'ex' not rethrown\n        return false;\n      }\n"
+        },
+        {
+          "shortName": "EmptyTryBlock",
+          "displayName": "Empty 'try' block",
+          "enabled": true,
+          "description": "Reports empty `try` blocks, including try-with-resources statements.\n\n`try` blocks with comments are considered empty.\n\n\nThis inspection doesn't report empty `try` blocks found in JSP files."
+        },
+        {
+          "shortName": "ThrowableSupplierOnlyThrowException",
+          "displayName": "Throwable supplier never returns a value",
+          "enabled": true,
+          "description": "Reports `Supplier` lambdas in `Optional.orElseThrow()` calls that throw an exception, instead of returning it.\n\n**Example:**\n\n\n    optional.orElseThrow(() -> {\n        throw new RuntimeException();\n    });\n\nAfter the quick-fix is applied:\n\n\n    optional.orElseThrow(() -> new RuntimeException());\n\nNew in 2023.1"
+        },
+        {
+          "shortName": "NonFinalFieldOfException",
+          "displayName": "Non-final field of 'Exception' class",
+          "enabled": false,
+          "description": "Reports fields in subclasses of `java.lang.Exception` that are not declared `final`.\n\nData on exception objects should not be modified\nbecause this may result in losing the error context for later debugging and logging.\n\n**Example:**\n\n\n      public class EditorException extends Exception {\n        private String message; // warning: Non-final field 'message' of exception class\n      }\n"
+        },
+        {
+          "shortName": "CatchMayIgnoreException",
+          "displayName": "Catch block may ignore exception",
+          "enabled": true,
+          "description": "Reports `catch` blocks that are empty or may ignore an exception.\n\nWhile occasionally intended, empty `catch` blocks may complicate debugging.\nAlso, ignoring a `catch` parameter might be wrong.\nFinally, the static code analyzer reports if it detects that a `catch` block may silently ignore important VM\nexceptions like `NullPointerException`. Ignoring such an exception\n(without logging or rethrowing it) may hide a bug.\n\n\nThe inspection won't report any `catch` parameters named `ignore` or `ignored`.\nConversely, the inspection will warn you about any `catch` parameters named `ignore` or `ignored` that are actually in use.\nAdditionally, the inspection won't report `catch` parameters inside test sources named `expected` or `ok`.\n\n\nYou can use a quick-fix to change the exception name to `ignored`.\nFor empty **catch** blocks, an additional quick-fix to generate the **catch** body is suggested.\nYou can modify the \"Catch Statement Body\" template on the Code tab in\n[Settings \\| Editor \\| File and Code Templates](settings://fileTemplates).\n\n**Example:**\n\n\n      try {\n        throwingMethod();\n      } catch (IOException ex) {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        System.out.println(System.in.read());\n      } catch (IOException ignored) {\n\n      }\n\nConfigure the inspection:\n\n* Use the **Do not warn when 'catch' block contains a comment** option to ignore `catch` blocks with comments.\n* Use the **Do not warn when 'catch' block is not empty** option to ignore `catch` blocks that contain statements or comments inside, while the variable itself is not used.\n* Use the **Do not warn when exception named 'ignore(d)' is not actually ignored** option to ignore variables named `ignored` if they are in use.\n\nNew in 2018.1"
+        },
+        {
+          "shortName": "ThrowCaughtLocally",
+          "displayName": "'throw' caught by containing 'try' statement",
+          "enabled": false,
+          "description": "Reports `throw` statements whose exceptions are always caught by containing `try` statements.\n\nUsing `throw`\nstatements as a \"goto\" to change the local flow of control is confusing and results in poor performance.\n\n**Example:**\n\n\n      try {\n        if (!Files.isDirectory(PROJECTS)) {\n            throw new IllegalStateException(\"Directory not found.\"); // warning: 'throw' caught by containing 'try' statement\n        }\n        ...\n      } catch (Exception e) {\n          LOG.error(\"run failed\");\n      }\n\nUse the **Ignore rethrown exceptions** option to ignore exceptions that are rethrown."
+        },
+        {
+          "shortName": "ThrowsRuntimeException",
+          "displayName": "Unchecked exception declared in 'throws' clause",
+          "enabled": false,
+          "description": "Reports declaration of an unchecked exception (`java.lang.RuntimeException` or one of its subclasses) in the `throws` clause of a method.\n\nDeclarations of unchecked exceptions are not required and may be deleted or moved to a Javadoc `@throws` tag.\n\n**Example:**\n\n\n      public class InvalidDataException extends RuntimeException {}\n\n      class TextEditor {\n        void readSettings() throws InvalidDataException {} // warning: Unchecked exception 'InvalidDataException' declared in 'throws' clause\n      }\n"
+        },
+        {
+          "shortName": "GroovyThrowFromFinallyBlock",
+          "displayName": "'throw' inside 'finally' block",
+          "enabled": false,
+          "description": "Reports `throw` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `throw` statements may mask exceptions thrown and\ntremendously complicate debugging."
+        },
+        {
+          "shortName": "GroovyEmptyCatchBlock",
+          "displayName": "Empty 'catch' block",
+          "enabled": false,
+          "description": "Reports empty `catch` blocks. While occasionally intended, empty `catch` blocks can make debugging extremely difficult.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception e) {\n    }\n\nAfter the quick-fix is applied:\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception ignored) {\n    }\n\n"
+        },
+        {
+          "shortName": "GroovyContinueOrBreakFromFinallyBlock",
+          "displayName": "'continue' or 'break' from 'finally' block",
+          "enabled": false,
+          "description": "Reports `break` and `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and tremendously complicate debugging."
+        },
+        {
+          "shortName": "GroovyUnusedCatchParameter",
+          "displayName": "Unused 'catch' parameter",
+          "enabled": false,
+          "description": "Reports **catch** parameters that are unused in their\ncorresponding blocks. This inspection will not report any **catch** parameters\nnamed \"ignore\" or \"ignored\".\n\n**Example:**\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ex) {\n          println('Catching the exception')\n      }\n\nHere the parameter **ex** is never used in **catch** block.\n\nAfter the quick-fix is applied:\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ignored) {\n          println('Catching the exception')\n      }\n"
+        },
+        {
+          "shortName": "GroovyReturnFromFinallyBlock",
+          "displayName": "'return' inside 'finally' block",
+          "enabled": false,
+          "description": "Reports `return` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `return` statements may mask exceptions thrown, and\ncomplicate debugging."
+        },
+        {
+          "shortName": "GroovyEmptyTryBlock",
+          "displayName": "Empty 'try' block",
+          "enabled": false,
+          "description": "Reports empty `try` blocks. Empty `try` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n    }\n    finally {\n      close()\n    }\n\n"
+        },
+        {
+          "shortName": "GroovyEmptyFinallyBlock",
+          "displayName": "Empty 'finally' block",
+          "enabled": false,
+          "description": "Reports empty `finally` blocks. Empty `finally` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    finally {\n    }\n\n"
+        }
+      ]
+    },
+    {
+      "name": "Declaration redundancy",
+      "inspections": [
+        {
+          "shortName": "UnusedReturnValue",
+          "displayName": "Method can be made 'void'",
+          "enabled": false,
+          "description": "Reports methods whose return values are never used when called. The return type of such methods can be made `void`.\n\nMethods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation will not be reported.\nThe quick-fix updates the method signature and removes `return` statements from inside the method.\n\n**Example:**\n\n\n      // reported if visibility setting is Protected or Public\n      protected String myToUpperCase(String s) {\n        return s.toUpperCase();\n      }\n\n      // simple setter, reporting depends on setting\n      public String setStr(String str) {\n        myStr = str;\n        return myStr;\n      }\n\n      void test() {\n        setStr(\"value\");          // return value is unused\n        myToUpperCase(\"result\");  // return value is unused\n      }\n\nAfter the quick-fix is applied to both methods:\n\n\n        protected void myToUpperCase(String s) {\n          // 'return' removed completely\n          // as 's.toUpperCase()' has no side effect\n        }\n\n        public void setStr(String str) {\n          myStr = str;\n          // 'return' removed\n        }\n      ...\n\n\n**NOTE:** Some methods might not be reported during in-editor highlighting due to performance reasons.\nTo see all results, run the inspection using **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**\\>\n\nUse the **Ignore chainable methods** option to ignore unused return values from chainable calls.\n\nUse the **Maximal reported method visibility** option to control the maximum visibility of methods to be reported."
+        },
+        {
+          "shortName": "UnusedLibrary",
+          "displayName": "Unused library",
+          "enabled": false,
+          "description": "Reports libraries attached to the specified inspection scope that are not used directly in code."
+        },
+        {
+          "shortName": "RedundantLambdaParameterType",
+          "displayName": "Redundant lambda parameter types",
+          "enabled": false,
+          "description": "Reports lambda formal parameter types that are redundant because they can be inferred from the context.\n\n**Example:**\n\n\n      Map<String, Integer> map = ...\n      map.forEach((String s, Integer i) -> log.info(s + \"=\" + i));\n\nThe quick-fix removes the parameter types from the lambda.\n\n\n      Map<String, Integer> map = ...\n      map.forEach((s, i) -> log.info(s + \"=\" + i));\n"
+        },
+        {
+          "shortName": "CanBeFinal",
+          "displayName": "Declaration can have 'final' modifier",
+          "enabled": false,
+          "description": "Reports fields, methods, or classes that may have the `final` modifier added to their declarations.\n\nFinal classes can't be extended, final methods can't be overridden, and final fields can't be reassigned.\n\n**Example:**\n\n\n      public class Person {\n        private String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n\n        public String toString() {\n          return getName();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public final String getName() {\n          return name;\n        }\n\n        public final String toString() {\n          return getName();\n        }\n      }\n\nUse the **Report classes** and **Report methods** options to define which declarations are to be reported."
+        },
+        {
+          "shortName": "RedundantExplicitClose",
+          "displayName": "Redundant 'close()'",
+          "enabled": false,
+          "description": "Reports unnecessary calls to `close()` at the end of a try-with-resources block and suggests removing them.\n\n**Example**:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n        ac.close();\n      }\n\nAfter the quick-fix is applied:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n      }\n\nNew in 2018.1"
+        },
+        {
+          "shortName": "UnusedLabel",
+          "displayName": "Unused label",
+          "enabled": false,
+          "description": "Reports labels that are not targets of any `break` or `continue` statements.\n\n**Example:**\n\n\n      label: for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n\nAfter the quick-fix is applied, the label is removed:\n\n\n      for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n"
+        },
+        {
+          "shortName": "DefaultAnnotationParam",
+          "displayName": "Default annotation parameter value",
+          "enabled": false,
+          "description": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n"
+        },
+        {
+          "shortName": "WeakerAccess",
+          "displayName": "Declaration access can be weaker",
+          "enabled": false,
+          "description": "Reports fields, methods or classes that may have their access modifier narrowed down.\n\nExample:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        void bar(String x, String y) { } // can be private\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        private void bar(String x, String y) { }\n      }\n\nUse the inspection's options to define the rules for the modifier change suggestions."
+        },
+        {
+          "shortName": "Java9RedundantRequiresStatement",
+          "displayName": "Redundant 'requires' directive in module-info",
+          "enabled": false,
+          "description": "Reports redundant `requires` directives in Java Platform Module System `module-info.java` files. A `requires` directive is redundant when a module `A` requires a module `B`, but the code in module `A` doesn't import any packages or classes from `B`. Furthermore, all modules have an implicitly declared dependence on the `java.base` module, therefore a `requires java.base;` directive is always redundant.\n\n\nThe quick-fix deletes the redundant `requires` directive.\nIf the deleted dependency re-exported modules that are actually used, the fix adds a `requires` directives for these modules.\n\nThis inspection only reports if the language level of the project or module is 9 or higher.\n\nNew in 2017.1"
+        },
+        {
+          "shortName": "FunctionalExpressionCanBeFolded",
+          "displayName": "Functional expression can be folded",
+          "enabled": false,
+          "description": "Reports method references or lambda expressions that point to a method of their own functional interface type and hence can be replaced with their qualifiers removing unnecessary object allocation.\n\nExample:\n\n\n      SwingUtilities.invokeLater(r::run);\n      SwingUtilities.invokeAndWait(() -> r.run());\n\nAfter the quick-fix is applied:\n\n\n      SwingUtilities.invokeLater(r);\n      SwingUtilities.invokeAndWait(r);\n\nThis inspection reports only if the language level of the project or module is 8 or higher."
+        },
+        {
+          "shortName": "unused",
+          "displayName": "Unused declaration",
+          "enabled": false,
+          "description": "Reports classes, methods, or fields that are not used or unreachable from the entry points.\n\nAn entry point can be a main method, tests, classes from outside the specified scope, classes accessible from\n`module-info.java`, and so on. It is possible to configure custom entry points by using name patterns or annotations.\n\n**Example:**\n\n\n      public class Department {\n        private Organization myOrganization;\n      }\n\nIn this example, `Department` explicitly references `Organization` but if `Department` class itself is unused, then inspection will report both classes.\n\n\nThe inspection also reports parameters that are not used by their methods and all method implementations and overriders, as well as local\nvariables that are declared but not used.\n\n\n**Note:** Some unused members may not be reported during in-editor code highlighting. For performance reasons, a non-private member is\nchecked only when its name rarely occurs in the project.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the visibility settings below to configure members to be reported. For example, configuring report `private` methods only means\nthat `public` methods of `private` inner class will be reported but `protected` methods of top level class\nwill be ignored.\n\n\nUse the **entry points** tab to configure entry points to be considered during the inspection run.\n\nYou can add entry points manually when inspection results are ready.\n\nIf your code uses unsupported frameworks, there are several options:\n\n* If the framework relies on annotations, use the **Annotations...** button to configure the framework's annotations.\n* If the framework doesn't rely on annotations, try to configure class name patterns that are expected by the framework.\n\nThis way the annotated code accessible by the framework internals will be treated as used."
+        },
+        {
+          "shortName": "ProtectedMemberInFinalClass",
+          "displayName": "'protected' member in 'final' class",
+          "enabled": false,
+          "description": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
+        },
+        {
+          "shortName": "EmptyInitializer",
+          "displayName": "Empty class initializer",
+          "enabled": false,
+          "description": "Reports empty class initializer blocks."
+        },
+        {
+          "shortName": "TrivialFunctionalExpressionUsage",
+          "displayName": "Trivial usage of functional expression",
+          "enabled": false,
+          "description": "Reports functional interface methods calls that are directly invoked on the definition of the lambda, method reference, or anonymous class. Such method calls can be replaced with the body of the functional interface implementation.\n\n**Example:**\n\n\n      boolean contains(List<String> names, String name) {\n        return ((Predicate<String>)x -> {\n          return names.contains(x);\n        }).test(name);\n      }\n\nWhen the quick-fix is applied, the method call changes to:\n\n\n      boolean contains(List<String> names, String name) {\n        return names.contains(name);\n      }\n"
+        },
+        {
+          "shortName": "AccessStaticViaInstance",
+          "displayName": "Access static member via instance reference",
+          "enabled": false,
+          "description": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n"
+        },
+        {
+          "shortName": "UnnecessaryModuleDependencyInspection",
+          "displayName": "Unnecessary module dependency",
+          "enabled": false,
+          "description": "Reports dependencies on modules that are not used. The quick-fix safely removes such unused dependencies."
+        },
+        {
+          "shortName": "RedundantThrows",
+          "displayName": "Redundant 'throws' clause",
+          "enabled": false,
+          "description": "Reports exceptions that are declared in a method's signature but never thrown by the method itself or its implementations and overriding methods.\n\nThe inspection ignores methods related to serialization, for example the methods `readObject()` and `writeObject()`.\n\n**Example:**\n\n\n      void method() throws InterruptedException {\n        System.out.println();\n      }\n\nThe quick-fix removes unnecessary exceptions from the declaration and normalizes redundant `try`-`catch` statements:\n\n\n      void method() {\n        System.out.println();\n      }\n\n\n**Note:** Some exceptions may not be reported during in-editor highlighting for performance reasons.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the **Ignore exceptions thrown by entry point methods** option to not report exceptions thrown by\nfor example `main()` methods.\nEntry point methods can be configured in the settings of the\n[Java \\| Declaration redundancy \\| Unused declaration](settings://Errors?Unused%20Declaration%20entry%20point) inspection."
+        },
+        {
+          "shortName": "DuplicateThrows",
+          "displayName": "Duplicate throws",
+          "enabled": false,
+          "description": "Reports duplicate exceptions in a method `throws` list.\n\nExample:\n\n\n      void f() throws Exception, Exception {}\n\nAfter the quick-fix is applied:\n\n\n      void f() throws Exception {}\n\n\nUse the **Ignore exceptions subclassing others** option to ignore exceptions subclassing other exceptions."
+        },
+        {
+          "shortName": "SameParameterValue",
+          "displayName": "Method parameter always has the same value",
+          "enabled": false,
+          "description": "Reports method parameters that always have the same constant value.\n\nExample:\n\n\n      static void printPoint(int x, int y) { // x is always 0\n        System.out.println(x + \", \" + y);\n      }\n\n      public static void main(String[] args) {\n        printPoint(0, 1);\n        printPoint(0, 2);\n      }\n\nThe quick-fix inlines the constant value. This may simplify the method implementation.\n\n\nUse the **Ignore when a quick-fix can not be provided** option to suppress the inspections when:\n\n* the parameter is modified inside the method\n* the parameter value that is being passed is a reference to an inaccessible field (Java ony)\n* the parameter is a vararg (Java only)\n\n\nUse the **Maximal method visibility** option to control the maximum visibility of methods to be reported.\n\n\nUse the **Minimal method usage count to report parameter** field to specify the minimal number of method usages with the same parameter value."
+        },
+        {
+          "shortName": "SameReturnValue",
+          "displayName": "Method always returns the same value",
+          "enabled": false,
+          "description": "Reports methods and method hierarchies that always return the same constant.\n\n\nThe inspection works differently in batch-mode\n(from **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**)\nand on-the-fly in the editor:\n\n* In batch-mode, the inspection reports methods and method hierarchies that always return the same constant.\n* In the editor, the inspection only reports methods that have more than one `return` statement, do not have super methods, and cannot be overridden. If a method overrides or implements a method, a contract may require it to return a specific constant, but at the same time, we may want to have several exit points. If a method can be overridden, it is possible that a different value will be returned in subclasses.\n\n**Example:**\n\n\n      class X {\n                    // Warn only in batch-mode:\n        int xxx() { // Method 'xxx()' and all its overriding methods always return '0'\n          return 0;\n        }\n      }\n\n      class Y extends X {\n        @Override\n        int xxx() {\n            return 0;\n        }\n\n                    // Warn only in batch-mode:\n        int yyy() { // Method 'yyy()' always returns '0'\n            return 0;\n        }\n\n                                      // Warn both in batch-mode and on-the-fly:\n        final int zzz(boolean flag) { // Method 'zzz()' always returns '0'\n            if (Math.random() > 0.5) {\n                return 0;\n            }\n            return 0;\n        }\n      }\n"
+        },
+        {
+          "shortName": "RedundantRecordConstructor",
+          "displayName": "Redundant record constructor",
+          "enabled": false,
+          "description": "Reports redundant constructors declared inside Java records.\n\n**Example 1:**\n\n\n      record Point(int x, int y) {\n        public Point {} // could be removed\n      }\n      \n      record Point(int x, int y) {\n        public Point(int x, int y) { // could be removed\n          this.x = x;\n          this.y = y;\n        }\n      }\n\nThe quick-fix removes the redundant constructors.\n\n**Example 2:**\n\n\n       // could be converted to compact constructor\n      record Range(int from, int to) {\n        public Range(int from, int to) {\n          if (from > to) throw new IllegalArgumentException();\n          this.from = from;\n          this.to = to;\n        }\n      }\n\nThe quick-fix converts this code into a compact constructor.\n\nThis inspection depends on the Java feature 'Records' which is available since Java 16.\n\nNew in 2020.1"
+        },
+        {
+          "shortName": "FinalMethodInFinalClass",
+          "displayName": "'final' method in 'final' class",
+          "enabled": false,
+          "description": "Reports `final` methods in `final` classes.\n\nSince `final` classes cannot be inherited, marking a method as `final`\nmay be unnecessary and confusing.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      public final int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      public int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
+        },
+        {
+          "shortName": "SillyAssignment",
+          "displayName": "Variable is assigned to itself",
+          "enabled": false,
+          "description": "Reports assignments of a variable to itself.\n\n**Example:**\n\n\n      a = a;\n\nThe quick-fix removes the assigment."
+        },
+        {
+          "shortName": "GroovyUnusedDeclaration",
+          "displayName": "Unused declaration",
+          "enabled": false,
+          "description": "Reports unused classes, methods and fields.\n\n**Example:**\n\n\n      public class Department {\n          private Organization myOrganization;\n      }\n\nHere `Department` explicitly references `Organization` but if `Department` class itself is unused,\nthen inspection would report both classes.\n\n\nThe inspection also reports parameters, which are not used by their methods and all method implementations/overriders, as well as local\nvariables, which are declared but not used.\n\nFor more information, see the same inspection in Java."
+        }
+      ]
+    },
+    {
       "name": "Code",
       "inspections": [
         {
@@ -2783,370 +3147,6 @@
           "displayName": "File.equals() usage",
           "enabled": false,
           "description": "Reports usages of `java.io.File.equals()/hashCode()/compareTo()` methods.\n\n\nThese do not honor case-insensitivity on macOS.\n\n\nUse `com.intellij.openapi.util.io.FileUtil.filesEquals()/fileHashCode()/compareFiles()` methods instead."
-        }
-      ]
-    },
-    {
-      "name": "Declaration redundancy",
-      "inspections": [
-        {
-          "shortName": "UnusedReturnValue",
-          "displayName": "Method can be made 'void'",
-          "enabled": false,
-          "description": "Reports methods whose return values are never used when called. The return type of such methods can be made `void`.\n\nMethods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation will not be reported.\nThe quick-fix updates the method signature and removes `return` statements from inside the method.\n\n**Example:**\n\n\n      // reported if visibility setting is Protected or Public\n      protected String myToUpperCase(String s) {\n        return s.toUpperCase();\n      }\n\n      // simple setter, reporting depends on setting\n      public String setStr(String str) {\n        myStr = str;\n        return myStr;\n      }\n\n      void test() {\n        setStr(\"value\");          // return value is unused\n        myToUpperCase(\"result\");  // return value is unused\n      }\n\nAfter the quick-fix is applied to both methods:\n\n\n        protected void myToUpperCase(String s) {\n          // 'return' removed completely\n          // as 's.toUpperCase()' has no side effect\n        }\n\n        public void setStr(String str) {\n          myStr = str;\n          // 'return' removed\n        }\n      ...\n\n\n**NOTE:** Some methods might not be reported during in-editor highlighting due to performance reasons.\nTo see all results, run the inspection using **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**\\>\n\nUse the **Ignore chainable methods** option to ignore unused return values from chainable calls.\n\nUse the **Maximal reported method visibility** option to control the maximum visibility of methods to be reported."
-        },
-        {
-          "shortName": "UnusedLibrary",
-          "displayName": "Unused library",
-          "enabled": false,
-          "description": "Reports libraries attached to the specified inspection scope that are not used directly in code."
-        },
-        {
-          "shortName": "RedundantLambdaParameterType",
-          "displayName": "Redundant lambda parameter types",
-          "enabled": false,
-          "description": "Reports lambda formal parameter types that are redundant because they can be inferred from the context.\n\n**Example:**\n\n\n      Map<String, Integer> map = ...\n      map.forEach((String s, Integer i) -> log.info(s + \"=\" + i));\n\nThe quick-fix removes the parameter types from the lambda.\n\n\n      Map<String, Integer> map = ...\n      map.forEach((s, i) -> log.info(s + \"=\" + i));\n"
-        },
-        {
-          "shortName": "CanBeFinal",
-          "displayName": "Declaration can have 'final' modifier",
-          "enabled": false,
-          "description": "Reports fields, methods, or classes that may have the `final` modifier added to their declarations.\n\nFinal classes can't be extended, final methods can't be overridden, and final fields can't be reassigned.\n\n**Example:**\n\n\n      public class Person {\n        private String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public String getName() {\n          return name;\n        }\n\n        public String toString() {\n          return getName();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class Person {\n        private final String name;\n\n        Person(String name) {\n          this.name = name;\n        }\n\n        public final String getName() {\n          return name;\n        }\n\n        public final String toString() {\n          return getName();\n        }\n      }\n\nUse the **Report classes** and **Report methods** options to define which declarations are to be reported."
-        },
-        {
-          "shortName": "RedundantExplicitClose",
-          "displayName": "Redundant 'close()'",
-          "enabled": false,
-          "description": "Reports unnecessary calls to `close()` at the end of a try-with-resources block and suggests removing them.\n\n**Example**:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n        ac.close();\n      }\n\nAfter the quick-fix is applied:\n\n\n      try(MyAutoCloseable ac = new MyAutoCloseable()) {\n        foo();\n      }\n\nNew in 2018.1"
-        },
-        {
-          "shortName": "UnusedLabel",
-          "displayName": "Unused label",
-          "enabled": false,
-          "description": "Reports labels that are not targets of any `break` or `continue` statements.\n\n**Example:**\n\n\n      label: for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n\nAfter the quick-fix is applied, the label is removed:\n\n\n      for (int i = 0; i < 10; i++) {\n        if (i == 3) {\n          break;\n        }\n      }\n"
-        },
-        {
-          "shortName": "DefaultAnnotationParam",
-          "displayName": "Default annotation parameter value",
-          "enabled": false,
-          "description": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n"
-        },
-        {
-          "shortName": "WeakerAccess",
-          "displayName": "Declaration access can be weaker",
-          "enabled": false,
-          "description": "Reports fields, methods or classes that may have their access modifier narrowed down.\n\nExample:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        void bar(String x, String y) { } // can be private\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Sample {\n        void foo() {\n            bar(\"foo\", \"foo\");\n        }\n        private void bar(String x, String y) { }\n      }\n\nUse the inspection's options to define the rules for the modifier change suggestions."
-        },
-        {
-          "shortName": "Java9RedundantRequiresStatement",
-          "displayName": "Redundant 'requires' directive in module-info",
-          "enabled": false,
-          "description": "Reports redundant `requires` directives in Java Platform Module System `module-info.java` files. A `requires` directive is redundant when a module `A` requires a module `B`, but the code in module `A` doesn't import any packages or classes from `B`. Furthermore, all modules have an implicitly declared dependence on the `java.base` module, therefore a `requires java.base;` directive is always redundant.\n\n\nThe quick-fix deletes the redundant `requires` directive.\nIf the deleted dependency re-exported modules that are actually used, the fix adds a `requires` directives for these modules.\n\nThis inspection only reports if the language level of the project or module is 9 or higher.\n\nNew in 2017.1"
-        },
-        {
-          "shortName": "FunctionalExpressionCanBeFolded",
-          "displayName": "Functional expression can be folded",
-          "enabled": false,
-          "description": "Reports method references or lambda expressions that point to a method of their own functional interface type and hence can be replaced with their qualifiers removing unnecessary object allocation.\n\nExample:\n\n\n      SwingUtilities.invokeLater(r::run);\n      SwingUtilities.invokeAndWait(() -> r.run());\n\nAfter the quick-fix is applied:\n\n\n      SwingUtilities.invokeLater(r);\n      SwingUtilities.invokeAndWait(r);\n\nThis inspection reports only if the language level of the project or module is 8 or higher."
-        },
-        {
-          "shortName": "unused",
-          "displayName": "Unused declaration",
-          "enabled": false,
-          "description": "Reports classes, methods, or fields that are not used or unreachable from the entry points.\n\nAn entry point can be a main method, tests, classes from outside the specified scope, classes accessible from\n`module-info.java`, and so on. It is possible to configure custom entry points by using name patterns or annotations.\n\n**Example:**\n\n\n      public class Department {\n        private Organization myOrganization;\n      }\n\nIn this example, `Department` explicitly references `Organization` but if `Department` class itself is unused, then inspection will report both classes.\n\n\nThe inspection also reports parameters that are not used by their methods and all method implementations and overriders, as well as local\nvariables that are declared but not used.\n\n\n**Note:** Some unused members may not be reported during in-editor code highlighting. For performance reasons, a non-private member is\nchecked only when its name rarely occurs in the project.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the visibility settings below to configure members to be reported. For example, configuring report `private` methods only means\nthat `public` methods of `private` inner class will be reported but `protected` methods of top level class\nwill be ignored.\n\n\nUse the **entry points** tab to configure entry points to be considered during the inspection run.\n\nYou can add entry points manually when inspection results are ready.\n\nIf your code uses unsupported frameworks, there are several options:\n\n* If the framework relies on annotations, use the **Annotations...** button to configure the framework's annotations.\n* If the framework doesn't rely on annotations, try to configure class name patterns that are expected by the framework.\n\nThis way the annotated code accessible by the framework internals will be treated as used."
-        },
-        {
-          "shortName": "ProtectedMemberInFinalClass",
-          "displayName": "'protected' member in 'final' class",
-          "enabled": false,
-          "description": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
-        },
-        {
-          "shortName": "EmptyInitializer",
-          "displayName": "Empty class initializer",
-          "enabled": false,
-          "description": "Reports empty class initializer blocks."
-        },
-        {
-          "shortName": "TrivialFunctionalExpressionUsage",
-          "displayName": "Trivial usage of functional expression",
-          "enabled": false,
-          "description": "Reports functional interface methods calls that are directly invoked on the definition of the lambda, method reference, or anonymous class. Such method calls can be replaced with the body of the functional interface implementation.\n\n**Example:**\n\n\n      boolean contains(List<String> names, String name) {\n        return ((Predicate<String>)x -> {\n          return names.contains(x);\n        }).test(name);\n      }\n\nWhen the quick-fix is applied, the method call changes to:\n\n\n      boolean contains(List<String> names, String name) {\n        return names.contains(name);\n      }\n"
-        },
-        {
-          "shortName": "AccessStaticViaInstance",
-          "displayName": "Access static member via instance reference",
-          "enabled": false,
-          "description": "Reports references to `static` methods and fields via a class instance rather than the class itself.\n\nEven though referring to static members via instance variables is allowed by The Java Language Specification,\nthis makes the code confusing as the reader may think that the result of the method depends on the instance.\n\nThe quick-fix replaces the instance variable with the class name.\n\nExample:\n\n\n      String s1 = s.valueOf(0);\n\nAfter the quick-fix is applied:\n\n\n      String s = String.valueOf(0);\n"
-        },
-        {
-          "shortName": "UnnecessaryModuleDependencyInspection",
-          "displayName": "Unnecessary module dependency",
-          "enabled": false,
-          "description": "Reports dependencies on modules that are not used. The quick-fix safely removes such unused dependencies."
-        },
-        {
-          "shortName": "RedundantThrows",
-          "displayName": "Redundant 'throws' clause",
-          "enabled": false,
-          "description": "Reports exceptions that are declared in a method's signature but never thrown by the method itself or its implementations and overriding methods.\n\nThe inspection ignores methods related to serialization, for example the methods `readObject()` and `writeObject()`.\n\n**Example:**\n\n\n      void method() throws InterruptedException {\n        System.out.println();\n      }\n\nThe quick-fix removes unnecessary exceptions from the declaration and normalizes redundant `try`-`catch` statements:\n\n\n      void method() {\n        System.out.println();\n      }\n\n\n**Note:** Some exceptions may not be reported during in-editor highlighting for performance reasons.\nTo see all results, run the inspection by selecting **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name** from the main menu.\n\nUse the **Ignore exceptions thrown by entry point methods** option to not report exceptions thrown by\nfor example `main()` methods.\nEntry point methods can be configured in the settings of the\n[Java \\| Declaration redundancy \\| Unused declaration](settings://Errors?Unused%20Declaration%20entry%20point) inspection."
-        },
-        {
-          "shortName": "DuplicateThrows",
-          "displayName": "Duplicate throws",
-          "enabled": false,
-          "description": "Reports duplicate exceptions in a method `throws` list.\n\nExample:\n\n\n      void f() throws Exception, Exception {}\n\nAfter the quick-fix is applied:\n\n\n      void f() throws Exception {}\n\n\nUse the **Ignore exceptions subclassing others** option to ignore exceptions subclassing other exceptions."
-        },
-        {
-          "shortName": "SameParameterValue",
-          "displayName": "Method parameter always has the same value",
-          "enabled": false,
-          "description": "Reports method parameters that always have the same constant value.\n\nExample:\n\n\n      static void printPoint(int x, int y) { // x is always 0\n        System.out.println(x + \", \" + y);\n      }\n\n      public static void main(String[] args) {\n        printPoint(0, 1);\n        printPoint(0, 2);\n      }\n\nThe quick-fix inlines the constant value. This may simplify the method implementation.\n\n\nUse the **Ignore when a quick-fix can not be provided** option to suppress the inspections when:\n\n* the parameter is modified inside the method\n* the parameter value that is being passed is a reference to an inaccessible field (Java ony)\n* the parameter is a vararg (Java only)\n\n\nUse the **Maximal method visibility** option to control the maximum visibility of methods to be reported.\n\n\nUse the **Minimal method usage count to report parameter** field to specify the minimal number of method usages with the same parameter value."
-        },
-        {
-          "shortName": "SameReturnValue",
-          "displayName": "Method always returns the same value",
-          "enabled": false,
-          "description": "Reports methods and method hierarchies that always return the same constant.\n\n\nThe inspection works differently in batch-mode\n(from **Code \\| Inspect Code** or **Code \\| Analyze Code \\| Run Inspection by Name**)\nand on-the-fly in the editor:\n\n* In batch-mode, the inspection reports methods and method hierarchies that always return the same constant.\n* In the editor, the inspection only reports methods that have more than one `return` statement, do not have super methods, and cannot be overridden. If a method overrides or implements a method, a contract may require it to return a specific constant, but at the same time, we may want to have several exit points. If a method can be overridden, it is possible that a different value will be returned in subclasses.\n\n**Example:**\n\n\n      class X {\n                    // Warn only in batch-mode:\n        int xxx() { // Method 'xxx()' and all its overriding methods always return '0'\n          return 0;\n        }\n      }\n\n      class Y extends X {\n        @Override\n        int xxx() {\n            return 0;\n        }\n\n                    // Warn only in batch-mode:\n        int yyy() { // Method 'yyy()' always returns '0'\n            return 0;\n        }\n\n                                      // Warn both in batch-mode and on-the-fly:\n        final int zzz(boolean flag) { // Method 'zzz()' always returns '0'\n            if (Math.random() > 0.5) {\n                return 0;\n            }\n            return 0;\n        }\n      }\n"
-        },
-        {
-          "shortName": "RedundantRecordConstructor",
-          "displayName": "Redundant record constructor",
-          "enabled": false,
-          "description": "Reports redundant constructors declared inside Java records.\n\n**Example 1:**\n\n\n      record Point(int x, int y) {\n        public Point {} // could be removed\n      }\n      \n      record Point(int x, int y) {\n        public Point(int x, int y) { // could be removed\n          this.x = x;\n          this.y = y;\n        }\n      }\n\nThe quick-fix removes the redundant constructors.\n\n**Example 2:**\n\n\n       // could be converted to compact constructor\n      record Range(int from, int to) {\n        public Range(int from, int to) {\n          if (from > to) throw new IllegalArgumentException();\n          this.from = from;\n          this.to = to;\n        }\n      }\n\nThe quick-fix converts this code into a compact constructor.\n\nThis inspection depends on the Java feature 'Records' which is available since Java 16.\n\nNew in 2020.1"
-        },
-        {
-          "shortName": "FinalMethodInFinalClass",
-          "displayName": "'final' method in 'final' class",
-          "enabled": false,
-          "description": "Reports `final` methods in `final` classes.\n\nSince `final` classes cannot be inherited, marking a method as `final`\nmay be unnecessary and confusing.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      public final int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      public int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly."
-        },
-        {
-          "shortName": "SillyAssignment",
-          "displayName": "Variable is assigned to itself",
-          "enabled": false,
-          "description": "Reports assignments of a variable to itself.\n\n**Example:**\n\n\n      a = a;\n\nThe quick-fix removes the assigment."
-        },
-        {
-          "shortName": "GroovyUnusedDeclaration",
-          "displayName": "Unused declaration",
-          "enabled": false,
-          "description": "Reports unused classes, methods and fields.\n\n**Example:**\n\n\n      public class Department {\n          private Organization myOrganization;\n      }\n\nHere `Department` explicitly references `Organization` but if `Department` class itself is unused,\nthen inspection would report both classes.\n\n\nThe inspection also reports parameters, which are not used by their methods and all method implementations/overriders, as well as local\nvariables, which are declared but not used.\n\nFor more information, see the same inspection in Java."
-        }
-      ]
-    },
-    {
-      "name": "Error handling",
-      "inspections": [
-        {
-          "shortName": "UncheckedExceptionClass",
-          "displayName": "Unchecked 'Exception' class",
-          "enabled": false,
-          "description": "Reports subclasses of `java.lang.RuntimeException`.\n\nSome coding standards require that all user-defined exception classes are checked.\n\n**Example:**\n\n\n      class EnigmaException extends RuntimeException {} // warning: Unchecked exception class 'EnigmaException'\n"
-        },
-        {
-          "shortName": "CheckedExceptionClass",
-          "displayName": "Checked exception class",
-          "enabled": false,
-          "description": "Reports checked exception classes (that is, subclasses of `java.lang.Exception` that are not subclasses of `java.lang.RuntimeException`).\n\nSome coding standards suppress checked user-defined exception classes.\n\n**Example:**\n\n\n      class IllegalMoveException extends Exception {}\n"
-        },
-        {
-          "shortName": "NestedTryStatement",
-          "displayName": "Nested 'try' statement",
-          "enabled": false,
-          "description": "Reports nested `try` statements.\n\nNested `try` statements\nmay result in unclear code and should probably have their `catch` and `finally` sections\nmerged."
-        },
-        {
-          "shortName": "BadExceptionThrown",
-          "displayName": "Prohibited exception thrown",
-          "enabled": false,
-          "description": "Reports `throw` statements that throw an inappropriate exception. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.io.IOException`.\n\n**Example:**\n\n\n      void setup(Mode mode) {\n          if (mode == null)\n              throw new RuntimeException(\"Problem during setup\"); // warning: Prohibited exception 'RuntimeException' thrown\n          ...\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
-        },
-        {
-          "shortName": "CaughtExceptionImmediatelyRethrown",
-          "displayName": "Caught exception is immediately rethrown",
-          "enabled": true,
-          "description": "Reports `catch` blocks that immediately rethrow the caught exception without performing any action on it. Such `catch` blocks are unnecessary and have no error handling.\n\n**Example:**\n\n\n            try {\n                new FileInputStream(\"\");\n            } catch (FileNotFoundException e) {\n                throw e;\n            }\n"
-        },
-        {
-          "shortName": "ThrowFromFinallyBlock",
-          "displayName": "'throw' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `throw` statements inside `finally` blocks.\n\nWhile occasionally intended, such `throw` statements may conceal exceptions thrown from `try`-`catch` and thus\ntremendously complicate the debugging process."
-        },
-        {
-          "shortName": "ContinueOrBreakFromFinallyBlock",
-          "displayName": "'continue' or 'break' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `break` or `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and complicate debugging.\n\n**Example:**\n\n\n        while (true) {\n            try {\n              throwingMethod();\n            } finally {\n                continue;\n            }\n        }\n"
-        },
-        {
-          "shortName": "BadExceptionDeclared",
-          "displayName": "Prohibited exception declared",
-          "enabled": false,
-          "description": "Reports methods that declare an inappropriate exception in their `throws` clause. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.lang.Throwable`.\n\n**Example:**\n\n\n      void describeModule(String module) throws Exception {} // warning: Prohibited exception 'Exception' declared\n\nConfigure the inspection:\n\n* Use the **Prohibited exceptions** list to specify which exceptions should be reported.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore exceptions declared by methods that override a library method."
-        },
-        {
-          "shortName": "ReturnFromFinallyBlock",
-          "displayName": "'return' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `return` statements inside of `finally` blocks.\n\nWhile occasionally intended, such `return` statements may mask thrown exceptions\nand complicate debugging.\n\n**Example:**\n\n\n      try {\n        foo();\n      } finally {\n        if (bar()) return;\n      }\n"
-        },
-        {
-          "shortName": "TooBroadThrows",
-          "displayName": "Overly broad 'throws' clause",
-          "enabled": false,
-          "description": "Reports `throws` clauses with exceptions that are more generic than the exceptions that the method actually throws.\n\n**Example:**\n\n\n      public void createFile() throws Exception { // warning: 'throws Exception' is too broad, masking exception 'IOException'\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void createFile() throws IOException {\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nConfigure the inspection:\n\n* Use the **Maximum number of hidden exceptions to warn** field to ignore exceptions, that hide a larger number of other exceptions than specified.\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore overly broad `throws` clauses in methods that override a library method.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown from the method body and thus are technically not overly broad."
-        },
-        {
-          "shortName": "BadExceptionCaught",
-          "displayName": "Prohibited 'Exception' caught",
-          "enabled": false,
-          "description": "Reports `catch` clauses that catch an inappropriate exception.\n\nSome exceptions, for example\n`java.lang.NullPointerException` or\n`java.lang.IllegalMonitorStateException`, represent programming errors\nand therefore almost certainly should not be caught in production code.\n\n**Example:**\n\n\n      try {\n        return component.getMousePosition(true) != null;\n      } catch (NullPointerException e) { // warning: Prohibited exception 'NullPointerException' caught\n        return false;\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
-        },
-        {
-          "shortName": "InstanceofCatchParameter",
-          "displayName": "'instanceof' on 'catch' parameter",
-          "enabled": false,
-          "description": "Reports cases in which an `instanceof` expression is used for testing the type of a parameter in a `catch` block.\n\nTesting the type of `catch` parameters is usually better done by having separate\n`catch` blocks instead of using `instanceof`.\n\n**Example:**\n\n\n      void foo(Runnable runnable) {\n        try {\n            runnable.run();\n        } catch (Throwable throwable) {\n            if (throwable instanceof NoClassDefFoundError) { // warning: 'instanceof' on 'catch' parameter 'throwable'\n                System.out.println(\"Class not found!\");\n            }\n        }\n      }\n"
-        },
-        {
-          "shortName": "FinallyBlockCannotCompleteNormally",
-          "displayName": "'finally' block which can not complete normally",
-          "enabled": true,
-          "description": "Reports `return`, `throw`, `break`, `continue`, and `yield` statements that are used inside `finally` blocks. These cause the `finally` block to not complete normally but to complete abruptly. Any exceptions thrown from the `try` and `catch` blocks of the same `try`-`catch` statement will be suppressed.\n\n**Example:**\n\n\n      void x() {\n        try {\n          throw new RuntimeException();\n        } finally {\n          // if bar() returns true, the RuntimeException will be suppressed\n          if (bar()) return;\n        }\n      }\n"
-        },
-        {
-          "shortName": "EmptyFinallyBlock",
-          "displayName": "Empty 'finally' block",
-          "enabled": true,
-          "description": "Reports empty `finally` blocks.\n\nEmpty `finally` blocks usually indicate coding errors. They may also remain after code refactoring and can safely be removed.\n\nThis inspection doesn't report empty `finally` blocks found in JSP files.\n\n**Example:**\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      } finally {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      }\n"
-        },
-        {
-          "shortName": "ErrorRethrown",
-          "displayName": "'Error' not rethrown",
-          "enabled": false,
-          "description": "Reports `try` statements that catch `java.lang.Error` or any of its subclasses and do not rethrow the error.\n\nStatements that catch `java.lang.ThreadDeath` are not\nreported.\n\n**Example:**\n\n\n      try {\n        executeTests(request);\n      }\n      catch (OutOfMemoryError ex) { // warning: Error 'ex' not rethrown\n        return false;\n      }\n"
-        },
-        {
-          "shortName": "NewExceptionWithoutArguments",
-          "displayName": "Exception constructor called without arguments",
-          "enabled": false,
-          "description": "Reports creation of a exception instance without any arguments specified.\n\nWhen an exception is constructed without any arguments, it contains no information about the problem that occurred, which makes\ndebugging needlessly hard.\n\n**Example:**\n\n\n      throw new IOException(); // warning: exception without arguments\n"
-        },
-        {
-          "shortName": "TooBroadCatch",
-          "displayName": "Overly broad 'catch' block",
-          "enabled": false,
-          "description": "Reports `catch` blocks with parameters that are more generic than the exception thrown by the corresponding `try` block.\n\n**Example:**\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (Exception ex) { // warning: 'catch' of 'Exception' is too broad, masking exceptions 'RuntimeException'\n        return defaultFilePath;\n      }\n\nAfter the quick-fix is applied:\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (RuntimeException ex) {\n        return defaultFilePath;\n      }\n\nConfigure the inspection:\n\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown and thus are technically not overly broad."
-        },
-        {
-          "shortName": "UnnecessaryInitCause",
-          "displayName": "Unnecessary call to 'Throwable.initCause()'",
-          "enabled": true,
-          "description": "Reports calls to `Throwable.initCause()` where an exception constructor also takes a `Throwable cause` argument.\n\nIn this case, the `initCause()` call can be removed and its argument can be added to the call to the exception's constructor.\n\n**Example:**\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\");\n        wrapper.initCause(ex); // Unnecessary call to 'Throwable.initCause()'\n        throw wrapper;\n      }\n\nA quick-fix is available to pass the cause argument to the constructor. After the quick-fix is applied:\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\", ex);\n        throw wrapper;\n      }\n      \n"
-        },
-        {
-          "shortName": "ExceptionFromCatchWhichDoesntWrap",
-          "displayName": "'throw' inside 'catch' block which ignores the caught exception",
-          "enabled": false,
-          "description": "Reports exceptions that are thrown from inside `catch` blocks but do not \"wrap\" the caught exception.\n\nWhen an exception is thrown in response to an exception, wrapping the initial exception prevents losing valuable context information,\nsuch as stack frames and line numbers.\n\n**Example:**\n\n\n      ...\n      catch (IOException e) {\n        closeAllConnections();\n        throw new ConnectException(\"Connection problem.\"); // warning: 'throw' inside 'catch' block ignores the caught exception 'e'\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if result of exception method call is used** option to indicate whether the inspection should ignore exceptions whose argument is the result of a method call on the original exception, such as `getMessage()`.\n* Use the **Ignore if thrown exception cannot wrap an exception** option to ignore `throw` statements that throw exceptions without a constructor that accepts a `Throwable` cause."
-        },
-        {
-          "shortName": "NullThrown",
-          "displayName": "'null' thrown",
-          "enabled": false,
-          "description": "Reports `null` literals that are used as the argument of a `throw` statement.\n\nSuch constructs produce a `java.lang.NullPointerException` that usually should not be thrown programmatically."
-        },
-        {
-          "shortName": "ExtendsThrowable",
-          "displayName": "Class directly extends 'Throwable'",
-          "enabled": false,
-          "description": "Reports classes that directly extend `java.lang.Throwable`.\n\nExtending `java.lang.Throwable` directly is generally considered bad practice.\nIt is usually enough to extend `java.lang.RuntimeException`, `java.lang.Exception`, or - in special\ncases - `java.lang.Error`.\n\n**Example:**\n\n\n      class EnigmaThrowable extends Throwable {} // warning: Class 'EnigmaThrowable' directly extends 'java.lang.Throwable'\n"
-        },
-        {
-          "shortName": "ThreadDeathRethrown",
-          "displayName": "'ThreadDeath' not rethrown",
-          "enabled": false,
-          "description": "Reports `try` statements that catch `java.lang.ThreadDeath` and do not rethrow the exception.\n\n**Example:**\n\n\n      try {\n        executeInParallel(request);\n      } catch (ThreadDeath ex) { // warning: ThreadDeath 'ex' not rethrown\n        return false;\n      }\n"
-        },
-        {
-          "shortName": "EmptyTryBlock",
-          "displayName": "Empty 'try' block",
-          "enabled": true,
-          "description": "Reports empty `try` blocks, including try-with-resources statements.\n\n`try` blocks with comments are considered empty.\n\n\nThis inspection doesn't report empty `try` blocks found in JSP files."
-        },
-        {
-          "shortName": "ThrowableSupplierOnlyThrowException",
-          "displayName": "Throwable supplier never returns a value",
-          "enabled": true,
-          "description": "Reports `Supplier` lambdas in `Optional.orElseThrow()` calls that throw an exception, instead of returning it.\n\n**Example:**\n\n\n    optional.orElseThrow(() -> {\n        throw new RuntimeException();\n    });\n\nAfter the quick-fix is applied:\n\n\n    optional.orElseThrow(() -> new RuntimeException());\n\nNew in 2023.1"
-        },
-        {
-          "shortName": "NonFinalFieldOfException",
-          "displayName": "Non-final field of 'Exception' class",
-          "enabled": false,
-          "description": "Reports fields in subclasses of `java.lang.Exception` that are not declared `final`.\n\nData on exception objects should not be modified\nbecause this may result in losing the error context for later debugging and logging.\n\n**Example:**\n\n\n      public class EditorException extends Exception {\n        private String message; // warning: Non-final field 'message' of exception class\n      }\n"
-        },
-        {
-          "shortName": "CatchMayIgnoreException",
-          "displayName": "Catch block may ignore exception",
-          "enabled": true,
-          "description": "Reports `catch` blocks that are empty or may ignore an exception.\n\nWhile occasionally intended, empty `catch` blocks may complicate debugging.\nAlso, ignoring a `catch` parameter might be wrong.\nFinally, the static code analyzer reports if it detects that a `catch` block may silently ignore important VM\nexceptions like `NullPointerException`. Ignoring such an exception\n(without logging or rethrowing it) may hide a bug.\n\n\nThe inspection won't report any `catch` parameters named `ignore` or `ignored`.\nConversely, the inspection will warn you about any `catch` parameters named `ignore` or `ignored` that are actually in use.\nAdditionally, the inspection won't report `catch` parameters inside test sources named `expected` or `ok`.\n\n\nYou can use a quick-fix to change the exception name to `ignored`.\nFor empty **catch** blocks, an additional quick-fix to generate the **catch** body is suggested.\nYou can modify the \"Catch Statement Body\" template on the Code tab in\n[Settings \\| Editor \\| File and Code Templates](settings://fileTemplates).\n\n**Example:**\n\n\n      try {\n        throwingMethod();\n      } catch (IOException ex) {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        System.out.println(System.in.read());\n      } catch (IOException ignored) {\n\n      }\n\nConfigure the inspection:\n\n* Use the **Do not warn when 'catch' block contains a comment** option to ignore `catch` blocks with comments.\n* Use the **Do not warn when 'catch' block is not empty** option to ignore `catch` blocks that contain statements or comments inside, while the variable itself is not used.\n* Use the **Do not warn when exception named 'ignore(d)' is not actually ignored** option to ignore variables named `ignored` if they are in use.\n\nNew in 2018.1"
-        },
-        {
-          "shortName": "ThrowCaughtLocally",
-          "displayName": "'throw' caught by containing 'try' statement",
-          "enabled": false,
-          "description": "Reports `throw` statements whose exceptions are always caught by containing `try` statements.\n\nUsing `throw`\nstatements as a \"goto\" to change the local flow of control is confusing and results in poor performance.\n\n**Example:**\n\n\n      try {\n        if (!Files.isDirectory(PROJECTS)) {\n            throw new IllegalStateException(\"Directory not found.\"); // warning: 'throw' caught by containing 'try' statement\n        }\n        ...\n      } catch (Exception e) {\n          LOG.error(\"run failed\");\n      }\n\nUse the **Ignore rethrown exceptions** option to ignore exceptions that are rethrown."
-        },
-        {
-          "shortName": "ThrowsRuntimeException",
-          "displayName": "Unchecked exception declared in 'throws' clause",
-          "enabled": false,
-          "description": "Reports declaration of an unchecked exception (`java.lang.RuntimeException` or one of its subclasses) in the `throws` clause of a method.\n\nDeclarations of unchecked exceptions are not required and may be deleted or moved to a Javadoc `@throws` tag.\n\n**Example:**\n\n\n      public class InvalidDataException extends RuntimeException {}\n\n      class TextEditor {\n        void readSettings() throws InvalidDataException {} // warning: Unchecked exception 'InvalidDataException' declared in 'throws' clause\n      }\n"
-        },
-        {
-          "shortName": "GroovyThrowFromFinallyBlock",
-          "displayName": "'throw' inside 'finally' block",
-          "enabled": false,
-          "description": "Reports `throw` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `throw` statements may mask exceptions thrown and\ntremendously complicate debugging."
-        },
-        {
-          "shortName": "GroovyEmptyCatchBlock",
-          "displayName": "Empty 'catch' block",
-          "enabled": false,
-          "description": "Reports empty `catch` blocks. While occasionally intended, empty `catch` blocks can make debugging extremely difficult.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception e) {\n    }\n\nAfter the quick-fix is applied:\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception ignored) {\n    }\n\n"
-        },
-        {
-          "shortName": "GroovyContinueOrBreakFromFinallyBlock",
-          "displayName": "'continue' or 'break' from 'finally' block",
-          "enabled": false,
-          "description": "Reports `break` and `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and tremendously complicate debugging."
-        },
-        {
-          "shortName": "GroovyUnusedCatchParameter",
-          "displayName": "Unused 'catch' parameter",
-          "enabled": false,
-          "description": "Reports **catch** parameters that are unused in their\ncorresponding blocks. This inspection will not report any **catch** parameters\nnamed \"ignore\" or \"ignored\".\n\n**Example:**\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ex) {\n          println('Catching the exception')\n      }\n\nHere the parameter **ex** is never used in **catch** block.\n\nAfter the quick-fix is applied:\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ignored) {\n          println('Catching the exception')\n      }\n"
-        },
-        {
-          "shortName": "GroovyReturnFromFinallyBlock",
-          "displayName": "'return' inside 'finally' block",
-          "enabled": false,
-          "description": "Reports `return` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `return` statements may mask exceptions thrown, and\ncomplicate debugging."
-        },
-        {
-          "shortName": "GroovyEmptyTryBlock",
-          "displayName": "Empty 'try' block",
-          "enabled": false,
-          "description": "Reports empty `try` blocks. Empty `try` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n    }\n    finally {\n      close()\n    }\n\n"
-        },
-        {
-          "shortName": "GroovyEmptyFinallyBlock",
-          "displayName": "Empty 'finally' block",
-          "enabled": false,
-          "description": "Reports empty `finally` blocks. Empty `finally` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    finally {\n    }\n\n"
         }
       ]
     },
@@ -4473,197 +4473,6 @@
       ]
     },
     {
-      "name": "Class structure",
-      "inspections": [
-        {
-          "shortName": "ClassWithOnlyPrivateConstructors",
-          "displayName": "Class with only 'private' constructors should be declared 'final'",
-          "enabled": false,
-          "description": "Reports classes with only `private` constructors.\n\nA class that only has `private` constructors cannot be extended outside a file and should be declared as `final`."
-        },
-        {
-          "shortName": "FinalMethod",
-          "displayName": "Method can't be overridden",
-          "enabled": false,
-          "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
-        },
-        {
-          "shortName": "StaticNonFinalField",
-          "displayName": "'static', non-'final' field",
-          "enabled": false,
-          "description": "Reports non-`final` `static` fields.\n\nA quick-fix is available to add the `final` modifier to a non-`final` `static` field.\n\nThis inspection doesn't check fields' mutability. For example, adding the `final` modifier to a field that has a value\nbeing set somewhere will cause a compilation error.\n\n\nUse the **Only report 'public' fields** option so that the inspection reported only `public` fields."
-        },
-        {
-          "shortName": "ClassInitializer",
-          "displayName": "Non-'static' initializer",
-          "enabled": false,
-          "description": "Reports non-`static` initializers in classes.\n\nSome coding standards prohibit instance initializers and recommend using constructors or field initializers for initialization.\nAlso, deleting the `static` keyword may accidentally create non-`static` initializers and result in obscure bugs.\n\nThis inspection doesn't report instance initializers in anonymous classes.\n\n\nUse the **Only warn when the class has one or more constructors** option to ignore instance initializers in classes that don't have any constructors."
-        },
-        {
-          "shortName": "UtilityClassWithPublicConstructor",
-          "displayName": "Utility class with 'public' constructor",
-          "enabled": false,
-          "description": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.\n\n**Example:**\n\n\n      public final class UtilityClass {\n        public UtilityClass(){\n        }\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        private UtilityClass(){\n        }\n        public static void foo() {}\n      }\n"
-        },
-        {
-          "shortName": "ListenerMayUseAdapter",
-          "displayName": "Class may extend adapter instead of implementing listener",
-          "enabled": false,
-          "description": "Reports classes implementing listeners instead of extending corresponding adapters.\n\nA quick-fix is available to\nremove any redundant empty methods left after replacing a listener implementation with an adapter extension.\n\n\nUse the **Only warn when empty implementing methods are found** option to configure the inspection to warn even if no empty methods are found."
-        },
-        {
-          "shortName": "MarkerInterface",
-          "displayName": "Marker interface",
-          "enabled": false,
-          "description": "Reports marker interfaces without any methods or fields.\n\nSuch interfaces may be confusing and typically indicate a design failure.\n\nThe inspection ignores interfaces that extend two or more interfaces and interfaces\nthat specify the generic type of their superinterface."
-        },
-        {
-          "shortName": "InnerClassOnInterface",
-          "displayName": "Inner class of interface",
-          "enabled": false,
-          "description": "Reports inner classes in `interface` classes.\n\nSome coding standards\ndiscourage the use of such classes. The inspection doesn't report enum classes and annotation interfaces.\n\n\nUse the **Ignore inner interfaces of interfaces** option to ignore inner interfaces. For example:\n\n\n      interface I {\n        interface Inner {\n        }\n      }\n"
-        },
-        {
-          "shortName": "UtilityClass",
-          "displayName": "Utility class",
-          "enabled": false,
-          "description": "Reports utility classes.\n\nUtility classes have all fields and methods declared as `static` and their\npresence may indicate a lack of object-oriented design.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes annotated with one of\nthese annotations."
-        },
-        {
-          "shortName": "ClassNameDiffersFromFileName",
-          "displayName": "Class name differs from file name",
-          "enabled": false,
-          "description": "Reports top-level class names that don't match the name of a file containing them.\n\nWhile the Java specification allows for naming non-`public` classes this way,\nfiles with unmatched names may be confusing and decrease usefulness of various software tools."
-        },
-        {
-          "shortName": "AnonymousInnerClass",
-          "displayName": "Anonymous class can be replaced with inner class",
-          "enabled": false,
-          "description": "Reports anonymous classes.\n\nOccasionally replacing anonymous classes with inner classes can lead to more readable and maintainable code.\nSome code standards discourage anonymous classes.\n\n**Example:**\n\n\n      class Example {\n        public static void main(String[] args) {\n          new Thread() {\n            public void run() {\n              work()\n            }\n\n            private void work() {}\n          }.start();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        public static void main(String[] args) {\n          new MyThread().start();\n        }\n\n        private static class MyThread extends Thread {\n          public void run() {\n            work();\n          }\n\n          private void work() {}\n        }\n      }\n"
-        },
-        {
-          "shortName": "MultipleTopLevelClassesInFile",
-          "displayName": "Multiple top level classes in single file",
-          "enabled": false,
-          "description": "Reports multiple top-level classes in a single Java file.\n\nPutting multiple\ntop-level classes in one file may be confusing and degrade the usefulness of various\nsoftware tools."
-        },
-        {
-          "shortName": "LimitedScopeInnerClass",
-          "displayName": "Local class",
-          "enabled": false,
-          "description": "Reports local classes.\n\nA local class is a named nested class declared inside a code block.\nLocal classes are uncommon and may therefore be confusing.\nIn addition, some code standards discourage the use of local classes.\n\n**Example:**\n\n\n      class Example {\n        void test() {\n          class Local { // here\n          }\n          new Local();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        void test() {\n          new Local();\n        }\n\n        private static class Local { // here\n        }\n      }\n"
-        },
-        {
-          "shortName": "ClassMayBeInterface",
-          "displayName": "Abstract 'class' may be 'interface'",
-          "enabled": false,
-          "description": "Reports `abstract` classes that can be converted to interfaces.\n\nUsing interfaces instead of classes is preferable as Java doesn't support multiple class inheritance,\nwhile a class can implement multiple interfaces.\n\nA class may be converted to an interface if it has no superclasses (other\nthan Object), has only `public static final` fields,\n`public abstract` methods, and `public` inner classes.\n\n\nExample:\n\n\n    abstract class Example {\n        public static final int MY_CONST = 42;\n        public abstract void foo();\n    }\n\n    class Inheritor extends Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n    interface Example {\n        int MY_CONST = 42;\n        void foo();\n    }\n\n    class Inheritor implements Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nConfigure the inspection:\n\n\nUse the **Report classes containing non-abstract methods when using Java 8** option to report only the classes with `static` methods and non-abstract methods that can be converted to\n`default` methods (only applicable to language level of 8 or higher)."
-        },
-        {
-          "shortName": "InterfaceMayBeAnnotatedFunctional",
-          "displayName": "Interface may be annotated as '@FunctionalInterface'",
-          "enabled": false,
-          "description": "Reports interfaces that can be annotated with `@FunctionalInterface` (available since JDK 1.8).\n\nAnnotating an interface with `@FunctionalInterface` indicates that the interface\nis functional and no more `abstract` methods can be added to it.\n\n**Example:**\n\n\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nAfter the quick-fix is applied:\n\n\n      @FunctionalInterface\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nThis inspection only reports if the language level of the project or module is 8 or higher.\n\nThis inspection depends on the Java feature 'Lambda expressions' which is available since Java 8."
-        },
-        {
-          "shortName": "FinalStaticMethod",
-          "displayName": "'static' method declared 'final'",
-          "enabled": false,
-          "description": "Reports static methods that are marked as `final`.\n\nSuch code might indicate an error or an incorrect assumption about the effect of the `final` keyword.\nStatic methods are not subject to runtime polymorphism, so the only purpose of the `final` keyword used with static methods\nis to ensure the method will not be hidden in a subclass."
-        },
-        {
-          "shortName": "ConstantDeclaredInAbstractClass",
-          "displayName": "Constant declared in 'abstract' class",
-          "enabled": false,
-          "description": "Reports constants (`public static final` fields) declared in abstract classes.\n\nSome coding standards require declaring constants in interfaces instead."
-        },
-        {
-          "shortName": "NonFinalFieldInEnum",
-          "displayName": "Non-final field in 'enum'",
-          "enabled": false,
-          "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
-        },
-        {
-          "shortName": "Singleton",
-          "displayName": "Singleton",
-          "enabled": false,
-          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
-        },
-        {
-          "shortName": "NonFinalUtilityClass",
-          "displayName": "Utility class is not 'final'",
-          "enabled": false,
-          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
-        },
-        {
-          "shortName": "ParameterCanBeLocal",
-          "displayName": "Value passed as parameter never read",
-          "enabled": false,
-          "description": "Reports redundant method parameters that can be replaced with local variables.\n\nIf all local usages of a parameter are preceded by assignments to that parameter, the\nparameter can be removed and its usages replaced with local variables.\nIt makes no sense to have such a parameter, as values that are passed to it are overwritten.\nUsually, the problem appears as a result of refactoring.\n\nExample:\n\n\n      void test(int p) {\n        p = 1;\n        System.out.print(p);\n      }\n\nAfter the quick-fix is applied:\n\n\n      void test() {\n        int p = 1;\n        System.out.print(p);\n      }\n"
-        },
-        {
-          "shortName": "NoopMethodInAbstractClass",
-          "displayName": "No-op method in 'abstract' class",
-          "enabled": false,
-          "description": "Reports no-op (for \"no operation\") methods in `abstract` classes.\n\nIt is usually a better\ndesign to make such methods `abstract` themselves so that classes inheriting these\nmethods provide their implementations.\n\n**Example:**\n\n\n      abstract class Test {\n        protected void doTest() {\n        }\n      }\n"
-        },
-        {
-          "shortName": "UtilityClassCanBeEnum",
-          "displayName": "Utility class can be 'enum'",
-          "enabled": false,
-          "description": "Reports utility classes that can be converted to enums.\n\nSome coding style guidelines require implementing utility classes as enums\nto avoid code coverage issues in `private` constructors.\n\n**Example:**\n\n\n      class StringUtils {\n        public static final String EMPTY = \"\";\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum StringUtils {\n        ;\n        public static final String EMPTY = \"\";\n      }\n\nThis inspection depends on the Java feature 'Enums' which is available since Java 5."
-        },
-        {
-          "shortName": "FinalClass",
-          "displayName": "Class is closed to inheritance",
-          "enabled": false,
-          "description": "Reports classes that are declared `final`. Final classes that extend a `sealed` class or interface are not reported. Such classes can't be inherited and may indicate a lack of object-oriented design. Some coding standards discourage `final` classes.\n\n**Example:**\n\n\n      public final class Main {\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Main {\n      }\n"
-        },
-        {
-          "shortName": "UtilityClassWithoutPrivateConstructor",
-          "displayName": "Utility class without 'private' constructor",
-          "enabled": false,
-          "description": "Reports utility classes without `private` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating `private`\nconstructors in utility classes prevents them from being accidentally instantiated.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes marked with one of\nthese annotations.\n\n\nUse the **Ignore classes with only a main method** option to ignore classes with no methods other than the main one."
-        },
-        {
-          "shortName": "FieldCanBeLocal",
-          "displayName": "Field can be local",
-          "enabled": false,
-          "description": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables."
-        },
-        {
-          "shortName": "EmptyClass",
-          "displayName": "Empty class",
-          "enabled": false,
-          "description": "Reports empty classes and empty Java files.\n\nA class is empty if it doesn't contain any fields, methods, constructors, or initializers. Empty classes are sometimes left over\nafter significant changes or refactorings.\n\n**Example:**\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>() {\n\n           };\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>();\n        }\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if annotated by** option to specify special annotations. The inspection will ignore the classes marked with these annotations.\n*\n  Use the **Ignore class if it is a parametrization of a super type** option to ignore classes that parameterize a superclass. For example:\n\n      class MyList extends ArrayList<String> {}\n\n* Use the **Ignore subclasses of java.lang.Throwable** to ignore classes that extend `java.lang.Throwable`.\n* Use the **Comments count as content** option to ignore classes that contain comments."
-        },
-        {
-          "shortName": "FinalPrivateMethod",
-          "displayName": "'private' method declared 'final'",
-          "enabled": false,
-          "description": "Reports methods that are marked with both `final` and `private` keywords.\n\nSince `private` methods cannot be meaningfully overridden because of their visibility, declaring them\n`final` is redundant."
-        },
-        {
-          "shortName": "MethodReturnAlwaysConstant",
-          "displayName": "Method returns per-class constant",
-          "enabled": false,
-          "description": "Reports methods that only return a constant, which may differ for various inheritors.\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
-        },
-        {
-          "shortName": "PublicConstructor",
-          "displayName": "'public' constructor can be replaced with factory method",
-          "enabled": false,
-          "description": "Reports `public` constructors.\n\nSome coding standards discourage the use of `public` constructors and recommend\n`static` factory methods instead.\nThis way the implementation can be swapped out without affecting the call sites.\n\n**Example:**\n\n\n      class Test {\n        private String name;\n\n        public Test(String name) {\n            this.name = name;\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            new Test(\"str\").test();\n        }\n      }\n\nAfter quick-fix is applied:\n\n\n      class Test {\n        private String name;\n\n        private Test(String name) {\n            this.name = name;\n        }\n\n        public static Test getInstance(String name) {\n            return new Test(name);\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            getInstance(\"str\").test();\n        }\n      }\n"
-        },
-        {
-          "shortName": "ConstantDeclaredInInterface",
-          "displayName": "Constant declared in interface",
-          "enabled": false,
-          "description": "Reports constants (`public static final` fields) declared in interfaces.\n\nSome coding standards require declaring constants in abstract classes instead."
-        }
-      ]
-    },
-    {
       "name": "Serialization issues",
       "inspections": [
         {
@@ -4803,6 +4612,197 @@
           "displayName": "Non-serializable object passed to 'ObjectOutputStream'",
           "enabled": false,
           "description": "Reports non-`Serializable` objects used as arguments to `java.io.ObjectOutputStream.write()`. Such calls will result in runtime exceptions.\n\n\nThis inspection assumes objects of the types `java.util.Collection` and\n`java.util.Map` to be `Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      public class IWantToSerializeThis {\n        public static void main(String[] args) throws IOException {\n          try(var stream = new ObjectOutputStream(Files.newOutputStream(Paths.get(\"output\")))) {\n            // Warning -- will fail with NotSerializableException\n            stream.writeObject(new IWantToSerializeThis());\n          }\n        }\n      }\n"
+        }
+      ]
+    },
+    {
+      "name": "Class structure",
+      "inspections": [
+        {
+          "shortName": "ClassWithOnlyPrivateConstructors",
+          "displayName": "Class with only 'private' constructors should be declared 'final'",
+          "enabled": false,
+          "description": "Reports classes with only `private` constructors.\n\nA class that only has `private` constructors cannot be extended outside a file and should be declared as `final`."
+        },
+        {
+          "shortName": "FinalMethod",
+          "displayName": "Method can't be overridden",
+          "enabled": false,
+          "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
+        },
+        {
+          "shortName": "StaticNonFinalField",
+          "displayName": "'static', non-'final' field",
+          "enabled": false,
+          "description": "Reports non-`final` `static` fields.\n\nA quick-fix is available to add the `final` modifier to a non-`final` `static` field.\n\nThis inspection doesn't check fields' mutability. For example, adding the `final` modifier to a field that has a value\nbeing set somewhere will cause a compilation error.\n\n\nUse the **Only report 'public' fields** option so that the inspection reported only `public` fields."
+        },
+        {
+          "shortName": "ClassInitializer",
+          "displayName": "Non-'static' initializer",
+          "enabled": false,
+          "description": "Reports non-`static` initializers in classes.\n\nSome coding standards prohibit instance initializers and recommend using constructors or field initializers for initialization.\nAlso, deleting the `static` keyword may accidentally create non-`static` initializers and result in obscure bugs.\n\nThis inspection doesn't report instance initializers in anonymous classes.\n\n\nUse the **Only warn when the class has one or more constructors** option to ignore instance initializers in classes that don't have any constructors."
+        },
+        {
+          "shortName": "UtilityClassWithPublicConstructor",
+          "displayName": "Utility class with 'public' constructor",
+          "enabled": false,
+          "description": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.\n\n**Example:**\n\n\n      public final class UtilityClass {\n        public UtilityClass(){\n        }\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        private UtilityClass(){\n        }\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "ListenerMayUseAdapter",
+          "displayName": "Class may extend adapter instead of implementing listener",
+          "enabled": false,
+          "description": "Reports classes implementing listeners instead of extending corresponding adapters.\n\nA quick-fix is available to\nremove any redundant empty methods left after replacing a listener implementation with an adapter extension.\n\n\nUse the **Only warn when empty implementing methods are found** option to configure the inspection to warn even if no empty methods are found."
+        },
+        {
+          "shortName": "MarkerInterface",
+          "displayName": "Marker interface",
+          "enabled": false,
+          "description": "Reports marker interfaces without any methods or fields.\n\nSuch interfaces may be confusing and typically indicate a design failure.\n\nThe inspection ignores interfaces that extend two or more interfaces and interfaces\nthat specify the generic type of their superinterface."
+        },
+        {
+          "shortName": "InnerClassOnInterface",
+          "displayName": "Inner class of interface",
+          "enabled": false,
+          "description": "Reports inner classes in `interface` classes.\n\nSome coding standards\ndiscourage the use of such classes. The inspection doesn't report enum classes and annotation interfaces.\n\n\nUse the **Ignore inner interfaces of interfaces** option to ignore inner interfaces. For example:\n\n\n      interface I {\n        interface Inner {\n        }\n      }\n"
+        },
+        {
+          "shortName": "UtilityClass",
+          "displayName": "Utility class",
+          "enabled": false,
+          "description": "Reports utility classes.\n\nUtility classes have all fields and methods declared as `static` and their\npresence may indicate a lack of object-oriented design.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes annotated with one of\nthese annotations."
+        },
+        {
+          "shortName": "ClassNameDiffersFromFileName",
+          "displayName": "Class name differs from file name",
+          "enabled": false,
+          "description": "Reports top-level class names that don't match the name of a file containing them.\n\nWhile the Java specification allows for naming non-`public` classes this way,\nfiles with unmatched names may be confusing and decrease usefulness of various software tools."
+        },
+        {
+          "shortName": "AnonymousInnerClass",
+          "displayName": "Anonymous class can be replaced with inner class",
+          "enabled": false,
+          "description": "Reports anonymous classes.\n\nOccasionally replacing anonymous classes with inner classes can lead to more readable and maintainable code.\nSome code standards discourage anonymous classes.\n\n**Example:**\n\n\n      class Example {\n        public static void main(String[] args) {\n          new Thread() {\n            public void run() {\n              work()\n            }\n\n            private void work() {}\n          }.start();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        public static void main(String[] args) {\n          new MyThread().start();\n        }\n\n        private static class MyThread extends Thread {\n          public void run() {\n            work();\n          }\n\n          private void work() {}\n        }\n      }\n"
+        },
+        {
+          "shortName": "MultipleTopLevelClassesInFile",
+          "displayName": "Multiple top level classes in single file",
+          "enabled": false,
+          "description": "Reports multiple top-level classes in a single Java file.\n\nPutting multiple\ntop-level classes in one file may be confusing and degrade the usefulness of various\nsoftware tools."
+        },
+        {
+          "shortName": "LimitedScopeInnerClass",
+          "displayName": "Local class",
+          "enabled": false,
+          "description": "Reports local classes.\n\nA local class is a named nested class declared inside a code block.\nLocal classes are uncommon and may therefore be confusing.\nIn addition, some code standards discourage the use of local classes.\n\n**Example:**\n\n\n      class Example {\n        void test() {\n          class Local { // here\n          }\n          new Local();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        void test() {\n          new Local();\n        }\n\n        private static class Local { // here\n        }\n      }\n"
+        },
+        {
+          "shortName": "ClassMayBeInterface",
+          "displayName": "Abstract 'class' may be 'interface'",
+          "enabled": false,
+          "description": "Reports `abstract` classes that can be converted to interfaces.\n\nUsing interfaces instead of classes is preferable as Java doesn't support multiple class inheritance,\nwhile a class can implement multiple interfaces.\n\nA class may be converted to an interface if it has no superclasses (other\nthan Object), has only `public static final` fields,\n`public abstract` methods, and `public` inner classes.\n\n\nExample:\n\n\n    abstract class Example {\n        public static final int MY_CONST = 42;\n        public abstract void foo();\n    }\n\n    class Inheritor extends Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n    interface Example {\n        int MY_CONST = 42;\n        void foo();\n    }\n\n    class Inheritor implements Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nConfigure the inspection:\n\n\nUse the **Report classes containing non-abstract methods when using Java 8** option to report only the classes with `static` methods and non-abstract methods that can be converted to\n`default` methods (only applicable to language level of 8 or higher)."
+        },
+        {
+          "shortName": "InterfaceMayBeAnnotatedFunctional",
+          "displayName": "Interface may be annotated as '@FunctionalInterface'",
+          "enabled": false,
+          "description": "Reports interfaces that can be annotated with `@FunctionalInterface` (available since JDK 1.8).\n\nAnnotating an interface with `@FunctionalInterface` indicates that the interface\nis functional and no more `abstract` methods can be added to it.\n\n**Example:**\n\n\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nAfter the quick-fix is applied:\n\n\n      @FunctionalInterface\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nThis inspection only reports if the language level of the project or module is 8 or higher.\n\nThis inspection depends on the Java feature 'Lambda expressions' which is available since Java 8."
+        },
+        {
+          "shortName": "FinalStaticMethod",
+          "displayName": "'static' method declared 'final'",
+          "enabled": false,
+          "description": "Reports static methods that are marked as `final`.\n\nSuch code might indicate an error or an incorrect assumption about the effect of the `final` keyword.\nStatic methods are not subject to runtime polymorphism, so the only purpose of the `final` keyword used with static methods\nis to ensure the method will not be hidden in a subclass."
+        },
+        {
+          "shortName": "ConstantDeclaredInAbstractClass",
+          "displayName": "Constant declared in 'abstract' class",
+          "enabled": false,
+          "description": "Reports constants (`public static final` fields) declared in abstract classes.\n\nSome coding standards require declaring constants in interfaces instead."
+        },
+        {
+          "shortName": "NonFinalFieldInEnum",
+          "displayName": "Non-final field in 'enum'",
+          "enabled": false,
+          "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
+        },
+        {
+          "shortName": "NonFinalUtilityClass",
+          "displayName": "Utility class is not 'final'",
+          "enabled": false,
+          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "Singleton",
+          "displayName": "Singleton",
+          "enabled": false,
+          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
+        },
+        {
+          "shortName": "ParameterCanBeLocal",
+          "displayName": "Value passed as parameter never read",
+          "enabled": false,
+          "description": "Reports redundant method parameters that can be replaced with local variables.\n\nIf all local usages of a parameter are preceded by assignments to that parameter, the\nparameter can be removed and its usages replaced with local variables.\nIt makes no sense to have such a parameter, as values that are passed to it are overwritten.\nUsually, the problem appears as a result of refactoring.\n\nExample:\n\n\n      void test(int p) {\n        p = 1;\n        System.out.print(p);\n      }\n\nAfter the quick-fix is applied:\n\n\n      void test() {\n        int p = 1;\n        System.out.print(p);\n      }\n"
+        },
+        {
+          "shortName": "NoopMethodInAbstractClass",
+          "displayName": "No-op method in 'abstract' class",
+          "enabled": false,
+          "description": "Reports no-op (for \"no operation\") methods in `abstract` classes.\n\nIt is usually a better\ndesign to make such methods `abstract` themselves so that classes inheriting these\nmethods provide their implementations.\n\n**Example:**\n\n\n      abstract class Test {\n        protected void doTest() {\n        }\n      }\n"
+        },
+        {
+          "shortName": "UtilityClassCanBeEnum",
+          "displayName": "Utility class can be 'enum'",
+          "enabled": false,
+          "description": "Reports utility classes that can be converted to enums.\n\nSome coding style guidelines require implementing utility classes as enums\nto avoid code coverage issues in `private` constructors.\n\n**Example:**\n\n\n      class StringUtils {\n        public static final String EMPTY = \"\";\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum StringUtils {\n        ;\n        public static final String EMPTY = \"\";\n      }\n\nThis inspection depends on the Java feature 'Enums' which is available since Java 5."
+        },
+        {
+          "shortName": "FinalClass",
+          "displayName": "Class is closed to inheritance",
+          "enabled": false,
+          "description": "Reports classes that are declared `final`. Final classes that extend a `sealed` class or interface are not reported. Such classes can't be inherited and may indicate a lack of object-oriented design. Some coding standards discourage `final` classes.\n\n**Example:**\n\n\n      public final class Main {\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Main {\n      }\n"
+        },
+        {
+          "shortName": "UtilityClassWithoutPrivateConstructor",
+          "displayName": "Utility class without 'private' constructor",
+          "enabled": false,
+          "description": "Reports utility classes without `private` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating `private`\nconstructors in utility classes prevents them from being accidentally instantiated.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes marked with one of\nthese annotations.\n\n\nUse the **Ignore classes with only a main method** option to ignore classes with no methods other than the main one."
+        },
+        {
+          "shortName": "FieldCanBeLocal",
+          "displayName": "Field can be local",
+          "enabled": false,
+          "description": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables."
+        },
+        {
+          "shortName": "EmptyClass",
+          "displayName": "Empty class",
+          "enabled": false,
+          "description": "Reports empty classes and empty Java files.\n\nA class is empty if it doesn't contain any fields, methods, constructors, or initializers. Empty classes are sometimes left over\nafter significant changes or refactorings.\n\n**Example:**\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>() {\n\n           };\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>();\n        }\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if annotated by** option to specify special annotations. The inspection will ignore the classes marked with these annotations.\n*\n  Use the **Ignore class if it is a parametrization of a super type** option to ignore classes that parameterize a superclass. For example:\n\n      class MyList extends ArrayList<String> {}\n\n* Use the **Ignore subclasses of java.lang.Throwable** to ignore classes that extend `java.lang.Throwable`.\n* Use the **Comments count as content** option to ignore classes that contain comments."
+        },
+        {
+          "shortName": "FinalPrivateMethod",
+          "displayName": "'private' method declared 'final'",
+          "enabled": false,
+          "description": "Reports methods that are marked with both `final` and `private` keywords.\n\nSince `private` methods cannot be meaningfully overridden because of their visibility, declaring them\n`final` is redundant."
+        },
+        {
+          "shortName": "MethodReturnAlwaysConstant",
+          "displayName": "Method returns per-class constant",
+          "enabled": false,
+          "description": "Reports methods that only return a constant, which may differ for various inheritors.\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
+        },
+        {
+          "shortName": "PublicConstructor",
+          "displayName": "'public' constructor can be replaced with factory method",
+          "enabled": false,
+          "description": "Reports `public` constructors.\n\nSome coding standards discourage the use of `public` constructors and recommend\n`static` factory methods instead.\nThis way the implementation can be swapped out without affecting the call sites.\n\n**Example:**\n\n\n      class Test {\n        private String name;\n\n        public Test(String name) {\n            this.name = name;\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            new Test(\"str\").test();\n        }\n      }\n\nAfter quick-fix is applied:\n\n\n      class Test {\n        private String name;\n\n        private Test(String name) {\n            this.name = name;\n        }\n\n        public static Test getInstance(String name) {\n            return new Test(name);\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            getInstance(\"str\").test();\n        }\n      }\n"
+        },
+        {
+          "shortName": "ConstantDeclaredInInterface",
+          "displayName": "Constant declared in interface",
+          "enabled": false,
+          "description": "Reports constants (`public static final` fields) declared in interfaces.\n\nSome coding standards require declaring constants in abstract classes instead."
         }
       ]
     },
@@ -7259,6 +7259,47 @@
       ]
     },
     {
+      "name": "Common",
+      "inspections": [
+        {
+          "shortName": "ReactiveStreamsUnusedPublisher",
+          "displayName": "Unused publisher",
+          "enabled": true,
+          "description": "Reports unused `Publisher` instances.\n\n\nTo use an operator (a method of Mono/Flux/Flowable object that returns a Mono/Flux/Flowable) that produces a new `Publisher`\ninstance,\nyou must subscribe to the created `Publisher` via `subscribe()`.\n\n\nUsing a factory (for example, `Mono.just()`) without subscribing to the returned `Publisher`,\ncreates an object that is never used and is treated as unnecessary memory allocation.\n\n\nFor example, `Mono.just(1, 2, 3).map(i -> i + 3)` won't be executed unless you subscribe to this `Publisher`,\nor unless you produce a new `Publisher` by applying operators and subscribe to it.\n\n**Example:**\n\nUnused `Flux` instance:\n\n\n    Flux.just(1, 2, 3);\n\nA `Flux` instance used by consumer:\n\n\n    Flux.just(1, 2, 3).subscribe(System.out::println);\n\nCalls to methods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation are not reported.\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsThrowInOperator",
+          "displayName": "Throw statement in Reactive operator",
+          "enabled": true,
+          "description": "Reports `throw` expressions in the Reactor/RxJava operator code.\n\nThrowing exceptions from a Reactor/RxJava operator indicates a possible problem, because you can return a \"Reactive-like\" error:\n`Mono.error()` or `Flowable.error()` from `flatMap()`,\nor call `sink.error()` from the Reactor's `handle()` operator.\n\n\nAlso, Reactor factory methods allow returning checked exceptions without any errors, while throwing such exceptions without\nthe `Exceptions` class leads to a compilation error.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                throw new RuntimeException();\n            })\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                return Flux.error(new RuntimeException());\n            })\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsPublisherImplementation",
+          "displayName": "Class implements Publisher",
+          "enabled": true,
+          "description": "Reports classes that directly implement the `Publisher` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
+        },
+        {
+          "shortName": "ReactiveStreamsNullableInLambdaInTransform",
+          "displayName": "Return null or something nullable from a lambda in transformation method",
+          "enabled": true,
+          "description": "Reports transform operations that may return `null` inside a Reactive Stream chain.\n\n\nReactive Streams don't support nullable values, which causes such code to fail.\nThe quick-fix suggests replacing `map()` with `mapNotNull`, which omits exceptions.\n\n**Example:**\n\n    repository.findWithTailableCursorBy()\n        .map(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nAfter the quick-fix is applied:\n\n    repository.findWithTailableCursorBy()\n        .mapNotNull(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsTooLongSameOperatorsChain",
+          "displayName": "Too long same methods chain",
+          "enabled": true,
+          "description": "Reports long Reactive Streams transformation chains.\n\nEach operator method call, such as `map()` or `filter()`, creates some objects for those operators.\nCalling a long chain of operators on each subscription, for each stream element, may cause performance overhead.\nTo avoid it, combine a long chain of calls into one operator call wherever possible.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1)\n            .map(it -> it + 2)\n            .map(it -> it + 3)\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1 + 2 + 3)\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsSubscriberImplementation",
+          "displayName": "Class implements Subscriber",
+          "enabled": true,
+          "description": "Reports classes that directly implement the `Subscriber` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
+        }
+      ]
+    },
+    {
       "name": "Packaging issues",
       "inspections": [
         {
@@ -7302,47 +7343,6 @@
           "displayName": "Package with classes in multiple modules",
           "enabled": false,
           "description": "Reports non-empty packages that are present in several modules. When packages are contained in several modules, it is very easy to create a class with the same name in two modules. A module which depends on these modules will see a conflict if it tries to use such a class. The Java Platform Module System disallows packages contained in more than one module (also called *split packages* )\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
-        }
-      ]
-    },
-    {
-      "name": "Common",
-      "inspections": [
-        {
-          "shortName": "ReactiveStreamsUnusedPublisher",
-          "displayName": "Unused publisher",
-          "enabled": true,
-          "description": "Reports unused `Publisher` instances.\n\n\nTo use an operator (a method of Mono/Flux/Flowable object that returns a Mono/Flux/Flowable) that produces a new `Publisher`\ninstance,\nyou must subscribe to the created `Publisher` via `subscribe()`.\n\n\nUsing a factory (for example, `Mono.just()`) without subscribing to the returned `Publisher`,\ncreates an object that is never used and is treated as unnecessary memory allocation.\n\n\nFor example, `Mono.just(1, 2, 3).map(i -> i + 3)` won't be executed unless you subscribe to this `Publisher`,\nor unless you produce a new `Publisher` by applying operators and subscribe to it.\n\n**Example:**\n\nUnused `Flux` instance:\n\n\n    Flux.just(1, 2, 3);\n\nA `Flux` instance used by consumer:\n\n\n    Flux.just(1, 2, 3).subscribe(System.out::println);\n\nCalls to methods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation are not reported.\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsThrowInOperator",
-          "displayName": "Throw statement in Reactive operator",
-          "enabled": true,
-          "description": "Reports `throw` expressions in the Reactor/RxJava operator code.\n\nThrowing exceptions from a Reactor/RxJava operator indicates a possible problem, because you can return a \"Reactive-like\" error:\n`Mono.error()` or `Flowable.error()` from `flatMap()`,\nor call `sink.error()` from the Reactor's `handle()` operator.\n\n\nAlso, Reactor factory methods allow returning checked exceptions without any errors, while throwing such exceptions without\nthe `Exceptions` class leads to a compilation error.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                throw new RuntimeException();\n            })\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                return Flux.error(new RuntimeException());\n            })\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsPublisherImplementation",
-          "displayName": "Class implements Publisher",
-          "enabled": true,
-          "description": "Reports classes that directly implement the `Publisher` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
-        },
-        {
-          "shortName": "ReactiveStreamsNullableInLambdaInTransform",
-          "displayName": "Return null or something nullable from a lambda in transformation method",
-          "enabled": true,
-          "description": "Reports transform operations that may return `null` inside a Reactive Stream chain.\n\n\nReactive Streams don't support nullable values, which causes such code to fail.\nThe quick-fix suggests replacing `map()` with `mapNotNull`, which omits exceptions.\n\n**Example:**\n\n    repository.findWithTailableCursorBy()\n        .map(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nAfter the quick-fix is applied:\n\n    repository.findWithTailableCursorBy()\n        .mapNotNull(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsTooLongSameOperatorsChain",
-          "displayName": "Too long same methods chain",
-          "enabled": true,
-          "description": "Reports long Reactive Streams transformation chains.\n\nEach operator method call, such as `map()` or `filter()`, creates some objects for those operators.\nCalling a long chain of operators on each subscription, for each stream element, may cause performance overhead.\nTo avoid it, combine a long chain of calls into one operator call wherever possible.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1)\n            .map(it -> it + 2)\n            .map(it -> it + 3)\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1 + 2 + 3)\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsSubscriberImplementation",
-          "displayName": "Class implements Subscriber",
-          "enabled": true,
-          "description": "Reports classes that directly implement the `Subscriber` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
         }
       ]
     },
@@ -11833,16 +11833,16 @@
           "description": "Reports methods whose number of statements exceeds the specified maximum.\n\nMethods with too many statements may be confusing and are a good sign that refactoring is necessary.\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Maximum statements per method** field to specify the maximum allowed number of statements in a method."
         },
         {
-          "shortName": "OverlyLongLambda",
-          "displayName": "Overly long lambda expression",
-          "enabled": false,
-          "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
-        },
-        {
           "shortName": "ParametersPerMethod",
           "displayName": "Method with too many parameters",
           "enabled": false,
           "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
+        },
+        {
+          "shortName": "OverlyLongLambda",
+          "displayName": "Overly long lambda expression",
+          "enabled": false,
+          "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
         },
         {
           "shortName": "MethodCoupling",
@@ -13042,6 +13042,47 @@
       ]
     },
     {
+      "name": "Spring Boot",
+      "inspections": [
+        {
+          "shortName": "SpringBootApplicationYaml",
+          "displayName": "Invalid YAML configuration",
+          "enabled": true,
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        },
+        {
+          "shortName": "SpringBootApplicationSetup",
+          "displayName": "Invalid Spring Boot application setup",
+          "enabled": true,
+          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "SpringBootAdditionalConfig",
+          "displayName": "Invalid additional-spring-configuration-metadata.json",
+          "enabled": true,
+          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
+        },
+        {
+          "shortName": "SpringBootReactorHooksOnDebug",
+          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
+          "enabled": true,
+          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
+        },
+        {
+          "shortName": "ConfigurationProperties",
+          "displayName": "Invalid @ConfigurationProperties",
+          "enabled": true,
+          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
+        },
+        {
+          "shortName": "SpringBootApplicationProperties",
+          "displayName": "Invalid properties configuration",
+          "enabled": true,
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        }
+      ]
+    },
+    {
       "name": "Nullability problems",
       "inspections": [
         {
@@ -13108,47 +13149,6 @@
           "displayName": "Update package.json dependencies to latest versions",
           "enabled": false,
           "description": "Suggests to upgrade your package.json dependencies to the latest versions, ignoring specified versions."
-        }
-      ]
-    },
-    {
-      "name": "Spring Boot",
-      "inspections": [
-        {
-          "shortName": "SpringBootApplicationYaml",
-          "displayName": "Invalid YAML configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
-        },
-        {
-          "shortName": "SpringBootApplicationSetup",
-          "displayName": "Invalid Spring Boot application setup",
-          "enabled": true,
-          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
-        },
-        {
-          "shortName": "SpringBootAdditionalConfig",
-          "displayName": "Invalid additional-spring-configuration-metadata.json",
-          "enabled": true,
-          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
-        },
-        {
-          "shortName": "SpringBootReactorHooksOnDebug",
-          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
-          "enabled": true,
-          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
-        },
-        {
-          "shortName": "ConfigurationProperties",
-          "displayName": "Invalid @ConfigurationProperties",
-          "enabled": true,
-          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
-        },
-        {
-          "shortName": "SpringBootApplicationProperties",
-          "displayName": "Invalid properties configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
         }
       ]
     },
