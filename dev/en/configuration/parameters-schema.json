@@ -526,6 +526,16 @@
             "title": "Disable safe mode",
             "$id": "#/definitions/DisableSafeMode"
         },
+        "DoubleNegatives": {
+            "description": "Double negatives",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Double negatives",
+            "$id": "#/definitions/DoubleNegatives"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": true,
