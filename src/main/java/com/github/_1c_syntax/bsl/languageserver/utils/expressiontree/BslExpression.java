@@ -24,17 +24,21 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public abstract class BslExpression {
   private final ExpressionNodeType nodeType;
   private ParseTree representingAst;
+
+  @ToString.Exclude
+  @Setter(AccessLevel.PACKAGE)
+  private BslExpression parent;
 
   /**
    * Синтаксический-помощник для более удобных downcast-ов

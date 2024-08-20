@@ -30,7 +30,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 public class TerminalSymbolNode extends BslExpression {
   private TerminalSymbolNode(ExpressionNodeType type, ParseTree representingAst) {
-    super(type, representingAst);
+    super(type, representingAst, null);
   }
 
   /**

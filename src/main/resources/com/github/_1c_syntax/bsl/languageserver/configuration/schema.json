@@ -149,6 +149,9 @@
                 "DisableSafeMode": {
                     "$ref": "parameters-schema.json#/definitions/DisableSafeMode"
                 },
+                "DoubleNegatives": {
+                    "$ref": "parameters-schema.json#/definitions/DoubleNegatives"
+                },
                 "DuplicateRegion": {
                     "$ref": "parameters-schema.json#/definitions/DuplicateRegion"
                 },
