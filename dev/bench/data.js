@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1723662657307,
+  "lastUpdate": 1724137230579,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26567,6 +26567,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5513303395093192",
             "extra": "mean: 80.24708112080891 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7a7ce89648070a8081dc1b0b6949f5ef5007c697",
+          "message": "Merge pull request #3308 from EvilBeaver/feature/double-negations-3271\n\nРеализация #3271: Диагностика двойных отрицаний",
+          "timestamp": "2024-08-20T09:49:16+03:00",
+          "tree_id": "47cf623814098bd69e2928f3d378c182ecf89962",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7a7ce89648070a8081dc1b0b6949f5ef5007c697"
+        },
+        "date": 1724137226784,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.47198112805684,
+            "unit": "sec",
+            "range": "stddev: 1.3323841730508794",
+            "extra": "mean: 80.47198112805684 sec\nrounds: 3"
           }
         ]
       }
