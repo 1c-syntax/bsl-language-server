@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.DefaultNodeEqualityComparer;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
@@ -72,7 +72,7 @@ class ExpressionTreeComparersTest {
 
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
-    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
+    return ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
   }
 
 }
