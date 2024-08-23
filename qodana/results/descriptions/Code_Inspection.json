@@ -260,16 +260,16 @@
           "description": "Reports calls to `assertTrue()` and `assertFalse()` that can be replaced with assert equality functions.\n\n\n`assertEquals()`, `assertSame()`, and their negating counterparts (-Not-) provide more informative messages on\nfailure.\n\n**Example:**\n\n      assertTrue(a == b)\n\nAfter the quick-fix is applied:\n\n      assertEquals(a, b)\n"
         },
         {
-          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
-          "displayName": "Not-null assertion can be replaced with 'return'",
-          "enabled": false,
-          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
-        },
-        {
           "shortName": "ReplaceStringFormatWithLiteral",
           "displayName": "'String.format' call can be replaced with string templates",
           "enabled": false,
           "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
+        },
+        {
+          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
+          "displayName": "Not-null assertion can be replaced with 'return'",
+          "enabled": false,
+          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
         },
         {
           "shortName": "ReplaceSubstringWithSubstringBefore",
@@ -1226,6 +1226,262 @@
       ]
     },
     {
+      "name": "Spring Core",
+      "inspections": [
+        {
+          "shortName": "SpringElStaticFieldInjectionInspection",
+          "displayName": "Incorrect injecting of SpEL in a static field",
+          "enabled": true,
+          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
+        },
+        {
+          "shortName": "SpringElInspection",
+          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
+          "enabled": true,
+          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
+        },
+        {
+          "shortName": "SpringHandlersSchemasHighlighting",
+          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
+          "enabled": true,
+          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
+        }
+      ]
+    },
+    {
+      "name": "XML",
+      "inspections": [
+        {
+          "shortName": "SpringBeanConstructorArgInspection",
+          "displayName": "Incorrect constructor injection in XML Spring bean",
+          "enabled": true,
+          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanInstantiationInspection",
+          "displayName": "Invalid non-abstract bean instantiation",
+          "enabled": true,
+          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
+        },
+        {
+          "shortName": "RequiredBeanTypeInspection",
+          "displayName": "Incorrect injected bean type",
+          "enabled": true,
+          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
+        },
+        {
+          "shortName": "ContextComponentScanInconsistencyInspection",
+          "displayName": "Invalid filter definition in XML-based component scans",
+          "enabled": true,
+          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
+        },
+        {
+          "shortName": "UtilSchemaInspection",
+          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
+          "enabled": true,
+          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringScopesInspection",
+          "displayName": "Unknown <bean> scope",
+          "enabled": true,
+          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPublicFactoryMethodInspection",
+          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringFactoryMethodInspection",
+          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringXmlModelInspection",
+          "displayName": "Incorrect Spring Core XML-based application context",
+          "enabled": true,
+          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
+        },
+        {
+          "shortName": "SpringBeanAttributesInspection",
+          "displayName": "Conflicting Spring bean attribute",
+          "enabled": true,
+          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInactiveProfileHighlightingInspection",
+          "displayName": "Inactive profile highlighting",
+          "enabled": true,
+          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueStyleInspection",
+          "displayName": "Injection value in XML application context violates conventions",
+          "enabled": true,
+          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "InjectionValueTypeInspection",
+          "displayName": "Unassignable injection point type in XML application context",
+          "enabled": true,
+          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueConsistencyInspection",
+          "displayName": "Inconsistent injection value in XML application context",
+          "enabled": true,
+          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "DuplicatedBeanNamesInspection",
+          "displayName": "Duplicated bean names in XML-based application context",
+          "enabled": true,
+          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringIncorrectResourceTypeInspection",
+          "displayName": "Incorrect resource type",
+          "enabled": true,
+          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringRequiredPropertyInspection",
+          "displayName": "Missing @Required property injections in the spring xml bean declaration",
+          "enabled": true,
+          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
+        },
+        {
+          "shortName": "SpringXmlAutowiringInspection",
+          "displayName": "Incorrect XML Spring bean autowiring",
+          "enabled": true,
+          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanNameConventionInspection",
+          "displayName": "Spring bean name violates conventions",
+          "enabled": true,
+          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
+        },
+        {
+          "shortName": "UnparsedCustomBeanInspection",
+          "displayName": "Unparsed custom Spring beans",
+          "enabled": true,
+          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
+        },
+        {
+          "shortName": "SpringXmlAutowireExplicitlyInspection",
+          "displayName": "Unnecessary autowired dependency in XML application context",
+          "enabled": true,
+          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPlaceholdersInspection",
+          "displayName": "Unresolved placeholders configured in the Spring XML application context",
+          "enabled": true,
+          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanLookupMethodInspection",
+          "displayName": "Incorrectly configured XML bean lookup-method",
+          "enabled": true,
+          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "AbstractBeanReferencesInspection",
+          "displayName": "Incorrect reference to abstract bean",
+          "enabled": true,
+          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
+        },
+        {
+          "shortName": "DeprecatedClassUsageInspection",
+          "displayName": "Deprecated API usage in XML",
+          "enabled": false,
+          "description": "Reports usages of deprecated classes and methods in XML files."
+        },
+        {
+          "shortName": "CheckXmlFileWithXercesValidator",
+          "displayName": "Failed external validation",
+          "enabled": false,
+          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
+        },
+        {
+          "shortName": "XmlUnusedNamespaceDeclaration",
+          "displayName": "Unused schema declaration",
+          "enabled": false,
+          "description": "Reports an unused namespace declaration or location hint in XML."
+        },
+        {
+          "shortName": "XmlDefaultAttributeValue",
+          "displayName": "Redundant attribute with default value",
+          "enabled": false,
+          "description": "Reports a redundant assignment of the default value to an XML attribute."
+        },
+        {
+          "shortName": "CheckDtdRefs",
+          "displayName": "Unresolved DTD reference",
+          "enabled": false,
+          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
+        },
+        {
+          "shortName": "CheckTagEmptyBody",
+          "displayName": "Empty element content",
+          "enabled": false,
+          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
+        },
+        {
+          "shortName": "XmlInvalidId",
+          "displayName": "Unresolved 'id' reference",
+          "enabled": false,
+          "description": "Reports an unresolved `id` reference in XML."
+        },
+        {
+          "shortName": "XmlDeprecatedElement",
+          "displayName": "Deprecated symbol",
+          "enabled": false,
+          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
+        },
+        {
+          "shortName": "XmlUnresolvedReference",
+          "displayName": "Unresolved references",
+          "enabled": false,
+          "description": "Reports an unresolved references in XML."
+        },
+        {
+          "shortName": "XmlWrongRootElement",
+          "displayName": "Wrong root element",
+          "enabled": false,
+          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
+        },
+        {
+          "shortName": "XmlHighlighting",
+          "displayName": "XML highlighting",
+          "enabled": false,
+          "description": "Reports XML validation problems in the results of a batch code inspection."
+        },
+        {
+          "shortName": "XmlDuplicatedId",
+          "displayName": "Duplicate 'id' attribute",
+          "enabled": false,
+          "description": "Reports a duplicate `id` attribute in XML."
+        },
+        {
+          "shortName": "XmlUnboundNsPrefix",
+          "displayName": "Unbound namespace prefix",
+          "enabled": false,
+          "description": "Reports an unbound namespace prefix in XML."
+        },
+        {
+          "shortName": "XmlPathReference",
+          "displayName": "Unresolved file reference",
+          "enabled": false,
+          "description": "Reports an unresolved file reference in XML."
+        }
+      ]
+    },
+    {
       "name": "Performance",
       "inspections": [
         {
@@ -1503,262 +1759,6 @@
           "displayName": "'StringBuilder.toString()' in concatenation",
           "enabled": false,
           "description": "Reports `StringBuffer.toString()` or `StringBuilder.toString()` calls in string concatenations. Such calls are unnecessary when concatenating and can be removed, saving a method call and an object allocation, which may improve performance."
-        }
-      ]
-    },
-    {
-      "name": "Spring Core",
-      "inspections": [
-        {
-          "shortName": "SpringElStaticFieldInjectionInspection",
-          "displayName": "Incorrect injecting of SpEL in a static field",
-          "enabled": true,
-          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
-        },
-        {
-          "shortName": "SpringElInspection",
-          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
-          "enabled": true,
-          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
-        },
-        {
-          "shortName": "SpringHandlersSchemasHighlighting",
-          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
-          "enabled": true,
-          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
-        }
-      ]
-    },
-    {
-      "name": "XML",
-      "inspections": [
-        {
-          "shortName": "SpringBeanConstructorArgInspection",
-          "displayName": "Incorrect constructor injection in XML Spring bean",
-          "enabled": true,
-          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanInstantiationInspection",
-          "displayName": "Invalid non-abstract bean instantiation",
-          "enabled": true,
-          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
-        },
-        {
-          "shortName": "RequiredBeanTypeInspection",
-          "displayName": "Incorrect injected bean type",
-          "enabled": true,
-          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
-        },
-        {
-          "shortName": "ContextComponentScanInconsistencyInspection",
-          "displayName": "Invalid filter definition in XML-based component scans",
-          "enabled": true,
-          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
-        },
-        {
-          "shortName": "UtilSchemaInspection",
-          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
-          "enabled": true,
-          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringScopesInspection",
-          "displayName": "Unknown <bean> scope",
-          "enabled": true,
-          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPublicFactoryMethodInspection",
-          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringFactoryMethodInspection",
-          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringXmlModelInspection",
-          "displayName": "Incorrect Spring Core XML-based application context",
-          "enabled": true,
-          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
-        },
-        {
-          "shortName": "SpringBeanAttributesInspection",
-          "displayName": "Conflicting Spring bean attribute",
-          "enabled": true,
-          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInactiveProfileHighlightingInspection",
-          "displayName": "Inactive profile highlighting",
-          "enabled": true,
-          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueStyleInspection",
-          "displayName": "Injection value in XML application context violates conventions",
-          "enabled": true,
-          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "InjectionValueTypeInspection",
-          "displayName": "Unassignable injection point type in XML application context",
-          "enabled": true,
-          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueConsistencyInspection",
-          "displayName": "Inconsistent injection value in XML application context",
-          "enabled": true,
-          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "DuplicatedBeanNamesInspection",
-          "displayName": "Duplicated bean names in XML-based application context",
-          "enabled": true,
-          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringIncorrectResourceTypeInspection",
-          "displayName": "Incorrect resource type",
-          "enabled": true,
-          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringRequiredPropertyInspection",
-          "displayName": "Missing @Required property injections in the spring xml bean declaration",
-          "enabled": true,
-          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
-        },
-        {
-          "shortName": "SpringXmlAutowiringInspection",
-          "displayName": "Incorrect XML Spring bean autowiring",
-          "enabled": true,
-          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanNameConventionInspection",
-          "displayName": "Spring bean name violates conventions",
-          "enabled": true,
-          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
-        },
-        {
-          "shortName": "UnparsedCustomBeanInspection",
-          "displayName": "Unparsed custom Spring beans",
-          "enabled": true,
-          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
-        },
-        {
-          "shortName": "SpringXmlAutowireExplicitlyInspection",
-          "displayName": "Unnecessary autowired dependency in XML application context",
-          "enabled": true,
-          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPlaceholdersInspection",
-          "displayName": "Unresolved placeholders configured in the Spring XML application context",
-          "enabled": true,
-          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanLookupMethodInspection",
-          "displayName": "Incorrectly configured XML bean lookup-method",
-          "enabled": true,
-          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "AbstractBeanReferencesInspection",
-          "displayName": "Incorrect reference to abstract bean",
-          "enabled": true,
-          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
-        },
-        {
-          "shortName": "DeprecatedClassUsageInspection",
-          "displayName": "Deprecated API usage in XML",
-          "enabled": false,
-          "description": "Reports usages of deprecated classes and methods in XML files."
-        },
-        {
-          "shortName": "CheckXmlFileWithXercesValidator",
-          "displayName": "Failed external validation",
-          "enabled": false,
-          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
-        },
-        {
-          "shortName": "XmlUnusedNamespaceDeclaration",
-          "displayName": "Unused schema declaration",
-          "enabled": false,
-          "description": "Reports an unused namespace declaration or location hint in XML."
-        },
-        {
-          "shortName": "XmlDefaultAttributeValue",
-          "displayName": "Redundant attribute with default value",
-          "enabled": false,
-          "description": "Reports a redundant assignment of the default value to an XML attribute."
-        },
-        {
-          "shortName": "CheckDtdRefs",
-          "displayName": "Unresolved DTD reference",
-          "enabled": false,
-          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
-        },
-        {
-          "shortName": "CheckTagEmptyBody",
-          "displayName": "Empty element content",
-          "enabled": false,
-          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
-        },
-        {
-          "shortName": "XmlInvalidId",
-          "displayName": "Unresolved 'id' reference",
-          "enabled": false,
-          "description": "Reports an unresolved `id` reference in XML."
-        },
-        {
-          "shortName": "XmlDeprecatedElement",
-          "displayName": "Deprecated symbol",
-          "enabled": false,
-          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
-        },
-        {
-          "shortName": "XmlUnresolvedReference",
-          "displayName": "Unresolved references",
-          "enabled": false,
-          "description": "Reports an unresolved references in XML."
-        },
-        {
-          "shortName": "XmlWrongRootElement",
-          "displayName": "Wrong root element",
-          "enabled": false,
-          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
-        },
-        {
-          "shortName": "XmlHighlighting",
-          "displayName": "XML highlighting",
-          "enabled": false,
-          "description": "Reports XML validation problems in the results of a batch code inspection."
-        },
-        {
-          "shortName": "XmlDuplicatedId",
-          "displayName": "Duplicate 'id' attribute",
-          "enabled": false,
-          "description": "Reports a duplicate `id` attribute in XML."
-        },
-        {
-          "shortName": "XmlUnboundNsPrefix",
-          "displayName": "Unbound namespace prefix",
-          "enabled": false,
-          "description": "Reports an unbound namespace prefix in XML."
-        },
-        {
-          "shortName": "XmlPathReference",
-          "displayName": "Unresolved file reference",
-          "enabled": false,
-          "description": "Reports an unresolved file reference in XML."
         }
       ]
     },
@@ -3303,16 +3303,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ClassGetClass",
-          "displayName": "Suspicious 'Class.getClass()' call",
-          "enabled": true,
-          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
-        },
-        {
           "shortName": "ResultOfObjectAllocationIgnored",
           "displayName": "Result of object allocation ignored",
           "enabled": false,
           "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
+        },
+        {
+          "shortName": "ClassGetClass",
+          "displayName": "Suspicious 'Class.getClass()' call",
+          "enabled": true,
+          "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
         },
         {
           "shortName": "MismatchedStringBuilderQueryUpdate",
@@ -4473,6 +4473,197 @@
       ]
     },
     {
+      "name": "Class structure",
+      "inspections": [
+        {
+          "shortName": "ClassWithOnlyPrivateConstructors",
+          "displayName": "Class with only 'private' constructors should be declared 'final'",
+          "enabled": false,
+          "description": "Reports classes with only `private` constructors.\n\nA class that only has `private` constructors cannot be extended outside a file and should be declared as `final`."
+        },
+        {
+          "shortName": "FinalMethod",
+          "displayName": "Method can't be overridden",
+          "enabled": false,
+          "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
+        },
+        {
+          "shortName": "StaticNonFinalField",
+          "displayName": "'static', non-'final' field",
+          "enabled": false,
+          "description": "Reports non-`final` `static` fields.\n\nA quick-fix is available to add the `final` modifier to a non-`final` `static` field.\n\nThis inspection doesn't check fields' mutability. For example, adding the `final` modifier to a field that has a value\nbeing set somewhere will cause a compilation error.\n\n\nUse the **Only report 'public' fields** option so that the inspection reported only `public` fields."
+        },
+        {
+          "shortName": "ClassInitializer",
+          "displayName": "Non-'static' initializer",
+          "enabled": false,
+          "description": "Reports non-`static` initializers in classes.\n\nSome coding standards prohibit instance initializers and recommend using constructors or field initializers for initialization.\nAlso, deleting the `static` keyword may accidentally create non-`static` initializers and result in obscure bugs.\n\nThis inspection doesn't report instance initializers in anonymous classes.\n\n\nUse the **Only warn when the class has one or more constructors** option to ignore instance initializers in classes that don't have any constructors."
+        },
+        {
+          "shortName": "UtilityClassWithPublicConstructor",
+          "displayName": "Utility class with 'public' constructor",
+          "enabled": false,
+          "description": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.\n\n**Example:**\n\n\n      public final class UtilityClass {\n        public UtilityClass(){\n        }\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        private UtilityClass(){\n        }\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "ListenerMayUseAdapter",
+          "displayName": "Class may extend adapter instead of implementing listener",
+          "enabled": false,
+          "description": "Reports classes implementing listeners instead of extending corresponding adapters.\n\nA quick-fix is available to\nremove any redundant empty methods left after replacing a listener implementation with an adapter extension.\n\n\nUse the **Only warn when empty implementing methods are found** option to configure the inspection to warn even if no empty methods are found."
+        },
+        {
+          "shortName": "MarkerInterface",
+          "displayName": "Marker interface",
+          "enabled": false,
+          "description": "Reports marker interfaces without any methods or fields.\n\nSuch interfaces may be confusing and typically indicate a design failure.\n\nThe inspection ignores interfaces that extend two or more interfaces and interfaces\nthat specify the generic type of their superinterface."
+        },
+        {
+          "shortName": "InnerClassOnInterface",
+          "displayName": "Inner class of interface",
+          "enabled": false,
+          "description": "Reports inner classes in `interface` classes.\n\nSome coding standards\ndiscourage the use of such classes. The inspection doesn't report enum classes and annotation interfaces.\n\n\nUse the **Ignore inner interfaces of interfaces** option to ignore inner interfaces. For example:\n\n\n      interface I {\n        interface Inner {\n        }\n      }\n"
+        },
+        {
+          "shortName": "UtilityClass",
+          "displayName": "Utility class",
+          "enabled": false,
+          "description": "Reports utility classes.\n\nUtility classes have all fields and methods declared as `static` and their\npresence may indicate a lack of object-oriented design.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes annotated with one of\nthese annotations."
+        },
+        {
+          "shortName": "ClassNameDiffersFromFileName",
+          "displayName": "Class name differs from file name",
+          "enabled": false,
+          "description": "Reports top-level class names that don't match the name of a file containing them.\n\nWhile the Java specification allows for naming non-`public` classes this way,\nfiles with unmatched names may be confusing and decrease usefulness of various software tools."
+        },
+        {
+          "shortName": "AnonymousInnerClass",
+          "displayName": "Anonymous class can be replaced with inner class",
+          "enabled": false,
+          "description": "Reports anonymous classes.\n\nOccasionally replacing anonymous classes with inner classes can lead to more readable and maintainable code.\nSome code standards discourage anonymous classes.\n\n**Example:**\n\n\n      class Example {\n        public static void main(String[] args) {\n          new Thread() {\n            public void run() {\n              work()\n            }\n\n            private void work() {}\n          }.start();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        public static void main(String[] args) {\n          new MyThread().start();\n        }\n\n        private static class MyThread extends Thread {\n          public void run() {\n            work();\n          }\n\n          private void work() {}\n        }\n      }\n"
+        },
+        {
+          "shortName": "MultipleTopLevelClassesInFile",
+          "displayName": "Multiple top level classes in single file",
+          "enabled": false,
+          "description": "Reports multiple top-level classes in a single Java file.\n\nPutting multiple\ntop-level classes in one file may be confusing and degrade the usefulness of various\nsoftware tools."
+        },
+        {
+          "shortName": "LimitedScopeInnerClass",
+          "displayName": "Local class",
+          "enabled": false,
+          "description": "Reports local classes.\n\nA local class is a named nested class declared inside a code block.\nLocal classes are uncommon and may therefore be confusing.\nIn addition, some code standards discourage the use of local classes.\n\n**Example:**\n\n\n      class Example {\n        void test() {\n          class Local { // here\n          }\n          new Local();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        void test() {\n          new Local();\n        }\n\n        private static class Local { // here\n        }\n      }\n"
+        },
+        {
+          "shortName": "ClassMayBeInterface",
+          "displayName": "Abstract 'class' may be 'interface'",
+          "enabled": false,
+          "description": "Reports `abstract` classes that can be converted to interfaces.\n\nUsing interfaces instead of classes is preferable as Java doesn't support multiple class inheritance,\nwhile a class can implement multiple interfaces.\n\nA class may be converted to an interface if it has no superclasses (other\nthan Object), has only `public static final` fields,\n`public abstract` methods, and `public` inner classes.\n\n\nExample:\n\n\n    abstract class Example {\n        public static final int MY_CONST = 42;\n        public abstract void foo();\n    }\n\n    class Inheritor extends Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n    interface Example {\n        int MY_CONST = 42;\n        void foo();\n    }\n\n    class Inheritor implements Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nConfigure the inspection:\n\n\nUse the **Report classes containing non-abstract methods when using Java 8** option to report only the classes with `static` methods and non-abstract methods that can be converted to\n`default` methods (only applicable to language level of 8 or higher)."
+        },
+        {
+          "shortName": "InterfaceMayBeAnnotatedFunctional",
+          "displayName": "Interface may be annotated as '@FunctionalInterface'",
+          "enabled": false,
+          "description": "Reports interfaces that can be annotated with `@FunctionalInterface` (available since JDK 1.8).\n\nAnnotating an interface with `@FunctionalInterface` indicates that the interface\nis functional and no more `abstract` methods can be added to it.\n\n**Example:**\n\n\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nAfter the quick-fix is applied:\n\n\n      @FunctionalInterface\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nThis inspection only reports if the language level of the project or module is 8 or higher.\n\nThis inspection depends on the Java feature 'Lambda expressions' which is available since Java 8."
+        },
+        {
+          "shortName": "FinalStaticMethod",
+          "displayName": "'static' method declared 'final'",
+          "enabled": false,
+          "description": "Reports static methods that are marked as `final`.\n\nSuch code might indicate an error or an incorrect assumption about the effect of the `final` keyword.\nStatic methods are not subject to runtime polymorphism, so the only purpose of the `final` keyword used with static methods\nis to ensure the method will not be hidden in a subclass."
+        },
+        {
+          "shortName": "ConstantDeclaredInAbstractClass",
+          "displayName": "Constant declared in 'abstract' class",
+          "enabled": false,
+          "description": "Reports constants (`public static final` fields) declared in abstract classes.\n\nSome coding standards require declaring constants in interfaces instead."
+        },
+        {
+          "shortName": "NonFinalFieldInEnum",
+          "displayName": "Non-final field in 'enum'",
+          "enabled": false,
+          "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
+        },
+        {
+          "shortName": "Singleton",
+          "displayName": "Singleton",
+          "enabled": false,
+          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
+        },
+        {
+          "shortName": "NonFinalUtilityClass",
+          "displayName": "Utility class is not 'final'",
+          "enabled": false,
+          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "ParameterCanBeLocal",
+          "displayName": "Value passed as parameter never read",
+          "enabled": false,
+          "description": "Reports redundant method parameters that can be replaced with local variables.\n\nIf all local usages of a parameter are preceded by assignments to that parameter, the\nparameter can be removed and its usages replaced with local variables.\nIt makes no sense to have such a parameter, as values that are passed to it are overwritten.\nUsually, the problem appears as a result of refactoring.\n\nExample:\n\n\n      void test(int p) {\n        p = 1;\n        System.out.print(p);\n      }\n\nAfter the quick-fix is applied:\n\n\n      void test() {\n        int p = 1;\n        System.out.print(p);\n      }\n"
+        },
+        {
+          "shortName": "NoopMethodInAbstractClass",
+          "displayName": "No-op method in 'abstract' class",
+          "enabled": false,
+          "description": "Reports no-op (for \"no operation\") methods in `abstract` classes.\n\nIt is usually a better\ndesign to make such methods `abstract` themselves so that classes inheriting these\nmethods provide their implementations.\n\n**Example:**\n\n\n      abstract class Test {\n        protected void doTest() {\n        }\n      }\n"
+        },
+        {
+          "shortName": "UtilityClassCanBeEnum",
+          "displayName": "Utility class can be 'enum'",
+          "enabled": false,
+          "description": "Reports utility classes that can be converted to enums.\n\nSome coding style guidelines require implementing utility classes as enums\nto avoid code coverage issues in `private` constructors.\n\n**Example:**\n\n\n      class StringUtils {\n        public static final String EMPTY = \"\";\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum StringUtils {\n        ;\n        public static final String EMPTY = \"\";\n      }\n\nThis inspection depends on the Java feature 'Enums' which is available since Java 5."
+        },
+        {
+          "shortName": "FinalClass",
+          "displayName": "Class is closed to inheritance",
+          "enabled": false,
+          "description": "Reports classes that are declared `final`. Final classes that extend a `sealed` class or interface are not reported. Such classes can't be inherited and may indicate a lack of object-oriented design. Some coding standards discourage `final` classes.\n\n**Example:**\n\n\n      public final class Main {\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Main {\n      }\n"
+        },
+        {
+          "shortName": "UtilityClassWithoutPrivateConstructor",
+          "displayName": "Utility class without 'private' constructor",
+          "enabled": false,
+          "description": "Reports utility classes without `private` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating `private`\nconstructors in utility classes prevents them from being accidentally instantiated.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes marked with one of\nthese annotations.\n\n\nUse the **Ignore classes with only a main method** option to ignore classes with no methods other than the main one."
+        },
+        {
+          "shortName": "FieldCanBeLocal",
+          "displayName": "Field can be local",
+          "enabled": false,
+          "description": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables."
+        },
+        {
+          "shortName": "EmptyClass",
+          "displayName": "Empty class",
+          "enabled": false,
+          "description": "Reports empty classes and empty Java files.\n\nA class is empty if it doesn't contain any fields, methods, constructors, or initializers. Empty classes are sometimes left over\nafter significant changes or refactorings.\n\n**Example:**\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>() {\n\n           };\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>();\n        }\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if annotated by** option to specify special annotations. The inspection will ignore the classes marked with these annotations.\n*\n  Use the **Ignore class if it is a parametrization of a super type** option to ignore classes that parameterize a superclass. For example:\n\n      class MyList extends ArrayList<String> {}\n\n* Use the **Ignore subclasses of java.lang.Throwable** to ignore classes that extend `java.lang.Throwable`.\n* Use the **Comments count as content** option to ignore classes that contain comments."
+        },
+        {
+          "shortName": "FinalPrivateMethod",
+          "displayName": "'private' method declared 'final'",
+          "enabled": false,
+          "description": "Reports methods that are marked with both `final` and `private` keywords.\n\nSince `private` methods cannot be meaningfully overridden because of their visibility, declaring them\n`final` is redundant."
+        },
+        {
+          "shortName": "MethodReturnAlwaysConstant",
+          "displayName": "Method returns per-class constant",
+          "enabled": false,
+          "description": "Reports methods that only return a constant, which may differ for various inheritors.\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
+        },
+        {
+          "shortName": "PublicConstructor",
+          "displayName": "'public' constructor can be replaced with factory method",
+          "enabled": false,
+          "description": "Reports `public` constructors.\n\nSome coding standards discourage the use of `public` constructors and recommend\n`static` factory methods instead.\nThis way the implementation can be swapped out without affecting the call sites.\n\n**Example:**\n\n\n      class Test {\n        private String name;\n\n        public Test(String name) {\n            this.name = name;\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            new Test(\"str\").test();\n        }\n      }\n\nAfter quick-fix is applied:\n\n\n      class Test {\n        private String name;\n\n        private Test(String name) {\n            this.name = name;\n        }\n\n        public static Test getInstance(String name) {\n            return new Test(name);\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            getInstance(\"str\").test();\n        }\n      }\n"
+        },
+        {
+          "shortName": "ConstantDeclaredInInterface",
+          "displayName": "Constant declared in interface",
+          "enabled": false,
+          "description": "Reports constants (`public static final` fields) declared in interfaces.\n\nSome coding standards require declaring constants in abstract classes instead."
+        }
+      ]
+    },
+    {
       "name": "Serialization issues",
       "inspections": [
         {
@@ -4616,197 +4807,6 @@
       ]
     },
     {
-      "name": "Class structure",
-      "inspections": [
-        {
-          "shortName": "ClassWithOnlyPrivateConstructors",
-          "displayName": "Class with only 'private' constructors should be declared 'final'",
-          "enabled": false,
-          "description": "Reports classes with only `private` constructors.\n\nA class that only has `private` constructors cannot be extended outside a file and should be declared as `final`."
-        },
-        {
-          "shortName": "FinalMethod",
-          "displayName": "Method can't be overridden",
-          "enabled": false,
-          "description": "Reports methods that are declared `final`. Such methods can't be overridden and may indicate a lack of object-oriented design. Some coding standards discourage `final` methods."
-        },
-        {
-          "shortName": "StaticNonFinalField",
-          "displayName": "'static', non-'final' field",
-          "enabled": false,
-          "description": "Reports non-`final` `static` fields.\n\nA quick-fix is available to add the `final` modifier to a non-`final` `static` field.\n\nThis inspection doesn't check fields' mutability. For example, adding the `final` modifier to a field that has a value\nbeing set somewhere will cause a compilation error.\n\n\nUse the **Only report 'public' fields** option so that the inspection reported only `public` fields."
-        },
-        {
-          "shortName": "ClassInitializer",
-          "displayName": "Non-'static' initializer",
-          "enabled": false,
-          "description": "Reports non-`static` initializers in classes.\n\nSome coding standards prohibit instance initializers and recommend using constructors or field initializers for initialization.\nAlso, deleting the `static` keyword may accidentally create non-`static` initializers and result in obscure bugs.\n\nThis inspection doesn't report instance initializers in anonymous classes.\n\n\nUse the **Only warn when the class has one or more constructors** option to ignore instance initializers in classes that don't have any constructors."
-        },
-        {
-          "shortName": "UtilityClassWithPublicConstructor",
-          "displayName": "Utility class with 'public' constructor",
-          "enabled": false,
-          "description": "Reports utility classes with `public` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating a `public`\nconstructor in such classes is confusing and may cause accidental class instantiation.\n\n**Example:**\n\n\n      public final class UtilityClass {\n        public UtilityClass(){\n        }\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        private UtilityClass(){\n        }\n        public static void foo() {}\n      }\n"
-        },
-        {
-          "shortName": "ListenerMayUseAdapter",
-          "displayName": "Class may extend adapter instead of implementing listener",
-          "enabled": false,
-          "description": "Reports classes implementing listeners instead of extending corresponding adapters.\n\nA quick-fix is available to\nremove any redundant empty methods left after replacing a listener implementation with an adapter extension.\n\n\nUse the **Only warn when empty implementing methods are found** option to configure the inspection to warn even if no empty methods are found."
-        },
-        {
-          "shortName": "MarkerInterface",
-          "displayName": "Marker interface",
-          "enabled": false,
-          "description": "Reports marker interfaces without any methods or fields.\n\nSuch interfaces may be confusing and typically indicate a design failure.\n\nThe inspection ignores interfaces that extend two or more interfaces and interfaces\nthat specify the generic type of their superinterface."
-        },
-        {
-          "shortName": "InnerClassOnInterface",
-          "displayName": "Inner class of interface",
-          "enabled": false,
-          "description": "Reports inner classes in `interface` classes.\n\nSome coding standards\ndiscourage the use of such classes. The inspection doesn't report enum classes and annotation interfaces.\n\n\nUse the **Ignore inner interfaces of interfaces** option to ignore inner interfaces. For example:\n\n\n      interface I {\n        interface Inner {\n        }\n      }\n"
-        },
-        {
-          "shortName": "UtilityClass",
-          "displayName": "Utility class",
-          "enabled": false,
-          "description": "Reports utility classes.\n\nUtility classes have all fields and methods declared as `static` and their\npresence may indicate a lack of object-oriented design.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes annotated with one of\nthese annotations."
-        },
-        {
-          "shortName": "ClassNameDiffersFromFileName",
-          "displayName": "Class name differs from file name",
-          "enabled": false,
-          "description": "Reports top-level class names that don't match the name of a file containing them.\n\nWhile the Java specification allows for naming non-`public` classes this way,\nfiles with unmatched names may be confusing and decrease usefulness of various software tools."
-        },
-        {
-          "shortName": "AnonymousInnerClass",
-          "displayName": "Anonymous class can be replaced with inner class",
-          "enabled": false,
-          "description": "Reports anonymous classes.\n\nOccasionally replacing anonymous classes with inner classes can lead to more readable and maintainable code.\nSome code standards discourage anonymous classes.\n\n**Example:**\n\n\n      class Example {\n        public static void main(String[] args) {\n          new Thread() {\n            public void run() {\n              work()\n            }\n\n            private void work() {}\n          }.start();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        public static void main(String[] args) {\n          new MyThread().start();\n        }\n\n        private static class MyThread extends Thread {\n          public void run() {\n            work();\n          }\n\n          private void work() {}\n        }\n      }\n"
-        },
-        {
-          "shortName": "MultipleTopLevelClassesInFile",
-          "displayName": "Multiple top level classes in single file",
-          "enabled": false,
-          "description": "Reports multiple top-level classes in a single Java file.\n\nPutting multiple\ntop-level classes in one file may be confusing and degrade the usefulness of various\nsoftware tools."
-        },
-        {
-          "shortName": "LimitedScopeInnerClass",
-          "displayName": "Local class",
-          "enabled": false,
-          "description": "Reports local classes.\n\nA local class is a named nested class declared inside a code block.\nLocal classes are uncommon and may therefore be confusing.\nIn addition, some code standards discourage the use of local classes.\n\n**Example:**\n\n\n      class Example {\n        void test() {\n          class Local { // here\n          }\n          new Local();\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        void test() {\n          new Local();\n        }\n\n        private static class Local { // here\n        }\n      }\n"
-        },
-        {
-          "shortName": "ClassMayBeInterface",
-          "displayName": "Abstract 'class' may be 'interface'",
-          "enabled": false,
-          "description": "Reports `abstract` classes that can be converted to interfaces.\n\nUsing interfaces instead of classes is preferable as Java doesn't support multiple class inheritance,\nwhile a class can implement multiple interfaces.\n\nA class may be converted to an interface if it has no superclasses (other\nthan Object), has only `public static final` fields,\n`public abstract` methods, and `public` inner classes.\n\n\nExample:\n\n\n    abstract class Example {\n        public static final int MY_CONST = 42;\n        public abstract void foo();\n    }\n\n    class Inheritor extends Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n    interface Example {\n        int MY_CONST = 42;\n        void foo();\n    }\n\n    class Inheritor implements Example {\n        @Override\n        public void foo() {\n            System.out.println(MY_CONST);\n        }\n    }\n\nConfigure the inspection:\n\n\nUse the **Report classes containing non-abstract methods when using Java 8** option to report only the classes with `static` methods and non-abstract methods that can be converted to\n`default` methods (only applicable to language level of 8 or higher)."
-        },
-        {
-          "shortName": "InterfaceMayBeAnnotatedFunctional",
-          "displayName": "Interface may be annotated as '@FunctionalInterface'",
-          "enabled": false,
-          "description": "Reports interfaces that can be annotated with `@FunctionalInterface` (available since JDK 1.8).\n\nAnnotating an interface with `@FunctionalInterface` indicates that the interface\nis functional and no more `abstract` methods can be added to it.\n\n**Example:**\n\n\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nAfter the quick-fix is applied:\n\n\n      @FunctionalInterface\n      interface FileProcessor {\n        void execute(File file);\n      }\n\nThis inspection only reports if the language level of the project or module is 8 or higher.\n\nThis inspection depends on the Java feature 'Lambda expressions' which is available since Java 8."
-        },
-        {
-          "shortName": "FinalStaticMethod",
-          "displayName": "'static' method declared 'final'",
-          "enabled": false,
-          "description": "Reports static methods that are marked as `final`.\n\nSuch code might indicate an error or an incorrect assumption about the effect of the `final` keyword.\nStatic methods are not subject to runtime polymorphism, so the only purpose of the `final` keyword used with static methods\nis to ensure the method will not be hidden in a subclass."
-        },
-        {
-          "shortName": "ConstantDeclaredInAbstractClass",
-          "displayName": "Constant declared in 'abstract' class",
-          "enabled": false,
-          "description": "Reports constants (`public static final` fields) declared in abstract classes.\n\nSome coding standards require declaring constants in interfaces instead."
-        },
-        {
-          "shortName": "NonFinalFieldInEnum",
-          "displayName": "Non-final field in 'enum'",
-          "enabled": false,
-          "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
-        },
-        {
-          "shortName": "NonFinalUtilityClass",
-          "displayName": "Utility class is not 'final'",
-          "enabled": false,
-          "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
-        },
-        {
-          "shortName": "Singleton",
-          "displayName": "Singleton",
-          "enabled": false,
-          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
-        },
-        {
-          "shortName": "ParameterCanBeLocal",
-          "displayName": "Value passed as parameter never read",
-          "enabled": false,
-          "description": "Reports redundant method parameters that can be replaced with local variables.\n\nIf all local usages of a parameter are preceded by assignments to that parameter, the\nparameter can be removed and its usages replaced with local variables.\nIt makes no sense to have such a parameter, as values that are passed to it are overwritten.\nUsually, the problem appears as a result of refactoring.\n\nExample:\n\n\n      void test(int p) {\n        p = 1;\n        System.out.print(p);\n      }\n\nAfter the quick-fix is applied:\n\n\n      void test() {\n        int p = 1;\n        System.out.print(p);\n      }\n"
-        },
-        {
-          "shortName": "NoopMethodInAbstractClass",
-          "displayName": "No-op method in 'abstract' class",
-          "enabled": false,
-          "description": "Reports no-op (for \"no operation\") methods in `abstract` classes.\n\nIt is usually a better\ndesign to make such methods `abstract` themselves so that classes inheriting these\nmethods provide their implementations.\n\n**Example:**\n\n\n      abstract class Test {\n        protected void doTest() {\n        }\n      }\n"
-        },
-        {
-          "shortName": "UtilityClassCanBeEnum",
-          "displayName": "Utility class can be 'enum'",
-          "enabled": false,
-          "description": "Reports utility classes that can be converted to enums.\n\nSome coding style guidelines require implementing utility classes as enums\nto avoid code coverage issues in `private` constructors.\n\n**Example:**\n\n\n      class StringUtils {\n        public static final String EMPTY = \"\";\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum StringUtils {\n        ;\n        public static final String EMPTY = \"\";\n      }\n\nThis inspection depends on the Java feature 'Enums' which is available since Java 5."
-        },
-        {
-          "shortName": "FinalClass",
-          "displayName": "Class is closed to inheritance",
-          "enabled": false,
-          "description": "Reports classes that are declared `final`. Final classes that extend a `sealed` class or interface are not reported. Such classes can't be inherited and may indicate a lack of object-oriented design. Some coding standards discourage `final` classes.\n\n**Example:**\n\n\n      public final class Main {\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Main {\n      }\n"
-        },
-        {
-          "shortName": "UtilityClassWithoutPrivateConstructor",
-          "displayName": "Utility class without 'private' constructor",
-          "enabled": false,
-          "description": "Reports utility classes without `private` constructors.\n\nUtility classes have all fields and methods declared as `static`. Creating `private`\nconstructors in utility classes prevents them from being accidentally instantiated.\n\n\nUse the **Ignore if annotated by** option to specify special annotations. The inspection ignores classes marked with one of\nthese annotations.\n\n\nUse the **Ignore classes with only a main method** option to ignore classes with no methods other than the main one."
-        },
-        {
-          "shortName": "FieldCanBeLocal",
-          "displayName": "Field can be local",
-          "enabled": false,
-          "description": "Reports redundant class fields that can be replaced with local variables.\n\nIf all local usages of a field are preceded by assignments to that field, the\nfield can be removed, and its usages can be replaced with local variables."
-        },
-        {
-          "shortName": "EmptyClass",
-          "displayName": "Empty class",
-          "enabled": false,
-          "description": "Reports empty classes and empty Java files.\n\nA class is empty if it doesn't contain any fields, methods, constructors, or initializers. Empty classes are sometimes left over\nafter significant changes or refactorings.\n\n**Example:**\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>() {\n\n           };\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Example {\n        List<String> getList() {\n           return new ArrayList<>();\n        }\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if annotated by** option to specify special annotations. The inspection will ignore the classes marked with these annotations.\n*\n  Use the **Ignore class if it is a parametrization of a super type** option to ignore classes that parameterize a superclass. For example:\n\n      class MyList extends ArrayList<String> {}\n\n* Use the **Ignore subclasses of java.lang.Throwable** to ignore classes that extend `java.lang.Throwable`.\n* Use the **Comments count as content** option to ignore classes that contain comments."
-        },
-        {
-          "shortName": "FinalPrivateMethod",
-          "displayName": "'private' method declared 'final'",
-          "enabled": false,
-          "description": "Reports methods that are marked with both `final` and `private` keywords.\n\nSince `private` methods cannot be meaningfully overridden because of their visibility, declaring them\n`final` is redundant."
-        },
-        {
-          "shortName": "MethodReturnAlwaysConstant",
-          "displayName": "Method returns per-class constant",
-          "enabled": false,
-          "description": "Reports methods that only return a constant, which may differ for various inheritors.\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
-        },
-        {
-          "shortName": "PublicConstructor",
-          "displayName": "'public' constructor can be replaced with factory method",
-          "enabled": false,
-          "description": "Reports `public` constructors.\n\nSome coding standards discourage the use of `public` constructors and recommend\n`static` factory methods instead.\nThis way the implementation can be swapped out without affecting the call sites.\n\n**Example:**\n\n\n      class Test {\n        private String name;\n\n        public Test(String name) {\n            this.name = name;\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            new Test(\"str\").test();\n        }\n      }\n\nAfter quick-fix is applied:\n\n\n      class Test {\n        private String name;\n\n        private Test(String name) {\n            this.name = name;\n        }\n\n        public static Test getInstance(String name) {\n            return new Test(name);\n        }\n\n        public void test() {\n            System.out.println(name);\n        }\n\n        public static void main(String[] args) {\n            getInstance(\"str\").test();\n        }\n      }\n"
-        },
-        {
-          "shortName": "ConstantDeclaredInInterface",
-          "displayName": "Constant declared in interface",
-          "enabled": false,
-          "description": "Reports constants (`public static final` fields) declared in interfaces.\n\nSome coding standards require declaring constants in abstract classes instead."
-        }
-      ]
-    },
-    {
       "name": "GPath",
       "inspections": [
         {
@@ -4883,53 +4883,6 @@
       ]
     },
     {
-      "name": "JSON and JSON5",
-      "inspections": [
-        {
-          "shortName": "MongoDBJsonDuplicatePropertyKeys",
-          "displayName": "Duplicate keys in object literals",
-          "enabled": false,
-          "description": "Reports a duplicate key in an object literal."
-        },
-        {
-          "shortName": "JsonSchemaCompliance",
-          "displayName": "Compliance with JSON schema",
-          "enabled": false,
-          "description": "Reports inconsistence between a JSON file and the [JSON schema](https://json-schema.org) that is assigned to it.  "
-        },
-        {
-          "shortName": "JsonStandardCompliance",
-          "displayName": "Compliance with JSON standard",
-          "enabled": false,
-          "description": "Reports the following discrepancies of a JSON file with [the language specification](https://tools.ietf.org/html/rfc7159):\n\n* A line or block comment (configurable).\n* Multiple top-level values (expect for JSON Lines files, configurable for others).\n* A trailing comma in an object or array (configurable).\n* A single quoted string.\n* A property key is a not a double quoted strings.\n* A NaN or Infinity/-Infinity numeric value as a floating point literal (configurable)."
-        },
-        {
-          "shortName": "JsonSchemaRefReference",
-          "displayName": "Unresolved '$ref' and '$schema' references",
-          "enabled": false,
-          "description": "Reports an unresolved `$ref` or `$schema` path in a JSON schema.  "
-        },
-        {
-          "shortName": "Json5StandardCompliance",
-          "displayName": "Compliance with JSON5 standard",
-          "enabled": false,
-          "description": "Reports inconsistency with [the language specification](http://json5.org) in a JSON5 file."
-        },
-        {
-          "shortName": "JsonSchemaDeprecation",
-          "displayName": "Deprecated JSON property",
-          "enabled": false,
-          "description": "Reports a deprecated property in a JSON file.  \nNote that deprecation mechanism is not defined in the JSON Schema specification yet, and this inspection uses a non-standard extension 'deprecationMessage'."
-        },
-        {
-          "shortName": "JsonDuplicatePropertyKeys",
-          "displayName": "Duplicate keys in object literals",
-          "enabled": false,
-          "description": "Reports a duplicate key in an object literal."
-        }
-      ]
-    },
-    {
       "name": "Maven",
       "inspections": [
         {
@@ -4973,6 +4926,53 @@
           "displayName": "Incompatible kotlinx.coroutines dependency is used with Kotlin 1.3+ in Maven",
           "enabled": false,
           "description": "Reports **kotlinx.coroutines** library dependencies in Maven that should be updated in order to be compatible with Kotlin 1.3 and later."
+        }
+      ]
+    },
+    {
+      "name": "JSON and JSON5",
+      "inspections": [
+        {
+          "shortName": "MongoDBJsonDuplicatePropertyKeys",
+          "displayName": "Duplicate keys in object literals",
+          "enabled": false,
+          "description": "Reports a duplicate key in an object literal."
+        },
+        {
+          "shortName": "JsonSchemaCompliance",
+          "displayName": "Compliance with JSON schema",
+          "enabled": false,
+          "description": "Reports inconsistence between a JSON file and the [JSON schema](https://json-schema.org) that is assigned to it.  "
+        },
+        {
+          "shortName": "JsonStandardCompliance",
+          "displayName": "Compliance with JSON standard",
+          "enabled": false,
+          "description": "Reports the following discrepancies of a JSON file with [the language specification](https://tools.ietf.org/html/rfc7159):\n\n* A line or block comment (configurable).\n* Multiple top-level values (expect for JSON Lines files, configurable for others).\n* A trailing comma in an object or array (configurable).\n* A single quoted string.\n* A property key is a not a double quoted strings.\n* A NaN or Infinity/-Infinity numeric value as a floating point literal (configurable)."
+        },
+        {
+          "shortName": "JsonSchemaRefReference",
+          "displayName": "Unresolved '$ref' and '$schema' references",
+          "enabled": false,
+          "description": "Reports an unresolved `$ref` or `$schema` path in a JSON schema.  "
+        },
+        {
+          "shortName": "Json5StandardCompliance",
+          "displayName": "Compliance with JSON5 standard",
+          "enabled": false,
+          "description": "Reports inconsistency with [the language specification](http://json5.org) in a JSON5 file."
+        },
+        {
+          "shortName": "JsonSchemaDeprecation",
+          "displayName": "Deprecated JSON property",
+          "enabled": false,
+          "description": "Reports a deprecated property in a JSON file.  \nNote that deprecation mechanism is not defined in the JSON Schema specification yet, and this inspection uses a non-standard extension 'deprecationMessage'."
+        },
+        {
+          "shortName": "JsonDuplicatePropertyKeys",
+          "displayName": "Duplicate keys in object literals",
+          "enabled": false,
+          "description": "Reports a duplicate key in an object literal."
         }
       ]
     },
@@ -5153,16 +5153,16 @@
           "description": "Reports classes that refer to their subclasses in static initializers or static fields.\n\nSuch references can cause JVM-level deadlocks in multithreaded environment, when one thread tries to load the superclass\nand another thread tries to load the subclass at the same time.\n\n**Example:**\n\n\n      class Parent {\n        static final Child field = new Child();\n      }\n      class Child extends Parent { }\n"
         },
         {
-          "shortName": "WaitCalledOnCondition",
-          "displayName": "'wait()' called on 'java.util.concurrent.locks.Condition' object",
-          "enabled": false,
-          "description": "Reports calls to `wait()` made on a `java.util.concurrent.locks.Condition` object. This is probably a programming error, and some variant of the `await()` method was intended instead.\n\n**Example:**\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.wait();\n        }\n      }\n\nGood code would look like this:\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.await();\n        }\n      }\n"
-        },
-        {
           "shortName": "NonSynchronizedMethodOverridesSynchronizedMethod",
           "displayName": "Unsynchronized method overrides 'synchronized' method",
           "enabled": false,
           "description": "Reports non-`synchronized` methods overriding `synchronized` methods.\n\n\nThe overridden method will not be automatically synchronized if the superclass method\nis declared as `synchronized`. This may result in unexpected race conditions when using the subclass.\n\n**Example:**\n\n\n      class Super {\n        synchronized void process() {}\n      }\n      class Sub extends Super {\n        // Unsynchronized method 'process()' overrides synchronized method\n        void process() {}\n      }  \n"
+        },
+        {
+          "shortName": "WaitCalledOnCondition",
+          "displayName": "'wait()' called on 'java.util.concurrent.locks.Condition' object",
+          "enabled": false,
+          "description": "Reports calls to `wait()` made on a `java.util.concurrent.locks.Condition` object. This is probably a programming error, and some variant of the `await()` method was intended instead.\n\n**Example:**\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.wait();\n        }\n      }\n\nGood code would look like this:\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.await();\n        }\n      }\n"
         },
         {
           "shortName": "WaitNotifyNotInSynchronizedContext",
@@ -5434,16 +5434,16 @@
           "description": "Reports equality expressions which are negated by a prefix expression.\n\nSuch expressions can be simplified using the `!=` operator.\n\nExample:\n\n\n      !(i == 1)\n\nAfter the quick-fix is applied:\n\n\n      i != 1\n"
         },
         {
-          "shortName": "DoubleNegation",
-          "displayName": "Double negation",
-          "enabled": true,
-          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
-        },
-        {
           "shortName": "AssertionCanBeIf",
           "displayName": "Assertion can be replaced with 'if' statement",
           "enabled": false,
           "description": "Reports `assert` statements and suggests replacing them with `if` statements that throw `java.lang.AssertionError`.\n\nExample:\n\n\n      assert param != null;\n\nAfter the quick-fix is applied:\n\n\n      if (param == null) throw new AssertionError();\n\nThis inspection depends on the Java feature 'Assertions' which is available since Java 4."
+        },
+        {
+          "shortName": "DoubleNegation",
+          "displayName": "Double negation",
+          "enabled": true,
+          "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
         },
         {
           "shortName": "BreakStatement",
@@ -7934,18 +7934,6 @@
       "name": "Validity issues",
       "inspections": [
         {
-          "shortName": "IncorrectPluginDslStructure",
-          "displayName": "Plugin DSL structure",
-          "enabled": false,
-          "description": "Detects disallowed statements before 'plugins {}' block.\nDue to the limitations of Gradle Plugin DSL, only a restricted set of Groovy statements is available before '`plugins {}`' block. The only options are '`buildscript {}`', '`pluginManagement {}`' and other '`plugins {}`'.   \n[See Gradle documentation](https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations)\n\n**Example:**\n\n\n    import foo.bar.Baz\n    plugins {} // reports 'plugins'\n    plugins {\n      foo() // reports 'foo'\n      id 'java'\n    }\n"
-        },
-        {
-          "shortName": "DeprecatedConfigurations",
-          "displayName": "Deprecated configurations",
-          "enabled": false,
-          "description": "Detects usage of configuration methods that were deprecated.\nConfiguration methods may be deprecated because of two possible reasons:\n\n* The Gradle API has evolved, so old method choices should be avoided;\n* Some plugin provides a better version of the deprecated configuration method.\n\nMost likely there will be an alternative for the deprecated method.\n\n**Example:**\n\n\n    plugins {\n      id 'java'\n    }\n\n    dependencies {\n      archive 'org.gradle.api:gradle:1.0' // reports 'archive'\n    }\n"
-        },
-        {
           "shortName": "BadExpressionStatementJS",
           "displayName": "Expression statement which is not assignment or call",
           "enabled": false,
@@ -7986,6 +7974,18 @@
           "displayName": "Attempt to assign to const or readonly variable",
           "enabled": false,
           "description": "Reports reassigning a value to a constant or a readonly variable."
+        },
+        {
+          "shortName": "IncorrectPluginDslStructure",
+          "displayName": "Plugin DSL structure",
+          "enabled": false,
+          "description": "Detects disallowed statements before 'plugins {}' block.\nDue to the limitations of Gradle Plugin DSL, only a restricted set of Groovy statements is available before '`plugins {}`' block. The only options are '`buildscript {}`', '`pluginManagement {}`' and other '`plugins {}`'.   \n[See Gradle documentation](https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations)\n\n**Example:**\n\n\n    import foo.bar.Baz\n    plugins {} // reports 'plugins'\n    plugins {\n      foo() // reports 'foo'\n      id 'java'\n    }\n"
+        },
+        {
+          "shortName": "DeprecatedConfigurations",
+          "displayName": "Deprecated configurations",
+          "enabled": false,
+          "description": "Detects usage of configuration methods that were deprecated.\nConfiguration methods may be deprecated because of two possible reasons:\n\n* The Gradle API has evolved, so old method choices should be avoided;\n* Some plugin provides a better version of the deprecated configuration method.\n\nMost likely there will be an alternative for the deprecated method.\n\n**Example:**\n\n\n    plugins {\n      id 'java'\n    }\n\n    dependencies {\n      archive 'org.gradle.api:gradle:1.0' // reports 'archive'\n    }\n"
         },
         {
           "shortName": "GroovyDuplicateSwitchBranch",
@@ -9560,6 +9560,41 @@
       ]
     },
     {
+      "name": "Class",
+      "inspections": [
+        {
+          "shortName": "ExceptionNameDoesntEndWithException",
+          "displayName": "Exception class name does not end with 'Exception'",
+          "enabled": false,
+          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "NewClassNamingConvention",
+          "displayName": "Class naming convention",
+          "enabled": false,
+          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
+        },
+        {
+          "shortName": "NonExceptionNameEndsWithException",
+          "displayName": "Non-exception class name ends with 'Exception'",
+          "enabled": false,
+          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNameSameAsAncestorName",
+          "displayName": "Class name same as ancestor name",
+          "enabled": false,
+          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNamePrefixedWithPackageName",
+          "displayName": "Class name prefixed with package name",
+          "enabled": false,
+          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
+        }
+      ]
+    },
+    {
       "name": "HTTP Client",
       "inspections": [
         {
@@ -9627,41 +9662,6 @@
           "displayName": "Missing request separator in YAML body",
           "enabled": false,
           "description": "Reports possible requests in injected YAML body where request separator `###` is missing. The quick fix suggests adding the separator `###` before the request."
-        }
-      ]
-    },
-    {
-      "name": "Class",
-      "inspections": [
-        {
-          "shortName": "ExceptionNameDoesntEndWithException",
-          "displayName": "Exception class name does not end with 'Exception'",
-          "enabled": false,
-          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "NewClassNamingConvention",
-          "displayName": "Class naming convention",
-          "enabled": false,
-          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
-        },
-        {
-          "shortName": "NonExceptionNameEndsWithException",
-          "displayName": "Non-exception class name ends with 'Exception'",
-          "enabled": false,
-          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNameSameAsAncestorName",
-          "displayName": "Class name same as ancestor name",
-          "enabled": false,
-          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNamePrefixedWithPackageName",
-          "displayName": "Class name prefixed with package name",
-          "enabled": false,
-          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
         }
       ]
     },
@@ -13042,35 +13042,6 @@
       ]
     },
     {
-      "name": "Nullability problems",
-      "inspections": [
-        {
-          "shortName": "NotNullFieldNotInitialized",
-          "displayName": "@NotNull field is not initialized",
-          "enabled": false,
-          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
-        },
-        {
-          "shortName": "UnsatisfiedRange",
-          "displayName": "Return value is outside of declared range",
-          "enabled": false,
-          "description": "Reports numeric values returned from methods that don't conform to the declared method return range. You can declare method return range using a number of annotations:\n\n* `org.jetbrains.annotations.Range` from JetBrains annotations package (specify 'from' and 'to')\n* `org.checkerframework.common.value.qual.IntRange` from Checker Framework annotations package (specify 'from' and 'to')\n* `org.checkerframework.checker.index.qual.GTENegativeOne` from Checker Framework annotations package (range is '\\>= -1')\n* `org.checkerframework.checker.index.qual.NonNegative` from Checker Framework annotations package (range is '\\>= 0')\n* `org.checkerframework.checker.index.qual.Positive` from Checker Framework annotations package (range is '\\> 0')\n* `javax.annotation.Nonnegative` from JSR 305 annotations package (range is '\\>= 0')\n* `javax.validation.constraints.Min` (specify minimum value)\n* `javax.validation.constraints.Max` (specify maximum value)\n\nExample:\n\n\n      @Range(from = 0, to = Integer.MAX_VALUE) int getValue() {\n        // Warning: -1 is outside of declared range\n        return -1;\n      }\n\nNew in 2021.2"
-        },
-        {
-          "shortName": "NullableProblems",
-          "displayName": "@NotNull/@Nullable problems",
-          "enabled": true,
-          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
-        },
-        {
-          "shortName": "ReturnNull",
-          "displayName": "Return of 'null'",
-          "enabled": false,
-          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        @Nullable\n        public String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
-        }
-      ]
-    },
-    {
       "name": "Imports and dependencies",
       "inspections": [
         {
@@ -13149,6 +13120,35 @@
           "displayName": "Invalid properties configuration",
           "enabled": true,
           "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        }
+      ]
+    },
+    {
+      "name": "Nullability problems",
+      "inspections": [
+        {
+          "shortName": "NotNullFieldNotInitialized",
+          "displayName": "@NotNull field is not initialized",
+          "enabled": false,
+          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
+        },
+        {
+          "shortName": "UnsatisfiedRange",
+          "displayName": "Return value is outside of declared range",
+          "enabled": false,
+          "description": "Reports numeric values returned from methods that don't conform to the declared method return range. You can declare method return range using a number of annotations:\n\n* `org.jetbrains.annotations.Range` from JetBrains annotations package (specify 'from' and 'to')\n* `org.checkerframework.common.value.qual.IntRange` from Checker Framework annotations package (specify 'from' and 'to')\n* `org.checkerframework.checker.index.qual.GTENegativeOne` from Checker Framework annotations package (range is '\\>= -1')\n* `org.checkerframework.checker.index.qual.NonNegative` from Checker Framework annotations package (range is '\\>= 0')\n* `org.checkerframework.checker.index.qual.Positive` from Checker Framework annotations package (range is '\\> 0')\n* `javax.annotation.Nonnegative` from JSR 305 annotations package (range is '\\>= 0')\n* `javax.validation.constraints.Min` (specify minimum value)\n* `javax.validation.constraints.Max` (specify maximum value)\n\nExample:\n\n\n      @Range(from = 0, to = Integer.MAX_VALUE) int getValue() {\n        // Warning: -1 is outside of declared range\n        return -1;\n      }\n\nNew in 2021.2"
+        },
+        {
+          "shortName": "NullableProblems",
+          "displayName": "@NotNull/@Nullable problems",
+          "enabled": true,
+          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
+        },
+        {
+          "shortName": "ReturnNull",
+          "displayName": "Return of 'null'",
+          "enabled": false,
+          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        @Nullable\n        public String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
         }
       ]
     },
