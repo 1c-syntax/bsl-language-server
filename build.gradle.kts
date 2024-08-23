@@ -18,7 +18,7 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "8.10"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("com.github.ben-manes.versions") version "0.51.0"
-    id("org.springframework.boot") version "3.2.5"
+    id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
