@@ -47,7 +47,8 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_CLIENT_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_SERVER_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_OBJECT_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl";
   private static final String PATH_TO_MANAGER_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl";
 
@@ -125,7 +126,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {PATH_TO_OBJECT_MODULE_FILE, PATH_TO_MANAGER_MODULE_FILE})
+  @ValueSource(strings = {PATH_TO_OBJECT_MODULE_FILE, PATH_TO_MANAGER_MODULE_FILE, PATH_TO_SERVER_MODULE_FILE})
   void testServerModules(String file) {
     var context = getDocumentContextWithUseFlag(UseMode.DONT_USE, file);
 
@@ -134,7 +135,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
-    return getDocumentContextWithUseFlag(useMode, PATH_TO_MODULE_FILE);
+    return getDocumentContextWithUseFlag(useMode, PATH_TO_CLIENT_MODULE_FILE);
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile) {
