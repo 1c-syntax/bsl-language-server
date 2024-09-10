@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Paths;
@@ -45,7 +47,9 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_OBJECT_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl";
+  private static final String PATH_TO_MANAGER_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl";
 
   @Test
   void testDontUse() {
@@ -120,9 +124,22 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     assertThat(diagnostics).isEmpty();
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {PATH_TO_OBJECT_MODULE_FILE, PATH_TO_MANAGER_MODULE_FILE})
+  void testServerModules(String file) {
+    var context = getDocumentContextWithUseFlag(UseMode.DONT_USE, file);
+
+    List<Diagnostic> diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).isEmpty();
+  }
+
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
+    return getDocumentContextWithUseFlag(useMode, PATH_TO_MODULE_FILE);
+  }
+
+  private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile) {
     var path = Absolute.path(PATH_TO_METADATA);
-    var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    var testFile = Paths.get(moduleFile).toAbsolutePath();
 
     initServerContext(path);
     var serverContext = spy(context);

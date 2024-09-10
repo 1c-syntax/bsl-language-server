@@ -29,14 +29,18 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -134,7 +138,32 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
+    if (isServerModule(documentContext.getModuleType(), documentContext.getMdObject())) {
+      return ctx;
+    }
+
     return super.visitFile(ctx);
+  }
+
+  private boolean isServerModule(ModuleType moduleType, Optional<MD> mdObject) {
+
+    switch (moduleType) {
+      case ApplicationModule:
+      case CommandModule:
+      case FormModule:
+      case ManagedApplicationModule:
+        return false;
+      case CommonModule: {
+        if (mdObject.isPresent()) {
+          var md = (CommonModule) mdObject.get();
+          return !(md.isClientManagedApplication() || md.isClientOrdinaryApplication());
+        } else {
+          return false; // Мы не знаем, что за модуль, проверяем, как обычно.
+        }
+      }
+      default:
+        return true; // Все прочие модули это строго серверные и в них синхронные вызовы разрешены (и только они возможны)
+    }
   }
 
   @Override
