@@ -154,8 +154,9 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean isServerCommonModule(DocumentContext documentContext) {
     var mdObject = documentContext.getMdObject();
 
-    return mdObject.map(mdo -> (CommonModule) mdo)
-      .filter(commonModule -> !(commonModule.isClientManagedApplication() || commonModule.isClientOrdinaryApplication()))
+    return mdObject.map(CommonModule.class::cast)
+      .filter(commonModule -> !(commonModule.isClientManagedApplication() ||
+                                commonModule.isClientOrdinaryApplication()))
       .isPresent();
   }
 
