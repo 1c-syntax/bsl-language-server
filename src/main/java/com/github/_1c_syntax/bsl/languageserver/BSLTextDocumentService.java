@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ModuleInfo;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ModuleUri;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
@@ -43,7 +45,10 @@ import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.ModuleTypePropertyIdMapper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
@@ -457,6 +462,50 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       }
       return new Diagnostics(diagnostics, documentContext.getVersion());
     });
+  }
+
+  @Override
+  public CompletableFuture<ModuleUri> moduleUri(ModuleInfo params) {
+    return ModuleTypePropertyIdMapper
+      .getModuleType(params.getPropertyId())
+      .map(type -> CompletableFuture.supplyAsync(() -> {
+          var owner = context
+            .getConfiguration()
+            .findChild(c -> c.getUuid().equals(params.getOwnerId()));
+          if (owner.isEmpty())
+            return null;
+
+          if (owner.get() instanceof ModuleOwner mo) {
+            var uri = mo.getModuleTypes().getOrDefault(type, null);
+            if (uri == null)
+              return null;
+            else
+              return new ModuleUri(uri.toString());
+          }
+          else
+            return null;
+        }
+      ))
+      .orElseGet(() -> CompletableFuture.completedFuture(null));
+  }
+
+  @Override
+  public CompletableFuture<ModuleInfo> moduleInfo(ModuleUri params) {
+    var documentContext = context.getDocument(params.getUri());
+    if (documentContext == null)
+      return CompletableFuture.completedFuture(null);
+
+    var ownerId = context
+      .getConfiguration()
+      .findChild(URI.create(params.getUri()))
+      .map(MD::getUuid)
+      .orElse("");
+
+    var propertyId = ModuleTypePropertyIdMapper
+      .getPropertyId(documentContext.getModuleType())
+      .orElse("");
+
+    return CompletableFuture.completedFuture(new ModuleInfo(ownerId, propertyId));
   }
 
   @Override

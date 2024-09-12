@@ -37,4 +37,24 @@ public interface ProtocolExtension {
   )
   CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params);
 
+  /**
+   * @param params Информация о модуле.
+   * @return Путь к bsl файлу.
+   */
+  @JsonRequest(
+    value = "dapBridge/moduleUri",
+    useSegment = false
+  )
+  CompletableFuture<ModuleUri> moduleUri(ModuleInfo params);
+
+  /**
+   * @param params URI bsl файла.
+   * @return Информация о модуле.
+   */
+  @JsonRequest(
+    value = "dapBridge/moduleInfo",
+    useSegment = false
+  )
+  CompletableFuture<ModuleInfo> moduleInfo(ModuleUri params);
+
 }

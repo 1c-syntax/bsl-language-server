@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ModuleInfo;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ModuleUri;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
@@ -172,6 +174,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);
+  }
+
+  @Override
+  public CompletableFuture<ModuleUri> moduleUri(ModuleInfo params) {
+    return textDocumentService.moduleUri(params);
+  }
+
+  @Override
+  public CompletableFuture<ModuleInfo> moduleInfo(ModuleUri params) {
+    return textDocumentService.moduleInfo(params);
   }
 
   @Override
