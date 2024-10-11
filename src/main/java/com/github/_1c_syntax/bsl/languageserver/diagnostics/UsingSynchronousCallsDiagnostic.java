@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -134,7 +136,28 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
+    if (isServerModule(documentContext)) {
+      return ctx;
+    }
+
     return super.visitFile(ctx);
+  }
+
+  private static boolean isServerModule(DocumentContext documentContext) {
+    return switch (documentContext.getModuleType()) {
+      case ApplicationModule, CommandModule, FormModule, ManagedApplicationModule -> false;
+      case CommonModule -> isServerCommonModule(documentContext);
+      default -> true; // Все прочие модули это строго серверные и в них синхронные вызовы разрешены
+    };
+  }
+
+  private static boolean isServerCommonModule(DocumentContext documentContext) {
+    var mdObject = documentContext.getMdObject();
+
+    return mdObject.map(CommonModule.class::cast)
+      .filter(commonModule -> !(commonModule.isClientManagedApplication() ||
+                                commonModule.isClientOrdinaryApplication()))
+      .isPresent();
   }
 
   @Override
