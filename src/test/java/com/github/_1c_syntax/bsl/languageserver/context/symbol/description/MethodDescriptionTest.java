@@ -44,7 +44,7 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(14);
+      assertThat(methods.size()).isEqualTo(18);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
@@ -52,8 +52,37 @@ class MethodDescriptionTest {
         .map(Optional::get)
         .collect(Collectors.toList());
 
-      assertThat(methodsWithDescription.size()).isEqualTo(13);
+      assertThat(methodsWithDescription.size()).isEqualTo(15);
     }
+  }
+
+  @Test
+  void testMethod15() {
+    var method = methodsWithDescription.get(14);
+    assertThat(method.getPurposeDescription())
+      .isNotEmpty()
+      .isEqualTo("См. ОбщийМодуль.ОписаниеСсылкойАсинх");
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).isEmpty();
+    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isNotEmpty();
+  }
+  @Test
+  void testMethod14() {
+    var method = methodsWithDescription.get(13);
+    assertThat(method.getPurposeDescription())
+      .isNotEmpty()
+      .isEqualTo("См. ОбщийМодуль.Метод()");
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).isEmpty();
+    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isNotEmpty();
   }
 
   @Test
