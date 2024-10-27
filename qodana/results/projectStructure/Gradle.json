@@ -1,5 +1,5 @@
 {
-  "gradleJvm": "#USE_PROJECT_JDK",
+  "gradleJvm": "17",
   "libraries": [
     {
       "ideaName": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.6",
