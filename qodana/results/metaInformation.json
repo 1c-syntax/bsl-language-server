@@ -1,19 +1,21 @@
 {
+  "version": "1.0",
   "total": 100,
   "tools inspection": {
     "Code Inspection": 100
   },
   "linter": "QDJVM",
   "attributes": {
+    "deviceId": "200820300000000-b1a5-d275-f8e7-faf9fd093ee8",
+    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/11541686784",
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server.git",
-        "revisionId": "ee94cab1231ec4fe835a2a5d5af6e4105adf35cd",
+        "revisionId": "dbc33f87bf79c0ab5f4e3b20551bc6b38731f9a9",
         "branch": "develop"
       }
     },
-    "repoUrl": "https://github.com/1c-syntax/bsl-language-server.git",
-    "deviceId": "200820300000000-b1a5-d275-f8e7-faf9fd093ee8",
-    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/11408101287"
-  }
+    "repoUrl": "https://github.com/1c-syntax/bsl-language-server.git"
+  },
+  "linterVersion": "242.24024"
 }
