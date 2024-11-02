@@ -44,16 +44,22 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(14);
+      assertThat(methods).hasSize(15);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .collect(Collectors.toList());
+        .toList();
 
-      assertThat(methodsWithDescription.size()).isEqualTo(13);
+      assertThat(methodsWithDescription.size()).isEqualTo(14);
     }
+  }
+
+  @Test
+  void testMethodWithAnnotation() {
+    var method = methodsWithDescription.get(13);
+    assertThat(method.getDescription()).isEqualTo("// Описание процедуры");
   }
 
   @Test

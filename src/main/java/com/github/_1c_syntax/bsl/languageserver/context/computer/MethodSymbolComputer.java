@@ -89,6 +89,10 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
+    if (!declaration.annotation().isEmpty()) {
+      startNode = declaration.annotation().get(0).AMPERSAND();
+    }
+
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
@@ -117,6 +121,10 @@ public final class MethodSymbolComputer
       || stopNode instanceof ErrorNode
     ) {
       return ctx;
+    }
+
+    if (!declaration.annotation().isEmpty()) {
+      startNode = declaration.annotation().get(0).AMPERSAND();
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
