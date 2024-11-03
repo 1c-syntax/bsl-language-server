@@ -96,12 +96,13 @@ public final class MethodSymbolComputer
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
+      declaration.FUNCTION_KEYWORD().getSymbol(),
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
       declaration.EXPORT_KEYWORD() != null,
       getCompilerDirective(declaration.compilerDirective()),
-      getAnnotations(declaration.annotation()));
+      createAnnotations(declaration.annotation()));
 
     methods.add(methodSymbol);
 
@@ -130,12 +131,13 @@ public final class MethodSymbolComputer
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
+      declaration.PROCEDURE_KEYWORD().getSymbol(),
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
       declaration.EXPORT_KEYWORD() != null,
       getCompilerDirective(declaration.compilerDirective()),
-      getAnnotations(declaration.annotation())
+      createAnnotations(declaration.annotation())
     );
 
     methods.add(methodSymbol);
@@ -190,6 +192,7 @@ public final class MethodSymbolComputer
   private MethodSymbol createMethodSymbol(
     TerminalNode startNode,
     TerminalNode stopNode,
+    Token startOfMethod,
     Token subName,
     BSLParser.ParamListContext paramList,
     boolean function,
@@ -197,7 +200,8 @@ public final class MethodSymbolComputer
     Optional<CompilerDirectiveKind> compilerDirective,
     List<Annotation> annotations
   ) {
-    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    Optional<MethodDescription> description = createDescription(startOfMethod)
+      .or(() -> createDescription(startNode.getSymbol()));
     boolean deprecated = description
       .map(MethodDescription::isDeprecated)
       .orElse(false);
@@ -244,7 +248,7 @@ public final class MethodSymbolComputer
           .range(getParameterRange(param))
           .description(getParameterDescription(parameterName, description))
           .build();
-      }).collect(Collectors.toList());
+      }).toList();
   }
 
   private static ParameterDefinition.DefaultValue getDefaultValue(BSLParser.ParamContext param) {
@@ -318,10 +322,10 @@ public final class MethodSymbolComputer
 
   }
 
-  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
-    return annotationContext.stream()
+  private static List<Annotation> createAnnotations(List<? extends BSLParser.AnnotationContext> annotationContexts) {
+    return annotationContexts.stream()
       .map(MethodSymbolComputer::createAnnotation)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
@@ -342,7 +346,7 @@ public final class MethodSymbolComputer
 
     return annotationParamsContext.annotationParam().stream()
       .map(MethodSymbolComputer::getAnnotationParam)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
