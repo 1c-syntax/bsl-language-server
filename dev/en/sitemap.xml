@@ -691,6 +691,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/ReservedParameterNames/</loc>
+         <lastmod>2024-11-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/RewriteMethodParameter/</loc>
          <lastmod>2024-11-04</lastmod>
          <changefreq>daily</changefreq>
