@@ -29,7 +29,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,16 +43,28 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(14);
+      assertThat(methods).hasSize(16);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .collect(Collectors.toList());
+        .toList();
 
-      assertThat(methodsWithDescription.size()).isEqualTo(13);
+      assertThat(methodsWithDescription.size()).isEqualTo(15);
     }
+  }
+
+  @Test
+  void testMethodWithAnnotationBeforeDescription() {
+    var method = methodsWithDescription.get(14);
+    assertThat(method.getDescription()).isEqualTo("// Описание процедуры");
+  }
+
+  @Test
+  void testMethodWithAnnotation() {
+    var method = methodsWithDescription.get(13);
+    assertThat(method.getDescription()).isEqualTo("// Описание процедуры");
   }
 
   @Test
