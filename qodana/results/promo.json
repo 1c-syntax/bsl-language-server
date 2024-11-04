@@ -1,1 +1,63 @@
-{"version":"3","listProblem":[]}
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Imports",
+  "type": "Unused import",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Unused import `import com.github._1c_syntax.bsl.mdo.ChildrenOwner;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ForbiddenMetadataNameDiagnostic.java",
+      "language": "JAVA",
+      "line": 32,
+      "offset": 1,
+      "length": 51,
+      "code": {
+        "startLine": 30,
+        "length": 51,
+        "offset": 138,
+        "surroundingCode": "import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;\nimport com.github._1c_syntax.bsl.mdo.AttributeOwner;\nimport com.github._1c_syntax.bsl.mdo.ChildrenOwner;\nimport com.github._1c_syntax.bsl.mdo.MD;\nimport com.github._1c_syntax.bsl.types.MdoReference;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UNUSED_IMPORT"
+  },
+  "hash": "dfef9c01f5a92ff4f33eeb0402a9ab04b8065bfbe30c0f7f1628f4c6fa960f1b"
+},{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Unnecessary 'default' for enum 'switch' statement",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "`default` branch is unnecessary",
+  "detailsInfo": "Reports enum `switch` statements or expression with `default` branches which can never be taken, because all possible values are covered by a `case` branch.\n\nSuch elements are redundant, especially for `switch` expressions, because they don't compile when all\nenum constants are not covered by a `case` branch.\n\n\nThe language level needs to be configured to 14 to report `switch` expressions.\n\nThe provided quick-fix removes `default` branches.\n\nExample:\n\n\n      enum E { A, B }\n      int foo(E e) {\n        return switch (e) {\n          case A -> 1;\n          case B -> 2;\n          default -> 3;\n        };\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum E { A, B }\n      int foo(E e) {\n        return switch (e) {\n          case A -> 1;\n          case B -> 2;\n        };\n      }\n\nUse the **Only report switch expressions** option to report only redundant `default` branches in switch expressions.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/DefaultNodeEqualityComparer.java",
+      "language": "JAVA",
+      "line": 51,
+      "offset": 7,
+      "length": 7,
+      "code": {
+        "startLine": 49,
+        "length": 7,
+        "offset": 136,
+        "surroundingCode": "      case SKIPPED_CALL_ARG -> true;\n      case CALL -> callStatementsEqual((AbstractCallNode) first, (AbstractCallNode) second);\n      default -> throw new IllegalStateException();\n    };\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UnnecessaryDefault"
+  },
+  "hash": "2c72370b59dde2cbf1ea29e8feac3da6f729b7114f1766f8f09a515ec88ac90f"
+}]}
