@@ -54,7 +54,7 @@ class ReservedParameterNamesDiagnosticTest extends AbstractDiagnosticTest<Reserv
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasMessageOnRange("Переименуйте параметр \"ВидГруппыФормы\" чтобы он не совпадал с зарезервированным словом.",
+      .hasMessageOnRange("Переименуйте параметр \"ВидГруппыФормы\" так, чтобы он не совпадал с зарезервированным словом.",
         2, 16, 30);
   
   }
