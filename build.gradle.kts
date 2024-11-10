@@ -12,13 +12,13 @@ plugins {
     id("org.cadixdev.licenser") version "0.6.1"
     id("org.sonarqube") version "5.1.0.4882"
     id("io.freefair.lombok") version "8.10.2"
-    id("io.freefair.javadoc-links") version "8.10.2"
+    //id("io.freefair.javadoc-links") version "8.10.2"
     id("io.freefair.javadoc-utf-8") version "8.10.2"
     id("io.freefair.aspectj.post-compile-weaving") version "8.10.2"
     id("io.freefair.maven-central.validate-poms") version "8.10.2"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("com.github.ben-manes.versions") version "0.51.0"
-    id("org.springframework.boot") version "3.2.5"
+    id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.6"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
@@ -59,7 +59,7 @@ gitProperties {
 
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
-val languageToolVersion = "6.4"
+val languageToolVersion = "6.5"
 
 dependencyManagement {
     imports {
@@ -107,8 +107,8 @@ dependencies {
     implementation("org.aspectj", "aspectjrt", "1.9.22.1")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.16.1")
-    implementation("org.apache.commons", "commons-lang3", "3.14.0")
+    implementation("commons-io", "commons-io", "2.17.0")
+    implementation("org.apache.commons", "commons-lang3", "3.17.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4"){
         exclude("commons-logging", "commons-logging")
     }
@@ -135,7 +135,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.2.1-jre")
+            strictly("33.3.1-jre")
        }
     }
     
@@ -151,7 +151,7 @@ dependencies {
 
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.49")
-    testImplementation("org.awaitility", "awaitility", "4.2.1")
+    testImplementation("org.awaitility", "awaitility", "4.2.2")
 }
 
 lombok {
@@ -218,7 +218,7 @@ tasks.check {
 tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
-        xml.outputLocation.set(File("$buildDir/reports/jacoco/test/jacoco.xml"))
+        xml.outputLocation.set(File("${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"))
     }
 }
 
@@ -238,12 +238,12 @@ tasks.generateDiagnosticDocs {
     doLast {
         val resourcePath = tasks["processResources"].outputs.files.singleFile
         copy {
-            from("$buildDir/docs/diagnostics")
+            from("${layout.buildDirectory.get()}/docs/diagnostics")
             into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
         }
 
         copy {
-            from("$buildDir/docs/en/diagnostics")
+            from("${layout.buildDirectory.get()}/docs/en/diagnostics")
             into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
         }
     }
@@ -285,7 +285,7 @@ sonarqube {
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
-        property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/test/jacoco.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml")
     }
 }
 

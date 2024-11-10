@@ -75,9 +75,9 @@ class DiagnosticInfosTest {
 
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getDescription()).isNotEmpty()))
-      .doesNotThrowAnyException();
+    assertThat(diagnosticInfos).allSatisfy((key, diagnosticInfo) -> {
+      assertThat(diagnosticInfo.getDescription()).isNotEmpty();
+    });
   }
 
   @Test
