@@ -33,7 +33,7 @@ jobs:
             - name: Set up JDK
               uses: actions/setup-java@v4
               with:
-                java-version: 21
+                java-version: 23
                 distribution: 'temurin'
                 cache: gradle
 
