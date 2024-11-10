@@ -1672,7 +1672,7 @@
         },
         "ReservedParameterNames": {
             "description": "Reserved parameter names",
-            "default": false,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
