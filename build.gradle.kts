@@ -218,7 +218,7 @@ tasks.check {
 tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
-        xml.outputLocation.set(File("${layout.buildDirectory}/reports/jacoco/test/jacoco.xml"))
+        xml.outputLocation.set(File("${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"))
     }
 }
 
@@ -238,12 +238,12 @@ tasks.generateDiagnosticDocs {
     doLast {
         val resourcePath = tasks["processResources"].outputs.files.singleFile
         copy {
-            from("${layout.buildDirectory}/docs/diagnostics")
+            from("${layout.buildDirectory.get()}/docs/diagnostics")
             into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
         }
 
         copy {
-            from("${layout.buildDirectory}/docs/en/diagnostics")
+            from("${layout.buildDirectory.get()}/docs/en/diagnostics")
             into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
         }
     }
@@ -285,7 +285,7 @@ sonarqube {
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
-        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory}/reports/jacoco/test/jacoco.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml")
     }
 }
 
