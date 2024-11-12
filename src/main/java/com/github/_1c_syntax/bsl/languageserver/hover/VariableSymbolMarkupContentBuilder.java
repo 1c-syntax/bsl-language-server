@@ -42,6 +42,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String EXPORT_KEY = "export";
 
   private final LanguageServerConfiguration configuration;
+  private final DescriptionFormatter descriptionFormatter;
 
   @Override
   public MarkupContent getContent(VariableSymbol symbol) {
@@ -52,22 +53,22 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     // описание переменной
 
     // сигнатура
-    String signature = getSignature(symbol);
-    addSectionIfNotEmpty(markupBuilder, signature);
+    String signature = descriptionFormatter.getSignature(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
 
     // местоположение переменной
-    String location = getLocation(symbol);
-    addSectionIfNotEmpty(markupBuilder, location);
+    String location = descriptionFormatter.getLocation(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, location);
 
     // описание переменной
     symbol.getDescription()
       .map(VariableDescription::getPurposeDescription)
-      .ifPresent(description -> addSectionIfNotEmpty(markupBuilder, description));
+      .ifPresent(description -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, description));
 
     symbol.getDescription()
       .flatMap(VariableDescription::getTrailingDescription)
       .map(VariableDescription::getPurposeDescription)
-      .ifPresent(trailingDescription -> addSectionIfNotEmpty(markupBuilder, trailingDescription));
+      .ifPresent(trailingDescription -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, trailingDescription));
 
     String content = markupBuilder.toString();
 
@@ -79,48 +80,4 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     return SymbolKind.Variable;
   }
 
-  private String getSignature(VariableSymbol symbol) {
-    String signatureTemplate = "```bsl\n%s %s%s\n```";
-
-    String varKey = getResourceString(VARIABLE_KEY);
-    String name = symbol.getName();
-    String export = symbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
-
-    return String.format(
-      signatureTemplate,
-      varKey,
-      name,
-      export
-    );
-  }
-
-  private static String getLocation(VariableSymbol symbol) {
-    var documentContext = symbol.getOwner();
-    var startPosition = symbol.getSelectionRange().getStart();
-    String mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
-
-    String parentPostfix = symbol.getRootParent(SymbolKind.Method)
-      .map(sourceDefinedSymbol -> "." + sourceDefinedSymbol.getName())
-      .orElse("");
-    mdoRef += parentPostfix;
-
-    return String.format(
-      "[%s](%s#%d)",
-      mdoRef,
-      documentContext.getUri(),
-      startPosition.getLine() + 1
-    );
-  }
-
-  private static void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
-    if (!newContent.isEmpty()) {
-      markupBuilder.add(newContent);
-      markupBuilder.add("");
-      markupBuilder.add("---");
-    }
-  }
-
-  private String getResourceString(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
-  }
 }

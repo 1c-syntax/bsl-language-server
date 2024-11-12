@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter;
 import com.github._1c_syntax.bsl.languageserver.hover.MethodSymbolMarkupContentBuilder;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -63,6 +64,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
   private final ReferenceIndex referenceIndex;
   private final LanguageServerConfiguration configuration;
+  private final DescriptionFormatter descriptionFormatter;
 
 
   @Override
@@ -81,7 +83,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .filter(Reference::isSourceDefinedSymbolReference)
       .map(this::toInlayHints)
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .toList();
   }
 
 
@@ -129,7 +131,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
         return hints;
       })
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .toList();
 
   }
 
@@ -164,9 +166,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     inlayHint.setPosition(position);
   }
 
-  private static void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {
-    // todo: refactor
-    var markdown = MethodSymbolMarkupContentBuilder.parameterToString(parameter);
+  private void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {
+    var markdown = descriptionFormatter.parameterToString(parameter);
     var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
     inlayHint.setTooltip(tooltip);
   }
