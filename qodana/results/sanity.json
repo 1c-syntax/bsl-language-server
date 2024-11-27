@@ -110,14 +110,14 @@
       "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
       "language": "JAVA",
-      "line": 96,
+      "line": 98,
       "offset": 23,
       "length": 2,
       "code": {
-        "startLine": 94,
+        "startLine": 96,
         "length": 2,
-        "offset": 95,
-        "surroundingCode": "  @Setter(onMethod = @__({@Autowired}))\n  private ServerContext context;\n  @Setter(onMethod = @__({@Autowired}))\n  private DiagnosticComputer diagnosticComputer;\n  @Setter(onMethod = @__({@Autowired}))"
+        "offset": 111,
+        "surroundingCode": "  @Setter(onMethod = @__({@Autowired}))\n  private DiagnosticComputer diagnosticComputer;\n  @Setter(onMethod = @__({@Autowired}))\n  private LanguageServerConfiguration configuration;\n"
       }
     }
   ],
@@ -125,7 +125,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "QodanaJavaSanity"
   },
-  "hash": "1f2717aab17a63f70b38e35e254c226c09158c4df7defaa8a7dd345f390e2d78"
+  "hash": "1f8b56cebb4302feddaa16cd68a7e3f3d901381bfdd985ba71552712ade710f1"
 },{
   "tool": "Code Inspection",
   "category": "General",
