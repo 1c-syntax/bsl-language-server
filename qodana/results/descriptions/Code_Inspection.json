@@ -129,16 +129,16 @@
           "description": "Reports calls to `assertTrue()` and `assertFalse()` that can be replaced with assert equality functions.\n\n\n`assertEquals()`, `assertSame()`, and their negating counterparts (-Not-) provide more informative messages on\nfailure.\n\n**Example:**\n\n      assertTrue(a == b)\n\nAfter the quick-fix is applied:\n\n      assertEquals(a, b)\n"
         },
         {
-          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
-          "displayName": "Not-null assertion can be replaced with 'return'",
-          "enabled": false,
-          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
-        },
-        {
           "shortName": "ReplaceStringFormatWithLiteral",
           "displayName": "'String.format' call can be replaced with string templates",
           "enabled": false,
           "description": "Reports `String.format` calls that can be replaced with string templates.\n\nUsing string templates makes your code simpler.\n\nThe quick-fix replaces the call with a string template.\n\n**Example:**\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = String.format(\"%s_%s_%s\", id, date, id)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val id = \"abc\"\n          val date = \"123\"\n          val s = \"${id}_${date}_$id\"\n      }\n"
+        },
+        {
+          "shortName": "ReplaceNotNullAssertionWithElvisReturn",
+          "displayName": "Not-null assertion can be replaced with 'return'",
+          "enabled": false,
+          "description": "Reports not-null assertion (`!!`) calls that can be replaced with the elvis operator and return (`?: return`).\n\nA not-null assertion can lead to NPE (NullPointerException) that is not expected. Avoiding the use of `!!` is good practice.\n\nThe quick-fix replaces the not-null assertion with `return` or `return null`.\n\n**Example:**\n\n\n      fun test(number: Int?) {\n          val x = number!!\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(number: Int?) {\n          val x = number ?: return\n      }\n"
         },
         {
           "shortName": "ReplaceSubstringWithSubstringBefore",
@@ -1232,262 +1232,6 @@
       ]
     },
     {
-      "name": "Spring Core",
-      "inspections": [
-        {
-          "shortName": "SpringElStaticFieldInjectionInspection",
-          "displayName": "Incorrect injecting of SpEL in a static field",
-          "enabled": true,
-          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
-        },
-        {
-          "shortName": "SpringElInspection",
-          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
-          "enabled": true,
-          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
-        },
-        {
-          "shortName": "SpringHandlersSchemasHighlighting",
-          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
-          "enabled": true,
-          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
-        }
-      ]
-    },
-    {
-      "name": "XML",
-      "inspections": [
-        {
-          "shortName": "SpringBeanConstructorArgInspection",
-          "displayName": "Incorrect constructor injection in XML Spring bean",
-          "enabled": true,
-          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanInstantiationInspection",
-          "displayName": "Invalid non-abstract bean instantiation",
-          "enabled": true,
-          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
-        },
-        {
-          "shortName": "RequiredBeanTypeInspection",
-          "displayName": "Incorrect injected bean type",
-          "enabled": true,
-          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
-        },
-        {
-          "shortName": "ContextComponentScanInconsistencyInspection",
-          "displayName": "Invalid filter definition in XML-based component scans",
-          "enabled": true,
-          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
-        },
-        {
-          "shortName": "UtilSchemaInspection",
-          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
-          "enabled": true,
-          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringScopesInspection",
-          "displayName": "Unknown <bean> scope",
-          "enabled": true,
-          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPublicFactoryMethodInspection",
-          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringFactoryMethodInspection",
-          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
-          "enabled": true,
-          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringXmlModelInspection",
-          "displayName": "Incorrect Spring Core XML-based application context",
-          "enabled": true,
-          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
-        },
-        {
-          "shortName": "SpringBeanAttributesInspection",
-          "displayName": "Conflicting Spring bean attribute",
-          "enabled": true,
-          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInactiveProfileHighlightingInspection",
-          "displayName": "Inactive profile highlighting",
-          "enabled": true,
-          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueStyleInspection",
-          "displayName": "Injection value in XML application context violates conventions",
-          "enabled": true,
-          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "InjectionValueTypeInspection",
-          "displayName": "Unassignable injection point type in XML application context",
-          "enabled": true,
-          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringInjectionValueConsistencyInspection",
-          "displayName": "Inconsistent injection value in XML application context",
-          "enabled": true,
-          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "DuplicatedBeanNamesInspection",
-          "displayName": "Duplicated bean names in XML-based application context",
-          "enabled": true,
-          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringIncorrectResourceTypeInspection",
-          "displayName": "Incorrect resource type",
-          "enabled": true,
-          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringRequiredPropertyInspection",
-          "displayName": "Missing @Required property injections in the spring xml bean declaration",
-          "enabled": true,
-          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
-        },
-        {
-          "shortName": "SpringXmlAutowiringInspection",
-          "displayName": "Incorrect XML Spring bean autowiring",
-          "enabled": true,
-          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanNameConventionInspection",
-          "displayName": "Spring bean name violates conventions",
-          "enabled": true,
-          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
-        },
-        {
-          "shortName": "UnparsedCustomBeanInspection",
-          "displayName": "Unparsed custom Spring beans",
-          "enabled": true,
-          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
-        },
-        {
-          "shortName": "SpringXmlAutowireExplicitlyInspection",
-          "displayName": "Unnecessary autowired dependency in XML application context",
-          "enabled": true,
-          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringPlaceholdersInspection",
-          "displayName": "Unresolved placeholders configured in the Spring XML application context",
-          "enabled": true,
-          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
-        },
-        {
-          "shortName": "SpringBeanLookupMethodInspection",
-          "displayName": "Incorrectly configured XML bean lookup-method",
-          "enabled": true,
-          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
-        },
-        {
-          "shortName": "AbstractBeanReferencesInspection",
-          "displayName": "Incorrect reference to abstract bean",
-          "enabled": true,
-          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
-        },
-        {
-          "shortName": "DeprecatedClassUsageInspection",
-          "displayName": "Deprecated API usage in XML",
-          "enabled": false,
-          "description": "Reports usages of deprecated classes and methods in XML files."
-        },
-        {
-          "shortName": "CheckXmlFileWithXercesValidator",
-          "displayName": "Failed external validation",
-          "enabled": false,
-          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
-        },
-        {
-          "shortName": "XmlUnusedNamespaceDeclaration",
-          "displayName": "Unused schema declaration",
-          "enabled": false,
-          "description": "Reports an unused namespace declaration or location hint in XML."
-        },
-        {
-          "shortName": "XmlDefaultAttributeValue",
-          "displayName": "Redundant attribute with default value",
-          "enabled": false,
-          "description": "Reports a redundant assignment of the default value to an XML attribute."
-        },
-        {
-          "shortName": "CheckDtdRefs",
-          "displayName": "Unresolved DTD reference",
-          "enabled": false,
-          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
-        },
-        {
-          "shortName": "CheckTagEmptyBody",
-          "displayName": "Empty element content",
-          "enabled": false,
-          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
-        },
-        {
-          "shortName": "XmlInvalidId",
-          "displayName": "Unresolved 'id' reference",
-          "enabled": false,
-          "description": "Reports an unresolved `id` reference in XML."
-        },
-        {
-          "shortName": "XmlDeprecatedElement",
-          "displayName": "Deprecated symbol",
-          "enabled": false,
-          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
-        },
-        {
-          "shortName": "XmlUnresolvedReference",
-          "displayName": "Unresolved references",
-          "enabled": false,
-          "description": "Reports an unresolved references in XML."
-        },
-        {
-          "shortName": "XmlWrongRootElement",
-          "displayName": "Wrong root element",
-          "enabled": false,
-          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
-        },
-        {
-          "shortName": "XmlHighlighting",
-          "displayName": "XML highlighting",
-          "enabled": false,
-          "description": "Reports XML validation problems in the results of a batch code inspection."
-        },
-        {
-          "shortName": "XmlDuplicatedId",
-          "displayName": "Duplicate 'id' attribute",
-          "enabled": false,
-          "description": "Reports a duplicate `id` attribute in XML."
-        },
-        {
-          "shortName": "XmlUnboundNsPrefix",
-          "displayName": "Unbound namespace prefix",
-          "enabled": false,
-          "description": "Reports an unbound namespace prefix in XML."
-        },
-        {
-          "shortName": "XmlPathReference",
-          "displayName": "Unresolved file reference",
-          "enabled": false,
-          "description": "Reports an unresolved file reference in XML."
-        }
-      ]
-    },
-    {
       "name": "Performance",
       "inspections": [
         {
@@ -1759,6 +1503,262 @@
           "displayName": "'StringBuilder' without initial capacity",
           "enabled": false,
           "description": "Reports attempts to instantiate a new `StringBuffer` or `StringBuilder` object without specifying its initial capacity.\n\n\nIf no initial capacity is specified, a default capacity is used, which will rarely be optimal.\nFailing to specify the initial capacity for `StringBuffer` may result\nin performance issues if space needs to be reallocated and memory copied\nwhen the initial capacity is exceeded.\n\nExample:\n\n\n      // Capacity is not specified\n      var sb = new StringBuilder();\n"
+        }
+      ]
+    },
+    {
+      "name": "Spring Core",
+      "inspections": [
+        {
+          "shortName": "SpringElStaticFieldInjectionInspection",
+          "displayName": "Incorrect injecting of SpEL in a static field",
+          "enabled": true,
+          "description": "Reports attempts to inject Spring Expression Language (SpEL) into static fields ('null' value is injected).\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{systemProperties['some.key']}\")  //  Injection to static fields is not allowed\n        static String spelWithDefaultValue;\n    }\n"
+        },
+        {
+          "shortName": "SpringElInspection",
+          "displayName": "Incorrect Spring Expression Language (SpEl) syntax",
+          "enabled": true,
+          "description": "Reports syntax errors in the Spring Expression Language (SpEL) code, such as unresolved references and invalid locations.\n\n**Example:**\n\n\n    @Controller\n    public class MyController {\n        @Value(\"#{T(java.lang.Math).unknown()}\") // Cannot resolve property or method 'unknown'\n        public void setValue(String s) {}\n    }\n"
+        },
+        {
+          "shortName": "SpringHandlersSchemasHighlighting",
+          "displayName": "Unresolved file or class reference in a spring.handlers or spring.schemas file",
+          "enabled": true,
+          "description": "Reports unresolved class and file references in `spring.handlers` and `spring.schemas` files.\n\n**Example `spring.handlers` file:**\n\n\n       a=my.company.MyHandler\n       b=my.company.UnknownHandler // reports \"Cannot resolve class 'my.company.UnknownHandler'\"\n"
+        }
+      ]
+    },
+    {
+      "name": "XML",
+      "inspections": [
+        {
+          "shortName": "SpringBeanConstructorArgInspection",
+          "displayName": "Incorrect constructor injection in XML Spring bean",
+          "enabled": true,
+          "description": "Reports Spring `<bean>` using constructor-based dependency injection.\n\nThe inspection triggers when it can't find an appropriate constructor or factory method for `<bean>` with the configured\n`<constructor-arg>` tags and defined `autowire` policy.\n\n**Example:**\n\n\n        public class MyComponent {\n        // constructor\n        public MyComponent(MyBean bean) {}\n        // factory method\n        public static MyComponent getInstance(String name, int port) {\n        }\n\n\n        <beans>\n          <bean class=\"beans.MyComponent\" id=\"foo\"> <!-- reports \"No matching constructor found in class 'MyComponent\" -->\n             <constructor-arg ref=\"myBean\"/>\n             <constructor-arg value=\"123\"/>\n          </bean>\n\n          <bean class=\"beans.MyComponent\" factory-method=\"getInstance\"> <!-- reports \"No matching factory method found in class\" -->\n             <constructor-arg value=\"123\"/>\n          </bean>\n        </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanInstantiationInspection",
+          "displayName": "Invalid non-abstract bean instantiation",
+          "enabled": true,
+          "description": "Reports instantiation errors on interface/abstract class **\\<bean\\>** declarations.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.util.List\"/>\n        <!-- reports 'Interface not allowed for non-abstract beans' -->\n      </beans>\n"
+        },
+        {
+          "shortName": "RequiredBeanTypeInspection",
+          "displayName": "Incorrect injected bean type",
+          "enabled": true,
+          "description": "Reports incorrect types of custom schema bean injections defined in the XML application context.\n\n**Example:**\n\n\n      public class SimpleBean{}\n\n\n      <beans ...>\n        <bean class=\"SimpleBean\" id=\"simpleBean\"/>\n           <mvc:annotation-driven\n             conversion-service=\"simpleBean\"      <!-- reports \"Bean must be of 'org.springframework.core.convert.ConversionService' type\" -->\n             message-codes-resolver=\"simpleBean\"  <!-- reports 'Bean must be of org.springframework.validation.MessageCodesResolver' type\" -->\n             validator=\"simpleBean\"               <!-- reports \"Bean must be of 'org.springframework.validation.Validator' type\" -->\n        />\n      </beans>\n"
+        },
+        {
+          "shortName": "ContextComponentScanInconsistencyInspection",
+          "displayName": "Invalid filter definition in XML-based component scans",
+          "enabled": true,
+          "description": "Reports inconsistent **\\<filter\\>** definitions in **\\<component-scan\\>** of XML application contexts.\n\n**Example:**\n\n\n      public class NonAnnotationTypeClass {}\n\n\n      <beans>\n        <ctx:component-scan base-package=\"com.my.company\">\n          <ctx:exclude-filter expression=\"com.my.company.anno.NonAnnotationTypeClass\" type=\"annotation\"/>\n        </ctx:component-scan>\n      </beans>\n\nIn this example, `NonAnnotationTypeClass` is expected to be an annotation type."
+        },
+        {
+          "shortName": "UtilSchemaInspection",
+          "displayName": "Incorrectly configured 'util' schema beans defined in XML application context",
+          "enabled": true,
+          "description": "Reports incorrect [schema beans](https://www.springframework.org/schema/util) defined in XML application contexts.\n\n\n      <beans ... xmlns:util=\"https://www.springframework.org/schema/util\">\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <util:list list-class=\"java.lang.String\"/> // reports \"Class must be inheritor of 'java.util.List'\"\n        <util:set value-type=\"MyBean\">\n          <ref bean=\"fooBean\"/>\n          <ref bean=\"errTypeBean\"/> // reports \"Cannot be added in collection of 'MyBean' type\"\n        </util:set>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringScopesInspection",
+          "displayName": "Unknown <bean> scope",
+          "enabled": true,
+          "description": "Reports unknown values of the `scope` attribute in `<bean>` elements.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"beans.FooComponent\" id=\"foo\" scope=\"unknown\"/>\n        <!-- reports \"Cannot resolve symbol 'unknown'\" >\n        <bean class=\"beans.BarComponent\" id=\"bar\" scope=\"prototype\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPublicFactoryMethodInspection",
+          "displayName": "Incorrect non-public method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports non-public methods referenced in the `factory-method` attributes of **\\<bean\\>** elements.\n\n**Example:**\n\n\n    public class MyFactory {\n      private static FooBean createBean() {...}\n      }\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      // reports \"Factory method 'createBean' should be public\"\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringFactoryMethodInspection",
+          "displayName": "Incorrectly defined method referenced in \"factory-method\" attribute",
+          "enabled": true,
+          "description": "Reports incorrect method references in the `factory-method` attribute of the `<bean>` element.\n\n**Example:**\n\n\n    public class MyFactory {\n    public static FooBean createBean() {}\n    }\n\n\n    <beans>\n      <bean class=\"MyFactory\" id=\"factory\"/>\n      <bean factory-bean=\"factory\" factory-method=\"createBean\"/> <!-- Factory method 'createBean' must not be static -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringXmlModelInspection",
+          "displayName": "Incorrect Spring Core XML-based application context",
+          "enabled": true,
+          "description": "Reports issues with the [Spring Framework](https://spring.io/projects/spring-framework) XML-based application context:\n\n* Unresolved bean references\n* Missing required tags or attributes\n* Incorrect property types\n* Inconsistent `enum` properties\n* Incorrect types of referenced beans"
+        },
+        {
+          "shortName": "SpringBeanAttributesInspection",
+          "displayName": "Conflicting Spring bean attribute",
+          "enabled": true,
+          "description": "Reports configuration conflicts on `<bean>` attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"java.lang.String\" factory-bean=\"factoryBean\"/>\n        <!-- Exactly one of 'class' or 'factory-bean' is required -->\n        <bean factory-bean=\"factoryBean\" id=\"missingFactoryMethod\"/> <!-- When factory-bean exists, factory-method is required -->\n\n        <!-- Attribute abstract with default value 'false' is superfluous -->\n        <bean abstract=\"false\" id=\"superfluousDefaultAttributeAbstract\"/>\n\n        <!-- Attribute scope with default value 'singleton' is superfluous -->\n        <bean id=\"superfluousDefaultAttributeScope\" scope=\"singleton\"/>\n\n        <bean class=\"java.lang.StringBuilder\">\n          <property name=\"length\">\n            <!-- Attributes id, name, and scope are superfluous -->\n            <bean id=\"beanId\" name=\"beanName\" scope=\"prototype\"/>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInactiveProfileHighlightingInspection",
+          "displayName": "Inactive profile highlighting",
+          "enabled": true,
+          "description": "Reports inactive profiles in the Spring XML application contexts.\n\n**Example:**\n\n\n      <!-- active profile 'DEV' is chosen for this application context -->\n      <beans profile=\"DEV\">\n        <bean class=\"MyFactory\" factory-method=\"createBean\"/>\n      </beans>\n      <!--  content of this tag is highlighted as 'unused' -->\n      <beans profile=\"**TESTS**\">\n    <bean class=\"MyTestFactory\" factory-method=\"createBean\"/>\n    </beans>\n      <!--  end of 'unused' section -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueStyleInspection",
+          "displayName": "Injection value in XML application context violates conventions",
+          "enabled": true,
+          "description": "Reports properties configured via `<value>` or `<ref>` sub-elements and offers to replace them with the corresponding attributes.\n\n**Example:**\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n\n        <bean class=\"MyFactory\">\n          <property name=\"bean\">\n            <ref bean=\"myBean\"/> <!-- reports 'Usage of explicit <ref> element' -->\n          </property>\n        </bean>\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"MyFactory\">\n          <property name=\"bean\" ref=\"myBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "InjectionValueTypeInspection",
+          "displayName": "Unassignable injection point type in XML application context",
+          "enabled": true,
+          "description": "Reports invalid injection point types (properties and constructor arguments).\n\nThe following injection point types are allowed: `ref`, `idref`, any collection type, inner beans, and so on.\n\n**Example:**\n\n\n      public class InjectionValueTypes{\n      public List<MyBean> setListBeans() {...}\n        public MyBean setMyBean() {...}\n        }\n      }\n\n\n      <beans>\n        <bean class=\"MyBean\" id=\"myBean\"/>\n        <bean class=\"ErrTypeBean\" id=\"errTypeBean\"/>\n        <bean class=\"InjectionValueTypes\" id=\"kt\">\n          <property name=\"myBean\" ref=\"errTypeBean\"/>\n          <!--  reports \"Property of 'MyBean' type cannot be injected by 'ErrTypeBean'\" -->\n          <property name=\"listBeans\">\n            <list>\n              <idref local=\"myBean\"/>\n              <ref bean=\"myBean\"/>\n              <ref bean=\"errTypeBean\"/> <!--  reports \"Cannot be added in collection of 'MyBean' type\" -->\n              <bean class=\"ErrTypeBean\"/> <!--  reports \"Bean must be of 'MyBean' type\" -->\n            </list>\n          </property>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringInjectionValueConsistencyInspection",
+          "displayName": "Inconsistent injection value in XML application context",
+          "enabled": true,
+          "description": "Reports inconsistent tags and attributes on injection points in XML application contexts.\n\n* `<property>` and `<constructor-arg>` must specify a `ref`, `value`, or a sub-element\n* `<property>` and `<constructor-arg>` cannot contain more than one sub-element\n* `<ref>` can contain either a `bean` attribute, a `local` attribute, or a `parent` attribute\n* `<ref>` must specify a bean\n* `<idref>` can contain either a `bean` attribute or a `local` attribute\n* `<idref>` must specify a bean\n* `<map>` must specify a key\n* `<idref>` can contain either a `key` attribute, a `key-ref` attribute, or a `<key>` sub-element\n\n**Example:**\n\n\n      <beans>\n\n      <!-- 1. Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      <bean class=\"MyClass\">\n        <property name=\"bean\" ref=\"myBean\" value=\"foo\"/>\n        <!-- Property is only allowed to contain either \"ref\" attribute OR \"value\" attribute OR sub-element -->\n      </bean>\n\n      <!-- 2. Property must not contain more than one sub-element -->\n      <bean class=\"MyFactory\">\n        <property name=\"bean\">\n        <ref>bean</ref> <!-- Property must not contain more than one sub-element -->\n         <value>foo</value> <!-- Property must not contain more than one sub-element -->\n         </property>\n      </bean>\n\n      <!-- 3. Map entry must specify a key -->\n      <bean class=\"MyBean\">\n         <property name=\"map\">\n            <map>\n               <entry value=\"foo\"/>  <!-- Map entry must specify a key -->\n            </map>\n         </property>\n      </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "DuplicatedBeanNamesInspection",
+          "displayName": "Duplicated bean names in XML-based application context",
+          "enabled": true,
+          "description": "Reports duplicate bean names defined in the application context.\n\n**Example:**\n\n\n      <beans profile=\"PROD\">\n        <bean class=\"...\" id=\"duplicatedName\"/>  <!--  error -->\n        <bean class=\"...\" name=\"foo_name, duplicatedName\"/> <!--  'duplicatedName' error -->\n        <bean class=\"...\" id=\"toBeAliased\"/>\n\n        <alias alias=\"duplicatedName\" name=\"toBeAliased\"/> <!--  'duplicatedName' error -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringIncorrectResourceTypeInspection",
+          "displayName": "Incorrect resource type",
+          "enabled": true,
+          "description": "Reports incorrect files referenced in the XML application context.\n\n**Example:**\n\n\n      <beans>\n        <import resource=\"imported-app-context.xml\"/>\n        <import resource=\"banner.txt\"/> <!-- reports 'Incorrect resource type' as Spring XML application context is expected here -->\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringRequiredPropertyInspection",
+          "displayName": "Missing @Required property injections in the spring xml bean declaration",
+          "enabled": true,
+          "description": "Reports `@Required` setter bean properties that are not injected or autowired.\n\n**Example:**\n\n\n    <beans>\n      <bean class=\"beans.MyComponent\" id=\"foo\"/>\n      <!-- reports \"Required properties missing: 'port'\" -->\n    </beans>\n\n\n    public class MyComponent {\n       @Required\n       public void setPort(int port) // reports \"Required property 'port' is not injected\"\n       {...}\n    }\n"
+        },
+        {
+          "shortName": "SpringXmlAutowiringInspection",
+          "displayName": "Incorrect XML Spring bean autowiring",
+          "enabled": true,
+          "description": "Reports incorrect autowiring of Spring beans configured in XML application contexts.\n\n**Example:**\n\n\n    public interface FooInterface {...}\n    @Component public class FooBean implements FooInterface {...}\n    @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t public void setFooInterface(FooInterface foo) {...}\n    }\n\n\n    <beans>\n    \t<bean class=\"beans.OtherBean\" id=\"otherBean\"/>\n    \t<bean class=\"beans.FooBean\" id=\"fooBean\"/>\n\n    \t<bean autowire=\"byType\" class=\"beans.MyComponent\" id=\"foo\"/> <!-- reports \"Could not autowire. There is more than one bean of 'FooInterface' type. -->\n                                                                       <!--          Beans: otherBean,fooBean. Properties: 'fooInterface' \" -->\n    </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanNameConventionInspection",
+          "displayName": "Spring bean name violates conventions",
+          "enabled": true,
+          "description": "Reports **\\<bean\\>** names that don't follow the bean naming conventions.\n\n\nThe convention is to use the standard Java convention for instance field names when naming beans.\nThat is, bean names start with a lowercase letter and are camel-cased from there.\nExamples of such names include `accountManager`, `accountService`, `userDao`, `loginController`, and so on.\nNaming beans consistently makes your configuration easier to read and understand.\nAlso, if you are using Spring AOP, it helps a lot when applying an advice to a set of beans related by name."
+        },
+        {
+          "shortName": "UnparsedCustomBeanInspection",
+          "displayName": "Unparsed custom Spring beans",
+          "enabled": true,
+          "description": "Reports unknown Spring bean types that have not yet been parsed or if a bean uses an unsupported tag for the custom namespace."
+        },
+        {
+          "shortName": "SpringXmlAutowireExplicitlyInspection",
+          "displayName": "Unnecessary autowired dependency in XML application context",
+          "enabled": true,
+          "description": "Reports `autowire` attributes in `<bean>` elements and suggests to explicitly inject bean properties if possible.\n\n**Example:**\n\n\n      public class MyComponent {\n        public void setOtherBean(OtherBean bean){...}\n      }\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean autowire=\"byType\" class=\"beans.MyComponent\"/>\n        <!-- \"Unnecessary autowired dependency\" -->\n        <!-- suggests \"Make autowired dependency explicit\" -->\n      </beans>\n\nAfter applying the quick-fix:\n\n\n      <beans>\n        <bean class=\"beans.OtherBean\" id=\"bar\"/>\n        <bean class=\"beans.MyComponent\" id=\"foo\">\n          <property name=\"otherBean\" ref=\"otherBean\"/>\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringPlaceholdersInspection",
+          "displayName": "Unresolved placeholders configured in the Spring XML application context",
+          "enabled": true,
+          "description": "Reports unresolved placeholders configured in Spring XML contexts.\n\n**Example:**\n\n\n      <beans>\n        <ctx:property-placeholder location=\"application.properties\"/>\n\n        <bean class=\"beans.ServerComponent\">\n          <property name=\"serverName\" value=\"${server.name}}\"/>\n          <property name=\"port\" value=\"${unknown.property}}\"/> <!-- reports \"Cannot resolve property key\" -->\n        </bean>\n      </beans>\n"
+        },
+        {
+          "shortName": "SpringBeanLookupMethodInspection",
+          "displayName": "Incorrectly configured XML bean lookup-method",
+          "enabled": true,
+          "description": "Reports incorrect **\\<lookup-method\\>** for a bean in XML application contexts.\n\n**Example:**\n\n\n      public abstract class FooLookupBean {\n        protected abstract FooBean createCommand();\n        private FooBean createCommand() {...}\n        protected static FooBean createCommandStatic() {...}\n        protected abstract FooBean createWithArgs(String foo);\n        protected abstract OtherBean createOtherBean();\n      }\n      \n\n      <beans>\n        <bean class=\"FooLookupBean\" id=\"lookupTest\">\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/>\n          <!-- private -->\n          <lookup-method bean=\"fooBean\" name=\"createCommand\"/> <!-- \"Method must be public or protected\" -->\n          <!-- static -->\n          <lookup-method bean=\"fooBean\" name=\"createCommandStatic\"/> <!-- Static method not allowed here -->\n          <!-- with arguments -->\n          <lookup-method bean=\"fooBean\" name=\"createWithArgs\"/> <!-- Method must have no parameters -->\n          <!-- not exist -->\n          <lookup-method bean=\"fooBean\" name=\"unknown\"/> <!-- unknown method -->\n          <!-- mismatch -->\n          <lookup-method bean=\"fooBean\" name=\"createOtherBean\"/> <!-- Lookup method return type does not match the 'FooBean' bean class -->\n        </bean>\n\n        <bean class=\"FooBean\" id=\"fooBean\"/>\n        <bean class=\"OtherBean\" id=\"otherBean\"/>\n      </beans>\n"
+        },
+        {
+          "shortName": "AbstractBeanReferencesInspection",
+          "displayName": "Incorrect reference to abstract bean",
+          "enabled": true,
+          "description": "Reports referenced abstract beans.\n\nAbstract beans can be used only as template bean definitions, that is, parents for child definitions.\nTrying to use such an abstract parent bean on its own by referring to it as a ref property of another bean,\nor by calling `getBean()` with the parent bean id, will result in an error.\n\n**Example:**\n\n\n      <bean abstract=\"true\" id=\"parentBeanWithoutClass\"/>\n      <bean class=\"com.my.company.FooBean\" id=\"childBean\" parent=\"parentBeanWithoutClass\">\n      <!--  properties -->\n      </bean>\n\nIn this example, the parent bean can't be instantiated on its own since it is incomplete and explicitly marked as abstract."
+        },
+        {
+          "shortName": "DeprecatedClassUsageInspection",
+          "displayName": "Deprecated API usage in XML",
+          "enabled": false,
+          "description": "Reports usages of deprecated classes and methods in XML files."
+        },
+        {
+          "shortName": "CheckXmlFileWithXercesValidator",
+          "displayName": "Failed external validation",
+          "enabled": false,
+          "description": "Reports a discrepancy in an XML file with the specified DTD or schema detected by the Xerces validator."
+        },
+        {
+          "shortName": "XmlUnusedNamespaceDeclaration",
+          "displayName": "Unused schema declaration",
+          "enabled": false,
+          "description": "Reports an unused namespace declaration or location hint in XML."
+        },
+        {
+          "shortName": "XmlDefaultAttributeValue",
+          "displayName": "Redundant attribute with default value",
+          "enabled": false,
+          "description": "Reports a redundant assignment of the default value to an XML attribute."
+        },
+        {
+          "shortName": "CheckDtdRefs",
+          "displayName": "Unresolved DTD reference",
+          "enabled": false,
+          "description": "Reports inconsistency in a DTD-specific reference, for example, in a reference to an XML entity or to a DTD element declaration. Works in DTD an XML files."
+        },
+        {
+          "shortName": "CheckTagEmptyBody",
+          "displayName": "Empty element content",
+          "enabled": false,
+          "description": "Reports XML elements without contents.\n\n**Example:**\n\n\n      <user>\n        <name></name>\n      </user>\n\nAfter the quick-fix is applied:\n\n\n      <user>\n        <name/>\n      </user>\n"
+        },
+        {
+          "shortName": "XmlInvalidId",
+          "displayName": "Unresolved 'id' reference",
+          "enabled": false,
+          "description": "Reports an unresolved `id` reference in XML."
+        },
+        {
+          "shortName": "XmlDeprecatedElement",
+          "displayName": "Deprecated symbol",
+          "enabled": false,
+          "description": "Reports a deprecated XML element or attribute.\n\nSymbols can be marked by XML comment or documentation tag with text 'deprecated'."
+        },
+        {
+          "shortName": "XmlUnresolvedReference",
+          "displayName": "Unresolved references",
+          "enabled": false,
+          "description": "Reports an unresolved references in XML."
+        },
+        {
+          "shortName": "XmlWrongRootElement",
+          "displayName": "Wrong root element",
+          "enabled": false,
+          "description": "Reports a root tag name different from the name specified in the `<doctype>` tag."
+        },
+        {
+          "shortName": "XmlHighlighting",
+          "displayName": "XML highlighting",
+          "enabled": false,
+          "description": "Reports XML validation problems in the results of a batch code inspection."
+        },
+        {
+          "shortName": "XmlDuplicatedId",
+          "displayName": "Duplicate 'id' attribute",
+          "enabled": false,
+          "description": "Reports a duplicate `id` attribute in XML."
+        },
+        {
+          "shortName": "XmlUnboundNsPrefix",
+          "displayName": "Unbound namespace prefix",
+          "enabled": false,
+          "description": "Reports an unbound namespace prefix in XML."
+        },
+        {
+          "shortName": "XmlPathReference",
+          "displayName": "Unresolved file reference",
+          "enabled": false,
+          "description": "Reports an unresolved file reference in XML."
         }
       ]
     },
@@ -4608,16 +4608,16 @@
           "description": "Reports non-final fields in enumeration types. Non-final fields introduce global mutable state, which is generally considered undesirable.\n\n**Example:**\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum Enum {\n        FIRST(\"first\"),\n        SECOND(\"second\");\n\n        public final String str;\n\n        Enum(String str) {\n            this.str = str;\n        }\n      }\n\nUse the \\`Ignore fields that cannot be made 'final'\\` option to only warn on fields that can be made final using the quick-fix."
         },
         {
-          "shortName": "Singleton",
-          "displayName": "Singleton",
-          "enabled": false,
-          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
-        },
-        {
           "shortName": "NonFinalUtilityClass",
           "displayName": "Utility class is not 'final'",
           "enabled": false,
           "description": "Reports utility classes that aren't `final` or `abstract`.\n\nUtility classes have all fields and methods declared as `static`.\nMaking them `final` prevents them from being accidentally subclassed.\n\n**Example:**\n\n\n      public class UtilityClass {\n        public static void foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      public final class UtilityClass {\n        public static void foo() {}\n      }\n"
+        },
+        {
+          "shortName": "Singleton",
+          "displayName": "Singleton",
+          "enabled": false,
+          "description": "Reports singleton classes.\n\nSingleton classes are declared in a way that only one instance of the class can ever be instantiated. Singleton classes complicate testing,\nand their presence may indicate a lack of object-oriented design.\n\n**Example:**\n\n\n      class Singleton {\n        private static final Singleton ourInstance = new Singleton();\n\n        private Singleton() {\n        }\n\n        public Singleton getInstance() {\n            return ourInstance;\n        }\n      }\n"
         },
         {
           "shortName": "ParameterCanBeLocal",
@@ -5177,16 +5177,16 @@
           "description": "Reports classes that refer to their subclasses in static initializers or static fields.\n\nSuch references can cause JVM-level deadlocks in multithreaded environment, when one thread tries to load the superclass\nand another thread tries to load the subclass at the same time.\n\n**Example:**\n\n\n      class Parent {\n        static final Child field = new Child();\n      }\n      class Child extends Parent { }\n"
         },
         {
-          "shortName": "NonSynchronizedMethodOverridesSynchronizedMethod",
-          "displayName": "Unsynchronized method overrides 'synchronized' method",
-          "enabled": false,
-          "description": "Reports non-`synchronized` methods overriding `synchronized` methods.\n\n\nThe overridden method will not be automatically synchronized if the superclass method\nis declared as `synchronized`. This may result in unexpected race conditions when using the subclass.\n\n**Example:**\n\n\n      class Super {\n        synchronized void process() {}\n      }\n      class Sub extends Super {\n        // Unsynchronized method 'process()' overrides synchronized method\n        void process() {}\n      }  \n"
-        },
-        {
           "shortName": "WaitCalledOnCondition",
           "displayName": "'wait()' called on 'java.util.concurrent.locks.Condition' object",
           "enabled": false,
           "description": "Reports calls to `wait()` made on a `java.util.concurrent.locks.Condition` object. This is probably a programming error, and some variant of the `await()` method was intended instead.\n\n**Example:**\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.wait();\n        }\n      }\n\nGood code would look like this:\n\n\n      void acquire(Condition released) throws InterruptedException {\n        while (acquired) {\n          released.await();\n        }\n      }\n"
+        },
+        {
+          "shortName": "NonSynchronizedMethodOverridesSynchronizedMethod",
+          "displayName": "Unsynchronized method overrides 'synchronized' method",
+          "enabled": false,
+          "description": "Reports non-`synchronized` methods overriding `synchronized` methods.\n\n\nThe overridden method will not be automatically synchronized if the superclass method\nis declared as `synchronized`. This may result in unexpected race conditions when using the subclass.\n\n**Example:**\n\n\n      class Super {\n        synchronized void process() {}\n      }\n      class Sub extends Super {\n        // Unsynchronized method 'process()' overrides synchronized method\n        void process() {}\n      }  \n"
         },
         {
           "shortName": "WaitNotifyNotInSynchronizedContext",
@@ -7355,47 +7355,6 @@
       ]
     },
     {
-      "name": "Common",
-      "inspections": [
-        {
-          "shortName": "ReactiveStreamsUnusedPublisher",
-          "displayName": "Unused publisher",
-          "enabled": true,
-          "description": "Reports unused `Publisher` instances.\n\n\nTo use an operator (a method of Mono/Flux/Flowable object that returns a Mono/Flux/Flowable) that produces a new `Publisher`\ninstance,\nyou must subscribe to the created `Publisher` via `subscribe()`.\n\n\nUsing a factory (for example, `Mono.just()`) without subscribing to the returned `Publisher`,\ncreates an object that is never used and is treated as unnecessary memory allocation.\n\n\nFor example, `Mono.just(1, 2, 3).map(i -> i + 3)` won't be executed unless you subscribe to this `Publisher`,\nor unless you produce a new `Publisher` by applying operators and subscribe to it.\n\n**Example:**\n\nUnused `Flux` instance:\n\n\n    Flux.just(1, 2, 3);\n\nA `Flux` instance used by consumer:\n\n\n    Flux.just(1, 2, 3).subscribe(System.out::println);\n\nCalls to methods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation are not reported.\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsThrowInOperator",
-          "displayName": "Throw statement in Reactive operator",
-          "enabled": true,
-          "description": "Reports `throw` expressions in the Reactor/RxJava operator code.\n\nThrowing exceptions from a Reactor/RxJava operator indicates a possible problem, because you can return a \"Reactive-like\" error:\n`Mono.error()` or `Flowable.error()` from `flatMap()`,\nor call `sink.error()` from the Reactor's `handle()` operator.\n\n\nAlso, Reactor factory methods allow returning checked exceptions without any errors, while throwing such exceptions without\nthe `Exceptions` class leads to a compilation error.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                throw new RuntimeException();\n            })\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                return Flux.error(new RuntimeException());\n            })\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsPublisherImplementation",
-          "displayName": "Class implements Publisher",
-          "enabled": true,
-          "description": "Reports classes that directly implement the `Publisher` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
-        },
-        {
-          "shortName": "ReactiveStreamsNullableInLambdaInTransform",
-          "displayName": "Return null or something nullable from a lambda in transformation method",
-          "enabled": true,
-          "description": "Reports transform operations that may return `null` inside a Reactive Stream chain.\n\n\nReactive Streams don't support nullable values, which causes such code to fail.\nThe quick-fix suggests replacing `map()` with `mapNotNull`, which omits exceptions.\n\n**Example:**\n\n    repository.findWithTailableCursorBy()\n        .map(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nAfter the quick-fix is applied:\n\n    repository.findWithTailableCursorBy()\n        .mapNotNull(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsTooLongSameOperatorsChain",
-          "displayName": "Too long same methods chain",
-          "enabled": true,
-          "description": "Reports long Reactive Streams transformation chains.\n\nEach operator method call, such as `map()` or `filter()`, creates some objects for those operators.\nCalling a long chain of operators on each subscription, for each stream element, may cause performance overhead.\nTo avoid it, combine a long chain of calls into one operator call wherever possible.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1)\n            .map(it -> it + 2)\n            .map(it -> it + 3)\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1 + 2 + 3)\n\nNew in 2019.3"
-        },
-        {
-          "shortName": "ReactiveStreamsSubscriberImplementation",
-          "displayName": "Class implements Subscriber",
-          "enabled": true,
-          "description": "Reports classes that directly implement the `Subscriber` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
-        }
-      ]
-    },
-    {
       "name": "Packaging issues",
       "inspections": [
         {
@@ -7439,6 +7398,47 @@
           "displayName": "Package with classes in multiple modules",
           "enabled": false,
           "description": "Reports non-empty packages that are present in several modules. When packages are contained in several modules, it is very easy to create a class with the same name in two modules. A module which depends on these modules will see a conflict if it tries to use such a class. The Java Platform Module System disallows packages contained in more than one module (also called *split packages* )\n\nAvailable only from **Code \\| Inspect Code** or\n**Code \\| Analyze Code \\| Run Inspection by Name** and isn't reported in the editor."
+        }
+      ]
+    },
+    {
+      "name": "Common",
+      "inspections": [
+        {
+          "shortName": "ReactiveStreamsUnusedPublisher",
+          "displayName": "Unused publisher",
+          "enabled": true,
+          "description": "Reports unused `Publisher` instances.\n\n\nTo use an operator (a method of Mono/Flux/Flowable object that returns a Mono/Flux/Flowable) that produces a new `Publisher`\ninstance,\nyou must subscribe to the created `Publisher` via `subscribe()`.\n\n\nUsing a factory (for example, `Mono.just()`) without subscribing to the returned `Publisher`,\ncreates an object that is never used and is treated as unnecessary memory allocation.\n\n\nFor example, `Mono.just(1, 2, 3).map(i -> i + 3)` won't be executed unless you subscribe to this `Publisher`,\nor unless you produce a new `Publisher` by applying operators and subscribe to it.\n\n**Example:**\n\nUnused `Flux` instance:\n\n\n    Flux.just(1, 2, 3);\n\nA `Flux` instance used by consumer:\n\n\n    Flux.just(1, 2, 3).subscribe(System.out::println);\n\nCalls to methods annotated with Error Prone's or AssertJ's `@CanIgnoreReturnValue` annotation are not reported.\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsThrowInOperator",
+          "displayName": "Throw statement in Reactive operator",
+          "enabled": true,
+          "description": "Reports `throw` expressions in the Reactor/RxJava operator code.\n\nThrowing exceptions from a Reactor/RxJava operator indicates a possible problem, because you can return a \"Reactive-like\" error:\n`Mono.error()` or `Flowable.error()` from `flatMap()`,\nor call `sink.error()` from the Reactor's `handle()` operator.\n\n\nAlso, Reactor factory methods allow returning checked exceptions without any errors, while throwing such exceptions without\nthe `Exceptions` class leads to a compilation error.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                throw new RuntimeException();\n            })\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3).flatMap(i -> {\n                return Flux.error(new RuntimeException());\n            })\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsPublisherImplementation",
+          "displayName": "Class implements Publisher",
+          "enabled": true,
+          "description": "Reports classes that directly implement the `Publisher` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
+        },
+        {
+          "shortName": "ReactiveStreamsNullableInLambdaInTransform",
+          "displayName": "Return null or something nullable from a lambda in transformation method",
+          "enabled": true,
+          "description": "Reports transform operations that may return `null` inside a Reactive Stream chain.\n\n\nReactive Streams don't support nullable values, which causes such code to fail.\nThe quick-fix suggests replacing `map()` with `mapNotNull`, which omits exceptions.\n\n**Example:**\n\n    repository.findWithTailableCursorBy()\n        .map(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nAfter the quick-fix is applied:\n\n    repository.findWithTailableCursorBy()\n        .mapNotNull(e -> (Person)null)\n        .doOnNext(System.out::println)\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsTooLongSameOperatorsChain",
+          "displayName": "Too long same methods chain",
+          "enabled": true,
+          "description": "Reports long Reactive Streams transformation chains.\n\nEach operator method call, such as `map()` or `filter()`, creates some objects for those operators.\nCalling a long chain of operators on each subscription, for each stream element, may cause performance overhead.\nTo avoid it, combine a long chain of calls into one operator call wherever possible.\n\n**Example:**\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1)\n            .map(it -> it + 2)\n            .map(it -> it + 3)\n\nAfter the quick-fix is applied:\n\n\n    Flux.just(1, 2, 3)\n            .map(it -> it + 1 + 2 + 3)\n\nNew in 2019.3"
+        },
+        {
+          "shortName": "ReactiveStreamsSubscriberImplementation",
+          "displayName": "Class implements Subscriber",
+          "enabled": true,
+          "description": "Reports classes that directly implement the `Subscriber` interface.\n\nConsider using static generators from RxJava, Reactor or Mutiny, for example:\n\n* `Flux.just()`, `Flux.create()`, `Flux.generate()`, `Flux.from()`\n* `Mono.create()`, `Mono.from()`, `Mono.just()`\n* `Flowable.just()`, `Flowable.from()`\n* `Maybe.just()`, `Maybe.from()`\n* `Multi.createFrom()`, `Multi.createBy()`\n* `Uni.createFrom()`"
         }
       ]
     },
@@ -13190,70 +13190,6 @@
       ]
     },
     {
-      "name": "Imports and dependencies",
-      "inspections": [
-        {
-          "shortName": "JSUrlImportUsage",
-          "displayName": "URL import is used",
-          "enabled": false,
-          "description": "Checks used URL imports in the JavaScript language. Suggests downloading the module for the specified remote URL. Such association enables the IDE to provide proper code completion and navigation.   \n\nURLs in import specifiers are supported only for ECMAScript modules in the JavaScript language."
-        },
-        {
-          "shortName": "JSXNamespaceValidation",
-          "displayName": "Missing JSX namespace",
-          "enabled": false,
-          "description": "Reports a usage of a JSX construction without importing namespace. Having the namespace in the file scope ensures proper code compilation."
-        },
-        {
-          "shortName": "ES6UnusedImports",
-          "displayName": "Unused import",
-          "enabled": false,
-          "description": "Reports a redundant `import` statement. This is usually the case if the imported symbols are not used in the source file. To avoid side-effects, consider using bare import `import 'packageName'` instead of the regular one."
-        },
-        {
-          "shortName": "NpmUsedModulesInstalled",
-          "displayName": "Missing module dependency",
-          "enabled": false,
-          "description": "Reports a module from a `require()` call or an `import` statement that is not installed or is not listed in package.json dependencies.\n\nSuggests installing the module and/or including it into package.json.\n\nFor `require()` calls, works only in the files from the scope of *Node.js Core* JavaScript library."
-        },
-        {
-          "shortName": "PackageJsonMismatchedDependency",
-          "displayName": "Mismatched dependencies in package.json",
-          "enabled": false,
-          "description": "Reports a dependency from package.json that is not installed or doesn't match the specified [version range](https://docs.npmjs.com/about-semantic-versioning)."
-        },
-        {
-          "shortName": "UpdateDependencyToLatestVersion",
-          "displayName": "Update package.json dependencies to latest versions",
-          "enabled": false,
-          "description": "Suggests to upgrade your package.json dependencies to the latest versions, ignoring specified versions."
-        }
-      ]
-    },
-    {
-      "name": "Nullability problems",
-      "inspections": [
-        {
-          "shortName": "NotNullFieldNotInitialized",
-          "displayName": "@NotNull field is not initialized",
-          "enabled": false,
-          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
-        },
-        {
-          "shortName": "NullableProblems",
-          "displayName": "@NotNull/@Nullable problems",
-          "enabled": true,
-          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
-        },
-        {
-          "shortName": "ReturnNull",
-          "displayName": "Return of 'null'",
-          "enabled": false,
-          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
-        }
-      ]
-    },
-    {
       "name": "Spring Boot",
       "inspections": [
         {
@@ -13291,6 +13227,70 @@
           "displayName": "Invalid properties configuration",
           "enabled": true,
           "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        }
+      ]
+    },
+    {
+      "name": "Nullability problems",
+      "inspections": [
+        {
+          "shortName": "NotNullFieldNotInitialized",
+          "displayName": "@NotNull field is not initialized",
+          "enabled": false,
+          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
+        },
+        {
+          "shortName": "NullableProblems",
+          "displayName": "@NotNull/@Nullable problems",
+          "enabled": true,
+          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
+        },
+        {
+          "shortName": "ReturnNull",
+          "displayName": "Return of 'null'",
+          "enabled": false,
+          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
+        }
+      ]
+    },
+    {
+      "name": "Imports and dependencies",
+      "inspections": [
+        {
+          "shortName": "JSUrlImportUsage",
+          "displayName": "URL import is used",
+          "enabled": false,
+          "description": "Checks used URL imports in the JavaScript language. Suggests downloading the module for the specified remote URL. Such association enables the IDE to provide proper code completion and navigation.   \n\nURLs in import specifiers are supported only for ECMAScript modules in the JavaScript language."
+        },
+        {
+          "shortName": "JSXNamespaceValidation",
+          "displayName": "Missing JSX namespace",
+          "enabled": false,
+          "description": "Reports a usage of a JSX construction without importing namespace. Having the namespace in the file scope ensures proper code compilation."
+        },
+        {
+          "shortName": "ES6UnusedImports",
+          "displayName": "Unused import",
+          "enabled": false,
+          "description": "Reports a redundant `import` statement. This is usually the case if the imported symbols are not used in the source file. To avoid side-effects, consider using bare import `import 'packageName'` instead of the regular one."
+        },
+        {
+          "shortName": "NpmUsedModulesInstalled",
+          "displayName": "Missing module dependency",
+          "enabled": false,
+          "description": "Reports a module from a `require()` call or an `import` statement that is not installed or is not listed in package.json dependencies.\n\nSuggests installing the module and/or including it into package.json.\n\nFor `require()` calls, works only in the files from the scope of *Node.js Core* JavaScript library."
+        },
+        {
+          "shortName": "PackageJsonMismatchedDependency",
+          "displayName": "Mismatched dependencies in package.json",
+          "enabled": false,
+          "description": "Reports a dependency from package.json that is not installed or doesn't match the specified [version range](https://docs.npmjs.com/about-semantic-versioning)."
+        },
+        {
+          "shortName": "UpdateDependencyToLatestVersion",
+          "displayName": "Update package.json dependencies to latest versions",
+          "enabled": false,
+          "description": "Suggests to upgrade your package.json dependencies to the latest versions, ignoring specified versions."
         }
       ]
     },
