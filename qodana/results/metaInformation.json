@@ -7,11 +7,11 @@
   "linter": "QDJVM",
   "attributes": {
     "deviceId": "200820300000000-b1a5-d275-f8e7-faf9fd093ee8",
-    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/12471685701",
+    "jobUrl": "https://github.com/1c-syntax/bsl-language-server/actions/runs/12471694029",
     "vcs": {
       "sarifIdea": {
         "repositoryUri": "https://github.com/1c-syntax/bsl-language-server.git",
-        "revisionId": "aaac3807fd7dc5636978a5d31105f82478cd2f95",
+        "revisionId": "9ced06f841d554ff651e15cf18ef1a21a0e9e0dd",
         "branch": "develop"
       }
     },
