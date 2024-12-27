@@ -113,6 +113,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     return methodSymbol.getAnnotations().stream()
       .filter(annotation -> annotation.getName().equalsIgnoreCase("Аннотация"))
       .findFirst()
+      .filter(annotation -> annotation.getParameters().size() == 1)
       .map(annotation -> Pair.of(methodSymbol, annotation));
   }
 
