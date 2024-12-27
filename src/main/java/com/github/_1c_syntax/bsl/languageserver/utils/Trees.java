@@ -28,6 +28,7 @@ import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
@@ -286,14 +287,14 @@ public final class Trees {
    * @return tnc - если родитель не найден, вернет null
    */
   @Nullable
-  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
+  public static BSLParserRuleContext getRootParent(RuleNode tnc, int ruleindex) {
     final var parent = tnc.getParent();
     if (parent == null) {
       return null;
     }
 
     if (getRuleIndex(parent) == ruleindex) {
-      return parent;
+      return (BSLParserRuleContext) parent;
     } else {
       return getRootParent(parent, ruleindex);
     }
