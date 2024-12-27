@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
@@ -32,7 +34,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class AnnotationReferenceFinderTest {
+@CleanupContextBeforeClassAndAfterClass
+class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private AnnotationReferenceFinder referenceFinder;
@@ -40,7 +43,9 @@ class AnnotationReferenceFinderTest {
   @Test
   void findReference() {
     // given
+    initServerContext(TestUtils.PATH_TO_METADATA);
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
     var module = documentContext.getSymbolTree().getModule();
     var method = documentContext.getSymbolTree().getMethods().get(0);
 

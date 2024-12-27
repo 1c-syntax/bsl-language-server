@@ -24,27 +24,69 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private final ServerContext serverContext;
+  private final Map<String, AnnotationSymbol> registeredAnnotations = new CaseInsensitiveMap<>();
+
+  @EventListener
+  public void handleContextRefresh(ServerContextPopulatedEvent event) {
+    registeredAnnotations.clear();
+    serverContext.getDocuments()
+      .values()
+      .forEach(this::findAndRegisterAnnotation);
+  }
+
+  @EventListener
+  public void handleDocumentContextChange(DocumentContextContentChangedEvent event) {
+    DocumentContext documentContext = event.getSource();
+    var uri = documentContext.getUri();
+
+    registeredAnnotations.values().stream()
+      .filter(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri))
+      .forEach(annotationSymbol -> registeredAnnotations.remove(annotationSymbol.getName()));
+
+    findAndRegisterAnnotation(documentContext);
+  }
+
+  private void findAndRegisterAnnotation(DocumentContext documentContext) {
+    if (documentContext.getFileType() != FileType.OS) {
+      return;
+    }
+
+    var symbolTree = documentContext.getSymbolTree();
+
+    Methods.getOscriptClassConstructor(symbolTree)
+      .flatMap(AnnotationReferenceFinder::findAnnotation)
+      .map(methodSymbolAnnotationPair -> AnnotationSymbol.from(getAnnotationName(methodSymbolAnnotationPair.getRight()), methodSymbolAnnotationPair.getLeft()))
+      .ifPresent(annotationSymbol -> registeredAnnotations.put(annotationSymbol.getName(), annotationSymbol));
+  }
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
@@ -53,27 +95,30 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
 
-    var registeredAnnotations = serverContext.getDocuments().values().stream()
-      .filter(documentContext -> documentContext.getFileType() == FileType.OS)
-      .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol("ПриСозданииОбъекта").stream())
-      .filter(methodSymbol -> methodSymbol.getAnnotations().stream().anyMatch(annotation -> annotation.getName().equals("Аннотация")))
-      .map(methodSymbol -> Pair.of(methodSymbol, methodSymbol.getAnnotations().stream().filter(annotation -> annotation.getName().equals("Аннотация")).findFirst().get()))
-      .collect(Collectors.toMap(methodSymbolAnnotationPair -> methodSymbolAnnotationPair.getRight().getParameters().get(0).getValue(), Pair::getLeft));
-
     return Trees.findTerminalNodeContainsPosition(document.getAst(), position)
       .filter(node -> node.getParent().getRuleContext().getRuleIndex() == BSLParser.RULE_annotationName)
       .flatMap((TerminalNode annotationNode) -> {
         var annotationName = annotationNode.getText();
-        var foundAnnotationDeclaration = registeredAnnotations.get(annotationName);
-        if (foundAnnotationDeclaration == null) {
+        var annotationSymbol = registeredAnnotations.get(annotationName);
+        if (annotationSymbol == null) {
           return Optional.empty();
         }
         return Optional.of(Reference.of(
           document.getSymbolTree().getModule(),
-          AnnotationSymbol.from(annotationName, foundAnnotationDeclaration),
+          annotationSymbol,
           new Location(uri.toString(), Ranges.create(annotationNode.getParent().getParent()))
         ));
       });
+  }
+
+  private static Optional<Pair<MethodSymbol, Annotation>> findAnnotation(MethodSymbol methodSymbol) {
+    return methodSymbol.getAnnotations().stream()
+      .filter(annotation -> annotation.getName().equalsIgnoreCase("Аннотация"))
+      .findFirst()
+      .map(annotation -> Pair.of(methodSymbol, annotation));
+  }
+
+  private static String getAnnotationName(Annotation annotation) {
+    return annotation.getParameters().get(0).getValue();
   }
 }
