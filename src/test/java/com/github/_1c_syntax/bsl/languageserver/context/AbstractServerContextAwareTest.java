@@ -34,7 +34,7 @@ public abstract class AbstractServerContextAwareTest {
   protected ServerContext context;
 
   @PostConstruct
-  public void init() {
+  public void abstractServerContextAwareTestInit() {
     context.clear();
   }
 
