@@ -43,11 +43,10 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void findReference() {
     // given
-    initServerContext(TestUtils.PATH_TO_METADATA);
+    initServerContext("./src/test/resources/references/annotations");
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
 
     var module = documentContext.getSymbolTree().getModule();
-    var method = documentContext.getSymbolTree().getMethods().get(0);
 
     // when
     var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(0, 2));
@@ -59,7 +58,7 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"))
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
       .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 18)))
-      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(method.getSelectionRange()))
+      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(1, 10, 28)))
     ;
   }
 }

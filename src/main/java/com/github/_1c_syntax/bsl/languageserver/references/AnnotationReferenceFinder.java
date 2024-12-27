@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
@@ -37,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -47,13 +45,14 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private final ServerContext serverContext;
-  private final Map<String, AnnotationSymbol> registeredAnnotations = new CaseInsensitiveMap<>();
+  private final Map<String, AnnotationSymbol> registeredAnnotations = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
@@ -68,9 +67,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     DocumentContext documentContext = event.getSource();
     var uri = documentContext.getUri();
 
-    registeredAnnotations.values().stream()
-      .filter(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri))
-      .forEach(annotationSymbol -> registeredAnnotations.remove(annotationSymbol.getName()));
+    registeredAnnotations.values()
+      .removeIf(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri));
 
     findAndRegisterAnnotation(documentContext);
   }

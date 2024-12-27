@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,10 +63,12 @@ public class AnnotationSymbol implements SourceDefinedSymbol, Describable {
   @Builder.Default
   Optional<SourceDefinedSymbol> parent = Optional.empty();
 
-  @Builder.Default
-  List<SourceDefinedSymbol> children = new ArrayList<>();
-
   Optional<MethodDescription> description;
+
+  @Override
+  public List<SourceDefinedSymbol> getChildren() {
+    return Collections.emptyList();
+  }
 
   @Override
   public void accept(SymbolTreeVisitor visitor) {
