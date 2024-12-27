@@ -22,12 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
@@ -35,7 +32,6 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +39,7 @@ import java.util.Optional;
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
+@ToString(exclude = {"parent"})
 public class AnnotationSymbol implements SourceDefinedSymbol, Describable {
 
   String name;
