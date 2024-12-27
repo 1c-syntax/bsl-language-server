@@ -74,6 +74,11 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
+    // In normal case this method may be called twice per each document context:
+    // 1. When the document context is created during the server context population or document opening
+    // 2. When server context is fully populated.
+    // This can lead to the situation when annotations registered from opened documents are cleared after populateContext step.
+    // Due to limitation of mechanism to only OS files, we can leave it as is for now, but it should be refactored in the future.
     if (documentContext.getFileType() != FileType.OS) {
       return;
     }
