@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -124,7 +125,7 @@ public class DescriptionFormatter {
     return getSectionWithCodeFences(callOptions, CALL_OPTIONS_KEY);
   }
 
-  public String getSectionWithCodeFences(List<String> codeBlocks, String resourceKey) {
+  public String getSectionWithCodeFences(Collection<String> codeBlocks, String resourceKey) {
     String codeFences = codeBlocks
       .stream()
       .map(codeBlock -> "```bsl\n" + codeBlock + "\n```")
@@ -169,7 +170,7 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(MethodSymbol methodSymbol) {
-    String signatureTemplate = "```bsl\n%s %s(%s)%s%s\n```";
+    var signatureTemplate = "```bsl\n%s %s(%s)%s%s\n```";
 
     String methodKind;
     if (methodSymbol.isFunction()) {
@@ -194,10 +195,10 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(AnnotationSymbol symbol, MethodSymbol methodSymbol) {
-    String signatureTemplate = "```bsl\n%s &%s(%s)\n```";
+    var signatureTemplate = "```bsl\n%s &%s(%s)\n```";
 
-    String annotationKind = getResourceString(ANNOTATION_KEY);
-    String annotationName = symbol.getName();
+    var annotationKind = getResourceString(ANNOTATION_KEY);
+    var annotationName = symbol.getName();
 
     var parameters = getParametersDescriptionPart(methodSymbol);
 
@@ -210,11 +211,11 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(VariableSymbol symbol) {
-    String signatureTemplate = "```bsl\n%s %s%s\n```";
+    var signatureTemplate = "```bsl\n%s %s%s\n```";
 
-    String varKey = getResourceString(VARIABLE_KEY);
-    String name = symbol.getName();
-    String export = symbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
+    var varKey = getResourceString(VARIABLE_KEY);
+    var name = symbol.getName();
+    var export = symbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
     return String.format(
       signatureTemplate,
@@ -292,7 +293,7 @@ public class DescriptionFormatter {
   }
 
   public String parameterToString(ParameterDefinition parameterDefinition) {
-    int level = 0;
+    var level = 0;
     var parameterDescription = parameterDefinition.getDescription();
     if (parameterDescription.isPresent()) {
       return parameterToString(parameterDescription.get(), level);
@@ -318,7 +319,7 @@ public class DescriptionFormatter {
     return types;
   }
 
-  private String typesMapToString(Map<String, String> types, int level) {
+  private static String typesMapToString(Map<String, String> types, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     var indent = "&nbsp;&nbsp;".repeat(level);
     types.forEach((String key, String value) -> {
