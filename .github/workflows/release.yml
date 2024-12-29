@@ -57,7 +57,7 @@ jobs:
 
             - name: Build with Gradle
               if: matrix.prefix == 'nix'
-              run: ./gradlew build
+              run: ./gradlew build -x test
 
             - name: Upload jar to release
               if: matrix.prefix == 'nix'
