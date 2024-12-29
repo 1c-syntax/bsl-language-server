@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1726522419630,
+  "lastUpdate": 1735512027024,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26722,6 +26722,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.876858587197116",
             "extra": "mean: 81.2124707698822 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9df6024db43c5f97117408c517f9367b96d84de3",
+          "message": "Merge pull request #3364 from 1c-syntax/feature/annotation-hover\n\nВсплывающая подсказка и переход к определениям для аннотаций в OneScript",
+          "timestamp": "2024-12-29T23:31:17+01:00",
+          "tree_id": "3549817cbd1ce2464168838b89721bc85916b608",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9df6024db43c5f97117408c517f9367b96d84de3"
+        },
+        "date": 1735512023821,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.40952905019124,
+            "unit": "sec",
+            "range": "stddev: 1.3147527410520345",
+            "extra": "mean: 81.40952905019124 sec\nrounds: 3"
           }
         ]
       }
