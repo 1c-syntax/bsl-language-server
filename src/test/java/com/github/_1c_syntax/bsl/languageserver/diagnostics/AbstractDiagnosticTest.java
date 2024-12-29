@@ -22,11 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -41,17 +40,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
-abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
+abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractServerContextAwareTest {
 
   @Autowired
   private DiagnosticObjectProvider diagnosticObjectProvider;
-  @Autowired
-  protected ServerContext context;
   @Autowired
   protected LanguageServerConfiguration configuration;
 
@@ -65,18 +61,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   @PostConstruct
   public void init() {
     diagnosticInstance = diagnosticObjectProvider.get(diagnosticClass);
-    context.clear();
     configuration.reset();
-  }
-
-  protected void initServerContext(String path) {
-    var configurationRoot = Absolute.path(path);
-    initServerContext(configurationRoot);
-  }
-
-  protected void initServerContext(Path configurationRoot) {
-    context.setConfigurationRoot(configurationRoot);
-    context.populateContext();
   }
 
   protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {

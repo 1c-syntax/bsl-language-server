@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
@@ -31,62 +32,53 @@ import org.springframework.stereotype.Component;
 import java.util.StringJoiner;
 
 /**
- * Построитель контента для всплывающего окна для {@link MethodSymbol}.
+ * Построитель контента для всплывающего окна для {@link AnnotationSymbol}.
  */
 @Component
 @RequiredArgsConstructor
-public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<MethodSymbol> {
-
-  private static final String PROCEDURE_KEY = "procedure";
-  private static final String FUNCTION_KEY = "function";
-  private static final String EXPORT_KEY = "export";
-  private static final String VAL_KEY = "val";
-  private static final String PARAMETERS_KEY = "parameters";
-  private static final String RETURNED_VALUE_KEY = "returnedValue";
-  private static final String EXAMPLES_KEY = "examples";
-  private static final String CALL_OPTIONS_KEY = "callOptions";
-  private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
+public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilder<AnnotationSymbol> {
 
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
-  public MarkupContent getContent(MethodSymbol symbol) {
+  public MarkupContent getContent(AnnotationSymbol symbol) {
+    var maybeMethodSymbol = symbol.getParent();
+    if (maybeMethodSymbol.filter(MethodSymbol.class::isInstance).isEmpty()) {
+      return new MarkupContent(MarkupKind.MARKDOWN, "");
+    }
+
     var markupBuilder = new StringJoiner("\n");
+    var methodSymbol = (MethodSymbol) maybeMethodSymbol.get();
 
     // сигнатура
     // местоположение метода
     // описание метода
     // параметры
-    // возвращаемое значение
     // примеры
     // варианты вызова
 
     // сигнатура
-    String signature = descriptionFormatter.getSignature(symbol);
+    String signature = descriptionFormatter.getSignature(symbol, methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
 
     // местоположение метода
-    String methodLocation = descriptionFormatter.getLocation(symbol);
+    String methodLocation = descriptionFormatter.getLocation(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
 
     // описание метода
-    String purposeSection = descriptionFormatter.getPurposeSection(symbol);
+    String purposeSection = descriptionFormatter.getPurposeSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
 
     // параметры
-    String parametersSection = descriptionFormatter.getParametersSection(symbol);
+    String parametersSection = descriptionFormatter.getParametersSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
-    // возвращаемое значение
-    String returnedValueSection = descriptionFormatter.getReturnedValueSection(symbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, returnedValueSection);
-
     // примеры
-    String examplesSection = descriptionFormatter.getExamplesSection(symbol);
+    String examplesSection = descriptionFormatter.getExamplesSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
 
     // варианты вызова
-    String callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
+    String callOptionsSection = descriptionFormatter.getCallOptionsSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
 
     String content = markupBuilder.toString();
@@ -96,7 +88,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   @Override
   public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
+    return SymbolKind.TypeParameter;
   }
 
 }

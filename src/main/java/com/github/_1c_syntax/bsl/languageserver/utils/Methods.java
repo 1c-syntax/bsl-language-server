@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.Token;
@@ -80,6 +82,11 @@ public class Methods {
     return Optional.ofNullable(lValueContext.acceptor())
       .map(BSLParser.AcceptorContext::modifier)
       .flatMap(Methods::getMethodName);
+  }
+
+  public static Optional<MethodSymbol> getOscriptClassConstructor(SymbolTree symbolTree) {
+    return symbolTree.getMethodSymbol("ПриСозданииОбъекта")
+      .or(() -> symbolTree.getMethodSymbol("OnObjectCreate"));
   }
 
 }
