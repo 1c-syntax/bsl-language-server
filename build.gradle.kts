@@ -195,7 +195,7 @@ tasks.test {
     }
 
     reports {
-        html.required.set(tue)
+        html.required.set(true)
     }
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
