@@ -154,14 +154,6 @@ dependencies {
     testImplementation("org.awaitility", "awaitility", "4.2.2")
 }
 
-lombok {
-    version.set("1.18.32")
-}
-
-jacoco {
-    toolVersion = "0.8.12"
-}
-
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -203,7 +195,7 @@ tasks.test {
     }
 
     reports {
-        html.required.set(true)
+        html.required.set(tue)
     }
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
