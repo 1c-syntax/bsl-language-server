@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1735515102756,
+  "lastUpdate": 1735617091513,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -26784,6 +26784,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3804559863059127",
             "extra": "mean: 81.76751478513081 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1d2994dbf5e4591c5488839a463457bba33142ee",
+          "message": "Merge pull request #3384 from 1c-syntax/nixel2007-patch-1\n\nDrop lombok and jacoco implicit versions",
+          "timestamp": "2024-12-31T04:42:03+01:00",
+          "tree_id": "1d5225d478b49f4554773470252bf30c3a115ffc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1d2994dbf5e4591c5488839a463457bba33142ee"
+        },
+        "date": 1735617088797,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.94100220998128,
+            "unit": "sec",
+            "range": "stddev: 1.6240717881736466",
+            "extra": "mean: 80.94100220998128 sec\nrounds: 3"
           }
         ]
       }
