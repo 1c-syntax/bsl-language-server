@@ -1,32 +1,32 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Regular expression can be simplified",
+  "category": "Redundant constructs",
+  "type": "Unused import directive",
   "tags": [
-    "RegExp"
+    "kotlin"
   ],
-  "severity": "Moderate",
-  "comment": "`[\\\\*]` can be simplified to '\\\\\\*'",
-  "detailsInfo": "Reports regular expressions that can be simplified.\n\n**Example:**\n\n\n      [a] xx* [ah-hz]\n\nAfter the quick-fix is applied:\n\n\n      a x+ [ahz]\n\nNew in 2022.1",
+  "severity": "High",
+  "comment": "Unused import directive",
+  "detailsInfo": "Reports redundant `import` statements.\n\nDefault and unused imports can be safely removed.\n\n**Example:**\n\n\n      import kotlin.*\n      import kotlin.collections.*\n      import kotlin.comparisons.*\n      import kotlin.io.*\n      import kotlin.ranges.*\n      import kotlin.sequences.*\n      import kotlin.text.*\n\n      // jvm specific\n      import java.lang.*\n      import kotlin.jvm.*\n\n      // js specific\n      import kotlin.js.*\n\n      import java.io.* // this import is unused and could be removed\n      import java.util.*\n\n      fun foo(list: ArrayList<String>) {\n          list.add(\"\")\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
-      "language": "JAVA",
-      "line": 67,
-      "offset": 75,
-      "length": 5,
+      "path": "build.gradle.kts",
+      "language": "kotlin",
+      "line": 1,
+      "offset": 1,
+      "length": 53,
       "code": {
-        "startLine": 65,
-        "length": 5,
-        "offset": 80,
-        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+        "startLine": 1,
+        "length": 53,
+        "offset": 0,
+        "surroundingCode": "import gradlegitproperties.org.ajoberstar.grgit.Grgit\nimport me.qoomon.gitversioning.commons.GitRefType\nimport org.apache.tools.ant.filters.EscapeUnicode"
       }
     }
   ],
   "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "RegExpSimplifiable"
+    "module": "bsl-language-server",
+    "inspectionName": "KotlinUnusedImport"
   },
-  "hash": "a96a0536e198cbff96eebc4edc9806807b12725ac46694da2501ad5bce236c55"
+  "hash": "d9056b5a72b4d51ad22f2462c55a8afda6bf2a7a924c1e18dad1c18345072a8a"
 }]}
