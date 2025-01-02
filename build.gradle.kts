@@ -88,10 +88,10 @@ dependencies {
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
     }
-    api("io.github.1c-syntax", "utils", "0.6.1")
-    api("io.github.1c-syntax", "mdclasses", "0.14.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.7.0")
-    api("io.github.1c-syntax", "supportconf", "0.14.0") {
+    api("io.github.1c-syntax", "utils", "0.6.2")
+    api("io.github.1c-syntax", "mdclasses", "0.15.0-rc.1")
+    api("io.github.1c-syntax", "bsl-common-library", "0.8.0-rc.1")
+    api("io.github.1c-syntax", "supportconf", "0.14.1") {
         exclude("io.github.1c-syntax", "bsl-common-library")
     }
     api("io.github.1c-syntax", "bsl-parser-core", "0.1.0")
