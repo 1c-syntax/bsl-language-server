@@ -9,7 +9,7 @@
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2025-01-01T13:30:54Z"
+    "created": "2025-01-02T10:09:25Z"
   },
   "packages": [
     {
@@ -27,28 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "7a10af2bef2ac5549f9333bd6e949ee887bfeae7"
-        }
-      ],
-      "primaryPackagePurpose": "SOURCE"
-    },
-    {
-      "SPDXID": "SPDXRef-bsl-language-server.main",
-      "name": "bsl-language-server.main",
-      "versionInfo": "develop-9df6024",
-      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
-      "filesAnalyzed": true,
-      "licenseConcluded": "LGPL-3.0-only",
-      "licenseDeclared": "LGPL-3.0-only",
-      "licenseInfoFromFiles": [
-        "LGPL-3.0-only"
-      ],
-      "copyrightText": "NOASSERTION",
-      "supplier": "NOASSERTION",
-      "checksums": [
-        {
-          "algorithm": "SHA1",
-          "checksumValue": "7a10af2bef2ac5549f9333bd6e949ee887bfeae7"
+          "checksumValue": "cbb2314a7a074980f29c845d2d3603eee229f2bb"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -69,7 +48,28 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "7a10af2bef2ac5549f9333bd6e949ee887bfeae7"
+          "checksumValue": "cbb2314a7a074980f29c845d2d3603eee229f2bb"
+        }
+      ],
+      "primaryPackagePurpose": "SOURCE"
+    },
+    {
+      "SPDXID": "SPDXRef-bsl-language-server.main",
+      "name": "bsl-language-server.main",
+      "versionInfo": "develop-9df6024",
+      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
+      "filesAnalyzed": true,
+      "licenseConcluded": "LGPL-3.0-only",
+      "licenseDeclared": "LGPL-3.0-only",
+      "licenseInfoFromFiles": [
+        "LGPL-3.0-only"
+      ],
+      "copyrightText": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "cbb2314a7a074980f29c845d2d3603eee229f2bb"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -5074,142 +5074,142 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
       "comment": "Module of the project"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
       "comment": "Module of the project"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.3.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.3.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.14.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.7.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.19.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-7.19.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.32"
     },
@@ -5654,132 +5654,132 @@
       "relatedSpdxElement": "SPDXRef-sentry-7.19.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.3.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.3.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.14.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.7.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-7.19.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-7.19.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.32"
     },
@@ -5790,13 +5790,13 @@
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"
