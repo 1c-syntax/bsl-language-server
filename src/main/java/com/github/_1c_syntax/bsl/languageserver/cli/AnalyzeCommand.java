@@ -80,7 +80,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-a", "--analyze"},
   description = "Run analysis and get diagnostic info",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2022|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
 @Component
 @RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {

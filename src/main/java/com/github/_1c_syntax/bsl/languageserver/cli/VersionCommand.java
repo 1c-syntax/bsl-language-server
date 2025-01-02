@@ -38,7 +38,7 @@ import java.util.concurrent.Callable;
   aliases = {"-v", "--version"},
   description = "Print version",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2022|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
 @Component
 @RequiredArgsConstructor
 public class VersionCommand implements Callable<Integer> {

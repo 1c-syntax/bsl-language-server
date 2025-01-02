@@ -52,7 +52,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-w", "--websocket"},
   description = "Websocket server mode",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2022|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
 @Component
 @RequiredArgsConstructor
 public class WebsocketCommand implements Callable<Integer> {
