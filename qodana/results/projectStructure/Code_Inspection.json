@@ -62,7 +62,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -86,19 +86,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:utils:0.6.1",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.15.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.8.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.1",
           "type": "Library"
         },
         {
@@ -106,7 +106,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.8.6",
+          "name": "Gradle: com.github.spotbugs:spotbugs-annotations:4.9.0",
           "type": "Library"
         },
         {
@@ -166,7 +166,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:7.19.1",
+          "name": "Gradle: io.sentry:sentry-logback:7.20.0",
           "type": "Library"
         },
         {
@@ -182,7 +182,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.32",
+          "name": "Gradle: org.projectlombok:lombok:1.18.36",
           "type": "Library"
         },
         {
@@ -190,7 +190,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -454,7 +454,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:7.19.1",
+          "name": "Gradle: io.sentry:sentry:7.20.0",
           "type": "Library"
         },
         {
@@ -494,7 +494,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -810,11 +810,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.21",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.179",
           "type": "Library"
         },
         {
@@ -934,7 +934,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -958,19 +958,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:utils:0.6.1",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.15.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.8.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.1",
           "type": "Library"
         },
         {
@@ -1038,7 +1038,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:7.19.1",
+          "name": "Gradle: io.sentry:sentry-logback:7.20.0",
           "type": "Library"
         },
         {
@@ -1046,7 +1046,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.32",
+          "name": "Gradle: org.projectlombok:lombok:1.18.36",
           "type": "Library"
         },
         {
@@ -1054,7 +1054,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -1318,7 +1318,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:7.19.1",
+          "name": "Gradle: io.sentry:sentry:7.20.0",
           "type": "Library"
         },
         {
@@ -1342,7 +1342,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -1546,11 +1546,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.21",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.179",
           "type": "Library"
         },
         {
@@ -1662,7 +1662,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -1690,19 +1690,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:utils:0.6.1",
+          "name": "Gradle: io.github.1c-syntax:utils:0.6.2",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:mdclasses:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:mdclasses:0.15.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.7.0",
+          "name": "Gradle: io.github.1c-syntax:bsl-common-library:0.8.0-rc.1",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.0",
+          "name": "Gradle: io.github.1c-syntax:supportconf:0.14.1",
           "type": "Library"
         },
         {
@@ -1766,7 +1766,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:7.19.1",
+          "name": "Gradle: io.sentry:sentry-logback:7.20.0",
           "type": "Library"
         },
         {
@@ -1774,7 +1774,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.projectlombok:lombok:1.18.32",
+          "name": "Gradle: org.projectlombok:lombok:1.18.36",
           "type": "Library"
         },
         {
@@ -1794,7 +1794,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -2106,7 +2106,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:7.19.1",
+          "name": "Gradle: io.sentry:sentry:7.20.0",
           "type": "Library"
         },
         {
@@ -2134,7 +2134,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.19.1",
+          "name": "Gradle: io.sentry:sentry-spring-jakarta:7.20.0",
           "type": "Library"
         },
         {
@@ -2370,11 +2370,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.20",
+          "name": "Gradle: com.thoughtworks.xstream:xstream:1.4.21",
           "type": "Library"
         },
         {
-          "name": "Gradle: io.github.classgraph:classgraph:4.8.147",
+          "name": "Gradle: io.github.classgraph:classgraph:4.8.179",
           "type": "Library"
         },
         {
