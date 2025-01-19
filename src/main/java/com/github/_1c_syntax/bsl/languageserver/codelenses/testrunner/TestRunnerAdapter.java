@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -34,7 +35,10 @@ import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -44,8 +48,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,12 +58,17 @@ import java.util.regex.Pattern;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@CacheConfig(cacheNames = "testIds")
 public class TestRunnerAdapter {
 
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\r?\n");
-  private static final Map<Pair<DocumentContext, Integer>, List<String>> CACHE = new WeakHashMap<>();
 
   private final LanguageServerConfiguration configuration;
+
+  @EventListener
+  @CacheEvict(allEntries = true)
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+  }
 
   /**
    * Получить идентификаторы тестов, содержащихся в файле.
@@ -69,13 +76,8 @@ public class TestRunnerAdapter {
    * @param documentContext Контекст документа с тестами.
    * @return Список идентификаторов тестов.
    */
+  @Cacheable
   public List<String> getTestIds(DocumentContext documentContext) {
-    var cacheKey = Pair.of(documentContext, documentContext.getVersion());
-
-    return CACHE.computeIfAbsent(cacheKey, pair -> computeTestIds(documentContext));
-  }
-
-  private List<String> computeTestIds(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     if (options.isGetTestsByTestRunner()) {
@@ -137,7 +139,7 @@ public class TestRunnerAdapter {
       .toList();
   }
 
-  private List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+  private static List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
     return documentContext.getSymbolTree()
       .getMethods()
       .stream()
