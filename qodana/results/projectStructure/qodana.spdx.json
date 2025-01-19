@@ -3,13 +3,13 @@
   "name": "SPDXRef-bsl-language-server",
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://bsl-language-server-fc9d3c6d-9634-168d-881c-3a6b5b80fc55",
+  "documentNamespace": "https://bsl-language-server-6b498dcb-6236-f316-7bb5-89d164a822c8",
   "creationInfo": {
     "creators": [
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2025-01-16T20:57:47Z"
+    "created": "2025-01-19T14:16:00Z"
   },
   "packages": [
     {
@@ -27,7 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "df086dc5fa8bf7663dd7d09dcebc78de0f03f157"
+          "checksumValue": "ebc617bd43752446310e50a45712e63607c4e8f6"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -48,7 +48,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "df086dc5fa8bf7663dd7d09dcebc78de0f03f157"
+          "checksumValue": "ebc617bd43752446310e50a45712e63607c4e8f6"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -69,7 +69,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "df086dc5fa8bf7663dd7d09dcebc78de0f03f157"
+          "checksumValue": "ebc617bd43752446310e50a45712e63607c4e8f6"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -2928,7 +2928,7 @@
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "homepage": "https://languagetool.org",
-      "licenseConcluded": "NOASSERTION",
+      "licenseConcluded": "LGPL-2.1-only",
       "licenseDeclared": "NOASSERTION",
       "licenseInfoFromFiles": [
         "NOASSERTION"

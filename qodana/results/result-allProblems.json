@@ -666,39 +666,6 @@
     "JAVA"
   ],
   "severity": "Critical",
-  "comment": "Could not autowire. No beans of 'URI' type found.",
-  "detailsInfo": "Reports autowiring problems on injection points of Spring beans\n[@Component](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html),\n[@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html),\nand so on.\n\n* More than one bean of 'concrete' type\n* No beans of 'concrete' type\n* No bean with qualifier\n* Incorrect usages of `@Autowired` on Spring bean constructors\n* Injected or autowired fields/methods in classes that are not valid Spring beans\n\n**Example:**\n\n\n    public interface FooInterface {...}\n      @Component public class FooBean implements FooInterface {...}\n      @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tFooInterface foo;  // \"Could not autowire. There is more than one bean of 'FooInterface' type.\n                         // Beans: fooBean(FooBean.java), otherBean(OtherBean.java)\"\n    }\n\n**Example:**\n\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tpublic MyComponent(BarBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n\n    \t@Autowired\n    \tpublic MyComponent(FooBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n    }\n\n    @Component\n    public class MyFactory {  // reports ' No matching @Autowired constructor'\n    \tpublic MyFactory(String str) {...}\n    \tpublic MyFactory(int count) {...}\n    }\n\n**Example:**\n\n\n    public class FooBeanClass {\n      @Autowired   // reports 'Autowired members must be defined in valid Spring beans: @Component, @Service, and so on'\n      ServiceBean bean;\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
-      "language": "JAVA",
-      "line": 87,
-      "offset": 21,
-      "length": 3,
-      "code": {
-        "startLine": 85,
-        "length": 3,
-        "offset": 31,
-        "surroundingCode": "\n  @Getter\n  private final URI uri;\n\n  @Nullable"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "SpringJavaInjectionPointsAutowiringInspection",
-    "isTechDebt": "true",
-    "baselineState": "unchanged"
-  },
-  "hash": "36c9b96fb03e23518ea35a037b73a870e6147b5f27c305e1481dc11d80fb0109"
-},{
-  "tool": "Code Inspection",
-  "category": "Code",
-  "type": "Incorrect autowiring in Spring bean components",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "Critical",
   "comment": "Could not autowire. No beans of 'Map\\>' type found.",
   "detailsInfo": "Reports autowiring problems on injection points of Spring beans\n[@Component](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html),\n[@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html),\nand so on.\n\n* More than one bean of 'concrete' type\n* No beans of 'concrete' type\n* No bean with qualifier\n* Incorrect usages of `@Autowired` on Spring bean constructors\n* Injected or autowired fields/methods in classes that are not valid Spring beans\n\n**Example:**\n\n\n    public interface FooInterface {...}\n      @Component public class FooBean implements FooInterface {...}\n      @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tFooInterface foo;  // \"Could not autowire. There is more than one bean of 'FooInterface' type.\n                         // Beans: fooBean(FooBean.java), otherBean(OtherBean.java)\"\n    }\n\n**Example:**\n\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tpublic MyComponent(BarBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n\n    \t@Autowired\n    \tpublic MyComponent(FooBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n    }\n\n    @Component\n    public class MyFactory {  // reports ' No matching @Autowired constructor'\n    \tpublic MyFactory(String str) {...}\n    \tpublic MyFactory(int count) {...}\n    }\n\n**Example:**\n\n\n    public class FooBeanClass {\n      @Autowired   // reports 'Autowired members must be defined in valid Spring beans: @Component, @Service, and so on'\n      ServiceBean bean;\n      }\n",
   "sources": [
@@ -3228,4 +3195,37 @@
     "baselineState": "new"
   },
   "hash": "e868063ca62f1326af0770e1a5d586d2747404c54839fa046b4ab51031f4f99f"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Incorrect autowiring in Spring bean components",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Critical",
+  "comment": "Could not autowire. No beans of 'URI' type found.",
+  "detailsInfo": "Reports autowiring problems on injection points of Spring beans\n[@Component](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html),\n[@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html),\nand so on.\n\n* More than one bean of 'concrete' type\n* No beans of 'concrete' type\n* No bean with qualifier\n* Incorrect usages of `@Autowired` on Spring bean constructors\n* Injected or autowired fields/methods in classes that are not valid Spring beans\n\n**Example:**\n\n\n    public interface FooInterface {...}\n      @Component public class FooBean implements FooInterface {...}\n      @Component public class OtherBean implements FooInterface {...}\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tFooInterface foo;  // \"Could not autowire. There is more than one bean of 'FooInterface' type.\n                         // Beans: fooBean(FooBean.java), otherBean(OtherBean.java)\"\n    }\n\n**Example:**\n\n\n    @Component\n    public class MyComponent {\n    \t@Autowired\n    \tpublic MyComponent(BarBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n\n    \t@Autowired\n    \tpublic MyComponent(FooBean bean) {...} // reports 'Only one @Autowired constructor is allowed'\n    }\n\n    @Component\n    public class MyFactory {  // reports ' No matching @Autowired constructor'\n    \tpublic MyFactory(String str) {...}\n    \tpublic MyFactory(int count) {...}\n    }\n\n**Example:**\n\n\n    public class FooBeanClass {\n      @Autowired   // reports 'Autowired members must be defined in valid Spring beans: @Component, @Service, and so on'\n      ServiceBean bean;\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 91,
+      "offset": 21,
+      "length": 3,
+      "code": {
+        "startLine": 89,
+        "length": 3,
+        "offset": 59,
+        "surroundingCode": "  @Getter\n  @EqualsAndHashCode.Include\n  private final URI uri;\n\n  @Nullable"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaInjectionPointsAutowiringInspection",
+    "isTechDebt": "true",
+    "baselineState": "unchanged"
+  },
+  "hash": "75826e3d6676ccf7a06e74f3f6c19382722139cc12b7c704a6a24ed60d0bbdc6"
 }]}

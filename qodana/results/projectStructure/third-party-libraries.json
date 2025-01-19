@@ -105,6 +105,13 @@
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
+    "name": "english-pos-dict",
+    "version": "0.3",
+    "url": "https://languagetool.org",
+    "license": "LGPL-2.1-only",
+    "licenseUrl": "http://www.gnu.org/licenses/lgpl-2.1.html"
+  },
+  {
     "name": "error_prone_annotations",
     "version": "2.28.0",
     "url": "",
