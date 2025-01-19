@@ -27,9 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.utils.Absolute;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -42,7 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "testIds")
+@CacheConfig(cacheNames = "testSource")
 public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   implements CodeLensSupplier<T> {
 
@@ -77,24 +80,26 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
    * {@inheritDoc}
    */
   @Override
-  @Cacheable
   public boolean isApplicable(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var testSources = getTestSources(documentContext);
+    var testSources = getSelf().getTestSources(documentContext.getServerContext().getConfigurationRoot());
 
     return documentContext.getFileType() == FileType.OS
       && testSources.stream().anyMatch(testSource -> isInside(uri, testSource))
       && clientIsSupported;
   }
 
-  public Set<URI> getTestSources(DocumentContext documentContext) {
-    var configurationRoot = Optional.ofNullable(documentContext.getServerContext().getConfigurationRoot())
+  protected abstract AbstractRunTestsCodeLensSupplier<T> getSelf();
+
+  @Cacheable
+  public Set<URI> getTestSources(@Nullable Path configurationRoot) {
+    var configurationRootString = Optional.ofNullable(configurationRoot)
       .map(Path::toString)
       .orElse("");
 
     return configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getTestSources()
       .stream()
-      .map(testDir -> Path.of(configurationRoot, testDir))
+      .map(testDir -> Path.of(configurationRootString, testDir))
       .map(path -> Absolute.path(path).toUri())
       .collect(Collectors.toSet());
   }
