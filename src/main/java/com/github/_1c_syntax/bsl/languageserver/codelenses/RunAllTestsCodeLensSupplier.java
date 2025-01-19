@@ -41,7 +41,6 @@ import java.util.Map;
  * Поставщик линзы для запуска всех тестов в текущем файле.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RunAllTestsCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> {
@@ -49,8 +48,17 @@ public class RunAllTestsCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runAllTests";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final LanguageServerConfiguration configuration;
   private final Resources resources;
+
+  public RunAllTestsCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    TestRunnerAdapter testRunnerAdapter,
+    Resources resources
+  ) {
+    super(configuration);
+    this.testRunnerAdapter = testRunnerAdapter;
+    this.resources = resources;
+  }
 
   /**
    * {@inheritDoc}

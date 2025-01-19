@@ -49,7 +49,6 @@ import java.util.stream.Collectors;
  * Поставщик линз для запуска теста по конкретному тестовому методу.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RunTestCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
@@ -57,8 +56,17 @@ public class RunTestCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runTest";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final LanguageServerConfiguration configuration;
   private final Resources resources;
+
+  public RunTestCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    TestRunnerAdapter testRunnerAdapter,
+    Resources resources
+  ) {
+    super(configuration);
+    this.testRunnerAdapter = testRunnerAdapter;
+    this.resources = resources;
+  }
 
   /**
    * {@inheritDoc}
@@ -77,7 +85,7 @@ public class RunTestCodeLensSupplier
       .map(symbolTree::getMethodSymbol)
       .flatMap(Optional::stream)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
-      .collect(Collectors.toList());
+      .toList();
   }
 
   /**

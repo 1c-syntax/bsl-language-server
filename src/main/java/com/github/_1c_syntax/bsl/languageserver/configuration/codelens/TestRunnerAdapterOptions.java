@@ -28,6 +28,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.SystemUtils;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * Параметры запускателя тестового фреймворка.
  */
@@ -38,6 +41,11 @@ import org.apache.commons.lang3.SystemUtils;
 public class TestRunnerAdapterOptions {
 
   /**
+   * Каталоги с исходными файлами тестов.
+   */
+  private Set<String> testSources = Set.of("tests");
+
+  /**
    * Имя исполняемого файла тестового фреймворка (linux и macOS).
    */
   private String executable = "1testrunner";
@@ -45,6 +53,10 @@ public class TestRunnerAdapterOptions {
    * Имя исполняемого файла тестового фреймворка (windows).
    */
   private String executableWin = "1testrunner.bat";
+  /**
+   * Флаг, указывающий на необходимость получения списка тестов через исполняемый файл тестового фреймворка.
+   */
+  private boolean getTestsByTestRunner;
   /**
    * Аргументы для получения списка тестов.
    */

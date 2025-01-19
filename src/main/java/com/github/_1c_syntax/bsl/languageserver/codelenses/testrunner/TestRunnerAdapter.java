@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
@@ -46,7 +48,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Расчетчик списка тестов в документе.
@@ -75,6 +76,16 @@ public class TestRunnerAdapter {
   }
 
   private List<String> computeTestIds(DocumentContext documentContext) {
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
+
+    if (options.isGetTestsByTestRunner()) {
+      return computeTestIdsByTestRunner(documentContext);
+    }
+
+    return computeTestIdsByLanguageServer(documentContext);
+  }
+
+  private List<String> computeTestIdsByTestRunner(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
@@ -123,7 +134,17 @@ public class TestRunnerAdapter {
       .map(getTestsRegex::matcher)
       .filter(Matcher::matches)
       .map(matcher -> matcher.group(1))
-      .collect(Collectors.toList());
+      .toList();
   }
 
+  private List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+    return documentContext.getSymbolTree()
+      .getMethods()
+      .stream()
+      .filter(methodSymbol -> methodSymbol.getAnnotations().stream()
+        .map(Annotation::getName)
+        .anyMatch("Тест"::equalsIgnoreCase))
+      .map(MethodSymbol::getName)
+      .toList();
+  }
 }
