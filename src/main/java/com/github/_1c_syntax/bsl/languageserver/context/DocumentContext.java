@@ -43,8 +43,10 @@ import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -65,12 +67,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -79,16 +81,20 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @RequiredArgsConstructor
 @Slf4j
-public class DocumentContext {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
 
   @Getter
+  @EqualsAndHashCode.Include
   private final URI uri;
 
   @Nullable
   private String content;
+
   @Getter
+  @EqualsAndHashCode.Include
   private int version;
 
   @Setter(onMethod = @__({@Autowired}))
@@ -158,13 +164,13 @@ public class DocumentContext {
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
   }
 
   public List<Token> getComments() {
     return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   public String getText(Range range) {
@@ -429,4 +435,10 @@ public class DocumentContext {
     return (new QueryComputer(this)).compute();
   }
 
+  @Override
+  public int compareTo(@NonNull DocumentContext other) {
+    return Comparator.comparing(DocumentContext::getUri)
+      .thenComparing(DocumentContext::getVersion)
+      .compare(this, other);
+  }
 }
