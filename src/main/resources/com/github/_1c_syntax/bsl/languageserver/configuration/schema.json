@@ -675,6 +675,17 @@
                     "type": "object",
                     "title": "Test runner configuration to use for 'Run test' code lenses.",
                     "properties": {
+                        "testSources": {
+                            "$id": "#/properties/codeLens/testRunner/testSources",
+                            "type": "array",
+                            "title": "List of directories with test sources.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "tests"
+                            ]
+                        },
                         "executable": {
                             "$id": "#/properties/codeLens/testRunner/executable",
                             "type": "string",
@@ -686,6 +697,12 @@
                             "type": "string",
                             "title": "Path to test runner executable on Windows systems.",
                             "default": "1testrunner.bat"
+                        },
+                        "getTestsByTestRunner": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsByTestRunner",
+                            "type": "boolean",
+                            "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &Тест.",
+                            "default": false
                         },
                         "getTestsArguments": {
                             "$id": "#/properties/codeLens/testRunner/getTestsArguments",
