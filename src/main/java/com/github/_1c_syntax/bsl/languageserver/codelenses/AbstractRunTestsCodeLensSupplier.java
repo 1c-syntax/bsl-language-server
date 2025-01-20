@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "testSource")
+@CacheConfig(cacheNames = "testSources")
 public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   implements CodeLensSupplier<T> {
 
