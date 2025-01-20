@@ -65,6 +65,13 @@ public class TestRunnerAdapter {
 
   private final LanguageServerConfiguration configuration;
 
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Очищает кэш при изменении конфигурации.
+   *
+   * @param event Событие
+   */
   @EventListener
   @CacheEvict(allEntries = true)
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {

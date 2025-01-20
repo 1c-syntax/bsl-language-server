@@ -59,6 +59,7 @@ public class RunTestCodeLensSupplier
   private final TestRunnerAdapter testRunnerAdapter;
   private final Resources resources;
 
+  // Self-injection для работы кэша в базовом классе.
   @Autowired
   @Lazy
   @Getter

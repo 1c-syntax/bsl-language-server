@@ -71,9 +71,17 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
     clientIsSupported = "Visual Studio Code".equals(clientName);
   }
 
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Сбрасывает кеш при изменении конфигурации.
+   *
+   * @param event Событие
+   */
   @EventListener
   @CacheEvict(allEntries = true)
   public void handleLanguageServerConfigurationChange(LanguageServerConfigurationChangedEvent event) {
+    // No-op. Служит для сброса кеша при изменении конфигурации
   }
 
   /**
@@ -89,8 +97,21 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
       && clientIsSupported;
   }
 
+  /**
+   * Получить self-injected экземпляр себя для работы механизмов кэширования.
+   *
+   * @return Управляемый Spring'ом экземпляр себя
+   */
   protected abstract AbstractRunTestsCodeLensSupplier<T> getSelf();
 
+  /**
+   * Получить список каталогов с тестами с учетом корня рабочей области.
+   * <p>
+   * public для работы @Cachable.
+   *
+   * @param configurationRoot Корень конфигурации
+   * @return Список исходных файлов тестов
+   */
   @Cacheable
   public Set<URI> getTestSources(@Nullable Path configurationRoot) {
     var configurationRootString = Optional.ofNullable(configurationRoot)

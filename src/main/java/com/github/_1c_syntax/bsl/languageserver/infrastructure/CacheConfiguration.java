@@ -24,6 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Spring-конфигурация кэширования.
+ */
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
