@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -30,85 +31,52 @@ import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.context.annotation.Bean;
 
+import java.util.Collections;
 import java.util.List;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class RunTestCodeLensSupplierTest {
+class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private RunTestCodeLensSupplier supplier;
+  private AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier;
 
   @Autowired
   private ApplicationEventPublisher eventPublisher;
 
-  @MockitoSpyBean
-  private TestRunnerAdapter testRunnerAdapter;
-
-  private DocumentContext documentContext;
-
-  @BeforeEach
-  void init() {
-    var filePath = "./src/test/resources/codelenses/RunTestCodeLensSupplier.os";
-    documentContext = TestUtils.getDocumentContextFromFile(filePath);
-  }
-
-  @Test
-  void testDryRun() {
+  @ParameterizedTest
+  @CsvSource({
+    "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, unknown, false",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, unknown, false",
+    "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, false",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, true"
+  })
+  void testIsApplicable(String filePath, String clientName, boolean expected) {
     // given
-    initializeServer("Visual Studio Code");
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    initializeServer("./src/test/resources/codelenses", clientName);
 
     // when
-    var codeLenses = supplier.getCodeLenses(documentContext);
+    var result = supplier.isApplicable(documentContext);
 
     // then
-    assertThat(codeLenses).isNotNull();
+    assertThat(result).isEqualTo(expected);
   }
 
-  @Test
-  void testRunWithMockedTestIds() {
-    // given
-    initializeServer("Visual Studio Code");
+  private void initializeServer(String path, String clientName) {
+    initServerContext(path);
 
-    when(testRunnerAdapter.getTestIds(documentContext))
-      .thenReturn(List.of("testName"));
-
-    // when
-    var codeLenses = supplier.getCodeLenses(documentContext);
-
-    // then
-    assertThat(codeLenses).isNotNull();
-  }
-
-  @Test
-  void testResolve() {
-    // given
-    CodeLens codeLens = new CodeLens();
-    RunTestCodeLensSupplier.RunTestCodeLensData codeLensData = new RunTestCodeLensSupplier.RunTestCodeLensData(
-      documentContext.getUri(),
-      supplier.getId(),
-      "testName"
-    );
-
-    // when
-    var resolvedCodeLens = supplier.resolve(documentContext, codeLens, codeLensData);
-
-    // then
-    assertThat(resolvedCodeLens.getCommand()).isNotNull();
-  }
-
-  private void initializeServer(String clientName) {
     var initializeParams = new InitializeParams();
     initializeParams.setClientInfo(
       new ClientInfo(clientName, "1.0.0")
@@ -120,4 +88,29 @@ class RunTestCodeLensSupplierTest {
     );
     eventPublisher.publishEvent(event);
   }
+
+  @TestConfiguration
+  static class TestConfig {
+    @Bean
+    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(LanguageServerConfiguration configuration) {
+      return new AbstractRunTestsCodeLensSupplier<>(configuration) {
+
+        @Override
+        public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
+          return Collections.emptyList();
+        }
+
+        @Override
+        public Class<DefaultCodeLensData> getCodeLensDataClass() {
+          return DefaultCodeLensData.class;
+        }
+
+        @Override
+        protected AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> getSelf() {
+          return this;
+        }
+      };
+    }
+  }
+
 }
