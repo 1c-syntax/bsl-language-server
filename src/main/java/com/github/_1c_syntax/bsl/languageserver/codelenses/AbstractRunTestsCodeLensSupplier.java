@@ -92,9 +92,9 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
     var uri = documentContext.getUri();
     var testSources = getSelf().getTestSources(documentContext.getServerContext().getConfigurationRoot());
 
-    return documentContext.getFileType() == FileType.OS
-      && testSources.stream().anyMatch(testSource -> isInside(uri, testSource))
-      && clientIsSupported;
+    return clientIsSupported
+      && documentContext.getFileType() == FileType.OS
+      && testSources.stream().anyMatch(testSource -> isInside(uri, testSource));
   }
 
   /**

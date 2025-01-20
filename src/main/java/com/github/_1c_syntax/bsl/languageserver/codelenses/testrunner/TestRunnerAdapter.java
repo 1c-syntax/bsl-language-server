@@ -75,6 +75,7 @@ public class TestRunnerAdapter {
   @EventListener
   @CacheEvict(allEntries = true)
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    // No-op. Служит для сброса кеша при изменении конфигурации
   }
 
   /**
