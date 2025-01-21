@@ -147,13 +147,14 @@ public class TestRunnerAdapter {
       .toList();
   }
 
-  private static List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+  private List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
     return documentContext.getSymbolTree()
       .getMethods()
       .stream()
       .filter(methodSymbol -> methodSymbol.getAnnotations().stream()
         .map(Annotation::getName)
-        .anyMatch("Тест"::equalsIgnoreCase))
+        .anyMatch(annotations::contains))
       .map(MethodSymbol::getName)
       .toList();
   }

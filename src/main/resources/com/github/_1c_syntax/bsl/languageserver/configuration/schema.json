@@ -686,6 +686,18 @@
                                 "tests"
                             ]
                         },
+                        "annotations": {
+                            "$id": "#/properties/codeLens/testRunner/annotations",
+                            "type": "array",
+                            "title": "List of annotations to find test methods.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "Тест",
+                                "Test"
+                            ]
+                        },
                         "executable": {
                             "$id": "#/properties/codeLens/testRunner/executable",
                             "type": "string",

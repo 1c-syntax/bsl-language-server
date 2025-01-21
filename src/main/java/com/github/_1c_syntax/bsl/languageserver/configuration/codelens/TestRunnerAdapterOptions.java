@@ -23,13 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github._1c_syntax.bsl.languageserver.configuration.databind.AnnotationsDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.SystemUtils;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Параметры запускателя тестового фреймворка.
@@ -40,10 +43,20 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TestRunnerAdapterOptions {
 
+  public static final Set<String> DEFAULT_ANNOTATIONS = getDefaultAnnotations();
+
   /**
    * Каталоги с исходными файлами тестов.
    */
   private Set<String> testSources = Set.of("tests");
+
+  /**
+   * Имена аннотаций, маркирующих тесты.
+   * <p>
+   * Используется при получении списка тестов средствами сервера.
+   */
+  @JsonDeserialize(using = AnnotationsDeserializer.class)
+  private Set<String> annotations = DEFAULT_ANNOTATIONS;
 
   /**
    * Имя исполняемого файла тестового фреймворка (linux и macOS).
@@ -81,5 +94,13 @@ public class TestRunnerAdapterOptions {
    */
   public String getExecutableForCurrentOS() {
     return SystemUtils.IS_OS_WINDOWS ? executableWin : executable;
+  }
+
+  private static Set<String> getDefaultAnnotations() {
+    Set<String> annotations = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    annotations.add("Test");
+    annotations.add("Тест");
+
+    return Collections.unmodifiableSet(annotations);
   }
 }
