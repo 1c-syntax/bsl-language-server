@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1737747349439,
+  "lastUpdate": 1737900012989,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27063,6 +27063,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7745576513482857",
             "extra": "mean: 81.38076933224995 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b11f1678ff7c17e985fabe31b46d59cb0012be36",
+          "message": "Merge pull request #3398 from 1c-syntax/gradlew-update-8.12.1\n\nUpdate Gradle Wrapper from 8.12 to 8.12.1",
+          "timestamp": "2025-01-26T14:49:46+01:00",
+          "tree_id": "b76b1858359caec7b9f491b99a72c1dd62d1b7f2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b11f1678ff7c17e985fabe31b46d59cb0012be36"
+        },
+        "date": 1737900008332,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 82.37909293174744,
+            "unit": "sec",
+            "range": "stddev: 4.339894549164786",
+            "extra": "mean: 82.37909293174744 sec\nrounds: 3"
           }
         ]
       }
