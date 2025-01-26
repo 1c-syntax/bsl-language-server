@@ -1,1 +1,32 @@
-{"version":"3","listProblem":[]}
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
+      "language": "JAVA",
+      "line": 88,
+      "offset": 20,
+      "length": 27,
+      "code": {
+        "startLine": 86,
+        "length": 27,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DefaultAnnotationParam"
+  },
+  "hash": "3a50d0fc8caa0b5118caec1dcd6e28b069541e9cf86a39b283046b43d3f20128"
+}]}
