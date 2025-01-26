@@ -1170,16 +1170,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "StringTokenizer",
-          "displayName": "Use of 'StringTokenizer'",
-          "enabled": false,
-          "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
-        },
-        {
           "shortName": "UnnecessaryUnicodeEscape",
           "displayName": "Unnecessary unicode escape sequence",
           "enabled": false,
           "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
+        },
+        {
+          "shortName": "StringTokenizer",
+          "displayName": "Use of 'StringTokenizer'",
+          "enabled": false,
+          "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
         },
         {
           "shortName": "NumericToString",
@@ -2326,6 +2326,221 @@
       ]
     },
     {
+      "name": "Error handling",
+      "inspections": [
+        {
+          "shortName": "UncheckedExceptionClass",
+          "displayName": "Unchecked 'Exception' class",
+          "enabled": false,
+          "description": "Reports subclasses of `java.lang.RuntimeException`.\n\nSome coding standards require that all user-defined exception classes are checked.\n\n**Example:**\n\n\n      class EnigmaException extends RuntimeException {} // warning: Unchecked exception class 'EnigmaException'\n"
+        },
+        {
+          "shortName": "CheckedExceptionClass",
+          "displayName": "Checked exception class",
+          "enabled": false,
+          "description": "Reports checked exception classes (that is, subclasses of `java.lang.Exception` that are not subclasses of `java.lang.RuntimeException`).\n\nSome coding standards suppress checked user-defined exception classes.\n\n**Example:**\n\n\n      class IllegalMoveException extends Exception {}\n"
+        },
+        {
+          "shortName": "NestedTryStatement",
+          "displayName": "Nested 'try' statement",
+          "enabled": false,
+          "description": "Reports nested `try` statements.\n\nNested `try` statements\nmay result in unclear code and should probably have their `catch` and `finally` sections\nmerged."
+        },
+        {
+          "shortName": "BadExceptionThrown",
+          "displayName": "Prohibited exception thrown",
+          "enabled": false,
+          "description": "Reports `throw` statements that throw an inappropriate exception. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.io.IOException`.\n\n**Example:**\n\n\n      void setup(Mode mode) {\n          if (mode == null)\n              throw new RuntimeException(\"Problem during setup\"); // warning: Prohibited exception 'RuntimeException' thrown\n          ...\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
+        },
+        {
+          "shortName": "CaughtExceptionImmediatelyRethrown",
+          "displayName": "Caught exception is immediately rethrown",
+          "enabled": true,
+          "description": "Reports `catch` blocks that immediately rethrow the caught exception without performing any action on it. Such `catch` blocks are unnecessary and have no error handling.\n\n**Example:**\n\n\n            try {\n                new FileInputStream(\"\");\n            } catch (FileNotFoundException e) {\n                throw e;\n            }\n"
+        },
+        {
+          "shortName": "ThrowFromFinallyBlock",
+          "displayName": "'throw' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `throw` statements inside `finally` blocks. While occasionally intended, such `throw` statements can hide exceptions thrown from the `try` and `catch` blocks, thereby complicating the debugging process.\n\n**Example:**\n\n\n      class Fascinating {\n        void doTask(Task t) {\n          try {\n            t.activity();\n          } finally {\n            if (!t.finish()) {\n              throw new IllegalStateException();\n            }\n          }\n        }\n      }\n\nUse the **Warn everywhere declared exceptions may be thrown** option\nto warn on method calls to methods that declare exceptions as well."
+        },
+        {
+          "shortName": "ContinueOrBreakFromFinallyBlock",
+          "displayName": "'continue' or 'break' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `break` or `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and complicate debugging.\n\n**Example:**\n\n\n        while (true) {\n            try {\n              throwingMethod();\n            } finally {\n                continue;\n            }\n        }\n"
+        },
+        {
+          "shortName": "BadExceptionDeclared",
+          "displayName": "Prohibited exception declared",
+          "enabled": false,
+          "description": "Reports methods that declare an inappropriate exception in their `throws` clause. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.lang.Throwable`.\n\n**Example:**\n\n\n      void describeModule(String module) throws Exception {} // warning: Prohibited exception 'Exception' declared\n\nConfigure the inspection:\n\n* Use the **Prohibited exceptions** list to specify which exceptions should be reported.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore exceptions declared by methods that override a library method."
+        },
+        {
+          "shortName": "ReturnFromFinallyBlock",
+          "displayName": "'return' inside 'finally' block",
+          "enabled": true,
+          "description": "Reports `return` statements inside of `finally` blocks.\n\nWhile occasionally intended, such `return` statements may mask thrown exceptions\nand complicate debugging.\n\n**Example:**\n\n\n      try {\n        foo();\n      } finally {\n        if (bar()) return;\n      }\n"
+        },
+        {
+          "shortName": "TooBroadThrows",
+          "displayName": "Overly broad 'throws' clause",
+          "enabled": false,
+          "description": "Reports `throws` clauses with exceptions that are more generic than the exceptions that the method actually throws.\n\n**Example:**\n\n\n      public void createFile() throws Exception { // warning: 'throws Exception' is too broad, masking exception 'IOException'\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void createFile() throws IOException {\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nConfigure the inspection:\n\n* Use the **Maximum number of hidden exceptions to warn** field to ignore exceptions, that hide a larger number of other exceptions than specified.\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore overly broad `throws` clauses in methods that override a library method.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown from the method body and thus are technically not overly broad."
+        },
+        {
+          "shortName": "BadExceptionCaught",
+          "displayName": "Prohibited 'Exception' caught",
+          "enabled": false,
+          "description": "Reports `catch` clauses that catch an inappropriate exception.\n\nSome exceptions, for example\n`java.lang.NullPointerException` or\n`java.lang.IllegalMonitorStateException`, represent programming errors\nand therefore almost certainly should not be caught in production code.\n\n**Example:**\n\n\n      try {\n        return component.getMousePosition(true) != null;\n      } catch (NullPointerException e) { // warning: Prohibited exception 'NullPointerException' caught\n        return false;\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
+        },
+        {
+          "shortName": "InstanceofCatchParameter",
+          "displayName": "'instanceof' on 'catch' parameter",
+          "enabled": false,
+          "description": "Reports cases in which an `instanceof` expression is used for testing the type of a parameter in a `catch` block.\n\nTesting the type of `catch` parameters is usually better done by having separate\n`catch` blocks instead of using `instanceof`.\n\n**Example:**\n\n\n      void foo(Runnable runnable) {\n        try {\n            runnable.run();\n        } catch (Throwable throwable) {\n            if (throwable instanceof NoClassDefFoundError) { // warning: 'instanceof' on 'catch' parameter 'throwable'\n                System.out.println(\"Class not found!\");\n            }\n        }\n      }\n"
+        },
+        {
+          "shortName": "FinallyBlockCannotCompleteNormally",
+          "displayName": "'finally' block which can not complete normally",
+          "enabled": true,
+          "description": "Reports `return`, `throw`, `break`, `continue`, and `yield` statements that are used inside `finally` blocks. These cause the `finally` block to not complete normally but to complete abruptly. Any exceptions thrown from the `try` and `catch` blocks of the same `try`-`catch` statement will be suppressed.\n\n**Example:**\n\n\n      void x() {\n        try {\n          throw new RuntimeException();\n        } finally {\n          // if bar() returns true, the RuntimeException will be suppressed\n          if (bar()) return;\n        }\n      }\n"
+        },
+        {
+          "shortName": "EmptyFinallyBlock",
+          "displayName": "Empty 'finally' block",
+          "enabled": true,
+          "description": "Reports empty `finally` blocks.\n\nEmpty `finally` blocks usually indicate coding errors. They may also remain after code refactoring and can safely be removed.\n\nThis inspection doesn't report empty `finally` blocks found in JSP files.\n\n**Example:**\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      } finally {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      }\n"
+        },
+        {
+          "shortName": "ErrorRethrown",
+          "displayName": "'Error' not rethrown",
+          "enabled": false,
+          "description": "Reports `try` statements that catch `java.lang.Error` or any of its subclasses and do not rethrow the error.\n\nStatements that catch `java.lang.ThreadDeath` are not\nreported.\n\n**Example:**\n\n\n      try {\n        executeTests(request);\n      }\n      catch (OutOfMemoryError ex) { // warning: Error 'ex' not rethrown\n        return false;\n      }\n"
+        },
+        {
+          "shortName": "NewExceptionWithoutArguments",
+          "displayName": "Exception constructor called without arguments",
+          "enabled": false,
+          "description": "Reports creation of a exception instance without any arguments specified.\n\nWhen an exception is constructed without any arguments, it contains no information about the problem that occurred, which makes\ndebugging needlessly hard.\n\n**Example:**\n\n\n      throw new IOException(); // warning: exception without arguments\n"
+        },
+        {
+          "shortName": "TooBroadCatch",
+          "displayName": "Overly broad 'catch' block",
+          "enabled": false,
+          "description": "Reports `catch` blocks with parameters that are more generic than the exception thrown by the corresponding `try` block.\n\n**Example:**\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (Exception ex) { // warning: 'catch' of 'Exception' is too broad, masking exceptions 'RuntimeException'\n        return defaultFilePath;\n      }\n\nAfter the quick-fix is applied:\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (RuntimeException ex) {\n        return defaultFilePath;\n      }\n\nConfigure the inspection:\n\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown and thus are technically not overly broad."
+        },
+        {
+          "shortName": "UnnecessaryInitCause",
+          "displayName": "Unnecessary call to 'Throwable.initCause()'",
+          "enabled": true,
+          "description": "Reports calls to `Throwable.initCause()` where an exception constructor also takes a `Throwable cause` argument.\n\nIn this case, the `initCause()` call can be removed and its argument can be added to the call to the exception's constructor.\n\n**Example:**\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\");\n        wrapper.initCause(ex); // Unnecessary call to 'Throwable.initCause()'\n        throw wrapper;\n      }\n\nA quick-fix is available to pass the cause argument to the constructor. After the quick-fix is applied:\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\", ex);\n        throw wrapper;\n      }\n      \n"
+        },
+        {
+          "shortName": "ExceptionFromCatchWhichDoesntWrap",
+          "displayName": "'throw' inside 'catch' block which ignores the caught exception",
+          "enabled": false,
+          "description": "Reports exceptions that are thrown from inside `catch` blocks but do not \"wrap\" the caught exception.\n\nWhen an exception is thrown in response to an exception, wrapping the initial exception prevents losing valuable context information,\nsuch as stack frames and line numbers.\n\n**Example:**\n\n\n      ...\n      catch (IOException e) {\n        closeAllConnections();\n        throw new ConnectException(\"Connection problem.\"); // warning: 'throw' inside 'catch' block ignores the caught exception 'e'\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if result of exception method call is used** option to indicate whether the inspection should ignore exceptions whose argument is the result of a method call on the original exception, such as `getMessage()`.\n* Use the **Ignore if thrown exception cannot wrap an exception** option to ignore `throw` statements that throw exceptions without a constructor that accepts a `Throwable` cause."
+        },
+        {
+          "shortName": "NullThrown",
+          "displayName": "'null' thrown",
+          "enabled": false,
+          "description": "Reports `null` literals that are used as the argument of a `throw` statement.\n\nSuch constructs produce a `java.lang.NullPointerException` that usually should not be thrown programmatically."
+        },
+        {
+          "shortName": "ExtendsThrowable",
+          "displayName": "Class directly extends 'Throwable'",
+          "enabled": false,
+          "description": "Reports classes that directly extend `java.lang.Throwable`.\n\nExtending `java.lang.Throwable` directly is generally considered bad practice.\nIt is usually enough to extend `java.lang.RuntimeException`, `java.lang.Exception`, or - in special\ncases - `java.lang.Error`.\n\n**Example:**\n\n\n      class EnigmaThrowable extends Throwable {} // warning: Class 'EnigmaThrowable' directly extends 'java.lang.Throwable'\n"
+        },
+        {
+          "shortName": "ThreadDeathRethrown",
+          "displayName": "'ThreadDeath' not rethrown",
+          "enabled": false,
+          "description": "Reports `try` statements that catch `java.lang.ThreadDeath` and do not rethrow the exception.\n\n**Example:**\n\n\n      try {\n        executeInParallel(request);\n      } catch (ThreadDeath ex) { // warning: ThreadDeath 'ex' not rethrown\n        return false;\n      }\n"
+        },
+        {
+          "shortName": "EmptyTryBlock",
+          "displayName": "Empty 'try' block",
+          "enabled": true,
+          "description": "Reports empty `try` blocks, including try-with-resources statements.\n\n`try` blocks with comments are considered empty.\n\n\nThis inspection doesn't report empty `try` blocks found in JSP files."
+        },
+        {
+          "shortName": "ThrowableSupplierOnlyThrowException",
+          "displayName": "Throwable supplier never returns a value",
+          "enabled": true,
+          "description": "Reports `Supplier` lambdas in `Optional.orElseThrow()` calls that throw an exception, instead of returning it.\n\n**Example:**\n\n\n    optional.orElseThrow(() -> {\n        throw new RuntimeException();\n    });\n\nAfter the quick-fix is applied:\n\n\n    optional.orElseThrow(() -> new RuntimeException());\n\nNew in 2023.1"
+        },
+        {
+          "shortName": "NonFinalFieldOfException",
+          "displayName": "Non-final field of 'Exception' class",
+          "enabled": false,
+          "description": "Reports fields in subclasses of `java.lang.Exception` that are not declared `final`.\n\nData on exception objects should not be modified\nbecause this may result in losing the error context for later debugging and logging.\n\n**Example:**\n\n\n      public class EditorException extends Exception {\n        private String message; // warning: Non-final field 'message' of exception class\n      }\n"
+        },
+        {
+          "shortName": "CatchMayIgnoreException",
+          "displayName": "Catch block may ignore exception",
+          "enabled": true,
+          "description": "Reports `catch` blocks that are empty or may ignore an exception.\n\nWhile occasionally intended, empty `catch` blocks may complicate debugging.\nAlso, ignoring a `catch` parameter might be wrong.\nFinally, the static code analyzer reports if it detects that a `catch` block may silently ignore important VM\nexceptions like `NullPointerException`. Ignoring such an exception\n(without logging or rethrowing it) may hide a bug.\n\n\nThe inspection won't report any `catch` parameters named `ignore` or `ignored`.\nConversely, the inspection will warn you about any `catch` parameters named `ignore` or `ignored` that are actually in use.\nAdditionally, the inspection won't report `catch` parameters inside test sources named `expected` or `ok`.\n\n\nYou can use a quick-fix to change the exception name to `ignored`.\nFor empty **catch** blocks, an additional quick-fix to generate the **catch** body is suggested.\nYou can modify the \"Catch Statement Body\" template on the Code tab in\n[Settings \\| Editor \\| File and Code Templates](settings://fileTemplates).\n\n**Example:**\n\n\n      try {\n        throwingMethod();\n      } catch (IOException ex) {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        System.out.println(System.in.read());\n      } catch (IOException ignored) {\n\n      }\n\nConfigure the inspection:\n\n* Use the **Do not warn when 'catch' block contains a comment** option to ignore `catch` blocks with comments.\n* Use the **Do not warn when 'catch' block is not empty** option to ignore `catch` blocks that contain statements or comments inside, while the variable itself is not used.\n* Use the **Do not warn when exception named 'ignore(d)' is not actually ignored** option to ignore variables named `ignored` if they are in use.\n\nNew in 2018.1"
+        },
+        {
+          "shortName": "ThrowCaughtLocally",
+          "displayName": "'throw' caught by containing 'try' statement",
+          "enabled": false,
+          "description": "Reports `throw` statements whose exceptions are always caught by containing `try` statements.\n\nUsing `throw`\nstatements as a \"goto\" to change the local flow of control is confusing and results in poor performance.\n\n**Example:**\n\n\n      try {\n        if (!Files.isDirectory(PROJECTS)) {\n            throw new IllegalStateException(\"Directory not found.\"); // warning: 'throw' caught by containing 'try' statement\n        }\n        ...\n      } catch (Exception e) {\n          LOG.error(\"run failed\");\n      }\n\nUse the **Ignore rethrown exceptions** option to ignore exceptions that are rethrown."
+        },
+        {
+          "shortName": "ThrowsRuntimeException",
+          "displayName": "Unchecked exception declared in 'throws' clause",
+          "enabled": false,
+          "description": "Reports declaration of an unchecked exception (`java.lang.RuntimeException` or one of its subclasses) in the `throws` clause of a method.\n\nDeclarations of unchecked exceptions are not required and may be deleted or moved to a Javadoc `@throws` tag.\n\n**Example:**\n\n\n      public class InvalidDataException extends RuntimeException {}\n\n      class TextEditor {\n        void readSettings() throws InvalidDataException {} // warning: Unchecked exception 'InvalidDataException' declared in 'throws' clause\n      }\n"
+        },
+        {
+          "shortName": "GroovyThrowFromFinallyBlock",
+          "displayName": "'throw' inside 'finally' block",
+          "enabled": false,
+          "description": "Reports `throw` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `throw` statements may mask exceptions thrown and\ntremendously complicate debugging."
+        },
+        {
+          "shortName": "GroovyEmptyCatchBlock",
+          "displayName": "Empty 'catch' block",
+          "enabled": false,
+          "description": "Reports empty `catch` blocks. While occasionally intended, empty `catch` blocks can make debugging extremely difficult.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception e) {\n    }\n\nAfter the quick-fix is applied:\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception ignored) {\n    }\n\n"
+        },
+        {
+          "shortName": "GroovyContinueOrBreakFromFinallyBlock",
+          "displayName": "'continue' or 'break' from 'finally' block",
+          "enabled": false,
+          "description": "Reports `break` and `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and tremendously complicate debugging."
+        },
+        {
+          "shortName": "GroovyUnusedCatchParameter",
+          "displayName": "Unused 'catch' parameter",
+          "enabled": false,
+          "description": "Reports **catch** parameters that are unused in their\ncorresponding blocks. This inspection will not report any **catch** parameters\nnamed \"ignore\" or \"ignored\".\n\n**Example:**\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ex) {\n          println('Catching the exception')\n      }\n\nHere the parameter **ex** is never used in **catch** block.\n\nAfter the quick-fix is applied:\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ignored) {\n          println('Catching the exception')\n      }\n"
+        },
+        {
+          "shortName": "GroovyReturnFromFinallyBlock",
+          "displayName": "'return' inside 'finally' block",
+          "enabled": false,
+          "description": "Reports `return` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `return` statements may mask exceptions thrown, and\ncomplicate debugging."
+        },
+        {
+          "shortName": "GroovyEmptyTryBlock",
+          "displayName": "Empty 'try' block",
+          "enabled": false,
+          "description": "Reports empty `try` blocks. Empty `try` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n    }\n    finally {\n      close()\n    }\n\n"
+        },
+        {
+          "shortName": "GroovyEmptyFinallyBlock",
+          "displayName": "Empty 'finally' block",
+          "enabled": false,
+          "description": "Reports empty `finally` blocks. Empty `finally` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    finally {\n    }\n\n"
+        }
+      ]
+    },
+    {
       "name": "Code",
       "inspections": [
         {
@@ -2799,221 +3014,6 @@
       ]
     },
     {
-      "name": "Error handling",
-      "inspections": [
-        {
-          "shortName": "UncheckedExceptionClass",
-          "displayName": "Unchecked 'Exception' class",
-          "enabled": false,
-          "description": "Reports subclasses of `java.lang.RuntimeException`.\n\nSome coding standards require that all user-defined exception classes are checked.\n\n**Example:**\n\n\n      class EnigmaException extends RuntimeException {} // warning: Unchecked exception class 'EnigmaException'\n"
-        },
-        {
-          "shortName": "CheckedExceptionClass",
-          "displayName": "Checked exception class",
-          "enabled": false,
-          "description": "Reports checked exception classes (that is, subclasses of `java.lang.Exception` that are not subclasses of `java.lang.RuntimeException`).\n\nSome coding standards suppress checked user-defined exception classes.\n\n**Example:**\n\n\n      class IllegalMoveException extends Exception {}\n"
-        },
-        {
-          "shortName": "NestedTryStatement",
-          "displayName": "Nested 'try' statement",
-          "enabled": false,
-          "description": "Reports nested `try` statements.\n\nNested `try` statements\nmay result in unclear code and should probably have their `catch` and `finally` sections\nmerged."
-        },
-        {
-          "shortName": "BadExceptionThrown",
-          "displayName": "Prohibited exception thrown",
-          "enabled": false,
-          "description": "Reports `throw` statements that throw an inappropriate exception. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.io.IOException`.\n\n**Example:**\n\n\n      void setup(Mode mode) {\n          if (mode == null)\n              throw new RuntimeException(\"Problem during setup\"); // warning: Prohibited exception 'RuntimeException' thrown\n          ...\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
-        },
-        {
-          "shortName": "CaughtExceptionImmediatelyRethrown",
-          "displayName": "Caught exception is immediately rethrown",
-          "enabled": true,
-          "description": "Reports `catch` blocks that immediately rethrow the caught exception without performing any action on it. Such `catch` blocks are unnecessary and have no error handling.\n\n**Example:**\n\n\n            try {\n                new FileInputStream(\"\");\n            } catch (FileNotFoundException e) {\n                throw e;\n            }\n"
-        },
-        {
-          "shortName": "ThrowFromFinallyBlock",
-          "displayName": "'throw' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `throw` statements inside `finally` blocks. While occasionally intended, such `throw` statements can hide exceptions thrown from the `try` and `catch` blocks, thereby complicating the debugging process.\n\n**Example:**\n\n\n      class Fascinating {\n        void doTask(Task t) {\n          try {\n            t.activity();\n          } finally {\n            if (!t.finish()) {\n              throw new IllegalStateException();\n            }\n          }\n        }\n      }\n\nUse the **Warn everywhere declared exceptions may be thrown** option\nto warn on method calls to methods that declare exceptions as well."
-        },
-        {
-          "shortName": "ContinueOrBreakFromFinallyBlock",
-          "displayName": "'continue' or 'break' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `break` or `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and complicate debugging.\n\n**Example:**\n\n\n        while (true) {\n            try {\n              throwingMethod();\n            } finally {\n                continue;\n            }\n        }\n"
-        },
-        {
-          "shortName": "BadExceptionDeclared",
-          "displayName": "Prohibited exception declared",
-          "enabled": false,
-          "description": "Reports methods that declare an inappropriate exception in their `throws` clause. For example an exception can be inappropriate because it is overly generic, such as `java.lang.Exception` or `java.lang.Throwable`.\n\n**Example:**\n\n\n      void describeModule(String module) throws Exception {} // warning: Prohibited exception 'Exception' declared\n\nConfigure the inspection:\n\n* Use the **Prohibited exceptions** list to specify which exceptions should be reported.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore exceptions declared by methods that override a library method."
-        },
-        {
-          "shortName": "ReturnFromFinallyBlock",
-          "displayName": "'return' inside 'finally' block",
-          "enabled": true,
-          "description": "Reports `return` statements inside of `finally` blocks.\n\nWhile occasionally intended, such `return` statements may mask thrown exceptions\nand complicate debugging.\n\n**Example:**\n\n\n      try {\n        foo();\n      } finally {\n        if (bar()) return;\n      }\n"
-        },
-        {
-          "shortName": "TooBroadThrows",
-          "displayName": "Overly broad 'throws' clause",
-          "enabled": false,
-          "description": "Reports `throws` clauses with exceptions that are more generic than the exceptions that the method actually throws.\n\n**Example:**\n\n\n      public void createFile() throws Exception { // warning: 'throws Exception' is too broad, masking exception 'IOException'\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void createFile() throws IOException {\n        File file = new File(\"pathToFile\");\n        file.createNewFile();\n      }\n\nConfigure the inspection:\n\n* Use the **Maximum number of hidden exceptions to warn** field to ignore exceptions, that hide a larger number of other exceptions than specified.\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions declared on methods overriding a library method** option to ignore overly broad `throws` clauses in methods that override a library method.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown from the method body and thus are technically not overly broad."
-        },
-        {
-          "shortName": "BadExceptionCaught",
-          "displayName": "Prohibited 'Exception' caught",
-          "enabled": false,
-          "description": "Reports `catch` clauses that catch an inappropriate exception.\n\nSome exceptions, for example\n`java.lang.NullPointerException` or\n`java.lang.IllegalMonitorStateException`, represent programming errors\nand therefore almost certainly should not be caught in production code.\n\n**Example:**\n\n\n      try {\n        return component.getMousePosition(true) != null;\n      } catch (NullPointerException e) { // warning: Prohibited exception 'NullPointerException' caught\n        return false;\n      }\n\nUse the **Prohibited exceptions** list to specify which exceptions should be reported."
-        },
-        {
-          "shortName": "InstanceofCatchParameter",
-          "displayName": "'instanceof' on 'catch' parameter",
-          "enabled": false,
-          "description": "Reports cases in which an `instanceof` expression is used for testing the type of a parameter in a `catch` block.\n\nTesting the type of `catch` parameters is usually better done by having separate\n`catch` blocks instead of using `instanceof`.\n\n**Example:**\n\n\n      void foo(Runnable runnable) {\n        try {\n            runnable.run();\n        } catch (Throwable throwable) {\n            if (throwable instanceof NoClassDefFoundError) { // warning: 'instanceof' on 'catch' parameter 'throwable'\n                System.out.println(\"Class not found!\");\n            }\n        }\n      }\n"
-        },
-        {
-          "shortName": "FinallyBlockCannotCompleteNormally",
-          "displayName": "'finally' block which can not complete normally",
-          "enabled": true,
-          "description": "Reports `return`, `throw`, `break`, `continue`, and `yield` statements that are used inside `finally` blocks. These cause the `finally` block to not complete normally but to complete abruptly. Any exceptions thrown from the `try` and `catch` blocks of the same `try`-`catch` statement will be suppressed.\n\n**Example:**\n\n\n      void x() {\n        try {\n          throw new RuntimeException();\n        } finally {\n          // if bar() returns true, the RuntimeException will be suppressed\n          if (bar()) return;\n        }\n      }\n"
-        },
-        {
-          "shortName": "EmptyFinallyBlock",
-          "displayName": "Empty 'finally' block",
-          "enabled": true,
-          "description": "Reports empty `finally` blocks.\n\nEmpty `finally` blocks usually indicate coding errors. They may also remain after code refactoring and can safely be removed.\n\nThis inspection doesn't report empty `finally` blocks found in JSP files.\n\n**Example:**\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      } finally {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        Files.readString(Paths.get(\"in.txt\"));\n      } catch (IOException e) {\n        throw new RuntimeException(e);\n      }\n"
-        },
-        {
-          "shortName": "ErrorRethrown",
-          "displayName": "'Error' not rethrown",
-          "enabled": false,
-          "description": "Reports `try` statements that catch `java.lang.Error` or any of its subclasses and do not rethrow the error.\n\nStatements that catch `java.lang.ThreadDeath` are not\nreported.\n\n**Example:**\n\n\n      try {\n        executeTests(request);\n      }\n      catch (OutOfMemoryError ex) { // warning: Error 'ex' not rethrown\n        return false;\n      }\n"
-        },
-        {
-          "shortName": "NewExceptionWithoutArguments",
-          "displayName": "Exception constructor called without arguments",
-          "enabled": false,
-          "description": "Reports creation of a exception instance without any arguments specified.\n\nWhen an exception is constructed without any arguments, it contains no information about the problem that occurred, which makes\ndebugging needlessly hard.\n\n**Example:**\n\n\n      throw new IOException(); // warning: exception without arguments\n"
-        },
-        {
-          "shortName": "TooBroadCatch",
-          "displayName": "Overly broad 'catch' block",
-          "enabled": false,
-          "description": "Reports `catch` blocks with parameters that are more generic than the exception thrown by the corresponding `try` block.\n\n**Example:**\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (Exception ex) { // warning: 'catch' of 'Exception' is too broad, masking exceptions 'RuntimeException'\n        return defaultFilePath;\n      }\n\nAfter the quick-fix is applied:\n\n\n      try  {\n        File file = new File(pathToFile);\n        return file.getAbsolutePath();\n      } catch (RuntimeException ex) {\n        return defaultFilePath;\n      }\n\nConfigure the inspection:\n\n* Use the **Only warn on RuntimeException, Exception, Error or Throwable** option to have this inspection warn only on the most generic exceptions.\n* Use the **Ignore exceptions which hide others but are themselves thrown** option to ignore any exceptions that hide other exceptions but still may be thrown and thus are technically not overly broad."
-        },
-        {
-          "shortName": "UnnecessaryInitCause",
-          "displayName": "Unnecessary call to 'Throwable.initCause()'",
-          "enabled": true,
-          "description": "Reports calls to `Throwable.initCause()` where an exception constructor also takes a `Throwable cause` argument.\n\nIn this case, the `initCause()` call can be removed and its argument can be added to the call to the exception's constructor.\n\n**Example:**\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\");\n        wrapper.initCause(ex); // Unnecessary call to 'Throwable.initCause()'\n        throw wrapper;\n      }\n\nA quick-fix is available to pass the cause argument to the constructor. After the quick-fix is applied:\n\n\n      try {\n          process();\n      }\n      catch (RuntimeException ex) {\n        RuntimeException wrapper = new RuntimeException(\"Error while processing\", ex);\n        throw wrapper;\n      }\n      \n"
-        },
-        {
-          "shortName": "ExceptionFromCatchWhichDoesntWrap",
-          "displayName": "'throw' inside 'catch' block which ignores the caught exception",
-          "enabled": false,
-          "description": "Reports exceptions that are thrown from inside `catch` blocks but do not \"wrap\" the caught exception.\n\nWhen an exception is thrown in response to an exception, wrapping the initial exception prevents losing valuable context information,\nsuch as stack frames and line numbers.\n\n**Example:**\n\n\n      ...\n      catch (IOException e) {\n        closeAllConnections();\n        throw new ConnectException(\"Connection problem.\"); // warning: 'throw' inside 'catch' block ignores the caught exception 'e'\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore if result of exception method call is used** option to indicate whether the inspection should ignore exceptions whose argument is the result of a method call on the original exception, such as `getMessage()`.\n* Use the **Ignore if thrown exception cannot wrap an exception** option to ignore `throw` statements that throw exceptions without a constructor that accepts a `Throwable` cause."
-        },
-        {
-          "shortName": "NullThrown",
-          "displayName": "'null' thrown",
-          "enabled": false,
-          "description": "Reports `null` literals that are used as the argument of a `throw` statement.\n\nSuch constructs produce a `java.lang.NullPointerException` that usually should not be thrown programmatically."
-        },
-        {
-          "shortName": "ExtendsThrowable",
-          "displayName": "Class directly extends 'Throwable'",
-          "enabled": false,
-          "description": "Reports classes that directly extend `java.lang.Throwable`.\n\nExtending `java.lang.Throwable` directly is generally considered bad practice.\nIt is usually enough to extend `java.lang.RuntimeException`, `java.lang.Exception`, or - in special\ncases - `java.lang.Error`.\n\n**Example:**\n\n\n      class EnigmaThrowable extends Throwable {} // warning: Class 'EnigmaThrowable' directly extends 'java.lang.Throwable'\n"
-        },
-        {
-          "shortName": "ThreadDeathRethrown",
-          "displayName": "'ThreadDeath' not rethrown",
-          "enabled": false,
-          "description": "Reports `try` statements that catch `java.lang.ThreadDeath` and do not rethrow the exception.\n\n**Example:**\n\n\n      try {\n        executeInParallel(request);\n      } catch (ThreadDeath ex) { // warning: ThreadDeath 'ex' not rethrown\n        return false;\n      }\n"
-        },
-        {
-          "shortName": "EmptyTryBlock",
-          "displayName": "Empty 'try' block",
-          "enabled": true,
-          "description": "Reports empty `try` blocks, including try-with-resources statements.\n\n`try` blocks with comments are considered empty.\n\n\nThis inspection doesn't report empty `try` blocks found in JSP files."
-        },
-        {
-          "shortName": "ThrowableSupplierOnlyThrowException",
-          "displayName": "Throwable supplier never returns a value",
-          "enabled": true,
-          "description": "Reports `Supplier` lambdas in `Optional.orElseThrow()` calls that throw an exception, instead of returning it.\n\n**Example:**\n\n\n    optional.orElseThrow(() -> {\n        throw new RuntimeException();\n    });\n\nAfter the quick-fix is applied:\n\n\n    optional.orElseThrow(() -> new RuntimeException());\n\nNew in 2023.1"
-        },
-        {
-          "shortName": "NonFinalFieldOfException",
-          "displayName": "Non-final field of 'Exception' class",
-          "enabled": false,
-          "description": "Reports fields in subclasses of `java.lang.Exception` that are not declared `final`.\n\nData on exception objects should not be modified\nbecause this may result in losing the error context for later debugging and logging.\n\n**Example:**\n\n\n      public class EditorException extends Exception {\n        private String message; // warning: Non-final field 'message' of exception class\n      }\n"
-        },
-        {
-          "shortName": "CatchMayIgnoreException",
-          "displayName": "Catch block may ignore exception",
-          "enabled": true,
-          "description": "Reports `catch` blocks that are empty or may ignore an exception.\n\nWhile occasionally intended, empty `catch` blocks may complicate debugging.\nAlso, ignoring a `catch` parameter might be wrong.\nFinally, the static code analyzer reports if it detects that a `catch` block may silently ignore important VM\nexceptions like `NullPointerException`. Ignoring such an exception\n(without logging or rethrowing it) may hide a bug.\n\n\nThe inspection won't report any `catch` parameters named `ignore` or `ignored`.\nConversely, the inspection will warn you about any `catch` parameters named `ignore` or `ignored` that are actually in use.\nAdditionally, the inspection won't report `catch` parameters inside test sources named `expected` or `ok`.\n\n\nYou can use a quick-fix to change the exception name to `ignored`.\nFor empty **catch** blocks, an additional quick-fix to generate the **catch** body is suggested.\nYou can modify the \"Catch Statement Body\" template on the Code tab in\n[Settings \\| Editor \\| File and Code Templates](settings://fileTemplates).\n\n**Example:**\n\n\n      try {\n        throwingMethod();\n      } catch (IOException ex) {\n\n      }\n\nAfter the quick-fix is applied:\n\n\n      try {\n        System.out.println(System.in.read());\n      } catch (IOException ignored) {\n\n      }\n\nConfigure the inspection:\n\n* Use the **Do not warn when 'catch' block contains a comment** option to ignore `catch` blocks with comments.\n* Use the **Do not warn when 'catch' block is not empty** option to ignore `catch` blocks that contain statements or comments inside, while the variable itself is not used.\n* Use the **Do not warn when exception named 'ignore(d)' is not actually ignored** option to ignore variables named `ignored` if they are in use.\n\nNew in 2018.1"
-        },
-        {
-          "shortName": "ThrowCaughtLocally",
-          "displayName": "'throw' caught by containing 'try' statement",
-          "enabled": false,
-          "description": "Reports `throw` statements whose exceptions are always caught by containing `try` statements.\n\nUsing `throw`\nstatements as a \"goto\" to change the local flow of control is confusing and results in poor performance.\n\n**Example:**\n\n\n      try {\n        if (!Files.isDirectory(PROJECTS)) {\n            throw new IllegalStateException(\"Directory not found.\"); // warning: 'throw' caught by containing 'try' statement\n        }\n        ...\n      } catch (Exception e) {\n          LOG.error(\"run failed\");\n      }\n\nUse the **Ignore rethrown exceptions** option to ignore exceptions that are rethrown."
-        },
-        {
-          "shortName": "ThrowsRuntimeException",
-          "displayName": "Unchecked exception declared in 'throws' clause",
-          "enabled": false,
-          "description": "Reports declaration of an unchecked exception (`java.lang.RuntimeException` or one of its subclasses) in the `throws` clause of a method.\n\nDeclarations of unchecked exceptions are not required and may be deleted or moved to a Javadoc `@throws` tag.\n\n**Example:**\n\n\n      public class InvalidDataException extends RuntimeException {}\n\n      class TextEditor {\n        void readSettings() throws InvalidDataException {} // warning: Unchecked exception 'InvalidDataException' declared in 'throws' clause\n      }\n"
-        },
-        {
-          "shortName": "GroovyThrowFromFinallyBlock",
-          "displayName": "'throw' inside 'finally' block",
-          "enabled": false,
-          "description": "Reports `throw` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `throw` statements may mask exceptions thrown and\ntremendously complicate debugging."
-        },
-        {
-          "shortName": "GroovyEmptyCatchBlock",
-          "displayName": "Empty 'catch' block",
-          "enabled": false,
-          "description": "Reports empty `catch` blocks. While occasionally intended, empty `catch` blocks can make debugging extremely difficult.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception e) {\n    }\n\nAfter the quick-fix is applied:\n\n\n    try {\n      throw new Exception()\n    }\n    catch (Exception ignored) {\n    }\n\n"
-        },
-        {
-          "shortName": "GroovyContinueOrBreakFromFinallyBlock",
-          "displayName": "'continue' or 'break' from 'finally' block",
-          "enabled": false,
-          "description": "Reports `break` and `continue` statements inside of `finally` blocks.\n\nWhile occasionally intended, such statements are very confusing, may mask thrown exceptions, and tremendously complicate debugging."
-        },
-        {
-          "shortName": "GroovyUnusedCatchParameter",
-          "displayName": "Unused 'catch' parameter",
-          "enabled": false,
-          "description": "Reports **catch** parameters that are unused in their\ncorresponding blocks. This inspection will not report any **catch** parameters\nnamed \"ignore\" or \"ignored\".\n\n**Example:**\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ex) {\n          println('Catching the exception')\n      }\n\nHere the parameter **ex** is never used in **catch** block.\n\nAfter the quick-fix is applied:\n\n\n      try {\n          def arr = new int[3]\n          arr[5] = 5\n      } catch(Exception ignored) {\n          println('Catching the exception')\n      }\n"
-        },
-        {
-          "shortName": "GroovyReturnFromFinallyBlock",
-          "displayName": "'return' inside 'finally' block",
-          "enabled": false,
-          "description": "Reports `return` statements inside of `finally` blocks.\n\n\nWhile occasionally intended, such `return` statements may mask exceptions thrown, and\ncomplicate debugging."
-        },
-        {
-          "shortName": "GroovyEmptyTryBlock",
-          "displayName": "Empty 'try' block",
-          "enabled": false,
-          "description": "Reports empty `try` blocks. Empty `try` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n    }\n    finally {\n      close()\n    }\n\n"
-        },
-        {
-          "shortName": "GroovyEmptyFinallyBlock",
-          "displayName": "Empty 'finally' block",
-          "enabled": false,
-          "description": "Reports empty `finally` blocks. Empty `finally` blocks usually indicate coding errors.\n\n**Example:**\n\n\n    try {\n      throw new Exception()\n    }\n    finally {\n    }\n\n"
-        }
-      ]
-    },
-    {
       "name": "Declaration redundancy",
       "inspections": [
         {
@@ -3315,16 +3315,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ResultOfObjectAllocationIgnored",
-          "displayName": "Result of object allocation ignored",
-          "enabled": false,
-          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
-        },
-        {
           "shortName": "ClassGetClass",
           "displayName": "Suspicious 'Class.getClass()' call",
           "enabled": true,
           "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "ResultOfObjectAllocationIgnored",
+          "displayName": "Result of object allocation ignored",
+          "enabled": false,
+          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
         },
         {
           "shortName": "MismatchedStringBuilderQueryUpdate",
@@ -3837,16 +3837,16 @@
           "description": "Reports annotations used on record components that have no effect.\n\nThis can happen in two cases:\n\n* The reported annotation has the METHOD target, but the corresponding accessor is explicitly defined.\n* The reported annotation has the PARAMETER target, but the canonical constructor is explicitly defined.\n\nExample:\n\n\n    @Target(ElementType.METHOD)\n    @interface A { }\n      \n    // The annotation will not appear in bytecode at all,\n    // as it should be propagated to the accessor but accessor is explicitly defined \n    record R(@A int x) {\n      public int x() { return x; }\n    }\n\nThis inspection depends on the Java feature 'Records', which is available since Java 16.\n\nNew in 2021.1"
         },
         {
-          "shortName": "SuspiciousDateFormat",
-          "displayName": "Suspicious date format pattern",
-          "enabled": true,
-          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
-        },
-        {
           "shortName": "MagicConstant",
           "displayName": "Magic constant",
           "enabled": true,
           "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
+        },
+        {
+          "shortName": "SuspiciousDateFormat",
+          "displayName": "Suspicious date format pattern",
+          "enabled": true,
+          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
         },
         {
           "shortName": "MismatchedCollectionQueryUpdate",
@@ -5449,179 +5449,6 @@
       ]
     },
     {
-      "name": "Numeric issues",
-      "inspections": [
-        {
-          "shortName": "RemoveLiteralUnderscores",
-          "displayName": "Underscores in numeric literal",
-          "enabled": false,
-          "description": "Reports numeric literals with underscores and suggests removing them with a quick-fix. This may be useful if you need to lower the language level.\n\nThe quick-fix removes underscores from numeric literals. For example `1_000_000` will be converted to `1000000`.\n\n\n*Numeric literals with underscores* appeared in Java 7.\nThis inspection can help to downgrade for backward compatibility with earlier Java versions.\n\nNew in 2020.2"
-        },
-        {
-          "shortName": "BadOddness",
-          "displayName": "Suspicious oddness check",
-          "enabled": false,
-          "description": "Reports odd-even checks of the following form: `x % 2 == 1`. Such checks fail when used with negative odd values. Consider using `x % 2 != 0` or `(x & 1) == 1` instead."
-        },
-        {
-          "shortName": "InsertLiteralUnderscores",
-          "displayName": "Unreadable numeric literal",
-          "enabled": false,
-          "description": "Reports long numeric literals without underscores and suggests adding them. Underscores make such literals easier to read.\n\nExample:\n\n\n      1000000\n\nAfter the quick-fix is applied:\n\n\n      1_000_000\n\nThis inspection only reports if the language level of the project of module is 7 or higher.\n\nNew in 2020.2"
-        },
-        {
-          "shortName": "ConfusingFloatingPointLiteral",
-          "displayName": "Confusing floating-point literal",
-          "enabled": false,
-          "description": "Reports any floating point numbers that don't have a decimal point, numbers before the decimal point, or numbers after the decimal point.\n\nSuch literals may be confusing, and violate several coding standards.\n\n**Example:**\n\n    double d = .03;\n\nAfter the quick-fix is applied:\n\n    double d = 0.03;\n\n\nUse the **Ignore floating point literals in scientific notation** option to ignore floating point numbers in scientific notation."
-        },
-        {
-          "shortName": "OctalAndDecimalIntegersMixed",
-          "displayName": "Octal and decimal integers in same array",
-          "enabled": false,
-          "description": "Reports mixed octal and decimal integer literals in a single array initializer. This situation might happen when you copy a list of numbers into an array initializer. Some numbers in the array might be zero-padded and the compiler will interpret them as octal.\n\n**Example:**\n\n    int[] elapsed = {1, 13, 052};\n\nAfter the quick-fix that removes a leading zero is applied:\n\n    int[] elapsed = {1, 13, 52};\n\nIf it is an octal number (for example, after a variable inline), then you can use another quick-fix that converts octal to decimal:\n`int[] elapsed = {1, 13, 42};`"
-        },
-        {
-          "shortName": "UnnecessaryUnaryMinus",
-          "displayName": "Unnecessary unary minus",
-          "enabled": true,
-          "description": "Reports unnecessary unary minuses. Such expressions might be hard to understand and might contain errors.\n\n**For example:**\n\n    void unaryMinus(int i) {\n        int x = - -i;\n      }\n\nThe following quick fixes are suggested here:\n\n* Remove `-` operators before the `i` variable:\n\n      void unaryMinus(int i) {\n          int x = i;\n        }\n\n* Replace `-` operators with the prefix decrement operator:\n\n      void unaryMinus(int i) {\n          int x = --i;\n        }\n\n**Another example:**\n\n    void unaryMinus(int i) {\n        i += - 8;\n      }\n\nAfter the quick-fix is applied:\n\n    void unaryMinus(int i) {\n        i -= 8;\n      }\n"
-        },
-        {
-          "shortName": "LossyConversionCompoundAssignment",
-          "displayName": "Possibly lossy implicit cast in compound assignment",
-          "enabled": true,
-          "description": "Reports compound assignments if the type of the right-hand operand is not assignment compatible with the type of the variable.\n\n\nDuring such compound assignments, an implicit cast occurs, potentially resulting in lossy conversions.\n\nExample:\n\n\n      long c = 1;\n      c += 1.2;\n\nAfter the quick-fix is applied:\n\n\n      long c = 1;\n      c += (long) 1.2;\n\nNew in 2023.2"
-        },
-        {
-          "shortName": "NegativeIntConstantInLongContext",
-          "displayName": "Negative int hexadecimal constant in long context",
-          "enabled": true,
-          "description": "Reports negative int hexadecimal constants in long context. Such constants are implicitly widened to long, which means their higher bits will become 1 rather than 0 (e.g., 0xFFFF_FFFF will become 0xFFFF_FFFF_FFFF_FFFFL). Unlikely this is intended, and even if it is, using an explicit long constant would be less confusing.\n\n**Example:**\n\n\n      // Warning: this is int constant -1 which is widened to long\n      // becoming 0xFFFF_FFFF_FFFF_FFFFL.\n      long mask = 0xFFFF_FFFF;\n\nNew in 2022.3"
-        },
-        {
-          "shortName": "ImplicitNumericConversion",
-          "displayName": "Implicit numeric conversion",
-          "enabled": false,
-          "description": "Reports implicit conversion between numeric types.\n\nImplicit numeric conversion is not a problem in itself but, if unexpected, may cause difficulties when tracing bugs.\n\n**Example:**\n\n\n      double m(int i) {\n        return i * 10;\n      }\n\nAfter the quick-fix is applied:\n\n\n      double m(int i) {\n        return (double) (i * 10);\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore widening conversions** option to ignore implicit conversion that cannot result in data loss (for example, `int`-\\>`long`).\n* Use the **Ignore conversions from and to 'char'** option to ignore conversion from and to `char`. The inspection will still report conversion from and to floating-point numbers.\n* Use the **Ignore conversion from constants and literals** to make the inspection ignore conversion from literals and compile-time constants."
-        },
-        {
-          "shortName": "OctalLiteral",
-          "displayName": "Octal integer",
-          "enabled": true,
-          "description": "Reports octal integer literals. Some coding standards prohibit the use of octal literals, as they may be easily confused with decimal literals.\n\nExample:\n\n\n      int i = 015;\n      int j = 0_777;\n\nThis inspection has two different quick-fixes.\nAfter the **Convert octal literal to decimal literal** quick-fix is applied, the code changes to:\n\n\n      int i = 13;\n      int j = 511;\n\nAfter the **Remove leading zero to make decimal** quick-fix is applied, the code changes to:\n\n\n      int i = 15;\n      int j = 777;\n"
-        },
-        {
-          "shortName": "NumericOverflow",
-          "displayName": "Numeric overflow",
-          "enabled": true,
-          "description": "Reports expressions that overflow during computation. Usually, this happens by accident and indicates a bug. For example, a wrong type is used or a shift should be done in an opposite direction .\n\n**Examples:**\n\n\n      float a = 1.0f/0.0f;\n      long b = 30 * 24 * 60 * 60 * 1000;\n      long c = 1000L << 62;\n"
-        },
-        {
-          "shortName": "SuspiciousLiteralUnderscore",
-          "displayName": "Suspicious underscore in number literal",
-          "enabled": false,
-          "description": "Reports decimal number literals that use the underscore numeric separator with groups where the number of digits is not three. Such literals may contain a typo.\n\nThis inspection will not warn on literals containing two consecutive underscores.\nIt is also allowed to omit underscores in the fractional part of `double` and `float` literals.\n\n**Example:** `int oneMillion = 1_000_0000;`"
-        },
-        {
-          "shortName": "ComparisonOfShortAndChar",
-          "displayName": "Comparison of 'short' and 'char' values",
-          "enabled": true,
-          "description": "Reports equality comparisons between `short` and `char` values.\n\nSuch comparisons may cause subtle bugs because while both values are 2-byte long, `short` values are\nsigned, and `char` values are unsigned.\n\n**Example:**\n\n\n    if (Character.MAX_VALUE == shortValue()) {} //never can be true\n"
-        },
-        {
-          "shortName": "DivideByZero",
-          "displayName": "Division by zero",
-          "enabled": true,
-          "description": "Reports division by zero or remainder by zero. Such expressions will produce an `Infinity`, `-Infinity` or `NaN` result for doubles or floats, and will throw an `ArithmeticException` for integers.\n\nWhen the expression has a `NaN` result, the fix suggests replacing the division expression with the `NaN` constant."
-        },
-        {
-          "shortName": "ComparisonToNaN",
-          "displayName": "Comparison to 'Double.NaN' or 'Float.NaN'",
-          "enabled": true,
-          "description": "Reports any comparisons to `Double.NaN` or `Float.NaN`. Such comparisons are never meaningful, as NaN is not equal to anything, including itself. Use the `Double.isNaN()` or `Float.isNaN()` methods instead.\n\n**Example:**\n\n\n      if (x == Double.NaN) {...}\n\nAfter the quick-fix is applied:\n\n\n      if (Double.isNaN(x)) {...}\n"
-        },
-        {
-          "shortName": "UnaryPlus",
-          "displayName": "Unary plus",
-          "enabled": true,
-          "description": "Reports usages of the `+` unary operator. The unary plus is usually a null operation, and its presence might represent a coding error. For example, in a combination with the increment operator (like in `+++`) or with the equal operator (like in `=+`).\n\n**Example:**\n\n\n      void unaryPlus(int i) {\n        int x = + +i;\n      }\n\nThe following quick fixes are suggested:\n\n* Remove `+` operators before the `i` variable:\n\n\n        void unaryPlus(int i) {\n          int x = i;\n        }\n\n* Replace `+` operators with the prefix increment operator:\n\n\n        void unaryPlus(int i) {\n          int x = ++i;\n        }\n\n\nUse the checkbox below to report unary pluses that are used together with a binary or another unary expression.\nIt means the inspection will not report situations when a unary plus expression is used in array\ninitializer expressions or as a method argument."
-        },
-        {
-          "shortName": "CachedNumberConstructorCall",
-          "displayName": "Number constructor call with primitive argument",
-          "enabled": true,
-          "description": "Reports instantiations of new `Long`, `Integer`, `Short`, or `Byte` objects that have a primitive `long`, `integer`, `short`, or `byte` argument.\n\nIt is recommended that you use the static method `valueOf()`\nintroduced in Java 5. By default, this method caches objects for values between -128 and\n127 inclusive.\n\n**Example:**\n\n\n      Integer i = new Integer(1);\n      Long l = new Long(1L);\n\nAfter the quick-fix is applied, the code changes to:\n\n\n      Integer i = Integer.valueOf(1);\n      Long l = Long.valueOf(1L);\n\nThis inspection only reports if the language level of the project or module is 5 or higher\n\n\nUse the **Ignore new number expressions with a String argument** option to ignore calls to number constructors with a `String` argument.\n\n\nUse the **Report only when constructor is @Deprecated** option to only report calls to deprecated constructors.\n`Long`, `Integer`, `Short` and `Byte` constructors are deprecated since JDK 9."
-        },
-        {
-          "shortName": "PointlessArithmeticExpression",
-          "displayName": "Pointless arithmetic expression",
-          "enabled": true,
-          "description": "Reports pointless arithmetic expressions. Such expressions include adding or subtracting zero, multiplying by zero or one, and division by one.\n\nSuch expressions may be the result of automated refactorings and they are unlikely to be what the developer intended to do.\n\nThe quick-fix simplifies such expressions.\n\n**Example:**\n\n\n      void f(int a) {\n        int x = a - a;\n        int y = a + 0;\n        int res = x / x;\n      }\n\nAfter the quick-fix is applied:\n\n\n      void f(int a) {\n        int x = 0;\n        int y = a;\n        int res = 1;\n      }\n\n\nNote that in rare cases, the suggested replacement might not be completely equivalent to the original code\nfor all possible inputs. For example, the inspection suggests replacing `x / x` with `1`.\nHowever, if `x` is zero, the original code throws `ArithmeticException` or results in `NaN`.\nAlso, if `x` is `NaN`, then the result is also `NaN`. It's very unlikely that such behavior is intended."
-        },
-        {
-          "shortName": "CharUsedInArithmeticContext",
-          "displayName": "'char' expression used in arithmetic context",
-          "enabled": false,
-          "description": "Reports expressions of the `char` type used in addition or subtraction expressions.\n\nSuch code is not necessarily an issue but may result in bugs (for example,\nif a string is expected).\n\n**Example:** `int a = 'a' + 42;`\n\nAfter the quick-fix is applied: `int a = (int) 'a' + 42;`\n\nFor the `String` context:\n\n    int i1 = 1;\n    int i2 = 2;\n    System.out.println(i2 + '-' + i1 + \" = \" + (i2 - i1));\n\nAfter the quick-fix is applied:\n`System.out.println(i2 + \"-\" + i1 + \" = \" + (i2 - i1));`"
-        },
-        {
-          "shortName": "UnpredictableBigDecimalConstructorCall",
-          "displayName": "Unpredictable 'BigDecimal' constructor call",
-          "enabled": true,
-          "description": "Reports calls to `BigDecimal` constructors that accept a `double` value. These constructors produce `BigDecimal` that is exactly equal to the supplied `double` value. However, because doubles are encoded in the IEEE 754 64-bit double-precision binary floating-point format, the exact value can be unexpected.\n\nFor example, `new BigDecimal(0.1)` yields a `BigDecimal` object. Its value is\n`0.1000000000000000055511151231257827021181583404541015625`\nwhich is the nearest number to 0.1 representable as a double.\nTo get `BigDecimal` that stores the same value as written in the source code,\nuse either `new BigDecimal(\"0.1\")` or `BigDecimal.valueOf(0.1)`.\n\n**Example:**\n\n\n      class Constructor {\n        void foo() {\n          new BigDecimal(0.1);\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Constructor {\n        void foo() {\n          new BigDecimal(\"0.1\");\n        }\n      }\n"
-        },
-        {
-          "shortName": "IntegerDivisionInFloatingPointContext",
-          "displayName": "Integer division in floating-point context",
-          "enabled": true,
-          "description": "Reports integer divisions where the result is used as a floating-point number. Such division is often an error and may have unexpected results due to the truncation that happens in integer division.\n\n**Example:**\n\n\n      float x = 3.0F + 3 * 2 / 5;\n\nAfter the quick-fix is applied:\n\n\n      float x = 3.0F + ((float) (3 * 2)) /5;\n"
-        },
-        {
-          "shortName": "BigDecimalEquals",
-          "displayName": "'equals()' called on 'BigDecimal'",
-          "enabled": false,
-          "description": "Reports `equals()` calls that compare two `java.math.BigDecimal` numbers. This is normally a mistake, as two `java.math.BigDecimal` numbers are only equal if they are equal in both value and scale.\n\n**Example:**\n\n\n      if (new BigDecimal(\"2.0\").equals(\n        new BigDecimal(\"2.00\"))) {} // false\n\nAfter the quick-fix is applied:\n\n\n      if (new BigDecimal(\"2.0\").compareTo(\n        new BigDecimal(\"2.00\")) == 0) {} // true\n"
-        },
-        {
-          "shortName": "ConstantMathCall",
-          "displayName": "Constant call to 'Math'",
-          "enabled": false,
-          "description": "Reports calls to `java.lang.Math` or `java.lang.StrictMath` methods that can be replaced with simple compile-time constants.\n\n**Example:**\n\n    double v = Math.sin(0.0);\n\nAfter the quick-fix is applied:\n\n    double v = 0.0;\n"
-        },
-        {
-          "shortName": "NonReproducibleMathCall",
-          "displayName": "Non-reproducible call to 'Math'",
-          "enabled": false,
-          "description": "Reports calls to `java.lang.Math` methods, which results are not guaranteed to be reproduced precisely.\n\nIn environments where reproducibility of results is required, `java.lang.StrictMath`\nshould be used instead."
-        },
-        {
-          "shortName": "FloatingPointEquality",
-          "displayName": "Floating-point equality comparison",
-          "enabled": false,
-          "description": "Reports floating-point values that are being compared using the `==` or `!=` operator.\n\nFloating-point values are inherently inaccurate, and comparing them for exact equality is seldom the desired semantics.\n\nThis inspection ignores comparisons with zero and infinity literals.\n\n**Example:**\n\n\n      void m(double d1, double d2) {\n        if (d1 == d2) {}\n      }\n"
-        },
-        {
-          "shortName": "LongLiteralsEndingWithLowercaseL",
-          "displayName": "'long' literal ending with 'l' instead of 'L'",
-          "enabled": true,
-          "description": "Reports `long` literals ending with lowercase 'l'. These literals may be confusing, as the lowercase 'l' looks very similar to a literal '1' (one).\n\n**Example:**\n\n\n      long nights = 100l;\n\nAfter the quick-fix is applied:\n\n\n      long nights = 100L;\n"
-        },
-        {
-          "shortName": "BigDecimalMethodWithoutRoundingCalled",
-          "displayName": "Call to 'BigDecimal' method without a rounding mode argument",
-          "enabled": true,
-          "description": "Reports calls to `divide()` or `setScale()` without a rounding mode argument.\n\nSuch calls can lead to an `ArithmeticException` when the exact value cannot be represented in the result\n(for example, because it has a non-terminating decimal expansion).\n\nSpecifying a rounding mode prevents the `ArithmeticException`.\n\n**Example:**\n\n\n      BigDecimal.valueOf(1).divide(BigDecimal.valueOf(3));\n"
-        },
-        {
-          "shortName": "OverlyComplexArithmeticExpression",
-          "displayName": "Overly complex arithmetic expression",
-          "enabled": false,
-          "description": "Reports arithmetic expressions with the excessive number of terms. Such expressions might be hard to understand and might contain errors.\n\nParameters, field references, and other primary expressions are counted as a term.\n\n**Example:**\n\n    int calc(int a, int b) {\n            return a + a + a + b + b + b + b; // The line contains 7 terms and will be reported.\n        }\n\nUse the field below to specify a number of terms allowed in arithmetic expressions."
-        }
-      ]
-    },
-    {
       "name": "Control flow issues",
       "inspections": [
         {
@@ -6145,6 +5972,179 @@
           "displayName": "Unreachable code",
           "enabled": false,
           "description": "Reports code that can never be executed, which almost certainly indicates an error"
+        }
+      ]
+    },
+    {
+      "name": "Numeric issues",
+      "inspections": [
+        {
+          "shortName": "RemoveLiteralUnderscores",
+          "displayName": "Underscores in numeric literal",
+          "enabled": false,
+          "description": "Reports numeric literals with underscores and suggests removing them with a quick-fix. This may be useful if you need to lower the language level.\n\nThe quick-fix removes underscores from numeric literals. For example `1_000_000` will be converted to `1000000`.\n\n\n*Numeric literals with underscores* appeared in Java 7.\nThis inspection can help to downgrade for backward compatibility with earlier Java versions.\n\nNew in 2020.2"
+        },
+        {
+          "shortName": "BadOddness",
+          "displayName": "Suspicious oddness check",
+          "enabled": false,
+          "description": "Reports odd-even checks of the following form: `x % 2 == 1`. Such checks fail when used with negative odd values. Consider using `x % 2 != 0` or `(x & 1) == 1` instead."
+        },
+        {
+          "shortName": "InsertLiteralUnderscores",
+          "displayName": "Unreadable numeric literal",
+          "enabled": false,
+          "description": "Reports long numeric literals without underscores and suggests adding them. Underscores make such literals easier to read.\n\nExample:\n\n\n      1000000\n\nAfter the quick-fix is applied:\n\n\n      1_000_000\n\nThis inspection only reports if the language level of the project of module is 7 or higher.\n\nNew in 2020.2"
+        },
+        {
+          "shortName": "ConfusingFloatingPointLiteral",
+          "displayName": "Confusing floating-point literal",
+          "enabled": false,
+          "description": "Reports any floating point numbers that don't have a decimal point, numbers before the decimal point, or numbers after the decimal point.\n\nSuch literals may be confusing, and violate several coding standards.\n\n**Example:**\n\n    double d = .03;\n\nAfter the quick-fix is applied:\n\n    double d = 0.03;\n\n\nUse the **Ignore floating point literals in scientific notation** option to ignore floating point numbers in scientific notation."
+        },
+        {
+          "shortName": "OctalAndDecimalIntegersMixed",
+          "displayName": "Octal and decimal integers in same array",
+          "enabled": false,
+          "description": "Reports mixed octal and decimal integer literals in a single array initializer. This situation might happen when you copy a list of numbers into an array initializer. Some numbers in the array might be zero-padded and the compiler will interpret them as octal.\n\n**Example:**\n\n    int[] elapsed = {1, 13, 052};\n\nAfter the quick-fix that removes a leading zero is applied:\n\n    int[] elapsed = {1, 13, 52};\n\nIf it is an octal number (for example, after a variable inline), then you can use another quick-fix that converts octal to decimal:\n`int[] elapsed = {1, 13, 42};`"
+        },
+        {
+          "shortName": "UnnecessaryUnaryMinus",
+          "displayName": "Unnecessary unary minus",
+          "enabled": true,
+          "description": "Reports unnecessary unary minuses. Such expressions might be hard to understand and might contain errors.\n\n**For example:**\n\n    void unaryMinus(int i) {\n        int x = - -i;\n      }\n\nThe following quick fixes are suggested here:\n\n* Remove `-` operators before the `i` variable:\n\n      void unaryMinus(int i) {\n          int x = i;\n        }\n\n* Replace `-` operators with the prefix decrement operator:\n\n      void unaryMinus(int i) {\n          int x = --i;\n        }\n\n**Another example:**\n\n    void unaryMinus(int i) {\n        i += - 8;\n      }\n\nAfter the quick-fix is applied:\n\n    void unaryMinus(int i) {\n        i -= 8;\n      }\n"
+        },
+        {
+          "shortName": "LossyConversionCompoundAssignment",
+          "displayName": "Possibly lossy implicit cast in compound assignment",
+          "enabled": true,
+          "description": "Reports compound assignments if the type of the right-hand operand is not assignment compatible with the type of the variable.\n\n\nDuring such compound assignments, an implicit cast occurs, potentially resulting in lossy conversions.\n\nExample:\n\n\n      long c = 1;\n      c += 1.2;\n\nAfter the quick-fix is applied:\n\n\n      long c = 1;\n      c += (long) 1.2;\n\nNew in 2023.2"
+        },
+        {
+          "shortName": "NegativeIntConstantInLongContext",
+          "displayName": "Negative int hexadecimal constant in long context",
+          "enabled": true,
+          "description": "Reports negative int hexadecimal constants in long context. Such constants are implicitly widened to long, which means their higher bits will become 1 rather than 0 (e.g., 0xFFFF_FFFF will become 0xFFFF_FFFF_FFFF_FFFFL). Unlikely this is intended, and even if it is, using an explicit long constant would be less confusing.\n\n**Example:**\n\n\n      // Warning: this is int constant -1 which is widened to long\n      // becoming 0xFFFF_FFFF_FFFF_FFFFL.\n      long mask = 0xFFFF_FFFF;\n\nNew in 2022.3"
+        },
+        {
+          "shortName": "ImplicitNumericConversion",
+          "displayName": "Implicit numeric conversion",
+          "enabled": false,
+          "description": "Reports implicit conversion between numeric types.\n\nImplicit numeric conversion is not a problem in itself but, if unexpected, may cause difficulties when tracing bugs.\n\n**Example:**\n\n\n      double m(int i) {\n        return i * 10;\n      }\n\nAfter the quick-fix is applied:\n\n\n      double m(int i) {\n        return (double) (i * 10);\n      }\n\nConfigure the inspection:\n\n* Use the **Ignore widening conversions** option to ignore implicit conversion that cannot result in data loss (for example, `int`-\\>`long`).\n* Use the **Ignore conversions from and to 'char'** option to ignore conversion from and to `char`. The inspection will still report conversion from and to floating-point numbers.\n* Use the **Ignore conversion from constants and literals** to make the inspection ignore conversion from literals and compile-time constants."
+        },
+        {
+          "shortName": "OctalLiteral",
+          "displayName": "Octal integer",
+          "enabled": true,
+          "description": "Reports octal integer literals. Some coding standards prohibit the use of octal literals, as they may be easily confused with decimal literals.\n\nExample:\n\n\n      int i = 015;\n      int j = 0_777;\n\nThis inspection has two different quick-fixes.\nAfter the **Convert octal literal to decimal literal** quick-fix is applied, the code changes to:\n\n\n      int i = 13;\n      int j = 511;\n\nAfter the **Remove leading zero to make decimal** quick-fix is applied, the code changes to:\n\n\n      int i = 15;\n      int j = 777;\n"
+        },
+        {
+          "shortName": "NumericOverflow",
+          "displayName": "Numeric overflow",
+          "enabled": true,
+          "description": "Reports expressions that overflow during computation. Usually, this happens by accident and indicates a bug. For example, a wrong type is used or a shift should be done in an opposite direction .\n\n**Examples:**\n\n\n      float a = 1.0f/0.0f;\n      long b = 30 * 24 * 60 * 60 * 1000;\n      long c = 1000L << 62;\n"
+        },
+        {
+          "shortName": "SuspiciousLiteralUnderscore",
+          "displayName": "Suspicious underscore in number literal",
+          "enabled": false,
+          "description": "Reports decimal number literals that use the underscore numeric separator with groups where the number of digits is not three. Such literals may contain a typo.\n\nThis inspection will not warn on literals containing two consecutive underscores.\nIt is also allowed to omit underscores in the fractional part of `double` and `float` literals.\n\n**Example:** `int oneMillion = 1_000_0000;`"
+        },
+        {
+          "shortName": "ComparisonOfShortAndChar",
+          "displayName": "Comparison of 'short' and 'char' values",
+          "enabled": true,
+          "description": "Reports equality comparisons between `short` and `char` values.\n\nSuch comparisons may cause subtle bugs because while both values are 2-byte long, `short` values are\nsigned, and `char` values are unsigned.\n\n**Example:**\n\n\n    if (Character.MAX_VALUE == shortValue()) {} //never can be true\n"
+        },
+        {
+          "shortName": "DivideByZero",
+          "displayName": "Division by zero",
+          "enabled": true,
+          "description": "Reports division by zero or remainder by zero. Such expressions will produce an `Infinity`, `-Infinity` or `NaN` result for doubles or floats, and will throw an `ArithmeticException` for integers.\n\nWhen the expression has a `NaN` result, the fix suggests replacing the division expression with the `NaN` constant."
+        },
+        {
+          "shortName": "ComparisonToNaN",
+          "displayName": "Comparison to 'Double.NaN' or 'Float.NaN'",
+          "enabled": true,
+          "description": "Reports any comparisons to `Double.NaN` or `Float.NaN`. Such comparisons are never meaningful, as NaN is not equal to anything, including itself. Use the `Double.isNaN()` or `Float.isNaN()` methods instead.\n\n**Example:**\n\n\n      if (x == Double.NaN) {...}\n\nAfter the quick-fix is applied:\n\n\n      if (Double.isNaN(x)) {...}\n"
+        },
+        {
+          "shortName": "UnaryPlus",
+          "displayName": "Unary plus",
+          "enabled": true,
+          "description": "Reports usages of the `+` unary operator. The unary plus is usually a null operation, and its presence might represent a coding error. For example, in a combination with the increment operator (like in `+++`) or with the equal operator (like in `=+`).\n\n**Example:**\n\n\n      void unaryPlus(int i) {\n        int x = + +i;\n      }\n\nThe following quick fixes are suggested:\n\n* Remove `+` operators before the `i` variable:\n\n\n        void unaryPlus(int i) {\n          int x = i;\n        }\n\n* Replace `+` operators with the prefix increment operator:\n\n\n        void unaryPlus(int i) {\n          int x = ++i;\n        }\n\n\nUse the checkbox below to report unary pluses that are used together with a binary or another unary expression.\nIt means the inspection will not report situations when a unary plus expression is used in array\ninitializer expressions or as a method argument."
+        },
+        {
+          "shortName": "CachedNumberConstructorCall",
+          "displayName": "Number constructor call with primitive argument",
+          "enabled": true,
+          "description": "Reports instantiations of new `Long`, `Integer`, `Short`, or `Byte` objects that have a primitive `long`, `integer`, `short`, or `byte` argument.\n\nIt is recommended that you use the static method `valueOf()`\nintroduced in Java 5. By default, this method caches objects for values between -128 and\n127 inclusive.\n\n**Example:**\n\n\n      Integer i = new Integer(1);\n      Long l = new Long(1L);\n\nAfter the quick-fix is applied, the code changes to:\n\n\n      Integer i = Integer.valueOf(1);\n      Long l = Long.valueOf(1L);\n\nThis inspection only reports if the language level of the project or module is 5 or higher\n\n\nUse the **Ignore new number expressions with a String argument** option to ignore calls to number constructors with a `String` argument.\n\n\nUse the **Report only when constructor is @Deprecated** option to only report calls to deprecated constructors.\n`Long`, `Integer`, `Short` and `Byte` constructors are deprecated since JDK 9."
+        },
+        {
+          "shortName": "PointlessArithmeticExpression",
+          "displayName": "Pointless arithmetic expression",
+          "enabled": true,
+          "description": "Reports pointless arithmetic expressions. Such expressions include adding or subtracting zero, multiplying by zero or one, and division by one.\n\nSuch expressions may be the result of automated refactorings and they are unlikely to be what the developer intended to do.\n\nThe quick-fix simplifies such expressions.\n\n**Example:**\n\n\n      void f(int a) {\n        int x = a - a;\n        int y = a + 0;\n        int res = x / x;\n      }\n\nAfter the quick-fix is applied:\n\n\n      void f(int a) {\n        int x = 0;\n        int y = a;\n        int res = 1;\n      }\n\n\nNote that in rare cases, the suggested replacement might not be completely equivalent to the original code\nfor all possible inputs. For example, the inspection suggests replacing `x / x` with `1`.\nHowever, if `x` is zero, the original code throws `ArithmeticException` or results in `NaN`.\nAlso, if `x` is `NaN`, then the result is also `NaN`. It's very unlikely that such behavior is intended."
+        },
+        {
+          "shortName": "CharUsedInArithmeticContext",
+          "displayName": "'char' expression used in arithmetic context",
+          "enabled": false,
+          "description": "Reports expressions of the `char` type used in addition or subtraction expressions.\n\nSuch code is not necessarily an issue but may result in bugs (for example,\nif a string is expected).\n\n**Example:** `int a = 'a' + 42;`\n\nAfter the quick-fix is applied: `int a = (int) 'a' + 42;`\n\nFor the `String` context:\n\n    int i1 = 1;\n    int i2 = 2;\n    System.out.println(i2 + '-' + i1 + \" = \" + (i2 - i1));\n\nAfter the quick-fix is applied:\n`System.out.println(i2 + \"-\" + i1 + \" = \" + (i2 - i1));`"
+        },
+        {
+          "shortName": "UnpredictableBigDecimalConstructorCall",
+          "displayName": "Unpredictable 'BigDecimal' constructor call",
+          "enabled": true,
+          "description": "Reports calls to `BigDecimal` constructors that accept a `double` value. These constructors produce `BigDecimal` that is exactly equal to the supplied `double` value. However, because doubles are encoded in the IEEE 754 64-bit double-precision binary floating-point format, the exact value can be unexpected.\n\nFor example, `new BigDecimal(0.1)` yields a `BigDecimal` object. Its value is\n`0.1000000000000000055511151231257827021181583404541015625`\nwhich is the nearest number to 0.1 representable as a double.\nTo get `BigDecimal` that stores the same value as written in the source code,\nuse either `new BigDecimal(\"0.1\")` or `BigDecimal.valueOf(0.1)`.\n\n**Example:**\n\n\n      class Constructor {\n        void foo() {\n          new BigDecimal(0.1);\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Constructor {\n        void foo() {\n          new BigDecimal(\"0.1\");\n        }\n      }\n"
+        },
+        {
+          "shortName": "IntegerDivisionInFloatingPointContext",
+          "displayName": "Integer division in floating-point context",
+          "enabled": true,
+          "description": "Reports integer divisions where the result is used as a floating-point number. Such division is often an error and may have unexpected results due to the truncation that happens in integer division.\n\n**Example:**\n\n\n      float x = 3.0F + 3 * 2 / 5;\n\nAfter the quick-fix is applied:\n\n\n      float x = 3.0F + ((float) (3 * 2)) /5;\n"
+        },
+        {
+          "shortName": "BigDecimalEquals",
+          "displayName": "'equals()' called on 'BigDecimal'",
+          "enabled": false,
+          "description": "Reports `equals()` calls that compare two `java.math.BigDecimal` numbers. This is normally a mistake, as two `java.math.BigDecimal` numbers are only equal if they are equal in both value and scale.\n\n**Example:**\n\n\n      if (new BigDecimal(\"2.0\").equals(\n        new BigDecimal(\"2.00\"))) {} // false\n\nAfter the quick-fix is applied:\n\n\n      if (new BigDecimal(\"2.0\").compareTo(\n        new BigDecimal(\"2.00\")) == 0) {} // true\n"
+        },
+        {
+          "shortName": "ConstantMathCall",
+          "displayName": "Constant call to 'Math'",
+          "enabled": false,
+          "description": "Reports calls to `java.lang.Math` or `java.lang.StrictMath` methods that can be replaced with simple compile-time constants.\n\n**Example:**\n\n    double v = Math.sin(0.0);\n\nAfter the quick-fix is applied:\n\n    double v = 0.0;\n"
+        },
+        {
+          "shortName": "NonReproducibleMathCall",
+          "displayName": "Non-reproducible call to 'Math'",
+          "enabled": false,
+          "description": "Reports calls to `java.lang.Math` methods, which results are not guaranteed to be reproduced precisely.\n\nIn environments where reproducibility of results is required, `java.lang.StrictMath`\nshould be used instead."
+        },
+        {
+          "shortName": "FloatingPointEquality",
+          "displayName": "Floating-point equality comparison",
+          "enabled": false,
+          "description": "Reports floating-point values that are being compared using the `==` or `!=` operator.\n\nFloating-point values are inherently inaccurate, and comparing them for exact equality is seldom the desired semantics.\n\nThis inspection ignores comparisons with zero and infinity literals.\n\n**Example:**\n\n\n      void m(double d1, double d2) {\n        if (d1 == d2) {}\n      }\n"
+        },
+        {
+          "shortName": "LongLiteralsEndingWithLowercaseL",
+          "displayName": "'long' literal ending with 'l' instead of 'L'",
+          "enabled": true,
+          "description": "Reports `long` literals ending with lowercase 'l'. These literals may be confusing, as the lowercase 'l' looks very similar to a literal '1' (one).\n\n**Example:**\n\n\n      long nights = 100l;\n\nAfter the quick-fix is applied:\n\n\n      long nights = 100L;\n"
+        },
+        {
+          "shortName": "BigDecimalMethodWithoutRoundingCalled",
+          "displayName": "Call to 'BigDecimal' method without a rounding mode argument",
+          "enabled": true,
+          "description": "Reports calls to `divide()` or `setScale()` without a rounding mode argument.\n\nSuch calls can lead to an `ArithmeticException` when the exact value cannot be represented in the result\n(for example, because it has a non-terminating decimal expansion).\n\nSpecifying a rounding mode prevents the `ArithmeticException`.\n\n**Example:**\n\n\n      BigDecimal.valueOf(1).divide(BigDecimal.valueOf(3));\n"
+        },
+        {
+          "shortName": "OverlyComplexArithmeticExpression",
+          "displayName": "Overly complex arithmetic expression",
+          "enabled": false,
+          "description": "Reports arithmetic expressions with the excessive number of terms. Such expressions might be hard to understand and might contain errors.\n\nParameters, field references, and other primary expressions are counted as a term.\n\n**Example:**\n\n    int calc(int a, int b) {\n            return a + a + a + b + b + b + b; // The line contains 7 terms and will be reported.\n        }\n\nUse the field below to specify a number of terms allowed in arithmetic expressions."
         }
       ]
     },
@@ -13190,43 +13190,25 @@
       ]
     },
     {
-      "name": "Spring Boot",
+      "name": "Nullability problems",
       "inspections": [
         {
-          "shortName": "SpringBootApplicationYaml",
-          "displayName": "Invalid YAML configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+          "shortName": "NotNullFieldNotInitialized",
+          "displayName": "@NotNull field is not initialized",
+          "enabled": false,
+          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
         },
         {
-          "shortName": "SpringBootApplicationSetup",
-          "displayName": "Invalid Spring Boot application setup",
+          "shortName": "NullableProblems",
+          "displayName": "@NotNull/@Nullable problems",
           "enabled": true,
-          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
+          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
         },
         {
-          "shortName": "SpringBootAdditionalConfig",
-          "displayName": "Invalid additional-spring-configuration-metadata.json",
-          "enabled": true,
-          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
-        },
-        {
-          "shortName": "SpringBootReactorHooksOnDebug",
-          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
-          "enabled": true,
-          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
-        },
-        {
-          "shortName": "ConfigurationProperties",
-          "displayName": "Invalid @ConfigurationProperties",
-          "enabled": true,
-          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
-        },
-        {
-          "shortName": "SpringBootApplicationProperties",
-          "displayName": "Invalid properties configuration",
-          "enabled": true,
-          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+          "shortName": "ReturnNull",
+          "displayName": "Return of 'null'",
+          "enabled": false,
+          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
         }
       ]
     },
@@ -13272,25 +13254,43 @@
       ]
     },
     {
-      "name": "Nullability problems",
+      "name": "Spring Boot",
       "inspections": [
         {
-          "shortName": "NotNullFieldNotInitialized",
-          "displayName": "@NotNull field is not initialized",
-          "enabled": false,
-          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
-        },
-        {
-          "shortName": "NullableProblems",
-          "displayName": "@NotNull/@Nullable problems",
+          "shortName": "SpringBootApplicationYaml",
+          "displayName": "Invalid YAML configuration",
           "enabled": true,
-          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.yaml` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server:\n      port: invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging:\n      path: ${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging:\n      file:\n        path: ${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new:\n      key: value # Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
         },
         {
-          "shortName": "ReturnNull",
-          "displayName": "Return of 'null'",
-          "enabled": false,
-          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
+          "shortName": "SpringBootApplicationSetup",
+          "displayName": "Invalid Spring Boot application setup",
+          "enabled": true,
+          "description": "Reports `@SpringBootApplication` in the default package and redundant `@EnableAutoConfiguration` or `@ComponentScan` annotations.\n\nThe quick-fix removes the redundant annotations.\n\n**Example:**\n\n\n    @SpringBootApplication\n    @ComponentScan // Reports 'Redundant declaration: @SpringBootApplication already implies @ComponentScan'\n    public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n    }\n\nAfter the quick-fix is applied:\n\n\n      @SpringBootApplication\n      public class DemoApplication {\n        public static void main(String[] args) {\n            SpringApplication.run(DemoApplication.class, args);\n        }\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "SpringBootAdditionalConfig",
+          "displayName": "Invalid additional-spring-configuration-metadata.json",
+          "enabled": true,
+          "description": "Reports missing and deprecated properties, unresolved references, and invalid values\nin the `additional-spring-configuration-metadata.json` configuration file.\n\n**Example:**\n\n\n      {\n        \"properties\": [\n          {\n            \"name\": \"old.key\",\n            \"type\": \"com.Unknown\", // Reports 'Cannot resolve class 'Unknown''\n            \"description\": \"Description for old.key\", // Reports 'Text should end with '.''\n            \"deprecation\": {\n              \"replacement\": \"new.key\", // Reports 'Cannot resolve configuration key reference 'new.key''\n              \"reason\": \"Reason\", // Reports 'Text should end with '.''\n              \"level\": \"warning\"\n             }\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            \"name\": \"duplicate\", // Reports 'Duplicate entry for 'duplicate''\n            \"type\": \"java.lang.String\"\n          },\n          {\n            // Reports 'Missing required 'name''\n            \"type\": \"java.lang.String\"\n          }\n        ]\n      }\n"
+        },
+        {
+          "shortName": "SpringBootReactorHooksOnDebug",
+          "displayName": "Suspicious Hooks.onOperatorDebug() usage",
+          "enabled": true,
+          "description": "Reports the usage of `Hooks.onOperatorDebug()` when `ReactorDebugAgent.init()` is called.\n\n\nIf `ReactorDebugAgent` is in the classpath, and `spring.reactor.debug-agent.enabled`\nis `true` (default value), `ReactorDebugAgent.init()` is called automatically at startup.\nUsing both `Hooks.onOperatorDebug()` and `ReactorDebugAgent.init()` cause doubled debugging stack frames generated by Reactor.\nAlso, `Hooks.onOperatorDebug()` can cause performance overhead.\n\nThe quick-fix removes the invocation of `Hooks.onOperatorDebug()`.\n\n**Example:**\n\n\n      public void hook() {\n        Hooks.onOperatorDebug(); // Reports 'Call Hooks.onOperatorDebug() while ReactorDebugAgent is initialized'\n      }\n\nAfter the quick-fix is applied:\n\n\n      public void hook() {\n      }\n\nThis inspection only triggers when Spring Boot version for the project or module is 2.2.0 or higher."
+        },
+        {
+          "shortName": "ConfigurationProperties",
+          "displayName": "Invalid @ConfigurationProperties",
+          "enabled": true,
+          "description": "Reports invalid prefixes defined in the `@ConfigurationProperties` annotations:\n\n* Missing prefix\n* Empty prefix\n* Duplicate prefix\n* Prefix in notation other than kebab-case\n\n\nThe inspection triggers in classes that are annotated with `@ConfigurationProperties` and not registered via `@EnableConfigurationProperties`,\nmarked as Spring component, or scanned via `@ConfigurationPropertiesScan`.\n\n\nThis inspection only triggers in classes annotated with `@ConfigurationProperties` that are not scanned via `@ConfigurationPropertiesScan`\nwhen the Spring Boot version for the project or module is set to 2.2.0 or later.\n\nNew in 2018.3"
+        },
+        {
+          "shortName": "SpringBootApplicationProperties",
+          "displayName": "Invalid properties configuration",
+          "enabled": true,
+          "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
         }
       ]
     },
