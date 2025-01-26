@@ -1,5 +1,67 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
+  "category": "Code maturity",
+  "type": "Commented out code",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Commented out code (6 lines)",
+  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
+      "language": "JAVA",
+      "line": 72,
+      "offset": 1,
+      "length": 2,
+      "code": {
+        "startLine": 70,
+        "length": 2,
+        "offset": 36,
+        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "CommentedOutCode"
+  },
+  "hash": "9d7aa692dca1a7bd1cc0125b6c407f625b6576eb7bb79884ddc4a843e4f71190"
+},{
+  "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
+      "language": "JAVA",
+      "line": 88,
+      "offset": 20,
+      "length": 27,
+      "code": {
+        "startLine": 86,
+        "length": 27,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DefaultAnnotationParam"
+  },
+  "hash": "3a50d0fc8caa0b5118caec1dcd6e28b069541e9cf86a39b283046b43d3f20128"
+},{
+  "tool": "Code Inspection",
   "category": "Declaration redundancy",
   "type": "'protected' member in 'final' class",
   "tags": [
@@ -60,35 +122,4 @@
     "inspectionName": "RegExpSimplifiable"
   },
   "hash": "a96a0536e198cbff96eebc4edc9806807b12725ac46694da2501ad5bce236c55"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Unused import `import com.github._1c_syntax.bsl.mdo.ChildrenOwner;`",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/ForbiddenMetadataNameDiagnostic.java",
-      "language": "JAVA",
-      "line": 32,
-      "offset": 1,
-      "length": 51,
-      "code": {
-        "startLine": 30,
-        "length": 51,
-        "offset": 138,
-        "surroundingCode": "import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;\nimport com.github._1c_syntax.bsl.mdo.AttributeOwner;\nimport com.github._1c_syntax.bsl.mdo.ChildrenOwner;\nimport com.github._1c_syntax.bsl.mdo.MD;\nimport com.github._1c_syntax.bsl.types.MdoReference;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
-  },
-  "hash": "dfef9c01f5a92ff4f33eeb0402a9ab04b8065bfbe30c0f7f1628f4c6fa960f1b"
 }]}
