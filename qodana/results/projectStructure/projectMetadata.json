@@ -6290,13 +6290,12 @@
               "homepageUrl": "https://languagetool.org",
               "licenses": [
                 {
-                  "key": "LGPL-2.1-only",
-                  "confidence": 0.98812354,
+                  "key": "UNKNOWN",
                   "rules": [],
                   "tags": [
                     {
-                      "type": "Prohibited",
-                      "comment": "LGPL-3.0-only"
+                      "type": "Unknown",
+                      "comment": ""
                     }
                   ]
                 }
@@ -18279,13 +18278,12 @@
               "homepageUrl": "https://languagetool.org",
               "licenses": [
                 {
-                  "key": "LGPL-2.1-only",
-                  "confidence": 0.98812354,
+                  "key": "UNKNOWN",
                   "rules": [],
                   "tags": [
                     {
-                      "type": "Prohibited",
-                      "comment": "LGPL-3.0-only"
+                      "type": "Unknown",
+                      "comment": ""
                     }
                   ]
                 }
