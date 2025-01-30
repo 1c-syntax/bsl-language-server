@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1737914630066,
+  "lastUpdate": 1738231393449,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27187,6 +27187,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.3480695803497069",
             "extra": "mean: 79.18593700726827 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7daca19a9c6f8c861495424d6a39e2ac5e987e28",
+          "message": "Merge pull request #3399 from 1c-syntax/dependabot/gradle/me.champeau.jmh-0.7.3\n\nbuild(deps): bump me.champeau.jmh from 0.7.2 to 0.7.3",
+          "timestamp": "2025-01-30T10:53:42+01:00",
+          "tree_id": "3e9dd24dab2c69eee7ae2d7374a493293baaf231",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7daca19a9c6f8c861495424d6a39e2ac5e987e28"
+        },
+        "date": 1738231390801,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.6999397277832,
+            "unit": "sec",
+            "range": "stddev: 0.207286035572308",
+            "extra": "mean: 79.6999397277832 sec\nrounds: 3"
           }
         ]
       }
