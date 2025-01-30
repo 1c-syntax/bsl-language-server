@@ -24,7 +24,7 @@ plugins {
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.2"
     id("io.codearte.nexus-staging") version "0.30.0"
-    id("me.champeau.jmh") version "0.7.2"
+    id("me.champeau.jmh") version "0.7.3"
 }
 
 repositories {
