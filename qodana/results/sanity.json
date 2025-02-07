@@ -332,6 +332,38 @@
   "sources": [
     {
       "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 107,
+      "offset": 23,
+      "length": 2,
+      "code": {
+        "startLine": 105,
+        "length": 2,
+        "offset": 76,
+        "surroundingCode": "  private LanguageServerConfiguration configuration;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;\n  @Setter(onMethod = @__({@Autowired}))"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "QodanaJavaSanity"
+  },
+  "hash": "b89d8b7ee31ad86c079ecd54cd8b49c23e77627de6ba9a72b4ea046390924eab"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Java sanity",
+  "tags": [
+    "JAVA",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference __",
+  "detailsInfo": "Reports unresolved references in Java code.",
+  "sources": [
+    {
+      "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/aop/MeasuresAspect.java",
       "language": "JAVA",
       "line": 46,
@@ -396,38 +428,6 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
-      "language": "JAVA",
-      "line": 100,
-      "offset": 23,
-      "length": 2,
-      "code": {
-        "startLine": 98,
-        "length": 2,
-        "offset": 46,
-        "surroundingCode": "  private int version;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ServerContext context;\n  @Setter(onMethod = @__({@Autowired}))"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "QodanaJavaSanity"
-  },
-  "hash": "d2eb63191f1ef161b35a75e09abe84192247157b430f375d24a146d6e63ece5e"
-},{
-  "tool": "Code Inspection",
-  "category": "General",
-  "type": "Java sanity",
-  "tags": [
-    "JAVA",
-    "Sanity"
-  ],
-  "severity": "Critical",
-  "comment": "Unresolved reference __",
-  "detailsInfo": "Reports unresolved references in Java code.",
-  "sources": [
-    {
-      "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/computer/CyclomaticComplexityComputer.java",
       "language": "JAVA",
       "line": 63,
@@ -446,4 +446,68 @@
     "inspectionName": "QodanaJavaSanity"
   },
   "hash": "dc87af1f7421c91b2688608780dcd693125e6a1fed0c1afe1e2f99e378fc9ae6"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Kotlin sanity",
+  "tags": [
+    "kotlin",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference java.util",
+  "detailsInfo": "Reports unresolved references in Kotlin code.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "build.gradle.kts",
+      "language": "kotlin",
+      "line": 4,
+      "offset": 8,
+      "length": 9,
+      "code": {
+        "startLine": 2,
+        "length": 9,
+        "offset": 107,
+        "surroundingCode": "import me.qoomon.gitversioning.commons.GitRefType\nimport org.apache.tools.ant.filters.EscapeUnicode\nimport java.util.*\nimport java.text.SimpleDateFormat\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server",
+    "inspectionName": "QodanaKotlinSanity"
+  },
+  "hash": "42fa07c1ef01cf86daa7928ab686cd06d2686c3193c723e183eb2ea12989d58c"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Kotlin sanity",
+  "tags": [
+    "kotlin",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference java.text.SimpleDateFormat",
+  "detailsInfo": "Reports unresolved references in Kotlin code.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "build.gradle.kts",
+      "language": "kotlin",
+      "line": 5,
+      "offset": 8,
+      "length": 26,
+      "code": {
+        "startLine": 3,
+        "length": 26,
+        "offset": 76,
+        "surroundingCode": "import org.apache.tools.ant.filters.EscapeUnicode\nimport java.util.*\nimport java.text.SimpleDateFormat\n\nplugins {"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server",
+    "inspectionName": "QodanaKotlinSanity"
+  },
+  "hash": "6364b7f783c7fd9f09ff1bd1bb0b195ea86a1b1a3333ce36f7b4f1c16a3dc50a"
 }]}
