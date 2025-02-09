@@ -69,7 +69,7 @@ public class TestRunnerAdapterOptions {
   /**
    * Флаг, указывающий на необходимость получения списка тестов через исполняемый файл тестового фреймворка.
    */
-  private boolean getTestsByTestRunner;
+  private boolean getTestsByTestRunner = false;
   /**
    * Аргументы для получения списка тестов.
    */
