@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739125831367,
+  "lastUpdate": 1739127507553,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27342,6 +27342,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.5264323910107067",
             "extra": "mean: 80.02329397201538 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "13209893a57de7e1adbb375db7389f02ef10785b",
+          "message": "Merge pull request #3404 from 1c-syntax/feature/disable-get-tests-by-bsl-ls-by-default\n\nПоиск тестов через бсл лс выключен по умолчанию",
+          "timestamp": "2025-02-09T18:32:12+01:00",
+          "tree_id": "fc4bb6cd7aa9ed9aac8e3c3e1cfa45f944ae6c2d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/13209893a57de7e1adbb375db7389f02ef10785b"
+        },
+        "date": 1739127504895,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.1679352124532,
+            "unit": "sec",
+            "range": "stddev: 0.5356619314338025",
+            "extra": "mean: 80.1679352124532 sec\nrounds: 3"
           }
         ]
       }
