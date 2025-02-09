@@ -714,7 +714,7 @@
                             "$id": "#/properties/codeLens/testRunner/getTestsByTestRunner",
                             "type": "boolean",
                             "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &Тест.",
-                            "default": false
+                            "default": true
                         },
                         "getTestsArguments": {
                             "$id": "#/properties/codeLens/testRunner/getTestsArguments",
