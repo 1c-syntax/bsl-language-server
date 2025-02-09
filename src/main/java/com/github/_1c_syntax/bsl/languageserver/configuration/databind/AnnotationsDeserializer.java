@@ -54,7 +54,7 @@ public class AnnotationsDeserializer extends JsonDeserializer<Set<String>> {
 
     Set<String> annotationsSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     var objectMapper = (ObjectMapper) p.getCodec();
-    objectMapper.readerForUpdating(annotationsSet).readValue(p);
+    objectMapper.readerForUpdating(annotationsSet).readValue(annotations);
 
     return annotationsSet;
   }
