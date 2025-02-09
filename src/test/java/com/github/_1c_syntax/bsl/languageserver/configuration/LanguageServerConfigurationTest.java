@@ -109,6 +109,10 @@ class LanguageServerConfigurationTest {
     assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
+    assertThat(annotations)
+      .hasSize(2)
+      .contains("Test", "Test2");
   }
 
   @Test

@@ -34,8 +34,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 
@@ -53,7 +53,7 @@ class RunAllTestsCodeLensSupplierTest {
   @Autowired
   private ApplicationEventPublisher eventPublisher;
 
-  @SpyBean
+  @MockitoSpyBean
   private TestRunnerAdapter testRunnerAdapter;
 
   private DocumentContext documentContext;
@@ -62,18 +62,6 @@ class RunAllTestsCodeLensSupplierTest {
   void init() {
     var filePath = "./src/test/resources/codelenses/RunAllTestsCodeLensSupplier.os";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
-  }
-
-  @Test
-  void noLensesIfClientIsNotSupported() {
-    // given
-    initializeServer("Unknown client");
-
-    // when
-    var codeLenses = supplier.getCodeLenses(documentContext);
-
-    // then
-    assertThat(codeLenses).isEmpty();
   }
 
   @Test

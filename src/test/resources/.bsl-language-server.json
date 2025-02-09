@@ -4,6 +4,12 @@
     "parameters": {
       "cognitiveComplexity": true,
       "cyclomaticComplexity": true
+    },
+    "testRunner": {
+      "annotations": [
+        "Test",
+        "Test2"
+      ]
     }
   },
   "diagnostics": {

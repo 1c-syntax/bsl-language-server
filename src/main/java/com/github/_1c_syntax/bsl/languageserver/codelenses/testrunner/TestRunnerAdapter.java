@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
@@ -32,7 +35,10 @@ import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -42,11 +48,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Расчетчик списка тестов в документе.
@@ -55,12 +58,25 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@CacheConfig(cacheNames = "testIds")
 public class TestRunnerAdapter {
 
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\r?\n");
-  private static final Map<Pair<DocumentContext, Integer>, List<String>> CACHE = new WeakHashMap<>();
 
   private final LanguageServerConfiguration configuration;
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Очищает кэш при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  @CacheEvict(allEntries = true)
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    // No-op. Служит для сброса кеша при изменении конфигурации
+  }
 
   /**
    * Получить идентификаторы тестов, содержащихся в файле.
@@ -68,13 +84,18 @@ public class TestRunnerAdapter {
    * @param documentContext Контекст документа с тестами.
    * @return Список идентификаторов тестов.
    */
+  @Cacheable
   public List<String> getTestIds(DocumentContext documentContext) {
-    var cacheKey = Pair.of(documentContext, documentContext.getVersion());
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
-    return CACHE.computeIfAbsent(cacheKey, pair -> computeTestIds(documentContext));
+    if (options.isGetTestsByTestRunner()) {
+      return computeTestIdsByTestRunner(documentContext);
+    }
+
+    return computeTestIdsByLanguageServer(documentContext);
   }
 
-  private List<String> computeTestIds(DocumentContext documentContext) {
+  private List<String> computeTestIdsByTestRunner(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
@@ -123,7 +144,18 @@ public class TestRunnerAdapter {
       .map(getTestsRegex::matcher)
       .filter(Matcher::matches)
       .map(matcher -> matcher.group(1))
-      .collect(Collectors.toList());
+      .toList();
   }
 
+  private List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
+    return documentContext.getSymbolTree()
+      .getMethods()
+      .stream()
+      .filter(methodSymbol -> methodSymbol.getAnnotations().stream()
+        .map(Annotation::getName)
+        .anyMatch(annotations::contains))
+      .map(MethodSymbol::getName)
+      .toList();
+  }
 }

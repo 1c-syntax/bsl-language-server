@@ -74,6 +74,7 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
+    api("org.springframework.boot:spring-boot-starter-cache")
     api("info.picocli:picocli-spring-boot-starter:4.7.6")
 
     // lsp4j core

@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,7 @@ public class ServerContext {
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @Nullable
   @Setter
+  @Getter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
