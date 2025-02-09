@@ -49,6 +49,6 @@ class TestRunnerAdapterTest {
 
     // then
     assertThat(testIds).hasSize(1);
-    assertThat(testIds.getFirst()).isEqualTo("Тест1");
+    assertThat(testIds.get(0)).isEqualTo("Тест1");
   }
 }
