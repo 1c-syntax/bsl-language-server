@@ -110,7 +110,11 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     }
 
     var operation = operands.peek();
-    assert operation != null; // для спокойствия сонара
+    // В случае ошибок парсинга выражения, operation может быть null
+    if (operation == null) {
+      recursionLevel--;
+      return ctx;
+    }
 
     if (operation.getRepresentingAst() == null) {
       operation.setRepresentingAst(ctx);
@@ -127,18 +131,28 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   @Override
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
 
+    // В случае ошибки парсинга member может быть пустой.
+    if (ctx.getChildCount() == 0) {
+      return ctx;
+    }
+
     // нужен ручной dispatch на конкретного child,
     // т.к. нет отдельного правила для подвыражения в скобках
     //  constValue
-    //    | complexIdentifier
-    //    | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
-    //    | (WAIT_KEYWORD (IDENTIFIER | globalMethodCall))
+      // | complexIdentifier
+      // | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
+      // | (IDENTIFIER | globalMethodCall)          // нечего оверрайдить !
+      // | waitExpression
 
     var unaryModifier = ctx.unaryModifier();
     var childIndex = 0;
     if (unaryModifier != null) {
       visitUnaryModifier(unaryModifier);
       childIndex = 1;
+    }
+
+    if (ctx.waitExpression() != null) {
+      return visitWaitExpression(ctx.waitExpression());
     }
 
     var dispatchChild = ctx.getChild(childIndex);
@@ -149,9 +163,6 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
       switch (token) {
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
-          break;
-        case BSLLexer.AWAIT_KEYWORD:
-          visitAwaitedMember(ctx.getChild(childIndex + 1));
           break;
         default:
           throw new IllegalStateException("Unexpected rule " + dispatchChild);
