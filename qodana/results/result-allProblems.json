@@ -435,39 +435,6 @@
     "Properties"
   ],
   "severity": "High",
-  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
-  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/resources/application.properties",
-      "language": "Properties",
-      "line": 14,
-      "offset": 1,
-      "length": 28,
-      "code": {
-        "startLine": 12,
-        "length": 28,
-        "offset": 131,
-        "surroundingCode": "logging.level.org.springframework.core.LocalVariableTableParameterNameDiscoverer=error\nspring.application.name=BSL Language Server\napp.globalConfiguration.path=${user.home}/.bsl-language-server.json\napp.configuration.path=.bsl-language-server.json\nlogging.level.org.eclipse.lsp4j.jsonrpc.RemoteEndpoint=fatal"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "SpringBootApplicationProperties",
-    "isTechDebt": "true",
-    "baselineState": "unchanged"
-  },
-  "hash": "3ffe7294a90d0455d083f72024cfdf2cdc6df22b51464ca58a89cd16e511b0fc"
-},{
-  "tool": "Code Inspection",
-  "category": "Spring Boot",
-  "type": "Invalid properties configuration",
-  "tags": [
-    "Properties"
-  ],
-  "severity": "High",
   "comment": "Cannot resolve configuration property 'app.measures.enabled'",
   "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
   "sources": [
@@ -526,39 +493,6 @@
     "baselineState": "unchanged"
   },
   "hash": "8cb191da383ec86c0cb7090cdab5ace7f4bc20cf896fc9769d9be10a5ee04174"
-},{
-  "tool": "Code Inspection",
-  "category": "Spring Boot",
-  "type": "Invalid properties configuration",
-  "tags": [
-    "Properties"
-  ],
-  "severity": "High",
-  "comment": "Cannot resolve configuration property 'picocli.disable.closures'",
-  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/resources/application.properties",
-      "language": "Properties",
-      "line": 23,
-      "offset": 1,
-      "length": 24,
-      "code": {
-        "startLine": 21,
-        "length": 24,
-        "offset": 78,
-        "surroundingCode": "sentry.attach-server-name=false\nsentry.logging.minimum-breadcrumb-level=debug\npicocli.disable.closures=true\n\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "SpringBootApplicationProperties",
-    "isTechDebt": "true",
-    "baselineState": "unchanged"
-  },
-  "hash": "e5b3e1e8827b3124842ed8c38d81266525eedb186ff3df263fca029f48010315"
 },{
   "tool": "Code Inspection",
   "category": "Spring Boot",
@@ -3195,6 +3129,136 @@
     "baselineState": "new"
   },
   "hash": "e868063ca62f1326af0770e1a5d586d2747404c54839fa046b4ab51031f4f99f"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'app.globalConfiguration.path'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/resources/application.properties",
+      "language": "Properties",
+      "line": 15,
+      "offset": 1,
+      "length": 28,
+      "code": {
+        "startLine": 13,
+        "length": 28,
+        "offset": 131,
+        "surroundingCode": "logging.level.org.springframework.core.LocalVariableTableParameterNameDiscoverer=error\nspring.application.name=BSL Language Server\napp.globalConfiguration.path=${user.home}/.bsl-language-server.json\napp.configuration.path=.bsl-language-server.json\nlogging.level.org.eclipse.lsp4j.jsonrpc.RemoteEndpoint=fatal"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringBootApplicationProperties",
+    "isTechDebt": "true",
+    "baselineState": "unchanged"
+  },
+  "hash": "51c5614e0165b847296eaadfa4ec4e62b1fb6037f36f2f7234ef1e40d57c9549"
+},{
+  "tool": "Code Inspection",
+  "category": "Spring Boot",
+  "type": "Invalid properties configuration",
+  "tags": [
+    "Properties"
+  ],
+  "severity": "High",
+  "comment": "Cannot resolve configuration property 'picocli.disable.closures'",
+  "detailsInfo": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/resources/application.properties",
+      "language": "Properties",
+      "line": 24,
+      "offset": 1,
+      "length": 24,
+      "code": {
+        "startLine": 22,
+        "length": 24,
+        "offset": 78,
+        "surroundingCode": "sentry.attach-server-name=false\nsentry.logging.minimum-breadcrumb-level=debug\npicocli.disable.closures=true\n\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringBootApplicationProperties",
+    "isTechDebt": "true",
+    "baselineState": "unchanged"
+  },
+  "hash": "9ab9e48e21cbf264882260427a547fdf17c90ff0dfba8497e5b0ce7ea7aa2325"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Non recommended 'field' injections",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Field injection is not recommended",
+  "detailsInfo": "Reports injected or autowired fields in Spring components.\n\nThe quick-fix suggests the recommended constructor-based dependency injection in beans\nand assertions for mandatory fields.\n\n**Example:**\n\n\n    class MyComponent {\n      @Inject MyCollaborator collaborator; // injected field\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // throws NullPointerException\n      }\n    }\n\nAfter applying the quick-fix:\n\n\n    class MyComponent {\n\n      private final MyCollaborator collaborator;\n\n      @Inject\n      public MyComponent(MyCollaborator collaborator) {\n        Assert.notNull(collaborator, \"MyCollaborator must not be null!\");\n        this.collaborator = collaborator;\n      }\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // now this call is safe\n      }\n    }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunAllTestsCodeLensSupplier.java",
+      "language": "JAVA",
+      "line": 56,
+      "offset": 3,
+      "length": 10,
+      "code": {
+        "startLine": 54,
+        "length": 10,
+        "offset": 57,
+        "surroundingCode": "\n  // Self-injection для работы кэша в базовом классе.\n  @Autowired\n  @Lazy\n  @Getter"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaAutowiredFieldsWarningInspection",
+    "baselineState": "new"
+  },
+  "hash": "85c3977f5561e0ade659fcdf2fa12cb5a394773ebb2324b512d8d6c8b04cd28f"
+},{
+  "tool": "Code Inspection",
+  "category": "Code",
+  "type": "Non recommended 'field' injections",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Field injection is not recommended",
+  "detailsInfo": "Reports injected or autowired fields in Spring components.\n\nThe quick-fix suggests the recommended constructor-based dependency injection in beans\nand assertions for mandatory fields.\n\n**Example:**\n\n\n    class MyComponent {\n      @Inject MyCollaborator collaborator; // injected field\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // throws NullPointerException\n      }\n    }\n\nAfter applying the quick-fix:\n\n\n    class MyComponent {\n\n      private final MyCollaborator collaborator;\n\n      @Inject\n      public MyComponent(MyCollaborator collaborator) {\n        Assert.notNull(collaborator, \"MyCollaborator must not be null!\");\n        this.collaborator = collaborator;\n      }\n\n      public void myBusinessMethod() {\n        collaborator.doSomething(); // now this call is safe\n      }\n    }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/RunTestCodeLensSupplier.java",
+      "language": "JAVA",
+      "line": 63,
+      "offset": 3,
+      "length": 10,
+      "code": {
+        "startLine": 61,
+        "length": 10,
+        "offset": 57,
+        "surroundingCode": "\n  // Self-injection для работы кэша в базовом классе.\n  @Autowired\n  @Lazy\n  @Getter"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "SpringJavaAutowiredFieldsWarningInspection",
+    "baselineState": "new"
+  },
+  "hash": "ff6c31ad6bf4be6dd47e4ecf09650b77aeae30b8d3d1eb46a8c1d0768f63e1d4"
 },{
   "tool": "Code Inspection",
   "category": "Code",

@@ -76,38 +76,6 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/codelens/TestRunnerAdapterOptions.java",
-      "language": "JAVA",
-      "line": 35,
-      "offset": 38,
-      "length": 2,
-      "code": {
-        "startLine": 33,
-        "length": 2,
-        "offset": 47,
-        "surroundingCode": " */\n@Data\n@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))\n@NoArgsConstructor\n@JsonIgnoreProperties(ignoreUnknown = true)"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "QodanaJavaSanity"
-  },
-  "hash": "100cb40fcaa53a4df7367a0520df7fcffea87d1d64b8f7d7b139171c83f5b109"
-},{
-  "tool": "Code Inspection",
-  "category": "General",
-  "type": "Java sanity",
-  "tags": [
-    "JAVA",
-    "Sanity"
-  ],
-  "severity": "Critical",
-  "comment": "Unresolved reference __",
-  "detailsInfo": "Reports unresolved references in Java code.",
-  "sources": [
-    {
-      "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/LanguageServerConfiguration.java",
       "language": "JAVA",
       "line": 72,
@@ -332,16 +300,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/codelens/TestRunnerAdapterOptions.java",
       "language": "JAVA",
-      "line": 107,
-      "offset": 23,
+      "line": 41,
+      "offset": 38,
       "length": 2,
       "code": {
-        "startLine": 105,
+        "startLine": 39,
         "length": 2,
-        "offset": 76,
-        "surroundingCode": "  private LanguageServerConfiguration configuration;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;\n  @Setter(onMethod = @__({@Autowired}))"
+        "offset": 47,
+        "surroundingCode": " */\n@Data\n@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))\n@NoArgsConstructor\n@JsonIgnoreProperties(ignoreUnknown = true)"
       }
     }
   ],
@@ -349,7 +317,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "QodanaJavaSanity"
   },
-  "hash": "b89d8b7ee31ad86c079ecd54cd8b49c23e77627de6ba9a72b4ea046390924eab"
+  "hash": "8c335721a9b3ae256456247b2ac1d68ee91d2aff53feb0144f71ce16b3c53d3a"
 },{
   "tool": "Code Inspection",
   "category": "General",
@@ -414,6 +382,38 @@
     "inspectionName": "QodanaJavaSanity"
   },
   "hash": "c3767c17d04674a1aecdb5499bf70c1b598aa6099bd34617e507d82a11a1f6b3"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Java sanity",
+  "tags": [
+    "JAVA",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference __",
+  "detailsInfo": "Reports unresolved references in Java code.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 100,
+      "offset": 23,
+      "length": 2,
+      "code": {
+        "startLine": 98,
+        "length": 2,
+        "offset": 46,
+        "surroundingCode": "  private int version;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ServerContext context;\n  @Setter(onMethod = @__({@Autowired}))"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "QodanaJavaSanity"
+  },
+  "hash": "d2eb63191f1ef161b35a75e09abe84192247157b430f375d24a146d6e63ece5e"
 },{
   "tool": "Code Inspection",
   "category": "General",
