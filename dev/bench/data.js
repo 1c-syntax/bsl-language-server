@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739119902616,
+  "lastUpdate": 1739125831367,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27311,6 +27311,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.47075633016201124",
             "extra": "mean: 78.97871160507202 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "adf58a79b30f881534abed71781236b97be909d0",
+          "message": "Merge pull request #3403 from 1c-syntax/fix/double-negatives\n\nИсправлен выброс исключения диагностики DoubleNegatives при наборе кода/ошибках разбора",
+          "timestamp": "2025-02-09T18:27:29+01:00",
+          "tree_id": "73b49a2677847b244bcebad3477e322b7d7ae282",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/adf58a79b30f881534abed71781236b97be909d0"
+        },
+        "date": 1739125828508,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.02329397201538,
+            "unit": "sec",
+            "range": "stddev: 2.5264323910107067",
+            "extra": "mean: 80.02329397201538 sec\nrounds: 3"
           }
         ]
       }
