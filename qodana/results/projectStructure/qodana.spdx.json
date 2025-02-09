@@ -3,13 +3,13 @@
   "name": "SPDXRef-bsl-language-server",
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://bsl-language-server-0090281c-1f02-6137-7352-9fb27d752333",
+  "documentNamespace": "https://bsl-language-server-5864bc08-bbd4-5591-65cf-386b3ab59a17",
   "creationInfo": {
     "creators": [
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2025-02-09T16:36:26Z"
+    "created": "2025-02-09T17:09:34Z"
   },
   "packages": [
     {
@@ -27,28 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "fc5bd740d47578d1ca5c0ed104d21f925f4f261f"
-        }
-      ],
-      "primaryPackagePurpose": "SOURCE"
-    },
-    {
-      "SPDXID": "SPDXRef-bsl-language-server.main",
-      "name": "bsl-language-server.main",
-      "versionInfo": "develop-1aae3b8-DIRTY",
-      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
-      "filesAnalyzed": true,
-      "licenseConcluded": "LGPL-3.0-only",
-      "licenseDeclared": "LGPL-3.0-only",
-      "licenseInfoFromFiles": [
-        "LGPL-3.0-only"
-      ],
-      "copyrightText": "NOASSERTION",
-      "supplier": "NOASSERTION",
-      "checksums": [
-        {
-          "algorithm": "SHA1",
-          "checksumValue": "fc5bd740d47578d1ca5c0ed104d21f925f4f261f"
+          "checksumValue": "3c79e645b418c95d9655826f7cdf586f0ecc2af2"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-1aae3b8-DIRTY",
+      "versionInfo": "develop-3c79e64-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +48,28 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "fc5bd740d47578d1ca5c0ed104d21f925f4f261f"
+          "checksumValue": "3c79e645b418c95d9655826f7cdf586f0ecc2af2"
+        }
+      ],
+      "primaryPackagePurpose": "SOURCE"
+    },
+    {
+      "SPDXID": "SPDXRef-bsl-language-server.main",
+      "name": "bsl-language-server.main",
+      "versionInfo": "develop-3c79e64-DIRTY",
+      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
+      "filesAnalyzed": true,
+      "licenseConcluded": "LGPL-3.0-only",
+      "licenseDeclared": "LGPL-3.0-only",
+      "licenseInfoFromFiles": [
+        "LGPL-3.0-only"
+      ],
+      "copyrightText": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "3c79e645b418c95d9655826f7cdf586f0ecc2af2"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -3105,6 +3105,28 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
+      "SPDXID": "SPDXRef-spring-boot-starter-cache-3.4.2",
+      "name": "org.springframework.boot:spring-boot-starter-cache",
+      "versionInfo": "3.4.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "licenseInfoFromFiles": [
+        "Apache-2.0"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "spring-boot-starter-cache-3.4.2.jar",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c97f8a049a5d2f64084f43cb0469b7f7e02efce3cdb9b88f96f610b3657ca7a4"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
       "SPDXID": "SPDXRef-spring-boot-starter-json-3.4.2",
       "name": "org.springframework.boot:spring-boot-starter-json",
       "versionInfo": "3.4.2",
@@ -3298,6 +3320,28 @@
         {
           "algorithm": "SHA256",
           "checksumValue": "be9ecf9b0dc6b88a869c9079b9076121e4d658d7e12856cc60598f1fe2d70d8a"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-spring-context-support-6.2.2",
+      "name": "org.springframework:spring-context-support",
+      "versionInfo": "6.2.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "licenseInfoFromFiles": [
+        "Apache-2.0"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "spring-context-support-6.2.2.jar",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d44fbf429f73c0d3211ad935e6478e05350de4dd3f9b57a0c57457e35fa545a9"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -4759,6 +4803,24 @@
       "noticeText": "Apache License\n                           Version 2.0, January 2004\n                        https://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright {yyyy} {name of copyright owner}\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       https://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License."
     },
     {
+      "SPDXID": "SPDXRef-spring-boot-starter-cache-3.4.2-Apache-2.0",
+      "fileName": "./5861d136fd5dc2e1f23e54b430e09dfef485f906/spring-boot-starter-cache-3.4.2.jar!",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c97f8a049a5d2f64084f43cb0469b7f7e02efce3cdb9b88f96f610b3657ca7a4"
+        }
+      ],
+      "fileTypes": [
+        "ARCHIVE"
+      ],
+      "licenseConcluded": "Apache-2.0",
+      "licenseInfoInFiles": [
+        "Apache-2.0"
+      ],
+      "noticeText": "Apache License\n                           Version 2.0, January 2004\n                        https://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright {yyyy} {name of copyright owner}\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       https://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License."
+    },
+    {
       "SPDXID": "SPDXRef-spring-boot-starter-json-3.4.2-Apache-2.0",
       "fileName": "./e413d51228ddaf6a9644533987faa0ae6e18fe47/spring-boot-starter-json-3.4.2.jar!",
       "checksums": [
@@ -4909,6 +4971,24 @@
         {
           "algorithm": "SHA256",
           "checksumValue": "be9ecf9b0dc6b88a869c9079b9076121e4d658d7e12856cc60598f1fe2d70d8a"
+        }
+      ],
+      "fileTypes": [
+        "ARCHIVE"
+      ],
+      "licenseConcluded": "Apache-2.0",
+      "licenseInfoInFiles": [
+        "Apache-2.0"
+      ],
+      "noticeText": "Apache License\n                           Version 2.0, January 2004\n                        https://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       https://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n\n=======================================================================\n\nSPRING FRAMEWORK 6.2.2 SUBCOMPONENTS:\n\nSpring Framework 6.2.2 includes a number of subcomponents\nwith separate copyright notices and license terms. The product that\nincludes this file does not necessarily use all the open source\nsubcomponents referred to below. Your use of the source\ncode for these subcomponents is subject to the terms and\nconditions of the following licenses.\n\n\n>>> ASM 9.1 (org.ow2.asm:asm:9.1, org.ow2.asm:asm-commons:9.1):\n\nCopyright (c) 2000-2011 INRIA, France Telecom\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions\nare met:\n\n1. Redistributions of source code must retain the above copyright\n   notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright\n   notice, this list of conditions and the following disclaimer in the\n   documentation and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holders nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF\nTHE POSSIBILITY OF SUCH DAMAGE.\n\nCopyright (c) 1999-2009, OW2 Consortium <https://www.ow2.org/>\n\n\n>>> CGLIB 3.3 (cglib:cglib:3.3):\n\nPer the LICENSE file in the CGLIB JAR distribution downloaded from\nhttps://github.com/cglib/cglib/releases/download/RELEASE_3_3_0/cglib-3.3.0.jar,\nCGLIB 3.3 is licensed under the Apache License, version 2.0, the text of which\nis included above.\n\n\n>>> JavaPoet 1.13.0 (com.squareup:javapoet:1.13.0):\n\nPer the LICENSE file in the JavaPoet JAR distribution downloaded from\nhttps://github.com/square/javapoet/archive/refs/tags/javapoet-1.13.0.zip,\nJavaPoet 1.13.0 is licensed under the Apache License, version 2.0, the text of\nwhich is included above.\n\n\n>>> Objenesis 3.4 (org.objenesis:objenesis:3.4):\n\nPer the LICENSE file in the Objenesis ZIP distribution downloaded from\nhttp://objenesis.org/download.html, Objenesis 3.4 is licensed under the\nApache License, version 2.0, the text of which is included above.\n\nPer the NOTICE file in the Objenesis ZIP distribution downloaded from\nhttp://objenesis.org/download.html and corresponding to section 4d of the\nApache License, Version 2.0, in this case for Objenesis:\n\nObjenesis\nCopyright 2006-2019 Joe Walnes, Henri Tremblay, Leonardo Mesquita\n\n\n===============================================================================\n\nTo the extent any open source components are licensed under the EPL and/or\nother similar licenses that require the source code and/or modifications to\nsource code to be made available (as would be noted above), you may obtain a\ncopy of the source code corresponding to the binaries for such open source\ncomponents and modifications thereto, if any, (the \"Source Files\"), by\ndownloading the Source Files from https://spring.io/projects, Pivotal's website\nat https://network.pivotal.io/open-source, or by sending a request, with your\nname and address to: Pivotal Software, Inc., 875 Howard Street, 5th floor, San\nFrancisco, CA 94103, Attention: General Counsel. All such requests should\nclearly specify: OPEN SOURCE FILES REQUEST, Attention General Counsel. Pivotal\ncan mail a copy of the Source Files to you on a CD or equivalent physical\nmedium.\n\nThis offer to obtain a copy of the Source Files is valid for three years from\nthe date you acquired this Software product. Alternatively, the Source Files\nmay accompany the Software."
+    },
+    {
+      "SPDXID": "SPDXRef-spring-context-support-6.2.2-Apache-2.0",
+      "fileName": "./d0ad90b2a0e80dcfeffe44184b5d0ac0b262ee46/spring-context-support-6.2.2.jar!",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d44fbf429f73c0d3211ad935e6478e05350de4dd3f9b57a0c57457e35fa545a9"
         }
       ],
       "fileTypes": [
@@ -5074,142 +5154,147 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
       "comment": "Module of the project"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
       "comment": "Module of the project"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-spring-boot-starter-cache-3.4.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.15.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.8.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.36"
     },
@@ -5257,6 +5342,16 @@
       "spdxElementId": "SPDXRef-spring-boot-starter-websocket-3.4.2",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-websocket-6.2.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-spring-boot-starter-cache-3.4.2",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.4.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-spring-boot-starter-cache-3.4.2",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-spring-context-support-6.2.2"
     },
     {
       "spdxElementId": "SPDXRef-picocli-spring-boot-starter-4.7.6",
@@ -5654,132 +5749,137 @@
       "relatedSpdxElement": "SPDXRef-sentry-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-spring-boot-starter-cache-3.4.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.15.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.8.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.36"
     },
@@ -5790,13 +5890,13 @@
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"
@@ -6192,6 +6292,12 @@
       "comment": "License mention"
     },
     {
+      "spdxElementId": "SPDXRef-spring-boot-starter-cache-3.4.2",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-spring-boot-starter-cache-3.4.2-Apache-2.0",
+      "comment": "License mention"
+    },
+    {
       "spdxElementId": "SPDXRef-spring-boot-starter-json-3.4.2",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-json-3.4.2-Apache-2.0",
@@ -6243,6 +6349,12 @@
       "spdxElementId": "SPDXRef-spring-beans-6.2.2",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-spring-beans-6.2.2-Apache-2.0",
+      "comment": "License mention"
+    },
+    {
+      "spdxElementId": "SPDXRef-spring-context-support-6.2.2",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-spring-context-support-6.2.2-Apache-2.0",
       "comment": "License mention"
     },
     {

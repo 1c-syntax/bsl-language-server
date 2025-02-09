@@ -553,6 +553,13 @@
     "licenseUrl": "http://www.apache.org/licenses/"
   },
   {
+    "name": "spring-boot-starter-cache",
+    "version": "3.4.2",
+    "url": "",
+    "license": "Apache-2.0",
+    "licenseUrl": "http://www.apache.org/licenses/"
+  },
+  {
     "name": "spring-boot-starter-json",
     "version": "3.4.2",
     "url": "",
@@ -597,6 +604,13 @@
   {
     "name": "spring-boot",
     "version": "3.4.2",
+    "url": "",
+    "license": "Apache-2.0",
+    "licenseUrl": "http://www.apache.org/licenses/"
+  },
+  {
+    "name": "spring-context-support",
+    "version": "6.2.2",
     "url": "",
     "license": "Apache-2.0",
     "licenseUrl": "http://www.apache.org/licenses/"

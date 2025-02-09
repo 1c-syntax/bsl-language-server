@@ -732,6 +732,15 @@
         </tr>
         <tr>
             <td>
+                <a href="">spring-boot-starter-cache</a>
+            </td>
+            <td>3.4.2</td>
+            <td>
+                <a href="http://www.apache.org/licenses/">Apache-2.0</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <a href="">spring-boot-starter-json</a>
             </td>
             <td>3.4.2</td>
@@ -789,6 +798,15 @@
                 <a href="">spring-boot</a>
             </td>
             <td>3.4.2</td>
+            <td>
+                <a href="http://www.apache.org/licenses/">Apache-2.0</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="">spring-context-support</a>
+            </td>
+            <td>6.2.2</td>
             <td>
                 <a href="http://www.apache.org/licenses/">Apache-2.0</a>
             </td>
