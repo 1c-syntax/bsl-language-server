@@ -903,6 +903,12 @@
       "name": "bsl-language-server.main",
       "contentEntries": [
         {
+          "path": "file://$PROJECT_DIR$/build/generated/sentry",
+          "excludePatterns": [],
+          "excludeFolders": [],
+          "sourceFolders": []
+        },
+        {
           "path": "file://$PROJECT_DIR$/src/main",
           "excludePatterns": [],
           "excludeFolders": [],
@@ -918,12 +924,6 @@
               "packagePrefix": ""
             }
           ]
-        },
-        {
-          "path": "file://$PROJECT_DIR$/build/generated/sentry",
-          "excludePatterns": [],
-          "excludeFolders": [],
-          "sourceFolders": []
         }
       ],
       "orderEntries": [
