@@ -1592,6 +1592,16 @@
             "title": "Procedure should not return Value",
             "$id": "#/definitions/ProcedureReturnsValue"
         },
+        "ProtectedModule": {
+            "description": "Protected modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Protected modules",
+            "$id": "#/definitions/ProtectedModule"
+        },
         "PublicMethodsDescription": {
             "description": "All public methods must have a description",
             "default": true,
