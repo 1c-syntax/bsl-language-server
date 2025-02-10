@@ -46,7 +46,8 @@ import org.eclipse.lsp4j.Range;
   modules = {
     ModuleType.SessionModule
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
 
 public class ProtectedModuleDiagnostic extends AbstractDiagnostic {
