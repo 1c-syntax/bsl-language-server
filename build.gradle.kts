@@ -203,6 +203,11 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
+tasks.checkLicenseMain {
+    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+    dependsOn(tasks.collectExternalDependenciesForSentry)
+}
+
 tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
