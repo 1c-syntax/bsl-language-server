@@ -1,32 +1,32 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Code maturity",
-  "type": "Commented out code",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
   "tags": [
     "JAVA"
   ],
-  "severity": "Moderate",
-  "comment": "Commented out code (6 lines)",
-  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/MissingSpaceDiagnostic.java",
       "language": "JAVA",
-      "line": 72,
-      "offset": 1,
-      "length": 2,
+      "line": 88,
+      "offset": 20,
+      "length": 27,
       "code": {
-        "startLine": 70,
-        "length": 2,
-        "offset": 36,
-        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
+        "startLine": 86,
+        "length": 27,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT\n  )\n  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "CommentedOutCode"
+    "inspectionName": "DefaultAnnotationParam"
   },
-  "hash": "9d7aa692dca1a7bd1cc0125b6c407f625b6576eb7bb79884ddc4a843e4f71190"
+  "hash": "3a50d0fc8caa0b5118caec1dcd6e28b069541e9cf86a39b283046b43d3f20128"
 }]}

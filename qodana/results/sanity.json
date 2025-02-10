@@ -76,38 +76,6 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/LanguageServerConfiguration.java",
-      "language": "JAVA",
-      "line": 72,
-      "offset": 38,
-      "length": 2,
-      "code": {
-        "startLine": 70,
-        "length": 2,
-        "offset": 90,
-        "surroundingCode": "@Component\n@Role(BeanDefinition.ROLE_INFRASTRUCTURE)\n@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))\n@NoArgsConstructor\n@Slf4j"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "QodanaJavaSanity"
-  },
-  "hash": "217a21df4032bee64c507cebd18530165ed34605d8a12e2e81d0d3b068ee3dbb"
-},{
-  "tool": "Code Inspection",
-  "category": "General",
-  "type": "Java sanity",
-  "tags": [
-    "JAVA",
-    "Sanity"
-  ],
-  "severity": "Critical",
-  "comment": "Unresolved reference __",
-  "detailsInfo": "Reports unresolved references in Java code.",
-  "sources": [
-    {
-      "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
       "language": "JAVA",
       "line": 102,
@@ -140,16 +108,16 @@
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/LanguageServerConfiguration.java",
       "language": "JAVA",
-      "line": 104,
-      "offset": 23,
+      "line": 73,
+      "offset": 38,
       "length": 2,
       "code": {
-        "startLine": 102,
+        "startLine": 71,
         "length": 2,
-        "offset": 111,
-        "surroundingCode": "  @Setter(onMethod = @__({@Autowired}))\n  private DiagnosticComputer diagnosticComputer;\n  @Setter(onMethod = @__({@Autowired}))\n  private LanguageServerConfiguration configuration;\n"
+        "offset": 90,
+        "surroundingCode": "@Component\n@Role(BeanDefinition.ROLE_INFRASTRUCTURE)\n@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))\n@NoArgsConstructor\n@Slf4j"
       }
     }
   ],
@@ -157,7 +125,7 @@
     "module": "bsl-language-server.main",
     "inspectionName": "QodanaJavaSanity"
   },
-  "hash": "626b726d34d72dc01702e71270f6438da03480fbdc89213b70a5638bd5c0926c"
+  "hash": "76b15846ed1eaf8208055b75f3562850f08da345aab0a12338cbdd130d9a1200"
 },{
   "tool": "Code Inspection",
   "category": "General",
@@ -318,6 +286,38 @@
     "inspectionName": "QodanaJavaSanity"
   },
   "hash": "8c335721a9b3ae256456247b2ac1d68ee91d2aff53feb0144f71ce16b3c53d3a"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Java sanity",
+  "tags": [
+    "JAVA",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference __",
+  "detailsInfo": "Reports unresolved references in Java code.",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 107,
+      "offset": 23,
+      "length": 2,
+      "code": {
+        "startLine": 105,
+        "length": 2,
+        "offset": 76,
+        "surroundingCode": "  private LanguageServerConfiguration configuration;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;\n  @Setter(onMethod = @__({@Autowired}))"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "QodanaJavaSanity"
+  },
+  "hash": "b89d8b7ee31ad86c079ecd54cd8b49c23e77627de6ba9a72b4ea046390924eab"
 },{
   "tool": "Code Inspection",
   "category": "General",
