@@ -66,10 +66,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.4.2",
           "type": "Library"
         },
@@ -170,11 +166,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
+          "name": "Gradle: io.sentry:sentry:8.1.0",
           "type": "Library"
         },
         {
@@ -198,10 +194,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
           "type": "Library"
         },
@@ -222,15 +214,15 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: org.springframework:spring-core:6.2.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
           "type": "Library"
         },
         {
           "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework:spring-core:6.2.2",
           "type": "Library"
         },
         {
@@ -462,10 +454,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.guava:failureaccess:1.0.2",
           "type": "Library"
         },
@@ -510,15 +498,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
           "type": "Library"
         },
         {
@@ -527,6 +507,22 @@
         },
         {
           "name": "Gradle: org.springframework:spring-web:6.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-jcl:6.2.2",
           "type": "Library"
         },
         {
@@ -539,10 +535,6 @@
         },
         {
           "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework:spring-jcl:6.2.2",
           "type": "Library"
         },
         {
@@ -658,6 +650,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
           "type": "Library"
         },
@@ -703,6 +699,10 @@
         },
         {
           "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-log4j2:8.1.0",
           "type": "Library"
         },
         {
@@ -918,6 +918,12 @@
               "packagePrefix": ""
             }
           ]
+        },
+        {
+          "path": "file://$PROJECT_DIR$/build/generated/sentry",
+          "excludePatterns": [],
+          "excludeFolders": [],
+          "sourceFolders": []
         }
       ],
       "orderEntries": [
@@ -935,10 +941,6 @@
         },
         {
           "name": "Gradle: info.picocli:picocli-spring-boot-starter:4.7.6",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
           "type": "Library"
         },
         {
@@ -1042,11 +1044,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
+          "name": "Gradle: io.sentry:sentry:8.1.0",
           "type": "Library"
         },
         {
@@ -1059,10 +1061,6 @@
         },
         {
           "name": "Gradle: info.picocli:picocli:4.7.6",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
           "type": "Library"
         },
         {
@@ -1086,15 +1084,15 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: org.springframework:spring-core:6.2.2",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
           "type": "Library"
         },
         {
           "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework:spring-core:6.2.2",
           "type": "Library"
         },
         {
@@ -1326,10 +1324,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.guava:failureaccess:1.0.2",
           "type": "Library"
         },
@@ -1358,15 +1352,7 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
           "type": "Library"
         },
         {
@@ -1375,6 +1361,22 @@
         },
         {
           "name": "Gradle: org.springframework:spring-web:6.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework:spring-jcl:6.2.2",
           "type": "Library"
         },
         {
@@ -1387,10 +1389,6 @@
         },
         {
           "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: org.springframework:spring-jcl:6.2.2",
           "type": "Library"
         },
         {
@@ -1502,6 +1500,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
           "type": "Library"
         },
@@ -1547,6 +1549,10 @@
         },
         {
           "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-log4j2:8.1.0",
           "type": "Library"
         },
         {
@@ -1662,10 +1668,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.4.2",
           "type": "Library"
         },
@@ -1766,11 +1768,11 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
           "type": "Library"
         },
         {
-          "name": "Gradle: com.google.guava:guava:33.3.1-jre",
+          "name": "Gradle: io.sentry:sentry:8.1.0",
           "type": "Library"
         },
         {
@@ -1795,10 +1797,6 @@
         },
         {
           "name": "Gradle: info.picocli:picocli:4.7.6",
-          "type": "Library"
-        },
-        {
-          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
           "type": "Library"
         },
         {
@@ -2110,10 +2108,6 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: io.sentry:sentry:8.1.0",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: com.google.guava:failureaccess:1.0.2",
           "type": "Library"
         },
@@ -2182,15 +2176,19 @@
           "type": "Library"
         },
         {
-          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
-          "type": "Library"
-        },
-        {
           "name": "Gradle: org.springframework:spring-webmvc:6.2.2",
           "type": "Library"
         },
         {
           "name": "Gradle: org.springframework:spring-web:6.2.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
           "type": "Library"
         },
         {
@@ -2330,6 +2328,10 @@
           "type": "Library"
         },
         {
+          "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+          "type": "Library"
+        },
+        {
           "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
           "type": "Library"
         },
@@ -2367,6 +2369,10 @@
         },
         {
           "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+          "type": "Library"
+        },
+        {
+          "name": "Gradle: io.sentry:sentry-log4j2:8.1.0",
           "type": "Library"
         },
         {

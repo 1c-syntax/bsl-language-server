@@ -18,14 +18,6 @@
       "version": "4.7.6"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
-      "gradleName": "io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
-      "unresolved": false,
-      "groupId": "io.sentry",
-      "artifactId": "sentry-spring-boot-starter-jakarta",
-      "version": "8.1.0"
-    },
-    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.4.2",
       "gradleName": "org.springframework.boot:spring-boot-starter-websocket:3.4.2",
       "unresolved": false,
@@ -226,20 +218,20 @@
       "version": "1.5.2"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-logback:8.1.0",
-      "gradleName": "io.sentry:sentry-logback:8.1.0",
-      "unresolved": false,
-      "groupId": "io.sentry",
-      "artifactId": "sentry-logback",
-      "version": "8.1.0"
-    },
-    {
       "ideaName": "Gradle: com.google.guava:guava:33.3.1-jre",
       "gradleName": "com.google.guava:guava:33.3.1-jre",
       "unresolved": false,
       "groupId": "com.google.guava",
       "artifactId": "guava",
       "version": "33.3.1-jre"
+    },
+    {
+      "ideaName": "Gradle: io.sentry:sentry:8.1.0",
+      "gradleName": "io.sentry:sentry:8.1.0",
+      "unresolved": false,
+      "groupId": "io.sentry",
+      "artifactId": "sentry",
+      "version": "8.1.0"
     },
     {
       "ideaName": "Gradle: org.openjdk.jmh:jmh-generator-bytecode:1.36",
@@ -282,14 +274,6 @@
       "version": "4.7.6"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
-      "gradleName": "io.sentry:sentry-spring-boot-jakarta:8.1.0",
-      "unresolved": false,
-      "groupId": "io.sentry",
-      "artifactId": "sentry-spring-boot-jakarta",
-      "version": "8.1.0"
-    },
-    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
       "gradleName": "org.springframework.boot:spring-boot-starter-web:3.4.2",
       "unresolved": false,
@@ -330,6 +314,14 @@
       "version": "3.4.2"
     },
     {
+      "ideaName": "Gradle: org.springframework:spring-core:6.2.2",
+      "gradleName": "org.springframework:spring-core:6.2.2",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-core",
+      "version": "6.2.2"
+    },
+    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
       "gradleName": "org.springframework.boot:spring-boot-starter-logging:3.4.2",
       "unresolved": false,
@@ -344,14 +336,6 @@
       "groupId": "jakarta.annotation",
       "artifactId": "jakarta.annotation-api",
       "version": "2.1.1"
-    },
-    {
-      "ideaName": "Gradle: org.springframework:spring-core:6.2.2",
-      "gradleName": "org.springframework:spring-core:6.2.2",
-      "unresolved": false,
-      "groupId": "org.springframework",
-      "artifactId": "spring-core",
-      "version": "6.2.2"
     },
     {
       "ideaName": "Gradle: org.yaml:snakeyaml:2.3",
@@ -810,14 +794,6 @@
       "version": "1.10.1"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry:8.1.0",
-      "gradleName": "io.sentry:sentry:8.1.0",
-      "unresolved": false,
-      "groupId": "io.sentry",
-      "artifactId": "sentry",
-      "version": "8.1.0"
-    },
-    {
       "ideaName": "Gradle: com.google.guava:failureaccess:1.0.2",
       "gradleName": "com.google.guava:failureaccess:1.0.2",
       "unresolved": false,
@@ -906,27 +882,11 @@
       "version": "6.2.2"
     },
     {
-      "ideaName": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
-      "gradleName": "io.sentry:sentry-spring-jakarta:8.1.0",
-      "unresolved": false,
-      "groupId": "io.sentry",
-      "artifactId": "sentry-spring-jakarta",
-      "version": "8.1.0"
-    },
-    {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
       "gradleName": "org.springframework.boot:spring-boot-starter-json:3.4.2",
       "unresolved": false,
       "groupId": "org.springframework.boot",
       "artifactId": "spring-boot-starter-json",
-      "version": "3.4.2"
-    },
-    {
-      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
-      "gradleName": "org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
-      "unresolved": false,
-      "groupId": "org.springframework.boot",
-      "artifactId": "spring-boot-starter-tomcat",
       "version": "3.4.2"
     },
     {
@@ -943,6 +903,38 @@
       "unresolved": false,
       "groupId": "org.springframework",
       "artifactId": "spring-web",
+      "version": "6.2.2"
+    },
+    {
+      "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+      "gradleName": "org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+      "unresolved": false,
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-tomcat",
+      "version": "3.4.2"
+    },
+    {
+      "ideaName": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
+      "gradleName": "io.sentry:sentry-spring-boot-jakarta:8.1.0",
+      "unresolved": false,
+      "groupId": "io.sentry",
+      "artifactId": "sentry-spring-boot-jakarta",
+      "version": "8.1.0"
+    },
+    {
+      "ideaName": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
+      "gradleName": "io.sentry:sentry-spring-jakarta:8.1.0",
+      "unresolved": false,
+      "groupId": "io.sentry",
+      "artifactId": "sentry-spring-jakarta",
+      "version": "8.1.0"
+    },
+    {
+      "ideaName": "Gradle: org.springframework:spring-jcl:6.2.2",
+      "gradleName": "org.springframework:spring-jcl:6.2.2",
+      "unresolved": false,
+      "groupId": "org.springframework",
+      "artifactId": "spring-jcl",
       "version": "6.2.2"
     },
     {
@@ -968,14 +960,6 @@
       "groupId": "org.slf4j",
       "artifactId": "jul-to-slf4j",
       "version": "2.0.16"
-    },
-    {
-      "ideaName": "Gradle: org.springframework:spring-jcl:6.2.2",
-      "gradleName": "org.springframework:spring-jcl:6.2.2",
-      "unresolved": false,
-      "groupId": "org.springframework",
-      "artifactId": "spring-jcl",
-      "version": "6.2.2"
     },
     {
       "ideaName": "Gradle: com.google.code.gson:gson:2.11.0",
@@ -1202,6 +1186,14 @@
       "version": "10.1.34"
     },
     {
+      "ideaName": "Gradle: io.sentry:sentry-logback:8.1.0",
+      "gradleName": "io.sentry:sentry-logback:8.1.0",
+      "unresolved": false,
+      "groupId": "io.sentry",
+      "artifactId": "sentry-logback",
+      "version": "8.1.0"
+    },
+    {
       "ideaName": "Gradle: ch.qos.logback:logback-core:1.5.16",
       "gradleName": "ch.qos.logback:logback-core:1.5.16",
       "unresolved": false,
@@ -1296,6 +1288,14 @@
       "groupId": "com.sun.istack",
       "artifactId": "istack-commons-runtime",
       "version": "4.1.2"
+    },
+    {
+      "ideaName": "Gradle: io.sentry:sentry-log4j2:8.1.0",
+      "gradleName": "io.sentry:sentry-log4j2:8.1.0",
+      "unresolved": false,
+      "groupId": "io.sentry",
+      "artifactId": "sentry-log4j2",
+      "version": "8.1.0"
     },
     {
       "ideaName": "Gradle: org.springframework.boot:spring-boot-starter-test:3.4.2",

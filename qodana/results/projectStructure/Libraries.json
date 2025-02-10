@@ -15,13 +15,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-boot-starter-jakarta:8.1.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-starter-jakarta/8.1.0/bae30eba2a92177f6037dc67e608bf24f2d41e0e/sentry-spring-boot-starter-jakarta-8.1.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: org.springframework.boot:spring-boot-starter-websocket:3.4.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-websocket/3.4.2/55180627970a6d1bcdfce22716674d16e780ed10/spring-boot-starter-websocket-3.4.2.jar!/"
@@ -197,16 +190,16 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+      "name": "Gradle: com.google.guava:guava:33.3.1-jre",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/8.1.0/3d0b46ded61a9f7b9f34216afaaad0b869956ae4/sentry-logback-8.1.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.google.guava/guava/33.3.1-jre/852f8b363da0111e819460021ca693cacca3e8db/guava-33.3.1-jre.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: com.google.guava:guava:33.3.1-jre",
+      "name": "Gradle: io.sentry:sentry:8.1.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.google.guava/guava/33.3.1-jre/852f8b363da0111e819460021ca693cacca3e8db/guava-33.3.1-jre.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/8.1.0/621b8f833db89527b4aff2ccf047dbe310e87bfb/sentry-8.1.0.jar!/"
       ],
       "properties": {}
     },
@@ -228,13 +221,6 @@
       "name": "Gradle: info.picocli:picocli:4.7.6",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.7.6/77c2cb87814b6a03d431fc856024a9f8ff605ad4/picocli-4.7.6.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-jakarta/8.1.0/33d05f63f8082319db5fa7ed659a096766b9b8a0/sentry-spring-boot-jakarta-8.1.0.jar!/"
       ],
       "properties": {}
     },
@@ -274,6 +260,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: org.springframework:spring-core:6.2.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/6.2.2/94269e888dc979e75a1a1b9600d7153d72e6a7f1/spring-core-6.2.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/3.4.2/be7631ab8d3cb2a6a3c9981dcaa6d0867c964772/spring-boot-starter-logging-3.4.2.jar!/"
@@ -284,13 +277,6 @@
       "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/jakarta.annotation/jakarta.annotation-api/2.1.1/48b9bda22b091b1f48b13af03fe36db3be6e1ae3/jakarta.annotation-api-2.1.1.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.springframework:spring-core:6.2.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-core/6.2.2/94269e888dc979e75a1a1b9600d7153d72e6a7f1/spring-core-6.2.2.jar!/"
       ],
       "properties": {}
     },
@@ -694,13 +680,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry:8.1.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry/8.1.0/621b8f833db89527b4aff2ccf047dbe310e87bfb/sentry-8.1.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: com.google.guava:failureaccess:1.0.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.2/c4a06a64e650562f30b7bf9aaec1bfed43aca12b/failureaccess-1.0.2.jar!/"
@@ -750,23 +729,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-jakarta/8.1.0/73ed0dac40c656a435c3a1c5315139ad43abff8f/sentry-spring-jakarta-8.1.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-json/3.4.2/e413d51228ddaf6a9644533987faa0ae6e18fe47/spring-boot-starter-json-3.4.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/3.4.2/aa345bdd83adc80db5bc6ac4a711460396ad17ef/spring-boot-starter-tomcat-3.4.2.jar!/"
       ],
       "properties": {}
     },
@@ -781,6 +746,34 @@
       "name": "Gradle: org.springframework:spring-web:6.2.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-web/6.2.2/bd2ef98bf98b6ecf8dd29106ae27b7515524c21/spring-web-6.2.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/3.4.2/aa345bdd83adc80db5bc6ac4a711460396ad17ef/spring-boot-starter-tomcat-3.4.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-spring-boot-jakarta:8.1.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-boot-jakarta/8.1.0/33d05f63f8082319db5fa7ed659a096766b9b8a0/sentry-spring-boot-jakarta-8.1.0.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-spring-jakarta:8.1.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-spring-jakarta/8.1.0/73ed0dac40c656a435c3a1c5315139ad43abff8f/sentry-spring-jakarta-8.1.0.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: org.springframework:spring-jcl:6.2.2",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/6.2.2/1fbbb0b2e85c6eac7c366c5eed5b124785f05ac8/spring-jcl-6.2.2.jar!/"
       ],
       "properties": {}
     },
@@ -802,13 +795,6 @@
       "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.slf4j/jul-to-slf4j/2.0.16/6d57da3e961daac65bcca0dd3def6cd11e48a24a/jul-to-slf4j-2.0.16.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.springframework:spring-jcl:6.2.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.springframework/spring-jcl/6.2.2/1fbbb0b2e85c6eac7c366c5eed5b124785f05ac8/spring-jcl-6.2.2.jar!/"
       ],
       "properties": {}
     },
@@ -1002,6 +988,13 @@
       "properties": {}
     },
     {
+      "name": "Gradle: io.sentry:sentry-logback:8.1.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-logback/8.1.0/3d0b46ded61a9f7b9f34216afaaad0b869956ae4/sentry-logback-8.1.0.jar!/"
+      ],
+      "properties": {}
+    },
+    {
       "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.5.16/4f17700f046900aea2fadf115e2d67fec921f7fd/logback-core-1.5.16.jar!/"
@@ -1082,6 +1075,13 @@
       "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.sun.istack/istack-commons-runtime/4.1.2/18ec117c85f3ba0ac65409136afa8e42bc74e739/istack-commons-runtime-4.1.2.jar!/"
+      ],
+      "properties": {}
+    },
+    {
+      "name": "Gradle: io.sentry:sentry-log4j2:8.1.0",
+      "roots": [
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.sentry/sentry-log4j2/8.1.0/e9ad22e7ff1355bb1eafa616320f9753f043474c/sentry-log4j2-8.1.0.jar!/"
       ],
       "properties": {}
     },
