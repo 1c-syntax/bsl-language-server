@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739127507553,
+  "lastUpdate": 1739178425881,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27373,6 +27373,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5356619314338025",
             "extra": "mean: 80.1679352124532 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4f0536b8c88a30f077fa0ccc1ab23b39df796a05",
+          "message": "Merge pull request #3266 from 1c-syntax/feature/bumpantlr\n\nОбновление на новый парсер с antlr 4.13.1",
+          "timestamp": "2025-02-10T11:57:39+03:00",
+          "tree_id": "118069eded3f69d3cc1a8bd839d13bbb6e01f0e9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4f0536b8c88a30f077fa0ccc1ab23b39df796a05"
+        },
+        "date": 1739178422868,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.9301499525706,
+            "unit": "sec",
+            "range": "stddev: 1.0045021656096695",
+            "extra": "mean: 78.9301499525706 sec\nrounds: 3"
           }
         ]
       }
