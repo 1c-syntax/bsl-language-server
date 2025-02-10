@@ -38,6 +38,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -115,10 +116,14 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
   @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String globalConfigPath;
 
