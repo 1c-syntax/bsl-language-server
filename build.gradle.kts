@@ -179,6 +179,11 @@ tasks.bootJar {
     archiveClassifier.set("exec")
 }
 
+tasks.named("sourcesJar") {
+    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+    dependsOn(tasks.collectExternalDependenciesForSentry)
+}
+
 tasks.build {
     dependsOn(tasks.bootJar)
 }
