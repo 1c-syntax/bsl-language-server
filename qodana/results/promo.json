@@ -1,1 +1,94 @@
-{"version":"3","listProblem":[]}
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "Verbose or redundant code constructs",
+  "type": "Lombok @Setter may be used",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Class 'AbstractFindMethodDiagnostic' may use Lombok @Setter",
+  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractFindMethodDiagnostic.java",
+      "language": "JAVA",
+      "line": 41,
+      "offset": 23,
+      "length": 28,
+      "code": {
+        "startLine": 39,
+        "length": 28,
+        "offset": 106,
+        "surroundingCode": " * параметром сообщения пользователю <b>всегда</b> будет имя найденного метода.\n */\npublic abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagnostic {\n\n  @Getter"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "LombokSetterMayBeUsed"
+  },
+  "hash": "e718c5d6de5b9d1cfe49cffb1b0469639c2630a78ef612ce6efa9f4b892a513f"
+},{
+  "tool": "Code Inspection",
+  "category": "Imports",
+  "type": "Unused import",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Unused import `import org.slf4j.Logger;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
+      "language": "JAVA",
+      "line": 34,
+      "offset": 1,
+      "length": 24,
+      "code": {
+        "startLine": 32,
+        "length": 24,
+        "offset": 80,
+        "surroundingCode": "import org.eclipse.lsp4j.ClientInfo;\nimport org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UNUSED_IMPORT"
+  },
+  "hash": "67e292f072d318e38c809a4e8215440cdd69fe9431a46d89620457ab9f611238"
+},{
+  "tool": "Code Inspection",
+  "category": "Imports",
+  "type": "Unused import",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Unused import `import org.slf4j.LoggerFactory;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
+      "language": "JAVA",
+      "line": 35,
+      "offset": 1,
+      "length": 31,
+      "code": {
+        "startLine": 33,
+        "length": 31,
+        "offset": 68,
+        "surroundingCode": "import org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;\nimport org.springframework.cache.annotation.CacheEvict;"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "UNUSED_IMPORT"
+  },
+  "hash": "d82dd19bc6a71e2a5db97388aed7d4c8166ea8f22a7b523251b6d29d1e22bdcb"
+}]}
