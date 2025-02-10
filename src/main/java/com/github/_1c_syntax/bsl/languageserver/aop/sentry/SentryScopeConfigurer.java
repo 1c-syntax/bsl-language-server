@@ -43,10 +43,10 @@ public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
 
-  @Value("${sentry.dsn}")
+  @Value("${sentry.dsn:}")
   private final String dsn;
 
-  @Value("${sentry.environment}")
+  @Value("${sentry.environment:dummy}")
   private final String environment;
 
   @PostConstruct
