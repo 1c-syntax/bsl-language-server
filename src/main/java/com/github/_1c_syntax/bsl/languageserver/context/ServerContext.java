@@ -33,6 +33,7 @@ import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -261,6 +262,7 @@ public class ServerContext {
     documentContext.clearSecondaryData();
   }
 
+  @NonNull
   public CF getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
