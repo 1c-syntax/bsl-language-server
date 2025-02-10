@@ -24,12 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
-import io.sentry.spring.boot.jakarta.SentryProperties;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.DependsOn;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -41,24 +39,33 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBean(name = "sentryHub")
-@DependsOn("sentryHub")
 public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
-  private final SentryProperties sentryProperties;
+
+  @Value("${sentry.dsn}")
+  private final String dsn;
+
+  @Value("${sentry.environment}")
+  private final String environment;
 
   @PostConstruct
   public void init() {
+    if (dsn != null && !dsn.isEmpty()) {
+      Sentry.init(options -> {
+        options.setDsn(dsn);
+        options.setEnvironment(environment);
+        options.setRelease(serverInfo.getVersion());
+        options.setTag("server.version", serverInfo.getVersion());
+        options.setAttachServerName(false);
+      });
+    }
+
     Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
       scope.setUser(user);
-
-      scope.setTag("server.version", serverInfo.getVersion());
     });
-
-    sentryProperties.setRelease(serverInfo.getVersion());
   }
 
 }
