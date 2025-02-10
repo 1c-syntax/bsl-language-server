@@ -172,6 +172,38 @@
   "sources": [
     {
       "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
+      "language": "JAVA",
+      "line": 109,
+      "offset": 23,
+      "length": 2,
+      "code": {
+        "startLine": 107,
+        "length": 2,
+        "offset": 153,
+        "surroundingCode": "  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;\n  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;\n"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "QodanaJavaSanity"
+  },
+  "hash": "795a22264650fa44e6177fe501175badf413ac5c8fcf262185837cd78fe10d16"
+},{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Java sanity",
+  "tags": [
+    "JAVA",
+    "Sanity"
+  ],
+  "severity": "Critical",
+  "comment": "Unresolved reference __",
+  "detailsInfo": "Reports unresolved references in Java code.",
+  "sources": [
+    {
+      "type": "file",
       "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/documentlink/DocumentLinkOptions.java",
       "language": "JAVA",
       "line": 34,
@@ -286,38 +318,6 @@
     "inspectionName": "QodanaJavaSanity"
   },
   "hash": "8c335721a9b3ae256456247b2ac1d68ee91d2aff53feb0144f71ce16b3c53d3a"
-},{
-  "tool": "Code Inspection",
-  "category": "General",
-  "type": "Java sanity",
-  "tags": [
-    "JAVA",
-    "Sanity"
-  ],
-  "severity": "Critical",
-  "comment": "Unresolved reference __",
-  "detailsInfo": "Reports unresolved references in Java code.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/context/DocumentContext.java",
-      "language": "JAVA",
-      "line": 107,
-      "offset": 23,
-      "length": 2,
-      "code": {
-        "startLine": 105,
-        "length": 2,
-        "offset": 76,
-        "surroundingCode": "  private LanguageServerConfiguration configuration;\n\n  @Setter(onMethod = @__({@Autowired}))\n  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;\n  @Setter(onMethod = @__({@Autowired}))"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "QodanaJavaSanity"
-  },
-  "hash": "b89d8b7ee31ad86c079ecd54cd8b49c23e77627de6ba9a72b4ea046390924eab"
 },{
   "tool": "Code Inspection",
   "category": "General",
