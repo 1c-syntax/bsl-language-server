@@ -1,125 +1,32 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "Default annotation parameter value",
+  "category": "RegExp",
+  "type": "Regular expression can be simplified",
   "tags": [
-    "JAVA"
+    "RegExp"
   ],
-  "severity": "High",
-  "comment": "Redundant default parameter value assignment",
-  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "severity": "Moderate",
+  "comment": "`[\\\\*]` can be simplified to '\\\\\\*'",
+  "detailsInfo": "Reports regular expressions that can be simplified.\n\n**Example:**\n\n\n      [a] xx* [ah-hz]\n\nAfter the quick-fix is applied:\n\n\n      a x+ [ahz]\n\nNew in 2022.1",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
       "language": "JAVA",
-      "line": 51,
-      "offset": 20,
-      "length": 17,
+      "line": 67,
+      "offset": 75,
+      "length": 5,
       "code": {
-        "startLine": 49,
-        "length": 17,
-        "offset": 68,
-        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "DefaultAnnotationParam"
-  },
-  "hash": "ca52c609965d4a073ebaadadda63e9fd15661f8c1aeb89baf1f580f7907adac4"
-},{
-  "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Lombok @Setter may be used",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Class 'ClientCapabilitiesHolder' may use Lombok @Setter",
-  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/ClientCapabilitiesHolder.java",
-      "language": "JAVA",
-      "line": 43,
-      "offset": 14,
-      "length": 24,
-      "code": {
-        "startLine": 41,
-        "length": 24,
-        "offset": 42,
-        "surroundingCode": "@ToString\n@EqualsAndHashCode\npublic class ClientCapabilitiesHolder {\n\n  /**"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "LombokSetterMayBeUsed"
-  },
-  "hash": "1599d1ed085eda694e1bb94418af70287c1721e8628e5dc827a905ae3a1b0944"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Unused import `import org.slf4j.Logger;`",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
-      "language": "JAVA",
-      "line": 34,
-      "offset": 1,
-      "length": 24,
-      "code": {
-        "startLine": 32,
-        "length": 24,
+        "startLine": 65,
+        "length": 5,
         "offset": 80,
-        "surroundingCode": "import org.eclipse.lsp4j.ClientInfo;\nimport org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;"
+        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
+    "inspectionName": "RegExpSimplifiable"
   },
-  "hash": "67e292f072d318e38c809a4e8215440cdd69fe9431a46d89620457ab9f611238"
-},{
-  "tool": "Code Inspection",
-  "category": "Imports",
-  "type": "Unused import",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Unused import `import org.slf4j.LoggerFactory;`",
-  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
-      "language": "JAVA",
-      "line": 35,
-      "offset": 1,
-      "length": 31,
-      "code": {
-        "startLine": 33,
-        "length": 31,
-        "offset": 68,
-        "surroundingCode": "import org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;\nimport org.springframework.cache.annotation.CacheEvict;"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UNUSED_IMPORT"
-  },
-  "hash": "d82dd19bc6a71e2a5db97388aed7d4c8166ea8f22a7b523251b6d29d1e22bdcb"
+  "hash": "a96a0536e198cbff96eebc4edc9806807b12725ac46694da2501ad5bce236c55"
 }]}

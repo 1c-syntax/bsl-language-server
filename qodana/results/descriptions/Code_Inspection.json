@@ -1170,16 +1170,16 @@
           "description": "Reports method and constructor calls that implicitly use the platform default charset. Such calls can produce different results on systems that use a different default charset and may result in unexpected behaviour.\n\n**Example:**\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes);\n    }\n\nYou can use a quick-fix that specifies the explicit UTF-8 charset if the corresponding overloaded method is available.\nAfter the quick-fix is applied:\n\n    void foo(byte[] bytes) {\n      String s = new String(bytes, StandardCharsets.UTF_8);\n    }\n"
         },
         {
-          "shortName": "StringTokenizer",
-          "displayName": "Use of 'StringTokenizer'",
-          "enabled": false,
-          "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
-        },
-        {
           "shortName": "UnnecessaryUnicodeEscape",
           "displayName": "Unnecessary unicode escape sequence",
           "enabled": false,
           "description": "Reports unnecessary unicode escape sequences. For example, when the file encoding can handle the character without escaping it. Unicode control characters are not reported by this inspection (except for a line feed and a tab).\n\n**Example:**\n\n    String s = \"\\u0062\";\n"
+        },
+        {
+          "shortName": "StringTokenizer",
+          "displayName": "Use of 'StringTokenizer'",
+          "enabled": false,
+          "description": "Reports usages of the `StringTokenizer` class. Excessive use of `StringTokenizer` is incorrect in an internationalized environment."
         },
         {
           "shortName": "NumericToString",
@@ -3163,6 +3163,125 @@
       ]
     },
     {
+      "name": "Migration",
+      "inspections": [
+        {
+          "shortName": "NonExhaustiveWhenStatementMigration",
+          "displayName": "Non-exhaustive 'when' statements will be prohibited since 1.7",
+          "enabled": false,
+          "description": "Reports a non-exhaustive `when` statements that will lead to compilation error since 1.7.\n\nMotivation types:\n\n* Problematic/meaningless usage patterns need to be discouraged/blocked (e.g. counterintuitive behaviors)\n  * Code is error-prone\n* Inconsistency in the design (things are done differently in different contexts)\n\nImpact types:\n\n* Compilation. Some code that used to compile won't compile any more\n  * There were cases when such code worked with no exceptions\n    * Some such code could compile without any warnings\n\n**More details:** [KT-47709: Make when statements with enum, sealed, and Boolean subjects exhaustive by default](https://youtrack.jetbrains.com/issue/KT-47709)\n\nThe quick-fix adds the missing `else -> {}` branch.\n\n**Example:**\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n              else -> {}\n          }\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
+        },
+        {
+          "shortName": "AmbiguousExpressionInWhenBranchMigration",
+          "displayName": "Ambiguous logical expressions in 'when' branches since 1.7",
+          "enabled": false,
+          "description": "Reports ambiguous logical expressions in `when` branches which cause compilation errors in Kotlin 1.8 and later.\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          this in (4..7) -> true // is ambiguous\n          else -> false\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          (this in (4..7)) -> true // wrapped in parentheses\n          else -> false\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
+        },
+        {
+          "shortName": "CastDueToProgressionResolutionChangeMigration",
+          "displayName": "Progression resolution change since 1.9",
+          "enabled": false,
+          "description": "Reports overloaded function calls where an argument requires an explicit cast to resolve to a proper declaration.\nThe current compiler warning (available since Kotlin 1.6.20) will become an error in Kotlin 1.8.\n\n\nProgressions and ranges types (`kotlin.ranges`) will start implementing the `Collection` interface in Kotlin\n1.9 and later. This update will cause a change in resolution for overloaded functions. For instance, in the example below, the\n`test(1..5)` call will be resolved to `test(t: Any)` in Kotlin 1.8 and earlier and to\n`test(t: Collection<*>)` in Kotlin 1.9 and later.\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n      fun invoke() {\n        test(1..5) // IntRange becomes Collection in 1.9\n      }\n\nThe provided quick-fix captures the behaviour specific to the compiler of version 1.8 and earlier:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test(1..5) // resolved to 'test(t: T)' before Kotlin 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test((1..5) as Iterable<Int>) // resolved to 'test(t: T)' in Kotlin 1.9\n      }\n\nInspection is available for the Kotlin language level starting from 1.6."
+        },
+        {
+          "shortName": "AddConversionCallMigration",
+          "displayName": "Explicit conversion from `Int` needed since 1.9",
+          "enabled": false,
+          "description": "Reports expressions that will be of type `Int`, thus causing compilation errors in Kotlin 1.9 and later.\n\nExample:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte(1 + 1) // will be resolved to Int in 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte((1 + 1).toByte()) // will be resolved to Int in 1.9\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
+        },
+        {
+          "shortName": "WarningOnMainUnusedParameterMigration",
+          "displayName": "Unused 'args' on 'main' since 1.4",
+          "enabled": false,
+          "description": "Reports `main` function with an unused single parameter.\n\nSince Kotlin 1.4, it is possible to use the `main` function without parameter as the entry point to the Kotlin program.\nThe compiler reports a warning for the `main` function with an unused parameter."
+        },
+        {
+          "shortName": "RedundantLabelMigration",
+          "displayName": "Redundant label",
+          "enabled": false,
+          "description": "Reports redundant labels which cause compilation errors since Kotlin 1.4.\n\nSince Kotlin 1.0, one can mark any statement with a label:\n\n\n      fun foo() {\n        L1@ val x = L2@bar()\n      }\n\nHowever, these labels can be referenced only in a limited number of ways:\n\n* break / continue from a loop\n* non-local return from an inline lambda or inline anonymous function\nsssss\n\nSuch labels are prohibited since Kotlin 1.4.\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "NoConstructorMigration",
+          "displayName": "Forbidden constructor call",
+          "enabled": false,
+          "description": "Reports a constructor calls on functional supertypes that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* The implementation does not abide by a published spec or documentation\n\n**More details:** [KT-46344: No error for a super class constructor call on a function interface in supertypes list](https://youtrack.jetbrains.com/issue/KT-46344)\n\nThe quick-fix removes a constructor call.\n\n**Example:**\n\n\n      abstract class A : () -> Int()\n\nAfter the quick-fix is applied:\n\n\n      abstract class A : () -> Int\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
+        },
+        {
+          "shortName": "ProhibitTypeParametersForLocalVariablesMigration",
+          "displayName": "Local variable with type parameters",
+          "enabled": false,
+          "description": "Reports local variables with type parameters.\n\nA type parameter for a local variable doesn't make sense because it can't be specialized.\n\n**Example:**\n\n\n      fun main() {\n          val <T> x = \"\"\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val x = \"\"\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "InlineClassDeprecatedMigration",
+          "displayName": "Inline classes are deprecated since 1.5",
+          "enabled": false,
+          "description": "Reports inline classes that are deprecated and cause compilation warnings in Kotlin 1.5 and later.\nSee [What's new in Kotlin 1.5.0](https://kotlinlang.org/docs/whatsnew15.html#inline-classes)\n\nExample:\n\n\n      inline class Password(val s: String)\n\nAfter the quick-fix is applied:\n\n\n      @JvmInline\n      value class Password(val s: String)\n\nInspection is available for Kotlin language level starting from 1.5."
+        },
+        {
+          "shortName": "ProhibitJvmOverloadsOnConstructorsOfAnnotationClassesMigration",
+          "displayName": "'@JvmOverloads' annotation cannot be used on constructors of annotation classes since 1.4",
+          "enabled": false,
+          "description": "Reports `@JvmOverloads` on constructors of annotation classes because it's meaningless.\n\n\nThere is no footprint of `@JvmOverloads` in the generated bytecode and Kotlin metadata,\nso `@JvmOverloads` doesn't affect the generated bytecode and the code behavior.\n\n`@JvmOverloads` on constructors of annotation classes causes a compilation error since Kotlin 1.4.\n\n**Example:**\n\n\n      annotation class A @JvmOverloads constructor(val x: Int = 1)\n\nAfter the quick-fix is applied:\n\n\n      annotation class A constructor(val x: Int = 1)\n"
+        },
+        {
+          "shortName": "KotlinDeprecation",
+          "displayName": "Usage of redundant or deprecated syntax or deprecated symbols",
+          "enabled": false,
+          "description": "Reports obsolete language features and unnecessarily verbose code constructs during the code cleanup operation (**Code \\| Code Cleanup** ).\n\n\nThe quick-fix automatically replaces usages of obsolete language features or unnecessarily verbose code constructs with compact and up-to-date syntax.\n\n\nIt also replaces deprecated symbols with their proposed substitutions."
+        },
+        {
+          "shortName": "OverrideDeprecatedMigration",
+          "displayName": "Do not propagate method deprecation through overrides since 1.9",
+          "enabled": false,
+          "description": "Reports a declarations that are propagated by `@Deprecated` annotation that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* Implementation changes are required for implementation design/architectural reasons\n* Inconsistency in the design (things are done differently in different contexts)\n\n**More details:** [KT-47902: Do not propagate method deprecation through overrides](https://youtrack.jetbrains.com/issue/KT-47902)\n\nThe quick-fix copies `@Deprecated` annotation from the parent declaration.\n\n**Example:**\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          override fun foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          @Deprecated(\"Don't use\")\n          override fun foo() {}\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
+        },
+        {
+          "shortName": "ObsoleteExperimentalCoroutines",
+          "displayName": "Experimental coroutines usages are deprecated since 1.3",
+          "enabled": false,
+          "description": "Reports code that uses experimental coroutines.\n\nSuch usages are incompatible with Kotlin 1.3+ and should be updated."
+        },
+        {
+          "shortName": "FromClosedRangeMigration",
+          "displayName": "MIN_VALUE step in fromClosedRange() since 1.3",
+          "enabled": false,
+          "description": "Reports `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with `MIN_VALUE` step.\n\n\nIt is prohibited to call `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with\n`MIN_VALUE` step. All such calls should be checked during migration to Kotlin 1.3+.\n\n**Example:**\n\n\n      IntProgression.fromClosedRange(12, 143, Int.MIN_VALUE)\n\nTo fix the problem change the step of the progression."
+        },
+        {
+          "shortName": "DeclaringClassMigration",
+          "displayName": "Deprecated 'Enum.declaringClass' property",
+          "enabled": false,
+          "description": "Reports 'declaringClass' property calls on Enum that will lead to compilation error since 1.9.\n\n'Enum.getDeclaringClass' is among \"hidden\" Java functions which aren't normally visible by resolve. However, it's visible via synthetic\nproperty that is a front-end bug.\n\n**More details:** [KT-49653 Deprecate and remove Enum.declaringClass synthetic\nproperty](https://youtrack.jetbrains.com/issue/KT-49653)\n\nThe quick-fix replaces a call with 'declaringJavaClass'.\n\n**Example:**\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringClass)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringJavaClass)\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
+        },
+        {
+          "shortName": "ProhibitUseSiteTargetAnnotationsOnSuperTypesMigration",
+          "displayName": "Meaningless annotations targets on superclass",
+          "enabled": false,
+          "description": "Reports meaningless annotation targets on superclasses since Kotlin 1.4.\n\nAnnotation targets such as `@get:` are meaningless on superclasses and are prohibited.\n\n**Example:**\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : @field:Ann @get:Ann @set:Ann @setparam:Ann Foo\n\nAfter the quick-fix is applied:\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : Foo\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "ObsoleteKotlinJsPackages",
+          "displayName": "'kotlin.browser' and 'kotlin.dom' packages are deprecated since 1.4",
+          "enabled": false,
+          "description": "Reports usages of `kotlin.dom` and `kotlin.browser` packages.\n\nThese packages were moved to `kotlinx.dom` and `kotlinx.browser`\nrespectively in Kotlin 1.4+."
+        },
+        {
+          "shortName": "RestrictReturnStatementTargetMigration",
+          "displayName": "Target label does not denote a function since 1.4",
+          "enabled": false,
+          "description": "Reports labels that don't points to a functions.\n\nIt's forbidden to declare a target label that does not denote a function.\n\nThe quick-fix removes the label.\n\n**Example:**\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return@L }\n          fn()\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return }\n          fn()\n      }\n\nThis inspection only reports if the language level of the project or module is 1.4 or higher."
+        },
+        {
+          "shortName": "ProhibitRepeatedUseSiteTargetAnnotationsMigration",
+          "displayName": "Repeated annotation which is not marked as '@Repeatable'",
+          "enabled": false,
+          "description": "Reports the repeated use of a non-`@Repeatable` annotation on property accessors.\n\n\nAs a result of using non-`@Repeatable` annotation multiple times, both annotation usages\nwill appear in the bytecode leading to an ambiguity in reflection calls.\n\n\nSince Kotlin 1.4 it's mandatory to either mark annotation as `@Repeatable` or not\nrepeat the annotation, otherwise it will lead to compilation error.\n\n**Example:**\n\n\n      annotation class Foo(val x: Int)\n\n      @get:Foo(10)\n      val a: String\n          @Foo(20) get() = \"foo\" // annotation repeated twice but not marked as @Repeatable\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
+        }
+      ]
+    },
+    {
       "name": "Probable bugs",
       "inspections": [
         {
@@ -3196,16 +3315,16 @@
           "description": "Reports calls to `StringBuffer` and `StringBuilder` constructors with `char` as the argument. In this case, `char` is silently cast to an integer and interpreted as the initial capacity of the buffer.\n\n**Example:**\n\n\n      new StringBuilder('(').append(\"1\").append(')');\n\nAfter the quick-fix is applied:\n\n\n      new StringBuilder(\"(\").append(\"1\").append(')');\n"
         },
         {
-          "shortName": "ResultOfObjectAllocationIgnored",
-          "displayName": "Result of object allocation ignored",
-          "enabled": false,
-          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
-        },
-        {
           "shortName": "ClassGetClass",
           "displayName": "Suspicious 'Class.getClass()' call",
           "enabled": true,
           "description": "Reports `getClass()` methods that are called on a `java.lang.Class` instance.\n\nThis is usually a mistake as the result is always equivalent to `Class.class`.\nIf it's a mistake, then it's better to remove the `getClass()` call and use the qualifier directly.\nIf the behavior is intended, then it's better to write `Class.class` explicitly to avoid confusion.\n\nExample:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getClass().getName();\n      }\n\nAfter one of the possible quick-fixes is applied:\n\n\n      void test(Class<?> clazz) {\n        String name = clazz.getName();\n      }\n\nNew in 2018.2"
+        },
+        {
+          "shortName": "ResultOfObjectAllocationIgnored",
+          "displayName": "Result of object allocation ignored",
+          "enabled": false,
+          "description": "Reports object allocations where the allocated object is ignored and neither assigned to a variable nor used in another way.\n\n\nSuch allocation expressions are legal in Java, but are usually either unintended, or\nevidence of a very odd object initialization strategy.\n\n\nUse the options to list classes whose allocations should be ignored by this inspection."
         },
         {
           "shortName": "MismatchedStringBuilderQueryUpdate",
@@ -3718,16 +3837,16 @@
           "description": "Reports annotations used on record components that have no effect.\n\nThis can happen in two cases:\n\n* The reported annotation has the METHOD target, but the corresponding accessor is explicitly defined.\n* The reported annotation has the PARAMETER target, but the canonical constructor is explicitly defined.\n\nExample:\n\n\n    @Target(ElementType.METHOD)\n    @interface A { }\n      \n    // The annotation will not appear in bytecode at all,\n    // as it should be propagated to the accessor but accessor is explicitly defined \n    record R(@A int x) {\n      public int x() { return x; }\n    }\n\nThis inspection depends on the Java feature 'Records', which is available since Java 16.\n\nNew in 2021.1"
         },
         {
-          "shortName": "SuspiciousDateFormat",
-          "displayName": "Suspicious date format pattern",
-          "enabled": true,
-          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
-        },
-        {
           "shortName": "MagicConstant",
           "displayName": "Magic constant",
           "enabled": true,
           "description": "Reports expressions that can be replaced with \"magic\" constants.\n\nExample 1:\n\n\n      // Bare literal \"2\" is used, warning:\n      Font font = new Font(\"Arial\", 2)\n\nExample 2:\n\n\n      // Predefined constant is used, good:\n      Font font = new Font(\"Arial\", Font.ITALIC)\n\n\nWhen possible, the quick-fix inserts an appropriate predefined constant.\n\n\nThe behavior of this inspection is controlled by `org.intellij.lang.annotations.MagicConstant` annotation.\nSome standard Java library methods are pre-annotated, but you can use this annotation in your code as well."
+        },
+        {
+          "shortName": "SuspiciousDateFormat",
+          "displayName": "Suspicious date format pattern",
+          "enabled": true,
+          "description": "Reports date format patterns that are likely used by mistake.\n\nThe following patterns are reported:\n\n* Uppercase \"Y\", unless \"w\" appears nearby. It stands for \"Week year\" that is almost always the same as normal \"Year\" (lowercase \"y\" pattern), but may point to the next year at the end of December.\n* Uppercase \"M\" (month) close to \"H\", \"K\", \"h\", or \"k\" (hour). It's likely that a lowercase \"m\" (minute) was intended.\n* Lowercase \"m\" (minute) close to \"y\" (year) or \"d\" (day in month). It's likely that an uppercase \"M\" (month) was intended.\n* Uppercase \"D\" (day in year) close to \"M\", or \"L\" (month). It's likely that a lowercase \"d\" (day in month) was intended.\n* Uppercase \"S\" (milliseconds) close to \"m\" (minutes). It's likely that a lowercase \"s\" (seconds) was intended.\n\n\nExamples:  \n\n`new SimpleDateFormat(\"YYYY-MM-dd\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"yyyy-MM-DD\")`: likely `\"yyyy-MM-dd\"` was intended.  \n\n`new SimpleDateFormat(\"HH:MM\")`: likely `\"HH:mm\"` was intended.\n\nNew in 2020.1"
         },
         {
           "shortName": "MismatchedCollectionQueryUpdate",
@@ -3766,16 +3885,16 @@
           "description": "Reports expressions and conditions that always produce the same result, like true, false, null, or zero. Such expressions could be replaced with the corresponding constant value. Very often though they signal about a bug in the code.\n\nExamples:\n\n      // always true\n      // root cause: || is used instead of &&\n      if (x > 0 || x < 10) {}\n\n      System.out.println(str.trim());\n      // always false\n      // root cause: variable was dereferenced before null-check\n      if (str == null) {}\n\n\nThe inspection behavior may be controlled by a number of annotations, such as\n[nullability](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) annotations,\n[@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) annotation,\n`@Range` annotation and so on.\n\nConfigure the inspection:\n\n* Use the **Don't report assertions with condition statically proven to be always true** option to avoid reporting assertions that were statically proven to be always true. This also includes conditions like `if (alwaysFalseCondition) throw new IllegalArgumentException();`.\n* Use the **Ignore assert statements** option to control how the inspection treats `assert` statements. By default, the option is disabled, which means that the assertions are assumed to be executed (-ea mode). If the option is enabled, the assertions will be completely ignored (-da mode).\n* Use the **Warn when constant is stored in variable** option to display warnings when variable is used, whose value is known to be a constant.\n\n\nBefore IntelliJ IDEA 2022.3, this inspection was part of \"Constant Conditions \\& Exceptions\" inspection. Now, it split into two inspections:\n\"Constant Values\" and \"Nullability and data flow problems\"."
         },
         {
-          "shortName": "EqualsAndHashcode",
-          "displayName": "'equals()' and 'hashCode()' not paired",
-          "enabled": false,
-          "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
-        },
-        {
           "shortName": "IteratorHasNextCallsIteratorNext",
           "displayName": "'Iterator.hasNext()' which calls 'next()'",
           "enabled": true,
           "description": "Reports implementations of `Iterator.hasNext()` or `ListIterator.hasPrevious()` that call `Iterator.next()` or `ListIterator.previous()` on the iterator instance. Such calls are almost certainly an error, as methods like `hasNext()` should not modify the iterators state, while `next()` should.\n\n**Example:**\n\n\n      class MyIterator implements Iterator<Integer> {\n        public boolean hasNext() {\n          return next() != null;\n        }\n      }\n"
+        },
+        {
+          "shortName": "EqualsAndHashcode",
+          "displayName": "'equals()' and 'hashCode()' not paired",
+          "enabled": false,
+          "description": "Reports classes that override the `equals()` method but do not override the `hashCode()` method or vice versa, which can potentially lead to problems when the class is added to a `Collection` or a `HashMap`.\n\nThe quick-fix generates the default implementation for an absent method.\n\nExample:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n    class StringHolder {\n      String s;\n\n      @Override public int hashCode() {\n        return s != null ? s.hashCode() : 0;\n      }\n\n      @Override\n      public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof StringHolder)) return false;\n\n        StringHolder holder = (StringHolder)o;\n\n        if (s != null ? !s.equals(holder.s) : holder.s != null) return false;\n\n        return true;\n      }\n    }\n"
         },
         {
           "shortName": "MathRoundingWithIntArgument",
@@ -4350,125 +4469,6 @@
       ]
     },
     {
-      "name": "Migration",
-      "inspections": [
-        {
-          "shortName": "NonExhaustiveWhenStatementMigration",
-          "displayName": "Non-exhaustive 'when' statements will be prohibited since 1.7",
-          "enabled": false,
-          "description": "Reports a non-exhaustive `when` statements that will lead to compilation error since 1.7.\n\nMotivation types:\n\n* Problematic/meaningless usage patterns need to be discouraged/blocked (e.g. counterintuitive behaviors)\n  * Code is error-prone\n* Inconsistency in the design (things are done differently in different contexts)\n\nImpact types:\n\n* Compilation. Some code that used to compile won't compile any more\n  * There were cases when such code worked with no exceptions\n    * Some such code could compile without any warnings\n\n**More details:** [KT-47709: Make when statements with enum, sealed, and Boolean subjects exhaustive by default](https://youtrack.jetbrains.com/issue/KT-47709)\n\nThe quick-fix adds the missing `else -> {}` branch.\n\n**Example:**\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      sealed class Base {\n          class A : Base()\n          class B : Base()\n      }\n\n      fun test(base: Base) {\n          when (base) {\n              is Base.A -> \"\"\n              else -> {}\n          }\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
-        },
-        {
-          "shortName": "AmbiguousExpressionInWhenBranchMigration",
-          "displayName": "Ambiguous logical expressions in 'when' branches since 1.7",
-          "enabled": false,
-          "description": "Reports ambiguous logical expressions in `when` branches which cause compilation errors in Kotlin 1.8 and later.\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          this in (4..7) -> true // is ambiguous\n          else -> false\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun Int.matches(strict: Boolean): Boolean = when (strict) {\n          true -> this == 6\n          (this in (4..7)) -> true // wrapped in parentheses\n          else -> false\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
-        },
-        {
-          "shortName": "CastDueToProgressionResolutionChangeMigration",
-          "displayName": "Progression resolution change since 1.9",
-          "enabled": false,
-          "description": "Reports overloaded function calls where an argument requires an explicit cast to resolve to a proper declaration.\nThe current compiler warning (available since Kotlin 1.6.20) will become an error in Kotlin 1.8.\n\n\nProgressions and ranges types (`kotlin.ranges`) will start implementing the `Collection` interface in Kotlin\n1.9 and later. This update will cause a change in resolution for overloaded functions. For instance, in the example below, the\n`test(1..5)` call will be resolved to `test(t: Any)` in Kotlin 1.8 and earlier and to\n`test(t: Collection<*>)` in Kotlin 1.9 and later.\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n      fun invoke() {\n        test(1..5) // IntRange becomes Collection in 1.9\n      }\n\nThe provided quick-fix captures the behaviour specific to the compiler of version 1.8 and earlier:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test(1..5) // resolved to 'test(t: T)' before Kotlin 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun test(t: Any) { }\n      fun test(t: Collection<*>) { }\n\n      fun invoke() {\n        test((1..5) as Iterable<Int>) // resolved to 'test(t: T)' in Kotlin 1.9\n      }\n\nInspection is available for the Kotlin language level starting from 1.6."
-        },
-        {
-          "shortName": "AddConversionCallMigration",
-          "displayName": "Explicit conversion from `Int` needed since 1.9",
-          "enabled": false,
-          "description": "Reports expressions that will be of type `Int`, thus causing compilation errors in Kotlin 1.9 and later.\n\nExample:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte(1 + 1) // will be resolved to Int in 1.9\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun takeByte(x: Byte) {}\n\n      fun foo() {\n          takeByte((1 + 1).toByte()) // will be resolved to Int in 1.9\n      }\n\nInspection is available for Kotlin language level starting from 1.7."
-        },
-        {
-          "shortName": "WarningOnMainUnusedParameterMigration",
-          "displayName": "Unused 'args' on 'main' since 1.4",
-          "enabled": false,
-          "description": "Reports `main` function with an unused single parameter.\n\nSince Kotlin 1.4, it is possible to use the `main` function without parameter as the entry point to the Kotlin program.\nThe compiler reports a warning for the `main` function with an unused parameter."
-        },
-        {
-          "shortName": "RedundantLabelMigration",
-          "displayName": "Redundant label",
-          "enabled": false,
-          "description": "Reports redundant labels which cause compilation errors since Kotlin 1.4.\n\nSince Kotlin 1.0, one can mark any statement with a label:\n\n\n      fun foo() {\n        L1@ val x = L2@bar()\n      }\n\nHowever, these labels can be referenced only in a limited number of ways:\n\n* break / continue from a loop\n* non-local return from an inline lambda or inline anonymous function\nsssss\n\nSuch labels are prohibited since Kotlin 1.4.\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "NoConstructorMigration",
-          "displayName": "Forbidden constructor call",
-          "enabled": false,
-          "description": "Reports a constructor calls on functional supertypes that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* The implementation does not abide by a published spec or documentation\n\n**More details:** [KT-46344: No error for a super class constructor call on a function interface in supertypes list](https://youtrack.jetbrains.com/issue/KT-46344)\n\nThe quick-fix removes a constructor call.\n\n**Example:**\n\n\n      abstract class A : () -> Int()\n\nAfter the quick-fix is applied:\n\n\n      abstract class A : () -> Int\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
-        },
-        {
-          "shortName": "ProhibitTypeParametersForLocalVariablesMigration",
-          "displayName": "Local variable with type parameters",
-          "enabled": false,
-          "description": "Reports local variables with type parameters.\n\nA type parameter for a local variable doesn't make sense because it can't be specialized.\n\n**Example:**\n\n\n      fun main() {\n          val <T> x = \"\"\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun main() {\n          val x = \"\"\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "InlineClassDeprecatedMigration",
-          "displayName": "Inline classes are deprecated since 1.5",
-          "enabled": false,
-          "description": "Reports inline classes that are deprecated and cause compilation warnings in Kotlin 1.5 and later.\nSee [What's new in Kotlin 1.5.0](https://kotlinlang.org/docs/whatsnew15.html#inline-classes)\n\nExample:\n\n\n      inline class Password(val s: String)\n\nAfter the quick-fix is applied:\n\n\n      @JvmInline\n      value class Password(val s: String)\n\nInspection is available for Kotlin language level starting from 1.5."
-        },
-        {
-          "shortName": "ProhibitJvmOverloadsOnConstructorsOfAnnotationClassesMigration",
-          "displayName": "'@JvmOverloads' annotation cannot be used on constructors of annotation classes since 1.4",
-          "enabled": false,
-          "description": "Reports `@JvmOverloads` on constructors of annotation classes because it's meaningless.\n\n\nThere is no footprint of `@JvmOverloads` in the generated bytecode and Kotlin metadata,\nso `@JvmOverloads` doesn't affect the generated bytecode and the code behavior.\n\n`@JvmOverloads` on constructors of annotation classes causes a compilation error since Kotlin 1.4.\n\n**Example:**\n\n\n      annotation class A @JvmOverloads constructor(val x: Int = 1)\n\nAfter the quick-fix is applied:\n\n\n      annotation class A constructor(val x: Int = 1)\n"
-        },
-        {
-          "shortName": "KotlinDeprecation",
-          "displayName": "Usage of redundant or deprecated syntax or deprecated symbols",
-          "enabled": false,
-          "description": "Reports obsolete language features and unnecessarily verbose code constructs during the code cleanup operation (**Code \\| Code Cleanup** ).\n\n\nThe quick-fix automatically replaces usages of obsolete language features or unnecessarily verbose code constructs with compact and up-to-date syntax.\n\n\nIt also replaces deprecated symbols with their proposed substitutions."
-        },
-        {
-          "shortName": "OverrideDeprecatedMigration",
-          "displayName": "Do not propagate method deprecation through overrides since 1.9",
-          "enabled": false,
-          "description": "Reports a declarations that are propagated by `@Deprecated` annotation that will lead to compilation error since 1.9.\n\nMotivation types:\n\n* Implementation changes are required for implementation design/architectural reasons\n* Inconsistency in the design (things are done differently in different contexts)\n\n**More details:** [KT-47902: Do not propagate method deprecation through overrides](https://youtrack.jetbrains.com/issue/KT-47902)\n\nThe quick-fix copies `@Deprecated` annotation from the parent declaration.\n\n**Example:**\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          override fun foo() {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      open class Base {\n          @Deprecated(\"Don't use\")\n          open fun foo() {}\n      }\n\n      class Derived : Base() {\n          @Deprecated(\"Don't use\")\n          override fun foo() {}\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.6 or higher."
-        },
-        {
-          "shortName": "ObsoleteExperimentalCoroutines",
-          "displayName": "Experimental coroutines usages are deprecated since 1.3",
-          "enabled": false,
-          "description": "Reports code that uses experimental coroutines.\n\nSuch usages are incompatible with Kotlin 1.3+ and should be updated."
-        },
-        {
-          "shortName": "FromClosedRangeMigration",
-          "displayName": "MIN_VALUE step in fromClosedRange() since 1.3",
-          "enabled": false,
-          "description": "Reports `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with `MIN_VALUE` step.\n\n\nIt is prohibited to call `IntProgression.fromClosedRange()` and `LongProgression.fromClosedRange()` with\n`MIN_VALUE` step. All such calls should be checked during migration to Kotlin 1.3+.\n\n**Example:**\n\n\n      IntProgression.fromClosedRange(12, 143, Int.MIN_VALUE)\n\nTo fix the problem change the step of the progression."
-        },
-        {
-          "shortName": "DeclaringClassMigration",
-          "displayName": "Deprecated 'Enum.declaringClass' property",
-          "enabled": false,
-          "description": "Reports 'declaringClass' property calls on Enum that will lead to compilation error since 1.9.\n\n'Enum.getDeclaringClass' is among \"hidden\" Java functions which aren't normally visible by resolve. However, it's visible via synthetic\nproperty that is a front-end bug.\n\n**More details:** [KT-49653 Deprecate and remove Enum.declaringClass synthetic\nproperty](https://youtrack.jetbrains.com/issue/KT-49653)\n\nThe quick-fix replaces a call with 'declaringJavaClass'.\n\n**Example:**\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringClass)\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun <E: Enum<E>> foo(values: Array<E>) {\n        EnumSet.noneOf(values.first().declaringJavaClass)\n      }\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.7 or higher."
-        },
-        {
-          "shortName": "ProhibitUseSiteTargetAnnotationsOnSuperTypesMigration",
-          "displayName": "Meaningless annotations targets on superclass",
-          "enabled": false,
-          "description": "Reports meaningless annotation targets on superclasses since Kotlin 1.4.\n\nAnnotation targets such as `@get:` are meaningless on superclasses and are prohibited.\n\n**Example:**\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : @field:Ann @get:Ann @set:Ann @setparam:Ann Foo\n\nAfter the quick-fix is applied:\n\n\n      interface Foo\n\n      annotation class Ann\n\n      class E : Foo\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "ObsoleteKotlinJsPackages",
-          "displayName": "'kotlin.browser' and 'kotlin.dom' packages are deprecated since 1.4",
-          "enabled": false,
-          "description": "Reports usages of `kotlin.dom` and `kotlin.browser` packages.\n\nThese packages were moved to `kotlinx.dom` and `kotlinx.browser`\nrespectively in Kotlin 1.4+."
-        },
-        {
-          "shortName": "RestrictReturnStatementTargetMigration",
-          "displayName": "Target label does not denote a function since 1.4",
-          "enabled": false,
-          "description": "Reports labels that don't points to a functions.\n\nIt's forbidden to declare a target label that does not denote a function.\n\nThe quick-fix removes the label.\n\n**Example:**\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return@L }\n          fn()\n      }\n\nAfter the quick-fix is applied:\n\n\n      fun testValLabelInReturn() {\n          L@ val fn = { return }\n          fn()\n      }\n\nThis inspection only reports if the language level of the project or module is 1.4 or higher."
-        },
-        {
-          "shortName": "ProhibitRepeatedUseSiteTargetAnnotationsMigration",
-          "displayName": "Repeated annotation which is not marked as '@Repeatable'",
-          "enabled": false,
-          "description": "Reports the repeated use of a non-`@Repeatable` annotation on property accessors.\n\n\nAs a result of using non-`@Repeatable` annotation multiple times, both annotation usages\nwill appear in the bytecode leading to an ambiguity in reflection calls.\n\n\nSince Kotlin 1.4 it's mandatory to either mark annotation as `@Repeatable` or not\nrepeat the annotation, otherwise it will lead to compilation error.\n\n**Example:**\n\n\n      annotation class Foo(val x: Int)\n\n      @get:Foo(10)\n      val a: String\n          @Foo(20) get() = \"foo\" // annotation repeated twice but not marked as @Repeatable\n\nThis inspection only reports if the Kotlin language level of the project or module is 1.4 or higher."
-        }
-      ]
-    },
-    {
       "name": "Spring Cloud",
       "inspections": [
         {
@@ -4493,6 +4493,149 @@
           "displayName": "Highlight failure line in test code",
           "enabled": false,
           "description": "Reports a failed method call or an assertion in a test."
+        }
+      ]
+    },
+    {
+      "name": "Serialization issues",
+      "inspections": [
+        {
+          "shortName": "ComparatorNotSerializable",
+          "displayName": "'Comparator' class not declared 'Serializable'",
+          "enabled": false,
+          "description": "Reports classes that implement `java.lang.Comparator`, but do not implement `java.io.Serializable`.\n\n\nIf a non-serializable comparator is used to construct an ordered collection such\nas a `java.util.TreeMap` or `java.util.TreeSet`, then the\ncollection will also be non-serializable. This can result in unexpected and\ndifficult-to-diagnose bugs.\n\n\nSince subclasses of `java.lang.Comparator` are often stateless,\nsimply marking them serializable is a small cost to avoid such issues.\n\n**Example:**\n\n\n      class Foo implements Comparator { // warning\n          @Override\n          public int compare(Object o1, Object o2) {\n              /* ... */\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Foo implements Comparator, Serializable { // no warning here\n          @Override\n          public int compare(Object o1, Object o2) {\n              /* ... */\n          }\n      }\n"
+        },
+        {
+          "shortName": "SerializableStoresNonSerializable",
+          "displayName": "'Serializable' object implicitly stores non-'Serializable' object",
+          "enabled": false,
+          "description": "Reports any references to local non-`Serializable` variables outside `Serializable` lambdas, local and anonymous classes.\n\n\nWhen a local variable is referenced from an anonymous class, its value\nis stored in an implicit field of that class. The same happens\nfor local classes and lambdas. If the variable is of a\nnon-`Serializable` type, serialization will fail.\n\n**Example:**\n\n\n      interface A extends Serializable {\n          abstract void foo();\n      }\n      class B {}\n      class C {\n          void foo() {\n              B b = new B();\n              A a = new A() {\n                  @Override\n                  public void foo() {\n                      System.out.println(b); // warning\n                  }\n              };\n          }\n      }\n"
+        },
+        {
+          "shortName": "ExternalizableWithSerializationMethods",
+          "displayName": "Externalizable class with 'readObject()' or 'writeObject()'",
+          "enabled": false,
+          "description": "Reports `Externalizable` classes that define `readObject()` or `writeObject()` methods. These methods are not called for serialization of `Externalizable` objects.\n\n**Example:**\n\n\n      abstract class Crucial implements Externalizable {\n        int value;\n        private void readObject(ObjectInputStream in) {\n          value = in.readInt();\n        }\n      }\n"
+        },
+        {
+          "shortName": "NonSerializableFieldInSerializableClass",
+          "displayName": "Non-serializable field in a 'Serializable' class",
+          "enabled": false,
+          "description": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class."
+        },
+        {
+          "shortName": "TransientFieldNotInitialized",
+          "displayName": "Transient field is not initialized on deserialization",
+          "enabled": false,
+          "description": "Reports `transient` fields that are initialized during normal object construction, but whose class does not have a `readObject` method.\n\n\nAs `transient` fields are not serialized they need\nto be initialized separately in a `readObject()` method\nduring deserialization.\n\n\nAny `transient` fields that\nare not initialized during normal object construction are considered to use the default\ninitialization and are not reported by this inspection.\n\n**Example:**\n\n\n      class Person implements Serializable {\n        transient String name = \"Default\"; //warning, can actually be a null after deserialization\n        transient String surname; //null is considered the default value and not reported\n      }\n"
+        },
+        {
+          "shortName": "ReadObjectAndWriteObjectPrivate",
+          "displayName": "'readObject()' or 'writeObject()' not declared 'private'",
+          "enabled": false,
+          "description": "Reports `Serializable` classes where the `readObject` or `writeObject` methods are not declared private. There is no reason these methods should ever have a higher visibility than `private`.\n\n\nA quick-fix is suggested to make the corresponding method `private`.\n\n**Example:**\n\n\n      public class Test implements Serializable {\n        public void readObject(ObjectInputStream stream) {\n          /* ... */\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Test implements Serializable {\n        private void readObject(ObjectInputStream stream) {\n          /* ... */\n        }\n      }\n"
+        },
+        {
+          "shortName": "SerializableWithUnconstructableAncestor",
+          "displayName": "Serializable class with unconstructable ancestor",
+          "enabled": false,
+          "description": "Reports `Serializable` classes whose closest non-serializable ancestor doesn't have a no-argument constructor. Such classes cannot be deserialized and will fail with an `InvalidClassException`.\n\n**Example:**\n\n\n      class Ancestor {\n        private String name;\n        Ancestor(String name) {\n          this.name = name;\n        }\n      }\n\n      // warning on this class because the superclass is not\n      // serializable, and its constructor takes arguments\n      class Descendant extends Ancestor implements Serializable {\n        Descendant() {\n          super(\"Bob\");\n        }\n      }\n"
+        },
+        {
+          "shortName": "SerialVersionUIDNotStaticFinal",
+          "displayName": "'serialVersionUID' field not declared 'private static final long'",
+          "enabled": true,
+          "description": "Reports `Serializable` classes whose `serialVersionUID` field is not declared `private static final long`.\n\n**Example:**\n\n\n      class SampleClass implements Serializable {\n        private long serialVersionUID = 1; // field of a Serializable class is not declared 'private static final long'\n\n        public SampleClass() {\n            System.out.println(serialVersionUID);\n        }\n      }\n"
+        },
+        {
+          "shortName": "SerializableInnerClassWithNonSerializableOuterClass",
+          "displayName": "Serializable non-'static' inner class with non-Serializable outer class",
+          "enabled": false,
+          "description": "Reports non-static inner classes that implement `Serializable` and are declared inside a class that doesn't implement `Serializable`.\n\n\nSuch classes are unlikely to serialize correctly due to implicit references to the outer class.\n\n**Example:**\n\n\n      class A {\n        class Main implements Serializable {\n        }\n      }\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
+        },
+        {
+          "shortName": "SerializableInnerClassHasSerialVersionUIDField",
+          "displayName": "Serializable non-static inner class without 'serialVersionUID'",
+          "enabled": false,
+          "description": "Reports non-static inner classes that implement `java.io.Serializable`, but do not define a `serialVersionUID` field.\n\n\nWithout a `serialVersionUID` field, any change to the class will make previously\nserialized versions unreadable. It is strongly recommended that `Serializable`\nnon-static inner classes have a `serialVersionUID` field, otherwise the default\nserialization algorithm may result in serialized versions being incompatible between\ncompilers due to differences in synthetic accessor methods.\n\n\nA quick-fix is suggested to add the missing `serialVersionUID` field.\n\n**Example:**\n\n\n      class Outer {\n          class Inner implements Serializable {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Outer {\n          class Inner implements Serializable {\n              private static final long serialVersionUID = -7004458730436243902L;\n          }\n      }\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
+        },
+        {
+          "shortName": "ReadResolveAndWriteReplaceProtected",
+          "displayName": "'readResolve()' or 'writeReplace()' not declared 'protected'",
+          "enabled": false,
+          "description": "Reports classes that implement `java.io.Serializable` where the `readResolve()` or `writeReplace()` methods are not declared `protected`.\n\n\nDeclaring `readResolve()` and `writeReplace()` methods `private`\ncan force subclasses to silently ignore them, while declaring them\n`public` allows them to be invoked by untrusted code.\n\n\nIf the containing class is declared `final`, these methods can be declared `private`.\n\n**Example:**\n\n\n      class ClassWithSerialization implements Serializable {\n        public Object writeReplace() { // warning: 'writeReplace()' not declared protected\n            ...\n        }\n      }\n      \n"
+        },
+        {
+          "shortName": "ExternalizableWithoutPublicNoArgConstructor",
+          "displayName": "'Externalizable' class without 'public' no-arg constructor",
+          "enabled": true,
+          "description": "Reports `Externalizable` classes without a public no-argument constructor.\n\nWhen an `Externalizable` object is reconstructed, an instance is created using the public\nno-arg constructor before the `readExternal` method called. If a public\nno-arg constructor is not available, a `java.io.InvalidClassException` will be\nthrown at runtime."
+        },
+        {
+          "shortName": "MissingSerialAnnotation",
+          "displayName": "'@Serial' annotation can be used",
+          "enabled": true,
+          "description": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer to the Javadoc of the `java.io.Serial` class.\n\nThis inspection depends on the Java feature '@Serial annotation', which is available since Java 14.\n\nNew in 2020.3"
+        },
+        {
+          "shortName": "SerialPersistentFieldsWithWrongSignature",
+          "displayName": "'serialPersistentFields' field not declared 'private static final ObjectStreamField[]'",
+          "enabled": false,
+          "description": "Reports `Serializable` classes whose `serialPersistentFields` field is not declared as `private static final ObjectStreamField[]`.\n\n\nIf a `serialPersistentFields` field is not declared with those modifiers,\nthe serialization behavior will be as if the field was not declared at all.\n\n**Example:**\n\n\n      class List implements Serializable {\n        private List next;\n\n        ObjectStreamField[] serialPersistentFields = {new ObjectStreamField(\"next\", List.class)};\n\n      }\n"
+        },
+        {
+          "shortName": "NonSerializableObjectBoundToHttpSession",
+          "displayName": "Non-serializable object bound to 'HttpSession'",
+          "enabled": false,
+          "description": "Reports objects of classes not implementing `java.io.Serializable` used as arguments to `javax.servlet.http.HttpSession.setAttribute()` or `javax.servlet.http.HttpSession.putValue()`.\n\n\nSuch objects will not be serialized if the `HttpSession` is passivated or migrated,\nand may result in difficult-to-diagnose bugs.\n\n\nThis inspection assumes objects of the types `java.util.Collection` and\n`java.util.Map` to be `Serializable`,\nunless type parameters are non-`Serializable`.\n\n**Example:**\n\n\n      void foo(HttpSession session) {\n          session.setAttribute(\"foo\", new NonSerializable());\n      }\n      static class NonSerializable {}\n"
+        },
+        {
+          "shortName": "SerializableRecordContainsIgnoredMembers",
+          "displayName": "'record' contains ignored members",
+          "enabled": true,
+          "description": "Reports serialization methods or fields defined in a `record` class. Serialization methods include `writeObject()`, `readObject()`, `readObjectNoData()`, `writeExternal()`, and `readExternal()` and the field `serialPersistentFields`. These members are not used for the serialization or deserialization of records and therefore unnecessary.\n\n**Examples:**\n\n\n      record R1() implements Serializable {\n        // The field is ignored during record serialization\n        @Serial\n        private static final ObjectStreamField[] serialPersistentFields = new ObjectStreamField[0];\n\n        // The method is ignored during record serialization\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n      }\n\n\n      record R2() implements Externalizable {\n        // The method is ignored during record serialization\n        @Override\n        public void writeExternal(ObjectOutput out) throws IOException {\n        }\n\n        // The method is ignored during record serialization\n        @Override\n        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {\n        }\n      }\n\nThis inspection depends on the Java feature 'Records', which is available since Java 16.\n\nNew in 2020.3"
+        },
+        {
+          "shortName": "ReadObjectInitialization",
+          "displayName": "Instance field may not be initialized by 'readObject()'",
+          "enabled": false,
+          "description": "Reports fields that are not guaranteed to be initialized after the object is deserialized by the `readObject()` method.\n\nThe inspection doesn't report transient fields.\n\n\nNote: This inspection uses a very conservative control flow algorithm, and may incorrectly report fields\nas uninitialized.\n\n**Example:**\n\n\n    class DataObject implements Serializable {\n      String s; // s is not initialized in readObject\n      int i;\n\n      private void readObject(ObjectInputStream stream) throws IOException {\n        i = stream.readInt();\n      }\n    }\n"
+        },
+        {
+          "shortName": "SerializableHasSerializationMethods",
+          "displayName": "Serializable class without 'readObject()' and 'writeObject()'",
+          "enabled": false,
+          "description": "Reports `Serializable` classes that do not implement `readObject()` and `writeObject()` methods.\n\n\nIf `readObject()` and `writeObject()` methods are not implemented,\nthe default serialization algorithms are used,\nwhich may be sub-optimal for performance and compatibility in many environments.\n\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` classes without non-static fields.\n* Whether to ignore `Serializable` anonymous classes."
+        },
+        {
+          "shortName": "NonSerializableWithSerialVersionUIDField",
+          "displayName": "Non-serializable class with 'serialVersionUID'",
+          "enabled": true,
+          "description": "Reports non-`Serializable` classes that define a `serialVersionUID` field. A `serialVersionUID` field in that context normally indicates an error because the field will be ignored and the class will not be serialized.\n\n**Example:**\n\n\n      public class IWantToSerializeThis {\n        private static final long serialVersionUID = 2669293150219020249L;\n      }\n"
+        },
+        {
+          "shortName": "TransientFieldInNonSerializableClass",
+          "displayName": "Transient field in non-serializable class",
+          "enabled": false,
+          "description": "Reports `transient` fields in classes that do not implement `java.io.Serializable`.\n\n**Example:**\n\n\n      public class NonSerializableClass {\n        private transient String password;\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class NonSerializableClass {\n        private String password;\n      }\n"
+        },
+        {
+          "shortName": "SerialAnnotationUsedOnWrongMember",
+          "displayName": "'@Serial' annotation used on wrong member",
+          "enabled": true,
+          "description": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are not suitable to be annotated with the `java.io.Serial` annotation.\n\n**Examples:**\n\n\n    class Test implements Serializable {\n      @Serial // The annotated field is not a part of serialization mechanism because it's not final\n      private static long serialVersionUID = 7874493593505141603L;\n\n      @Serial // The annotated method is not a part of the serialization mechanism because it's not private\n      void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\n\n    class Test implements Externalizable {\n      @Serial // The annotated method is not a part of the serialization mechanism as it's inside Externalizable class\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nFor information about all valid cases, refer to the Javadoc of the `java.io.Serial` class.\n\nThis inspection depends on the Java feature '@Serial annotation', which is available since Java 14.\n\nNew in 2020.3"
+        },
+        {
+          "shortName": "NonSerializableWithSerializationMethods",
+          "displayName": "Non-serializable class with 'readObject()' or 'writeObject()'",
+          "enabled": false,
+          "description": "Reports non-`Serializable` classes that define `readObject()` or `writeObject()` methods. Such methods in that context normally indicate an error.\n\n**Example:**\n\n\n      public class SampleClass {\n        private void readObject(ObjectInputStream str) {}\n        private void writeObject(ObjectOutputStream str) {}\n      }\n"
+        },
+        {
+          "shortName": "NonSerializableObjectPassedToObjectStream",
+          "displayName": "Non-serializable object passed to 'ObjectOutputStream'",
+          "enabled": false,
+          "description": "Reports non-`Serializable` objects used as arguments to `java.io.ObjectOutputStream.write()`. Such calls will result in runtime exceptions.\n\n\nThis inspection assumes objects of the types `java.util.Collection` and\n`java.util.Map` to be `Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      public class IWantToSerializeThis {\n        public static void main(String[] args) throws IOException {\n          try(var stream = new ObjectOutputStream(Files.newOutputStream(Paths.get(\"output\")))) {\n            // Warning -- will fail with NotSerializableException\n            stream.writeObject(new IWantToSerializeThis());\n          }\n        }\n      }\n"
         }
       ]
     },
@@ -4688,149 +4831,6 @@
       ]
     },
     {
-      "name": "Serialization issues",
-      "inspections": [
-        {
-          "shortName": "ComparatorNotSerializable",
-          "displayName": "'Comparator' class not declared 'Serializable'",
-          "enabled": false,
-          "description": "Reports classes that implement `java.lang.Comparator`, but do not implement `java.io.Serializable`.\n\n\nIf a non-serializable comparator is used to construct an ordered collection such\nas a `java.util.TreeMap` or `java.util.TreeSet`, then the\ncollection will also be non-serializable. This can result in unexpected and\ndifficult-to-diagnose bugs.\n\n\nSince subclasses of `java.lang.Comparator` are often stateless,\nsimply marking them serializable is a small cost to avoid such issues.\n\n**Example:**\n\n\n      class Foo implements Comparator { // warning\n          @Override\n          public int compare(Object o1, Object o2) {\n              /* ... */\n          }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Foo implements Comparator, Serializable { // no warning here\n          @Override\n          public int compare(Object o1, Object o2) {\n              /* ... */\n          }\n      }\n"
-        },
-        {
-          "shortName": "SerializableStoresNonSerializable",
-          "displayName": "'Serializable' object implicitly stores non-'Serializable' object",
-          "enabled": false,
-          "description": "Reports any references to local non-`Serializable` variables outside `Serializable` lambdas, local and anonymous classes.\n\n\nWhen a local variable is referenced from an anonymous class, its value\nis stored in an implicit field of that class. The same happens\nfor local classes and lambdas. If the variable is of a\nnon-`Serializable` type, serialization will fail.\n\n**Example:**\n\n\n      interface A extends Serializable {\n          abstract void foo();\n      }\n      class B {}\n      class C {\n          void foo() {\n              B b = new B();\n              A a = new A() {\n                  @Override\n                  public void foo() {\n                      System.out.println(b); // warning\n                  }\n              };\n          }\n      }\n"
-        },
-        {
-          "shortName": "ExternalizableWithSerializationMethods",
-          "displayName": "Externalizable class with 'readObject()' or 'writeObject()'",
-          "enabled": false,
-          "description": "Reports `Externalizable` classes that define `readObject()` or `writeObject()` methods. These methods are not called for serialization of `Externalizable` objects.\n\n**Example:**\n\n\n      abstract class Crucial implements Externalizable {\n        int value;\n        private void readObject(ObjectInputStream in) {\n          value = in.readInt();\n        }\n      }\n"
-        },
-        {
-          "shortName": "NonSerializableFieldInSerializableClass",
-          "displayName": "Non-serializable field in a 'Serializable' class",
-          "enabled": false,
-          "description": "Reports non-serializable fields in classes that implement `java.io.Serializable`. Such fields will result in runtime exceptions if the object is serialized.\n\n\nFields declared\n`transient` or `static`\nare not reported, nor are fields of classes that have a `writeObject` method defined.\n\n\nThis inspection assumes fields of the types\n`java.util.Collection` and\n`java.util.Map` to be\n`Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      class NonSerializableClass {}\n\n      public class SerializableClass implements Serializable {\n          NonSerializableClass clazz; // warning: Non-serializable field 'clazz' in a Serializable class\n          static NonSerializableClass staticClazz; // no warnings\n      }\n      \n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* List annotations that will make the inspection ignore the annotated fields.\n* Whether to ignore fields initialized with an anonymous class."
-        },
-        {
-          "shortName": "TransientFieldNotInitialized",
-          "displayName": "Transient field is not initialized on deserialization",
-          "enabled": false,
-          "description": "Reports `transient` fields that are initialized during normal object construction, but whose class does not have a `readObject` method.\n\n\nAs `transient` fields are not serialized they need\nto be initialized separately in a `readObject()` method\nduring deserialization.\n\n\nAny `transient` fields that\nare not initialized during normal object construction are considered to use the default\ninitialization and are not reported by this inspection.\n\n**Example:**\n\n\n      class Person implements Serializable {\n        transient String name = \"Default\"; //warning, can actually be a null after deserialization\n        transient String surname; //null is considered the default value and not reported\n      }\n"
-        },
-        {
-          "shortName": "ReadObjectAndWriteObjectPrivate",
-          "displayName": "'readObject()' or 'writeObject()' not declared 'private'",
-          "enabled": false,
-          "description": "Reports `Serializable` classes where the `readObject` or `writeObject` methods are not declared private. There is no reason these methods should ever have a higher visibility than `private`.\n\n\nA quick-fix is suggested to make the corresponding method `private`.\n\n**Example:**\n\n\n      public class Test implements Serializable {\n        public void readObject(ObjectInputStream stream) {\n          /* ... */\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class Test implements Serializable {\n        private void readObject(ObjectInputStream stream) {\n          /* ... */\n        }\n      }\n"
-        },
-        {
-          "shortName": "SerializableWithUnconstructableAncestor",
-          "displayName": "Serializable class with unconstructable ancestor",
-          "enabled": false,
-          "description": "Reports `Serializable` classes whose closest non-serializable ancestor doesn't have a no-argument constructor. Such classes cannot be deserialized and will fail with an `InvalidClassException`.\n\n**Example:**\n\n\n      class Ancestor {\n        private String name;\n        Ancestor(String name) {\n          this.name = name;\n        }\n      }\n\n      // warning on this class because the superclass is not\n      // serializable, and its constructor takes arguments\n      class Descendant extends Ancestor implements Serializable {\n        Descendant() {\n          super(\"Bob\");\n        }\n      }\n"
-        },
-        {
-          "shortName": "SerialVersionUIDNotStaticFinal",
-          "displayName": "'serialVersionUID' field not declared 'private static final long'",
-          "enabled": true,
-          "description": "Reports `Serializable` classes whose `serialVersionUID` field is not declared `private static final long`.\n\n**Example:**\n\n\n      class SampleClass implements Serializable {\n        private long serialVersionUID = 1; // field of a Serializable class is not declared 'private static final long'\n\n        public SampleClass() {\n            System.out.println(serialVersionUID);\n        }\n      }\n"
-        },
-        {
-          "shortName": "SerializableInnerClassWithNonSerializableOuterClass",
-          "displayName": "Serializable non-'static' inner class with non-Serializable outer class",
-          "enabled": false,
-          "description": "Reports non-static inner classes that implement `Serializable` and are declared inside a class that doesn't implement `Serializable`.\n\n\nSuch classes are unlikely to serialize correctly due to implicit references to the outer class.\n\n**Example:**\n\n\n      class A {\n        class Main implements Serializable {\n        }\n      }\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
-        },
-        {
-          "shortName": "SerializableInnerClassHasSerialVersionUIDField",
-          "displayName": "Serializable non-static inner class without 'serialVersionUID'",
-          "enabled": false,
-          "description": "Reports non-static inner classes that implement `java.io.Serializable`, but do not define a `serialVersionUID` field.\n\n\nWithout a `serialVersionUID` field, any change to the class will make previously\nserialized versions unreadable. It is strongly recommended that `Serializable`\nnon-static inner classes have a `serialVersionUID` field, otherwise the default\nserialization algorithm may result in serialized versions being incompatible between\ncompilers due to differences in synthetic accessor methods.\n\n\nA quick-fix is suggested to add the missing `serialVersionUID` field.\n\n**Example:**\n\n\n      class Outer {\n          class Inner implements Serializable {}\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Outer {\n          class Inner implements Serializable {\n              private static final long serialVersionUID = -7004458730436243902L;\n          }\n      }\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` anonymous classes."
-        },
-        {
-          "shortName": "ReadResolveAndWriteReplaceProtected",
-          "displayName": "'readResolve()' or 'writeReplace()' not declared 'protected'",
-          "enabled": false,
-          "description": "Reports classes that implement `java.io.Serializable` where the `readResolve()` or `writeReplace()` methods are not declared `protected`.\n\n\nDeclaring `readResolve()` and `writeReplace()` methods `private`\ncan force subclasses to silently ignore them, while declaring them\n`public` allows them to be invoked by untrusted code.\n\n\nIf the containing class is declared `final`, these methods can be declared `private`.\n\n**Example:**\n\n\n      class ClassWithSerialization implements Serializable {\n        public Object writeReplace() { // warning: 'writeReplace()' not declared protected\n            ...\n        }\n      }\n      \n"
-        },
-        {
-          "shortName": "ExternalizableWithoutPublicNoArgConstructor",
-          "displayName": "'Externalizable' class without 'public' no-arg constructor",
-          "enabled": true,
-          "description": "Reports `Externalizable` classes without a public no-argument constructor.\n\nWhen an `Externalizable` object is reconstructed, an instance is created using the public\nno-arg constructor before the `readExternal` method called. If a public\nno-arg constructor is not available, a `java.io.InvalidClassException` will be\nthrown at runtime."
-        },
-        {
-          "shortName": "MissingSerialAnnotation",
-          "displayName": "'@Serial' annotation can be used",
-          "enabled": true,
-          "description": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are suitable to be annotated with the `java.io.Serial` annotation. The quick-fix adds the annotation.\n\n**Example:**\n\n\n    class Main implements Serializable {\n      private static final long serialVersionUID = 7874493593505141603L;\n\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Serializable {\n        @Serial\n        private static final long serialVersionUID = 7874493593505141603L;\n\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n    }\n\n**Example:**\n\n\n      class Main implements Externalizable {\n        protected Object readResolve() throws ObjectStreamException {\n          return \"SomeObject\";\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Main implements Externalizable {\n        @Serial\n        protected Object readResolve() throws ObjectStreamException {\n            return \"SomeObject\";\n        }\n      }\n\nFor more information about all possible cases, refer to the Javadoc of the `java.io.Serial` class.\n\nThis inspection depends on the Java feature '@Serial annotation', which is available since Java 14.\n\nNew in 2020.3"
-        },
-        {
-          "shortName": "SerialPersistentFieldsWithWrongSignature",
-          "displayName": "'serialPersistentFields' field not declared 'private static final ObjectStreamField[]'",
-          "enabled": false,
-          "description": "Reports `Serializable` classes whose `serialPersistentFields` field is not declared as `private static final ObjectStreamField[]`.\n\n\nIf a `serialPersistentFields` field is not declared with those modifiers,\nthe serialization behavior will be as if the field was not declared at all.\n\n**Example:**\n\n\n      class List implements Serializable {\n        private List next;\n\n        ObjectStreamField[] serialPersistentFields = {new ObjectStreamField(\"next\", List.class)};\n\n      }\n"
-        },
-        {
-          "shortName": "NonSerializableObjectBoundToHttpSession",
-          "displayName": "Non-serializable object bound to 'HttpSession'",
-          "enabled": false,
-          "description": "Reports objects of classes not implementing `java.io.Serializable` used as arguments to `javax.servlet.http.HttpSession.setAttribute()` or `javax.servlet.http.HttpSession.putValue()`.\n\n\nSuch objects will not be serialized if the `HttpSession` is passivated or migrated,\nand may result in difficult-to-diagnose bugs.\n\n\nThis inspection assumes objects of the types `java.util.Collection` and\n`java.util.Map` to be `Serializable`,\nunless type parameters are non-`Serializable`.\n\n**Example:**\n\n\n      void foo(HttpSession session) {\n          session.setAttribute(\"foo\", new NonSerializable());\n      }\n      static class NonSerializable {}\n"
-        },
-        {
-          "shortName": "SerializableRecordContainsIgnoredMembers",
-          "displayName": "'record' contains ignored members",
-          "enabled": true,
-          "description": "Reports serialization methods or fields defined in a `record` class. Serialization methods include `writeObject()`, `readObject()`, `readObjectNoData()`, `writeExternal()`, and `readExternal()` and the field `serialPersistentFields`. These members are not used for the serialization or deserialization of records and therefore unnecessary.\n\n**Examples:**\n\n\n      record R1() implements Serializable {\n        // The field is ignored during record serialization\n        @Serial\n        private static final ObjectStreamField[] serialPersistentFields = new ObjectStreamField[0];\n\n        // The method is ignored during record serialization\n        @Serial\n        private void writeObject(ObjectOutputStream out) throws IOException {\n        }\n      }\n\n\n      record R2() implements Externalizable {\n        // The method is ignored during record serialization\n        @Override\n        public void writeExternal(ObjectOutput out) throws IOException {\n        }\n\n        // The method is ignored during record serialization\n        @Override\n        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {\n        }\n      }\n\nThis inspection depends on the Java feature 'Records', which is available since Java 16.\n\nNew in 2020.3"
-        },
-        {
-          "shortName": "ReadObjectInitialization",
-          "displayName": "Instance field may not be initialized by 'readObject()'",
-          "enabled": false,
-          "description": "Reports fields that are not guaranteed to be initialized after the object is deserialized by the `readObject()` method.\n\nThe inspection doesn't report transient fields.\n\n\nNote: This inspection uses a very conservative control flow algorithm, and may incorrectly report fields\nas uninitialized.\n\n**Example:**\n\n\n    class DataObject implements Serializable {\n      String s; // s is not initialized in readObject\n      int i;\n\n      private void readObject(ObjectInputStream stream) throws IOException {\n        i = stream.readInt();\n      }\n    }\n"
-        },
-        {
-          "shortName": "SerializableHasSerializationMethods",
-          "displayName": "Serializable class without 'readObject()' and 'writeObject()'",
-          "enabled": false,
-          "description": "Reports `Serializable` classes that do not implement `readObject()` and `writeObject()` methods.\n\n\nIf `readObject()` and `writeObject()` methods are not implemented,\nthe default serialization algorithms are used,\nwhich may be sub-optimal for performance and compatibility in many environments.\n\n\nUse the following options to configure the inspection:\n\n* List classes whose inheritors should not be reported by this inspection. This is meant for classes that inherit `Serializable` from a superclass but are not intended for serialization.\n* Whether to ignore `Serializable` classes without non-static fields.\n* Whether to ignore `Serializable` anonymous classes."
-        },
-        {
-          "shortName": "NonSerializableWithSerialVersionUIDField",
-          "displayName": "Non-serializable class with 'serialVersionUID'",
-          "enabled": true,
-          "description": "Reports non-`Serializable` classes that define a `serialVersionUID` field. A `serialVersionUID` field in that context normally indicates an error because the field will be ignored and the class will not be serialized.\n\n**Example:**\n\n\n      public class IWantToSerializeThis {\n        private static final long serialVersionUID = 2669293150219020249L;\n      }\n"
-        },
-        {
-          "shortName": "TransientFieldInNonSerializableClass",
-          "displayName": "Transient field in non-serializable class",
-          "enabled": false,
-          "description": "Reports `transient` fields in classes that do not implement `java.io.Serializable`.\n\n**Example:**\n\n\n      public class NonSerializableClass {\n        private transient String password;\n      }\n\nAfter the quick-fix is applied:\n\n\n      public class NonSerializableClass {\n        private String password;\n      }\n"
-        },
-        {
-          "shortName": "SerialAnnotationUsedOnWrongMember",
-          "displayName": "'@Serial' annotation used on wrong member",
-          "enabled": true,
-          "description": "Reports methods and fields in the `Serializable` and `Externalizable` classes that are not suitable to be annotated with the `java.io.Serial` annotation.\n\n**Examples:**\n\n\n    class Test implements Serializable {\n      @Serial // The annotated field is not a part of serialization mechanism because it's not final\n      private static long serialVersionUID = 7874493593505141603L;\n\n      @Serial // The annotated method is not a part of the serialization mechanism because it's not private\n      void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\n\n    class Test implements Externalizable {\n      @Serial // The annotated method is not a part of the serialization mechanism as it's inside Externalizable class\n      private void writeObject(ObjectOutputStream out) throws IOException {\n      }\n    }\n\nFor information about all valid cases, refer to the Javadoc of the `java.io.Serial` class.\n\nThis inspection depends on the Java feature '@Serial annotation', which is available since Java 14.\n\nNew in 2020.3"
-        },
-        {
-          "shortName": "NonSerializableWithSerializationMethods",
-          "displayName": "Non-serializable class with 'readObject()' or 'writeObject()'",
-          "enabled": false,
-          "description": "Reports non-`Serializable` classes that define `readObject()` or `writeObject()` methods. Such methods in that context normally indicate an error.\n\n**Example:**\n\n\n      public class SampleClass {\n        private void readObject(ObjectInputStream str) {}\n        private void writeObject(ObjectOutputStream str) {}\n      }\n"
-        },
-        {
-          "shortName": "NonSerializableObjectPassedToObjectStream",
-          "displayName": "Non-serializable object passed to 'ObjectOutputStream'",
-          "enabled": false,
-          "description": "Reports non-`Serializable` objects used as arguments to `java.io.ObjectOutputStream.write()`. Such calls will result in runtime exceptions.\n\n\nThis inspection assumes objects of the types `java.util.Collection` and\n`java.util.Map` to be `Serializable`, unless the types\nthey are declared in are non-`Serializable`.\n\n**Example:**\n\n\n      public class IWantToSerializeThis {\n        public static void main(String[] args) throws IOException {\n          try(var stream = new ObjectOutputStream(Files.newOutputStream(Paths.get(\"output\")))) {\n            // Warning -- will fail with NotSerializableException\n            stream.writeObject(new IWantToSerializeThis());\n          }\n        }\n      }\n"
-        }
-      ]
-    },
-    {
       "name": "GPath",
       "inspections": [
         {
@@ -4907,53 +4907,6 @@
       ]
     },
     {
-      "name": "Maven",
-      "inspections": [
-        {
-          "shortName": "MavenDuplicatePluginInspection",
-          "displayName": "Duplicate plugin declaration",
-          "enabled": false,
-          "description": "Reports the duplication of the plugin declaration in pom.xml"
-        },
-        {
-          "shortName": "MavenPropertyInParent",
-          "displayName": "Usage of properties in parent description",
-          "enabled": false,
-          "description": "Reports that the usage of properties in modules parent definition is prohibited"
-        },
-        {
-          "shortName": "MavenDuplicateDependenciesInspection",
-          "displayName": "Duplicate Dependencies",
-          "enabled": false,
-          "description": "Reports duplicate dependencies"
-        },
-        {
-          "shortName": "MavenModelInspection",
-          "displayName": "Maven Model Inspection",
-          "enabled": false,
-          "description": "Reports resolution problems in a Maven model"
-        },
-        {
-          "shortName": "MavenParentMissedVersionInspection",
-          "displayName": "Parent version missed",
-          "enabled": false,
-          "description": "Reports the absence of the parent version element for versions that do not support consumer POM feature"
-        },
-        {
-          "shortName": "MavenRedundantGroupId",
-          "displayName": "Redundant groupId",
-          "enabled": false,
-          "description": "Reports the unnecessary \\<groupId\\> definition since it is already defined in the parent pom.xml"
-        },
-        {
-          "shortName": "MavenCoroutinesDeprecation",
-          "displayName": "Incompatible kotlinx.coroutines dependency is used with Kotlin 1.3+ in Maven",
-          "enabled": false,
-          "description": "Reports **kotlinx.coroutines** library dependencies in Maven that should be updated in order to be compatible with Kotlin 1.3 and later."
-        }
-      ]
-    },
-    {
       "name": "JSON and JSON5",
       "inspections": [
         {
@@ -4997,6 +4950,53 @@
           "displayName": "Duplicate keys in object literals",
           "enabled": false,
           "description": "Reports a duplicate key in an object literal."
+        }
+      ]
+    },
+    {
+      "name": "Maven",
+      "inspections": [
+        {
+          "shortName": "MavenDuplicatePluginInspection",
+          "displayName": "Duplicate plugin declaration",
+          "enabled": false,
+          "description": "Reports the duplication of the plugin declaration in pom.xml"
+        },
+        {
+          "shortName": "MavenPropertyInParent",
+          "displayName": "Usage of properties in parent description",
+          "enabled": false,
+          "description": "Reports that the usage of properties in modules parent definition is prohibited"
+        },
+        {
+          "shortName": "MavenDuplicateDependenciesInspection",
+          "displayName": "Duplicate Dependencies",
+          "enabled": false,
+          "description": "Reports duplicate dependencies"
+        },
+        {
+          "shortName": "MavenModelInspection",
+          "displayName": "Maven Model Inspection",
+          "enabled": false,
+          "description": "Reports resolution problems in a Maven model"
+        },
+        {
+          "shortName": "MavenParentMissedVersionInspection",
+          "displayName": "Parent version missed",
+          "enabled": false,
+          "description": "Reports the absence of the parent version element for versions that do not support consumer POM feature"
+        },
+        {
+          "shortName": "MavenRedundantGroupId",
+          "displayName": "Redundant groupId",
+          "enabled": false,
+          "description": "Reports the unnecessary \\<groupId\\> definition since it is already defined in the parent pom.xml"
+        },
+        {
+          "shortName": "MavenCoroutinesDeprecation",
+          "displayName": "Incompatible kotlinx.coroutines dependency is used with Kotlin 1.3+ in Maven",
+          "enabled": false,
+          "description": "Reports **kotlinx.coroutines** library dependencies in Maven that should be updated in order to be compatible with Kotlin 1.3 and later."
         }
       ]
     },
@@ -5631,16 +5631,16 @@
           "description": "Reports equality expressions which are negated by a prefix expression.\n\nSuch expressions can be simplified using the `!=` operator.\n\nExample:\n\n\n      !(i == 1)\n\nAfter the quick-fix is applied:\n\n\n      i != 1\n"
         },
         {
-          "shortName": "AssertionCanBeIf",
-          "displayName": "Assertion can be replaced with 'if' statement",
-          "enabled": false,
-          "description": "Reports `assert` statements and suggests replacing them with `if` statements that throw `java.lang.AssertionError`.\n\nExample:\n\n\n      assert param != null;\n\nAfter the quick-fix is applied:\n\n\n      if (param == null) throw new AssertionError();\n\nThis inspection depends on the Java feature 'Assertions', which is available since Java 1.4."
-        },
-        {
           "shortName": "DoubleNegation",
           "displayName": "Double negation",
           "enabled": true,
           "description": "Reports double negations that can be simplified.\n\nExample:\n\n\n      if (!!functionCall()) {}\n\nAfter the quick-fix is applied:\n\n\n      if (functionCall()) {}\n\nExample:\n\n\n      if (!(a != b)) {}\n\nAfter the quick-fix is applied:\n\n\n      if (a == b) {}\n"
+        },
+        {
+          "shortName": "AssertionCanBeIf",
+          "displayName": "Assertion can be replaced with 'if' statement",
+          "enabled": false,
+          "description": "Reports `assert` statements and suggests replacing them with `if` statements that throw `java.lang.AssertionError`.\n\nExample:\n\n\n      assert param != null;\n\nAfter the quick-fix is applied:\n\n\n      if (param == null) throw new AssertionError();\n\nThis inspection depends on the Java feature 'Assertions', which is available since Java 1.4."
         },
         {
           "shortName": "BreakStatement",
@@ -9662,6 +9662,41 @@
       ]
     },
     {
+      "name": "Class",
+      "inspections": [
+        {
+          "shortName": "ExceptionNameDoesntEndWithException",
+          "displayName": "Exception class name does not end with 'Exception'",
+          "enabled": false,
+          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "NewClassNamingConvention",
+          "displayName": "Class naming convention",
+          "enabled": false,
+          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
+        },
+        {
+          "shortName": "NonExceptionNameEndsWithException",
+          "displayName": "Non-exception class name ends with 'Exception'",
+          "enabled": false,
+          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNameSameAsAncestorName",
+          "displayName": "Class name same as ancestor name",
+          "enabled": false,
+          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
+        },
+        {
+          "shortName": "ClassNamePrefixedWithPackageName",
+          "displayName": "Class name prefixed with package name",
+          "enabled": false,
+          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
+        }
+      ]
+    },
+    {
       "name": "HTTP Client",
       "inspections": [
         {
@@ -9735,41 +9770,6 @@
           "displayName": "Missing request separator in YAML body",
           "enabled": false,
           "description": "Reports possible requests in injected YAML body where request separator `###` is missing. The quick fix suggests adding the separator `###` before the request."
-        }
-      ]
-    },
-    {
-      "name": "Class",
-      "inspections": [
-        {
-          "shortName": "ExceptionNameDoesntEndWithException",
-          "displayName": "Exception class name does not end with 'Exception'",
-          "enabled": false,
-          "description": "Reports exception classes whose names don't end with `Exception`.\n\n**Example:** `class NotStartedEx extends Exception {}`\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "NewClassNamingConvention",
-          "displayName": "Class naming convention",
-          "enabled": false,
-          "description": "Reports classes whose names are too short, too long, or do not follow the specified regular expression pattern.\n\n**Example:** if the inspection is enabled for tests, and the specified length for the minimum class name is 8 (the default), the following test class\nproduces a warning because the length of its name is 6, which is less than 8: `public class MyTest{}`.\n\nA quick-fix that renames such classes is available only in the editor.\n\nConfigure the inspection:\n\n\nUse the list in the **Options** section to specify which classes should be checked. Deselect the checkboxes for the classes for which\nyou want to skip the check.\n\nFor each class type, specify the minimum length, maximum length, and the regular expression expected for class names using the\nprovided input fields. Specify **0** in the length fields to skip corresponding checks.\n\nRegular expressions should be specified in the standard `java.util.regex` format."
-        },
-        {
-          "shortName": "NonExceptionNameEndsWithException",
-          "displayName": "Non-exception class name ends with 'Exception'",
-          "enabled": false,
-          "description": "Reports non-`exception` classes whose names end with `Exception`.\n\nSuch classes may cause confusion by breaking a common naming convention and\noften indicate that the `extends Exception` clause is missing.\n\n**Example:**\n\n    public class NotStartedException {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNameSameAsAncestorName",
-          "displayName": "Class name same as ancestor name",
-          "enabled": false,
-          "description": "Reports classes that have the same name as one of their superclasses, while their fully qualified names remain different. Such class names may be very confusing.\n\n**Example:**\n\n\n      package util;\n      abstract class Iterable<T> implements java.lang.Iterable<T> {}\n\nA quick-fix that renames such classes is available only in the editor."
-        },
-        {
-          "shortName": "ClassNamePrefixedWithPackageName",
-          "displayName": "Class name prefixed with package name",
-          "enabled": false,
-          "description": "Reports classes whose names are prefixed with their package names, ignoring differences in capitalization.\n\nWhile occasionally having such names is reasonable, they are often used due to a poor naming scheme, may be redundant and\nannoying.\n\n**Example:**\n\n\n      package byteCode;\n      class ByteCodeAnalyzer {}\n\nA quick-fix that renames such classes is available only in the editor."
         }
       ]
     },
@@ -11958,16 +11958,16 @@
           "description": "Reports methods whose number of statements exceeds the specified maximum.\n\nMethods with too many statements may be confusing and are a good sign that refactoring is necessary.\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Maximum statements per method** field to specify the maximum allowed number of statements in a method."
         },
         {
-          "shortName": "ParametersPerMethod",
-          "displayName": "Method with too many parameters",
-          "enabled": false,
-          "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
-        },
-        {
           "shortName": "OverlyLongLambda",
           "displayName": "Overly long lambda expression",
           "enabled": false,
           "description": "Reports lambda expressions whose number of statements exceeds the specified maximum.\n\nLambda expressions that are too long may be confusing, and it is often better to extract the statements into a separate method.\n\n\nThe following statements are not counted:\n\n* empty statements (semicolons)\n* block statements\n* `for` loop initialization statements, that is, `int i = ...` within a `for(int i = ...;...)` statement\n* `for` loop update statements, that is, `i += 2` within a `for(int i = ...;...; i += 2)` statement\n\nUse the **Non-comment source statements limit** field to specify the maximum allowed number of statements in a lambda expression."
+        },
+        {
+          "shortName": "ParametersPerMethod",
+          "displayName": "Method with too many parameters",
+          "enabled": false,
+          "description": "Reports methods whose number of parameters exceeds the specified maximum. Methods with too many parameters can be a good sign that a refactoring is necessary.\n\nMethods that have super methods are not reported.\n\nUse the **Parameter limit** field to specify the maximum allowed number of parameters for a method."
         },
         {
           "shortName": "MethodCoupling",
@@ -13190,29 +13190,6 @@
       ]
     },
     {
-      "name": "Nullability problems",
-      "inspections": [
-        {
-          "shortName": "NotNullFieldNotInitialized",
-          "displayName": "@NotNull field is not initialized",
-          "enabled": false,
-          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
-        },
-        {
-          "shortName": "NullableProblems",
-          "displayName": "@NotNull/@Nullable problems",
-          "enabled": true,
-          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
-        },
-        {
-          "shortName": "ReturnNull",
-          "displayName": "Return of 'null'",
-          "enabled": false,
-          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
-        }
-      ]
-    },
-    {
       "name": "Imports and dependencies",
       "inspections": [
         {
@@ -13291,6 +13268,29 @@
           "displayName": "Invalid properties configuration",
           "enabled": true,
           "description": "Reports unresolved and deprecated configuration keys and invalid values in Spring Boot application `.properties` configuration files,\nwhich can lead to runtime errors.\n\n**Example:**\n\n\n    server.port=invalid # Reports 'Cannot convert 'invalid' to java.lang.Integer'\n\nIf a deprecated configuration key has a replacement key, you can apply the 'Use replacement key' quick-fix.\n\n**Example:**\n\n\n    logging.path=${path} # Reports 'Deprecated configuration property 'logging.path''\n\nAfter the quick-fix is applied:\n\n\n    logging.file.path=${path}\n\n\nIf a configuration key is not defined in `spring-configuration-metadata.json`, you can apply the 'Define configuration key' quick-fix\nthat creates the `META-INF/spring-additional-configuration-metadata.json` file and defines the necessary key.\n\n**Example:**\n\n\n    new.key=value #Reports 'Cannot resolve configuration property 'new.key''\n\nAfter the quick-fix is applied, the following is added to `META-INF/spring-additional-configuration-metadata.json`:\n\n\n    {\n      \"properties\": [\n        {\n          \"name\": \"new.key\",\n          \"type\": \"java.lang.String\",\n          \"description\": \"Description for new.key.\"\n      }\n    ] }\n\nThe inspection also highlights index notation errors in list and map configuration keys.\n\n**Example:**\n\n\n    spring.datasource.schema[]=${schema} #Reports 'Missing index value'\n\n\nUse the **Replacement tokens** option to define tokens used for value placeholders in configuration files.\nThese tokens are specified in the form `beginToken*endToken`.\nWithout the `*`, the token is assumed to be the same for start and end.\n\n\nFor example, the default is `@` for both start and end token,\nwhich enables you to define placeholders, such as `some.property=@another.property@`.\n\nValues inside the replacement token (`@property.key@`) will not be highlighted."
+        }
+      ]
+    },
+    {
+      "name": "Nullability problems",
+      "inspections": [
+        {
+          "shortName": "NotNullFieldNotInitialized",
+          "displayName": "@NotNull field is not initialized",
+          "enabled": false,
+          "description": "Reports fields annotated as not-null that are not initialized in the constructor.\n\nExample:\n\n    public class MyClass {\n      private @NotNull String value;\n\n      public void setValue(@NotNull String value) {\n        this.value = value;\n      }\n\n      public @NotNull String getValue() {\n        return value;\n      }\n    }\n\n\nSuch fields may violate the not-null constraint. In the example above, the `setValue` parameter is annotated as not-null, but\n`getValue` may return null if the setter was not called."
+        },
+        {
+          "shortName": "NullableProblems",
+          "displayName": "@NotNull/@Nullable problems",
+          "enabled": true,
+          "description": "Reports problems related to nullability annotations.\n\n**Examples:**\n\n* Overriding methods are not annotated:\n\n\n      abstract class A {\n        @NotNull abstract String m();\n      }\n      class B extends A {\n          String m() { return \"empty string\"; }\n      }\n          \n* Annotated primitive types: `@NotNull int myFoo;`\n* Both `@Nullable` and `@NotNull` are present on the same member: `@Nullable @NotNull String myFooString;`\n* Collection of nullable elements is assigned into a collection of non-null elements:\n\n\n      void testList(List<@Nullable String> nullableList) {\n         List<@NotNull String> list2 = nullableList;\n      }\n          \nUse the **Configure Annotations** button to specify nullability annotations and the checkboxes to fine-tune where the inspection should provide warnings.\n\nThis inspection only reports if the language level of the project or module is 5 or higher,\nand nullability annotations are available on the classpath."
+        },
+        {
+          "shortName": "ReturnNull",
+          "displayName": "Return of 'null'",
+          "enabled": false,
+          "description": "Reports `return` statements with `null` return values. While occasionally useful, this construct may make the code more prone to failing with a `NullPointerException`.\n\n\nIf a method is designed to return `null`, it is suggested to mark it with the\n`@Nullable` annotation - such methods will be ignored by this inspection.\n\n**Example:**\n\n\n      class Person {\n        public String getName () {\n          return null;\n        }\n      }\n\nAfter the quick-fix is applied:\n\n\n      class Person {\n        public @Nullable String getName () {\n          return null;\n        }\n      }\n\n\nIf the return type is `java.util.Optional`, an additional quick-fix to convert\n`null` to `Optional.empty()` is suggested.\n\n\nUse the following options to configure the inspection:\n\n* Whether to ignore `private` methods. This will also ignore return of `null` from anonymous classes and lambdas.\n* Whether `null` values on array returns, collection object returns, plain object returns, or a combination of the three should be reported. Return of `null` in methods with return type `java.util.Optional` are always reported.\n* Click **Configure annotations** to specify which annotations should be considered 'nullable'."
         }
       ]
     },

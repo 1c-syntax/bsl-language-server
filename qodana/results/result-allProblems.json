@@ -3177,14 +3177,14 @@
       "type": "file",
       "path": "src/main/resources/application.properties",
       "language": "Properties",
-      "line": 24,
+      "line": 25,
       "offset": 1,
       "length": 24,
       "code": {
-        "startLine": 22,
+        "startLine": 23,
         "length": 24,
-        "offset": 78,
-        "surroundingCode": "sentry.attach-server-name=false\nsentry.logging.minimum-breadcrumb-level=debug\npicocli.disable.closures=true\n\n"
+        "offset": 88,
+        "surroundingCode": "sentry.logging.minimum-breadcrumb-level=debug\nsentry.use-git-commit-id-as-release=false\npicocli.disable.closures=true\n"
       }
     }
   ],
@@ -3194,7 +3194,7 @@
     "isTechDebt": "true",
     "baselineState": "unchanged"
   },
-  "hash": "9ab9e48e21cbf264882260427a547fdf17c90ff0dfba8497e5b0ce7ea7aa2325"
+  "hash": "d0a9b3d4b4eeae713cf89f8e0cf516dc17f04bcda81c285bb32708ae7b8e3f11"
 },{
   "tool": "Code Inspection",
   "category": "Code",
