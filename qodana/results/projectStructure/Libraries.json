@@ -50,9 +50,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
+      "name": "Gradle: io.github.1c-syntax:bsl-parser:0.26.0-rc.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-parser/0.24.0/d2d4bc9a9baa73b97bc99944e91e79b50ad53838/bsl-parser-0.24.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-parser/0.26.0-rc.1/f93d58c4580559d8da5ca3516384df9b3560975e/bsl-parser-0.26.0-rc.1.jar!/"
       ],
       "properties": {}
     },
@@ -85,9 +85,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
+      "name": "Gradle: io.github.1c-syntax:bsl-parser-core:0.3.0",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-parser-core/0.1.0/4434dfde62c4baab857e4c4724292acb73f37581/bsl-parser-core-0.1.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/bsl-parser-core/0.3.0/f60fb55c9f9994bf6fd575f87cc58453c5e756d0/bsl-parser-core-0.3.0.jar!/"
       ],
       "properties": {}
     },
@@ -316,9 +316,9 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
+      "name": "Gradle: io.github.1c-syntax:antlr4:0.1.1",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.tunnelvisionlabs/antlr4/4.9.0/232b88dcbe71f8d05700e962fe2006898a8b4120/antlr4-4.9.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.github.1c-syntax/antlr4/0.1.1/6bb96491d8a3f77ea951bb27169e6ff3d0ccfdb9/antlr4-0.1.1.jar!/"
       ],
       "properties": {}
     },
@@ -820,13 +820,6 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.tunnelvisionlabs:antlr4-runtime:4.9.0",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.tunnelvisionlabs/antlr4-runtime/4.9.0/17e19535a875a2a1014197d2bb35faeecf4e50f4/antlr4-runtime-4.9.0.jar!/"
-      ],
-      "properties": {}
-    },
-    {
       "name": "Gradle: io.grpc:grpc-api:1.66.0",
       "roots": [
         "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/io.grpc/grpc-api/1.66.0/a2d48c8f3d22296c4a9e71a42b3ba457717889b3/grpc-api-1.66.0.jar!/"
@@ -1107,37 +1100,23 @@
       "properties": {}
     },
     {
-      "name": "Gradle: com.github.1c-syntax:utils:0.5.1",
+      "name": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.github.1c-syntax/utils/0.5.1/6a28103225784d2fbcca95cc2b16d38e807632bf/utils-0.5.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.abego.treelayout/org.abego.treelayout.core/1.0.3/457216e8e6578099ae63667bb1e4439235892028/org.abego.treelayout.core-1.0.3.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
+      "name": "Gradle: org.antlr:ST4:4.3.4",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/com.tunnelvisionlabs/antlr4-annotations/4.9.0/ef4a4a6528a74cc24b6f7f0f1711876e32ab54b7/antlr4-annotations-4.9.0.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.antlr/ST4/4.3.4/bf68d049dd4e6e104055a79ac3bf9e6307d29258/ST4-4.3.4.jar!/"
       ],
       "properties": {}
     },
     {
-      "name": "Gradle: org.antlr:ST4:4.3",
+      "name": "Gradle: org.antlr:antlr-runtime:3.5.3",
       "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.antlr/ST4/4.3/92f2c1ad8d84abcbeead6cf7f2c53a04166293c2/ST4-4.3.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.antlr:antlr-runtime:3.5.2",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.antlr/antlr-runtime/3.5.2/cd9cd41361c155f3af0f653009dcecb08d8b4afd/antlr-runtime-3.5.2.jar!/"
-      ],
-      "properties": {}
-    },
-    {
-      "name": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
-      "roots": [
-        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.abego.treelayout/org.abego.treelayout.core/1.0.1/e31e79cba7a5414cf18fa69f3f0a2cf9ee997b61/org.abego.treelayout.core-1.0.1.jar!/"
+        "jar://$PROJECT_DIR$/../cache/gradle/caches/modules-2/files-2.1/org.antlr/antlr-runtime/3.5.3/9011fb189c5ed6d99e5f3322514848d1ec1e1416/antlr-runtime-3.5.3.jar!/"
       ],
       "properties": {}
     },

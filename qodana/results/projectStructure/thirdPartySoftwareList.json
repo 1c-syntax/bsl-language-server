@@ -3,13 +3,13 @@
   "name": "SPDXRef-bsl-language-server",
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://bsl-language-server-ff5497e3-5b90-a6fa-425a-03b434c8ef78",
+  "documentNamespace": "https://bsl-language-server-0833ca26-7ac7-6b14-6f60-f576fe9e3ce6",
   "creationInfo": {
     "creators": [
       "Tool: Qodana",
       "Organization: JetBrains s.r.o."
     ],
-    "created": "2025-02-10T09:12:22Z"
+    "created": "2025-02-10T10:47:20Z"
   },
   "packages": [
     {
@@ -27,28 +27,7 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "4f0536b8c88a30f077fa0ccc1ab23b39df796a05"
-        }
-      ],
-      "primaryPackagePurpose": "SOURCE"
-    },
-    {
-      "SPDXID": "SPDXRef-bsl-language-server.main",
-      "name": "bsl-language-server.main",
-      "versionInfo": "develop-3c79e64-DIRTY",
-      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
-      "filesAnalyzed": true,
-      "licenseConcluded": "LGPL-3.0-only",
-      "licenseDeclared": "LGPL-3.0-only",
-      "licenseInfoFromFiles": [
-        "LGPL-3.0-only"
-      ],
-      "copyrightText": "NOASSERTION",
-      "supplier": "NOASSERTION",
-      "checksums": [
-        {
-          "algorithm": "SHA1",
-          "checksumValue": "4f0536b8c88a30f077fa0ccc1ab23b39df796a05"
+          "checksumValue": "b0a3fe0277ef8484ce1dbf9f1db96082ca524fb5"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -56,7 +35,7 @@
     {
       "SPDXID": "SPDXRef-bsl-language-server.jmh",
       "name": "bsl-language-server.jmh",
-      "versionInfo": "develop-3c79e64-DIRTY",
+      "versionInfo": "develop-b0a3fe0-DIRTY",
       "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
       "filesAnalyzed": true,
       "licenseConcluded": "LGPL-3.0-only",
@@ -69,7 +48,28 @@
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "4f0536b8c88a30f077fa0ccc1ab23b39df796a05"
+          "checksumValue": "b0a3fe0277ef8484ce1dbf9f1db96082ca524fb5"
+        }
+      ],
+      "primaryPackagePurpose": "SOURCE"
+    },
+    {
+      "SPDXID": "SPDXRef-bsl-language-server.main",
+      "name": "bsl-language-server.main",
+      "versionInfo": "develop-b0a3fe0-DIRTY",
+      "downloadLocation": "https://github.com/1c-syntax/bsl-language-server",
+      "filesAnalyzed": true,
+      "licenseConcluded": "LGPL-3.0-only",
+      "licenseDeclared": "LGPL-3.0-only",
+      "licenseInfoFromFiles": [
+        "LGPL-3.0-only"
+      ],
+      "copyrightText": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "b0a3fe0277ef8484ce1dbf9f1db96082ca524fb5"
         }
       ],
       "primaryPackagePurpose": "SOURCE"
@@ -294,28 +294,6 @@
         {
           "algorithm": "SHA256",
           "checksumValue": "67a6a4b6b91f3d450df21e77417f400be663be0cf528e48349ccc381cf74b3b0"
-        }
-      ],
-      "primaryPackagePurpose": "LIBRARY"
-    },
-    {
-      "SPDXID": "SPDXRef-utils-0.5.1",
-      "name": "com.github.1c-syntax:utils",
-      "versionInfo": "0.5.1",
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "licenseInfoFromFiles": [
-        "NOASSERTION"
-      ],
-      "copyrightText": "NOASSERTION",
-      "packageFileName": "utils-0.5.1.jar",
-      "supplier": "NOASSERTION",
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "02cd3efc77a4e6af54b1e11d1b11c64f385e98b63699657b7bc017bbeb958922"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -680,50 +658,6 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-antlr4-runtime-4.9.0",
-      "name": "com.tunnelvisionlabs:antlr4-runtime",
-      "versionInfo": "4.9.0",
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "licenseInfoFromFiles": [
-        "NOASSERTION"
-      ],
-      "copyrightText": "NOASSERTION",
-      "packageFileName": "antlr4-runtime-4.9.0.jar",
-      "supplier": "Organization: null",
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "e4193ba8034cedf920905bdb318b8a5097d767f999f87ba97a4298de69f3ffab"
-        }
-      ],
-      "primaryPackagePurpose": "LIBRARY"
-    },
-    {
-      "SPDXID": "SPDXRef-antlr4-4.9.0",
-      "name": "com.tunnelvisionlabs:antlr4",
-      "versionInfo": "4.9.0",
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "licenseInfoFromFiles": [
-        "NOASSERTION"
-      ],
-      "copyrightText": "NOASSERTION",
-      "packageFileName": "antlr4-4.9.0.jar",
-      "supplier": "Organization: null",
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "c4634458bc4a9d5751979e93314df4991abf5fa061057c9263256e9503e1cc3b"
-        }
-      ],
-      "primaryPackagePurpose": "LIBRARY"
-    },
-    {
       "SPDXID": "SPDXRef-commons-beanutils-1.9.4",
       "name": "commons-beanutils:commons-beanutils",
       "versionInfo": "1.9.4",
@@ -998,6 +932,28 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
+      "SPDXID": "SPDXRef-antlr4-0.1.1",
+      "name": "io.github.1c-syntax:antlr4",
+      "versionInfo": "0.1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "licenseInfoFromFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "antlr4-0.1.1.jar",
+      "supplier": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e57e40aba5e70b14c5bc7ebd645905d8dd654c68b56e75de8785168189bbecf9"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
       "SPDXID": "SPDXRef-bsl-common-library-0.8.0-rc.1",
       "name": "io.github.1c-syntax:bsl-common-library",
       "versionInfo": "0.8.0-rc.1",
@@ -1020,9 +976,9 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-bsl-parser-core-0.1.0",
+      "SPDXID": "SPDXRef-bsl-parser-core-0.3.0",
       "name": "io.github.1c-syntax:bsl-parser-core",
-      "versionInfo": "0.1.0",
+      "versionInfo": "0.3.0",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1031,20 +987,20 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "bsl-parser-core-0.1.0.jar",
+      "packageFileName": "bsl-parser-core-0.3.0.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6757557b96dbf97c700daf1f1aecf68af631ad5ce6a023e20e2427bab70c5ddf"
+          "checksumValue": "9e8898e931e29a98cd6abe79880c765703cb81d96f370fbbeed0b652152fded4"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
     },
     {
-      "SPDXID": "SPDXRef-bsl-parser-0.24.0",
+      "SPDXID": "SPDXRef-bsl-parser-0.26.0-rc.1",
       "name": "io.github.1c-syntax:bsl-parser",
-      "versionInfo": "0.24.0",
+      "versionInfo": "0.26.0-rc.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -1053,12 +1009,12 @@
         "NOASSERTION"
       ],
       "copyrightText": "NOASSERTION",
-      "packageFileName": "bsl-parser-0.24.0.jar",
+      "packageFileName": "bsl-parser-0.26.0-rc.1.jar",
       "supplier": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a13ec801bb6444cf3d99add355384603484c1f283be3efe39ab15c0b3cb85f40"
+          "checksumValue": "28b9cb84ced9a98931fd7b41050e4a1a02ee0237624c7482f3a7af67db24488c"
         }
       ],
       "primaryPackagePurpose": "LIBRARY"
@@ -2206,6 +2162,74 @@
       "primaryPackagePurpose": "LIBRARY"
     },
     {
+      "SPDXID": "SPDXRef-org.abego.treelayout.core-1.0.3",
+      "name": "org.abego.treelayout:org.abego.treelayout.core",
+      "versionInfo": "1.0.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "homepage": "http://treelayout.sourceforge.net",
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "NOASSERTION",
+      "licenseInfoFromFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "org.abego.treelayout.core-1.0.3.jar",
+      "supplier": "Organization:  abego Software GmbH, Germany",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fa5e31395c39c2e7d46aca0f81f72060931607b2fa41bd36038eb2cb6fb93326"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-antlr-runtime-3.5.3",
+      "name": "org.antlr:antlr-runtime",
+      "versionInfo": "3.5.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "homepage": "http://www.antlr.org",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "licenseInfoFromFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "antlr-runtime-3.5.3.jar",
+      "supplier": "Organization:  USFCA, Temporal Wave LLC",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "68bf9f5a33dfcb34033495c587e6236bef4e37aa6612919f5b1e843b90669fb9"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-st4-4.3.4",
+      "name": "org.antlr:st4",
+      "versionInfo": "4.3.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "NOASSERTION",
+      "licenseInfoFromFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION",
+      "packageFileName": "ST4-4.3.4.jar",
+      "supplier": "Organization: null",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f927ac384c46d749f8b5ec68972a53aed21e00313509299616edb73bfa15ff33"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
       "SPDXID": "SPDXRef-commons-collections4-4.4",
       "name": "org.apache.commons:commons-collections4",
       "versionInfo": "4.4",
@@ -2928,7 +2952,7 @@
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "homepage": "https://languagetool.org",
-      "licenseConcluded": "NOASSERTION",
+      "licenseConcluded": "LGPL-2.1-only",
       "licenseDeclared": "NOASSERTION",
       "licenseInfoFromFiles": [
         "NOASSERTION"
@@ -5154,147 +5178,147 @@
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
       "comment": "Module of the project"
     },
     {
       "spdxElementId": "SPDXRef-bsl-language-server",
       "relationshipType": "CONTAINS",
-      "relatedSpdxElement": "SPDXRef-bsl-language-server.jmh",
+      "relatedSpdxElement": "SPDXRef-bsl-language-server.main",
       "comment": "Module of the project"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-cache-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
+      "relatedSpdxElement": "SPDXRef-bsl-parser-0.26.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.15.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.8.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
+      "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.3.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.36"
     },
@@ -5379,9 +5403,9 @@
       "relatedSpdxElement": "SPDXRef-jakarta.websocket-api-2.1.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-parser-0.24.0",
+      "spdxElementId": "SPDXRef-bsl-parser-0.26.0-rc.1",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-antlr4-4.9.0"
+      "relatedSpdxElement": "SPDXRef-antlr4-0.1.1"
     },
     {
       "spdxElementId": "SPDXRef-mdclasses-0.15.0-rc.1",
@@ -5449,17 +5473,17 @@
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-parser-core-0.1.0",
+      "spdxElementId": "SPDXRef-bsl-parser-core-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-antlr4-4.9.0"
+      "relatedSpdxElement": "SPDXRef-antlr4-0.1.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-parser-core-0.1.0",
+      "spdxElementId": "SPDXRef-bsl-parser-core-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-utils-0.5.1"
+      "relatedSpdxElement": "SPDXRef-utils-0.6.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-parser-core-0.1.0",
+      "spdxElementId": "SPDXRef-bsl-parser-core-0.3.0",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
@@ -5749,137 +5773,137 @@
       "relatedSpdxElement": "SPDXRef-sentry-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-websocket-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spring-boot-starter-cache-3.4.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-picocli-spring-boot-starter-4.7.6"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-org.eclipse.lsp4j.websocket.jakarta-0.23.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-parser-0.24.0"
+      "relatedSpdxElement": "SPDXRef-bsl-parser-0.26.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-utils-0.6.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-mdclasses-0.15.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-bsl-common-library-0.8.0-rc.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-supportconf-0.14.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.1.0"
+      "relatedSpdxElement": "SPDXRef-bsl-parser-core-0.3.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-spotbugs-annotations-4.7.3"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-languagetool-core-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-en-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-language-ru-6.5"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aspectjrt-1.9.22.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-io-2.17.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-beanutils-1.9.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-collections4-4.4"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-commons-exec-1.4.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-progressbar-0.10.1"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-jgrapht-core-1.5.2"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-java-sarif-2.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-spring-boot-starter-jakarta-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-sentry-logback-8.1.0"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-lombok-1.18.36"
     },
@@ -5890,13 +5914,13 @@
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.main",
+      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"
     },
     {
-      "spdxElementId": "SPDXRef-bsl-language-server.jmh",
+      "spdxElementId": "SPDXRef-bsl-language-server.main",
       "relationshipType": "CONTAINS",
       "relatedSpdxElement": "SPDXRef-COPYING.md-LGPL-3.0-only",
       "comment": "License mention"

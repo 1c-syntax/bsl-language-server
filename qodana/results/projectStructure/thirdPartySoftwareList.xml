@@ -145,6 +145,15 @@
         </tr>
         <tr>
             <td>
+                <a href="https://languagetool.org">english-pos-dict</a>
+            </td>
+            <td>0.3</td>
+            <td>
+                <a href="http://www.gnu.org/licenses/lgpl-2.1.html">LGPL-2.1-only</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <a href="">error_prone_annotations</a>
             </td>
             <td>2.28.0</td>
@@ -606,6 +615,15 @@
         </tr>
         <tr>
             <td>
+                <a href="http://treelayout.sourceforge.net">org.abego.treelayout.core</a>
+            </td>
+            <td>1.0.3</td>
+            <td>
+                <a href="http://www.opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <a href="http://github.com/ctongfei/progressbar">progressbar</a>
             </td>
             <td>0.10.1</td>
@@ -872,6 +890,15 @@
             <td>6.2.2</td>
             <td>
                 <a href="http://www.apache.org/licenses/">Apache-2.0</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="">st4</a>
+            </td>
+            <td>4.3.4</td>
+            <td>
+                <a href="http://www.opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a>
             </td>
         </tr>
         <tr>

@@ -1,5 +1,36 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
+  "category": "Declaration redundancy",
+  "type": "Default annotation parameter value",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "High",
+  "comment": "Redundant default parameter value assignment",
+  "detailsInfo": "Reports annotation parameters that are assigned to their `default` value.\n\nExample:\n\n\n      @interface Test {\n          Class<?> expected() default Throwable.class;\n      }\n\n      @Test(expected = Throwable.class)\n      void testSmth() {}\n\nAfter the quick-fix is applied:\n\n\n      @Test()\n      void testSmth() {}\n",
+  "sources": [
+    {
+      "type": "file",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/BadWordsDiagnostic.java",
+      "language": "JAVA",
+      "line": 51,
+      "offset": 20,
+      "length": 17,
+      "code": {
+        "startLine": 49,
+        "length": 17,
+        "offset": 68,
+        "surroundingCode": "  @DiagnosticParameter(\n    type = String.class,\n    defaultValue = BAD_WORDS_DEFAULT\n  )\n  private Pattern badWords = CaseInsensitivePattern.compile(BAD_WORDS_DEFAULT);"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DefaultAnnotationParam"
+  },
+  "hash": "ca52c609965d4a073ebaadadda63e9fd15661f8c1aeb89baf1f580f7907adac4"
+},{
+  "tool": "Code Inspection",
   "category": "Verbose or redundant code constructs",
   "type": "Lombok @Setter may be used",
   "tags": [
@@ -31,64 +62,64 @@
   "hash": "1599d1ed085eda694e1bb94418af70287c1721e8628e5dc827a905ae3a1b0944"
 },{
   "tool": "Code Inspection",
-  "category": "Declaration redundancy",
-  "type": "'protected' member in 'final' class",
+  "category": "Imports",
+  "type": "Unused import",
   "tags": [
     "JAVA"
   ],
   "severity": "High",
-  "comment": "Class member declared `protected` in 'final' class",
-  "detailsInfo": "Reports `protected` members in `final`classes.\n\nSince `final` classes cannot be inherited, marking the method as `protected`\nmay be confusing. It is better to declare such members as `private` or package-visible instead.\n\n**Example:**\n\n    record Bar(int a, int b) {\n      protected int sum() { \n         return a + b;\n      }\n    }\n\nAfter the quick-fix is applied:\n\n    record Bar(int a, int b) {\n      int sum() { \n         return a + b;\n      }\n    }\n\nAs shown in the example, a class can be marked as `final` explicitly or implicitly.",
+  "comment": "Unused import `import org.slf4j.Logger;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/TernaryOperatorNode.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
       "language": "JAVA",
-      "line": 40,
-      "offset": 3,
-      "length": 9,
+      "line": 34,
+      "offset": 1,
+      "length": 24,
       "code": {
-        "startLine": 38,
-        "length": 9,
-        "offset": 30,
-        "surroundingCode": "  BslExpression falsePart;\n\n  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {\n    super(ExpressionNodeType.TERNARY_OP);\n    this.condition = condition;"
+        "startLine": 32,
+        "length": 24,
+        "offset": 80,
+        "surroundingCode": "import org.eclipse.lsp4j.ClientInfo;\nimport org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "ProtectedMemberInFinalClass"
+    "inspectionName": "UNUSED_IMPORT"
   },
-  "hash": "d9c993d92b4291aaeef7c252b06070217bdf419d186aff75c238630e051b7199"
+  "hash": "67e292f072d318e38c809a4e8215440cdd69fe9431a46d89620457ab9f611238"
 },{
   "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Redundant character escape",
+  "category": "Imports",
+  "type": "Unused import",
   "tags": [
-    "RegExp"
+    "JAVA"
   ],
   "severity": "High",
-  "comment": "Redundant character escape `\\\\*` in RegExp",
-  "detailsInfo": "Reports redundant character escape sequences that can be replaced with unescaped characters preserving the meaning. Many escape sequences that are necessary outside of a character class are redundant inside square brackets `[]` of a character class.\n\n\nAlthough unescaped opening curly braces `{` outside of character classes are allowed in some dialects (JavaScript, Python, and so on),\nit can cause confusion and make the pattern less portable, because there are dialects that require escaping curly braces as characters.\nFor this reason the inspection does not report escaped opening curly braces.\n\n**Example:**\n\n\n      \\-\\;[\\.]\n\nAfter the quick-fix is applied:\n\n\n      -;[.]\n\n\nThe **Ignore escaped closing brackets '}' and '\\]'** option specifies whether to report `\\}` and `\\]` outside of a character class\nwhen they are allowed to be unescaped by the RegExp dialect.\n\nNew in 2017.3",
+  "comment": "Unused import `import org.slf4j.LoggerFactory;`",
+  "detailsInfo": "Reports redundant `import` statements.\n\nRegular `import` statements are unnecessary when not using imported classes and packages in the source file.\nThe same applies to imported `static` fields and methods that aren't used in the source file.\n\n**Example:**\n\n\n      import java.util.ArrayList;\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n\nAfter the quick fix is applied:\n\n\n      public class Example {\n        public static void main(String[] args) {\n          System.out.println(\"Hello World!\");\n        }\n      }\n",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/codelenses/AbstractRunTestsCodeLensSupplier.java",
       "language": "JAVA",
-      "line": 67,
-      "offset": 76,
-      "length": 3,
+      "line": 35,
+      "offset": 1,
+      "length": 31,
       "code": {
-        "startLine": 65,
-        "length": 3,
-        "offset": 81,
-        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+        "startLine": 33,
+        "length": 31,
+        "offset": 68,
+        "surroundingCode": "import org.eclipse.lsp4j.InitializeParams;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cache.annotation.CacheConfig;\nimport org.springframework.cache.annotation.CacheEvict;"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "RegExpRedundantEscape"
+    "inspectionName": "UNUSED_IMPORT"
   },
-  "hash": "773d4bfe78dcae4ccaf24d64c6a67d700acfbba1c47d2e6a4bd3401a2492913c"
+  "hash": "d82dd19bc6a71e2a5db97388aed7d4c8166ea8f22a7b523251b6d29d1e22bdcb"
 }]}

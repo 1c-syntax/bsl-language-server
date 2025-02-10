@@ -58,12 +58,12 @@
       "version": "0.23.1"
     },
     {
-      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser:0.24.0",
-      "gradleName": "io.github.1c-syntax:bsl-parser:0.24.0",
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser:0.26.0-rc.1",
+      "gradleName": "io.github.1c-syntax:bsl-parser:0.26.0-rc.1",
       "unresolved": false,
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-parser",
-      "version": "0.24.0"
+      "version": "0.26.0-rc.1"
     },
     {
       "ideaName": "Gradle: io.github.1c-syntax:utils:0.6.2",
@@ -98,12 +98,12 @@
       "version": "0.14.1"
     },
     {
-      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser-core:0.1.0",
-      "gradleName": "io.github.1c-syntax:bsl-parser-core:0.1.0",
+      "ideaName": "Gradle: io.github.1c-syntax:bsl-parser-core:0.3.0",
+      "gradleName": "io.github.1c-syntax:bsl-parser-core:0.3.0",
       "unresolved": false,
       "groupId": "io.github.1c-syntax",
       "artifactId": "bsl-parser-core",
-      "version": "0.1.0"
+      "version": "0.3.0"
     },
     {
       "ideaName": "Gradle: com.github.spotbugs:spotbugs-annotations:4.9.0",
@@ -378,12 +378,12 @@
       "version": "2.1.1"
     },
     {
-      "ideaName": "Gradle: com.tunnelvisionlabs:antlr4:4.9.0",
-      "gradleName": "com.tunnelvisionlabs:antlr4:4.9.0",
+      "ideaName": "Gradle: io.github.1c-syntax:antlr4:0.1.1",
+      "gradleName": "io.github.1c-syntax:antlr4:0.1.1",
       "unresolved": false,
-      "groupId": "com.tunnelvisionlabs",
+      "groupId": "io.github.1c-syntax",
       "artifactId": "antlr4",
-      "version": "4.9.0"
+      "version": "0.1.1"
     },
     {
       "ideaName": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
@@ -986,14 +986,6 @@
       "version": "2.11.0"
     },
     {
-      "ideaName": "Gradle: com.tunnelvisionlabs:antlr4-runtime:4.9.0",
-      "gradleName": "com.tunnelvisionlabs:antlr4-runtime:4.9.0",
-      "unresolved": false,
-      "groupId": "com.tunnelvisionlabs",
-      "artifactId": "antlr4-runtime",
-      "version": "4.9.0"
-    },
-    {
       "ideaName": "Gradle: io.grpc:grpc-api:1.66.0",
       "gradleName": "io.grpc:grpc-api:1.66.0",
       "unresolved": false,
@@ -1530,14 +1522,6 @@
       "version": "4.8.179"
     },
     {
-      "ideaName": "Gradle: com.github.1c-syntax:utils:0.5.1",
-      "gradleName": "com.github.1c-syntax:utils:0.5.1",
-      "unresolved": false,
-      "groupId": "com.github.1c-syntax",
-      "artifactId": "utils",
-      "version": "0.5.1"
-    },
-    {
       "ideaName": "Gradle: org.junit.platform:junit-platform-engine:1.11.4",
       "gradleName": "org.junit.platform:junit-platform-engine:1.11.4",
       "unresolved": false,
@@ -1562,36 +1546,28 @@
       "version": "3.3"
     },
     {
-      "ideaName": "Gradle: com.tunnelvisionlabs:antlr4-annotations:4.9.0",
-      "gradleName": "com.tunnelvisionlabs:antlr4-annotations:4.9.0",
-      "unresolved": false,
-      "groupId": "com.tunnelvisionlabs",
-      "artifactId": "antlr4-annotations",
-      "version": "4.9.0"
-    },
-    {
-      "ideaName": "Gradle: org.antlr:ST4:4.3",
-      "gradleName": "org.antlr:ST4:4.3",
-      "unresolved": false,
-      "groupId": "org.antlr",
-      "artifactId": "ST4",
-      "version": "4.3"
-    },
-    {
-      "ideaName": "Gradle: org.antlr:antlr-runtime:3.5.2",
-      "gradleName": "org.antlr:antlr-runtime:3.5.2",
-      "unresolved": false,
-      "groupId": "org.antlr",
-      "artifactId": "antlr-runtime",
-      "version": "3.5.2"
-    },
-    {
-      "ideaName": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.1",
-      "gradleName": "org.abego.treelayout:org.abego.treelayout.core:1.0.1",
+      "ideaName": "Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3",
+      "gradleName": "org.abego.treelayout:org.abego.treelayout.core:1.0.3",
       "unresolved": false,
       "groupId": "org.abego.treelayout",
       "artifactId": "org.abego.treelayout.core",
-      "version": "1.0.1"
+      "version": "1.0.3"
+    },
+    {
+      "ideaName": "Gradle: org.antlr:ST4:4.3.4",
+      "gradleName": "org.antlr:ST4:4.3.4",
+      "unresolved": false,
+      "groupId": "org.antlr",
+      "artifactId": "ST4",
+      "version": "4.3.4"
+    },
+    {
+      "ideaName": "Gradle: org.antlr:antlr-runtime:3.5.3",
+      "gradleName": "org.antlr:antlr-runtime:3.5.3",
+      "unresolved": false,
+      "groupId": "org.antlr",
+      "artifactId": "antlr-runtime",
+      "version": "3.5.3"
     },
     {
       "ideaName": "Gradle: io.github.x-stream:mxparser:1.2.2",
