@@ -1,94 +1,32 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "Redundant constructs",
-  "type": "Unused import directive",
+  "category": "Code maturity",
+  "type": "Commented out code",
   "tags": [
-    "kotlin"
+    "JAVA"
   ],
-  "severity": "High",
-  "comment": "Unused import directive",
-  "detailsInfo": "Reports redundant `import` statements.\n\nDefault and unused imports can be safely removed.\n\n**Example:**\n\n\n      import kotlin.*\n      import kotlin.collections.*\n      import kotlin.comparisons.*\n      import kotlin.io.*\n      import kotlin.ranges.*\n      import kotlin.sequences.*\n      import kotlin.text.*\n\n      // jvm specific\n      import java.lang.*\n      import kotlin.jvm.*\n\n      // js specific\n      import kotlin.js.*\n\n      import java.io.* // this import is unused and could be removed\n      import java.util.*\n\n      fun foo(list: ArrayList<String>) {\n          list.add(\"\")\n      }\n",
+  "severity": "Moderate",
+  "comment": "Commented out code (6 lines)",
+  "detailsInfo": "Reports comments that contain Java code.\n\nUsually, code that is commented out gets outdated very quickly and becomes misleading.\nAs most projects use some kind of version control system,\nit is better to delete commented out code completely and use the VCS history instead.\n\nNew in 2020.3",
   "sources": [
     {
       "type": "file",
-      "path": "build.gradle.kts",
-      "language": "kotlin",
-      "line": 1,
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/inlayhints/SourceDefinedMethodCallInlayHintSupplier.java",
+      "language": "JAVA",
+      "line": 72,
       "offset": 1,
-      "length": 53,
+      "length": 2,
       "code": {
-        "startLine": 1,
-        "length": 53,
-        "offset": 0,
-        "surroundingCode": "import gradlegitproperties.org.ajoberstar.grgit.Grgit\nimport me.qoomon.gitversioning.commons.GitRefType\nimport org.apache.tools.ant.filters.EscapeUnicode"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server",
-    "inspectionName": "KotlinUnusedImport"
-  },
-  "hash": "d9056b5a72b4d51ad22f2462c55a8afda6bf2a7a924c1e18dad1c18345072a8a"
-},{
-  "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Lombok @Setter may be used",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "Class 'AbstractFindMethodDiagnostic' may use Lombok @Setter",
-  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/AbstractFindMethodDiagnostic.java",
-      "language": "JAVA",
-      "line": 41,
-      "offset": 23,
-      "length": 28,
-      "code": {
-        "startLine": 39,
-        "length": 28,
-        "offset": 106,
-        "surroundingCode": " * параметром сообщения пользователю <b>всегда</b> будет имя найденного метода.\n */\npublic abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagnostic {\n\n  @Getter"
+        "startLine": 70,
+        "length": 2,
+        "offset": 36,
+        "surroundingCode": "    var range = params.getRange();\n\n//    var ast = documentContext.getAst();\n//    Trees.findAllRuleNodes(\n//      ast,"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "LombokSetterMayBeUsed"
+    "inspectionName": "CommentedOutCode"
   },
-  "hash": "e718c5d6de5b9d1cfe49cffb1b0469639c2630a78ef612ce6efa9f4b892a513f"
-},{
-  "tool": "Code Inspection",
-  "category": "Verbose or redundant code constructs",
-  "type": "Unnecessary 'default' for enum 'switch' statement",
-  "tags": [
-    "JAVA"
-  ],
-  "severity": "High",
-  "comment": "`default` branch is unnecessary",
-  "detailsInfo": "Reports enum `switch` statements or expression with `default` branches which can never be taken, because all possible values are covered by a `case` branch.\n\nSuch elements are redundant, especially for `switch` expressions, because they don't compile when all\nenum constants are not covered by a `case` branch.\n\n\nThe language level needs to be configured to 14 to report `switch` expressions.\n\nThe provided quick-fix removes `default` branches.\n\nExample:\n\n\n      enum E { A, B }\n      int foo(E e) {\n        return switch (e) {\n          case A -> 1;\n          case B -> 2;\n          default -> 3;\n        };\n      }\n\nAfter the quick-fix is applied:\n\n\n      enum E { A, B }\n      int foo(E e) {\n        return switch (e) {\n          case A -> 1;\n          case B -> 2;\n        };\n      }\n\nUse the **Only report switch expressions** option to report only redundant `default` branches in switch expressions.",
-  "sources": [
-    {
-      "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/expressiontree/DefaultNodeEqualityComparer.java",
-      "language": "JAVA",
-      "line": 51,
-      "offset": 7,
-      "length": 7,
-      "code": {
-        "startLine": 49,
-        "length": 7,
-        "offset": 136,
-        "surroundingCode": "      case SKIPPED_CALL_ARG -> true;\n      case CALL -> callStatementsEqual((AbstractCallNode) first, (AbstractCallNode) second);\n      default -> throw new IllegalStateException();\n    };\n"
-      }
-    }
-  ],
-  "attributes": {
-    "module": "bsl-language-server.main",
-    "inspectionName": "UnnecessaryDefault"
-  },
-  "hash": "2c72370b59dde2cbf1ea29e8feac3da6f729b7114f1766f8f09a515ec88ac90f"
+  "hash": "9d7aa692dca1a7bd1cc0125b6c407f625b6576eb7bb79884ddc4a843e4f71190"
 }]}
