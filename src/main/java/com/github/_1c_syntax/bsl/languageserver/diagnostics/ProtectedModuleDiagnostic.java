@@ -21,19 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.mdo.ModuleOwner;
-import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
-
-import java.util.List;
+import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -43,44 +43,48 @@ import java.util.List;
     DiagnosticTag.BADPRACTICE,
     DiagnosticTag.SUSPICIOUS
   },
-  modules = { ModuleType.SessionModule },
+  modules = {
+    ModuleType.SessionModule
+  },
   scope = DiagnosticScope.BSL
 )
 
-public class ProtectedModuleDiagnostic extends AbstractMetadataDiagnostic {
+public class ProtectedModuleDiagnostic extends AbstractDiagnostic {
 
-  public ProtectedModuleDiagnostic() {
-    super(List.of(
-      MDOType.CONFIGURATION,
-      MDOType.ACCOUNTING_REGISTER,
-      MDOType.ACCUMULATION_REGISTER,
-      MDOType.BUSINESS_PROCESS,
-      MDOType.CALCULATION_REGISTER,
-      MDOType.CATALOG,
-      MDOType.CHART_OF_ACCOUNTS,
-      MDOType.CHART_OF_CALCULATION_TYPES,
-      MDOType.CHART_OF_CHARACTERISTIC_TYPES,
-      MDOType.COMMON_MODULE,
-      MDOType.CONSTANT,
-      MDOType.DOCUMENT,
-      MDOType.DOCUMENT_JOURNAL,
-      MDOType.ENUM,
-      MDOType.EXCHANGE_PLAN,
-      MDOType.FILTER_CRITERION,
-      MDOType.INFORMATION_REGISTER,
-      MDOType.TASK
-    ));
-  }
+  /**
+   * Рендж на который будут повешены замечания
+   * Костыль, но пока так
+   */
+  private Range diagnosticRange;
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
-    if (!(mdo instanceof ModuleOwner)){
+  protected void check() {
+
+    var configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
-    var moduleOwner = (ModuleOwner) mdo;
-    moduleOwner.getProtectedModules().forEach((MDOModule mdoModule) ->{
-        var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, mdo);
-        addDiagnostic(info.getMessage(ownerMDOName));
+
+    diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(diagnosticRange)) {
+      return;
+    }
+
+    configuration.getChildren().stream()
+      .filter(md -> md instanceof ModuleOwner)
+      .map(md -> (ModuleOwner) md)
+      .forEach((ModuleOwner moduleOwner) -> {
+        var hasProtected = moduleOwner.getModules().stream()
+          .filter(Module::isProtected)
+          .findAny();
+        if (hasProtected.isPresent()) {
+          addDiagnostic(moduleOwner);
+        }
       });
+  }
+
+  private void addDiagnostic(ModuleOwner moduleOwner) {
+    var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, moduleOwner);
+    diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(ownerMDOName));
   }
 }

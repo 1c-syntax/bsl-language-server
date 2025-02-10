@@ -371,6 +371,9 @@
                 "ProcedureReturnsValue": {
                     "$ref": "parameters-schema.json#/definitions/ProcedureReturnsValue"
                 },
+                "ProtectedModule": {
+                    "$ref": "parameters-schema.json#/definitions/ProtectedModule"
+                },
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
@@ -694,7 +697,7 @@
                                 "type": "string"
                             },
                             "default": [
-                                "Тест",
+                                "\u0422\u0435\u0441\u0442",
                                 "Test"
                             ]
                         },
@@ -713,7 +716,7 @@
                         "getTestsByTestRunner": {
                             "$id": "#/properties/codeLens/testRunner/getTestsByTestRunner",
                             "type": "boolean",
-                            "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &Тест.",
+                            "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &\u0422\u0435\u0441\u0442.",
                             "default": true
                         },
                         "getTestsArguments": {

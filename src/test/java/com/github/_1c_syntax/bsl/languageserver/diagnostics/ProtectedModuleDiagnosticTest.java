@@ -44,17 +44,16 @@ class ProtectedModuleDiagnosticTest extends AbstractDiagnosticTest<ProtectedModu
   @Test
   void test() {
     initServerContext(Absolute.path(PATH_TO_METADATA));
-
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
 
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics, true)
+      .hasSize(1)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(getRange()))
       .anyMatch(diagnostic -> diagnostic.getMessage()
-        .equals("Исходник модуля отсутствует из-за защиты паролем. ОбщийМодуль.ОбщийМодуль1"))
-      .hasSize(1)
+        .equals("Исходный код модуля отсутствует из-за защиты паролем. ОбщийМодуль.ОбщийМодуль1"))
     ;
   }
 
