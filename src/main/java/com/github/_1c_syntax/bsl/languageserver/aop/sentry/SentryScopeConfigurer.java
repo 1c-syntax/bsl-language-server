@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
+import io.sentry.spring.boot.jakarta.SentryProperties;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
@@ -45,6 +46,7 @@ import java.util.UUID;
 public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
+  private final SentryProperties sentryProperties;
 
   @PostConstruct
   public void init() {
@@ -55,6 +57,8 @@ public class SentryScopeConfigurer {
 
       scope.setTag("server.version", serverInfo.getVersion());
     });
+
+    sentryProperties.setRelease(serverInfo.getVersion());
   }
 
 }
