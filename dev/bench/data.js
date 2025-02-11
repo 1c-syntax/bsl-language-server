@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739261651757,
+  "lastUpdate": 1739304045315,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27652,6 +27652,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8402228631421058",
             "extra": "mean: 80.09785930315654 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd490f9b932b13d39d45e3b398be19d7a06537af",
+          "message": "Merge pull request #3410 from 1c-syntax/fix/complexity-lens\n\nИсправлено падение линз сложности при ошибке парсинга",
+          "timestamp": "2025-02-11T20:31:05+01:00",
+          "tree_id": "d383b12dc267b0fae7c5ffcea15268d5c3cbb0cc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bd490f9b932b13d39d45e3b398be19d7a06537af"
+        },
+        "date": 1739304042670,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.97179651260376,
+            "unit": "sec",
+            "range": "stddev: 0.9433521583792153",
+            "extra": "mean: 79.97179651260376 sec\nrounds: 3"
           }
         ]
       }
