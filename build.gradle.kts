@@ -78,8 +78,8 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.6")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.23.1")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.23.1")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
     api("io.github.1c-syntax", "bsl-parser", "0.26.0-rc.1") {
@@ -90,7 +90,7 @@ dependencies {
     }
     api("io.github.1c-syntax", "utils", "0.6.2")
     api("io.github.1c-syntax", "mdclasses", "0.15.0-rc.1")
-    api("io.github.1c-syntax", "bsl-common-library", "0.8.0-rc.1")
+    api("io.github.1c-syntax", "bsl-common-library", "0.8.0")
     api("io.github.1c-syntax", "supportconf", "0.14.1") {
         exclude("io.github.1c-syntax", "bsl-common-library")
     }
@@ -107,9 +107,9 @@ dependencies {
     implementation("org.aspectj", "aspectjrt", "1.9.22.1")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.17.0")
+    implementation("commons-io", "commons-io", "2.18.0")
     implementation("org.apache.commons", "commons-lang3", "3.17.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.9.4"){
+    implementation("commons-beanutils", "commons-beanutils", "1.10.0"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("org.apache.commons", "commons-collections4", "4.4")
@@ -131,7 +131,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.3.1-jre")
+            strictly("33.4.0-jre")
        }
     }
     
