@@ -60,7 +60,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     var complexityThreshold = getComplexityThreshold();
     var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
+      .filter(methodSymbol -> methodsComplexity.getOrDefault(methodSymbol, complexityThreshold - 1) >= complexityThreshold)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }
