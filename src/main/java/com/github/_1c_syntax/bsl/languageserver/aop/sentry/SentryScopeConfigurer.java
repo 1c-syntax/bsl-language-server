@@ -63,6 +63,7 @@ public class SentryScopeConfigurer {
         options.setAttachServerName(false);
         options.setServerName(getServerName());
         options.setBeforeSend(beforeSendCallback);
+        options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
       });
     }
 
