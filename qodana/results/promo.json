@@ -1,32 +1,32 @@
 {"version":"3","listProblem":[{
   "tool": "Code Inspection",
-  "category": "RegExp",
-  "type": "Regular expression can be simplified",
+  "category": "Verbose or redundant code constructs",
+  "type": "Lombok @Setter may be used",
   "tags": [
-    "RegExp"
+    "JAVA"
   ],
-  "severity": "Moderate",
-  "comment": "`[\\\\*]` can be simplified to '\\\\\\*'",
-  "detailsInfo": "Reports regular expressions that can be simplified.\n\n**Example:**\n\n\n      [a] xx* [ah-hz]\n\nAfter the quick-fix is applied:\n\n\n      a x+ [ahz]\n\nNew in 2022.1",
+  "severity": "High",
+  "comment": "Class 'ClientCapabilitiesHolder' may use Lombok @Setter",
+  "detailsInfo": "Reports standard setter method that can be replaced by the lombok `@Setter` annotation.\n\nExample:\n\n\n      import java.util.Date;\n\n      public class MyClass {\n        /**\n         * The process date.\n         */\n        private Date processDate;\n\n        /**\n         * Sets the date.\n         *\n         * @param The date\n         */\n        public void setProcessDate(Date param) {\n          processDate = param;\n        }\n      }\n\nAfter the quick-fix/cleanup is applied:\n\n\n      import lombok.Setter;\n      import java.util.Date;\n\n      @Setter\n      public class MyClass {\n        /**\n         * The process date.\n         * -- SETTER --\n         * Sets the date.\n         *\n         * @param The date\n         */\n        private Date processDate;\n      }\n\nIt only reports when the lombok library is configured. To unlombok, see the lombok site.\n\nNew in 2023.2",
   "sources": [
     {
       "type": "file",
-      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/UsingHardcodeSecretInformationDiagnostic.java",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/ClientCapabilitiesHolder.java",
       "language": "JAVA",
-      "line": 67,
-      "offset": 75,
-      "length": 5,
+      "line": 43,
+      "offset": 14,
+      "length": 24,
       "code": {
-        "startLine": 65,
-        "length": 5,
-        "offset": 80,
-        "surroundingCode": "  );\n\n  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile(\"^[\\\\*]+$\", Pattern.UNICODE_CASE);\n\n  @DiagnosticParameter("
+        "startLine": 41,
+        "length": 24,
+        "offset": 42,
+        "surroundingCode": "@ToString\n@EqualsAndHashCode\npublic class ClientCapabilitiesHolder {\n\n  /**"
       }
     }
   ],
   "attributes": {
     "module": "bsl-language-server.main",
-    "inspectionName": "RegExpSimplifiable"
+    "inspectionName": "LombokSetterMayBeUsed"
   },
-  "hash": "a96a0536e198cbff96eebc4edc9806807b12725ac46694da2501ad5bce236c55"
+  "hash": "1599d1ed085eda694e1bb94418af70287c1721e8628e5dc827a905ae3a1b0944"
 }]}
