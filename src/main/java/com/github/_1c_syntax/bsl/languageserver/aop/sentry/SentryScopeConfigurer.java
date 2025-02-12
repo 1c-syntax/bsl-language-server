@@ -60,7 +60,6 @@ public class SentryScopeConfigurer {
         options.setDsn(dsn);
         options.setEnvironment(environment);
         options.setRelease(serverInfo.getVersion());
-        options.setTag("server.version", serverInfo.getVersion());
         options.setAttachServerName(false);
         options.setServerName(getServerName());
         options.setBeforeSend(beforeSendCallback);
