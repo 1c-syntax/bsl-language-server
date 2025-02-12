@@ -1,1 +1,46 @@
-{"version":"3","listProblem":[]}
+{"version":"3","listProblem":[{
+  "tool": "Code Inspection",
+  "category": "General",
+  "type": "Duplicates",
+  "tags": [
+    "JAVA"
+  ],
+  "severity": "Moderate",
+  "comment": "Duplicated code",
+  "detailsInfo": "Reports duplicated blocks of code from the selected scope: the same file, same module, dependent modules or the entire project.\n\nThe inspection features quick-fixes that help you to set the size of detected duplicates, navigate to repetitive code fragments, and compare them in a tool window.When possible, the inspection provides a quick-fix to extract a method from the duplicated code.\n\nThe inspection options allow you to select the scope of the reported duplicated fragments and set the initial size for the duplicated language constructs.",
+  "sources": [
+    {
+      "type": "Duplicates",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/DisableSafeModeDiagnostic.java",
+      "language": "JAVA",
+      "line": 70,
+      "offset": 12,
+      "length": 512,
+      "code": {
+        "startLine": 70,
+        "length": 512,
+        "offset": 11,
+        "surroundingCode": "    return Optional.of(ctx)\n      .map(BSLParser.GlobalMethodCallContext::doCall)\n      .map(BSLParser.DoCallContext::callParamList)\n      .map(BSLParser.CallParamListContext::callParam)\n      .filter(callParamContexts -> callParamContexts.size() == 1)\n      .map(callParamContexts -> callParamContexts.get(0))\n      .map(BSLParser.CallParamContext::expression)\n      .map(BSLParser.ExpressionContext::member)\n      .map(memberContexts -> memberContexts.get(0))\n      .map(BSLParser.MemberContext::constValue)\n      .filter(constValueContext -> constValueContext.getToken(enabledValue, 0) != null)"
+      }
+    },
+    {
+      "type": "Duplicates",
+      "path": "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/SetPrivilegedModeDiagnostic.java",
+      "language": "JAVA",
+      "line": 63,
+      "offset": 12,
+      "length": 512,
+      "code": {
+        "startLine": 63,
+        "length": 512,
+        "offset": 11,
+        "surroundingCode": "    return Optional.of(ctx)\n      .map(BSLParser.GlobalMethodCallContext::doCall)\n      .map(BSLParser.DoCallContext::callParamList)\n      .map(BSLParser.CallParamListContext::callParam)\n      .filter(callParamContexts -> callParamContexts.size() == 1)\n      .map(callParamContexts -> callParamContexts.get(0))\n      .map(BSLParser.CallParamContext::expression)\n      .map(BSLParser.ExpressionContext::member)\n      .map(memberContexts -> memberContexts.get(0))\n      .map(BSLParser.MemberContext::constValue)\n      .filter(constValueContext -> constValueContext.FALSE() != null)"
+      }
+    }
+  ],
+  "attributes": {
+    "module": "bsl-language-server.main",
+    "inspectionName": "DuplicatedCode"
+  },
+  "hash": "92c398ed7c07aad782be4337f7855af387486f31848a2acf94105188fa48c8dc"
+}]}
