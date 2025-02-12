@@ -42,6 +42,7 @@ import java.util.UUID;
 public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
+  private final PermissionFilterBeforeSendCallback beforeSendCallback;
 
   @Value("${sentry.dsn:}")
   private final String dsn;
@@ -58,6 +59,7 @@ public class SentryScopeConfigurer {
         options.setRelease(serverInfo.getVersion());
         options.setTag("server.version", serverInfo.getVersion());
         options.setAttachServerName(false);
+        options.setBeforeSend(beforeSendCallback);
       });
     }
 
