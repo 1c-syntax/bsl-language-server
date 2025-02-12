@@ -275,6 +275,12 @@ license {
     exclude("**/*.mockito.plugins.MockMaker")
 }
 
+if (System.getenv("SENTRY_AUTH_TOKEN") != "true") {
+    sentry {
+        includeSourceContext.set(true)
+    }
+}
+
 sonarqube {
     properties {
         property("sonar.sourceEncoding", "UTF-8")
