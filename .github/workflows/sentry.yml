@@ -1,18 +1,30 @@
-name: Sentry Ref
-
+name: Sentry
 on:
   push:
+    branches-ignore:
+      - "translations_**"
+      - "dependabot/**"
     tags:
       - 'v*'
-
 jobs:
-  release:
+
+  sentry:
+    name: Sentry
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: gradle
+      - name: Get version from Gradle
+        id: get_version
+        run: echo "RELEASE_VERSION=$(./gradlew version -q)" >> $GITHUB_ENV
       - name: Create Sentry release
         uses: getsentry/action-release@v1
         env:
@@ -21,4 +33,4 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           environment: production
-          version: ${{ github.ref }}
+          version: ${{ env.RELEASE_VERSION }}
