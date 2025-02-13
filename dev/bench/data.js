@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739405325863,
+  "lastUpdate": 1739466750139,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27776,6 +27776,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.841475506938886",
             "extra": "mean: 78.86800750096639 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "66275f4a146ba4498e1eb9c68d60969929771de7",
+          "message": "Убран лишний unlock - он выполняется при finilize",
+          "timestamp": "2025-02-13T18:02:19+01:00",
+          "tree_id": "616470427080e9bb7dfa53e08261399de0bb7a05",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/66275f4a146ba4498e1eb9c68d60969929771de7"
+        },
+        "date": 1739466744364,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.49492994944255,
+            "unit": "sec",
+            "range": "stddev: 1.1943214127255077",
+            "extra": "mean: 79.49492994944255 sec\nrounds: 3"
           }
         ]
       }
