@@ -63,7 +63,7 @@ val languageToolVersion = "6.5"
 
 dependencyManagement {
     imports {
-        mavenBom("io.sentry:sentry-bom:8.1.0")
+        mavenBom("io.sentry:sentry-bom:8.2.0")
     }
 }
 
