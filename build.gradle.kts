@@ -20,7 +20,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.52.0"
     id("org.springframework.boot") version "3.4.2"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.1.0"
+    id("io.sentry.jvm.gradle") version "5.2.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.4.2"
@@ -60,12 +60,6 @@ gitProperties {
 val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
 
 val languageToolVersion = "6.5"
-
-dependencyManagement {
-    imports {
-        mavenBom("io.sentry:sentry-bom:8.1.0")
-    }
-}
 
 dependencies {
 
