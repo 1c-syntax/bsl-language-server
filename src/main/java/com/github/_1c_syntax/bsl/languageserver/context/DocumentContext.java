@@ -281,7 +281,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
       if (versionMatches && (this.content != null)) {
         clearDependantData();
-        computeLock.unlock();
         return;
       }
 
