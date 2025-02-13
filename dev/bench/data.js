@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739402049158,
+  "lastUpdate": 1739405325863,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27745,6 +27745,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8562916353628991",
             "extra": "mean: 79.70776136716206 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b15d400f82f24c20cca66e929c8f872803f3872f",
+          "message": "Merge pull request #3417 from 1c-syntax/feature/hash-server-name\n\nХэширование имени хоста и отправка в Sentry, фильтрация стак трейса по принадлежности к приложению",
+          "timestamp": "2025-02-13T00:16:47+01:00",
+          "tree_id": "ab11bf13973642835938d4b1bc3f1df42a6a8494",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b15d400f82f24c20cca66e929c8f872803f3872f"
+        },
+        "date": 1739405322683,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.86800750096639,
+            "unit": "sec",
+            "range": "stddev: 1.841475506938886",
+            "extra": "mean: 78.86800750096639 sec\nrounds: 3"
           }
         ]
       }
