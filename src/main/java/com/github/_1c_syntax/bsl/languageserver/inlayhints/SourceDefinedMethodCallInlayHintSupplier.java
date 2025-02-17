@@ -149,7 +149,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
     ) {
       labelBuilder.append(" (");
-      labelBuilder.append(defaultValue.getValue());
+      labelBuilder.append(defaultValue.value());
       labelBuilder.append(")");
     } else {
       labelBuilder.append(":");
