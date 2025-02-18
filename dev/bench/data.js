@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1739466750139,
+  "lastUpdate": 1739868575575,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27807,6 +27807,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1943214127255077",
             "extra": "mean: 79.49492994944255 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ae97c9a33023e2a4f139448c8c05db70f058ff2d",
+          "message": "Merge pull request #3420 from 1c-syntax/feature/parameter-annotation\n\nДобавлено хранение информации об аннотации параметров методов.",
+          "timestamp": "2025-02-18T09:35:37+01:00",
+          "tree_id": "f09a306633c62fb87fdc39b9ba3f3a53a168bb43",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ae97c9a33023e2a4f139448c8c05db70f058ff2d"
+        },
+        "date": 1739868571509,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.76163125038147,
+            "unit": "sec",
+            "range": "stddev: 1.500472312711821",
+            "extra": "mean: 79.76163125038147 sec\nrounds: 3"
           }
         ]
       }
