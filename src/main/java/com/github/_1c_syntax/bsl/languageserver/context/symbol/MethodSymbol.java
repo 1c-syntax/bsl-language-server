@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,12 +88,12 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   boolean deprecated;
 
   @Builder.Default
-  List<ParameterDefinition> parameters = new ArrayList<>();
+  List<ParameterDefinition> parameters = Collections.emptyList();
 
   @Builder.Default
   Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
   @Builder.Default
-  List<Annotation> annotations = new ArrayList<>();
+  List<Annotation> annotations = Collections.emptyList();
 
   @Override
   public Range getRange() {

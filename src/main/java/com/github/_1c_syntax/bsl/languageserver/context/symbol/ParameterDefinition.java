@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AccessLevel;
@@ -29,6 +30,8 @@ import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -57,6 +60,9 @@ public class ParameterDefinition {
    * Значение по умолчанию.
    */
   DefaultValue defaultValue;
+
+  @Builder.Default
+  List<Annotation> annotations = Collections.emptyList();
 
   @Getter(AccessLevel.NONE)
   int startLine;
@@ -92,12 +98,8 @@ public class ParameterDefinition {
     EMPTY
   }
 
-  @Value
-  public static class DefaultValue {
-    public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
-
-    ParameterType type;
-    String value;
+  public record DefaultValue(ParameterType type, String value) {
+      public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
   }
 
   public static class ParameterDefinitionBuilder {

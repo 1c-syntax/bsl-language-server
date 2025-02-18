@@ -245,6 +245,7 @@ public final class MethodSymbolComputer
           .name(parameterName)
           .byValue(param.VAL_KEYWORD() != null)
           .defaultValue(getDefaultValue(param))
+          .annotations(createAnnotations(param.annotation()))
           .range(getParameterRange(param))
           .description(getParameterDescription(parameterName, description))
           .build();

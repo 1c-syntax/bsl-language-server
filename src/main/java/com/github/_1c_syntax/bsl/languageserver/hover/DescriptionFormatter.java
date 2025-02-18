@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
@@ -180,7 +181,7 @@ public class DescriptionFormatter {
     }
     String methodName = methodSymbol.getName();
 
-    var parameters = getParametersDescriptionPart(methodSymbol);
+    var parameters = getParametersSignatureDescription(methodSymbol);
     var returnedValueType = getReturnedValueTypeDescriptionPart(methodSymbol);
     String export = methodSymbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
@@ -200,7 +201,7 @@ public class DescriptionFormatter {
     var annotationKind = getResourceString(ANNOTATION_KEY);
     var annotationName = symbol.getName();
 
-    var parameters = getParametersDescriptionPart(methodSymbol);
+    var parameters = getParametersSignatureDescription(methodSymbol);
 
     return String.format(
       signatureTemplate,
@@ -225,16 +226,17 @@ public class DescriptionFormatter {
     );
   }
 
-  private String getParametersDescriptionPart(MethodSymbol methodSymbol) {
+  public String getParametersSignatureDescription(MethodSymbol methodSymbol) {
     var parametersDescription = new StringJoiner(", ");
     methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-      var parameter = "";
+      StringBuilder parameter = new StringBuilder();
+      parameter.append(getAnnotationsDescriptionPart(parameterDefinition));
       var parameterName = parameterDefinition.getName();
 
       if (parameterDefinition.isByValue()) {
-        parameter = parameter + getResourceString(VAL_KEY) + " ";
+        parameter.append(getResourceString(VAL_KEY)).append(" ");
       }
-      parameter += parameterName;
+      parameter.append(parameterName);
 
       var parameterTypes = parameterDefinition.getDescription()
         .map(ParameterDescription::getTypes)
@@ -242,18 +244,27 @@ public class DescriptionFormatter {
         .orElse("");
 
       if (!parameterTypes.isEmpty()) {
-        parameter += ": " + parameterTypes;
+        parameter.append(": ").append(parameterTypes);
       }
 
       if (parameterDefinition.isOptional()) {
-        parameter += " = ";
-        parameter += parameterDefinition.getDefaultValue().getValue();
+        parameter.append(" = ");
+        parameter.append(parameterDefinition.getDefaultValue().value());
       }
 
-      parametersDescription.add(parameter);
+      parametersDescription.add(parameter.toString());
     });
 
     return parametersDescription.toString();
+  }
+
+  private static String getAnnotationsDescriptionPart(ParameterDefinition parameterDefinition) {
+    var description = new StringBuilder();
+    for (Annotation annotation : parameterDefinition.getAnnotations()) {
+      description.append("&").append(annotation.getName()).append(" ");
+    }
+
+    return description.toString();
   }
 
   private static String getReturnedValueTypeDescriptionPart(MethodSymbol methodSymbol) {
@@ -275,18 +286,17 @@ public class DescriptionFormatter {
       .collect(Collectors.joining(" | "));
   }
 
-
-  public String parameterToString(ParameterDescription parameter, int level) {
+  public String parameterToString(ParameterDescription parameterDescription, int level) {
     var result = new StringJoiner("  \n"); // два пробела
-    Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
+    Map<String, String> typesMap = typesToMap(parameterDescription.getTypes(), level);
     var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
 
     if (typesMap.size() == 1) {
       result.add(String.format(parameterTemplate,
-        parameter.getName(),
+        parameterDescription.getName(),
         typesMapToString(typesMap, 0)));
     } else {
-      result.add(String.format(parameterTemplate, parameter.getName(), ""));
+      result.add(String.format(parameterTemplate, parameterDescription.getName(), ""));
       result.add(typesMapToString(typesMap, level + 1));
     }
     return result.toString();
@@ -299,7 +309,11 @@ public class DescriptionFormatter {
       return parameterToString(parameterDescription.get(), level);
     }
 
-    return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
+    return String.format(
+      PARAMETER_TEMPLATE,
+      parameterDefinition.getName(),
+      ""
+    );
   }
 
   private Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {

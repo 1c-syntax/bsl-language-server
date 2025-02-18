@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -38,5 +38,5 @@ public class Annotation {
   AnnotationKind kind;
 
   @Builder.Default
-  List<AnnotationParameterDefinition> parameters = new ArrayList<>();
+  List<AnnotationParameterDefinition> parameters = Collections.emptyList();
 }
