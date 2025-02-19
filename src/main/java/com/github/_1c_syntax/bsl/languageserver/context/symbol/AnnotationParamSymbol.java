@@ -40,7 +40,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"parent"})
-public class AnnotationSymbol implements SourceDefinedSymbol, Describable {
+public class AnnotationParamSymbol implements SourceDefinedSymbol, Describable {
 
   String name;
 
@@ -65,7 +65,7 @@ public class AnnotationSymbol implements SourceDefinedSymbol, Describable {
   }
 
   public SymbolKind getSymbolKind() {
-    return SymbolKind.Interface;
+    return SymbolKind.TypeParameter;
   }
 
   @Override
@@ -73,8 +73,8 @@ public class AnnotationSymbol implements SourceDefinedSymbol, Describable {
     // no-op
   }
 
-  public static AnnotationSymbol from(String name, MethodSymbol methodSymbol) {
-    return AnnotationSymbol.builder()
+  public static AnnotationParamSymbol from(String name, MethodSymbol methodSymbol) {
+    return AnnotationParamSymbol.builder()
       .name(name)
       .owner(methodSymbol.getOwner())
       .range(methodSymbol.getRange())

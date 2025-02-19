@@ -41,7 +41,7 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
   private AnnotationReferenceFinder referenceFinder;
 
   @Test
-  void findReference() {
+  void findReferenceOfAnnotation() {
     // given
     initServerContext("./src/test/resources/references/annotations");
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
@@ -56,9 +56,53 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
       .isPresent()
       .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.Interface))
+      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 76)))
+      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
+    ;
+  }
+
+  @Test
+  void findReferenceOfAnnotationParameterName() {
+    // given
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(0, 25));
+
+    // then
+    assertThat(optionalReference)
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ВторойПараметр"))
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 18)))
-      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(1, 10, 28)))
+      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 19, 33)))
+      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
+    ;
+  }
+
+  @Test
+  void findReferenceOfAnnotationParameterValue() {
+    // given
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(0, 60));
+
+    // then
+    assertThat(optionalReference)
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Значение"))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
+      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 56, 75)))
+      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }
 }

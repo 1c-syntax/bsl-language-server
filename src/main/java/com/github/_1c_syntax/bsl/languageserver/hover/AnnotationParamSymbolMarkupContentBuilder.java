@@ -21,14 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -36,12 +39,12 @@ import java.util.StringJoiner;
  */
 @Component
 @RequiredArgsConstructor
-public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilder<AnnotationSymbol> {
+public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentBuilder<AnnotationParamSymbol> {
 
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
-  public MarkupContent getContent(AnnotationSymbol symbol) {
+  public MarkupContent getContent(AnnotationParamSymbol symbol) {
     var maybeMethodSymbol = symbol.getParent();
     if (maybeMethodSymbol.filter(MethodSymbol.class::isInstance).isEmpty()) {
       return new MarkupContent(MarkupKind.MARKDOWN, "");
@@ -49,37 +52,19 @@ public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilde
 
     var markupBuilder = new StringJoiner("\n");
     var methodSymbol = (MethodSymbol) maybeMethodSymbol.get();
+    var maybeParameterDefinition = methodSymbol.getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(symbol.getName()))
+      .findFirst();
 
-    // сигнатура
-    // местоположение метода
-    // описание метода
-    // параметры
-    // примеры
-    // варианты вызова
+    if (maybeParameterDefinition.isEmpty()) {
+      return new MarkupContent(MarkupKind.MARKDOWN, "");
+    }
 
-    // сигнатура
-    String signature = descriptionFormatter.getSignature(symbol, methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
+    var parameterDefinition = maybeParameterDefinition.get();
 
-    // местоположение метода
-    String methodLocation = descriptionFormatter.getLocation(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
-
-    // описание метода
-    String purposeSection = descriptionFormatter.getPurposeSection(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
-
-    // параметры
-    String parametersSection = descriptionFormatter.getParametersSection(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
-
-    // примеры
-    String examplesSection = descriptionFormatter.getExamplesSection(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
-
-    // варианты вызова
-    String callOptionsSection = descriptionFormatter.getCallOptionsSection(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
+    // описание параметра аннотации
+    String parameter = descriptionFormatter.parameterToString(parameterDefinition);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parameter);
 
     String content = markupBuilder.toString();
 
@@ -88,7 +73,7 @@ public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilde
 
   @Override
   public SymbolKind getSymbolKind() {
-    return SymbolKind.Interface;
+    return SymbolKind.TypeParameter;
   }
 
 }
