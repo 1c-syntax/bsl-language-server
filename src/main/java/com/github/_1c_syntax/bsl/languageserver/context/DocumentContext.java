@@ -112,9 +112,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Getter
   private FileType fileType;
-  @Getter(onMethod = @__({@Locked.Read("computeLock")}))
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private BSLTokenizer tokenizer;
-  @Getter(onMethod = @__({@Locked.Read("computeLock")}))
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private SymbolTree symbolTree;
 
   @Getter
@@ -145,24 +145,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return context;
   }
 
-  @Locked.Read("computeLock")
+  @Locked("computeLock")
   public String getContent() {
     requireNonNull(content);
     return content;
   }
 
-  @Locked.Read("computeLock")
+  @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
-  @Locked.Read("computeLock")
+  @Locked("computeLock")
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
   }
 
-  @Locked.Read("computeLock")
+  @Locked("computeLock")
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
@@ -178,7 +178,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       .toList();
   }
 
-  @Locked.Read("computeLock")
+  @Locked("computeLock")
   public String getText(Range range) {
     Position start = range.getStart();
     Position end = range.getEnd();
