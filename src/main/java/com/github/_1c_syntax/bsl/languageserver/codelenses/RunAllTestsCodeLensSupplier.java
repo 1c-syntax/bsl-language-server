@@ -80,8 +80,12 @@ public class RunAllTestsCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var symbolTree = documentContext.getSymbolTree();
-    var firstMethod = symbolTree.getMethods().get(0);
+    var methods = documentContext.getSymbolTree().getMethods();
+    if (methods.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    var firstMethod = methods.get(0);
 
     return List.of(toCodeLens(firstMethod, documentContext));
   }
