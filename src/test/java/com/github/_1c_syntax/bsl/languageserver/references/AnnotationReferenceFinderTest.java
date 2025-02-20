@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -102,6 +104,49 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Значение"))
       .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
       .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 56, 75)))
+      .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
+    ;
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+     6, 24,  6, 19,  6, 27
+     8, 10,  8,  4,  9, 12
+     9, 10,  8,  4,  9, 12
+    11, 20, 11, 19, 11, 21
+    12, 20, 12, 19, 12, 22
+    13, 20, 13, 19, 13, 25
+    14, 20, 14, 19, 14, 29
+    15, 20, 15, 19, 15, 31
+    16, 20, 16, 19, 16, 23
+    18,  5, 18,  4, 18,  6
+    19,  5, 19,  4, 19,  7
+    20,  5, 20,  4, 20, 12
+    21,  5, 21,  4, 22, 12
+    22,  5, 21,  4, 22, 12
+    23,  5, 23,  4, 23, 10
+    24,  5, 24,  4, 24, 14
+    25,  5, 25,  4, 25, 16
+    26,  5, 26,  4, 26,  8
+    """
+  )
+  void findReferenceOfAnnotationParameterValue_allLiterals(int positionLine, int positionCharacter, int selectionRangeStartLine, int selectionRangeStartCharacter, int selectionRangeEndLine, int selectionRangeEndCharacter) {
+    // given
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(positionLine, positionCharacter));
+
+    // then
+    assertThat(optionalReference)
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Значение"))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
+      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(selectionRangeStartLine, selectionRangeStartCharacter, selectionRangeEndLine, selectionRangeEndCharacter)))
       .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }

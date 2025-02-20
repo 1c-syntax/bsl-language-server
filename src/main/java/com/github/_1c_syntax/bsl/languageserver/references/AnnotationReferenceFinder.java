@@ -37,10 +37,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -122,15 +122,23 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
         .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamContext
         .map(BSLParser.AnnotationParamContext.class::cast)
         .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+    } else if (parent instanceof BSLParser.ConstValueContext constValue) {
+      return getReferenceToAnnotationParamSymbol(constValue, documentContext);
     } else if (parent.getParent() instanceof BSLParser.ConstValueContext constValue) {
-      return Optional.of(constValue)
-        .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamContext
-        .filter(BSLParser.AnnotationParamContext.class::isInstance)
-        .map(BSLParser.AnnotationParamContext.class::cast)
-        .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+      return getReferenceToAnnotationParamSymbol(constValue, documentContext);
+    } else if (parent.getParent().getParent() instanceof BSLParser.ConstValueContext constValue) {
+      return getReferenceToAnnotationParamSymbol(constValue, documentContext);
     }
 
     return Optional.empty();
+  }
+
+  private @NotNull Optional<Reference> getReferenceToAnnotationParamSymbol(BSLParser.ConstValueContext constValue, DocumentContext documentContext) {
+    return Optional.of(constValue)
+      .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamContext
+      .filter(BSLParser.AnnotationParamContext.class::isInstance)
+      .map(BSLParser.AnnotationParamContext.class::cast)
+      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
   }
 
   private Optional<AnnotationSymbol> getAnnotationSymbol(BSLParser.AnnotationNameContext annotationNode) {
