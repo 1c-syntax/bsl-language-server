@@ -184,6 +184,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    if (ctx.IDENTIFIER() == null) {
+      return super.visitForEachStatement(ctx);
+    }
+
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
       || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
