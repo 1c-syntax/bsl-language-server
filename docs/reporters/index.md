@@ -9,4 +9,5 @@
 * [junit](junit.md);
 * [tslint](tslint.md);
 * [sarif](sarif.md);
+* [code-quality](code-quality.md);
 * [console](console.md).

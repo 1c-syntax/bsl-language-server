@@ -1,4 +1,3 @@
-import gradlegitproperties.org.ajoberstar.grgit.Grgit
 import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
@@ -102,10 +101,11 @@ dependencies {
 
     // commons utils
     implementation("commons-io", "commons-io", "2.18.0")
-    implementation("org.apache.commons", "commons-lang3", "3.17.0")
     implementation("commons-beanutils", "commons-beanutils", "1.10.0"){
         exclude("commons-logging", "commons-logging")
     }
+    implementation("commons-codec", "commons-codec", "1.16.0")
+    implementation("org.apache.commons", "commons-lang3", "3.17.0")
     implementation("org.apache.commons", "commons-collections4", "4.4")
     implementation("org.apache.commons", "commons-exec", "1.4.0")
 
