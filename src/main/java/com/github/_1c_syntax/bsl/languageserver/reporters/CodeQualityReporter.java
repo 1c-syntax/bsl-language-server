@@ -63,10 +63,10 @@ public class CodeQualityReporter implements DiagnosticReporter {
       }
     }
 
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-    File reportFile = new File(outputDir.toFile(), "./bsl-code-quality.json");
+    var reportFile = new File(outputDir.toFile(), "./bsl-code-quality.json");
     mapper.writeValue(reportFile, report);
     LOGGER.info("CodeQuality report saved to {}", reportFile.getAbsolutePath());
   }
