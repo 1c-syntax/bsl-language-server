@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import picocli.CommandLine;
 import picocli.spring.PicocliSpringFactory;
 
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class WebsocketCommandTest {
 
-  @SpyBean
+  @MockitoSpyBean
   private LanguageServerConfiguration configuration;
 
   @Autowired

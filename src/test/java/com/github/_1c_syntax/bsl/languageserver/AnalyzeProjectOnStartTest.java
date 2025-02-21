@@ -30,8 +30,8 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -47,11 +47,13 @@ class AnalyzeProjectOnStartTest {
 
   @Autowired
   private LanguageServerConfiguration configuration;
-  @SpyBean
+
+  @MockitoSpyBean
   private ServerContext serverContext;
 
-  @MockBean
+  @MockitoBean
   private LanguageClient languageClient;
+
   @Autowired
   private LanguageClientHolder languageClientHolder;
 

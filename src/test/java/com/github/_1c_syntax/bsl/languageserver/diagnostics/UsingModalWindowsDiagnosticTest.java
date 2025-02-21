@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 
 @DirtiesContext
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
-  @SpyBean
+  @MockitoSpyBean
   private ServerContext context;
 
   UsingModalWindowsDiagnosticTest() {
