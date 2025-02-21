@@ -58,7 +58,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   private final LocationRepository locationRepository;
 
   private static String getMethodNameByLocation(BSLParserRuleContext node, Range range) {
-    return Trees.findTerminalNodeContainsPosition(node, range.getEnd())
+    return Trees.findTerminalNodeContainsPosition(node, range.getStart())
       .map(ParseTree::getText)
       .orElseThrow();
   }

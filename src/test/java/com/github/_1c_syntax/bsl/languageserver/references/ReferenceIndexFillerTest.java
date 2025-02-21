@@ -203,7 +203,7 @@ class ReferenceIndexFillerTest {
 
     var referencedSymbol = referenceIndex.getReference(
       documentContext.getUri(),
-      new Position(33, 10)
+      new Position(33, 9)
     );
     assertThat(referencedSymbol).isPresent();
     assertThat(referencedSymbol).get()

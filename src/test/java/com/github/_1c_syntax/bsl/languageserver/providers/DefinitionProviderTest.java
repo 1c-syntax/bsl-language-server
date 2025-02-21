@@ -76,7 +76,7 @@ class DefinitionProviderTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     var params = new DefinitionParams();
-    params.setPosition(new Position(4, 10));
+    params.setPosition(new Position(4, 9));
 
     // when
     var definitions = definitionProvider.getDefinition(documentContext, params);
