@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740173209580,
+  "lastUpdate": 1740180106484,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27869,6 +27869,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.764496030505926",
             "extra": "mean: 80.23545050621033 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b972780ee9da2ffd93562eff051fa75876c2ce4",
+          "message": "Merge pull request #3427 from 1c-syntax/feature/polish-callHierarchy",
+          "timestamp": "2025-02-21T23:59:11+01:00",
+          "tree_id": "d028780b6e74e037af47fa9c7b19692ee2cfd55c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4b972780ee9da2ffd93562eff051fa75876c2ce4"
+        },
+        "date": 1740180103063,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.04049015045166,
+            "unit": "sec",
+            "range": "stddev: 1.6760817478190595",
+            "extra": "mean: 79.04049015045166 sec\nrounds: 3"
           }
         ]
       }
