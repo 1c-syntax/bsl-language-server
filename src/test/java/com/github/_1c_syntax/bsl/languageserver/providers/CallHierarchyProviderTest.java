@@ -52,7 +52,7 @@ class CallHierarchyProviderTest {
 
   private final Position firstProcedureDeclarationPosition = new Position(0, 15);
   private final Position firstFunctionCallPosition = new Position(1, 15);
-  private final Position secondFunctionDeclarationPosition = new Position(14, 15);
+  private final Position secondFunctionDeclarationPosition = new Position(16, 15);
   private final Position secondFunctionCallPosition = new Position(2, 15);
 
   @BeforeEach
