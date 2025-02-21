@@ -17,7 +17,7 @@ plugins {
     id("io.freefair.maven-central.validate-poms") version "8.12.1"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("com.github.ben-manes.versions") version "0.52.0"
-    id("org.springframework.boot") version "3.4.2"
+    id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "5.2.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
@@ -101,7 +101,7 @@ dependencies {
 
     // commons utils
     implementation("commons-io", "commons-io", "2.18.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.10.0"){
+    implementation("commons-beanutils", "commons-beanutils", "1.10.1"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("commons-codec", "commons-codec", "1.16.0")
@@ -141,7 +141,7 @@ dependencies {
 
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.49")
-    testImplementation("org.awaitility", "awaitility", "4.2.2")
+    testImplementation("org.awaitility", "awaitility", "4.3.0")
 }
 
 java {
@@ -212,6 +212,10 @@ tasks.jacocoTestReport {
         xml.required.set(true)
         xml.outputLocation.set(File("${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"))
     }
+}
+
+jmh {
+    jmhVersion = "1.37"
 }
 
 tasks.processResources {
