@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -54,7 +54,7 @@ class ReferenceIndexReferenceFinderTest {
   @Autowired
   private ServerContext serverContext;
 
-  @SpyBean
+  @MockitoSpyBean
   private ReferenceIndex referenceIndex;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndexReferenceFinder.bsl";

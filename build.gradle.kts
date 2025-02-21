@@ -103,7 +103,7 @@ dependencies {
     // commons utils
     implementation("commons-io", "commons-io", "2.18.0")
     implementation("org.apache.commons", "commons-lang3", "3.17.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.10.0"){
+    implementation("commons-beanutils", "commons-beanutils", "1.10.1"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("org.apache.commons", "commons-collections4", "4.4")
@@ -141,7 +141,7 @@ dependencies {
 
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.49")
-    testImplementation("org.awaitility", "awaitility", "4.2.2")
+    testImplementation("org.awaitility", "awaitility", "4.3.0")
 }
 
 java {
@@ -212,6 +212,10 @@ tasks.jacocoTestReport {
         xml.required.set(true)
         xml.outputLocation.set(File("${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"))
     }
+}
+
+jmh {
+    jmhVersion = "1.37"
 }
 
 tasks.processResources {

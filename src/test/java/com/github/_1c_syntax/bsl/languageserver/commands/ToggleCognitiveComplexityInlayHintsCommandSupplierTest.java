@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Optional;
 
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verify;
 class ToggleCognitiveComplexityInlayHintsCommandSupplierTest {
   private final static String FILE_PATH = "./src/test/resources/commands/ToggleCognitiveComplexityInlayHintsCommandSupplier.bsl";
 
-  @MockBean
+  @MockitoBean
   private CognitiveComplexityInlayHintSupplier complexityInlayHintSupplier;
 
   @Autowired
