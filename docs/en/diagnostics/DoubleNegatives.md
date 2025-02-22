@@ -1,6 +1,5 @@
 # Double negatives (DoubleNegatives)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
 
-Описание диагностики
+* Source: [Remove double negative](https://www.refactoring.com/catalog/removeDoubleNegative.html)
