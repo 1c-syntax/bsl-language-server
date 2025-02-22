@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740227373241,
+  "lastUpdate": 1740241661455,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27993,6 +27993,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6984736590856213",
             "extra": "mean: 80.77467211087544 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "32728fc9c0a454d4b8788c14d0e3279c5916bcbf",
+          "message": "Явный lf в отчете CodeQuality + /-пути",
+          "timestamp": "2025-02-22T17:13:14+01:00",
+          "tree_id": "5ca10785243af5ca5243ab9d453efe39bd626340",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/32728fc9c0a454d4b8788c14d0e3279c5916bcbf"
+        },
+        "date": 1740241657911,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.16579826672871,
+            "unit": "sec",
+            "range": "stddev: 2.508334803796419",
+            "extra": "mean: 81.16579826672871 sec\nrounds: 3"
           }
         ]
       }
