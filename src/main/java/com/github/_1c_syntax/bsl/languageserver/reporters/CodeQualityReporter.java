@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -58,7 +61,8 @@ public class CodeQualityReporter implements DiagnosticReporter {
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         var diagnosticInfo = diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnostic.getCode()));
-        var entry = new CodeQualityReportEntry(fileInfo.getPath().toString(), diagnostic, diagnosticInfo);
+        var path = fileInfo.getPath().toString().replace("\\", "/");
+        var entry = new CodeQualityReportEntry(path, diagnostic, diagnosticInfo);
         report.add(entry);
       }
     }
@@ -66,8 +70,13 @@ public class CodeQualityReporter implements DiagnosticReporter {
     var mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
+    var indenter = new DefaultIndenter().withLinefeed("\n");
+    var printer = new DefaultPrettyPrinter()
+      .withObjectIndenter(indenter);
+    ObjectWriter writer = mapper.writer(printer);
+
     var reportFile = new File(outputDir.toFile(), "./bsl-code-quality.json");
-    mapper.writeValue(reportFile, report);
+    writer.writeValue(reportFile, report);
     LOGGER.info("CodeQuality report saved to {}", reportFile.getAbsolutePath());
   }
 }
