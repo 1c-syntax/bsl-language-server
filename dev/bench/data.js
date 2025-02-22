@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740226314357,
+  "lastUpdate": 1740227373241,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -27962,6 +27962,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9834596215801223",
             "extra": "mean: 79.67128411928813 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd888c095d2c5abd3f8bccaa56a6cc84866919e5",
+          "message": "Merge pull request #3423 from 1c-syntax/feature/hover-annotation-param\n\nПоказ ховера при наведении на параметры аннотации.",
+          "timestamp": "2025-02-22T13:01:54+01:00",
+          "tree_id": "afd81d0d47e014c15b46d16b59713702587afb39",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bd888c095d2c5abd3f8bccaa56a6cc84866919e5"
+        },
+        "date": 1740227369266,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.77467211087544,
+            "unit": "sec",
+            "range": "stddev: 0.6984736590856213",
+            "extra": "mean: 80.77467211087544 sec\nrounds: 3"
           }
         ]
       }
