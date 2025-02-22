@@ -3,6 +3,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+The absence of module sources in the configuration is not recommended.
+In the case of a closed, password-protected module, the quality of the code decreases, it is impossible to review the code, and versioning of changes is not carried out.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
