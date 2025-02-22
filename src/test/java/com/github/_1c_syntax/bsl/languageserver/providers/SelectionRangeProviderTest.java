@@ -71,7 +71,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAfterStatement() {
     // given
-    var params = selection(4, 20);
+    var params = selection(4, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -89,7 +89,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockBeforeStatement() {
     // given
-    var params = selection(6, 20);
+    var params = selection(6, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -107,7 +107,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAroundStatement() {
     // given
-    var params = selection(5, 20);
+    var params = selection(5, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);

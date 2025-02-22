@@ -48,6 +48,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Locked;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -111,9 +112,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Getter
   private FileType fileType;
-  @Getter
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private BSLTokenizer tokenizer;
-  @Getter
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private SymbolTree symbolTree;
 
   @Getter
@@ -144,20 +145,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return context;
   }
 
+  @Locked("computeLock")
   public String getContent() {
     requireNonNull(content);
     return content;
   }
 
+  @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  @Locked("computeLock")
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
   }
 
+  @Locked("computeLock")
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
@@ -173,6 +178,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       .toList();
   }
 
+  @Locked("computeLock")
   public String getText(Range range) {
     Position start = range.getStart();
     Position end = range.getEnd();

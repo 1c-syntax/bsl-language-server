@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -34,8 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -93,25 +94,119 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    DocumentContext document = serverContext.getDocument(uri);
-    if (document == null || document.getFileType() != FileType.OS) {
+    DocumentContext documentContext = serverContext.getDocument(uri);
+    if (documentContext == null || documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }
 
-    return Trees.findTerminalNodeContainsPosition(document.getAst(), position)
-      .filter(node -> node.getParent().getRuleContext().getRuleIndex() == BSLParser.RULE_annotationName)
-      .flatMap((TerminalNode annotationNode) -> {
-        var annotationName = annotationNode.getText();
-        var annotationSymbol = registeredAnnotations.get(annotationName);
-        if (annotationSymbol == null) {
-          return Optional.empty();
-        }
-        return Optional.of(Reference.of(
-          document.getSymbolTree().getModule(),
-          annotationSymbol,
-          new Location(uri.toString(), Ranges.create(annotationNode.getParent().getParent()))
-        ));
-      });
+    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(documentContext.getAst(), position);
+    if (maybeTerminalNode.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var terminalNode = maybeTerminalNode.get();
+    var parent = terminalNode.getParent();
+    if (!(parent instanceof BSLParserRuleContext parentContext)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(parentContext)
+      .filter(BSLParser.AnnotationNameContext.class::isInstance)
+      .map(BSLParser.AnnotationNameContext.class::cast)
+      .flatMap(annotationName -> getReferenceToAnnotationSymbol(uri, annotationName, documentContext))
+
+      .or(() -> Optional.of(parentContext)
+        .filter(BSLParser.AnnotationParamNameContext.class::isInstance)
+        .map(BSLParser.AnnotationParamNameContext.class::cast)
+        .flatMap(annotationParamName -> getReferenceToAnnotationParamSymbol(annotationParamName, documentContext))
+      )
+
+      .or(() -> Optional.of(parentContext)
+        .filter(BSLParser.ConstValueContext.class::isInstance)
+        .map(BSLParser.ConstValueContext.class::cast)
+        .flatMap(constValue -> getReferenceToAnnotationParamSymbol(constValue, documentContext))
+      )
+
+      .or(() -> Optional.of(parentContext)
+        .map(BSLParserRuleContext::getParent)
+        .filter(BSLParser.ConstValueContext.class::isInstance)
+        .map(BSLParser.ConstValueContext.class::cast)
+        .flatMap(constValue -> getReferenceToAnnotationParamSymbol(constValue, documentContext))
+      )
+
+      .or(() -> Optional.of(parentContext)
+        .map(BSLParserRuleContext::getParent)
+        .map(BSLParserRuleContext::getParent)
+        .filter(BSLParser.ConstValueContext.class::isInstance)
+        .map(BSLParser.ConstValueContext.class::cast)
+        .flatMap(constValue -> getReferenceToAnnotationParamSymbol(constValue, documentContext))
+      );
+
+  }
+
+  private Optional<Reference> getReferenceToAnnotationSymbol(URI uri, BSLParser.AnnotationNameContext annotationName, DocumentContext documentContext) {
+    var annotationNode = (BSLParser.AnnotationContext) annotationName.getParent();
+
+    return getAnnotationSymbol(annotationName)
+      .map(annotationSymbol -> Reference.of(
+        documentContext.getSymbolTree().getModule(),
+        annotationSymbol,
+        new Location(uri.toString(), Ranges.create(annotationNode))
+      ));
+  }
+
+  private Optional<Reference> getReferenceToAnnotationParamSymbol(BSLParser.AnnotationParamNameContext annotationParamName, DocumentContext documentContext) {
+    return Optional.of(annotationParamName)
+      .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamContext
+      .map(BSLParser.AnnotationParamContext.class::cast)
+      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+  }
+
+  private Optional<Reference> getReferenceToAnnotationParamSymbol(BSLParser.ConstValueContext constValue, DocumentContext documentContext) {
+    return Optional.of(constValue)
+      .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamContext
+      .filter(BSLParser.AnnotationParamContext.class::isInstance)
+      .map(BSLParser.AnnotationParamContext.class::cast)
+      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+  }
+
+  private Optional<AnnotationSymbol> getAnnotationSymbol(BSLParser.AnnotationNameContext annotationNode) {
+    var annotationName = annotationNode.getText();
+    return Optional.ofNullable(registeredAnnotations.get(annotationName));
+  }
+
+  private Optional<Reference> getReferenceToAnnotationParam(
+    DocumentContext documentContext,
+    Optional<BSLParser.AnnotationParamContext> annotationParamContext
+  ) {
+
+    var annotationParamName = annotationParamContext
+      .map(BSLParser.AnnotationParamContext::annotationParamName)
+      .map(BSLParserRuleContext::getText)
+      .orElse("Значение");
+
+    BSLParserRuleContext annotationParamLocation = annotationParamContext
+      .map(BSLParser.AnnotationParamContext::annotationParamName)
+      .map(BSLParserRuleContext.class::cast)
+      .or(() -> annotationParamContext.map(BSLParser.AnnotationParamContext::constValue))
+      .orElseThrow();
+
+    return annotationParamContext
+      .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationParamsContext
+      .map(BSLParserRuleContext::getParent) // BSLParser.AnnotationContext
+      .map(BSLParser.AnnotationContext.class::cast)
+
+      .map(BSLParser.AnnotationContext::annotationName)
+      .flatMap(this::getAnnotationSymbol)
+      .flatMap(AnnotationSymbol::getParent)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .map(annotationDefinitionMethodSymbol -> AnnotationParamSymbol.from(annotationParamName, annotationDefinitionMethodSymbol))
+      .map(annotationParamSymbol -> Reference.of(
+        documentContext.getSymbolTree().getModule(),
+        annotationParamSymbol,
+        new Location(documentContext.getUri().toString(), Ranges.create(annotationParamLocation))
+      ));
   }
 
   private static Optional<Pair<MethodSymbol, Annotation>> findAnnotation(MethodSymbol methodSymbol) {
