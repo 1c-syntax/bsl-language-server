@@ -78,7 +78,7 @@ public class CodeQualityReportEntry {
     this.location = new Location();
     this.location.path = path;
     this.location.lines = new Lines();
-    this.location.lines.begin = diagnostic.getRange().getStart().getLine();
+    this.location.lines.begin = diagnostic.getRange().getStart().getLine() + 1;
   }
 
   @Getter
@@ -100,7 +100,7 @@ public class CodeQualityReportEntry {
   @ToString
   public static class Lines {
     /**
-     * The line on which the code quality violation occurred.
+     * The line on which the code quality violation occurred (1-based).
      */
     private int begin;
   }

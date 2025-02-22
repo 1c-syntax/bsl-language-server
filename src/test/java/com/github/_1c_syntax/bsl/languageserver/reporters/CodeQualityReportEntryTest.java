@@ -57,7 +57,7 @@ class CodeQualityReportEntryTest {
       .hasFieldOrPropertyWithValue("checkName", "Typo")
       .hasFieldOrPropertyWithValue("severity", CodeQualityReportEntry.Severity.INFO)
       .hasFieldOrPropertyWithValue("location.path", "file.txt")
-      .hasFieldOrPropertyWithValue("location.lines.begin", 0)
+      .hasFieldOrPropertyWithValue("location.lines.begin", 1)
     ;
   }
 
