@@ -1239,7 +1239,25 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>Описание диагностики</p>
+<p>Using double negatives makes the code harder to understand and can lead to errors when the developer mentally computes False instead of True, or vice versa.
+It is recommended to replace double negatives with conditional expressions that directly express the author's intentions.</p>
+<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<h3 id="Incorrect">Incorrect<a class="headerlink" href="#Incorrect" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="k">Not</span> <span class="nv">ValueTable</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">SearchValue</span><span class="p">,</span> <span class="s">&quot;Column&quot;</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span> <span class="k">Then</span>
+    <span class="c1">// Do the action</span>
+<span class="k">EndIf</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="Correct">Correct<a class="headerlink" href="#Correct" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">ValueTable</span><span class="o">.</span><span class="nf">Find</span><span class="p">(</span><span class="nv">LookupValue</span><span class="p">,</span> <span class="s">&quot;Column&quot;</span><span class="p">)</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>
+    <span class="c1">// Perform action</span>
+<span class="k">EndIf</span><span class="p">;</span>
+</code></pre></div>
+<h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+<ul>
+<li>Source: <a href="https://www.refactoring.com/catalog/removeDoubleNegative.html">Remove double negative</a></li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
