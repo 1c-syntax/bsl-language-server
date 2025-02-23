@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,7 +36,7 @@ public abstract class BslOperationNode extends BslExpression {
   BslOperator operator;
 
   protected BslOperationNode(ExpressionNodeType type, BslOperator operator, ParseTree sourceCodeOperator) {
-    super(type, sourceCodeOperator);
+    super(type, sourceCodeOperator, null);
     this.operator = operator;
   }
 

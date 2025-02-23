@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ class CallHierarchyProviderTest {
 
   private final Position firstProcedureDeclarationPosition = new Position(0, 15);
   private final Position firstFunctionCallPosition = new Position(1, 15);
-  private final Position secondFunctionDeclarationPosition = new Position(14, 15);
+  private final Position secondFunctionDeclarationPosition = new Position(16, 15);
   private final Position secondFunctionCallPosition = new Position(2, 15);
 
   @BeforeEach

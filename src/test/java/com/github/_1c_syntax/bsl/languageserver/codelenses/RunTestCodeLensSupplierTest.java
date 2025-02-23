@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,8 +34,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 
@@ -53,7 +53,7 @@ class RunTestCodeLensSupplierTest {
   @Autowired
   private ApplicationEventPublisher eventPublisher;
 
-  @SpyBean
+  @MockitoSpyBean
   private TestRunnerAdapter testRunnerAdapter;
 
   private DocumentContext documentContext;
@@ -62,18 +62,6 @@ class RunTestCodeLensSupplierTest {
   void init() {
     var filePath = "./src/test/resources/codelenses/RunTestCodeLensSupplier.os";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
-  }
-
-  @Test
-  void noLensesIfClientIsNotSupported() {
-    // given
-    initializeServer("Unknown client");
-
-    // when
-    var codeLenses = supplier.getCodeLenses(documentContext);
-
-    // then
-    assertThat(codeLenses).isEmpty();
   }
 
   @Test

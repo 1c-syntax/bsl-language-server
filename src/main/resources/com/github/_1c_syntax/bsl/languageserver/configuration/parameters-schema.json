@@ -526,6 +526,16 @@
             "title": "Disable safe mode",
             "$id": "#/definitions/DisableSafeMode"
         },
+        "DoubleNegatives": {
+            "description": "Double negatives",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Double negatives",
+            "$id": "#/definitions/DoubleNegatives"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": true,
@@ -1582,6 +1592,16 @@
             "title": "Procedure should not return Value",
             "$id": "#/definitions/ProcedureReturnsValue"
         },
+        "ProtectedModule": {
+            "description": "Protected modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Protected modules",
+            "$id": "#/definitions/ProtectedModule"
+        },
         "PublicMethodsDescription": {
             "description": "All public methods must have a description",
             "default": true,
@@ -1659,6 +1679,24 @@
             ],
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
+        },
+        "ReservedParameterNames": {
+            "description": "Reserved parameter names",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Reserved parameter names",
+            "properties": {
+                "reservedWords": {
+                    "description": "Regular expression for reserved parameter names.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for reserved parameter names."
+                }
+            },
+            "$id": "#/definitions/ReservedParameterNames"
         },
         "RewriteMethodParameter": {
             "description": "Rewrite method parameter",

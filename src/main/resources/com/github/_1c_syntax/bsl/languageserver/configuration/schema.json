@@ -149,6 +149,9 @@
                 "DisableSafeMode": {
                     "$ref": "parameters-schema.json#/definitions/DisableSafeMode"
                 },
+                "DoubleNegatives": {
+                    "$ref": "parameters-schema.json#/definitions/DoubleNegatives"
+                },
                 "DuplicateRegion": {
                     "$ref": "parameters-schema.json#/definitions/DuplicateRegion"
                 },
@@ -368,6 +371,9 @@
                 "ProcedureReturnsValue": {
                     "$ref": "parameters-schema.json#/definitions/ProcedureReturnsValue"
                 },
+                "ProtectedModule": {
+                    "$ref": "parameters-schema.json#/definitions/ProtectedModule"
+                },
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
@@ -382,6 +388,9 @@
                 },
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
+                },
+                "ReservedParameterNames": {
+                    "$ref": "parameters-schema.json#/definitions/ReservedParameterNames"
                 },
                 "RewriteMethodParameter": {
                     "$ref": "parameters-schema.json#/definitions/RewriteMethodParameter"
@@ -669,6 +678,29 @@
                     "type": "object",
                     "title": "Test runner configuration to use for 'Run test' code lenses.",
                     "properties": {
+                        "testSources": {
+                            "$id": "#/properties/codeLens/testRunner/testSources",
+                            "type": "array",
+                            "title": "List of directories with test sources.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "tests"
+                            ]
+                        },
+                        "annotations": {
+                            "$id": "#/properties/codeLens/testRunner/annotations",
+                            "type": "array",
+                            "title": "List of annotations to find test methods.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "\u0422\u0435\u0441\u0442",
+                                "Test"
+                            ]
+                        },
                         "executable": {
                             "$id": "#/properties/codeLens/testRunner/executable",
                             "type": "string",
@@ -680,6 +712,12 @@
                             "type": "string",
                             "title": "Path to test runner executable on Windows systems.",
                             "default": "1testrunner.bat"
+                        },
+                        "getTestsByTestRunner": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsByTestRunner",
+                            "type": "boolean",
+                            "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &\u0422\u0435\u0441\u0442.",
+                            "default": true
                         },
                         "getTestsArguments": {
                             "$id": "#/properties/codeLens/testRunner/getTestsArguments",
@@ -858,7 +896,7 @@
             "type": "object",
             "title": "Formatting configuration.",
             "properties": {
-                "useUpperCaseForOrNotKeywords": {
+                "useUpperCaseForOrNotAndKeywords": {
                     "$id": "#/properties/useUpperCaseForOrNotAndKeywords",
                     "type": "boolean",
                     "default": true,

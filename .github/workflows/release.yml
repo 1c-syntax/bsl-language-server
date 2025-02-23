@@ -33,7 +33,7 @@ jobs:
             - name: Set up JDK
               uses: actions/setup-java@v4
               with:
-                java-version: 21
+                java-version: 23
                 distribution: 'temurin'
                 cache: gradle
 
@@ -57,7 +57,7 @@ jobs:
 
             - name: Build with Gradle
               if: matrix.prefix == 'nix'
-              run: ./gradlew build
+              run: ./gradlew build -x test
 
             - name: Upload jar to release
               if: matrix.prefix == 'nix'

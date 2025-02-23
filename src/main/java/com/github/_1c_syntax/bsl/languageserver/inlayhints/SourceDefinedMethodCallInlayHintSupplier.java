@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.hover.MethodSymbolMarkupContentBuilder;
+import com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -47,7 +47,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Поставщик подсказок о параметрах вызываемого метода.
@@ -63,6 +62,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
   private final ReferenceIndex referenceIndex;
   private final LanguageServerConfiguration configuration;
+  private final DescriptionFormatter descriptionFormatter;
 
 
   @Override
@@ -81,7 +81,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .filter(Reference::isSourceDefinedSymbolReference)
       .map(this::toInlayHints)
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .toList();
   }
 
 
@@ -129,7 +129,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
         return hints;
       })
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .toList();
 
   }
 
@@ -149,7 +149,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
     ) {
       labelBuilder.append(" (");
-      labelBuilder.append(defaultValue.getValue());
+      labelBuilder.append(defaultValue.value());
       labelBuilder.append(")");
     } else {
       labelBuilder.append(":");
@@ -164,9 +164,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     inlayHint.setPosition(position);
   }
 
-  private static void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {
-    // todo: refactor
-    var markdown = MethodSymbolMarkupContentBuilder.parameterToString(parameter);
+  private void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {
+    var markdown = descriptionFormatter.parameterToString(parameter);
     var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
     inlayHint.setTooltip(tooltip);
   }

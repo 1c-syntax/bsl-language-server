@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,12 +28,14 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
@@ -43,13 +45,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Поставщик линз для запуска теста по конкретному тестовому методу.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RunTestCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
@@ -57,8 +57,23 @@ public class RunTestCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runTest";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final LanguageServerConfiguration configuration;
   private final Resources resources;
+
+  // Self-injection для работы кэша в базовом классе.
+  @Autowired
+  @Lazy
+  @Getter
+  private RunTestCodeLensSupplier self;
+
+  public RunTestCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    TestRunnerAdapter testRunnerAdapter,
+    Resources resources
+  ) {
+    super(configuration);
+    this.testRunnerAdapter = testRunnerAdapter;
+    this.resources = resources;
+  }
 
   /**
    * {@inheritDoc}
@@ -77,7 +92,7 @@ public class RunTestCodeLensSupplier
       .map(symbolTree::getMethodSymbol)
       .flatMap(Optional::stream)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
-      .collect(Collectors.toList());
+      .toList();
   }
 
   /**

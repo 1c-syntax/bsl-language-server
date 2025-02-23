@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -60,7 +60,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     var complexityThreshold = getComplexityThreshold();
     var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
+      .filter(methodSymbol -> methodsComplexity.getOrDefault(methodSymbol, complexityThreshold - 1) >= complexityThreshold)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,10 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github._1c_syntax.bsl.languageserver.configuration.databind.AnnotationsDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.SystemUtils;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Параметры запускателя тестового фреймворка.
@@ -37,6 +43,21 @@ import org.apache.commons.lang3.SystemUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TestRunnerAdapterOptions {
 
+  public static final Set<String> DEFAULT_ANNOTATIONS = getDefaultAnnotations();
+
+  /**
+   * Каталоги с исходными файлами тестов.
+   */
+  private Set<String> testSources = Set.of("tests");
+
+  /**
+   * Имена аннотаций, маркирующих тесты.
+   * <p>
+   * Используется при получении списка тестов средствами сервера.
+   */
+  @JsonDeserialize(using = AnnotationsDeserializer.class)
+  private Set<String> annotations = DEFAULT_ANNOTATIONS;
+
   /**
    * Имя исполняемого файла тестового фреймворка (linux и macOS).
    */
@@ -45,6 +66,10 @@ public class TestRunnerAdapterOptions {
    * Имя исполняемого файла тестового фреймворка (windows).
    */
   private String executableWin = "1testrunner.bat";
+  /**
+   * Флаг, указывающий на необходимость получения списка тестов через исполняемый файл тестового фреймворка.
+   */
+  private boolean getTestsByTestRunner = true;
   /**
    * Аргументы для получения списка тестов.
    */
@@ -69,5 +94,13 @@ public class TestRunnerAdapterOptions {
    */
   public String getExecutableForCurrentOS() {
     return SystemUtils.IS_OS_WINDOWS ? executableWin : executable;
+  }
+
+  private static Set<String> getDefaultAnnotations() {
+    Set<String> annotations = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    annotations.add("Test");
+    annotations.add("Тест");
+
+    return Collections.unmodifiableSet(annotations);
   }
 }

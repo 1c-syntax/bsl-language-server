@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -71,7 +71,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAfterStatement() {
     // given
-    var params = selection(4, 20);
+    var params = selection(4, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -89,7 +89,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockBeforeStatement() {
     // given
-    var params = selection(6, 20);
+    var params = selection(6, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -107,7 +107,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAroundStatement() {
     // given
-    var params = selection(5, 20);
+    var params = selection(5, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);

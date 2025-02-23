@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,10 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Paths;
@@ -41,7 +43,6 @@ import java.util.Map;
  * Поставщик линзы для запуска всех тестов в текущем файле.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RunAllTestsCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> {
@@ -49,8 +50,23 @@ public class RunAllTestsCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runAllTests";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final LanguageServerConfiguration configuration;
   private final Resources resources;
+
+  // Self-injection для работы кэша в базовом классе.
+  @Autowired
+  @Lazy
+  @Getter
+  private RunAllTestsCodeLensSupplier self;
+
+  public RunAllTestsCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    TestRunnerAdapter testRunnerAdapter,
+    Resources resources
+  ) {
+    super(configuration);
+    this.testRunnerAdapter = testRunnerAdapter;
+    this.resources = resources;
+  }
 
   /**
    * {@inheritDoc}
@@ -64,8 +80,12 @@ public class RunAllTestsCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var symbolTree = documentContext.getSymbolTree();
-    var firstMethod = symbolTree.getMethods().get(0);
+    var methods = documentContext.getSymbolTree().getMethods();
+    if (methods.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    var firstMethod = methods.get(0);
 
     return List.of(toCodeLens(firstMethod, documentContext));
   }

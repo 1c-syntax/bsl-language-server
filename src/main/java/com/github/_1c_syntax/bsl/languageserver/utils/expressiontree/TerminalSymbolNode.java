@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,7 +30,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 public class TerminalSymbolNode extends BslExpression {
   private TerminalSymbolNode(ExpressionNodeType type, ParseTree representingAst) {
-    super(type, representingAst);
+    super(type, representingAst, null);
   }
 
   /**

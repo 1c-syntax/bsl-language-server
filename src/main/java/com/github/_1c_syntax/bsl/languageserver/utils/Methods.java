@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.Token;
@@ -80,6 +82,11 @@ public class Methods {
     return Optional.ofNullable(lValueContext.acceptor())
       .map(BSLParser.AcceptorContext::modifier)
       .flatMap(Methods::getMethodName);
+  }
+
+  public static Optional<MethodSymbol> getOscriptClassConstructor(SymbolTree symbolTree) {
+    return symbolTree.getMethodSymbol("ПриСозданииОбъекта")
+      .or(() -> symbolTree.getMethodSymbol("OnObjectCreate"));
   }
 
 }

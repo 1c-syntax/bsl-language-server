@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -43,9 +43,12 @@ import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Locked;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,12 +68,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -79,16 +82,20 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @RequiredArgsConstructor
 @Slf4j
-public class DocumentContext {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
 
   @Getter
+  @EqualsAndHashCode.Include
   private final URI uri;
 
   @Nullable
   private String content;
+
   @Getter
+  @EqualsAndHashCode.Include
   private int version;
 
   @Setter(onMethod = @__({@Autowired}))
@@ -105,9 +112,9 @@ public class DocumentContext {
 
   @Getter
   private FileType fileType;
-  @Getter
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private BSLTokenizer tokenizer;
-  @Getter
+  @Getter(onMethod = @__({@Locked("computeLock")}))
   private SymbolTree symbolTree;
 
   @Getter
@@ -138,35 +145,40 @@ public class DocumentContext {
     return context;
   }
 
+  @Locked("computeLock")
   public String getContent() {
     requireNonNull(content);
     return content;
   }
 
+  @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  @Locked("computeLock")
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
   }
 
+  @Locked("computeLock")
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
   }
 
   public List<Token> getComments() {
     return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .collect(Collectors.toList());
+      .toList();
   }
 
+  @Locked("computeLock")
   public String getText(Range range) {
     Position start = range.getStart();
     Position end = range.getEnd();
@@ -275,7 +287,6 @@ public class DocumentContext {
 
       if (versionMatches && (this.content != null)) {
         clearDependantData();
-        computeLock.unlock();
         return;
       }
 
@@ -429,4 +440,10 @@ public class DocumentContext {
     return (new QueryComputer(this)).compute();
   }
 
+  @Override
+  public int compareTo(@NonNull DocumentContext other) {
+    return Comparator.comparing(DocumentContext::getUri)
+      .thenComparing(DocumentContext::getVersion)
+      .compare(this, other);
+  }
 }

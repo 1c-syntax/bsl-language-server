@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -58,7 +58,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   private final LocationRepository locationRepository;
 
   private static String getMethodNameByLocation(BSLParserRuleContext node, Range range) {
-    return Trees.findTerminalNodeContainsPosition(node, range.getEnd())
+    return Trees.findTerminalNodeContainsPosition(node, range.getStart())
       .map(ParseTree::getText)
       .orElseThrow();
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -76,7 +76,7 @@ class DefinitionProviderTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     var params = new DefinitionParams();
-    params.setPosition(new Position(4, 10));
+    params.setPosition(new Position(4, 9));
 
     // when
     var definitions = definitionProvider.getDefinition(documentContext, params);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,6 +38,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -115,10 +116,14 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
   @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String globalConfigPath;
 

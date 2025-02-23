@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -109,6 +109,10 @@ class LanguageServerConfigurationTest {
     assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
+    assertThat(annotations)
+      .hasSize(2)
+      .contains("Test", "Test2");
   }
 
   @Test

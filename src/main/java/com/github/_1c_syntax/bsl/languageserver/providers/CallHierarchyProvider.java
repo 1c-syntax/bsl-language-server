@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2024
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
@@ -35,14 +37,15 @@ import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -55,6 +58,10 @@ public class CallHierarchyProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  private final Comparator<CallHierarchyItem> callHierarchyItemComparator = Comparator
+    .comparing(CallHierarchyItem::getDetail)
+    .thenComparing(CallHierarchyItem::getSelectionRange, Ranges::compare);
+
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
     CallHierarchyPrepareParams params
@@ -65,8 +72,7 @@ public class CallHierarchyProvider {
       .flatMap(Reference::getSourceDefinedSymbol)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
-      .orElse(Collections.emptyList())
-      ;
+      .orElse(Collections.emptyList());
   }
 
   public List<CallHierarchyIncomingCall> incomingCalls(
@@ -90,8 +96,8 @@ public class CallHierarchyProvider {
       .entrySet()
       .stream()
       .map(entry -> new CallHierarchyIncomingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
-      .collect(Collectors.toList());
-
+      .sorted((o1, o2) -> callHierarchyItemComparator.compare(o1.getFrom(), o2.getFrom()))
+      .toList();
   }
 
   public List<CallHierarchyOutgoingCall> outgoingCalls(
@@ -101,13 +107,13 @@ public class CallHierarchyProvider {
 
     URI uri = documentContext.getUri();
     Position position = params.getItem().getSelectionRange().getStart();
-
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
       .map(referenceIndex::getReferencesFrom)
       .flatMap(Collection::stream)
       .filter(Reference::isSourceDefinedSymbolReference)
+      .filter(reference -> isSymbolSupported(reference.getSymbol()))
       .collect(groupingBy(
         reference -> reference.getSourceDefinedSymbol().orElseThrow(),
         mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
@@ -115,8 +121,8 @@ public class CallHierarchyProvider {
       .entrySet()
       .stream()
       .map(entry -> new CallHierarchyOutgoingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
-      .collect(Collectors.toList());
-
+      .sorted((o1, o2) -> callHierarchyItemComparator.compare(o1.getTo(), o2.getTo()))
+      .toList();
   }
 
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
@@ -132,5 +138,9 @@ public class CallHierarchyProvider {
     item.setSelectionRange(sourceDefinedSymbol.getSelectionRange());
 
     return item;
+  }
+
+  private static boolean isSymbolSupported(Symbol symbol) {
+    return symbol.getSymbolKind() == SymbolKind.Method;
   }
 }
