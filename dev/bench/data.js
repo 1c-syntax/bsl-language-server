@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1740250747449,
+  "lastUpdate": 1740290439506,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -28086,6 +28086,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.1129578022984687",
             "extra": "mean: 79.86580387751262 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3324e6c267aaa96f652145ccc5b7ab49df9b63f2",
+          "message": "Merge pull request #3435 from 1c-syntax/feature/bumpDeps250223\n\nОбновлены зависимости + добавил в доку jdk 23 и win 11",
+          "timestamp": "2025-02-23T06:50:39+01:00",
+          "tree_id": "dc6e8ac553d27bbdbb8343710dac1a283070e16a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3324e6c267aaa96f652145ccc5b7ab49df9b63f2"
+        },
+        "date": 1740290436037,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.60542893409729,
+            "unit": "sec",
+            "range": "stddev: 1.0089698302788022",
+            "extra": "mean: 80.60542893409729 sec\nrounds: 3"
           }
         ]
       }
