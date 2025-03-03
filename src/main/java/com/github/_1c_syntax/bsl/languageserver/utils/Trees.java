@@ -23,16 +23,19 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Predicate;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.util.Positions;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +70,50 @@ public final class Trees {
 
   public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
     return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
+  }
+
+  /**
+   /**
+   * Находит только первый элемент дерева, подходящий по типу элемента.
+   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
+   *
+   * @param t узел дерева
+   * @param ruleIndex искомый тип элемент
+   * @return первый подходящий узел, если он найден
+   */
+  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, int ruleIndex) {
+    return findNodeSuchThat(t, node -> node.getRuleIndex() == ruleIndex);
+  }
+
+  /**
+   * Находит только первый элемент дерева, подходящий по условию поиска.
+   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
+   *
+   * @param t узел дерева
+   * @param pred предикат-условие поиска
+   * @return первый подходящий узел, если он найден
+   */
+  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
+    return Optional.ofNullable(findNodeSuchThatInner(t, pred));
+  }
+
+  @Nullable
+  private static BSLParserRuleContext findNodeSuchThatInner(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
+    if ( pred.eval(t) ) {
+      return t;
+    }
+
+    int n = t.getChildCount();
+    for (var i = 0 ; i < n ; i++){
+      final var child = t.getChild(i);
+      if (child instanceof BSLParserRuleContext) {
+        BSLParserRuleContext u = findNodeSuchThatInner((BSLParserRuleContext)child, pred);
+        if ( u != null) {
+          return u;
+        }
+      }
+    }
+    return null;
   }
 
   public static List<Tree> getChildren(Tree t) {
@@ -162,7 +209,7 @@ public final class Trees {
    * Пример:
    * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
-  @Nullable
+  @CheckForNull
   public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
     var parent = element.getParent();
     if (parent == null) {
@@ -281,11 +328,31 @@ public final class Trees {
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
    *
+   * @param context - нода, для которой ищем родителя
+   * @param index- BSLParser.RULE_*
+   * @param klass - класс типа
+   * @param <T> - тип
+   * @return - если родитель не найден, вернет пустой Optional
+   */
+  public static <T extends BSLParserRuleContext> Optional<T> getRootNode(RuleNode context, int index, Class<T> klass) {
+    if (klass.isInstance(context)){
+      return Optional.of(klass.cast(context));
+    }
+    return Optional.of(context)
+      .map(BSLParserRuleContext.class::cast)
+      .map(node -> Trees.getRootParent(node, index))
+      .filter(klass::isInstance)
+      .map(klass::cast);
+  }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
+   *
    * @param tnc       - нода, для которой ищем родителя
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @Nullable
+  @CheckForNull
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -306,7 +373,7 @@ public final class Trees {
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @Nullable
+  @CheckForNull
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
     final var parent = tnc.getParent();
     if (parent == null) {
@@ -435,7 +502,7 @@ public final class Trees {
   }
 
   /**
-   * Получение ноды в дереве по позиции в документе.
+   * Получение терминальной ноды в дереве по позиции в документе.
    *
    * @param tree     - дерево, в котором ищем
    * @param position - искомая позиция
@@ -472,6 +539,48 @@ public final class Trees {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Получение ноды в дереве по позиции в документе.
+   *
+   * @param tree - дерево, в котором ищем
+   * @param position - искомая позиция
+   * @return нода на указанной позиции, если есть
+   */
+  public static Optional<BSLParserRuleContext> findContextContainsPosition(BSLParserRuleContext tree, Position position) {
+    if (!nodeContainsPosition(tree, position)) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(findContextContainsPositionInner(tree, position));
+  }
+
+  private static @Nullable BSLParserRuleContext findContextContainsPositionInner(BSLParserRuleContext tree, Position position) {
+
+    var children = Trees.getChildren(tree);
+
+    var isOneElemSize = children.size() == 1;
+    for (Tree child : children) {
+      if ((child instanceof TerminalNode)
+        || (!isOneElemSize && !nodeContainsPosition((BSLParserRuleContext) child, position))) {
+        continue;
+      }
+      BSLParserRuleContext node = findContextContainsPositionInner((BSLParserRuleContext) child, position);
+      if (node != null) {
+        return node;
+      }
+    }
+    return tree;
+  }
+
+  private static boolean nodeContainsPosition(BSLParserRuleContext tree, Position position) {
+    var start = tree.getStart();
+    var stop = tree.getStop();
+    if (start == null || stop == null){
+      return false;
+    }
+
+    return positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop);
   }
 
   /**

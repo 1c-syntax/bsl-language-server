@@ -89,7 +89,7 @@ public class ReferenceIndex {
 
     return symbolOccurrenceRepository.getAllBySymbol(symbolDto)
       .stream()
-      .map(this::buildReference)
+      .map(symbolOccurrence -> buildReference(symbolOccurrence, symbol))
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -234,6 +234,16 @@ public class ReferenceIndex {
     locationRepository.updateLocation(symbolOccurrence);
   }
 
+  private Optional<Reference> buildReference(SymbolOccurrence symbolOccurrence, SourceDefinedSymbol symbol) {
+    var uri = symbolOccurrence.getLocation().getUri();
+    var range = symbolOccurrence.getLocation().getRange();
+    var occurrenceType = symbolOccurrence.getOccurrenceType();
+
+    SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
+    return Optional.of(new Reference(from, symbol, uri, range, occurrenceType))
+      .filter(ReferenceIndex::isReferenceAccessible);
+  }
+
   private Optional<Reference> buildReference(
     SymbolOccurrence symbolOccurrence
   ) {
@@ -282,8 +292,8 @@ public class ReferenceIndex {
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
       .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
       .findFirst()
-      .or(() -> symbolTree.map(SymbolTree::getModule))
-      .orElseThrow();
+        .or(() -> symbolTree.map(SymbolTree::getModule))
+        .orElseThrow();
   }
 
   private static boolean isReferenceAccessible(Reference reference) {
