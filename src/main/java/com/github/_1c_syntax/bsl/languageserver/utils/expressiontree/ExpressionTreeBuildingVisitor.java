@@ -164,10 +164,6 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
           break;
-        case BSLLexer.RPAREN:
-          // This is a closing parenthesis; for empty parentheses situations
-          // No need to throw an exception, just return (no action needed)
-          break;
         default:
           throw new IllegalStateException("Unexpected rule " + dispatchChild);
       }
@@ -181,6 +177,11 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   private void visitParenthesis(BSLParser.ExpressionContext expression,
                                 List<? extends BSLParser.ModifierContext> modifiers) {
 
+    // Handle the case where expression is empty (empty parentheses)
+    if (expression == null || expression.getTokens().isEmpty()) {
+      return;
+    }
+    
     var subExpr = makeSubexpression(expression);
     operands.push(subExpr);
 
