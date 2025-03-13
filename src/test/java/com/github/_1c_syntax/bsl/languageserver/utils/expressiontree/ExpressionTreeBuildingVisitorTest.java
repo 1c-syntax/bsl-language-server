@@ -21,13 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.parser.BSLParser.IfStatementContext;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
+import org.antlr.v4.runtime.tree.Trees;
+
+@SpringBootTest
 class ExpressionTreeBuildingVisitorTest {
 
   @Test
@@ -42,33 +47,24 @@ class ExpressionTreeBuildingVisitorTest {
       """;
 
     var documentContext = TestUtils.getDocumentContext(code);
-    var serverContext = new ServerContext();
-    serverContext.populateContext(documentContext);
 
     // Assert that no exception is thrown when processing the if statement with empty parentheses
     assertThatNoException().isThrownBy(() -> {
       var ast = documentContext.getAst();
-      var ifStatements = ast.getDescendants()
+      var ifStatement = Trees.getDescendants(ast)
         .stream()
-        .filter(node -> node.getClass().getSimpleName().equals("IfStatementContext"))
-        .findFirst();
-      
-      // If the statement should exist
-      assertThat(ifStatements).isPresent();
+        .filter(node -> node instanceof IfStatementContext)
+        .map(node -> (IfStatementContext) node)
+        .findFirst()
+        .orElseThrow();
       
       var visitor = new ExpressionTreeBuildingVisitor();
-      var ifStatement = ifStatements.get();
       
       // Find the expression node within the if statement
-      var expressions = ifStatement.getDescendants()
-        .stream()
-        .filter(node -> node.getClass().getSimpleName().equals("ExpressionContext"))
-        .findFirst();
-      
-      assertThat(expressions).isPresent();
+      var expression = ifStatement.ifBranch().expression();
       
       // Try to build expression tree from empty parentheses
-      visitor.visitExpression((com.github._1c_syntax.bsl.parser.BSLParser.ExpressionContext) expressions.get());
+      visitor.visitExpression(expression);
       
       // Result should be null since there's no expression
       assertThat(visitor.getExpressionTree()).isNull();
