@@ -164,6 +164,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
           break;
+        case BSLLexer.RPAREN:
+          // This is a closing parenthesis; for empty parentheses situations
+          // No need to throw an exception, just return (no action needed)
+          break;
         default:
           throw new IllegalStateException("Unexpected rule " + dispatchChild);
       }
