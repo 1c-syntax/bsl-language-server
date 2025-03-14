@@ -70,4 +70,41 @@ class ExpressionTreeBuildingVisitorTest {
       assertThat(visitor.getExpressionTree()).isNull();
     });
   }
+
+  @Test
+  void testEmptyIfStatementHandling() {
+    // Create test code with empty parentheses
+    var code = """
+     Процедура Имя()
+      Если
+        Пока Истина Цикл
+        КонецЦикла;
+      КонецЕсли;
+     КонецПроцедуры
+     """;
+
+    var documentContext = TestUtils.getDocumentContext(code);
+
+    // Assert that no exception is thrown when processing the if statement with empty parentheses
+    assertThatNoException().isThrownBy(() -> {
+      var ast = documentContext.getAst();
+      var ifStatement = Trees.getDescendants(ast)
+        .stream()
+        .filter(node -> node instanceof IfStatementContext)
+        .map(node -> (IfStatementContext) node)
+        .findFirst()
+        .orElseThrow();
+
+      var visitor = new ExpressionTreeBuildingVisitor();
+
+      // Find the expression node within the if statement
+      var expression = ifStatement.ifBranch().expression();
+
+      // Try to build expression tree from empty parentheses
+      visitor.visitExpression(expression);
+
+      // Result should be null since there's no expression
+      assertThat(visitor.getExpressionTree()).isNull();
+    });
+  }
 }

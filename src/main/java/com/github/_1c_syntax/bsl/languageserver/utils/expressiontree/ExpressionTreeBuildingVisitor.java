@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Value;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -156,17 +157,15 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     }
 
     var dispatchChild = ctx.getChild(childIndex);
-    if (dispatchChild instanceof TerminalNode terminalNode) {
+    if (dispatchChild instanceof ErrorNode) {
+      return ctx;
+    } else if (dispatchChild instanceof TerminalNode terminalNode) {
       var token = terminalNode.getSymbol().getType();
 
       // ручная диспетчеризация
       switch (token) {
         case BSLLexer.LPAREN:
           visitParenthesis(ctx.expression(), ctx.modifier());
-          break;
-        case BSLLexer.RPAREN:
-          // This is a closing parenthesis; for empty parentheses situations
-          // No need to throw an exception, just return (no action needed)
           break;
         default:
           throw new IllegalStateException("Unexpected rule " + dispatchChild);
@@ -185,7 +184,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (expression == null || expression.getTokens().isEmpty()) {
       return;
     }
-    
+
     var subExpr = makeSubexpression(expression);
     operands.push(subExpr);
 
