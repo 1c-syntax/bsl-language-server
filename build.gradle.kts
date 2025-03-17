@@ -68,6 +68,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("org.springframework.boot:spring-boot-starter-cache")
+    api("com.github.ben-manes.caffeine", "caffeine", "3.2.0")
+
     api("info.picocli:picocli-spring-boot-starter:4.7.6")
 
     // lsp4j core
