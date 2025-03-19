@@ -74,7 +74,7 @@ public class BSLLSBinding {
   }
 
   private static SpringApplication createApplication() {
-    return new SpringApplicationBuilder(BSLLSBinding.class)
+    var app = new SpringApplicationBuilder(BSLLSBinding.class)
       .bannerMode(Banner.Mode.OFF)
       .web(WebApplicationType.NONE)
       .logStartupInfo(false)
@@ -87,6 +87,9 @@ public class BSLLSBinding {
         "spring.cache.cache-names", "testIds,testSources"
       ))
       .build();
+
+    app.setRegisterShutdownHook(false);
+    return app;
   }
 
   private static ConfigurableApplicationContext createContext() {
