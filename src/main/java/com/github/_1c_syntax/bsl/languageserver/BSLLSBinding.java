@@ -82,7 +82,9 @@ public class BSLLSBinding {
       .lazyInitialization(true)
       .properties(Map.of(
         "app.command.line.runner.enabled", "false",
-        "app.scheduling.enabled", "false"
+        "app.scheduling.enabled", "false",
+        "spring.cache.caffeine.spec", "maximumSize=500,expireAfterAccess=600s",
+        "spring.cache.cache-names", "testIds,testSources"
       ))
       .build();
   }
