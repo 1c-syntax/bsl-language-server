@@ -31,6 +31,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -40,6 +41,7 @@ import java.util.Map;
 
 @EnableAutoConfiguration
 @ComponentScan("com.github._1c_syntax.bsl.languageserver")
+@EnableCaching(proxyTargetClass = true)
 public class BSLLSBinding {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
