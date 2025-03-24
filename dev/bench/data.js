@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1742628826195,
+  "lastUpdate": 1742838815475,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -28427,6 +28427,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.9861988879477916",
             "extra": "mean: 82.07821655273438 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c560d79704c113ce07185408f9d17a0182cf3c6",
+          "message": "Merge pull request #3450 from 1c-syntax/feature/caffeineCache\n\nДобавлено кэширование caffeine",
+          "timestamp": "2025-03-24T18:44:10+01:00",
+          "tree_id": "70c6748c4bec39d0b9a13a5255d62453797f46dd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9c560d79704c113ce07185408f9d17a0182cf3c6"
+        },
+        "date": 1742838810918,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.20758986473083,
+            "unit": "sec",
+            "range": "stddev: 0.913125176243362",
+            "extra": "mean: 79.20758986473083 sec\nrounds: 3"
           }
         ]
       }
