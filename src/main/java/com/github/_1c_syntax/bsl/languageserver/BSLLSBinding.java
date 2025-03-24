@@ -31,6 +31,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -40,6 +41,7 @@ import java.util.Map;
 
 @EnableAutoConfiguration
 @ComponentScan("com.github._1c_syntax.bsl.languageserver")
+@EnableCaching(proxyTargetClass = true)
 public class BSLLSBinding {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
@@ -74,7 +76,7 @@ public class BSLLSBinding {
   }
 
   private static SpringApplication createApplication() {
-    return new SpringApplicationBuilder(BSLLSBinding.class)
+    var app = new SpringApplicationBuilder(BSLLSBinding.class)
       .bannerMode(Banner.Mode.OFF)
       .web(WebApplicationType.NONE)
       .logStartupInfo(false)
@@ -82,9 +84,14 @@ public class BSLLSBinding {
       .lazyInitialization(true)
       .properties(Map.of(
         "app.command.line.runner.enabled", "false",
-        "app.scheduling.enabled", "false"
+        "app.scheduling.enabled", "false",
+        "spring.cache.caffeine.spec", "maximumSize=500,expireAfterAccess=600s",
+        "spring.cache.cache-names", "testIds,testSources"
       ))
       .build();
+
+    app.setRegisterShutdownHook(false);
+    return app;
   }
 
   private static ConfigurableApplicationContext createContext() {
