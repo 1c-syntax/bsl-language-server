@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,9 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -33,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.regex.Pattern;
 
@@ -60,10 +59,6 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
   )
   private boolean checkAllRegion = DEFAULT_CHECK_ALL_REGION;
 
-  public PublicMethodsDescriptionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
@@ -72,7 +67,7 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
         if (checkAllRegion) {
           diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
         } else {
-          methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
+          methodSymbol.getRootParent(SymbolKind.Namespace).ifPresent((Symbol rootRegion) -> {
             if (isAPIRegion(rootRegion)) {
               diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
             }
@@ -85,6 +80,6 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
   }
 
   private static boolean isAPIRegion(Symbol symbol) {
-    return symbol instanceof RegionSymbol && API_REGION_NAME.matcher(symbol.getName()).matches();
+    return API_REGION_NAME.matcher(symbol.getName()).matches();
   }
 }

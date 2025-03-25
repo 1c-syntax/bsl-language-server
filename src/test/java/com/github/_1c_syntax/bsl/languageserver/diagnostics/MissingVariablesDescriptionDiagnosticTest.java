@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -38,12 +38,13 @@ class MissingVariablesDescriptionDiagnosticTest extends AbstractDiagnosticTest<M
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(1, 6, 1, 27)
       .hasRange(3, 6, 3, 45)
       .hasRange(17, 6, 17, 38)
-      .hasRange(21, 6, 21, 56);
+      .hasRange(21, 6, 21, 56)
+      .hasRange(37, 6, 49);
 
   }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -273,6 +273,10 @@ public final class Keywords {
   public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU =
     "ОбработчикиСобытийЭлементовТаблицыФормы";
   public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN = "FormTableItemsEventHandlers";
+  public static final String ASYNC_EN = "Async";
+  public static final String ASYNC_RU = "Асинх";
+  public static final String AWAIT_EN = "Await";
+  public static final String AWAIT_RU = "Ждать";
 
   private Keywords() {
     // static utils

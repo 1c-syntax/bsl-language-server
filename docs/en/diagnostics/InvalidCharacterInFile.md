@@ -1,9 +1,5 @@
 # Invalid character (InvalidCharacterInFile)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `1` | `error`<br/>`standard`<br/>`unpredictable` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -29,20 +25,4 @@ Diagnostics detects the following invalid characters
 
 ## Sources
 
-- [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:InvalidCharacterInFile-off
-// BSLLS:InvalidCharacterInFile-on
-```
-
-### Parameter for config
-
-```json
-"InvalidCharacterInFile": false
-```
+* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)

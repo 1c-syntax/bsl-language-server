@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,16 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.FormattingOptions;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -41,60 +57,184 @@ import java.util.stream.Collectors;
     DiagnosticTag.SUSPICIOUS
   }
 )
-public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
+@RequiredArgsConstructor
+public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
+  private static final String POPULAR_DIVISORS_DEFAULT_VALUE = "60, 1024";
 
-  public IdenticalExpressionsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
+  )
+  private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
+  private final FormatProvider formatProvider;
+
+  private final List<BinaryOperationNode> binaryOperations = new ArrayList<>();
+  private BSLParser.ExpressionContext expressionContext;
+
+  private static Set<String> parseCommaSeparatedSet(String values) {
+    if (values.trim().isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return Arrays.stream(values.split(","))
+      .map(String::trim)
+      .collect(Collectors.toSet());
+
   }
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
+  public void configure(Map<String, Object> configuration) {
 
-    List<? extends BSLParser.OperationContext> onlyOperation = ctx.operation();
+    String popularDivisorsValue =
+      (String) configuration.getOrDefault("popularDivisors", POPULAR_DIVISORS_DEFAULT_VALUE);
 
-    if (sufficientSize(ctx) || !isUniformExpression(onlyOperation)) {
-      return super.visitChildren(ctx);
-    }
+    popularDivisors = parseCommaSeparatedSet(popularDivisorsValue);
+  }
 
-    List<? extends BSLParser.MemberContext> onlyMembers = ctx.member();
+  @Override
+  protected ExpressionVisitorDecision onExpressionEnter(BSLParser.ExpressionContext ctx) {
+    expressionContext = ctx;
+    return sufficientSize(ctx)? ExpressionVisitorDecision.SKIP : ExpressionVisitorDecision.ACCEPT;
+  }
 
-    List<ParseTree> identicalExpressions = onlyMembers
+  @Override
+  protected void visitTopLevelExpression(BslExpression node) {
+    binaryOperations.clear();
+    super.visitTopLevelExpression(node);
+
+    var comparer = new TransitiveOperationsIgnoringComparer();
+    comparer.logicalOperationsAsTransitive(true);
+    binaryOperations
       .stream()
-      .filter((ParseTree t) -> onlyMembers
-        .stream()
-        .filter((ParseTree p) -> DiagnosticHelper.equalNodes(t, p)).count() > 1)
-      .collect((Collectors.toList()));
+      .filter(x -> checkEquality(comparer, x))
+      .forEach(x -> diagnosticStorage.addDiagnostic(expressionContext,
+        info.getMessage(x.getRepresentingAst().getText(), getOperandText(x))));
+  }
 
-    if (!identicalExpressions.isEmpty()) {
-      diagnosticStorage.addDiagnostic(
-        ctx,
-        info.getMessage(onlyOperation.get(0).getText(), identicalExpressions.get(0).getText())
-      );
+  @Override
+  protected void visitBinaryOperation(BinaryOperationNode node) {
+    var operator = node.getOperator();
+
+    // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
+    // лучше выкинем их сразу
+    if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
+      return;
     }
 
-    return super.visitChildren(ctx);
+    // одинаковые умножения и сложения - не считаем, см. тесты
+    if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
+      binaryOperations.add(node);
+    }
 
+    super.visitBinaryOperation(node);
+  }
+
+  private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node) {
+
+    var justEqual = comparer.areEqual(node.getLeft(), node.getRight());
+    if (justEqual) {
+      // отбрасывает популярные деления на время и байты
+      return !isPopularQuantification(node);
+    }
+
+    if (isComplementary(node)) {
+      // left не должен встречаться ни в одной из подветок right
+      var searchableLeft = node.getLeft();
+      BinaryOperationNode complementaryNode = node.getRight().cast();
+      while (true) {
+        var equal = comparer.areEqual(searchableLeft, complementaryNode.getLeft()) ||
+          comparer.areEqual(searchableLeft, complementaryNode.getRight());
+
+        if (equal) {
+          return true;
+        }
+
+        if (isComplementary(complementaryNode)) {
+          complementaryNode = complementaryNode.getRight().cast();
+        } else {
+          break;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private boolean isPopularQuantification(BinaryOperationNode node) {
+    if (popularDivisors.isEmpty()) {
+      return false; // выключено игнорирование популярных делителей
+    }
+
+    if (node.getOperator() == BslOperator.DIVIDE
+      && node.getLeft().getNodeType() == ExpressionNodeType.LITERAL) {
+
+      // проверяем только левое, т.к. принципиальное равенство L и R проверено выше по стеку
+      // left заведомо равен right
+      var leftAst = (BSLParser.ConstValueContext) node.getLeft().getRepresentingAst();
+      var number = leftAst.numeric();
+      if (number != null) {
+        var text = number.getText();
+        return popularDivisors.contains(text);
+      }
+
+    }
+
+    return false;
+  }
+
+  private String getOperandText(BinaryOperationNode node) {
+
+    assert node.getRepresentingAst() != null;
+
+    var pairedOperand = node.getLeft();
+    List<Token> tokens = new ArrayList<>();
+
+    fillTokens(pairedOperand, tokens);
+
+    // todo: очень плохое место для этого метода
+    return formatProvider.getNewText(
+      tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
+
+  }
+
+  private static List<Token> collectTokensForUnaryOperation(UnaryOperationNode unary, List<Token> tokens) {
+    tokens.addAll(Trees.getTokens(unary.getRepresentingAst()));
+    fillTokens(unary.getOperand(), tokens);
+    return tokens;
+  }
+
+  private static List<Token> collectTokensForBinaryOperation(BinaryOperationNode binary, List<Token> tokens) {
+
+    fillTokens(binary.getLeft(), tokens);
+    tokens.addAll(Trees.getTokens(binary.getRepresentingAst()));
+    fillTokens(binary.getRight(), tokens);
+
+    return tokens;
+  }
+
+  private static void fillTokens(BslExpression node, List<Token> collection) {
+    if (node instanceof BinaryOperationNode) {
+      collectTokensForBinaryOperation(node.cast(), collection);
+    } else if (node instanceof UnaryOperationNode) {
+      collectTokensForUnaryOperation(node.cast(), collection);
+    } else {
+      collection.addAll(Trees.getTokens(node.getRepresentingAst()));
+    }
+  }
+
+  private static boolean isComplementary(BinaryOperationNode binary) {
+    var operator = binary.getOperator();
+    if ((operator == BslOperator.OR || operator == BslOperator.AND)
+      && binary.getRight() instanceof BinaryOperationNode) {
+      return ((BinaryOperationNode) binary.getRight()).getOperator() == operator;
+    }
+
+    return false;
   }
 
   private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
     return ctx.children.size() < MIN_EXPRESSION_SIZE;
-  }
-
-  private static boolean isUniformExpression(List<? extends BSLParser.OperationContext> operation) {
-    List<Integer> groupOperation = groupIdenticalOperation(operation);
-
-    return groupOperation.size() == 1
-      && groupOperation.get(0) != BSLParser.MUL
-      && groupOperation.get(0) != BSLParser.PLUS;
-  }
-
-  private static List<Integer> groupIdenticalOperation(List<? extends BSLParser.OperationContext> operation) {
-    return operation
-      .stream()
-      .map((BSLParser.OperationContext o) -> o.start.getType())
-      .distinct()
-      .collect(Collectors.toList());
   }
 }

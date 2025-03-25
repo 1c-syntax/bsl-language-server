@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,16 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
@@ -55,10 +54,6 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
   private static final Pattern PUBLIC = CaseInsensitivePattern.compile(
     String.format("^(%s|%s)$", Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN));
 
-  public CachedPublicDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   protected void check() {
 
@@ -68,22 +63,19 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
     documentContext.getSymbolTree().getModuleLevelRegions()
       .stream()
+      .filter(regionSymbol -> !regionSymbol.getMethods().isEmpty())
       .filter(regionSymbol -> PUBLIC.matcher(regionSymbol.getName()).find())
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }
 
-  private boolean isCashed(DocumentContext documentContext) {
+  private static boolean isCashed(DocumentContext documentContext) {
     return documentContext.getMdObject()
       .filter(CommonModule.class::isInstance)
       .map(CommonModule.class::cast)
       .map(CommonModule::getReturnValuesReuse)
-      .filter(this::isReuseValue)
+      .filter(value -> value == ReturnValueReuse.DURING_REQUEST
+        || value == ReturnValueReuse.DURING_SESSION)
       .isPresent();
-  }
-
-  private Boolean isReuseValue(ReturnValueReuse value) {
-    return value == ReturnValueReuse.DURING_REQUEST
-      || value == ReturnValueReuse.DURING_SESSION;
   }
 
 }

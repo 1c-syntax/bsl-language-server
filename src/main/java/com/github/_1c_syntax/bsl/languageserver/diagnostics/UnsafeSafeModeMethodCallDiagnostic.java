@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,8 +58,8 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   private static final Set<Integer> IF_BRANCHES = Set.of(
     BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch);
 
-  public UnsafeSafeModeMethodCallDiagnostic(DiagnosticInfo info) {
-    super(info, SAFE_MODE_METHOD_NAME);
+  public UnsafeSafeModeMethodCallDiagnostic() {
+    super(SAFE_MODE_METHOD_NAME);
   }
 
   @Override
@@ -71,7 +70,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (!super.checkGlobalMethodCall(ctx)){
+    if (!super.checkGlobalMethodCall(ctx)) {
       return false;
     }
 
@@ -84,17 +83,17 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   }
 
   private static boolean nonValidExpression(BSLParser.MemberContext currentRootMember) {
-    if (currentRootMember.unaryModifier() != null){
+    if (currentRootMember.unaryModifier() != null) {
       return true;
     }
 
-    BSLParserRuleContext rootExpressionNode = (BSLParserRuleContext) currentRootMember.getParent();
+    BSLParserRuleContext rootExpressionNode = currentRootMember.getParent();
 
     BSLParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
       return false;
     }
-    if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())){
+    if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())) {
       return true;
     }
 
@@ -103,25 +102,25 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
 
   private static boolean haveNeighboorBooleanOperator(BSLParserRuleContext currentRootMember,
                                                       BSLParserRuleContext rootExpressionNode) {
-    boolean haveNeighboorBoolOperation = false;
+    var haveNeighbourBoolOperation = false;
     int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
     if (indexOfCurrentMemberNode > 0) {
       var prev = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
-      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)){
+      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      haveNeighboorBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
+      haveNeighbourBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
     }
     if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
 
       var next = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
-      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)){
+      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      if (!haveNeighboorBoolOperation){
-        haveNeighboorBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
+      if (!haveNeighbourBoolOperation) {
+        haveNeighbourBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
       }
     }
-    return haveNeighboorBoolOperation;
+    return haveNeighbourBoolOperation;
   }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,13 +28,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -50,12 +50,11 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   private static final String DEFAULT_AUTHORIZED_NUMBERS = "-1,0,1";
   private static final boolean DEFAULT_ALLOW_MAGIC_NUMBER = true;
 
-
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
+    defaultValue = DEFAULT_AUTHORIZED_NUMBERS
   )
-  private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
+  private final List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -63,55 +62,67 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   )
   private boolean allowMagicIndexes = DEFAULT_ALLOW_MAGIC_NUMBER;
 
-  public MagicNumberDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     DiagnosticHelper.configureDiagnostic(this, configuration, "allowMagicIndexes");
 
-    String authorizedNumbersString =
+    this.authorizedNumbers.clear();
+
+    var authorizedNumbersString =
       (String) configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
     for (String s : authorizedNumbersString.split(",")) {
       this.authorizedNumbers.add(s.trim());
     }
   }
 
-  @Override
-  public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
-    String checked = ctx.getText();
-
-    if (checked != null && !isExcluded(checked)) {
-      ParserRuleContext expression = ctx.getParent().getParent().getParent();
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isNumericExpression((BSLParser.ExpressionContext) expression)
-        || mayBeNumberAccess((BSLParser.ExpressionContext) expression))) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
-      }
-    }
-
-    return ctx;
-  }
-
-  private boolean isExcluded(String s) {
-    for (String elem : this.authorizedNumbers) {
-      if (s.compareTo(elem) == 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private boolean mayBeNumberAccess(BSLParser.ExpressionContext expression) {
-    return !allowMagicIndexes && expression.getParent() instanceof BSLParser.AccessIndexContext;
+  private static Optional<BSLParser.ExpressionContext> getExpression(BSLParserRuleContext ctx) {
+    return Optional.of(ctx)
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(context -> context.getChildCount() == 1)
+      .map(BSLParserRuleContext::getParent)
+      .filter(BSLParser.ExpressionContext.class::isInstance)
+      .map(BSLParser.ExpressionContext.class::cast);
   }
 
   private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
     return (expression.getChildCount() <= 1);
+  }
+
+  private static boolean insideCallParam(BSLParser.ExpressionContext expression) {
+    return expression.getParent() instanceof BSLParser.CallParamContext;
+  }
+
+  @Override
+  public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
+    String checked = ctx.getText();
+
+    if (checked != null && isAllowed(checked)) {
+      final var parent = ctx.getParent();
+      if (parent.getParent() instanceof BSLParser.DefaultValueContext || isWrongExpression(parent)) {
+        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
+      }
+    }
+    return defaultResult();
+  }
+
+  private boolean isAllowed(String s) {
+    for (String elem : this.authorizedNumbers) {
+      if (s.compareTo(elem) == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean isWrongExpression(BSLParserRuleContext numericContextParent) {
+    return getExpression(numericContextParent)
+      .filter((BSLParser.ExpressionContext expression) ->
+        (!isNumericExpression(expression) || mayBeNumberAccess(expression) || insideCallParam(expression)))
+      .isPresent();
+  }
+
+  private boolean mayBeNumberAccess(BSLParser.ExpressionContext expression) {
+    return !allowMagicIndexes && expression.getParent() instanceof BSLParser.AccessIndexContext;
   }
 }

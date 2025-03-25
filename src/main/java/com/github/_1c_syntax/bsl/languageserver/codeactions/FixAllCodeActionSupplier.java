@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,13 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,12 +37,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Component
 public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
   private static final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
 
-  public FixAllCodeActionSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
-    super(diagnosticProvider, quickFixSupplier);
+  public FixAllCodeActionSupplier(QuickFixSupplier quickFixSupplier) {
+    super(quickFixSupplier);
   }
 
   @Override
@@ -58,7 +59,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
   }
 
   private List<CodeAction> getFixAllCodeAction(
-    Either<String, Number> diagnosticCode,
+    Either<String, Integer> diagnosticCode,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
@@ -69,7 +70,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
       return Collections.emptyList();
     }
 
-    List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
+    List<Diagnostic> suitableDiagnostics = documentContext.getComputedDiagnostics().stream()
       .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
       .collect(Collectors.toList());
 

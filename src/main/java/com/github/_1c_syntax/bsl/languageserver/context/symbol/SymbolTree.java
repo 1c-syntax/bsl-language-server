@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -30,20 +30,68 @@ import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
+
+/**
+ * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель -&gt; дети
+ */
 @Value
 public class SymbolTree {
-  List<Symbol> children;
 
+  /**
+   * Корневой символ модуля документа.
+   */
+  ModuleSymbol module;
+
+  /**
+   * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
+   */
   @Getter(lazy = true)
-  List<Symbol> childrenFlat = createChildrenFlat();
+  List<SourceDefinedSymbol> childrenFlat = createChildrenFlat();
 
+  /**
+   * Список методов документа.
+   */
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
 
+  @Getter(lazy = true)
+  Map<String, MethodSymbol> methodsByName = createMethodsByName();
+
+  /**
+   * Плоский список всех переменных документа
+   */
+  @Getter(lazy = true)
+  List<VariableSymbol> variables = createVariables();
+
+  // TODO: value = AccessLevel.PRIVATE после окончания тестирования производительности
+  @Getter(lazy = true)
+  Map<SourceDefinedSymbol, Map<String, VariableSymbol>> variablesByName = createVariablesByName();
+
+  /**
+   * @return Список символов верхнего уровня за исключением символа модуля документа.
+   */
+  public List<SourceDefinedSymbol> getChildren() {
+    return module.getChildren();
+  }
+
+  /**
+   * Список всех символов всех уровней указанного типа (за исключением символа модуля документа),
+   * преобразованных в плоский список.
+   *
+   * @param clazz класс искомого символа.
+   * @param <T>   тип искомого символа.
+   * @return плоский список символов указанного типа.
+   */
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
       .filter(clazz::isInstance)
@@ -51,17 +99,31 @@ public class SymbolTree {
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return Список областей, расположенных на верхнем уровне документа.
+   */
   public List<RegionSymbol> getModuleLevelRegions() {
     return getChildren().stream()
       .filter(RegionSymbol.class::isInstance)
-      .map(symbol -> (RegionSymbol) symbol)
+      .map(RegionSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return плоский список всех областей документа.
+   */
   public List<RegionSymbol> getRegionsFlat() {
     return getChildrenFlat(RegionSymbol.class);
   }
 
+  /**
+   * Попытка поиска символа метода по узлу дерева разбора.
+   * <p>
+   * Implementation note - Поиск осуществляется по месту определения метода (declaration).
+   *
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ метода.
+   */
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
     BSLParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
@@ -83,10 +145,24 @@ public class SymbolTree {
       .findAny();
   }
 
-  public List<VariableSymbol> getVariables() {
-    return getChildrenFlat(VariableSymbol.class);
+  /**
+   * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
+   *
+   * @param methodName Имя метода
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(String methodName) {
+    return Optional.ofNullable(getMethodsByName().get(methodName));
   }
 
+  /**
+   * Попытка поиска символа переменной по узлу дерева разбора.
+   * <p>
+   * Implementation note Поиск осуществляется по месту определения переменной (declaration).
+   *
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ переменной.
+   */
   public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
 
     BSLParserRuleContext varNameNode;
@@ -108,8 +184,22 @@ public class SymbolTree {
       .findAny();
   }
 
-  private List<Symbol> createChildrenFlat() {
-    List<Symbol> symbols = new ArrayList<>();
+  /**
+   * Поиск VariableSymbol в дереве по указанному имени (без учета регистра) и области объявления.
+   *
+   * @param variableName Имя переменной
+   * @param scopeSymbol  Символ, внутри которого осуществляется поиск.
+   *                     Например, {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @return VariableSymbol, если он был найден в дереве символов.
+   */
+  public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
+    return Optional.ofNullable(
+      getVariablesByName().getOrDefault(scopeSymbol, Collections.emptyMap()).get(variableName)
+    );
+  }
+
+  private List<SourceDefinedSymbol> createChildrenFlat() {
+    List<SourceDefinedSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
 
     return symbols;
@@ -119,7 +209,38 @@ public class SymbolTree {
     return getChildrenFlat(MethodSymbol.class);
   }
 
-  private static void flatten(Symbol symbol, List<Symbol> symbols) {
+  private List<VariableSymbol> createVariables() {
+    return getChildrenFlat(VariableSymbol.class);
+  }
+
+  private Map<SourceDefinedSymbol, Map<String, VariableSymbol>> createVariablesByName() {
+    return getVariables().stream()
+      .collect(
+        groupingBy(
+          VariableSymbol::getScope,
+          toMap(
+            VariableSymbol::getName,
+            Function.identity(),
+            (existing, replacement) -> existing,
+            () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
+          )
+        )
+      );
+  }
+
+  private Map<String, MethodSymbol> createMethodsByName() {
+    return getMethods().stream()
+      .collect(
+        toMap(
+          MethodSymbol::getName,
+          Function.identity(),
+          (existing, replacement) -> existing,
+          () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
+        )
+      );
+  }
+
+  private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
     symbols.add(symbol);
     symbol.getChildren().forEach(child -> flatten(child, symbols));
   }

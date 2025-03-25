@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -36,7 +36,6 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
   @Test
   void test() {
-
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
@@ -52,17 +51,14 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(12, 44, 12, 85)
       .hasRange(20, 18, 20, 29)
       .hasRange(23, 7, 23, 119)
-      .hasRange(43, 33, 43, 42)
       .hasRange(55, 13, 18)
-      .hasRange(57, 104,114)
-      .hasRange(65, 9,22)
-    ;
-
+      .hasRange(57, 104, 114)
+      .hasRange(65, 9, 22)
+      .hasRange(71, 6, 15);
   }
 
   @Test
   void testConfigure() {
-
     List<Diagnostic> diagnostics;
     Map<String, Object> configuration;
 
@@ -83,7 +79,16 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
     diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(18);
+    assertThat(diagnostics).hasSize(13);
 
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    // убираем 2.* из исключения
+    configuration.put("searchPopularVersionExclusion", "^(1|3|8\\.3|11)\\.");
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(15);
   }
 }

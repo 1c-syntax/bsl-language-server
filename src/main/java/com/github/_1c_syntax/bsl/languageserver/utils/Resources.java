@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import lombok.experimental.UtilityClass;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.utils.StringInterner;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -30,28 +33,74 @@ import java.util.ResourceBundle;
 /**
  * Вспомогательный класс для оптимизированного чтения ресурсов прикладных классов с учетом {@link Language}.
  */
-@UtilityClass
+@Component
+@RequiredArgsConstructor
 public class Resources {
+
+  private static final StringInterner stringInterner = new StringInterner();
+
+  private final LanguageServerConfiguration configuration;
+
+  /**
+   * @param clazz    Класс, ресурсы которого необходимо прочитать.
+   * @param key      Ключ из {@link ResourceBundle}.
+   * @return Содержимое ресурса.
+   */
+  public String getResourceString(Class<?> clazz, String key) {
+    return getResourceString(configuration.getLanguage().getLocale(), clazz, key);
+  }
+
+  /**
+   * @param clazz    Класс, ресурсы которого необходимо прочитать.
+   * @param key      Ключ из {@link ResourceBundle}.
+   * @param args     Аргументы для форматирования ресурсной строки.
+   * @return Содержимое ресурса.
+   */
+  public String getResourceString(Class<?> clazz, String key, Object... args) {
+    return getResourceString(configuration.getLanguage().getLocale(), clazz, key, args);
+  }
 
   /**
    * @param language Язык получения ресурсной строки.
-   * @param clazz Класс, ресурсы которого необходимо прочитать.
-   * @param key Ключ из {@link ResourceBundle}.
+   * @param clazz    Класс, ресурсы которого необходимо прочитать.
+   * @param key      Ключ из {@link ResourceBundle}.
    * @return Содержимое ресурса.
    */
-  public String getResourceString(Language language, Class<?> clazz, String key) {
-    String languageCode = language.getLanguageCode();
-    Locale locale = Locale.forLanguageTag(languageCode);
-    return ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key).intern();
+  public static String getResourceString(Language language, Class<?> clazz, String key) {
+    return getResourceString(language.getLocale(), clazz, key);
   }
+
+  /**
+   * @param locale Язык получения ресурсной строки.
+   * @param clazz  Класс, ресурсы которого необходимо прочитать.
+   * @param key    Ключ из {@link ResourceBundle}.
+   * @return Содержимое ресурса.
+   */
+  public static String getResourceString(Locale locale, Class<?> clazz, String key) {
+    var resourceString = ResourceBundle.getBundle(clazz.getName(), locale, new UTF8Control()).getString(key);
+    return stringInterner.intern(resourceString);
+  }
+
   /**
    * @param language Язык получения ресурсной строки.
-   * @param clazz Класс, ресурсы которого необходимо прочитать.
-   * @param key Ключ из {@link ResourceBundle}.
-   * @param args Аргументы для форматирования ресурсной строки.
+   * @param clazz    Класс, ресурсы которого необходимо прочитать.
+   * @param key      Ключ из {@link ResourceBundle}.
+   * @param args     Аргументы для форматирования ресурсной строки.
    * @return Содержимое ресурса.
    */
-  public String getResourceString(Language language, Class<?> clazz, String key, Object... args) {
-    return String.format(getResourceString(language, clazz, key), args).intern();
+  public static String getResourceString(Language language, Class<?> clazz, String key, Object... args) {
+    return getResourceString(language.getLocale(), clazz, key, args);
+  }
+
+  /**
+   * @param locale Язык получения ресурсной строки.
+   * @param clazz  Класс, ресурсы которого необходимо прочитать.
+   * @param key    Ключ из {@link ResourceBundle}.
+   * @param args   Аргументы для форматирования ресурсной строки.
+   * @return Содержимое ресурса.
+   */
+  public static String getResourceString(Locale locale, Class<?> clazz, String key, Object... args) {
+    var resourceString = String.format(getResourceString(locale, clazz, key), args);
+    return stringInterner.intern(resourceString);
   }
 }

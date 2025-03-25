@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -43,6 +44,8 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -56,18 +59,27 @@ import java.util.stream.Collectors;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
+  private static final boolean CHECK_UNKNOWN_MODULE_TYPE = false;
   private final List<Range> regionsRanges = new ArrayList<>();
 
-  public CodeOutOfRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_UNKNOWN_MODULE_TYPE
+  )
+  private boolean checkUnknownModuleType = CHECK_UNKNOWN_MODULE_TYPE;
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+
+    // Для неизвестных модулей не будем требовать нахождения кода в области
+    if (documentContext.getModuleType() == ModuleType.UNKNOWN && !checkUnknownModuleType) {
+      return ctx;
+    }
+
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
     regionsRanges.clear();
 
-    // если областей нет, то и смысла дальше анализировть тоже нет
+    // если областей нет, то и смысла дальше анализировать тоже нет
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
 
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
@@ -135,7 +147,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
         && !(node instanceof TerminalNode))
       .findFirst()
       .ifPresent((Tree node) -> {
-          Range ctxRange = Ranges.create((BSLParserRuleContext) node);
+          var ctxRange = Ranges.create((BSLParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic(ctx);
@@ -172,14 +184,26 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node -> node.getParent().getParent() == ctx)
       .forEach((ParseTree child) -> {
-        if (child.getChildCount() > 1
-          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext)) {
-          Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
+        if ((child.getChildCount() > 1
+          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext))
+          && !isRaiseStatement(child)) {
+
+          var ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic((BSLParser.StatementContext) child);
           }
         }
       });
+  }
+
+  private static boolean isRaiseStatement(ParseTree child) {
+    return Optional.of(child).stream()
+      .filter(BSLParser.StatementContext.class::isInstance)
+      .map(BSLParser.StatementContext.class::cast)
+      .map(BSLParser.StatementContext::compoundStatement)
+      .filter(Objects::nonNull)
+      .map(BSLParser.CompoundStatementContext::raiseStatement)
+      .anyMatch(Objects::nonNull);
   }
 }

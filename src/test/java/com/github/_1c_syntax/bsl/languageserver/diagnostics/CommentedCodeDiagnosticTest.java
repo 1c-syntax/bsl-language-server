@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,8 +40,23 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   @Test
   void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
+    check(diagnostics, false);
+  }
 
-    assertThat(diagnostics).hasSize(11);
+  @Test
+  void exclusionPrefixesTest(){
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("exclusionPrefixes", "<code>");
+    diagnosticInstance.configure(configuration);
+
+    var diagnostics = getDiagnostics();
+    check(diagnostics, true);
+  }
+
+  void check(List<Diagnostic> diagnostics, boolean excludePrefixes){
+    int expectedSize = excludePrefixes?11:12;
+
+    assertThat(diagnostics).hasSize(expectedSize);
     assertThat(diagnostics, true)
       .hasRange(0, 0, 6, 81)
       .hasRange(16, 4, 34, 16)
@@ -53,18 +69,29 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
       .hasRange(117, 0, 118, 24)
       .hasRange(203, 0, 203, 32)
       .hasRange(244, 0, 264, 152);
+
+    if(!excludePrefixes){
+      assertThat(diagnostics, true).hasRange(268, 4, 270, 22);
+    }
   }
 
   @Test
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("threshold", 1f);
-    diagnosticInstance.configure(configuration);
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    List<Object> thresholdVariants = new ArrayList<>();
+    thresholdVariants.add(1f);
+    thresholdVariants.add(1.0);
+    thresholdVariants.add(1);
 
-    assertThat(diagnostics).hasSize(0);
+    for (Object threshold : thresholdVariants){
+      configuration.put("threshold", threshold);
+      diagnosticInstance.configure(configuration);
+
+      List<Diagnostic> diagnostics = getDiagnostics();
+      assertThat(diagnostics).isEmpty();
+    }
 
   }
 

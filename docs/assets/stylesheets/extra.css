@@ -2,16 +2,6 @@
     margin-right: 0;
 }
 
-.md-sidebar--secondary {
-    margin-top: 220px;
-    margin-left: 0.5rem;
-}
-
-/* для отступа заголовка "Содержание" */
-.md-sidebar--secondary .md-nav__title {  
-    padding-left: 0px;
-}
-
 .md-typeset__table {
     padding: 0;
 }
@@ -20,8 +10,23 @@
     font-size: .54rem;
 }
 
-@media only screen and (min-width:59.9375em) and (max-width:80em) {
-    .md-sidebar--secondary {
-        display: none;
-    }
+
+[data-md-color-scheme="slate"] .md-logo img { 
+    filter: invert(100%);
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #212121;
+}
+
+[data-md-color-scheme=slate][data-md-color-primary=black] {
+    --md-typeset-a-color: #02a6f2;
+}
+
+[data-md-color-primary=black] .md-header {
+    background-color: #212121;
+}
+
+[data-md-color-primary=black] .md-tabs {
+    background-color: #212121;
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,15 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -41,27 +38,20 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 )
 public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
-
-  public CommonModuleAssignDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
 
-    TerminalNode identifier = ctx.IDENTIFIER();
+    var identifier = ctx.IDENTIFIER();
 
-    if (identifier == null
-      || ctx.acceptor() != null) {
+    if (identifier == null || ctx.acceptor() != null) {
       return ctx;
     }
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getCommonModule(identifier.getText()).isPresent()) {
+    var configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration.findCommonModule(identifier.getText()).isPresent()) {
       diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
     }
 
     return ctx;
   }
-
 }

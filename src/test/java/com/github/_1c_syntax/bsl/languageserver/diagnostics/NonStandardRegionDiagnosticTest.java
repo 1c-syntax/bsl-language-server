@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,11 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,8 +39,9 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@DirtiesContext
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
-  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
+  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata/designer");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
 
   NonStandardRegionDiagnosticTest() {
@@ -53,6 +55,8 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     pathByModuleType.put(ModuleType.FormModule, "Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl");
     pathByModuleType.put(ModuleType.CommonModule, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
     pathByModuleType.put(ModuleType.RecordSetModule, "InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl");
+    pathByModuleType.put(ModuleType.HTTPServiceModule, "HTTPServices/HTTPСервис1/Ext/Module.bsl");
+    pathByModuleType.put(ModuleType.WEBServiceModule, "WebServices/WebСервис1/Ext/Module.bsl");
   }
 
   @Test
@@ -100,11 +104,11 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(0, 1, 27)
-      .hasRange(28, 1, 32)
-      .hasRange(32, 1, 46)
-      .hasRange(36, 1, 63)
-      .hasRange(40, 1, 31)
-      .hasRange(52, 1, 18)
+      .hasRange(39, 1, 32)
+      .hasRange(43, 1, 46)
+      .hasRange(47, 1, 63)
+      .hasRange(51, 1, 31)
+      .hasRange(63, 1, 18)
     ;
   }
 
@@ -141,7 +145,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       .hasRange(41, 1, 63)
       .hasRange(45, 1, 31)
       .hasRange(49, 1, 27)
-      .hasRange(77, 1, 18)
+      .hasRange(91, 1, 18)
     ;
   }
 
@@ -170,13 +174,13 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(11, 1, 38)
-      .hasRange(24, 1, 16)
-      .hasRange(28, 1, 32)
-      .hasRange(32, 1, 46)
-      .hasRange(36, 1, 63)
-      .hasRange(40, 1, 31)
-      .hasRange(52, 1, 18)
+      .hasRange(13, 1, 38)
+      .hasRange(26, 1, 16)
+      .hasRange(30, 1, 32)
+      .hasRange(34, 1, 46)
+      .hasRange(38, 1, 63)
+      .hasRange(42, 1, 31)
+      .hasRange(54, 1, 18)
     ;
   }
 
@@ -213,15 +217,39 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     ;
   }
 
+  @Test
+  void testHTTPServiceModule() throws IOException {
+
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.HTTPServiceModule));
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 29)
+      .hasRange(4, 1, 38)
+    ;
+  }
+
+  @Test
+  void testWEBServiceModule() throws IOException {
+
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.WEBServiceModule));
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(20, 1, 22)
+    ;
+  }
+
   private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
     Path tempFile = Paths.get(CONFIGURATION_PATH.toString(),
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );
 
-    return new DocumentContext(
+    initServerContext(CONFIGURATION_PATH.toRealPath());
+    return TestUtils.getDocumentContext(
       tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(CONFIGURATION_PATH.toRealPath())
+      context
     );
   }
 }

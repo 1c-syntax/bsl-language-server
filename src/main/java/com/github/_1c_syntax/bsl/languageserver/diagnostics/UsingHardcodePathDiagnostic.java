@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -68,16 +67,8 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Pattern searchWordsStdPathsUnix = CaseInsensitivePattern.compile("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 
-  public UsingHardcodePathDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty =
       (String) configuration.getOrDefault("searchWordsStdPathsUnix", REGEX_STD_PATHS_UNIX);
@@ -93,8 +84,9 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
-    if (content.length() > 2) {
+    // пропускаю 4 символа, т.к. 2 кавычки и значимые 2 символа точно не попадют под регулярки
+    if (ctx.getText().length() > 4) {
+      String content = ctx.getText().substring(1, ctx.getText().length() - 1);
       Matcher matcher = patternPath.matcher(content);
       Matcher matcherURL = patternURL.matcher(content);
       if (matcher.find() && !matcherURL.find()) {

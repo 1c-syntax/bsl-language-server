@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,10 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,13 +45,18 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
   private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
     = "./src/test/resources/.partial-bsl-language-server.json";
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void startUp() throws IOException {
@@ -60,12 +69,10 @@ class LanguageServerConfigurationTest {
 
   @Test
   void createDefault() {
-    // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-
     // then
     assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
+    assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isTrue();
   }
 
   @Test
@@ -75,7 +82,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -94,13 +101,18 @@ class LanguageServerConfigurationTest {
 
     Either<Boolean, Map<String, Object>> methodSize = parameters.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
-    assertThat(methodSize.getLeft()).isEqualTo(false);
+    assertThat(methodSize.getLeft()).isFalse();
 
     Path configurationRoot = configuration.getConfigurationRoot();
-    assertThat(configurationRoot).isNotEqualTo(null);
+    assertThat(configurationRoot).isNotNull();
 
-    assertThat(configuration.getDocumentLinkOptions().useDevSite()).isTrue();
+    assertThat(configuration.isUseDevSite()).isTrue();
+    assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
+    assertThat(annotations)
+      .hasSize(2)
+      .contains("Test", "Test2");
   }
 
   @Test
@@ -110,7 +122,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -125,13 +137,12 @@ class LanguageServerConfigurationTest {
   @Test
   void test_GetCustomConfigurationRoot() {
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     Path path = Paths.get(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
-    configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
@@ -141,22 +152,26 @@ class LanguageServerConfigurationTest {
   void testPartialInitialization() {
     // given
     File configurationFile = new File(PATH_TO_PARTIAL_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    InlayHintOptions inlayHintOptions = configuration.getInlayHintOptions();
 
     // then
-    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
-    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+    assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
+    assertThat(codeLensOptions.getParameters()).containsEntry("cyclomaticComplexity", Either.forLeft(false));
 
     assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
 
     assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
     assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
     assertThat(diagnosticsOptions.getParameters()).isEmpty();
+
+    assertThat(inlayHintOptions.getParameters())
+      .containsEntry("sourceDefinedMethodCall", Either.forRight(Map.of("showParametersWithTheSameName", true)));
+
   }
 
 }

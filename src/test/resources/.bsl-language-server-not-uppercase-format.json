@@ -1,0 +1,27 @@
+{
+  "language": "ru",
+  "codeLens": {
+    "parameters": {
+      "cognitiveComplexity": true,
+      "cyclomaticComplexity": true
+    }
+  },
+  "diagnostics": {
+    "computeTrigger": "onType",
+    "skipSupport": "withSupportLocked",
+    "ordinaryAppSupport": false,
+    "mode": "only",
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 140
+      },
+      "MethodSize": false
+    }
+  },
+  "formatting": {
+    "useUpperCaseForOrNotAndKeywords": false
+  },
+  "useDevSite": true,
+  "traceLog": "build/.trace.log",
+  "configurationRoot": "src/test/resources/metadata/designer"
+}

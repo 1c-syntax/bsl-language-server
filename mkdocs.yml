@@ -1,32 +1,92 @@
 site_name: BSL Language Server
 nav:
-  - Домашняя: index.md
-  - Руководство контрибьютора: contributing/index.md
-  - Репортеры: reporters/index.md
+  - Домашняя:
+    - index.md
+    - faq.md
+    - systemRequirements.md
+  - Руководство контрибьютора:
+    - О разделе: contributing/index.md
+    - Старт:
+      - contributing/EnvironmentSetting.md
+      - contributing/FastStart.md
+      - contributing/StyleGuide.md
+      - JavaDoc: javadoc/index.html
+    - Разработка диагностик:
+      - contributing/DiagnosticDevWorkFlow.md
+      - contributing/DiagnosticExample.md
+      - contributing/DiagnosticStructure.md
+      - contributing/DiagnosticTypeAndSeverity.md
+      - contributing/DiagnosticTag.md
+      - contributing/DiagnostcAddSettings.md
+      - contributing/DiagnosticQuickFix.md
+  - Репортеры:
+    - О разделе: reporters/index.md
+    - JSON: reporters/json.md
+    - Generic Issue: reporters/generic.md
+    - JUnit: reporters/junit.md
+    - TSLint: reporters/tslint.md
+    - Console: reporters/console.md
   - Диагностики: diagnostics/index.md
-  - Дополнительные возможности: features/index.md
-  - English: https://1c-syntax.github.io/bsl-language-server/en
+  - Дополнительные возможности:
+    - О разделе: features/index.md
+    - features/ConfigurationFile.md
+    - features/DiagnosticIgnorance.md
 theme: 
   name: material
   language: ru
   logo: 'assets/images/logo.png'
   favicon: 'assets/images/logo.png'
   palette:
-    primary: 'white'
-    accent: 'indigo'
+    # Light mode
+    - teal: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: indigo
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to dark mode
+
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: light blue
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - search.highlight
+    - toc.integrate
+    - header.autohide
 extra:
   social:
     - icon: fontawesome/brands/github
       link: 'https://github.com/1c-syntax'
     - icon: fontawesome/brands/telegram
       link: 'https://t.me/bsl_language_server'
+  alternate:
+    - name: English
+      link: /bsl-language-server/en/
+      lang: en
+    - name: Русский
+      link: /bsl-language-server/
+      lang: ru
 extra_css:
   - 'assets/stylesheets/extra.css'
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js
+  - assets/javascripts/tables.js
 markdown_extensions:
   - admonition
   - codehilite
-  - toc:
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - markdown.extensions.toc:
       permalink: true
+      slugify: !!python/name:pymdownx.slugs.uslugify_cased
+      toc_depth: 2
 
 plugins:
   - search:

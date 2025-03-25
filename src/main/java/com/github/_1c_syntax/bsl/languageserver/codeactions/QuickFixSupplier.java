@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,72 +22,44 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+@Component
+@RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final List<Class<? extends QuickFixProvider>> quickFixClasses;
+  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticObjectProvider diagnosticObjectProvider;
+
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
   // Возможно через аннотацию.
-  private final DiagnosticSupplier diagnosticSupplier;
-
-  public QuickFixSupplier(DiagnosticSupplier diagnosticSupplier) {
-    this.diagnosticSupplier = diagnosticSupplier;
-    this.quickFixClasses = createQuickFixClasses();
-  }
-
-  public List<Class<? extends QuickFixProvider>> getQuickFixClasses() {
-    return new ArrayList<>(quickFixClasses);
-  }
 
   @SuppressWarnings("unchecked")
-  public <T extends Either<String, Number>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
+  public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
   ) {
-    Optional<Class<? extends BSLDiagnostic>> diagnosticClass = diagnosticSupplier.getDiagnosticClass(diagnosticCode);
-    if (diagnosticClass.isEmpty()) {
-      return Optional.empty();
-    }
-
-    final Class<? extends BSLDiagnostic> bslDiagnosticClass = diagnosticClass.get();
-    if (!quickFixClasses.contains(bslDiagnosticClass)) {
-      return Optional.empty();
-    }
-
-    Class<? extends QuickFixProvider> quickFixClass = (Class<? extends QuickFixProvider>) bslDiagnosticClass;
-    return Optional.of(quickFixClass);
+    return Optional.ofNullable(
+      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+    )
+      .map(DiagnosticInfo::getDiagnosticClass)
+      .filter(QuickFixProvider.class::isAssignableFrom)
+      .map(aClass -> (Class<? extends QuickFixProvider>) aClass);
   }
 
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    return (QuickFixProvider) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
-  }
-
-  private static List<Class<? extends QuickFixProvider>> createQuickFixClasses() {
-
-    Reflections quickFixReflections = new Reflections(
-      new ConfigurationBuilder()
-        .setUrls(
-          ClasspathHelper.forPackage(
-            BSLDiagnostic.class.getPackage().getName(),
-            ClasspathHelper.contextClassLoader(),
-            ClasspathHelper.staticClassLoader()
-          )
-        )
-    );
-
-    return new ArrayList<>(quickFixReflections.getSubTypesOf(QuickFixProvider.class));
+    return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticClass);
   }
 
 }

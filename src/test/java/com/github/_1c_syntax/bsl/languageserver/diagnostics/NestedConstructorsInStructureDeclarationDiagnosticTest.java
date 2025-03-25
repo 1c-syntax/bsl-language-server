@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
@@ -39,7 +40,12 @@ class NestedConstructorsInStructureDeclarationDiagnosticTest
     super(NestedConstructorsInStructureDeclarationDiagnostic.class);
   }
 
-  private final String relatedMessage = diagnosticInstance.getInfo().getResourceString("nestedConstructorRelatedMessage");
+  private String relatedMessage;
+
+  @PostConstruct
+  void before() {
+    relatedMessage = diagnosticInstance.getInfo().getResourceString("nestedConstructorRelatedMessage");
+  }
 
   @Test
   void test() {

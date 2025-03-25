@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,13 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -55,26 +54,22 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
     "(\\.Свойство\\(\"АвтоТест\"\\)|=\"АвтоТест\"|\\.Property\\(\"AutoTest\"\\)|=\"AutoTest\")$"
   );
 
-  public ExcessiveAutoTestCheckDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
 
     if (expressionMatchesPattern(ctx.expression()) && codeBlockWithOnlyReturn(ctx.codeBlock())) {
-      diagnosticStorage.addDiagnostic((BSLParser.IfStatementContext) ctx.getParent());
+      diagnosticStorage.addDiagnostic(ctx.getParent());
       return ctx;
     }
 
     return super.visitIfBranch(ctx);
   }
 
-  private boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
+  private static boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
     return ERROR_EXPRESSION.matcher(expression.getText()).find();
   }
 
-  private boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
+  private static boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
     List<? extends BSLParser.StatementContext> statements = codeBlock.statement();
 
     if (statements.size() == 1) {

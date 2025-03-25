@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -53,8 +52,7 @@ import java.util.stream.Collectors;
 public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
   private final Map<String, String> regionNames = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-  public DuplicateRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public DuplicateRegionDiagnostic() {
     regionNames.put(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
     regionNames.put(Keywords.PUBLIC_REGION_EN, Keywords.PUBLIC_REGION_EN);
     regionNames.put(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);

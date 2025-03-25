@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,43 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.reflections.ReflectionUtils;
+import lombok.Getter;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Описание параметров диагностики
+ */
+@Getter
 public final class DiagnosticParameterInfo {
 
-  private final Class type;
+  private final Class<?> type;
   private final String name;
   private final String description;
   private final Object defaultValue;
 
   private DiagnosticParameterInfo(Field field, String description) {
-
     DiagnosticParameter diagnosticParameter = field.getAnnotation(DiagnosticParameter.class);
     this.type = diagnosticParameter.type();
     this.name = field.getName();
     this.description = description;
     this.defaultValue = castDiagnosticParameterValue(diagnosticParameter.defaultValue());
-
-  }
-
-  public Class getType() {
-    return type;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getDescription() {
-    return this.description;
-  }
-
-  public Object getDefaultValue() {
-    return this.defaultValue;
   }
 
   private Object castDiagnosticParameterValue(String valueToCast) {
@@ -77,13 +64,21 @@ public final class DiagnosticParameterInfo {
     return value;
   }
 
-  @SuppressWarnings("unchecked")
   static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
-    return ReflectionUtils.getAllFields(
-      diagnosticInfo.getDiagnosticClass(),
-      ReflectionUtils.withAnnotation(DiagnosticParameter.class)
-    ).stream()
-      .map((Field field) -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
+    var parameterInfos = getParameterByClass(diagnosticInfo.getDiagnosticClass(), diagnosticInfo);
+
+    var superClass = diagnosticInfo.getDiagnosticClass().getSuperclass();
+    if (superClass != null) {
+      parameterInfos.addAll(getParameterByClass(superClass, diagnosticInfo));
+    }
+
+    return parameterInfos;
+  }
+
+  private static List<DiagnosticParameterInfo> getParameterByClass(Class<?> clazz, DiagnosticInfo diagnosticInfo) {
+    return Arrays.stream(clazz.getDeclaredFields())
+      .filter(field -> field.isAnnotationPresent(DiagnosticParameter.class))
+      .map(field -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
       .collect(Collectors.toList());
   }
 }

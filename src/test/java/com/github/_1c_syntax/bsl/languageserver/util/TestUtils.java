@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,10 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.util;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
 public class TestUtils {
 
   public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
-  public static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  public static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
@@ -50,7 +51,7 @@ public class TestUtils {
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {
-    return getDocumentContext(uri, fileContent, new ServerContext());
+    return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(ServerContext.class));
   }
 
   public static DocumentContext getDocumentContext(String fileContent) {
@@ -60,13 +61,20 @@ public class TestUtils {
   public static DocumentContext getDocumentContext(String fileContent, @Nullable ServerContext context) {
     ServerContext passedContext = context;
     if (passedContext == null) {
-      passedContext = new ServerContext();
+      passedContext = TestApplicationContext.getBean(ServerContext.class);
     }
 
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent, passedContext);
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent, ServerContext context) {
-    return context.addDocument(uri, fileContent);
+    var documentContext = context.addDocument(uri);
+    context.rebuildDocument(documentContext, fileContent, 0);
+    return documentContext;
   }
+
+  public static TextDocumentIdentifier getTextDocumentIdentifier(URI uri) {
+    return new TextDocumentIdentifier(uri.toString());
+  }
+
 }

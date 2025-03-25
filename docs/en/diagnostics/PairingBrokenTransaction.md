@@ -1,9 +1,5 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `15` | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -24,7 +20,7 @@ Procedure WriteDataToIB()
         CommitTransaction();
     Raise
         RollbackTransaction();
-        ... // additional operations to process the exception
+        ... // additional steps to handle the exception
     EndTry;
 
 EndProcedure
@@ -34,7 +30,7 @@ EndProcedure
 
 ```bsl
 Procedure WriteDataToIB()
- 
+
     StartTransaction();
     WriteDocument();
 
@@ -48,28 +44,13 @@ Procedure WriteDocument()
         CommitTransaction();
     Raise
         RollbackTransaction();
-        ... // additional operations to process the exception
+        ... // additional steps to handle the exception
     EndTry;
 
 EndProcedure
+
 ```
 
-## Reference
+## Sources
 
-- [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:PairingBrokenTransaction-off
-// BSLLS:PairingBrokenTransaction-on
-```
-
-### Parameter for config
-
-```json
-"PairingBrokenTransaction": false
-```
+* [Transactions: Rules of Use (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)

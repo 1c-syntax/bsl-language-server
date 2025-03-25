@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,29 +21,71 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
+@Component
+@Primary
+@Scope("prototype")
 public @interface DiagnosticMetadata {
+  /**
+   * Тип диагностики
+   */
   DiagnosticType type() default DiagnosticType.ERROR;
 
+  /**
+   * Серьезность замечания
+   */
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
 
+  /**
+   * Область применения диагностики по диалекту языка (bsl или oscript)
+   */
   DiagnosticScope scope() default DiagnosticScope.ALL;
 
+  /**
+   * Типы модулей, анализируемых диагностикой
+   */
   ModuleType[] modules() default {};
 
+  /**
+   * Время, необходимое для исправления замечания
+   */
   int minutesToFix() default 0;
 
+  /**
+   * Признак включения диагностики в профиле по умолчанию
+   */
   boolean activatedByDefault() default true;
 
+  /**
+   * Версия платформы 1С:Предприятие, с которой диагностика применяется
+   */
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
 
+  /**
+   * Перечень меток (тегов) диагностики
+   */
   DiagnosticTag[] tags() default {};
+
+  /**
+   * Замечания диагностики могут быть прикреплены на уровень анализируемого проекта (в частности в SonarQube)
+   */
+  boolean canLocateOnProject() default false;
+
+  /**
+   * Надбавка ко времени исправления замечания за повышенную сложность
+   */
+  double extraMinForComplexity() default 0;
 }

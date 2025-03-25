@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,60 +21,59 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
-import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ServerContextTest {
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class ServerContextTest {
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
+  @Autowired
+  private ServerContext serverContext;
+
   @Test
   void testConfigurationMetadata() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
-    ServerContext serverContext = new ServerContext(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    serverContext.setConfigurationRoot(path);
+    var configurationMetadata = serverContext.getConfiguration();
 
-    assertThat(configurationMetadata).isNotEqualTo(null);
+    assertThat(configurationMetadata).isNotNull();
 
     assertThat(configurationMetadata.getScriptVariant()).isEqualTo(ScriptVariant.RUSSIAN);
 
     assertThat(configurationMetadata.getConfigurationSource()).isEqualTo(ConfigurationSource.DESIGNER);
 
-    assertThat(configurationMetadata.getCompatibilityMode().getMajor()).isEqualTo(8);
     assertThat(configurationMetadata.getCompatibilityMode().getMinor()).isEqualTo(3);
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    ModuleType type = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
+    ModuleType type = configurationMetadata.getModuleTypeByURI(Absolute.uri(file.toURI()));
     assertThat(type).isEqualTo(ModuleType.CommonModule);
-
   }
 
   @Test
-  void testMdoRefs() throws IOException {
-
+  void testMdoRefs() {
     var path = Absolute.path(PATH_TO_METADATA);
-    var serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
-    DocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
+    var documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
     assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()
@@ -101,23 +100,22 @@ public class ServerContextTest {
 
   @Test
   void testErrorConfigurationMetadata() {
-    Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
+    Path path = Absolute.path(PATH_TO_METADATA + "test");
 
-    ServerContext serverContext = new ServerContext();
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
-    assertThat(configurationMetadata.getModulesByType()).hasSize(0);
+    assertThat(configurationMetadata.getModulesByType()).isEmpty();
   }
 
   @Test
   void testPopulateContext() {
     // given
     Path path = Absolute.path(PATH_TO_METADATA);
-    ServerContext serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
 
-    assertThat(serverContext.getDocuments()).hasSize(0);
+    assertThat(serverContext.getDocuments()).isEmpty();
 
     // when
     serverContext.populateContext();
@@ -126,10 +124,11 @@ public class ServerContextTest {
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
   }
 
-  private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
+  private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
+    return documentContext;
   }
-
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,6 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,29 +35,51 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements Symbol {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+  @EqualsAndHashCode.Include
   String name;
 
-  Range range;
-  Range subNameRange;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Method;
+
+  @EqualsAndHashCode.Include
+  DocumentContext owner;
+
+  @Getter(AccessLevel.NONE)
+  int startLine;
+  @Getter(AccessLevel.NONE)
+  int startCharacter;
+  @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
+  int endCharacter;
+
+  @Getter(AccessLevel.NONE)
+  int subNameLine;
+  @Getter(AccessLevel.NONE)
+  int subNameStartCharacter;
+  @Getter(AccessLevel.NONE)
+  int subNameEndCharacter;
 
   @Getter
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
   boolean export;
@@ -59,18 +87,65 @@ public class MethodSymbol implements Symbol {
 
   boolean deprecated;
 
-  /**
-   * Ссылка на объект метаданных, в модуле которого находится метод
-   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения
-   */
-  String mdoRef;
+  @Builder.Default
+  List<ParameterDefinition> parameters = Collections.emptyList();
 
   @Builder.Default
-  List<ParameterDefinition> parameters = new ArrayList<>();
+  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
+  @Builder.Default
+  List<Annotation> annotations = Collections.emptyList();
+
+  @Override
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @EqualsAndHashCode.Include
+  public Range getSubNameRange() {
+    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
+  }
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
-      .filter(symbol -> symbol instanceof RegionSymbol)
-      .map(symbol -> (RegionSymbol) symbol);
+      .filter(RegionSymbol.class::isInstance)
+      .map(RegionSymbol.class::cast);
+  }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitMethod(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getSubNameRange();
+  }
+
+  public static MethodSymbolBuilder builder() {
+    return new MethodSymbolBuilder();
+  }
+
+  public static class MethodSymbolBuilder {
+
+    public MethodSymbolBuilder range(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      startLine = start.getLine();
+      startCharacter = start.getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
+
+      return this;
+    }
+
+    public MethodSymbolBuilder subNameRange(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      subNameLine = start.getLine();
+      subNameStartCharacter = start.getCharacter();
+      subNameEndCharacter = end.getCharacter();
+
+      return this;
+    }
   }
 }

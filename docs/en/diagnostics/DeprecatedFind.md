@@ -1,9 +1,5 @@
 # Using of the deprecated method "Find" (DeprecatedFind)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Minor` | `Yes` | `2` | `deprecated` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -14,31 +10,20 @@ Method "Find" is deprecated. Use "StrFind" instead.
 Incorrect:
 
 ```bsl
-If Find(Collaborator.Name, "Boris") > 0 Then
-    
-EndIf;
+
+If Find(Employee.Name, "Boris") > 0 Then
+
+EndIf; 
+
 ```
+
 
 Correct:
 
 ```bsl
-If StrFind(Collaborator.Name, "Boris") > 0 Then
-    
-EndIf;
-```
 
-## Snippets
+If StrFind(Employee.Name, "Boris") > 0 Then
 
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+EndIf; 
 
-```bsl
-// BSLLS:DeprecatedFind-off
-// BSLLS:DeprecatedFind-on
-```
-
-### Parameter for config
-
-```json
-"DeprecatedFind": false
 ```

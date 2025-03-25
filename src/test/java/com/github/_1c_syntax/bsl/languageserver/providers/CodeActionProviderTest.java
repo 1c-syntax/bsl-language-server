@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.StringInterner;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -38,40 +38,50 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class CodeActionProviderTest {
 
+  @Autowired
+  private CodeActionProvider codeActionProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
+  @Autowired
+  private StringInterner stringInterner;
+
+  private DocumentContext documentContext;
+
+  @BeforeEach
+  void init() {
+    String filePath = "./src/test/resources/providers/codeAction.bsl";
+    documentContext = TestUtils.getDocumentContextFromFile(filePath);
+  }
+
   @Test
-  void testGetCodeActions() throws IOException {
+  void testGetCodeActions() {
 
     // given
-    String filePath = "./src/test/resources/providers/codeAction.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      configuration,
+      stringInterner);
+    DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
 
-    final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
-      .filter(diagnostic -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
-          CanonicalSpellingKeywordsDiagnostic.class,
-          configuration.getLanguage()
-        );
-        DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
-        return diagnostic.getCode().equals(diagnosticCode);
-      })
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
+      .filter(diagnostic -> diagnostic.getCode().equals(diagnosticCode))
+      //  clean diagnostic tags array to emulate clear of tags property from the client
+      .peek(diagnostic -> diagnostic.setTags(null))
       .collect(Collectors.toList());
-
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
@@ -89,25 +99,18 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(3)
       .extracting(Either::getRight)
+      .hasSizeGreaterThanOrEqualTo(3)
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))
-      .allMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+      .anyMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+      .allMatch(codeAction -> (codeAction.getDiagnostics().size() == 1) == toBoolean(codeAction.getIsPreferred()))
     ;
   }
 
   @Test
-  void testEmptyDiagnosticList() throws IOException {
+  void testEmptyDiagnosticList() {
     // given
-    String filePath = "./src/test/resources/providers/codeAction.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
-
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -124,6 +127,50 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(0);
+      .filteredOn(codeAction -> codeAction.getRight().getKind().equals(CodeActionKind.QuickFix))
+      .isEmpty();
+  }
+
+  @Test
+  void testOnly() {
+    // given
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      configuration,
+      stringInterner);
+    DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
+
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
+      .filter(diagnostic -> diagnostic.getCode().equals(diagnosticCode))
+      .collect(Collectors.toList());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+
+    codeActionContext.setOnly(List.of(CodeActionKind.Refactor));
+    codeActionContext.setDiagnostics(diagnostics);
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .extracting(Either::getRight)
+      .extracting(CodeAction::getKind)
+      .containsOnly(CodeActionKind.Refactor)
+    ;
+  }
+
+  private static boolean toBoolean(@Nullable Boolean value) {
+    if (value == null) {
+      return false;
+    }
+    return value;
   }
 }

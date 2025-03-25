@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -30,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.antlr.v4.runtime.Token;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -50,20 +48,13 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + SERVICE_TAGS_DEFAULT
+    defaultValue = SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
 
-  public UsingServiceTagDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
     pattern = getPatternSearch(serviceTags);
   }
@@ -79,8 +70,8 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
     documentContext.getComments()
       .parallelStream()
       .forEach((Token token) -> {
-        Matcher matcher = pattern.matcher(token.getText());
-        if (!matcher.find()){
+        var matcher = pattern.matcher(token.getText());
+        if (!matcher.find()) {
           return;
         }
         diagnosticStorage.addDiagnostic(

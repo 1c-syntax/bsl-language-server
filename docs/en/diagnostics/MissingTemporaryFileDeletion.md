@@ -1,19 +1,9 @@
 # Missing temporary file deletion after using (MissingTemporaryFileDeletion)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `badpractice`<br/>`standard` |
-
-## Parameters 
-
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `searchDeleteFileMethod` | `String` | ```Keywords to search for delete/move files methods``` | ```УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-After you finished working with temporary file or folder, you need to delete it yourself.
+After you finished working with temporary file or folder, you need to delete it yourself. 
 You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
 
 ## Examples
@@ -26,7 +16,7 @@ Data.Write(TempFileName);
 // Not delete temporary file
 ```
 
-Сorrect:
+Correct:
 
 ```bsl
 TempFileName = GetTempFileName("xml");
@@ -43,24 +33,20 @@ Catch
 EndTry;
 ```
 
-## Reference
+## Nuances
 
-- [FileSystem access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
+Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.
 
-## Snippets
+If the applied solution uses its own method of removing/moving over the platform one, then it is worth specifying it in the diagnostic parameter, adding it after `|`. Diagnostics understands both global methods and those located in common modules or manager modules.
 
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+The following is an examples of a settings
 
-```bsl
-// BSLLS:MissingTemporaryFileDeletion-off
-// BSLLS:MissingTemporaryFileDeletion-on
-```
+- The global method `MyFileDeletion` in the `GlobalServer` module in the parameter is specified as `MyFileDeletion`
+- Method `MyFileDeletion` in the common module `FilesClientServer` in the parameter is specified as `FilesClientServer.MyFileDelete`
+- Method `MyFileOperations` in the module of the catalog manager `FileOperations` in the parameter is specified as `Catalogs.FileOperations.MyFileOperations`
 
-### Parameter for config
+and so on.
 
-```json
-"MissingTemporaryFileDeletion": {
-    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"
-}
-```
+## Sources
+
+* [File system access from application code (RU)](https://its.1c.ru/db/v8std#content:542:hdoc)

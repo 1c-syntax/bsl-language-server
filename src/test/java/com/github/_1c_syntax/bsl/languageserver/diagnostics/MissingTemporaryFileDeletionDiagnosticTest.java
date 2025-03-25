@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -29,7 +29,6 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-
 class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<MissingTemporaryFileDeletionDiagnostic> {
   MissingTemporaryFileDeletionDiagnosticTest() {
     super(MissingTemporaryFileDeletionDiagnostic.class);
@@ -40,11 +39,15 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(6, 29, 6, 62)
-      .hasRange(19, 30, 19, 63)
-      .hasRange(25, 30, 25, 63)
+      .hasRange(6, 29, 62)
+      .hasRange(19, 30, 63)
+      .hasRange(25, 30, 63)
+      .hasRange(45, 29, 62)
+      .hasRange(49, 30, 63)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(7)
     ;
 
   }
@@ -59,16 +62,51 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(7);
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put(
       "searchDeleteFileMethod",
-      MissingTemporaryFileDeletionDiagnostic.REGEX_DELETION_FILE + "|РаботаСФайламиСлужебныйКлиент.УдалитьФайл");
+      "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile"
+        + "|РаботаСФайламиСлужебныйКлиент.УдалитьФайл|Справочники.ОбщийМодуль.УдалитьВсеФайлы");
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(6, 29, 62)
+      .hasRange(25, 30, 63)
+      .hasRange(49, 30, 63)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(5)
+    ;
+  }
 
+  @Test
+  void testIncorrectConfig() {
+
+    var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put(
+      "searchDeleteFileMethod",
+      "УдалитьФайл|DeleteFile|НачатьУдалениеФайловВсех"
+        + "|ОбщийМодуль.УдалитьВсеФайлы");
+    diagnosticInstance.configure(configuration);
+    var diagnostics = getDiagnostics();
+
+    assertThat(diagnostics, true)
+      .hasRange(6, 29, 62)
+      .hasRange(9, 30, 63)
+      .hasRange(13, 30, 63)
+      .hasRange(19, 30, 63)
+      .hasRange(25, 30, 63)
+      .hasRange(30, 30, 63)
+      .hasRange(34, 16, 38)
+      .hasRange(45, 29, 62)
+      .hasRange(49, 30, 63)
+      .hasRange(60, 29, 57)
+      .hasRange(64, 30, 58)
+      .hasRange(71, 26, 54)
+      .hasSize(12)
+    ;
   }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,32 +21,35 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SpringBootTest
 class DiagnosticProviderTest {
+
+  @Autowired
+  private DiagnosticProvider diagnosticProvider;
 
   @Test
   void testComputeDiagnostics() {
     // given
+    // TODO: это тест на новый getDiagnostics, а не на DiagnosticProvider
 
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     final DocumentContext documentContext
       = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
 
     // when
-    final List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
+    final List<Diagnostic> diagnostics = documentContext.getDiagnostics();
 
     // then
-    assertThat(diagnostics.size()).isGreaterThan(0);
+    assertThat(diagnostics.size()).isPositive();
   }
 }

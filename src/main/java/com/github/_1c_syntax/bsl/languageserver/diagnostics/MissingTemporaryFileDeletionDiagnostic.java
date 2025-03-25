@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,14 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -52,9 +49,10 @@ import java.util.stream.Collectors;
 
 public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagnostic {
 
-  public static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile";
+  private static final String REGEX_DELETION_FILE =
+    "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile";
 
-  private static final Pattern searchGetTempFileName = CaseInsensitivePattern.compile(
+  private static final Pattern GET_TEMP_FILE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "^(ПолучитьИмяВременногоФайла|GetTempFileName)"
   );
 
@@ -66,19 +64,12 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     "^(" + REGEX_DELETION_FILE + ")"
   );
 
-  public MissingTemporaryFileDeletionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchDeleteFileMethodProperty =
       (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
     searchDeleteFileMethod = CaseInsensitivePattern.compile(
-      "^(" + searchDeleteFileMethodProperty + ")"
+      "^(" + searchDeleteFileMethodProperty.replace(".", "\\.") + ")"
     );
   }
 
@@ -93,14 +84,16 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    BSLParser.MethodNameContext methodNameContext = ctx.methodName();
+    var methodNameContext = ctx.methodName();
     if (methodNameContext == null) {
       return super.visitGlobalMethodCall(ctx);
     }
 
-    Matcher matcher = searchGetTempFileName.matcher(methodNameContext.getText());
+    var matcher = GET_TEMP_FILE_NAME_PATTERN.matcher(methodNameContext.getText());
     if (matcher.find()) {
 
+      // просто получение имени временного файла без сохранения его в переменную
+      // всегда ошибка
       String variableName = getVariableName(ctx);
       if (variableName == null) {
         diagnosticStorage.addDiagnostic(ctx);
@@ -108,8 +101,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       }
 
       int filterLine = ctx.getStart().getLine();
-      BSLParser.CodeBlockContext codeBlockContext = (BSLParser.CodeBlockContext)
-        Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
+      var codeBlockContext = (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
 
       if (codeBlockContext != null
         && !foundDeleteFile(codeBlockContext, variableName, filterLine)) {
@@ -121,31 +113,31 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   }
 
   private boolean foundDeleteFile(BSLParser.CodeBlockContext codeBlockContext, String variableName, int filterLine) {
-    boolean result = false;
+    var result = false;
 
-    Collection<ParseTree> listCallStatements = Trees
-      .findAllRuleNodes(codeBlockContext, BSLParser.RULE_callStatement)
+    var listCallStatements = Trees
+      .findAllRuleNodes(codeBlockContext, BSLParser.RULE_globalMethodCall, BSLParser.RULE_accessCall)
       .stream()
-      .filter(node -> ((BSLParser.CallStatementContext) node).getStart().getLine() > filterLine)
-      .collect(Collectors.toList());
+      .map(BSLParserRuleContext.class::cast)
+      .filter((BSLParserRuleContext node) -> node.getStart().getLine() > filterLine)
+      .toList();
 
-    for (ParseTree node : listCallStatements) {
-      BSLParser.CallStatementContext localCallStatementContext = ((BSLParser.CallStatementContext) node);
-
-      BSLParser.GlobalMethodCallContext localGlobalMethodCall = localCallStatementContext.globalMethodCall();
-      // получаем full call method и полное имя вызова
+    for (var node : listCallStatements) {
       String fullCallMethod;
       BSLParser.DoCallContext doCallContext;
-      if (localGlobalMethodCall == null) {
-        fullCallMethod = getFullCallMethod(localCallStatementContext);
-        doCallContext = getDoCallFromCallStatement(localCallStatementContext);
+
+      if (node instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+        fullCallMethod = globalMethodCallContext.methodName().getText();
+        doCallContext = globalMethodCallContext.doCall();
       } else {
-        fullCallMethod = localGlobalMethodCall.methodName().getText();
-        doCallContext = localGlobalMethodCall.doCall();
+        fullCallMethod = getFullMethodName((BSLParser.AccessCallContext) node);
+        doCallContext = ((BSLParser.AccessCallContext) node).methodCall().doCall();
       }
+
       if (doCallContext != null) {
-        Matcher matcher = searchDeleteFileMethod.matcher(fullCallMethod);
-        if (matcher.find() && fullCallMethod.length() > 0 && foundVariableInCallParams(doCallContext, variableName)) {
+        var matcher = searchDeleteFileMethod.matcher(fullCallMethod);
+        if (matcher.matches() && !fullCallMethod.isEmpty()
+          && foundVariableInCallParams(doCallContext, variableName)) {
           result = true;
           break;
         }
@@ -154,19 +146,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private static BSLParser.DoCallContext getDoCallFromCallStatement(
-    BSLParser.CallStatementContext callStatementContext
-  ) {
-    BSLParser.MethodCallContext methodCallContext = callStatementContext.accessCall().methodCall();
-    if (methodCallContext == null) {
-      return null;
-    }
-    return methodCallContext.doCall();
-  }
-
   private static boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
 
-    BSLParser.CallParamListContext callParamListContext = doCallContext.callParamList();
+    var callParamListContext = doCallContext.callParamList();
     if (callParamListContext == null) {
       return false;
     }
@@ -176,7 +158,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       return false;
     }
 
-    boolean result = false;
+    var result = false;
     for (BSLParser.CallParamContext callParamContext : list) {
       if (callParamContext.getText().equalsIgnoreCase(variableName)) {
         result = true;
@@ -204,21 +186,40 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return lValue.getText();
   }
 
-  // TODO: перенести в TREES или в BSL parser
-  private static String getFullCallMethod(BSLParser.CallStatementContext ctx) {
-    StringBuilder builder = new StringBuilder();
-    builder.append(ctx.getStart().getText());
-    BSLParser.AccessCallContext accessCallContext = ctx.accessCall();
-    if (accessCallContext != null) {
-      for (ParseTree node : accessCallContext.children) {
-        if (node instanceof TerminalNodeImpl) {
-          builder.append(node.getText());
-        } else if (node instanceof BSLParser.MethodCallContext) {
-          builder.append(((BSLParser.MethodCallContext) node).methodName().getText());
-        }
-      }
-    }
-    return builder.toString();
-  }
+  private static String getFullMethodName(BSLParser.AccessCallContext ctx) {
+    var parent = ctx.getParent();
+    var prefix = "";
+    List<? extends BSLParser.ModifierContext> modifiers;
 
+    if (parent instanceof BSLParser.CallStatementContext callStatement) {
+
+      modifiers = callStatement.modifier();
+      if (callStatement.globalMethodCall() != null) {
+        prefix = callStatement.globalMethodCall().methodName().IDENTIFIER().getText();
+      } else {
+        prefix = callStatement.IDENTIFIER().getText();
+      }
+
+    } else if (parent instanceof BSLParser.ModifierContext
+      && parent.getParent() instanceof BSLParser.ComplexIdentifierContext root) {
+
+      modifiers = root.modifier();
+
+      var terminalNode = root.IDENTIFIER();
+      if (terminalNode != null) {
+        prefix = terminalNode.getText();
+      }
+
+    } else {
+      // остальные к методам не относятся
+      return "";
+    }
+
+    return prefix
+      + modifiers.stream()
+      .takeWhile(element -> element != parent)
+      .map(ParseTree::getText)
+      .collect(Collectors.joining())
+      + "." + ctx.methodCall().methodName().IDENTIFIER().getText();
+  }
 }

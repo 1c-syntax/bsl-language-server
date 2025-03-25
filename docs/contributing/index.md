@@ -14,6 +14,9 @@
     - [Пример разработки диагностики](DiagnosticExample.md)
     - [Структура диагностики, назначение и содержимое файлов](DiagnosticStructure.md)
     - [Описание типов и важности диагностик](DiagnosticTypeAndSeverity.md)
-    - [Тэги диагностик](DiagnosticTag.md)
+    - [Теги диагностик](DiagnosticTag.md)
     - [Добавление параметров диагностике](DiagnostcAddSettings.md)
     - [Добавление быстрых исправлений диагностик](DiagnosticQuickFix.md)
+- Общие механизмы
+    - [Подсистема событий](EventsApi.md)
+    - [Замер производительности](Measures.md)

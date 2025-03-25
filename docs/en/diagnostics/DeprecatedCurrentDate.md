@@ -1,48 +1,48 @@
 # Using of the deprecated method "CurrentDate" (DeprecatedCurrentDate)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Major` | `Yes` | `5` | `standard`<br/>`deprecated`<br/>`unpredictable` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Method "CurrentDate" is deprecated. Use "CurrentSessionDate" instead.
+The configurations must be designed to work in conditions where the time zone on the server computer does not match the real time zone of the infobase users. For example, employees of a company from Vladivostok work with a server located in Moscow, and all operations in the system must be performed in local time (Vladivostok).
+
+Such a work scenario is often in demand in client-server infobases and in applied solutions in the service model (SaaS).
+
+In all server procedures and functions, instead of the CurrentDate function, which returns the server computer's date and time, you should use the CurrentSessionDate function, which converts the server's time to the user's session time zone.
+
+In client code, using the CurrentDate function is also not allowed. This requirement is due to the fact that the current time calculated in the client and server code must not differ.
+
+When using the Library of Standard Subsystems, it is recommended to use the DateSession function of the general module GeneralPurposeClient.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Incorrect:
+### On the client
+Wrong:
 
 ```bsl
 OperationDate = CurrentDate();
 ```
 
+Right:
 
-Correct:
+```bsl
+OperationDate = GeneralPurposeClient.SessionDate();
+```
+
+### On server
+
+```bsl
+OperationDate = CurrentDate();
+```
+
+Right:
 
 ```bsl
 OperationDate = CurrentSessionDate();
 ```
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+<!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
 
 
-* Reference: [Metadata creation and change. Work in different timezones](https://its.1c.ru/db/v8std/content/643/hdoc)
 
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:DeprecatedCurrentDate-off
-// BSLLS:DeprecatedCurrentDate-on
-```
-
-### Parameter for config
-
-```json
-"DeprecatedCurrentDate": false
-```
+* Reference: [Metadata creation and change. Work in different timezones (RU)](https://its.1c.ru/db/v8std/content/643/hdoc)

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,15 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
+
   TypoDiagnosticTest() {
     super(TypoDiagnostic.class);
   }
@@ -38,7 +43,6 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
   void test() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     diagnosticInstance.configure(configuration);
-
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
@@ -76,6 +80,20 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
       .hasRange(1, 13, 1, 21)
+      .hasRange(8, 13, 8, 18);
+  }
+
+  @Test
+  void testConfigureUserWordsToIgnoreWithSpaces() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("userWordsToIgnore", "Варинаты, Атмена");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
       .hasRange(8, 13, 8, 18);
   }
 }

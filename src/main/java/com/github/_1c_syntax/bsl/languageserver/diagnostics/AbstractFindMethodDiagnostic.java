@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
@@ -47,16 +46,16 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Конструктор по умолчанию
-   * @param info служебная информация о диагностике
+   *
    * @param pattern регулярное выражение для проверки
    */
-  AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
-    super(info);
+  AbstractFindMethodDiagnostic(Pattern pattern) {
     methodPattern = pattern;
   }
 
   /**
    * Проверка контекста глобального метода
+   *
    * @param ctx контекст глобального метода
    * @return {@code true} если имя метода соответствует регулярному выражению
    */
@@ -66,6 +65,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Проверка контекста обычного метода
+   *
    * @param ctx контекст метода
    * @return {@code true} если имя метода соответствует регулярному выражению
    */
@@ -75,6 +75,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Получает сообщение диагностики для пользователя
+   *
    * @param ctx контекст узла
    * @return В случае если передан контекст метода, параметризованное сообщение,
    * первым параметром которого <b>всегда</b> будет имя метода.
@@ -82,10 +83,10 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    */
   protected String getMessage(BSLParserRuleContext ctx) {
 
-    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
-      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
-    } else if (ctx instanceof BSLParser.MethodCallContext) {
-      return info.getMessage(((BSLParser.MethodCallContext) ctx).methodName().getText());
+    if (ctx instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+      return info.getMessage(globalMethodCallContext.methodName().getText());
+    } else if (ctx instanceof BSLParser.MethodCallContext methodCallContext) {
+      return info.getMessage(methodCallContext.methodName().getText());
     } else {
       return info.getMessage();
     }
@@ -96,6 +97,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * Обработчик узла глобального метода. Добавляет информацию о сработавшей диагностике
    * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkGlobalMethodCall(BSLParser.GlobalMethodCallContext)}
    * возвращает {@code true}
+   *
    * @param ctx контекст глобального метода
    * @return результат посещения ноды по умолчанию.
    */
@@ -113,6 +115,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * Обработчик узла обычного метода. Добавляет информацию о сработавшей диагностике
    * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkMethodCall(BSLParser.MethodCallContext)}
    * возвращает {@code true}
+   *
    * @param ctx контекст метода
    * @return результат посещения ноды по умолчанию.
    */

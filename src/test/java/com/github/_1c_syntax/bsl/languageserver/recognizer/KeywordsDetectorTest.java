@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class KeywordsDetectorTest {
+@SpringBootTest
+class KeywordsDetectorTest {
 
   @Test
   void runTest() {
@@ -33,7 +35,7 @@ public class KeywordsDetectorTest {
     String testedText = "Если НЕПродолжатьВыполнение() Тогда Возврат; КонецЕсли;";
 
     assertThat(detector.detect(testedText)).isEqualTo(0.75);
-    assertThat(detector.detect("или")).isEqualTo(0);
+    assertThat(detector.detect("или")).isZero();
     assertThat(detector.detect("ИЛИ")).isEqualTo(0.5);
   }
 }

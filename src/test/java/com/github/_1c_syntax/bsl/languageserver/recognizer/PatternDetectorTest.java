@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PatternDetectorTest {
+@SpringBootTest
+class PatternDetectorTest {
 
   @Test
   void runTest() {
@@ -33,11 +35,11 @@ public class PatternDetectorTest {
       "^[/\\s]*(?:Процедура|Функция|Procedure|Function)\\s+[а-яА-Яё\\w]+\\s*?\\(",
       "^[/\\s]*(?:&На[а-яА-Яё]+|&At[\\w]+)\\s*?$*");
 
-    assertThat(detector.detect("Процедура Какой-то текст")).isEqualTo(0);
+    assertThat(detector.detect("Процедура Какой-то текст")).isZero();
     assertThat(detector.detect("Процедура МояПро0цедура()")).isEqualTo(1);
     assertThat(detector.detect("Функция   МояФункция (  Параметр)")).isEqualTo(1);
-    assertThat(detector.detect("Какой-то текст МояФункция была(")).isEqualTo(0);
-    assertThat(detector.detect("Функция или Процедура А")).isEqualTo(0);
+    assertThat(detector.detect("Какой-то текст МояФункция была(")).isZero();
+    assertThat(detector.detect("Функция или Процедура А")).isZero();
     assertThat(detector.detect("&НаКлиенте")).isEqualTo(1);
     assertThat(detector.detect("//&НаКлиенте")).isEqualTo(1);
     assertThat(detector.detect("&НаКлиенте\n\nПроцедура МояПро0цедура2(CGf)")).isEqualTo(1);
@@ -45,7 +47,7 @@ public class PatternDetectorTest {
     assertThat(detector.detect("//&AtServer")).isEqualTo(1);
     assertThat(detector.detect("&AtClient\nProcedure МояПро0цедура2(CGf)")).isEqualTo(1);
     assertThat(detector.detect("Функция MyFunc(Param, Param2)")).isEqualTo(1);
-    assertThat(detector.detect("//&AtКлиент")).isEqualTo(0);
+    assertThat(detector.detect("//&AtКлиент")).isZero();
   }
 
 }

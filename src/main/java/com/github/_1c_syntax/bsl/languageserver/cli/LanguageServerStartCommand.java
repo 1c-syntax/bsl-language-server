@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,22 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
-import org.eclipse.lsp4j.services.LanguageServer;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Command;
@@ -53,13 +46,14 @@ import static picocli.CommandLine.Option;
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP.
  */
-@Slf4j
 @Command(
   name = "lsp",
   aliases = {"--lsp"},
   description = "LSP server mode (default)",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
+@Component
+@RequiredArgsConstructor
 public class LanguageServerStartCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
@@ -74,48 +68,23 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  private final LanguageServerConfiguration configuration;
+  private final Launcher<LanguageClient> launcher;
+  private final List<LanguageClientAware> languageClientAwares;
+
   public Integer call() {
 
-    File configurationFile = new File(configurationOption);
+    var configurationFile = new File(configurationOption);
+    if (configurationFile.exists()) {
+      configuration.update(configurationFile);
+    }
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-    LanguageServer server = new BSLLanguageServer(configuration);
+    var languageClient = launcher.getRemoteProxy();
 
-    Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
-
-    LanguageClient client = launcher.getRemoteProxy();
-    ((LanguageClientAware) server).connect(client);
+    languageClientAwares.forEach(languageClientAware -> languageClientAware.connect(languageClient));
 
     launcher.startListening();
     return -1;
   }
 
-  private static Launcher<LanguageClient> getLanguageClientLauncher(
-    LanguageServer server,
-    LanguageServerConfiguration configuration
-  ) {
-    InputStream in = System.in;
-    OutputStream out = System.out;
-
-    File logFile = configuration.getTraceLog();
-    if (logFile == null) {
-      return LSPLauncher.createServerLauncher(server, in, out);
-    }
-
-    Launcher<LanguageClient> launcher;
-
-    try {
-      PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
-      launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
-    } catch (FileNotFoundException | UnsupportedEncodingException e) {
-      LOGGER.error("Can't create LSP trace file", e);
-      if (logFile.isDirectory()) {
-        LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
-      }
-
-      launcher = LSPLauncher.createServerLauncher(server, in, out);
-    }
-
-    return launcher;
-  }
 }

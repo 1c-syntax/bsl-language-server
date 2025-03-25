@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,10 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.utils.Absolute;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -35,28 +36,32 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
-abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
+@SpringBootTest
+abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractServerContextAwareTest {
 
-  protected final T diagnosticInstance;
-  @Nullable
-  protected ServerContext context;
+  @Autowired
+  private DiagnosticObjectProvider diagnosticObjectProvider;
+  @Autowired
+  protected LanguageServerConfiguration configuration;
 
-  @SuppressWarnings("unchecked")
+  private final Class<T> diagnosticClass;
+  protected T diagnosticInstance;
+
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    diagnosticInstance = (T) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
+    this.diagnosticClass = diagnosticClass;
   }
 
-  protected void initServerContext(String path) {
-    var configurationRoot = Absolute.path(path);
-    context = new ServerContext(configurationRoot);
-    context.populateContext();
+  @PostConstruct
+  public void init() {
+    diagnosticInstance = diagnosticObjectProvider.get(diagnosticClass);
+    configuration.reset();
   }
 
   protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -64,12 +69,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    var documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -82,12 +87,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);

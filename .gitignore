@@ -28,9 +28,14 @@
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
 .idea/modules.xml
 .idea/*.iml
 .idea/modules
+*.iml
+*.ipr
 
 # IntelliJ
 out/
@@ -49,6 +54,7 @@ fabric.properties
 *.ps1
 target/
 build/
+bin/
 
 # Scala compiler user settings
 .idea/hydra.xml
@@ -62,9 +68,18 @@ gen/
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
 .idea/checkstyle-idea.xml
+.idea/jpa-buddy.xml
 *.bak
 *.orig
 
 # mkdocs
 temp/
 public/
+
+# jpackage
+bsl-language-server/
+bsl-language-server_*.zip
+/.idea/misc.xml
+*.log
+*.hprof
+/.idea/material_theme_project_new.xml

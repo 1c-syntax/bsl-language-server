@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,76 +21,116 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
-import java.util.List;
+import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  scope = DiagnosticScope.ALL,
   modules = {
-    ModuleType.CommonModule
+    ModuleType.CommonModule,
+    ModuleType.ObjectModule
   },
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.UNUSED
   }
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
-
-  private static final Pattern ATTACHABLE_PATTERN = CaseInsensitivePattern.compile(
-    "(подключаемый_.*|attachable_.*)"
-  );
 
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
     "(ПриСозданииОбъекта|OnObjectCreate)"
   );
 
-  public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
+  /**
+   * Префиксы подключаемых методов
+   */
+  private static final String ATTACHABLE_METHOD_PREFIXES = "подключаемый_,attachable_";
+
+  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
+    AnnotationKind.AFTER,
+    AnnotationKind.AROUND,
+    AnnotationKind.BEFORE,
+    AnnotationKind.CHANGEANDVALIDATE
+  );
+  private static final boolean CHECK_OBJECT_MODULE = false;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ATTACHABLE_METHOD_PREFIXES
+  )
+  private Pattern attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(ATTACHABLE_METHOD_PREFIXES);
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_OBJECT_MODULE
+  )
+  private boolean checkObjectModule = CHECK_OBJECT_MODULE;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
+      (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
+
+    this.checkObjectModule = (boolean) configuration.getOrDefault("checkObjectModule", CHECK_OBJECT_MODULE);
   }
 
-  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
-    return ATTACHABLE_PATTERN.matcher(subNameContext.getText()).matches();
+  private boolean isAttachable(MethodSymbol methodSymbol) {
+    return attachableMethodPrefixes.matcher(methodSymbol.getName()).matches();
   }
 
-  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
-    return HANDLER_PATTERN.matcher(subNameContext.getText()).matches();
+  private static boolean isHandler(MethodSymbol methodSymbol) {
+    return HANDLER_PATTERN.matcher(methodSymbol.getName()).matches();
+  }
+
+  private static boolean isOverride(MethodSymbol method) {
+    return method.getAnnotations()
+      .stream()
+      .map(Annotation::getKind)
+      .anyMatch(EXTENSION_ANNOTATIONS::contains);
   }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+    var moduleType = documentContext.getModuleType();
+    if (!checkObjectModule && moduleType == ModuleType.ObjectModule) {
+      return ctx;
+    }
 
-    List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+    var collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
       .map(parseTree ->
         ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
-      .collect(Collectors.toList());
+      .toList();
 
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
+    documentContext.getSymbolTree().getMethods()
       .stream()
-      .map(parseTree -> ((BSLParser.SubNameContext) parseTree))
-      .filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
-      .filter(subNameContext -> !isAttachable(subNameContext))
-      .filter(subNameContext -> !isHandler(subNameContext))
-      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase(Locale.ENGLISH)))
-      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getMessage(node.getText())));
+      .filter(method -> !method.isExport())
+      .filter(method -> !isOverride(method))
+      .filter(method -> !isAttachable(method))
+      .filter(method -> !isHandler(method))
+      .filter(method -> !collect.contains(method.getName().toLowerCase(Locale.ENGLISH)))
+      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(), info.getMessage(method.getName())));
 
     return ctx;
   }

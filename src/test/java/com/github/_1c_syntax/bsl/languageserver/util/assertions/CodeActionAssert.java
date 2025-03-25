@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -65,7 +65,8 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     isNotNull();
 
     // saving original state
-    String cachedContent = documentContext.getContent();
+    var cachedContent = documentContext.getContent();
+    var serverContext = documentContext.getServerContext();
 
     // apply edits from quick fix
     final List<TextEdit> textEdits = getTextEdits();
@@ -97,17 +98,18 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
 
       // TODO: does not work for several textedits changing content length (missed semicolon ie.)
       String content = startText + newText + endText;
-      documentContext.rebuild(content);
+      serverContext.rebuildDocument(documentContext, content, documentContext.getVersion() + 1);
     });
 
     // get diagnostics from fixed document
     final List<Diagnostic> diagnostics = bslDiagnostic.getDiagnostics(documentContext);
 
     // check if expected diagnostic is not present in new diagnostic list
-    Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
+    Assertions.assertThat(diagnostics).doesNotContain(diagnostic)
+    ;
 
     // returning to original state
-    documentContext.rebuild(cachedContent);
+    serverContext.rebuildDocument(documentContext, cachedContent, documentContext.getVersion() + 1);
 
     return this;
   }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -31,7 +31,7 @@ class EndWithDetectorTest {
   void scan() {
     EndWithDetector detector = new EndWithDetector(1, ';');
 
-    assertThat(detector.detect("Какой-то текст с ; в середине")).isEqualTo(0);
+    assertThat(detector.detect("Какой-то текст с ; в середине")).isZero();
     assertThat(detector.detect("Какой-то текст заказнчивающийся на ;")).isEqualTo(1);
     assertThat(detector.detect("Какой-то текст заказнчивающийся на ;  ")).isEqualTo(1);
   }

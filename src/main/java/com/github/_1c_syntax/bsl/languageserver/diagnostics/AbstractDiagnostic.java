@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,24 +23,19 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import lombok.Getter;
+import lombok.Setter;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 
 public abstract class AbstractDiagnostic implements BSLDiagnostic {
 
-  protected final DiagnosticInfo info;
+  @Getter
+  @Setter
+  protected DiagnosticInfo info;
   protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
   protected DocumentContext documentContext;
-
-  public AbstractDiagnostic(DiagnosticInfo info) {
-    this.info = info;
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
-  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {

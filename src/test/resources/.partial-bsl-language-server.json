@@ -1,7 +1,15 @@
 {
-  "$schema": "https://1c-syntax.github.io/bsl-language-server/dev/configuration/schema.json",
   "codeLens": {
-    "showCyclomaticComplexity": false
+    "parameters": {
+      "cyclomaticComplexity": false
+    }
+  },
+  "inlayHint": {
+    "parameters": {
+      "sourceDefinedMethodCall": {
+        "showParametersWithTheSameName": true
+      }
+    }
   },
   "diagnostics": {
     "mode": "on"

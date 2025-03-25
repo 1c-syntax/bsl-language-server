@@ -8,7 +8,7 @@
 
 ## Пример вывода
 
-```
+```log
 Analysis date: 2019-01-28T15:32:06.856
 [FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
   range = Range [

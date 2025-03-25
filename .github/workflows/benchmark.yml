@@ -26,18 +26,20 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Setup JDK 11
-        uses: actions/setup-java@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
+          java-version: 17
+          distribution: 'temurin'
+          cache: gradle
 
       - name: Build with Gradle
-        run: ./gradlew jar
+        run: ./gradlew bootJar
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: "3.7"
 
@@ -49,6 +51,12 @@ jobs:
 
       - name: Analyze ssl
         run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
+
+      - name: Archive results in SARIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: "SARIF report"
+          path: bsl-ls.sarif
 
       - name: Generation badge benchmark
         if: github.event_name == 'push'

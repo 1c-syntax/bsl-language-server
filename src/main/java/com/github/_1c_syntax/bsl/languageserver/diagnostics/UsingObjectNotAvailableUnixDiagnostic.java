@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,11 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -56,10 +54,6 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     "Linux_x86|Windows|MacOS"
   );
 
-  public UsingObjectNotAvailableUnixDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   /**
    * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся
    * цепочка) с проверкой ТипПлатформы = Linux не найдено в методе, то диагностика срабатывает.
@@ -68,11 +62,11 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    BSLParser.TypeNameContext typeNameContext = ctx.typeName();
+    var typeNameContext = ctx.typeName();
     if (typeNameContext == null) {
       return super.visitNewExpression(ctx);
     }
-    Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
+    var matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
     // ищем условие выше, пока не дойдем до null
 
     if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
@@ -81,13 +75,13 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     return super.visitNewExpression(ctx);
   }
 
-  private static boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
-    ParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
+  private static boolean isFindIfBranchWithLinuxCondition(BSLParserRuleContext element) {
+    BSLParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
     if (ancestor == null) {
       return false;
     }
     String content = ancestor.getText();
-    Matcher matcher = patternTypePlatform.matcher(content);
+    var matcher = patternTypePlatform.matcher(content);
     if (matcher.find()) {
       return true;
     }

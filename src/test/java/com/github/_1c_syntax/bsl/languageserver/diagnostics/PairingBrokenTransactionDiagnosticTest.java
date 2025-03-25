@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -40,8 +40,8 @@ class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<Pair
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(21);
     assertThat(diagnostics)
+      .hasSize(21)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(44, 4, 44, 22)))
@@ -58,9 +58,7 @@ class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<Pair
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(113, 4, 113, 29)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(106, 8, 106, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(110, 8, 110, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 8, 108, 26)));
-
-    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 8, 108, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
         && diagnostic.getMessage().matches(".*CommitTransaction.*"))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,47 +21,40 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ServerInfo;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Callable;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 /**
  * Выводит версию приложения
  * Ключ команды:
  *  -v, (--version)
  */
-@Slf4j
 @Command(
   name = "version",
   aliases = {"-v", "--version"},
   description = "Print version",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
+@Component
+@RequiredArgsConstructor
 public class VersionCommand implements Callable<Integer> {
 
-  public Integer call() {
-    final InputStream mfStream = Thread.currentThread()
-      .getContextClassLoader()
-      .getResourceAsStream("META-INF/MANIFEST.MF");
+  private final ServerInfo serverInfo;
 
-    Manifest manifest = new Manifest();
-    try {
-      manifest.read(mfStream);
-    } catch (IOException e) {
-      LOGGER.error("Can't read manifest", e);
+  public Integer call() {
+    String version = serverInfo.getVersion();
+    if (version.isEmpty()) {
       return 1;
     }
 
-    System.out.print(
-      String.format(
-        "version: %s%n",
-        manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
-      ));
+    System.out.printf(
+      "version: %s%n",
+      version
+    );
 
     return 0;
   }

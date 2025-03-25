@@ -1,15 +1,11 @@
 # Canonical keyword writing (CanonicalSpellingKeywords)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `standard` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 A built-in language constructs, keywords must be written canonically.
 
-**Keywords**
+### Keywords
 
 | RU                 | EN            |
 |--------------------|---------------|
@@ -36,8 +32,8 @@ A built-in language constructs, keywords must be written canonically.
 | Неопределено       | Undefined     |
 | Перейти            | Goto          |
 | Перем              | Var           |
-| По                 | For           |
-| Пока               | WHile         |
+| По                 | To            |
+| Пока               | While         |
 | Попытка            | Try           |
 | Процедура          | Procedure     |
 | Прервать           | Break         |
@@ -48,7 +44,7 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-**Preprocessor Instructions**
+### Preprocessor instrutions
 
 | RU                                 | EN                             |
 |------------------------------------|--------------------------------|
@@ -58,7 +54,7 @@ A built-in language constructs, keywords must be written canonically.
 | И                                  | AND, And                       |
 | ИЛИ, Или                           | OR, Or                         |
 | Иначе                              | Else                           |
-| ИначеЕсли                          | ИначеЕсли                      |
+| ИначеЕсли                          | ElsIf                          |
 | КонецЕсли                          | EndIf                          |
 | КонецОбласти                       | EndRegion                      |
 | Клиент                             | Client                         |
@@ -75,7 +71,7 @@ A built-in language constructs, keywords must be written canonically.
 | ТолстыйКлиентУправляемоеПриложение | ThickClientManagedApplication  |
 | ТонкийКлиент                       | ThinClient                     |
 
-**Compilation directives**
+### Compilation directives
 
 | RU                             | EN                        |
 |--------------------------------|---------------------------|
@@ -87,20 +83,4 @@ A built-in language constructs, keywords must be written canonically.
 
 ## Sources
 
-* [Standart: Modules texts (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:CanonicalSpellingKeywords-off
-// BSLLS:CanonicalSpellingKeywords-on
-```
-
-### Parameter for config
-
-```json
-"CanonicalSpellingKeywords": false
-```
++ [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)

@@ -1,9 +1,5 @@
 # Duplicated code blocks in If...Then...ElseIf... statements (IfElseDuplicatedCodeBlock)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `10` | `suspicious` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -21,20 +17,4 @@ ElseIf p = 2 Then
 Else
     t = -1;
 EndIf;
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:IfElseDuplicatedCodeBlock-off
-// BSLLS:IfElseDuplicatedCodeBlock-on
-```
-
-### Parameter for config
-
-```json
-"IfElseDuplicatedCodeBlock": false
 ```

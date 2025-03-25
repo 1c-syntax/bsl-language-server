@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,11 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,15 +37,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
 public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
-  protected final DiagnosticProvider diagnosticProvider;
   protected final QuickFixSupplier quickFixSupplier;
-
-  public AbstractQuickFixSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
-    this.diagnosticProvider = diagnosticProvider;
-    this.quickFixSupplier = quickFixSupplier;
-  }
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
@@ -56,10 +54,13 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    Set<Diagnostic> computedDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext);
+    Set<LightDiagnostic> computedDiagnostics = documentContext.getComputedDiagnostics()
+      .stream()
+      .map(LightDiagnostic::new)
+      .collect(Collectors.toSet());
 
     Stream<Diagnostic> diagnosticStream = incomingDiagnostics.stream()
-      .filter(computedDiagnostics::contains);
+      .filter(diagnostic -> computedDiagnostics.contains(new LightDiagnostic(diagnostic)));
 
     return processDiagnosticStream(diagnosticStream, params, documentContext)
       .collect(Collectors.toList());
@@ -71,4 +72,17 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
     CodeActionParams params,
     DocumentContext documentContext
   );
+
+  @Value
+  private static class LightDiagnostic {
+    Either<String, Integer> code;
+    Range range;
+    String source;
+
+    public LightDiagnostic(Diagnostic diagnostic) {
+      this.code = diagnostic.getCode();
+      this.range = diagnostic.getRange();
+      this.source = diagnostic.getSource();
+    }
+  }
 }

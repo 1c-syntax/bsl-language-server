@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -51,7 +50,7 @@ class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<Dep
   void testQuickFix() {
 
 
-    final DocumentContext documentContext = getDocumentContext();
+    final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic ruDiagnostic = diagnostics.get(0);
 

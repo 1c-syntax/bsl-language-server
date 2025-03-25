@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,8 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +41,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameGlobalClientDiagnostic> {
   private CommonModule module;
   private DocumentContext documentContext;
@@ -48,8 +50,8 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     super(CommonModuleNameGlobalClientDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
 
   @Test
@@ -73,7 +75,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     //then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(5, 0, 1);
+      .hasRange(1, 0, 13);
 
   }
 
@@ -98,7 +100,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     //then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(5, 0, 1);
+      .hasRange(1, 0, 13);
 
   }
 
@@ -119,7 +121,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -138,7 +140,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -158,7 +160,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -178,7 +180,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -198,26 +200,22 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
   @SneakyThrows
   void getDocumentContextFromFile() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    ServerContext serverContext = new ServerContext(path);
-    var configuration = serverContext.getConfiguration();
-    documentContext = spy(new DocumentContext(
+    initServerContext(path);
+    var configuration = context.getConfiguration();
+    documentContext = spy(TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
+      context
     ));
-
-
-    module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
-
+    module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
   }
 }

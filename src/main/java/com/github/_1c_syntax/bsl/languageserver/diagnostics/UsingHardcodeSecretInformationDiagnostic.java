@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -38,7 +37,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -74,15 +72,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
-  public UsingHardcodeSecretInformationDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchWordsProperty = (String) configuration.getOrDefault("searchWords", FIND_WORD_DEFAULT);
     searchWords = getPatternSearch(searchWordsProperty);
   }
@@ -101,7 +92,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
-    Matcher matcher = searchWords.matcher(ctx.getStart().getText());
+    var matcher = searchWords.matcher(ctx.getStart().getText());
     if (matcher.find()) {
       List<Token> list = ctx.expression().getTokens();
       if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
@@ -156,10 +147,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    Matcher matcherMethod = PATTERN_METHOD_INSERT.matcher(ctx.methodName().getText());
+    var matcherMethod = PATTERN_METHOD_INSERT.matcher(ctx.methodName().getText());
     if (matcherMethod.find()) {
       List<? extends BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
-      Matcher matcher = searchWords.matcher(getClearString(list.get(0).getText()));
+      var matcher = searchWords.matcher(getClearString(list.get(0).getText()));
       if (matcher.find() && list.size() > 1 && isNotEmptyStringByToken(list.get(1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
       }
@@ -174,13 +165,13 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    BSLParser.TypeNameContext typeNameContext = ctx.typeName();
+    var typeNameContext = ctx.typeName();
     if (typeNameContext == null) {
       return super.visitNewExpression(ctx);
     }
-    Matcher matcherTypeName = PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText());
+    var matcherTypeName = PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText());
     if (matcherTypeName.find()) {
-      BSLParser.DoCallContext doCallContext = ctx.doCall();
+      var doCallContext = ctx.doCall();
       if (doCallContext != null) {
         List<? extends BSLParser.CallParamContext> list = doCallContext.callParamList().callParam();
         if (!list.isEmpty()) {
@@ -193,7 +184,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private void processCheckNewExpression(BSLParser.NewExpressionContext ctx,
                                          List<? extends BSLParser.CallParamContext> list, String typeName) {
-    Matcher matcherTypeNameConnection = PATTERN_NEW_EXPRESSION_CONNECTION.matcher(typeName);
+    var matcherTypeNameConnection = PATTERN_NEW_EXPRESSION_CONNECTION.matcher(typeName);
     if (matcherTypeNameConnection.find()) {
       if (list.size() >= 4 && isNotEmptyStringByToken(list.get(3).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
@@ -204,10 +195,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
-    Matcher matcher = searchWords.matcher(getClearString(accessText));
+    var matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
       ParserRuleContext assignment = Trees.getAncestorByRuleIndex(
-        (ParserRuleContext) ctx.getRuleContext(),
+        ctx.getRuleContext(),
         BSLParser.RULE_assignment
       );
       if (assignment != null
@@ -223,8 +214,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     List<? extends BSLParser.CallParamContext> list
   ) {
     String[] arr = list.get(0).getText().split(",");
-    for (int index = 0; index < arr.length; index++) {
-      Matcher matcher = searchWords.matcher(getClearString(arr[index]));
+    for (var index = 0; index < arr.length; index++) {
+      var matcher = searchWords.matcher(getClearString(arr[index]));
       if (matcher.find() && list.size() > index + 1 && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
         break;
@@ -233,16 +224,16 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
-    ParserRuleContext assignment = Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
+    BSLParserRuleContext assignment = Trees.getAncestorByRuleIndex(ctx.getRuleContext(), type);
     if (assignment != null) {
-      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getMessage());
+      diagnosticStorage.addDiagnostic(assignment, info.getMessage());
     }
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    boolean result = token.getType() == BSLParser.STRING && token.getText().length() > 2;
     if (result) {
-      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().replace("\"", "")).find();
+      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().substring(1, token.getText().length() - 1)).find();
       if (foundStars) {
         result = false;
       }

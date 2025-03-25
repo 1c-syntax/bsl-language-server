@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,26 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   protected Pattern pattern;
+  private final LanguageServerConfiguration serverConfiguration;
 
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
-    super(info);
-    pattern = CaseInsensitivePattern.compile(regexp);
+  protected AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
+    this.serverConfiguration = serverConfiguration;
+    this.pattern = CaseInsensitivePattern.compile(regexp);
   }
 
   @Override
   protected void check() {
-    if (documentContext.getTokensFromDefaultChannel().isEmpty()) {
+    var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+    if (Ranges.isEmpty(range)) {
       return;
     }
 
@@ -48,10 +51,10 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .filter(CommonModule.class::isInstance)
       .map(CommonModule.class::cast)
       .filter(this::flagsCheck)
-      .map(MDObjectBase::getName)
+      .map(CommonModule::getName)
       .map(pattern::matcher)
       .filter(this::matchCheck)
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
+      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(range));
   }
 
   protected abstract boolean flagsCheck(CommonModule commonModule);
@@ -60,38 +63,43 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return !matcher.find();
   }
 
-  protected static boolean isClientServer(CommonModule commonModule) {
+  protected boolean isClientServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected static boolean isClient(CommonModule commonModule) {
+  protected boolean isClient(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && !commonModule.isServer()
       && !commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected static boolean isServerCall(CommonModule commonModule) {
+  protected boolean isServerCall(CommonModule commonModule) {
     return commonModule.isServerCall()
       && commonModule.isServer()
       && !commonModule.isExternalConnection()
-      && !isClientApplication(commonModule);
-  }
-
-  protected static boolean isServer(CommonModule commonModule) {
-    return !commonModule.isServerCall()
-      && commonModule.isServer()
-      && commonModule.isExternalConnection()
-//      && commonModule.isClientOrdinaryApplication()
+      && !commonModule.isClientOrdinaryApplication()
       && !commonModule.isClientManagedApplication();
   }
 
-  private static boolean isClientApplication(CommonModule commonModule) {
-    return commonModule.isClientOrdinaryApplication()
-      || commonModule.isClientManagedApplication();
+  protected boolean isServer(CommonModule commonModule) {
+    return !commonModule.isServerCall()
+      && commonModule.isServer()
+      && commonModule.isExternalConnection()
+      && isClientOrdinaryAppIfNeed(commonModule)
+      && !commonModule.isClientManagedApplication();
   }
 
+  private boolean isClientApplication(CommonModule commonModule) {
+    return isClientOrdinaryAppIfNeed(commonModule)
+      && commonModule.isClientManagedApplication();
+  }
+
+  private boolean isClientOrdinaryAppIfNeed(CommonModule commonModule) {
+    return commonModule.isClientOrdinaryApplication()
+      || !serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport();
+  }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,14 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -59,8 +60,13 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingModalWindowsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "false"
+  )
+  private boolean forceModalityMode;
+
+  public UsingModalWindowsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
@@ -90,9 +96,10 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
-    // если использование модальных окон разрешено (без предупреждение), то
+    // если использование модальных окон разрешено (без предупреждения)
+    // и не установлен флаг игнорирования использования модальных окон, то
     // ничего не диагностируется
-    if (configuration.getModalityUseMode() == UseMode.USE) {
+    if (!forceModalityMode && configuration instanceof Configuration cf && cf.getModalityUseMode() == UseMode.USE) {
       return ctx;
     }
 

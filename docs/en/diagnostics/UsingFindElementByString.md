@@ -1,48 +1,39 @@
-# Using FindByName and FindByCode (UsingFindElementByString)
-
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
+# Using FindByName, FindByCode and FindByNumber (UsingFindElementByString)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-It is forbidden to use the search methods for elements "FindByName" or "FindByCode".
+The rule finds the use of the `FindByName`, `FindByCode` or `FindByNumber` methods using specific numbers, codes and names of elements or documents. 
+Similar code may not work correctly in other databases.
+Often such code is test code included in the release version, which is also not recommended.
+
+It is recommended to specify constant data values ​​from the database in "Сonstants" or predefined metadata elements.
 
 ## Examples
 
+Incorrect:
 ```bsl
 Position = Catalogs.Positions.FindByName("Senior Accountant");
+```
+or
+```bsl
+Position = Catalogs.Positions.FindByCode("00-0000001");
 ```
 
 or
 
 ```bsl
-Position = Catalogs.Positions.FindByCode("00-0000001");
+Object = Documents.Invoice.FindByNumber("0000-000001", CurrentDate());
 ```
 
 Acceptable use:
-
 ```bsl
 Catalogs.Currencies.FindByCode(CurrentData.CurrencyCodeDigital);
 ```
-
 ```bsl
 Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
 ```
 
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
 ```bsl
-// BSLLS:UsingFindElementByString-off
-// BSLLS:UsingFindElementByString-on
-```
-
-### Parameter for config
-
-```json
-"UsingFindElementByString": false
+Documents.Invoice.FindByNumber(Number);
 ```

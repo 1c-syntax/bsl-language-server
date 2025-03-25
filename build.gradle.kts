@@ -1,108 +1,154 @@
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
+import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
-import java.net.URI
 import java.util.*
+import java.text.SimpleDateFormat
 
 plugins {
-    java
-    maven
+    `java-library`
     `maven-publish`
     jacoco
-    id("com.github.hierynomus.license") version "0.15.0"
-    id("org.sonarqube") version "2.8"
-    id("io.franzbecker.gradle-lombok") version "4.0.0"
-    id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.28.0"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    signing
+    id("org.cadixdev.licenser") version "0.6.1"
+    id("org.sonarqube") version "6.0.1.5171"
+    id("io.freefair.lombok") version "8.13"
+    id("io.freefair.javadoc-links") version "8.13"
+    id("io.freefair.javadoc-utf-8") version "8.13"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.13"
+    id("io.freefair.maven-central.validate-poms") version "8.13"
+    id("me.qoomon.git-versioning") version "6.4.4"
+    id("com.github.ben-manes.versions") version "0.52.0"
+    id("org.springframework.boot") version "3.4.4"
+    id("io.spring.dependency-management") version "1.1.7"
+    id("io.sentry.jvm.gradle") version "5.3.0"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
+    id("ru.vyarus.pom") version "3.0.0"
+    id("com.gorylenko.gradle-git-properties") version "2.5.0"
+    id("io.codearte.nexus-staging") version "0.30.0"
+    id("me.champeau.jmh") version "0.7.3"
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
-    maven { url = URI("https://jitpack.io") }
+    maven(url = "https://projectlombok.org/edge-releases")
+    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
-group = "com.github.1c-syntax"
+group = "io.github.1c-syntax"
 
-gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
-    preferTags = true
-    branch(closureOf<VersionDescription> {
-        pattern = "^(?!v[0-9]+).*"
-        versionFormat = "\${branch}-\${commit.short}\${dirty}"
-    })
-    tag(closureOf<VersionDescription> {
-        pattern = "v(?<tagVersion>[0-9].*)"
-        versionFormat = "\${tagVersion}\${dirty}"
-    })
-    commit(closureOf<CommitVersionDescription> {
-        versionFormat = "\${commit.short}\${dirty}"
-    })
-})
+gitVersioning.apply {
+    refs {
+        considerTagsOnBranches = true
+        tag("v(?<tagVersion>[0-9].*)") {
+            version = "\${ref.tagVersion}\${dirty}"
+        }
+        branch(".+") {
+            version = "\${ref}-\${commit.short}\${dirty}"
+        }
+    }
 
-val jacksonVersion = "2.10.3"
-val junitVersion = "5.6.1"
+    rev {
+        version = "\${commit.short}\${dirty}"
+    }
+}
+
+gitProperties {
+    customProperty("git.build.time", buildTime())
+}
+
+val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
+
+val languageToolVersion = "6.5"
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
-    implementation("org.languagetool", "languagetool-core", "4.2")
+    // RUNTIME
 
-    // https://mvnrepository.com/artifact/org.languagetool/language-en
-    implementation("org.languagetool", "language-en", "4.2")
+    // spring
+    api("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-websocket")
+    api("org.springframework.boot:spring-boot-starter-cache")
 
-    // https://mvnrepository.com/artifact/org.languagetool/language-ru
-    implementation("org.languagetool", "language-ru", "4.2")
+    api("info.picocli:picocli-spring-boot-starter:4.7.6")
 
-    implementation("info.picocli", "picocli", "4.2.0")
+    // кэширование
+    api("com.github.ben-manes.caffeine", "caffeine", "3.2.0")
 
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation("commons-io", "commons-io", "2.6")
-    implementation("org.apache.commons", "commons-lang3", "3.10")
-    // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
-    implementation("commons-beanutils", "commons-beanutils", "1.9.4")
+    // lsp4j core
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
-    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
-
-    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-    implementation("com.google.code.findbugs", "jsr305", "3.0.2")
-
-    implementation("me.tongfei", "progressbar", "0.8.1")
-
-    implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
-    implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
-
-    implementation("org.reflections", "reflections", "0.9.10")
-
-    implementation("com.github.1c-syntax", "bsl-parser", "0.14.1") {
-        exclude("com.tunnelvisionlabs", "antlr4-annotations")
+    // 1c-syntax
+    api("io.github.1c-syntax", "bsl-parser", "0.26.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
-        exclude("org.glassfish", "javax.json")
+    }
+    api("io.github.1c-syntax", "utils", "0.6.2")
+    api("io.github.1c-syntax", "mdclasses", "0.15.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.8.0")
+    api("io.github.1c-syntax", "supportconf", "0.14.2")
+    api("io.github.1c-syntax", "bsl-parser-core", "0.3.0")
+
+    // JLanguageTool
+    implementation("org.languagetool", "languagetool-core", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
+    }
+    implementation("org.languagetool", "language-en", languageToolVersion)
+    implementation("org.languagetool", "language-ru", languageToolVersion)
+
+    // AOP
+    implementation("org.aspectj", "aspectjrt", "1.9.22.1")
+
+    // commons utils
+    implementation("commons-io", "commons-io", "2.18.0")
+    implementation("commons-beanutils", "commons-beanutils", "1.10.1"){
+        exclude("commons-logging", "commons-logging")
+    }
+    implementation("commons-codec", "commons-codec", "1.16.0")
+    implementation("org.apache.commons", "commons-lang3", "3.17.0")
+    implementation("org.apache.commons", "commons-collections4", "4.4")
+    implementation("org.apache.commons", "commons-exec", "1.4.0")
+
+    // progress bar
+    implementation("me.tongfei", "progressbar", "0.10.1")
+
+    // (de)serialization
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+
+    // graphs
+    implementation("org.jgrapht", "jgrapht-core", "1.5.2")
+
+    // SARIF serialization
+    implementation("com.contrastsecurity", "java-sarif", "2.0")
+
+    // CONSTRAINTS
+    implementation("com.google.guava:guava") {
+        version {
+            strictly("33.4.0-jre")
+       }
+    }
+    
+    // COMPILE
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.3")
+
+    // TEST
+
+    // spring
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude("com.vaadin.external.google", "android-json")
     }
 
-    implementation("com.github.1c-syntax", "utils", "0.3.0")
-    implementation("com.github.1c-syntax", "mdclasses", "0.5.0")
-
-    compileOnly("org.projectlombok", "lombok", lombok.version)
-
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
-
-    testImplementation("org.assertj", "assertj-core", "3.16.1")
-    testImplementation("org.mockito", "mockito-core", "3.3.3")
-
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    // test utils
+    testImplementation("org.jmockit", "jmockit", "1.49")
+    testImplementation("org.awaitility", "awaitility", "4.3.0")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
     withJavadocJar()
 }
@@ -118,68 +164,120 @@ tasks.jar {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
-
-    enabled = false
-    dependsOn(tasks.shadowJar)
+    enabled = true
+    archiveClassifier.set("")
 }
 
-tasks.shadowJar {
-    project.configurations.implementation.get().isCanBeResolved = true
-    configurations = listOf(project.configurations["implementation"])
-    archiveClassifier.set("")
+tasks.bootJar {
+    manifest {
+        attributes["Implementation-Version"] = archiveVersion.get()
+    }
+    archiveClassifier.set("exec")
+}
+
+tasks.named("sourcesJar") {
+    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+    dependsOn(tasks.collectExternalDependenciesForSentry)
+}
+
+tasks.build {
+    dependsOn(tasks.bootJar)
 }
 
 tasks.test {
     useJUnitPlatform()
 
     testLogging {
-        events("passed", "skipped", "failed")
+        events("passed", "skipped", "failed", "standard_error")
     }
 
     reports {
-        html.isEnabled = true
+        html.required.set(true)
     }
+
+    val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {
     dependsOn(tasks.jacocoTestReport)
+    mustRunAfter(tasks.generateDiagnosticDocs)
+}
+
+tasks.checkLicenseMain {
+    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+    dependsOn(tasks.collectExternalDependenciesForSentry)
+}
+
+tasks.updateLicenseMain {
+    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+    dependsOn(tasks.collectExternalDependenciesForSentry)
 }
 
 tasks.jacocoTestReport {
     reports {
-        xml.isEnabled = true
-        xml.destination = File("$buildDir/reports/jacoco/test/jacoco.xml")
+        xml.required.set(true)
+        xml.outputLocation.set(File("${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"))
     }
+}
+
+jmh {
+    jmhVersion = "1.37"
 }
 
 tasks.processResources {
     filteringCharset = "UTF-8"
-    from("docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
-    }
-
-    from("docs/en/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
-    }
-
     // native2ascii gradle replacement
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
     }
 }
 
+tasks.classes {
+    finalizedBy(tasks.generateDiagnosticDocs)
+}
+
+tasks.generateDiagnosticDocs {
+    doLast {
+        val resourcePath = tasks["processResources"].outputs.files.singleFile
+        copy {
+            from("${layout.buildDirectory.get()}/docs/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+        }
+
+        copy {
+            from("${layout.buildDirectory.get()}/docs/en/diagnostics")
+            into("$resourcePath/com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
+        }
+    }
+}
+
+tasks.javadoc {
+    options {
+        this as StandardJavadocDocletOptions
+        links(
+            "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
+            "https://1c-syntax.github.io/mdclasses/dev/javadoc",
+            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
+        )
+    }
+}
+
 license {
-    header = rootProject.file("license/HEADER.txt")
+    header(rootProject.file("license/HEADER.txt"))
+    newLine(false)
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
-    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
+    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
-    strictCheck = true
-    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")
     exclude("**/*.bsl")
     exclude("**/*.os")
+    exclude("**/*.txt")
+    exclude("**/*.java.orig")
+    exclude("**/*.impl")
+    exclude("**/*.mockito.plugins.MockMaker")
 }
 
 sonarqube {
@@ -190,77 +288,118 @@ sonarqube {
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
-        property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/test/jacoco.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml")
     }
 }
 
-lombok {
-    version = "1.18.12"
-    sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
+artifacts {
+    archives(tasks["jar"])
+    archives(tasks["sourcesJar"])
+    archives(tasks["bootJar"])
+    archives(tasks["javadocJar"])
 }
 
-// custom developers tools
-apply(from = "gradle/tools-new-diagnostic.gradle.kts")
-apply(from = "gradle/developer-tools.gradle.kts")
-
-tasks.register("precommit") {
-    description = "Run all precommit tasks"
-    group = "Developer tools"
-    dependsOn(":test")
-    dependsOn(":licenseFormat")
-    dependsOn(":updateDiagnosticDocs")
-    dependsOn(":updateDiagnosticsIndex")
-    dependsOn(":updateJsonSchema")
-}
-
-tasks {
-    val delombok by registering(JavaExec::class) {
-        dependsOn(compileJava)
-
-        main = project.extensions.findByType(io.franzbecker.gradle.lombok.LombokPluginExtension::class)!!.main
-        args = listOf("delombok")
-        classpath = project.configurations.getByName("compileClasspath")
-
-        jvmArgs = listOf("-Dfile.encoding=UTF-8")
-        val outputDir by extra { file("$buildDir/delombok") }
-        outputs.dir(outputDir)
-        sourceSets["main"].java.srcDirs.forEach {
-            inputs.dir(it)
-            args(it, "-d", outputDir)
-        }
-        doFirst {
-            outputDir.delete()
-        }
-    }
-
-    javadoc {
-        dependsOn(delombok)
-        val outputDir: File by delombok.get().extra
-        source = fileTree(outputDir)
-        isFailOnError = false
-        options.encoding = "UTF-8"
+signing {
+    val signingInMemoryKey: String? by project      // env.ORG_GRADLE_PROJECT_signingInMemoryKey
+    val signingInMemoryPassword: String? by project // env.ORG_GRADLE_PROJECT_signingInMemoryPassword
+    if (signingInMemoryKey != null) {
+        useInMemoryPgpKeys(signingInMemoryKey, signingInMemoryPassword)
+        sign(publishing.publications)
     }
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "sonatype"
+            url = if (isSnapshot)
+                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            else
+                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+
+            val sonatypeUsername: String? by project
+            val sonatypePassword: String? by project
+
+            credentials {
+                username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
+                password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["shadowJar"])
-            artifact(tasks["javadocJar"])
-            pom.withXml {
-                val dependenciesNode = asNode().appendNode("dependencies")
-                
-                configurations.implementation.get().dependencies.forEach { dependency ->
-                    if (dependency !is SelfResolvingDependency) {
-                        val dependencyNode = dependenciesNode.appendNode("dependency")
-                        dependencyNode.appendNode("groupId", dependency.group)
-                        dependencyNode.appendNode("artifactId", dependency.name)
-                        dependencyNode.appendNode("version", dependency.version)
-                        dependencyNode.appendNode("scope", "runtime")
+            from(components["java"])
+            artifact(tasks["bootJar"])
+
+            if (isSnapshot && project.hasProperty("simplifyVersion")) {
+                version = findProperty("git.ref.slug") as String + "-SNAPSHOT"
+            }
+
+            pom {
+                description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+                url.set("https://1c-syntax.github.io/bsl-language-server")
+                licenses {
+                    license {
+                        name.set("GNU LGPL 3")
+                        url.set("https://www.gnu.org/licenses/lgpl-3.0.txt")
+                        distribution.set("repo")
                     }
+                }
+                developers {
+                    developer {
+                        id.set("asosnoviy")
+                        name.set("Alexey Sosnoviy")
+                        email.set("labotamy@gmail.com")
+                        url.set("https://github.com/asosnoviy")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("nixel2007")
+                        name.set("Nikita Fedkin")
+                        email.set("nixel2007@gmail.com")
+                        url.set("https://github.com/nixel2007")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("theshadowco")
+                        name.set("Valery Maximov")
+                        email.set("maximovvalery@gmail.com")
+                        url.set("https://github.com/theshadowco")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("otymko")
+                        name.set("Oleg Tymko")
+                        email.set("olegtymko@yandex.ru")
+                        url.set("https://github.com/otymko")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/1c-syntax/bsl-language-server.git")
+                    developerConnection.set("scm:git:git@github.com:1c-syntax/bsl-language-server.git")
+                    url.set("https://github.com/1c-syntax/bsl-language-server")
                 }
             }
         }
     }
+}
+
+nexusStaging {
+    serverUrl = "https://s01.oss.sonatype.org/service/local/"
+    stagingProfileId = "15bd88b4d17915" // ./gradlew getStagingProfile
+}
+
+tasks.withType<GenerateModuleMetadata> {
+    enabled = false
+}
+
+fun buildTime(): String {
+    val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(Date())
 }

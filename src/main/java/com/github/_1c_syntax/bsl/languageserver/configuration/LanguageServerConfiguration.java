@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,18 +22,33 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.PostConstruct;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Role;
+import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,7 +57,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
@@ -54,23 +68,42 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
  * и безопасно сохранять ссылку на конфигурацию или ее части.
  */
 @Data
+@Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class LanguageServerConfiguration {
+public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
-  private Language language;
+  private Language language = Language.DEFAULT_LANGUAGE;
 
   @JsonProperty("diagnostics")
-  private final DiagnosticsOptions diagnosticsOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
 
   @JsonProperty("codeLens")
-  private final CodeLensOptions codeLensOptions;
+  @Setter(value = AccessLevel.NONE)
+  private CodeLensOptions codeLensOptions = new CodeLensOptions();
 
   @JsonProperty("documentLink")
-  private final DocumentLinkOptions documentLinkOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
+
+  @JsonProperty("inlayHint")
+  @Setter(value = AccessLevel.NONE)
+  private InlayHintOptions inlayHintOptions = new InlayHintOptions();
+
+  @JsonProperty("formatting")
+  @Setter(value = AccessLevel.NONE)
+  private FormattingOptions formattingOptions = new FormattingOptions();
+
+  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+  private boolean useDevSite;
+
+  private SendErrorsMode sendErrors = SendErrorsMode.DEFAULT;
 
   @Nullable
   private File traceLog;
@@ -78,44 +111,47 @@ public final class LanguageServerConfiguration {
   @Nullable
   private Path configurationRoot;
 
-  private LanguageServerConfiguration() {
-    this(
-      Language.DEFAULT_LANGUAGE,
-      new DiagnosticsOptions(),
-      new CodeLensOptions(),
-      new DocumentLinkOptions(),
-      null,
-      null
-    );
-  }
+  @JsonIgnore
+  @Setter(value = AccessLevel.NONE)
+  private File configurationFile;
 
-  public static LanguageServerConfiguration create(File configurationFile) {
-    LanguageServerConfiguration configuration = null;
+  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
+  @JsonIgnore
+  private String configurationFilePath;
+
+  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
+  @JsonIgnore
+  private String globalConfigPath;
+
+  @PostConstruct
+  private void init() {
+    configurationFile = new File(configurationFilePath);
     if (configurationFile.exists()) {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-      try {
-        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize configuration file", e);
-      }
+      loadConfigurationFile(configurationFile);
+      return;
     }
-
-    if (configuration == null) {
-      configuration = create();
+    var configuration = new File(globalConfigPath);
+    if (configuration.exists()) {
+      loadConfigurationFile(configuration);
     }
-    return configuration;
   }
 
-  public static LanguageServerConfiguration create() {
-    return new LanguageServerConfiguration();
+  public void update(File configurationFile) {
+    loadConfigurationFile(configurationFile);
+  }
+
+  public void reset() {
+    copyPropertiesFrom(new LanguageServerConfiguration());
   }
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    var pathFromConfiguration = configuration.getConfigurationRoot();
 
     if (pathFromConfiguration == null) {
       rootPath = Absolute.path(srcDir);
@@ -129,7 +165,7 @@ public final class LanguageServerConfiguration {
     }
 
     if (rootPath != null) {
-      File fileConfiguration = getConfigurationFile(rootPath);
+      var fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
         if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
           rootPath = Optional.of(fileConfiguration.toPath())
@@ -146,15 +182,18 @@ public final class LanguageServerConfiguration {
     }
 
     return rootPath;
-
   }
 
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "False positive"
+  )
   private static File getConfigurationFile(Path rootPath) {
     File configurationFile = null;
     List<Path> listPath = new ArrayList<>();
     try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
       basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
+      listPath = stream.toList();
     } catch (IOException e) {
       LOGGER.error("Error on read configuration file", e);
     }
@@ -164,4 +203,36 @@ public final class LanguageServerConfiguration {
     return configurationFile;
   }
 
+  private void loadConfigurationFile(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
+    }
+
+    LanguageServerConfiguration configuration;
+
+    var mapper = JsonMapper.builder()
+      .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
+      .build();
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
+    }
+
+    this.configurationFile = configurationFile;
+    copyPropertiesFrom(configuration);
+  }
+
+  @SneakyThrows
+  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
+    // todo: refactor
+    PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
+    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+    PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
+  }
 }

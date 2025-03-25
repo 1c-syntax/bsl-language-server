@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,26 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -50,9 +52,11 @@ import static picocli.CommandLine.Option;
  * Ключ команды:
  *  -f, (--format)
  * Параметры:
- *  -s, (--srcDir) &lt;arg&gt; -  Путь к каталогу исходных файлов.
+ *  -s, (--src)                -  Путь к каталогу исходных файлов.
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то анализ выполняется в текущем каталоге запуска.
+ *                                Можно указать каталог, в котором будут найдены файлы для форматирования, либо один
+ *                                файл для форматирования
  *  -q, (--silent)             -  Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
  * Выводимая информация:
  *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
@@ -64,10 +68,14 @@ import static picocli.CommandLine.Option;
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
+@Component
+@RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
 
+  private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private final ServerContext serverContext;
+  private final FormatProvider formatProvider;
 
   @Option(
     names = {"-h", "--help"},
@@ -76,8 +84,8 @@ public class FormatCommand implements Callable<Integer> {
   private boolean usageHelpRequested;
 
   @Option(
-    names = {"-s", "--srcDir"},
-    description = "Source directory",
+    names = {"-s", "--srcDir", "--src"}, // TODO delete old key --srcDir
+    description = "Source directory or file",
     paramLabel = "<path>",
     defaultValue = "")
   private String srcDirOption;
@@ -87,25 +95,25 @@ public class FormatCommand implements Callable<Integer> {
     description = "Silent mode")
   private boolean silentMode;
 
-  public FormatCommand() {
-    this.serverContext = new ServerContext();
-  }
-
   public Integer call() {
     serverContext.clear();
 
-    Path srcDir = Absolute.path(srcDirOption);
-    if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+    String[] filePaths = COMMA_PATTERN.split(srcDirOption);
+
+    List<File> files = findFilesForFormatting(filePaths);
+
+    if (files.isEmpty()) {
       return 1;
     }
-
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
     if (silentMode) {
       files.parallelStream().forEach(this::formatFile);
     } else {
-      try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
+      try (ProgressBar pb = new ProgressBarBuilder()
+        .setTaskName("Formatting files...")
+        .setInitialMax(files.size())
+        .setStyle(ProgressBarStyle.ASCII)
+        .build()) {
         files.parallelStream()
           .forEach((File file) -> {
             pb.step();
@@ -117,19 +125,38 @@ public class FormatCommand implements Callable<Integer> {
     return 0;
   }
 
+  private List<File> findFilesForFormatting(String[] filePaths) {
+    List<File> files = new ArrayList<>();
+    for (String filePath : filePaths) {
+      Path srcDir = Absolute.path(filePath);
+      if (!srcDir.toFile().exists()) {
+        LOGGER.error("Source dir `{}` is not exists", srcDir);
+        continue;
+      }
+
+      if(srcDir.toFile().isDirectory()) {
+        files.addAll(FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true));
+      } else {
+        files.add(srcDir.toFile());
+      }
+    }
+
+    return files;
+  }
+
   @SneakyThrows
   private void formatFile(File file) {
-    String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    final URI uri = file.toURI();
+    var uri = file.toURI();
 
-    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
 
-    DocumentFormattingParams params = new DocumentFormattingParams();
-    FormattingOptions options = new FormattingOptions();
+    var params = new DocumentFormattingParams();
+    var options = new FormattingOptions();
     options.setInsertSpaces(false);
 
     params.setOptions(options);
-    final List<TextEdit> formatting = FormatProvider.getFormatting(params, documentContext);
+    final List<TextEdit> formatting = formatProvider.getFormatting(params, documentContext);
 
     serverContext.removeDocument(uri);
 

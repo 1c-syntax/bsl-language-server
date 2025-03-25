@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,39 +21,54 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.ColorProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.ColorPresentation;
+import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
-import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentLinkParams;
-import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
@@ -61,27 +76,37 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
+import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.PrepareRenameResult;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
-import org.eclipse.lsp4j.SignatureHelp;
-import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SelectionRange;
+import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
-import java.util.ArrayList;
+import java.net.URI;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
+@Component
+@RequiredArgsConstructor
+public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -89,149 +114,269 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final CodeActionProvider codeActionProvider;
   private final CodeLensProvider codeLensProvider;
   private final DocumentLinkProvider documentLinkProvider;
+  private final DocumentSymbolProvider documentSymbolProvider;
+  private final FoldingRangeProvider foldingRangeProvider;
+  private final FormatProvider formatProvider;
+  private final HoverProvider hoverProvider;
+  private final ReferencesProvider referencesProvider;
+  private final DefinitionProvider definitionProvider;
+  private final CallHierarchyProvider callHierarchyProvider;
+  private final SelectionRangeProvider selectionRangeProvider;
+  private final ColorProvider colorProvider;
+  private final RenameProvider renameProvider;
+  private final InlayHintProvider inlayHintProvider;
 
-  @CheckForNull
-  private LanguageClient client;
+  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
-  public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
-    this.configuration = configuration;
-    this.context = context;
-
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    codeActionProvider = new CodeActionProvider(this.diagnosticProvider, quickFixSupplier);
-    codeLensProvider = new CodeLensProvider(this.configuration);
-    documentLinkProvider = new DocumentLinkProvider(this.configuration, this.diagnosticProvider);
-  }
-
-  @Override
-  public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
-    List<CompletionItem> completionItems = new ArrayList<>();
-    completionItems.add(new CompletionItem("Hello World"));
-    return CompletableFuture.completedFuture(Either.forLeft(completionItems));
-  }
-
-  @Override
-  public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-    throw new UnsupportedOperationException();
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
   }
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = HoverProvider.getHover(params, documentContext);
-    return CompletableFuture.completedFuture(hover.orElse(null));
-  }
-
-  @Override
-  public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
-    throw new UnsupportedOperationException();
+    return CompletableFuture.supplyAsync(
+      () -> hoverProvider.getHover(documentContext, params).orElse(null),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    throw new UnsupportedOperationException();
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params)),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-    throw new UnsupportedOperationException();
-  }
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
 
-  @Override
-  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
-    throw new UnsupportedOperationException();
+    return CompletableFuture.supplyAsync(
+      () -> referencesProvider.getReferences(documentContext, params),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbols(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+        .map(Either::<SymbolInformation, DocumentSymbol>forRight)
+        .toList(),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> codeActionProvider.getCodeActions(params, documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> codeActionProvider.getCodeActions(params, documentContext),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> codeLensProvider.getCodeLens(documentContext),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-    throw new UnsupportedOperationException();
+    var data = codeLensProvider.extractData(unresolved);
+    var documentContext = context.getDocument(data.getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    return CompletableFuture.supplyAsync(
+      () -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getFormatting(params, documentContext);
-    return CompletableFuture.completedFuture(edits);
+    return CompletableFuture.supplyAsync(
+      () -> formatProvider.getFormatting(params, documentContext),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, documentContext);
-    return CompletableFuture.completedFuture(edits);
-  }
-
-  @Override
-  public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
-    throw new UnsupportedOperationException();
+    return CompletableFuture.supplyAsync(
+      () -> formatProvider.getRangeFormatting(params, documentContext),
+      executorService
+    );
   }
 
   @Override
   public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> FoldingRangeProvider.getFoldingRange(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> foldingRangeProvider.getFoldingRange(documentContext),
+      executorService
+    );
   }
 
   @Override
-  public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-    throw new UnsupportedOperationException();
+  public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
+    // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> {
+        List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
+        if (callHierarchyItems.isEmpty()) {
+          return null;
+        }
+        return callHierarchyItems;
+      },
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
+    CallHierarchyIncomingCallsParams params
+  ) {
+    var documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> callHierarchyProvider.incomingCalls(documentContext, params),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
+    CallHierarchyOutgoingCallsParams params
+  ) {
+    var documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> callHierarchyProvider.outgoingCalls(documentContext, params),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> selectionRangeProvider.getSelectionRange(documentContext, params),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<ColorInformation>> documentColor(DocumentColorParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> colorProvider.getDocumentColor(documentContext),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<ColorPresentation>> colorPresentation(ColorPresentationParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> colorProvider.getColorPresentation(documentContext, params),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> inlayHintProvider.getInlayHint(documentContext, params),
+      executorService
+    );
   }
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    DocumentContext documentContext = context.addDocument(params.getTextDocument());
+    var textDocumentItem = params.getTextDocument();
+    var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+
+    context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
@@ -241,13 +386,16 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public void didChange(DidChangeTextDocumentParams params) {
 
     // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
 
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
-    documentContext.rebuild(params.getContentChanges().get(0).getText());
+    context.rebuildDocument(
+      documentContext,
+      params.getContentChanges().get(0).getText(),
+      params.getTextDocument().getVersion()
+    );
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -256,22 +404,19 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
 
-    documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
+    context.closeDocument(documentContext);
 
-    if (client != null) {
-      diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
-    }
+    diagnosticProvider.publishEmptyDiagnosticList(documentContext);
   }
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
@@ -282,30 +427,70 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public void connect(LanguageClient client) {
-    this.client = client;
-  }
-
-  @Override
   public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
+    return CompletableFuture.supplyAsync(
+      () -> documentLinkProvider.getDocumentLinks(documentContext),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Diagnostics.EMPTY);
+    }
+
+    return CompletableFuture.supplyAsync(() -> {
+      var diagnostics = documentContext.getDiagnostics();
+
+      var range = params.getRange();
+      if (range != null) {
+        diagnostics = diagnostics.stream()
+          .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
+          .toList();
+      }
+      return new Diagnostics(diagnostics, documentContext.getVersion());
+    });
+  }
+
+  @Override
+  public CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> prepareRename(PrepareRenameParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> Either3.forFirst(renameProvider.getPrepareRename(documentContext, params)),
+      executorService
+    );
+  }
+
+  @Override
+  public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(
+      () -> renameProvider.getRename(documentContext, params),
+      executorService
+    );
   }
 
   public void reset() {
-    diagnosticProvider.clearAllComputedDiagnostics();
     context.clear();
   }
 
   private void validate(DocumentContext documentContext) {
-    if (client == null) {
-      return;
-    }
-    diagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
+    diagnosticProvider.computeAndPublishDiagnostics(documentContext);
   }
 
 }

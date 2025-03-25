@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,14 +25,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ContainsDetectorTest {
+class ContainsDetectorTest {
 
   @Test
   void runTest() {
     ContainsDetector detector = new ContainsDetector(1, "КонецЕсли;", "КонецФункции", "КонецПроцедуры");
 
-    assertThat(detector.detect("Процедура Какой-то текст")).isEqualTo(0);
-    assertThat(detector.detect("Какой-то текст КонецЕсли")).isEqualTo(0);
+    assertThat(detector.detect("Процедура Какой-то текст")).isZero();
+    assertThat(detector.detect("Какой-то текст КонецЕсли")).isZero();
     assertThat(detector.detect("КонецФункции Какой-то текст")).isEqualTo(1);
     assertThat(detector.detect("Какой-то текст КонецЕсли;")).isEqualTo(1);
     assertThat(detector.detect("Какой-то текст КонецПроцедуры")).isEqualTo(1);

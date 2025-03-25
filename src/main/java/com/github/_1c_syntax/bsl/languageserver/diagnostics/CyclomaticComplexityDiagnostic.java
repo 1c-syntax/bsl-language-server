@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -47,7 +46,8 @@ import java.util.stream.Collectors;
   minutesToFix = 25,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
-  }
+  },
+  extraMinForComplexity = 1
 )
 public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private static final int COMPLEXITY_THRESHOLD = 20;
@@ -66,10 +66,6 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private boolean checkModuleBody = CHECK_MODULE_BODY;
 
   private boolean fileCodeBlockChecked;
-
-  public CyclomaticComplexityDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();

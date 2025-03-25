@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import lombok.AccessLevel;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +30,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,29 +38,44 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Value
-@Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = {"children", "parent"})
+@Builder(access = lombok.AccessLevel.PUBLIC)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
-public class RegionSymbol implements Symbol {
+public class RegionSymbol implements SourceDefinedSymbol {
   String name;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Namespace;
+  @EqualsAndHashCode.Include
+  DocumentContext owner;
   Range range;
   Range startRange;
   Range endRange;
+  @EqualsAndHashCode.Include
   Range regionNameRange;
 
   @Getter
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   public List<MethodSymbol> getMethods() {
     return children.stream()
       .filter(MethodSymbol.class::isInstance)
-      .map(symbol -> (MethodSymbol) symbol)
+      .map(MethodSymbol.class::cast)
       .collect(Collectors.toList());
+  }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitRegion(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getRegionNameRange();
   }
 }

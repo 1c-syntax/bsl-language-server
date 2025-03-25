@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,24 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class FoldingRangeProviderTest {
+
+  @Autowired
+  private FoldingRangeProvider foldingRangeProvider;
 
   @Test
   void testFoldingRange() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
-    List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     assertThat(foldingRanges).hasSize(11);
 
@@ -75,10 +80,10 @@ class FoldingRangeProviderTest {
   @Test
   void testFoldingRangeParseError() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
-    List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
-    assertThat(foldingRanges).hasSize(0);
+    assertThat(foldingRanges).isEmpty();
 
   }
 }

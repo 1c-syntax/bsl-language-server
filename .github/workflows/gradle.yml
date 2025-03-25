@@ -1,26 +1,38 @@
 name: Java CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - "translations_*"
+  pull_request:
 
 jobs:
+  gatekeeper:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
+    steps:
+      - run: echo 'Open the Golden Gate'
   build:
+    needs: gatekeeper
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        java_version: ['11', '14']
+        java_version: ['17', '21', '23']
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - name: Set up JDK ${{ matrix.java_version }}
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v4
       with:
         java-version: ${{ matrix.java_version }}
+        distribution: 'temurin'
+        cache: gradle
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
     - name: Archive test results
       if: failure()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test

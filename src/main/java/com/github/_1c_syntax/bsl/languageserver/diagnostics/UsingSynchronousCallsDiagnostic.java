@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,21 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -63,14 +67,12 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)"
   );
 
-  private static final Pattern SERVER_COMPILER_PATTERN = CaseInsensitivePattern.compile(
-    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)"
-  );
+  private static final Set<CompilerDirectiveKind> serverCompilerDirectives =
+    EnumSet.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingSynchronousCallsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public UsingSynchronousCallsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
@@ -128,29 +130,55 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
-    // если использование синхронных вызовов разрешено (без предупреждение), то
+    // если использование синхронных вызовов разрешено (без предупреждения), то
     // ничего не диагностируется
-    if (configuration.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
+    if (configuration instanceof Configuration cf && cf.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
+      return ctx;
+    }
+
+    if (isServerModule(documentContext)) {
       return ctx;
     }
 
     return super.visitFile(ctx);
   }
 
+  private static boolean isServerModule(DocumentContext documentContext) {
+    return switch (documentContext.getModuleType()) {
+      case ApplicationModule, CommandModule, FormModule, ManagedApplicationModule -> false;
+      case CommonModule -> isServerCommonModule(documentContext);
+      default -> true; // Все прочие модули это строго серверные и в них синхронные вызовы разрешены
+    };
+  }
+
+  private static boolean isServerCommonModule(DocumentContext documentContext) {
+    var mdObject = documentContext.getMdObject();
+
+    return mdObject.map(CommonModule.class::cast)
+      .filter(commonModule -> !(commonModule.isClientManagedApplication() ||
+                                commonModule.isClientOrdinaryApplication()))
+      .isPresent();
+  }
+
+  @Override
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
+    if (methodSymbol.isPresent()) {
+      var compilerDirective = methodSymbol.get().getCompilerDirectiveKind();
+      if (compilerDirective.isPresent() && serverCompilerDirectives.contains(compilerDirective.get())) {
+        return ctx;
+      }
+    }
+
+    return super.visitSub(ctx);
+  }
+
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
     if (MODALITY_METHODS.matcher(methodName).matches()) {
-      BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
-      if (rootParent == null
-        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
-        .stream()
-        .filter(node ->
-          SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
-
-        diagnosticStorage.addDiagnostic(ctx,
-          info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
-      }
+      diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
     }
     return super.visitGlobalMethodCall(ctx);
   }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,12 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -67,6 +65,8 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   private static final String REGEX_ALPHABET = "[A-zА-я]";
 
+  private static final String REGEX_POPULAR_VERSION = "^(1|2|3|8\\.3|11)\\.";
+
   private static final Pattern patternNetworkAddress = CaseInsensitivePattern.compile(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
   private static final Pattern patternAlphabet = CaseInsensitivePattern.compile(REGEX_ALPHABET);
@@ -77,22 +77,26 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   )
   private Pattern searchWordsExclusion = CaseInsensitivePattern.compile(REGEX_EXCLUSION);
 
-  public UsingHardcodeNetworkAddressDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  /**
+   * Паттерн для исключения популярных версий из списка IP-адресов. Например, `2.5.4.10`.
+   */
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = REGEX_POPULAR_VERSION
+  )
+  private Pattern searchPopularVersionExclusion = CaseInsensitivePattern.compile(REGEX_POPULAR_VERSION);
 
   @Override
   public void configure(Map<String, Object> configuration) {
-
-    if (configuration == null) {
-      return;
-    }
-
     // Слова исключения, при поиске IP адресов
     String searchWordsExclusionProperty =
       (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
     searchWordsExclusion = CaseInsensitivePattern.compile(searchWordsExclusionProperty);
 
+    // Паттерн исключения популярных версий
+    String searchPopularVersionExclusionProperty =
+      (String) configuration.getOrDefault("searchPopularVersionExclusion", REGEX_POPULAR_VERSION);
+    searchPopularVersionExclusion = CaseInsensitivePattern.compile(searchPopularVersionExclusionProperty);
   }
 
   /**
@@ -103,9 +107,9 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
+    var content = ctx.getText().substring(1, ctx.getText().length() - 1);
     if (content.length() > 2) {
-      Matcher matcherURL = patternURL.matcher(content);
+      var matcherURL = patternURL.matcher(content);
       if (!matcherURL.find()) {
         processVisitString(ctx, content);
       }
@@ -114,7 +118,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   }
 
   private void processVisitString(BSLParser.StringContext ctx, String content) {
-    Matcher matcher = patternNetworkAddress.matcher(content);
+    var matcher = patternNetworkAddress.matcher(content);
     if (matcher.find()) {
 
       String firstValue = matcher.group(0);
@@ -133,24 +137,28 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
+      if (searchPopularVersionExclusion.matcher(content).find()) {
+        return;
+      }
+
       diagnosticStorage.addDiagnostic(ctx);
     }
   }
 
-  private boolean itVersionReturn(ParserRuleContext ctx) {
+  private boolean itVersionReturn(BSLParserRuleContext ctx) {
 
-    ParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
+    BSLParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
     if (returnState != null) {
       return skipStatement(returnState, BSLParser.RULE_function);
     }
     return false;
   }
 
-  private boolean skipStatement(ParserRuleContext ctx, int ruleStatement) {
+  private boolean skipStatement(BSLParserRuleContext ctx, int ruleStatement) {
 
-    ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
+    BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
     if (parent != null) {
-      Matcher matcher = searchWordsExclusion.matcher(parent.getText());
+      var matcher = searchWordsExclusion.matcher(parent.getText());
       return matcher.find();
     }
     return false;

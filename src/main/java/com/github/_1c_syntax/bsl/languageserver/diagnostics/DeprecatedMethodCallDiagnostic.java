@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,28 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,123 +44,31 @@ import java.util.Set;
     DiagnosticTag.DESIGN
   }
 )
-public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Set<ModuleType> DEFAULT_MODULE_TYPES =
-    EnumSet.of(ModuleType.ManagerModule, ModuleType.CommonModule);
-
-  public DeprecatedMethodCallDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+@RequiredArgsConstructor
+public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
+  private final ReferenceIndex referenceIndex;
 
   @Override
-  public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
+  public void check() {
+    var uri = documentContext.getUri();
 
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
-      return super.visitCallStatement(ctx);
-    }
-
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
-    if (mdoRef.isEmpty()) {
-      return super.visitCallStatement(ctx);
-    }
-
-    getMethodName(ctx).ifPresent(methodName -> checkDeprecatedCall(mdoRef, methodName));
-
-    return super.visitCallStatement(ctx);
+    referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
+      .filter(reference -> reference.getSymbol().isDeprecated())
+      .filter(reference -> !reference.getFrom().isDeprecated())
+      .forEach((Reference reference) -> {
+        var deprecatedSymbol = reference.getSymbol();
+        var deprecationInfo = getDeprecationInfo(deprecatedSymbol);
+        var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
+        diagnosticStorage.addDiagnostic(reference.getSelectionRange(), message);
+      });
   }
 
-  @Override
-  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
-      return super.visitComplexIdentifier(ctx);
-    }
-
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
-    if (mdoRef.isEmpty()) {
-      return super.visitComplexIdentifier(ctx);
-    }
-
-    getMethodName(ctx).ifPresent(methodName -> checkDeprecatedCall(mdoRef, methodName));
-
-    return super.visitComplexIdentifier(ctx);
-  }
-
-  @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
-      return super.visitGlobalMethodCall(ctx);
-    }
-
-    var methodName = ctx.methodName().getStart();
-    var methodNameText = methodName.getText();
-
-    documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.isDeprecated()
-        && methodSymbol.getName().equalsIgnoreCase(methodNameText))
-      .findAny()
-      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
-
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
-    return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
-      .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
-      .map(MethodSymbol::isDeprecated)
-      .orElse(false);
-  }
-
-  private void checkDeprecatedCall(String mdoRef, Token methodName) {
-    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
-    String methodNameText = methodName.getText();
-
-    documentContexts.entrySet().stream()
-      .filter(entry -> DEFAULT_MODULE_TYPES.contains(entry.getKey()))
-      .map(Map.Entry::getValue)
-      .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> symbolTree.getMethods().stream())
-      .filter(methodSymbol -> methodSymbol.isDeprecated()
-        && methodSymbol.getName().equalsIgnoreCase(methodNameText))
-      .findAny()
-      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
-  }
-
-  private void fireIssue(MethodSymbol methodSymbol, Token methodName) {
-    var methodNameText = methodName.getText();
-
-    var deprecationInfo = methodSymbol.getDescription()
-      .map(MethodDescription::getDeprecationInfo)
+  private static String getDeprecationInfo(Symbol deprecatedSymbol) {
+    return Optional.of(deprecatedSymbol)
+      .filter(Describable.class::isInstance)
+      .map(Describable.class::cast)
+      .flatMap(Describable::getDescription)
+      .map(SourceDefinedSymbolDescription::getDeprecationInfo)
       .orElse("");
-
-    diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText, deprecationInfo));
-  }
-
-  private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
-    var modifiers = ctx.modifier();
-    var methodName = getMethodName(ctx.accessCall());
-
-    if (modifiers.isEmpty()) {
-      return methodName;
-    } else {
-      return getMethodName(modifiers).or(() -> methodName);
-    }
-  }
-
-  private static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
-    return Optional.of(ctx.methodCall().methodName().getStart());
-  }
-
-  private static Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
-    return getMethodName(ctx.modifier());
-  }
-
-  private static Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
-    return modifiers.stream()
-      .map(BSLParser.ModifierContext::accessCall)
-      .filter(Objects::nonNull)
-      .map(DeprecatedMethodCallDiagnostic::getMethodName)
-      .findFirst()
-      .orElse(Optional.empty());
   }
 }

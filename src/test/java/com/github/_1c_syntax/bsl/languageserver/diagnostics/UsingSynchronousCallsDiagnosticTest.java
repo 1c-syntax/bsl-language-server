@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,12 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -36,13 +40,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@DirtiesContext
 class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSynchronousCallsDiagnostic> {
   UsingSynchronousCallsDiagnosticTest() {
     super(UsingSynchronousCallsDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-  private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String PATH_TO_CLIENT_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_SERVER_MODULE_FILE = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_OBJECT_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl";
+  private static final String PATH_TO_MANAGER_MODULE_FILE = "src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl";
 
   @Test
   void testDontUse() {
@@ -50,8 +58,8 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     var documentContext = getDocumentContextWithUseFlag(UseMode.DONT_USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(28);
     assertThat(diagnostics)
+      .hasSize(28)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 12, 3, 57))
         && diagnostic.getMessage().matches(".*(синхронного|synchronous).*Вопрос.*ПоказатьВопрос.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 4, 21, 84))
@@ -112,26 +120,37 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 
   @Test
   void testUse() {
-
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {PATH_TO_OBJECT_MODULE_FILE, PATH_TO_MANAGER_MODULE_FILE, PATH_TO_SERVER_MODULE_FILE})
+  void testServerModules(String file) {
+    var context = getDocumentContextWithUseFlag(UseMode.DONT_USE, file);
+
+    List<Diagnostic> diagnostics = getDiagnostics(context);
+    assertThat(diagnostics).isEmpty();
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
-    var path = Absolute.path(PATH_TO_METADATA);
-    var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-
-    var serverContext = spy(new ServerContext(path));
-    var configuration = spy(serverContext.getConfiguration());
-    when(configuration.getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
-
-    return new DocumentContext(
-      testFile.toUri(),
-      getText(),
-      serverContext
-    );
+    return getDocumentContextWithUseFlag(useMode, PATH_TO_CLIENT_MODULE_FILE);
   }
 
+  private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile) {
+    var path = Absolute.path(PATH_TO_METADATA);
+    var testFile = Paths.get(moduleFile).toAbsolutePath();
+
+    initServerContext(path);
+    var serverContext = spy(context);
+    var configuration = spy(serverContext.getConfiguration());
+    when(((Configuration) configuration).getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
+    when(serverContext.getConfiguration()).thenReturn(configuration);
+
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
+    return documentContext;
+  }
 }

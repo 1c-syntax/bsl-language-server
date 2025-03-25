@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,59 +21,110 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
-import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import com.github._1c_syntax.bsl.support.SupportVariant;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Lazy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import jakarta.annotation.PostConstruct;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Locked;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.antlr.v4.runtime.tree.Tree;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
-public class DocumentContext {
+@Component
+@Scope("prototype")
+@RequiredArgsConstructor
+@Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class DocumentContext implements Comparable<DocumentContext> {
 
+  private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+
+  @Getter
+  @EqualsAndHashCode.Include
   private final URI uri;
-  private final FileType fileType;
+
+  @Nullable
   private String content;
-  private final ServerContext context;
-  private Tokenizer tokenizer;
+
+  @Getter
+  @EqualsAndHashCode.Include
+  private int version;
+
+  @Setter(onMethod = @__({@Autowired}))
+  private ServerContext context;
+  @Setter(onMethod = @__({@Autowired}))
+  private DiagnosticComputer diagnosticComputer;
+  @Setter(onMethod = @__({@Autowired}))
+  private LanguageServerConfiguration configuration;
+
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  @Setter(onMethod = @__({@Autowired}))
+  private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
+
+  @Getter
+  private FileType fileType;
+  @Getter(onMethod = @__({@Locked("computeLock")}))
+  private BSLTokenizer tokenizer;
+  @Getter(onMethod = @__({@Locked("computeLock")}))
+  private SymbolTree symbolTree;
+
+  @Getter
+  private boolean isComputedDataFrozen;
 
   private final ReentrantLock computeLock = new ReentrantLock();
+  private final ReentrantLock diagnosticsLock = new ReentrantLock();
 
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
-    = new Lazy<>(this::computeSupportVariants, computeLock);
-  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -81,12 +132,12 @@ public class DocumentContext {
   private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private final Lazy<List<Diagnostic>> diagnostics = new Lazy<>(this::computeDiagnostics, diagnosticsLock);
 
-  public DocumentContext(URI uri, String content, ServerContext context) {
-    this.uri = Absolute.uri(uri);
-    this.content = content;
-    this.context = context;
-    this.tokenizer = new Tokenizer(content);
+  private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
+
+  @PostConstruct
+  void init() {
     this.fileType = computeFileType(this.uri);
   }
 
@@ -94,39 +145,40 @@ public class DocumentContext {
     return context;
   }
 
+  @Locked("computeLock")
   public String getContent() {
     requireNonNull(content);
     return content;
   }
 
+  @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  @Locked("computeLock")
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
   }
 
-  public SymbolTree getSymbolTree() {
-    return symbolTree.getOrCompute();
-  }
-
+  @Locked("computeLock")
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
   }
 
   public List<Token> getComments() {
     return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .collect(Collectors.toList());
+      .toList();
   }
 
+  @Locked("computeLock")
   public String getText(Range range) {
     Position start = range.getStart();
     Position end = range.getEnd();
@@ -137,8 +189,8 @@ public class DocumentContext {
       throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
-    String startString = contentListUnboxed[start.getLine()];
-    StringBuilder sb = new StringBuilder();
+    var startString = contentListUnboxed[start.getLine()];
+    var sb = new StringBuilder();
 
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
@@ -157,16 +209,27 @@ public class DocumentContext {
     return sb.toString();
   }
 
+  public Locale getScriptVariantLocale() {
+    var mdConfiguration = getServerContext().getConfiguration();
+
+    String languageTag;
+    if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
+      languageTag = configuration.getLanguage().getLanguageCode();
+    } else {
+      var scriptVariant = mdConfiguration.getScriptVariant();
+      if (scriptVariant == ScriptVariant.ENGLISH) {
+        languageTag = "en";
+      } else if (scriptVariant == ScriptVariant.RUSSIAN) {
+        languageTag = "ru";
+      } else {
+        throw new IllegalArgumentException("Unknown scriptVariant " + scriptVariant);
+      }
+    }
+    return Locale.forLanguageTag(languageTag);
+  }
+
   public MetricStorage getMetrics() {
     return metrics.getOrCompute();
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-
-  public FileType getFileType() {
-    return fileType;
   }
 
   public ComplexityData getCognitiveComplexityData() {
@@ -185,34 +248,104 @@ public class DocumentContext {
     return moduleType.getOrCompute();
   }
 
-  public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
-    return supportVariants.getOrCompute();
+  public SupportVariant getSupportVariant() {
+    return getMdObject().map(MD::getSupportVariant).orElse(SupportVariant.NONE);
   }
 
-  public Optional<MDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+  public Optional<MD> getMdObject() {
+    return getServerContext().getConfiguration().findChild(getUri());
   }
 
-  public void rebuild(String content) {
+  public List<SDBLTokenizer> getQueries() {
+    return queries.getOrCompute();
+  }
+
+  public List<Diagnostic> getDiagnostics() {
+    return diagnostics.getOrCompute();
+  }
+
+  public List<Diagnostic> getComputedDiagnostics() {
+    return Optional
+      .ofNullable(diagnostics.get())
+      .orElseGet(Collections::emptyList);
+  }
+
+  public void freezeComputedData() {
+    isComputedDataFrozen = true;
+  }
+
+  public void unfreezeComputedData() {
+    isComputedDataFrozen = false;
+  }
+
+  protected void rebuild(String content, int version) {
     computeLock.lock();
-    clearSecondaryData();
-    symbolTree.clear();
-    this.content = content;
-    tokenizer = new Tokenizer(content);
-    computeLock.unlock();
+
+    try {
+
+      boolean versionMatches = version == this.version && version != 0;
+
+      if (versionMatches && (this.content != null)) {
+        clearDependantData();
+        return;
+      }
+
+      if (!isComputedDataFrozen) {
+        clearSecondaryData();
+      }
+
+      this.content = content;
+      tokenizer = new BSLTokenizer(content);
+      this.version = version;
+      symbolTree = computeSymbolTree();
+
+    } finally {
+      computeLock.unlock();
+    }
+
   }
 
-  public void clearSecondaryData() {
-    computeLock.lock();
-    content = null;
-    contentList.clear();
-    tokenizer = null;
+  protected void rebuild() {
+    try {
+      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      rebuild(newContent, 0);
+    } catch (IOException e) {
+      LOGGER.error("Can't rebuild content from uri", e);
+    }
+  }
 
-    cognitiveComplexityData.clear();
-    cyclomaticComplexityData.clear();
-    metrics.clear();
-    diagnosticIgnoranceData.clear();
-    computeLock.unlock();
+  protected void clearSecondaryData() {
+    computeLock.lock();
+
+    try {
+
+      content = null;
+      contentList.clear();
+      tokenizer = null;
+      queries.clear();
+      clearDependantData();
+
+      if (!isComputedDataFrozen) {
+        cognitiveComplexityData.clear();
+        cyclomaticComplexityData.clear();
+        metrics.clear();
+        diagnosticIgnoranceData.clear();
+      }
+    } finally {
+      computeLock.unlock();
+    }
+  }
+
+  private void clearDependantData() {
+    computeLock.lock();
+    diagnosticsLock.lock();
+
+    try {
+      diagnostics.clear();
+    } finally {
+      diagnosticsLock.unlock();
+      computeLock.unlock();
+    }
   }
 
   private static FileType computeFileType(URI uri) {
@@ -234,7 +367,7 @@ public class DocumentContext {
   }
 
   private String[] computeContentList() {
-    return getContent().split("\n", -1);
+    return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
   }
 
   private SymbolTree computeSymbolTree() {
@@ -243,26 +376,22 @@ public class DocumentContext {
 
 
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleType(uri);
-  }
-
-  private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
-    return context.getConfiguration().getModuleSupport(uri);
+    return context.getConfiguration().getModuleTypeByURI(uri);
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
     return cognitiveComplexityComputer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
     return cyclomaticComplexityComputer.compute();
   }
 
   private MetricStorage computeMetrics() {
-    MetricStorage metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
+    var metricsTemp = new MetricStorage();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
@@ -272,8 +401,6 @@ public class DocumentContext {
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
     metricsTemp.setNcloc(nclocData.length);
-
-    metricsTemp.setCovlocData(computeCovlocData());
 
     int lines;
     final List<Token> tokensUnboxed = getTokens();
@@ -300,25 +427,23 @@ public class DocumentContext {
     return metricsTemp;
   }
 
-  private int[] computeCovlocData() {
-
-    return Trees.getDescendants(getAst()).stream()
-      .filter(Predicate.not(TerminalNodeImpl.class::isInstance))
-      .filter(DocumentContext::mustCovered)
-      .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
-      .distinct().toArray();
-
-  }
-
-  private static boolean mustCovered(Tree node) {
-    return node instanceof BSLParser.StatementContext
-      || node instanceof BSLParser.GlobalMethodCallContext
-      || node instanceof BSLParser.Var_nameContext;
-  }
-
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
     return diagnosticIgnoranceComputer.compute();
   }
 
+  private List<Diagnostic> computeDiagnostics() {
+    return diagnosticComputer.compute(this);
+  }
+
+  private List<SDBLTokenizer> computeQueries() {
+    return (new QueryComputer(this)).compute();
+  }
+
+  @Override
+  public int compareTo(@NonNull DocumentContext other) {
+    return Comparator.comparing(DocumentContext::getUri)
+      .thenComparing(DocumentContext::getVersion)
+      .compare(this, other);
+  }
 }

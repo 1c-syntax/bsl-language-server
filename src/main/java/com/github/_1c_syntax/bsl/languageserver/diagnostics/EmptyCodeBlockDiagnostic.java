@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -33,11 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
-import org.eclipse.lsp4j.Range;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
@@ -59,10 +54,6 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
 
-  public EmptyCodeBlockDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
@@ -79,7 +70,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
+      var rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
         Ranges.containsRange(
           rangeCodeBlock,
@@ -90,10 +81,10 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     int lineOfStop = ctx.getStop().getLine();
 
-    List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
-      .filter(node -> node instanceof TerminalNode)
+    var list = Trees.getChildren(ctx.getParent()).stream()
+      .filter(TerminalNode.class::isInstance)
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
-      .collect(Collectors.toList());
+      .toList();
 
     if (!list.isEmpty()) {
       TerminalNode first = (TerminalNode) list.get(0);

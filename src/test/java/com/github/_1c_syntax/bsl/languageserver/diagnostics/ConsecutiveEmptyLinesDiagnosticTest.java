@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -39,9 +39,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoFirstLines() {
-    String module = "  \n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+       \s
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -53,10 +54,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyThreeFirstLines() {
-    String module = "  \n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+       \s
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -68,10 +70,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoInnerLines() {
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -83,10 +86,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoInnerLinesWithSpaces() {
-    String module = "Процедура Первая()  \n" +
-      " \n" +
-      " \n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая() \s
+      \s
+      \s
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -98,12 +102,13 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_WorseEmptyTwoInnerLines() {
-    String module = "Процедура Первая()  \n" +
-      "  \n" +
-      "  Метод1(); //комментарии  \n" +
-      "\n" +
-      "  \n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая() \s
+       \s
+        Метод1(); //комментарии \s
+
+       \s
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -115,11 +120,12 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyThreeInnerLines() {
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -131,8 +137,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyLastLines() {
-    String module = "Перем А;\n" +
-      "\n";
+    String module = """
+      Перем А;
+
+      """;
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -182,11 +190,12 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   void test_ConfigureEmptyLineParam() {
     setTwoForAllowedEmptyLinesCount();
 
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -200,10 +209,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   void test_ConfigureEmptyLineParamNoIssue() {
     setTwoForAllowedEmptyLinesCount();
 
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -232,7 +242,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     String module = getText();
 
-    if (use_CR_WithTab){
+    if (use_CR_WithTab) {
       module = module.replace("\n", "\r");
       module = module.replace("  ", "\t");
     }
@@ -259,7 +269,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private void checkQuickFixes(String module, boolean haveFix) {
-    final DocumentContext documentContext = TestUtils.getDocumentContext(module);
+    final var documentContext = TestUtils.getDocumentContext(module);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     diagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, haveFix));
@@ -267,8 +277,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void testQuickFixLastLines() {
-    String module = "Перем А;\n" +
-      "\n";
+    String module = """
+      Перем А;
+
+      """;
     checkQuickFixes(module, true);
   }
 
@@ -291,7 +303,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     final CodeAction quickFix = quickFixes.get(0);
 
-    if (haveFix){
+    if (haveFix) {
       assertThat(quickFix).of(diagnosticInstance).in(documentContext)
         .fixes(diagnostic);
 
@@ -304,7 +316,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private List<Diagnostic> getDiagnosticsForText(String textDocumentContent) {
-    DocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
+    var documentContext = TestUtils.getDocumentContext(textDocumentContent);
     return getDiagnostics(documentContext);
   }
 }

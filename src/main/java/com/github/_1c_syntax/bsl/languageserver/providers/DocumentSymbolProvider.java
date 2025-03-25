@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,78 +22,64 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.stereotype.Component;
 
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+@Component
 public final class DocumentSymbolProvider {
 
-  private static final Map<Class<? extends Symbol>, SymbolKind> symbolKinds = Map.of(
-    MethodSymbol.class, SymbolKind.Method,
-    RegionSymbol.class, SymbolKind.Namespace,
-    VariableSymbol.class, SymbolKind.Variable
+  /**
+   * Идентификатор источника символов документа.
+   */
+  public static final String LABEL = "BSL Language Server";
+
+  private static final Set<VariableKind> supportedVariableKinds = EnumSet.of(
+    VariableKind.MODULE,
+    VariableKind.LOCAL,
+    VariableKind.GLOBAL
   );
 
-  private DocumentSymbolProvider() {
-    // only statics
-  }
-
-  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+  public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
+      .filter(DocumentSymbolProvider::isSupported)
       .map(DocumentSymbolProvider::toDocumentSymbol)
-      .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());
   }
 
-  private static DocumentSymbol toDocumentSymbol(Symbol symbol) {
+  private static DocumentSymbol toDocumentSymbol(SourceDefinedSymbol symbol) {
     var documentSymbol = new DocumentSymbol(
       symbol.getName(),
-      symbolKinds.get(symbol.getClass()),
+      symbol.getSymbolKind(),
       symbol.getRange(),
-      getSelectionRange(symbol)
+      symbol.getSelectionRange()
     );
 
     List<DocumentSymbol> children = symbol.getChildren().stream()
+      .filter(DocumentSymbolProvider::isSupported)
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 
-    documentSymbol.setDeprecated(isDeprecated(symbol));
+    documentSymbol.setTags(symbol.getTags());
     documentSymbol.setChildren(children);
 
     return documentSymbol;
   }
 
-  private static Range getSelectionRange(Symbol symbol) {
-    Range selectionRange;
-    if (symbol instanceof MethodSymbol) {
-      selectionRange = ((MethodSymbol) symbol).getSubNameRange();
-    } else if (symbol instanceof RegionSymbol) {
-      selectionRange = ((RegionSymbol) symbol).getRegionNameRange();
-    } else if (symbol instanceof VariableSymbol) {
-      selectionRange = ((VariableSymbol) symbol).getVariableNameRange();
-    } else {
-      selectionRange = symbol.getRange();
+  public static boolean isSupported(Symbol symbol) {
+    var symbolKind = symbol.getSymbolKind();
+    if (symbolKind == SymbolKind.Variable) {
+      return supportedVariableKinds.contains(((VariableSymbol) symbol).getKind());
     }
-    return selectionRange;
-  }
-
-  private static boolean isDeprecated(Symbol symbol) {
-    boolean deprecated;
-    if (symbol instanceof MethodSymbol) {
-      deprecated = ((MethodSymbol) symbol).isDeprecated();
-    } else {
-      deprecated = false;
-    }
-    return deprecated;
+    return true;
   }
 }

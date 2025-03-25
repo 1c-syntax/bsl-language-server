@@ -1,85 +1,54 @@
 # Execution query on cycle (CreateQueryInCycle)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `20` | `performance` |
-
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Execution query in cycle
+Execution query in cycle.
 
 ## Examples
 
-Bad
-
-```Bsl
-
-СписокДокументов = Новый Массив;
-СуммаДокументов = 0;
-Для индекс = 0 По СписокДокументов.ВГраница() Цикл
-	Запрос = Новый Запрос;
-	Запрос.Текст =
-		"ВЫБРАТЬ
-		|	ПоступлениеТоваровУслуг.СуммаДокумента
-		|ИЗ
-		|	Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг
-		|ГДЕ
-		|	ПоступлениеТоваровУслуг.Ссылка = &Ссылка";
-	
-	Запрос.УстановитьПараметр("Ссылка", СписокДокументов[индекс]);
-	
-	РезультатЗапроса = Запрос.Выполнить();
-
-	ВыборкаДетальныеЗаписи = РезультатЗапроса.Выбрать();
-
-	Пока ВыборкаДетальныеЗаписи.Следующий() Цикл
-		СуммаДокументов = СуммаДокументов + ВыборкаДетальныеЗаписи.СуммаДокумента;
-	КонецЦикла;
-КонецЦикла;
-
-
-```
-
-Good
-
-```Bsl
-СписокДокументов = Новый Массив;
-СуммаДокументов = 0;
-
-Запрос = Новый Запрос;
-Запрос.Текст =
-	"ВЫБРАТЬ
-	|	СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента
-	|ИЗ
-	|	Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг
-	|ГДЕ
-	|	ПоступлениеТоваровУслуг.Ссылка В(&СписокДокументов)";
-
-Запрос.УстановитьПараметр("Ссылка", СписокДокументов);
-
-РезультатЗапроса = Запрос.Выполнить();
-
-ВыборкаДетальныеЗаписи = РезультатЗапроса.Выбрать();
-
-Пока ВыборкаДетальныеЗаписи.Следующий() Цикл
-	СуммаДокументов = ВыборкаДетальныеЗаписи.СуммаДокумента;
-КонецЦикла;
-
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+Incorrect
 
 ```bsl
-// BSLLS:CreateQueryInCycle-off
-// BSLLS:CreateQueryInCycle-on
+
+// BanksToProcessing - contains an array of banks
+
+InidividualQuery = New Query("
+  |SELECT
+  | BankAccounts.Ref AS Account
+  |FROM
+  | Catalog.BankAccounts AS BankAccounts
+  |WHERE
+  | BankAccounts.Bank = &Bank");
+
+For Each Bank From BanksToProcess Do
+  InidividualQuery .SetParameter("Bank", Bank);
+  AccountsSelection = InidividualQuery .Execute().Select();
+  While AccountsSelection.Next() Do
+    ProcessBankAccounts(AccountsSelection.Account);
+  EndDo;
+EndDo;
+
+
 ```
 
-### Parameter for config
+Correct
 
-```json
-"CreateQueryInCycle": false
+```bsl
+// BanksToProcess - contains an array of banks
+
+MergedQuery = New Query("
+  |SELECT
+  | BankAccounts.Ref AS Account
+  |FROM
+  | Catalog.BankAccounts AS BankAccounts
+  |WHERE
+  | BankAccounts.Bank In(&BanksToProcess)");
+
+MergedQuery.SetParameter("BanksToProcess", BanksToProcess);
+AccountsSelection = MergedQuery.Execute().Select();
+While AccountsSelection.Next() Do
+  ProcessBankAccounts(AccountsSelection.Account);
+EndDo;
+
 ```

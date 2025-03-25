@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind.ParametersDeserializer;
+import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,8 +42,11 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DiagnosticsOptions {
   private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
+  private boolean analyzeOnStart;
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
+  private boolean ordinaryAppSupport = true;
+  private SubsystemFilter subsystemsFilter = new SubsystemFilter();
 
   @JsonDeserialize(using = ParametersDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();

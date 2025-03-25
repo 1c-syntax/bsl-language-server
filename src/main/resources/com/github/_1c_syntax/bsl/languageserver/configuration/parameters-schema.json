@@ -2,8 +2,66 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
+        "AllFunctionPathMustHaveReturn": {
+            "description": "All execution paths of a function must have a Return statement",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All execution paths of a function must have a Return statement",
+            "properties": {
+                "loopsExecutedAtLeastOnce": {
+                    "description": "Assume loops are executed at least once",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Assume loops are executed at least once"
+                },
+                "ignoreMissingElseOnExit": {
+                    "description": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore ElIf clauses which has no Else branch. Disable to detect exits from ElIf condition which results to False"
+                }
+            },
+            "$id": "#/definitions/AllFunctionPathMustHaveReturn"
+        },
+        "AssignAliasFieldsInQuery": {
+            "description": "Assigning aliases to selected fields in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assigning aliases to selected fields in a query",
+            "$id": "#/definitions/AssignAliasFieldsInQuery"
+        },
+        "BadWords": {
+            "description": "Prohibited words",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Prohibited words",
+            "properties": {
+                "findInComments": {
+                    "description": "Find in comments",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Find in comments"
+                },
+                "badWords": {
+                    "description": "Regular expression for prohibited words.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for prohibited words."
+                }
+            },
+            "$id": "#/definitions/BadWords"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
@@ -34,6 +92,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeAfterAsyncCall": {
+            "description": "Lines of code after the asynchronous method call",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lines of code after the asynchronous method call",
+            "$id": "#/definitions/CodeAfterAsyncCall"
+        },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
             "default": true,
@@ -52,6 +120,14 @@
                 "object"
             ],
             "title": "Code out of region",
+            "properties": {
+                "checkUnknownModuleType": {
+                    "description": "Check unknown module type",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check unknown module type"
+                }
+            },
             "$id": "#/definitions/CodeOutOfRegion"
         },
         "CognitiveComplexity": {
@@ -78,6 +154,16 @@
             },
             "$id": "#/definitions/CognitiveComplexity"
         },
+        "CommandModuleExportMethods": {
+            "description": "Export methods in command and general command modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Export methods in command and general command modules",
+            "$id": "#/definitions/CommandModuleExportMethods"
+        },
         "CommentedCode": {
             "description": "Commented out code",
             "default": true,
@@ -87,6 +173,12 @@
             ],
             "title": "Commented out code",
             "properties": {
+                "exclusionPrefixes": {
+                    "description": "Exclusion prefixes",
+                    "default": "",
+                    "type": "string",
+                    "title": "Exclusion prefixes"
+                },
                 "threshold": {
                     "description": "Threshold",
                     "default": 0.9,
@@ -125,6 +217,16 @@
             ],
             "title": "Common module invalid type",
             "$id": "#/definitions/CommonModuleInvalidType"
+        },
+        "CommonModuleMissingAPI": {
+            "description": "Common module should have a programming interface",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module should have a programming interface",
+            "$id": "#/definitions/CommonModuleMissingAPI"
         },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
@@ -252,6 +354,16 @@
             },
             "$id": "#/definitions/ConsecutiveEmptyLines"
         },
+        "CrazyMultilineString": {
+            "description": "Crazy multiline literals",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Crazy multiline literals",
+            "$id": "#/definitions/CrazyMultilineString"
+        },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
             "default": true,
@@ -313,6 +425,16 @@
             ],
             "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "$id": "#/definitions/DeletingCollectionItem"
+        },
+        "DenyIncompleteValues": {
+            "description": "Deny incomplete values for dimensions",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deny incomplete values for dimensions",
+            "$id": "#/definitions/DenyIncompleteValues"
         },
         "DeprecatedAttributes8312": {
             "description": "Deprecated 8.3.12 platform features.",
@@ -394,6 +516,26 @@
             "title": "Deprecated ManagedForm type",
             "$id": "#/definitions/DeprecatedTypeManagedForm"
         },
+        "DisableSafeMode": {
+            "description": "Disable safe mode",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Disable safe mode",
+            "$id": "#/definitions/DisableSafeMode"
+        },
+        "DoubleNegatives": {
+            "description": "Double negatives",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Double negatives",
+            "$id": "#/definitions/DoubleNegatives"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": true,
@@ -403,6 +545,60 @@
             ],
             "title": "Duplicate regions",
             "$id": "#/definitions/DuplicateRegion"
+        },
+        "DuplicateStringLiteral": {
+            "description": "Duplicate string literal",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate string literal",
+            "properties": {
+                "minTextLength": {
+                    "description": "Minimum length of a string literal (quoted)",
+                    "default": 5,
+                    "type": "integer",
+                    "title": "Minimum length of a string literal (quoted)"
+                },
+                "allowedNumberCopies": {
+                    "description": "Allowed number of copies string literals",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Allowed number of copies string literals"
+                },
+                "caseSensitive": {
+                    "description": "Case sensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive"
+                },
+                "analyzeFile": {
+                    "description": "Analyze file",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Analyze file"
+                }
+            },
+            "$id": "#/definitions/DuplicateStringLiteral"
+        },
+        "DuplicatedInsertionIntoCollection": {
+            "description": "Duplicate adding or pasting a value to a collection",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate adding or pasting a value to a collection",
+            "properties": {
+                "isAllowedMethodADD": {
+                    "description": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analysis of methods named \"Add\" is allowed - both useful and false issues may appear"
+                }
+            },
+            "$id": "#/definitions/DuplicatedInsertionIntoCollection"
         },
         "EmptyCodeBlock": {
             "description": "Empty code block",
@@ -472,6 +668,40 @@
             "title": "Executing of external code in a common module on the server",
             "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
         },
+        "ExportVariables": {
+            "description": "Ban export global module variables",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ban export global module variables",
+            "$id": "#/definitions/ExportVariables"
+        },
+        "ExternalAppStarting": {
+            "description": "External applications starting",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "External applications starting",
+            "properties": {
+                "checkGotoUrl": {
+                    "description": "Check navigation links",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check navigation links"
+                },
+                "userPatternString": {
+                    "description": "User regex pattern",
+                    "default": "\u041a\u043e\u043c\u0430\u043d\u0434\u0430\u0421\u0438\u0441\u0442\u0435\u043c\u044b|System|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u0421\u0438\u0441\u0442\u0435\u043c\u0443|RunSystem|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041d\u0430\u0447\u0430\u0442\u044c\u0417\u0430\u043f\u0443\u0441\u043a\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f|BeginRunningApplication|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0410\u0441\u0438\u043d\u0445|RunAppAsync|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0443|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u041f\u0440\u043e\u0432\u043e\u0434\u043d\u0438\u043a|\u041e\u0442\u043a\u0440\u044b\u0442\u044c\u0424\u0430\u0439\u043b",
+                    "type": "string",
+                    "title": "User regex pattern"
+                }
+            },
+            "$id": "#/definitions/ExternalAppStarting"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
@@ -481,6 +711,50 @@
             ],
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
+        },
+        "FieldsFromJoinsWithoutIsNull": {
+            "description": "No NULL checks for fields from joined tables",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "No NULL checks for fields from joined tables",
+            "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
+        },
+        "FileSystemAccess": {
+            "description": "File system access",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "File system access",
+            "properties": {
+                "globalMethods": {
+                    "description": "Global methods pattern (regex)",
+                    "default": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435\u0412\u0424\u0430\u0439\u043b|ValueToFile|\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0424\u0430\u0439\u043b|FileCopy|\u041e\u0431\u044a\u0435\u0434\u0438\u043d\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|MergeFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile|\u0420\u0430\u0437\u0434\u0435\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b|SplitFile|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u041a\u0430\u0442\u0430\u043b\u043e\u0433|CreateDirectory|\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u044b|BinDir|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432|TempFilesDir|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432|DocumentsDir|\u0420\u0430\u0431\u043e\u0447\u0438\u0439\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f|UserDataWorkDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|BeginAttachingFileSystemExtension|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0443\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|BeginInstallFileSystemExtension|\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438|InstallFileSystemExtension|\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438\u0410\u0441\u0438\u043d\u0445|InstallFileSystemExtensionAsync|\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0442\u044b\u0421\u0424\u0430\u0439\u043b\u0430\u043c\u0438\u0410\u0441\u0438\u043d\u0445|AttachFileSystemExtensionAsync|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432\u0410\u0441\u0438\u043d\u0445|TempFilesDirAsync|\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432\u0410\u0441\u0438\u043d\u0445|DocumentsDirAsync|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0412\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445\u0424\u0430\u0439\u043b\u043e\u0432|BeginGettingTempFilesDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432|BeginGettingDocumentsDir|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435\u0420\u0430\u0431\u043e\u0447\u0435\u0433\u043e\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f|BeginGettingUserDataWorkDir|\u0420\u0430\u0431\u043e\u0447\u0438\u0439\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0414\u0430\u043d\u043d\u044b\u0445\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u0410\u0441\u0438\u043d\u0445|UserDataWorkDirAsync|\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0424\u0430\u0439\u043b\u0410\u0441\u0438\u043d\u0445|CopyFileAsync|\u041d\u0430\u0439\u0442\u0438\u0424\u0430\u0439\u043b\u044b\u0410\u0441\u0438\u043d\u0445|FindFilesAsync|\u041d\u0430\u0447\u0430\u0442\u044c\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u0430|BeginCopyingFile|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u0430|BeginMovingFile|\u041d\u0430\u0447\u0430\u0442\u044c\u041f\u043e\u0438\u0441\u043a\u0424\u0430\u0439\u043b\u043e\u0432|BeginFindingFiles|\u041d\u0430\u0447\u0430\u0442\u044c\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0445\u0414\u0430\u043d\u043d\u044b\u0445\u0418\u0437\u0424\u0430\u0439\u043b\u0430|BeginCreateBinaryDataFromFile|\u041d\u0430\u0447\u0430\u0442\u044c\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0430|BeginCreatingDirectory|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u043e\u0432|BeginDeletingFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u0410\u0441\u0438\u043d\u0445|MoveFileAsync|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0435\u0414\u0430\u043d\u043d\u044b\u0435\u0418\u0437\u0424\u0430\u0439\u043b\u0430\u0410\u0441\u0438\u043d\u0445|CreateBinaryDataFromFileAsync|\u0421\u043e\u0437\u0434\u0430\u0442\u044c\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0410\u0441\u0438\u043d\u0445|CreateDirectoryAsync|\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b\u0410\u0441\u0438\u043d\u0445|DeleteFilesAsync",
+                    "type": "string",
+                    "title": "Global methods pattern (regex)"
+                },
+                "newExpression": {
+                    "description": "Class names pattern (regex)",
+                    "default": "File|\u0424\u0430\u0439\u043b|xBase|HTMLWriter|\u0417\u0430\u043f\u0438\u0441\u044cHTML|HTMLReader|\u0427\u0442\u0435\u043d\u0438\u0435HTML|FastInfosetReader|\u0427\u0442\u0435\u043d\u0438\u0435FastInfoset|FastInfosetWriter|\u0417\u0430\u043f\u0438\u0441\u044cFastInfoset|XSLTransform|\u041f\u0440\u0435\u043e\u0431\u0440\u0430\u0437\u043e\u0432\u0430\u043d\u0438\u0435XSL|ZipFileWriter|\u0417\u0430\u043f\u0438\u0441\u044cZip\u0424\u0430\u0439\u043b\u0430|ZipFileReader|\u0427\u0442\u0435\u043d\u0438\u0435Zip\u0424\u0430\u0439\u043b\u0430|TextReader|\u0427\u0442\u0435\u043d\u0438\u0435\u0422\u0435\u043a\u0441\u0442\u0430|TextWriter|\u0417\u0430\u043f\u0438\u0441\u044c\u0422\u0435\u043a\u0441\u0442\u0430|TextExtraction|\u0418\u0437\u0432\u043b\u0435\u0447\u0435\u043d\u0438\u0435\u0422\u0435\u043a\u0441\u0442\u0430|BinaryData|\u0414\u0432\u043e\u0438\u0447\u043d\u044b\u0435\u0414\u0430\u043d\u043d\u044b\u0435|FileStream|\u0424\u0430\u0439\u043b\u043e\u0432\u044b\u0439\u041f\u043e\u0442\u043e\u043a|FileStreamsManager|\u041c\u0435\u043d\u0435\u0434\u0436\u0435\u0440\u0424\u0430\u0439\u043b\u043e\u0432\u044b\u0445\u041f\u043e\u0442\u043e\u043a\u043e\u0432|DataWriter|\u0417\u0430\u043f\u0438\u0441\u044c\u0414\u0430\u043d\u043d\u044b\u0445|DataReader|\u0427\u0442\u0435\u043d\u0438\u0435\u0414\u0430\u043d\u043d\u044b\u0445",
+                    "type": "string",
+                    "title": "Class names pattern (regex)"
+                }
+            },
+            "$id": "#/definitions/FileSystemAccess"
+        },
+        "ForbiddenMetadataName": {
+            "description": "Metadata object has a forbidden name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object has a forbidden name",
+            "$id": "#/definitions/ForbiddenMetadataName"
         },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
@@ -492,6 +766,16 @@
             "title": "FormDataToValue method call",
             "$id": "#/definitions/FormDataToValue"
         },
+        "FullOuterJoinQuery": {
+            "description": "Using of \"FULL OUTER JOIN\" in queries",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using of \"FULL OUTER JOIN\" in queries",
+            "$id": "#/definitions/FullOuterJoinQuery"
+        },
         "FunctionNameStartsWithGet": {
             "description": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "default": false,
@@ -501,6 +785,16 @@
             ],
             "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "$id": "#/definitions/FunctionNameStartsWithGet"
+        },
+        "FunctionOutParameter": {
+            "description": "Out function parameter",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Out function parameter",
+            "$id": "#/definitions/FunctionOutParameter"
         },
         "FunctionReturnsSamePrimitive": {
             "description": "The function always returns the same primitive value",
@@ -546,6 +840,16 @@
             "title": "GetForm method call",
             "$id": "#/definitions/GetFormMethod"
         },
+        "GlobalContextMethodCollision8312": {
+            "description": "Global context method names collision",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Global context method names collision",
+            "$id": "#/definitions/GlobalContextMethodCollision8312"
+        },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
             "default": true,
@@ -554,6 +858,14 @@
                 "object"
             ],
             "title": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
+            "properties": {
+                "popularDivisors": {
+                    "description": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation",
+                    "default": "60, 1024",
+                    "type": "string",
+                    "title": "There are popular division operations used for quantification (e.g. 60 or 1024 for time and bytes). Use comma-separated values which'll be ignored on both sides of division operation"
+                }
+            },
             "$id": "#/definitions/IdenticalExpressions"
         },
         "IfConditionComplexity": {
@@ -604,6 +916,72 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectLineBreak": {
+            "description": "Incorrect expression line break",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect expression line break",
+            "properties": {
+                "checkFirstSymbol": {
+                    "description": "Check beginning of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check beginning of line for invalid characters"
+                },
+                "checkLastSymbol": {
+                    "description": "Check end of line for invalid characters",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check end of line for invalid characters"
+                },
+                "listOfIncorrectLastSymbol": {
+                    "description": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)",
+                    "default": "\u0418\u041b\u0418|\u0418|OR|AND|\\+|-|/|%|\\*",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that must not end in the line (special characters must be escaped)"
+                },
+                "listOfIncorrectFirstSymbol": {
+                    "description": "Vertical bar-separated characters that should not start the line (special characters must be escaped)",
+                    "default": "\\)|;|,\\s*\\S+|\\);",
+                    "type": "string",
+                    "title": "Vertical bar-separated characters that should not start the line (special characters must be escaped)"
+                }
+            },
+            "$id": "#/definitions/IncorrectLineBreak"
+        },
+        "IncorrectUseLikeInQuery": {
+            "description": "Incorrect use of 'LIKE'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of 'LIKE'",
+            "$id": "#/definitions/IncorrectUseLikeInQuery"
+        },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
+        },
+        "InternetAccess": {
+            "description": "Referring to Internet resources",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Referring to Internet resources",
+            "$id": "#/definitions/InternetAccess"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,
@@ -614,7 +992,7 @@
             "title": "Invalid character",
             "$id": "#/definitions/InvalidCharacterInFile"
         },
-        "IsInRoleMethodDiagnostic": {
+        "IsInRoleMethod": {
             "description": "IsInRole global method call",
             "default": true,
             "type": [
@@ -622,7 +1000,51 @@
                 "object"
             ],
             "title": "IsInRole global method call",
-            "$id": "#/definitions/IsInRoleMethodDiagnostic"
+            "$id": "#/definitions/IsInRoleMethod"
+        },
+        "JoinWithSubQuery": {
+            "description": "Join with sub queries",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Join with sub queries",
+            "$id": "#/definitions/JoinWithSubQuery"
+        },
+        "JoinWithVirtualTable": {
+            "description": "Join with virtual table",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Join with virtual table",
+            "$id": "#/definitions/JoinWithVirtualTable"
+        },
+        "LatinAndCyrillicSymbolInWord": {
+            "description": "Mixing Latin and Cyrillic characters in one identifier",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Mixing Latin and Cyrillic characters in one identifier",
+            "properties": {
+                "excludeWords": {
+                    "description": "A list of exclusion words, specified as a comma-separated string",
+                    "default": "\u0427\u0442\u0435\u043d\u0438\u0435XML, \u0427\u0442\u0435\u043d\u0438\u0435JSON, \u0417\u0430\u043f\u0438\u0441\u044cXML, \u0417\u0430\u043f\u0438\u0441\u044cJSON, Com\u041e\u0431\u044a\u0435\u043a\u0442, \u0424\u0430\u0431\u0440\u0438\u043a\u0430XDTO, \u041e\u0431\u044a\u0435\u043a\u0442XDTO, \u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435FTP, HTTP\u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435, HTTP\u0417\u0430\u043f\u0440\u043e\u0441, HTTP\u0421\u0435\u0440\u0432\u0438\u0441\u041e\u0442\u0432\u0435\u0442, SMS\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435, WS\u041f\u0440\u043e\u043a\u0441\u0438",
+                    "type": "string",
+                    "title": "A list of exclusion words, specified as a comma-separated string"
+                },
+                "allowTrailingPartsInAnotherLanguage": {
+                    "description": "Allow a name to start or end with a word in another language",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow a name to start or end with a word in another language"
+                }
+            },
+            "$id": "#/definitions/LatinAndCyrillicSymbolInWord"
         },
         "LineLength": {
             "description": "Line Length limit",
@@ -638,9 +1060,43 @@
                     "default": 120,
                     "type": "integer",
                     "title": "Max length of string in characters"
+                },
+                "checkMethodDescription": {
+                    "description": "Check length of strings in method descriptions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of strings in method descriptions"
                 }
             },
             "$id": "#/definitions/LineLength"
+        },
+        "LogicalOrInTheWhereSectionOfQuery": {
+            "description": "Using a logical \"OR\" in the \"WHERE\" section of a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using a logical \"OR\" in the \"WHERE\" section of a query",
+            "$id": "#/definitions/LogicalOrInTheWhereSectionOfQuery"
+        },
+        "MagicDate": {
+            "description": "Magic dates",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Magic dates",
+            "properties": {
+                "authorizedDates": {
+                    "description": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000",
+                    "default": "00010101,00010101000000,000101010000",
+                    "type": "string",
+                    "title": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000"
+                }
+            },
+            "$id": "#/definitions/MagicDate"
         },
         "MagicNumber": {
             "description": "Magic numbers",
@@ -666,6 +1122,24 @@
             },
             "$id": "#/definitions/MagicNumber"
         },
+        "MetadataObjectNameLength": {
+            "description": "Metadata object names must not exceed the allowed length",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object names must not exceed the allowed length",
+            "properties": {
+                "maxMetadataObjectNameLength": {
+                    "description": "Permissible length of the name of the configuration object",
+                    "default": 80,
+                    "type": "integer",
+                    "title": "Permissible length of the name of the configuration object"
+                }
+            },
+            "$id": "#/definitions/MetadataObjectNameLength"
+        },
         "MethodSize": {
             "description": "Method size",
             "default": true,
@@ -683,6 +1157,16 @@
                 }
             },
             "$id": "#/definitions/MethodSize"
+        },
+        "MissedRequiredParameter": {
+            "description": "Missed a required method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed a required method parameter",
+            "$id": "#/definitions/MissedRequiredParameter"
         },
         "MissingCodeTryCatchEx": {
             "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
@@ -702,20 +1186,68 @@
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
         },
-        "MissingSpace": {
-            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+        "MissingCommonModuleMethod": {
+            "description": "Referencing a missing common module method",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+            "title": "Referencing a missing common module method",
+            "$id": "#/definitions/MissingCommonModuleMethod"
+        },
+        "MissingEventSubscriptionHandler": {
+            "description": "Event subscription handler missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Event subscription handler missing",
+            "$id": "#/definitions/MissingEventSubscriptionHandler"
+        },
+        "MissingParameterDescription": {
+            "description": "Method parameters description are missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Method parameters description are missing",
+            "$id": "#/definitions/MissingParameterDescription"
+        },
+        "MissingReturnedValueDescription": {
+            "description": "Function returned values description is missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Function returned values description is missing",
+            "properties": {
+                "allowShortDescriptionReturnValues": {
+                    "description": "Allow short description of return values",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow short description of return values"
+                }
+            },
+            "$id": "#/definitions/MissingReturnedValueDescription"
+        },
+        "MissingSpace": {
+            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
             "properties": {
                 "listForCheckLeftAndRight": {
-                    "description": "List of symbols to check for the space from both sides of (separated by space)",
+                    "description": "List to check for the space from both sides of (separated by space)",
                     "default": "+ - * / = % < > <> <= >=",
                     "type": "string",
-                    "title": "List of symbols to check for the space from both sides of (separated by space)"
+                    "title": "List to check for the space from both sides of (separated by space)"
                 },
                 "allowMultipleCommas": {
                     "description": "Allow several commas in a row",
@@ -730,19 +1262,29 @@
                     "title": "Check for space to the right of unary signs (+ -)"
                 },
                 "listForCheckLeft": {
-                    "description": "List of symbols to check for the space to the left of (separated by space)",
+                    "description": "List to check for the space to the left of (separated by space)",
                     "default": "",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the left of (separated by space)"
+                    "title": "List to check for the space to the left of (separated by space)"
                 },
                 "listForCheckRight": {
-                    "description": "List of symbols to check for the space to the right of (separated by space)",
+                    "description": "List to check for the space to the right of (separated by space)",
                     "default": ", ;",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the right of (separated by space)"
+                    "title": "List to check for the space to the right of (separated by space)"
                 }
             },
             "$id": "#/definitions/MissingSpace"
+        },
+        "MissingTempStorageDeletion": {
+            "description": "Missing temporary storage data deletion after using",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing temporary storage data deletion after using",
+            "$id": "#/definitions/MissingTempStorageDeletion"
         },
         "MissingTemporaryFileDeletion": {
             "description": "Missing temporary file deletion after using",
@@ -755,7 +1297,7 @@
             "properties": {
                 "searchDeleteFileMethod": {
                     "description": "Keywords to search for delete/move files methods",
-                    "default": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile",
+                    "default": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041d\u0430\u0447\u0430\u0442\u044c\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435\u0424\u0430\u0439\u043b\u043e\u0432|BeginDeletingFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile",
                     "type": "string",
                     "title": "Keywords to search for delete/move files methods"
                 }
@@ -771,6 +1313,16 @@
             ],
             "title": "All variables declarations must have a description",
             "$id": "#/definitions/MissingVariablesDescription"
+        },
+        "MultilineStringInQuery": {
+            "description": "Multi-line literal in query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Multi-line literal in query",
+            "$id": "#/definitions/MultilineStringInQuery"
         },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
@@ -826,6 +1378,20 @@
                 "object"
             ],
             "title": "Initialization of method and constructor parameters by calling nested methods",
+            "properties": {
+                "allowOneliner": {
+                    "description": "Allow oneliner expression",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Allow oneliner expression"
+                },
+                "allowedMethodNames": {
+                    "description": "Names of methods that are allowed to be used to initialize parameters",
+                    "default": "\u041d\u0421\u0442\u0440,NStr,\u041f\u0440\u0435\u0434\u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u043d\u043e\u0435\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435,PredefinedValue",
+                    "type": "string",
+                    "title": "Names of methods that are allowed to be used to initialize parameters"
+                }
+            },
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {
@@ -864,6 +1430,14 @@
                 "object"
             ],
             "title": "Non export methods in API regions",
+            "properties": {
+                "skipAnnotatedMethods": {
+                    "description": "Skip extension annotated methods",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Skip extension annotated methods"
+                }
+            },
             "$id": "#/definitions/NonExportMethodsInApiRegion"
         },
         "NonStandardRegion": {
@@ -960,6 +1534,16 @@
             "title": "Order of Parameters in method",
             "$id": "#/definitions/OrderOfParams"
         },
+        "OrdinaryAppSupport": {
+            "description": "Ordinary application support",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ordinary application support",
+            "$id": "#/definitions/OrdinaryAppSupport"
+        },
         "PairingBrokenTransaction": {
             "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
             "default": true,
@@ -980,6 +1564,24 @@
             "title": "Source code parse error",
             "$id": "#/definitions/ParseError"
         },
+        "PrivilegedModuleMethodCall": {
+            "description": "Accessing privileged module methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Accessing privileged module methods",
+            "properties": {
+                "validateNestedCalls": {
+                    "description": "Validate nested method calls from privileged modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Validate nested method calls from privileged modules"
+                }
+            },
+            "$id": "#/definitions/PrivilegedModuleMethodCall"
+        },
         "ProcedureReturnsValue": {
             "description": "Procedure should not return Value",
             "default": true,
@@ -989,6 +1591,16 @@
             ],
             "title": "Procedure should not return Value",
             "$id": "#/definitions/ProcedureReturnsValue"
+        },
+        "ProtectedModule": {
+            "description": "Protected modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Protected modules",
+            "$id": "#/definitions/ProtectedModule"
         },
         "PublicMethodsDescription": {
             "description": "All public methods must have a description",
@@ -1007,6 +1619,132 @@
                 }
             },
             "$id": "#/definitions/PublicMethodsDescription"
+        },
+        "QueryParseError": {
+            "description": "Query text parsing error",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Query text parsing error",
+            "$id": "#/definitions/QueryParseError"
+        },
+        "QueryToMissingMetadata": {
+            "description": "Using non-existent metadata in the query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using non-existent metadata in the query",
+            "$id": "#/definitions/QueryToMissingMetadata"
+        },
+        "RedundantAccessToObject": {
+            "description": "Redundant access to an object",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Redundant access to an object",
+            "properties": {
+                "checkRecordSetModule": {
+                    "description": "Check record set modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check record set modules"
+                },
+                "checkFormModule": {
+                    "description": "Check form modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check form modules"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check object modules"
+                }
+            },
+            "$id": "#/definitions/RedundantAccessToObject"
+        },
+        "RefOveruse": {
+            "description": "Overuse \"Reference\" in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Overuse \"Reference\" in a query",
+            "$id": "#/definitions/RefOveruse"
+        },
+        "ReservedParameterNames": {
+            "description": "Reserved parameter names",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Reserved parameter names",
+            "properties": {
+                "reservedWords": {
+                    "description": "Regular expression for reserved parameter names.",
+                    "default": "",
+                    "type": "string",
+                    "title": "Regular expression for reserved parameter names."
+                }
+            },
+            "$id": "#/definitions/ReservedParameterNames"
+        },
+        "RewriteMethodParameter": {
+            "description": "Rewrite method parameter",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Rewrite method parameter",
+            "$id": "#/definitions/RewriteMethodParameter"
+        },
+        "SameMetadataObjectAndChildNames": {
+            "description": "Same metadata object and child name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Same metadata object and child name",
+            "$id": "#/definitions/SameMetadataObjectAndChildNames"
+        },
+        "ScheduledJobHandler": {
+            "description": "Scheduled job handler",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Scheduled job handler",
+            "$id": "#/definitions/ScheduledJobHandler"
+        },
+        "SelectTopWithoutOrderBy": {
+            "description": "Using 'SELECT TOP' without 'ORDER BY'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'SELECT TOP' without 'ORDER BY'",
+            "properties": {
+                "skipSelectTopOne": {
+                    "description": "Skip 'SELECT TOP 1' if there is 'WHERE'",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Skip 'SELECT TOP 1' if there is 'WHERE'"
+                }
+            },
+            "$id": "#/definitions/SelectTopWithoutOrderBy"
         },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
@@ -1038,6 +1776,44 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerSideExportFormMethod": {
+            "description": "Server-side export form method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server-side export form method",
+            "$id": "#/definitions/ServerSideExportFormMethod"
+        },
+        "SetPermissionsForNewObjects": {
+            "description": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The check box \u00abSet permissions for new objects\u00bb should only be selected for the FullAccess role",
+            "properties": {
+                "namesFullAccessRole": {
+                    "description": "Name of the role with full rights",
+                    "default": "FullAccess,\u041f\u043e\u043b\u043d\u044b\u0435\u041f\u0440\u0430\u0432\u0430",
+                    "type": "string",
+                    "title": "Name of the role with full rights"
+                }
+            },
+            "$id": "#/definitions/SetPermissionsForNewObjects"
+        },
+        "SetPrivilegedMode": {
+            "description": "Using privileged mode",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using privileged mode",
+            "$id": "#/definitions/SetPrivilegedMode"
+        },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
             "default": true,
@@ -1062,9 +1838,25 @@
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
                     "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
+                },
+                "useStrictValidation": {
+                    "description": "Use strict validation against double comments `//// Comment`",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Use strict validation against double comments `//// Comment`"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
+        },
+        "StyleElementConstructors": {
+            "description": "Style element constructor",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Style element constructor",
+            "$id": "#/definitions/StyleElementConstructors"
         },
         "TempFilesDir": {
             "description": "TempFilesDir() method call",
@@ -1132,6 +1924,16 @@
             },
             "$id": "#/definitions/TooManyReturns"
         },
+        "TransferringParametersBetweenClientAndServer": {
+            "description": "Transferring parameters between the client and the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Transferring parameters between the client and the server",
+            "$id": "#/definitions/TransferringParametersBetweenClientAndServer"
+        },
         "TryNumber": {
             "description": "Cast to number of try catch block",
             "default": true,
@@ -1152,10 +1954,10 @@
             "title": "Typo",
             "properties": {
                 "userWordsToIgnore": {
-                    "description": "Dictionary for excluding words (comma separated, without spaces)",
+                    "description": "Dictionary for excluding words (comma separated)",
                     "default": "",
                     "type": "string",
-                    "title": "Dictionary for excluding words (comma separated, without spaces)"
+                    "title": "Dictionary for excluding words (comma separated)"
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
@@ -1175,6 +1977,16 @@
             ],
             "title": "Unary Plus sign in string concatenation",
             "$id": "#/definitions/UnaryPlusInConcatenation"
+        },
+        "UnionAll": {
+            "description": "Using keyword \"UNION\" in queries",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using keyword \"UNION\" in queries",
+            "$id": "#/definitions/UnionAll"
         },
         "UnknownPreprocessorSymbol": {
             "description": "Unknown preprocessor symbol",
@@ -1214,7 +2026,31 @@
                 "object"
             ],
             "title": "Unused local method",
+            "properties": {
+                "attachableMethodPrefixes": {
+                    "description": "Method prefixes (comma separated)",
+                    "default": "\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0430\u0435\u043c\u044b\u0439_,attachable_",
+                    "type": "string",
+                    "title": "Method prefixes (comma separated)"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check object modules"
+                }
+            },
             "$id": "#/definitions/UnusedLocalMethod"
+        },
+        "UnusedLocalVariable": {
+            "description": "Unused local variable",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local variable",
+            "$id": "#/definitions/UnusedLocalVariable"
         },
         "UnusedParameters": {
             "description": "Unused parameter",
@@ -1226,6 +2062,16 @@
             "title": "Unused parameter",
             "$id": "#/definitions/UnusedParameters"
         },
+        "UsageWriteLogEvent": {
+            "description": "Incorrect use of the method \"WriteLogEvent\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of the method \"WriteLogEvent\"",
+            "$id": "#/definitions/UsageWriteLogEvent"
+        },
         "UseLessForEach": {
             "description": "Useless collection iteration",
             "default": true,
@@ -1235,6 +2081,16 @@
             ],
             "title": "Useless collection iteration",
             "$id": "#/definitions/UseLessForEach"
+        },
+        "UseSystemInformation": {
+            "description": "Use of system information",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Use of system information",
+            "$id": "#/definitions/UseSystemInformation"
         },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",
@@ -1257,13 +2113,13 @@
             "$id": "#/definitions/UsingExternalCodeTools"
         },
         "UsingFindElementByString": {
-            "description": "Using FindByName and FindByCode",
+            "description": "Using FindByName, FindByCode and FindByNumber",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Using FindByName and FindByCode",
+            "title": "Using FindByName, FindByCode and FindByNumber",
             "$id": "#/definitions/UsingFindElementByString"
         },
         "UsingGoto": {
@@ -1285,6 +2141,12 @@
             ],
             "title": "Using hardcode ip addresses in code",
             "properties": {
+                "searchPopularVersionExclusion": {
+                    "description": "Pattern to exclude popular versions from search",
+                    "default": "^(1|2|3|8\\.3|11)\\.",
+                    "type": "string",
+                    "title": "Pattern to exclude popular versions from search"
+                },
                 "searchWordsExclusion": {
                     "description": "Keywords to exclude from search",
                     "default": "\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver",
@@ -1330,6 +2192,16 @@
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"
         },
+        "UsingLikeInQuery": {
+            "description": "Using 'LIKE' in query",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'LIKE' in query",
+            "$id": "#/definitions/UsingLikeInQuery"
+        },
         "UsingModalWindows": {
             "description": "Using modal windows",
             "default": true,
@@ -1338,6 +2210,14 @@
                 "object"
             ],
             "title": "Using modal windows",
+            "properties": {
+                "forceModalityMode": {
+                    "description": "Ignore configurations modality mode",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore configurations modality mode"
+                }
+            },
             "$id": "#/definitions/UsingModalWindows"
         },
         "UsingObjectNotAvailableUnix": {
@@ -1388,6 +2268,46 @@
             "title": "Using deprecated property \"ThisForm\"",
             "$id": "#/definitions/UsingThisForm"
         },
+        "VirtualTableCallWithoutParameters": {
+            "description": "Virtual table call without parameters",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Virtual table call without parameters",
+            "$id": "#/definitions/VirtualTableCallWithoutParameters"
+        },
+        "WrongDataPathForFormElements": {
+            "description": "Form fields do not have a data path",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Form fields do not have a data path",
+            "$id": "#/definitions/WrongDataPathForFormElements"
+        },
+        "WrongHttpServiceHandler": {
+            "description": "Missing handler for http service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missing handler for http service",
+            "$id": "#/definitions/WrongHttpServiceHandler"
+        },
+        "WrongUseFunctionProceedWithCall": {
+            "description": "Wrong use of ProceedWithCall function",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong use of ProceedWithCall function",
+            "$id": "#/definitions/WrongUseFunctionProceedWithCall"
+        },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",
             "default": true,
@@ -1397,6 +2317,16 @@
             ],
             "title": "Not recommended using of RollbackTransaction method",
             "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
+        "WrongWebServiceHandler": {
+            "description": "Wrong handler for web service",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong handler for web service",
+            "$id": "#/definitions/WrongWebServiceHandler"
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",

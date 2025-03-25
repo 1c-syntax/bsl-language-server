@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
 import org.antlr.v4.runtime.Lexer;
@@ -30,6 +31,7 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,24 +41,26 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class DocumentContextTest {
 
   @Test
   void testRebuild() throws IOException {
 
-    DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
     assertThat(documentContext.getTokens()).hasSize(39);
 
     File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
     String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    documentContext.rebuild(fileContent);
+    documentContext.rebuild(fileContent, documentContext.getVersion() + 1);
     assertThat(documentContext.getTokens()).hasSize(16);
   }
 
   @Test
   void testClearASTData() throws IllegalAccessException {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     documentContext.clearSecondaryData();
@@ -69,7 +73,7 @@ class DocumentContextTest {
   @Test
   void testMethodCompute() {
 
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(3);
 
@@ -77,7 +81,7 @@ class DocumentContextTest {
 
   @Test
   void testMethodParametersComputesCorrectly() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     assertThat(documentContext.getSymbolTree().getMethods())
       .filteredOn(methodSymbol -> methodSymbol.getName().equals("ФункцияСПараметрами"))
       .flatExtracting(MethodSymbol::getParameters)
@@ -109,7 +113,7 @@ class DocumentContextTest {
   @Test
   void testMethodComputeParseError() throws IOException {
 
-    DocumentContext documentContext =
+    var documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
 
     assertThat(documentContext.getSymbolTree().getMethods().isEmpty()).isTrue();
@@ -118,7 +122,7 @@ class DocumentContextTest {
 
   @Test
   void testGetRegionsFlatComputesAllLevels() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     assertThat(documentContext.getSymbolTree().getModuleLevelRegions()).hasSize(2);
     assertThat(documentContext.getSymbolTree().getRegionsFlat()).hasSize(6);
@@ -127,19 +131,19 @@ class DocumentContextTest {
   @Test
   void testRegionsAdjustingCompute() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // then
-    assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
+    assertThat(regions).anyMatch(regionSymbol -> !regionSymbol.getMethods().isEmpty());
   }
 
   @Test
   void testMethodsAdjustingCompute() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
@@ -191,19 +195,9 @@ class DocumentContextTest {
   }
 
   @Test
-  void testComputeMetricsLocForCover() {
-
-    DocumentContext documentContext =
-      getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
-
-    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
-
-  }
-
-  @Test
   void testComputeMetricsComments() {
 
-    DocumentContext documentContext =
+    var documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");
 
     assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
@@ -213,7 +207,7 @@ class DocumentContextTest {
   @Test
   void testContentList() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
 
     // when
     String[] contentList = documentContext.getContentList();
@@ -223,9 +217,21 @@ class DocumentContextTest {
   }
 
   @Test
+  void testContentListWithStandaloneCR() {
+    // given
+    var documentContext = getDocumentContext("./src/test/resources/context/DocumentContextBrokenLineFeeds.bsl");
+
+    // when
+    var contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(3);
+  }
+
+  @Test
   void testEOF() {
     // given
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     // when
     List<Token> tokens = documentContext.getTokens();
     Token lastToken = tokens.get(tokens.size() - 1);

@@ -1,12 +1,21 @@
 {
   "language": "en",
   "codeLens": {
-    "showCognitiveComplexity": true,
-    "showCyclomaticComplexity": true
+    "parameters": {
+      "cognitiveComplexity": true,
+      "cyclomaticComplexity": true
+    },
+    "testRunner": {
+      "annotations": [
+        "Test",
+        "Test2"
+      ]
+    }
   },
   "diagnostics": {
     "computeTrigger": "onType",
     "skipSupport": "withSupportLocked",
+    "ordinaryAppSupport": false,
     "mode": "only",
     "parameters": {
       "LineLength": {
@@ -15,9 +24,7 @@
       "MethodSize": false
     }
   },
-  "documentLink": {
-    "useDevSite": true
-  },
+  "useDevSite": true,
   "traceLog": "build/.trace.log",
-  "configurationRoot": "src/test/resources/metadata"
+  "configurationRoot": "src/test/resources/metadata/designer"
 }

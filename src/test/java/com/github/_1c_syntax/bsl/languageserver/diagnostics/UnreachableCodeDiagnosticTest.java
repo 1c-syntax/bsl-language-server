@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -40,7 +40,7 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
 
     assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
-      .hasRange(12,12, 20)
+      .hasRange(12, 12, 20)
       .hasRange(21, 12, 20)
       .hasRange(30, 12, 20)
       .hasRange(37, 4, 41, 15)
@@ -60,8 +60,6 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   @Test
   void testRegion() {
     List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeRegionDiagnostic");
-
-    assertThat(diagnostics).hasSize(0);
-
+    assertThat(diagnostics).isEmpty();
   }
 }

@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,15 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
@@ -75,10 +77,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private VariableScope currentScope;
 
-  public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;
     if (constValue.string() != null) {
@@ -102,19 +100,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
 
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
+    String typeName = Constructors.typeName(newExpression)
       .orElse(UNDEFINED_TYPE);
 
     if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
@@ -134,10 +120,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     ParserRuleContext parent = modifier.getParent();
-    if (parent instanceof BSLParser.ComplexIdentifierContext) {
-      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
-    } else if (parent instanceof BSLParser.CallStatementContext) {
-      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
+    if (parent instanceof BSLParser.ComplexIdentifierContext complexIdentifierContext) {
+      return getComplexPathName(complexIdentifierContext, modifier);
+    } else if (parent instanceof BSLParser.CallStatementContext parentCall) {
 
       return parentCall.modifier().stream()
         .takeWhile(e -> !e.equals(modifier))
@@ -147,7 +132,10 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     return null;
   }
 
-  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
+  private static String getComplexPathName(
+    BSLParser.ComplexIdentifierContext ci,
+    @Nullable BSLParser.ModifierContext to
+  ) {
 
     return ci.modifier().stream()
       .takeWhile(e -> !e.equals(to))
@@ -200,7 +188,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitAssignment(ctx);
     }
     String variableName = ctx.lValue().getText();
-    VariableDefinition currentVariable = new VariableDefinition(variableName);
+    var currentVariable = new VariableDefinition(variableName);
     currentVariable.addDeclaration(ctx.lValue());
 
     if (firstMember.complexIdentifier() != null) {
@@ -227,12 +215,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+  private void visitDescendantCodeBlock(@Nullable BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
       .flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+      .forEach(t -> t.accept(this));
   }
 
   @Override
@@ -246,13 +234,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
     String variableName = null;
     BSLParserRuleContext errorContext = null;
-    BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
-    if (parent instanceof BSLParser.CallStatementContext) {
+    BSLParserRuleContext parent = ctx.getParent();
+    if (parent instanceof BSLParser.CallStatementContext callStatementContext) {
       errorContext = parent;
-      variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
-    } else if (parent instanceof BSLParser.ModifierContext) {
-      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
-      errorContext = (BSLParserRuleContext) callModifier.getParent();
+      variableName = getVariableNameFromCallStatementContext(callStatementContext);
+    } else if (parent instanceof BSLParser.ModifierContext callModifier) {
+      errorContext = callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
@@ -276,9 +263,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       Optional.ofNullable(ctx.expression())
-        .ifPresent( e -> e.accept(this));
+        .ifPresent(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
@@ -297,9 +284,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       ctx.expression()
-        .forEach( e-> e.accept(this));
+        .forEach(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
@@ -332,6 +319,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class Scope {
+    @Getter
     private final String name;
 
     private final HashMap<String, VariableDefinition> variables = new HashMap<>();
@@ -353,10 +341,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
           return key;
         });
     }
-
-    public String getName() {
-      return name;
-    }
   }
 
   private static class VariableScope extends ArrayDeque<Scope> {
@@ -370,7 +354,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return flowType == CodeFlowType.CYCLE;
     }
 
-    public Optional<VariableDefinition> getVariableByName(String variableName) {
+    public Optional<VariableDefinition> getVariableByName(@Nullable String variableName) {
       return Optional.ofNullable(current().variables.get(variableName));
     }
 
@@ -383,9 +367,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     public void enterScope(String name) {
-      Scope newScope = new Scope(name);
+      var newScope = new Scope(name);
       if (!this.isEmpty()) {
-        Scope prevScope = this.peek();
+        var prevScope = this.peek();
         newScope.variables.putAll(prevScope.variables);
       }
       this.push(newScope);

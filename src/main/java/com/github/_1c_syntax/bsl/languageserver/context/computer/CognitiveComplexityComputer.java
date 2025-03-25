@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -28,10 +28,18 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.StringInterner;
+import jakarta.annotation.PostConstruct;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,28 +50,36 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
+@Component
+@Scope(SCOPE_PROTOTYPE)
+@RequiredArgsConstructor
 public class CognitiveComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
   private final DocumentContext documentContext;
 
+  @Setter(onMethod = @__({@Autowired}), value = AccessLevel.PACKAGE)
+  private StringInterner stringInterner;
+
   private int fileComplexity;
   private int fileCodeBlockComplexity;
-  private final List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
+  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
-  private final Map<MethodSymbol, Integer> methodsComplexity;
-  private final Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+  private Map<MethodSymbol, Integer> methodsComplexity;
+  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 
   private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
-  private final Set<BSLParserRuleContext> ignoredContexts;
+  private Set<BSLParserRuleContext> ignoredContexts;
 
-  public CognitiveComplexityComputer(DocumentContext documentContext) {
-    this.documentContext = documentContext;
+  @PostConstruct
+  public void init() {
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
     fileBlockComplexitySecondaryLocations = new ArrayList<>();
@@ -81,7 +97,7 @@ public class CognitiveComplexityComputer
     methodsComplexity.clear();
     ignoredContexts.clear();
 
-    ParseTreeWalker walker = new ParseTreeWalker();
+    var walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
     return new ComplexityData(
@@ -249,7 +265,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.MethodNameContext methodNameContext = ctx.methodName();
+    var methodNameContext = ctx.methodName();
     if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
       if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
@@ -270,7 +286,7 @@ public class CognitiveComplexityComputer
     final List<Token> flattenExpression = flattenExpression(ctx);
 
     int emptyTokenType = -1;
-    AtomicInteger lastOperationType = new AtomicInteger(emptyTokenType);
+    var lastOperationType = new AtomicInteger(emptyTokenType);
 
     flattenExpression.forEach((Token token) -> {
       int currentOperationType = token.getType();
@@ -293,15 +309,14 @@ public class CognitiveComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext)) {
+      if (!(tree instanceof BSLParserRuleContext parserRule)) {
         continue;
       }
 
-      BSLParserRuleContext parserRule = ((BSLParserRuleContext) tree);
-      if (parserRule instanceof BSLParser.MemberContext) {
-        flattenMember(result, (BSLParser.MemberContext) parserRule);
-      } else if (parserRule instanceof BSLParser.OperationContext) {
-        flattenOperation(result, (BSLParser.OperationContext) parserRule);
+      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+        flattenMember(result, memberContext);
+      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+        flattenOperation(result, operationContext);
       }
     }
 
@@ -323,7 +338,7 @@ public class CognitiveComplexityComputer
     final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
 
     if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
-      final CommonToken splitter = new CommonToken(-1);
+      final var splitter = new CommonToken(-1);
       result.add(splitter);
       result.addAll(nestedTokens);
       result.add(splitter);
@@ -381,7 +396,7 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), message.intern());
+    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), stringInterner.intern(message));
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

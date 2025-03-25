@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,15 +58,11 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   )
   private int allowedEmptyLinesCount = DEFAULT_ALLOWED_EMPTY_LINES_COUNT;
 
-  public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   protected void check() {
 
     final var tokens = documentContext.getTokens();
-    if (tokens.isEmpty()){
+    if (tokens.isEmpty()) {
       return;
     }
 
@@ -87,7 +82,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private void checkEmptyLines(int currentLine, int previousLine) {
-    if (currentLine - previousLine > allowedEmptyLinesCount){
+    if (currentLine - previousLine > allowedEmptyLinesCount) {
       addIssue(previousLine, currentLine);
     }
   }
@@ -102,7 +97,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
   @Override
   public List<CodeAction> getQuickFixes(
-      List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+    List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
     var eofTokenLine = getEofTokenLine(documentContext.getTokens());
 
@@ -123,7 +118,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     int endLine = range.getEnd().getLine() + 1;
     String newText = "\n";
-    if (endLine == eofTokenLine){
+    if (endLine == eofTokenLine) {
       endLine--;
       newText = "";
     }

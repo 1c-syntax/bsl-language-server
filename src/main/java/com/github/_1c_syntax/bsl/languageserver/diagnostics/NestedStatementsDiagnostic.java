@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -32,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 )
 public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
-  private final String relatedMessage;
+  private String relatedMessage;
   private static final int MAX_ALLOWED_LEVEL = 4;
 
   @DiagnosticParameter(
@@ -66,8 +66,8 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private ParseTree lastCtx;
   private final Deque<ParseTree> nestedParents = new ArrayDeque<>();
 
-  public NestedStatementsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @PostConstruct
+  public void init() {
     relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
   }
 

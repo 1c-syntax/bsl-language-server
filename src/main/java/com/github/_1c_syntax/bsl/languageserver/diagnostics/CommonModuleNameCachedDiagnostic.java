@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
+import com.github._1c_syntax.bsl.types.ModuleType;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,10 +47,10 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
 )
 public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "повнорноеиспользование|повтисп|сached";
+  private static final String REGEXP = "повторноеиспользование|повтисп|cached";
 
-  public CommonModuleNameCachedDiagnostic(DiagnosticInfo info) {
-    super(info, REGEXP);
+  public CommonModuleNameCachedDiagnostic(LanguageServerConfiguration serverConfiguration) {
+    super(serverConfiguration, REGEXP);
   }
 
   @Override
@@ -58,5 +58,4 @@ public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDi
     return commonModule.getReturnValuesReuse() == ReturnValueReuse.DURING_REQUEST
       || commonModule.getReturnValuesReuse() == ReturnValueReuse.DURING_SESSION;
   }
-
 }

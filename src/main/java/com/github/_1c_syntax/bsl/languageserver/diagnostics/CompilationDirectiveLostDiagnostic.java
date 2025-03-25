@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,14 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -48,28 +49,30 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnostic {
 
-  public CompilationDirectiveLostDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    if (documentContext.getModuleType() == ModuleType.FormModule) {
+      var mdo = documentContext.getMdObject();
+      if (mdo.isPresent() && mdo.get() instanceof Form form && form.getFormType() != FormType.MANAGED) {
+        return ctx;
+      }
+    }
+    return super.visitFile(ctx);
   }
 
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
-
     if (ctx.compilerDirective().isEmpty()) {
       diagnosticStorage.addDiagnostic(ctx.subName(), info.getMessage(ctx.subName().getText()));
     }
-
     return ctx;
   }
 
   @Override
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
-
     if (ctx.compilerDirective().isEmpty()) {
       diagnosticStorage.addDiagnostic(ctx.subName(), info.getMessage(ctx.subName().getText()));
     }
-
     return ctx;
   }
 }
-

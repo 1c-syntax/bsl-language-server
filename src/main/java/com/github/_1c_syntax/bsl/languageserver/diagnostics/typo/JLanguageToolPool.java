@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,15 +23,26 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
 import com.github._1c_syntax.bsl.languageserver.utils.AbstractObjectPool;
 import lombok.AllArgsConstructor;
+import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
+import org.languagetool.rules.Rule;
+
+import java.util.function.Predicate;
 
 @AllArgsConstructor
-public class JLanguageToolPool extends AbstractObjectPool<JLanguageToolPoolEntry> {
+public class JLanguageToolPool extends AbstractObjectPool<JLanguageTool> {
 
   private final Language language;
 
   @Override
-  protected JLanguageToolPoolEntry create() {
-    return new JLanguageToolPoolEntry(language);
+  protected JLanguageTool create() {
+    JLanguageTool languageTool = new JLanguageTool(language);
+
+    languageTool.getAllRules().stream()
+      .filter(Predicate.not(Rule::isDictionaryBasedSpellingRule))
+      .map(Rule::getId)
+      .forEach(languageTool::disableRule);
+
+    return languageTool;
   }
 }

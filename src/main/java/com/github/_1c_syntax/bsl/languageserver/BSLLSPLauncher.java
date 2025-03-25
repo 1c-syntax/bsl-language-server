@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,15 +25,27 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
-import org.jetbrains.annotations.NotNull;
+import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.ExitCodeGenerator;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParameterException;
+import picocli.CommandLine.Unmatched;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
@@ -43,13 +55,22 @@ import static picocli.CommandLine.Command;
     AnalyzeCommand.class,
     FormatCommand.class,
     VersionCommand.class,
-    LanguageServerStartCommand.class
+    LanguageServerStartCommand.class,
+    WebsocketCommand.class
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2020|@",
+  footer = "@|green Copyright(c) 2018-2025|@",
   header = "@|green BSL language server|@")
-public class BSLLSPLauncher implements Callable<Integer> {
+@SpringBootApplication(scanBasePackageClasses = BSLLSPLauncher.class)
+@Component
+@ConditionalOnProperty(
+  prefix = "app.command.line.runner",
+  value = "enabled",
+  havingValue = "true",
+  matchIfMissing = true)
+@RequiredArgsConstructor
+public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -66,40 +87,66 @@ public class BSLLSPLauncher implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  @Unmatched
+  private List<String> unmatched;
+
+  private final Set<Pattern> allowedAdditionalArgs = Set.of(
+    CaseInsensitivePattern.compile("--spring\\."),
+    CaseInsensitivePattern.compile("--app\\."),
+    CaseInsensitivePattern.compile("--logging\\."),
+    CaseInsensitivePattern.compile("--debug")
+  );
+
+  private final CommandLine.IFactory picocliFactory;
+
+  private int exitCode;
+
   public static void main(String[] args) {
-    var app = new BSLLSPLauncher();
-    var cmd = new CommandLine(app);
+    var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
+      .web(getWebApplicationType(args))
+      .run(args);
+
+    var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    launcher.run(args);
+
+    if (launcher.getExitCode() >= 0) {
+      System.exit(
+        SpringApplication.exit(applicationContext)
+      );
+    }
+  }
+
+  public void run(String... args) {
+    var cmd = new CommandLine(this, picocliFactory);
 
     // проверка использования дефолтной команды
     // если строка параметров пуста, то это точно вызов команды по умолчанию
     if (args.length == 0) {
       args = addDefaultCommand(args);
     } else {
-      // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
-      // неизвестных параметров выдает ошибку
-      try {
-        var parseResult = cmd.parseArgs(args);
-        // если переданы параметры без команды и это не справка
-        // то считаем, что параметры для команды по умолчанию
-        if(!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
-          args = addDefaultCommand(args);
-        }
-      } catch (ParameterException ex) {
-        // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
-        // вдруг заработает
-        if (!ex.getCommandLine().getParseResult().hasSubcommand()) {
-          args = addDefaultCommand(args);
-        }
+      var parseResult = cmd.parseArgs(args);
+      var unmatchedArgs = parseResult.unmatched().stream()
+        .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))
+        .collect(Collectors.toList());
+
+      if (!unmatchedArgs.isEmpty()) {
+        unmatchedArgs.forEach(s -> cmd.getErr().println("Unknown option: '" + s + "'"));
+        cmd.usage(cmd.getOut());
+        exitCode = cmd.getCommandSpec().exitCodeOnInvalidInput();
+        return;
+      }
+
+      // если переданы параметры без команды и это не справка
+      // то считаем, что параметры для команды по умолчанию
+      if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+        args = addDefaultCommand(args);
       }
     }
 
-    int result = cmd.execute(args);
-    if (result >= 0) {
-      System.exit(result);
-    }
+    exitCode = cmd.execute(args);
+
   }
 
-  @NotNull
   private static String[] addDefaultCommand(String[] args) {
     List<String> tmpList = new ArrayList<>(Arrays.asList(args));
     tmpList.add(0, DEFAULT_COMMAND);
@@ -107,8 +154,24 @@ public class BSLLSPLauncher implements Callable<Integer> {
     return args;
   }
 
+  @Override
+  public int getExitCode() {
+    return exitCode;
+  }
+
   public Integer call() {
     // заглушка, командой как таковой не пользуемся
     return 0;
+  }
+
+  private static WebApplicationType getWebApplicationType(String[] args) {
+    WebApplicationType webApplicationType;
+    var argsList = Arrays.asList(args);
+    if (argsList.contains("-w") || argsList.contains("websocket")) {
+      webApplicationType = WebApplicationType.SERVLET;
+    } else {
+      webApplicationType = WebApplicationType.NONE;
+    }
+    return webApplicationType;
   }
 }

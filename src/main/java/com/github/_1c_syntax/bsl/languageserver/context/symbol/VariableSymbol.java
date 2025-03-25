@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -23,38 +23,35 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
-@Value
-@Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
-@ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements Symbol {
-  String name;
-  Range range;
-  Range variableNameRange;
+/**
+ * Информация о символе, представляющем собой переменную.
+ */
+public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  /**
+   * @return Вид переменной
+   */
+  VariableKind getKind();
 
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  /**
+   * @return Диапазон, в котором определено имя переменной.
+   */
+  @EqualsAndHashCode.Include
+  Range getVariableNameRange();
 
-  @Builder.Default
-  List<Symbol> children = Collections.emptyList();
+  @Override
+  Optional<VariableDescription> getDescription();
 
-  VariableKind kind;
-  boolean export;
-  Optional<VariableDescription> description;
+  /**
+   * @return Область объявления переменной.
+   */
+  SourceDefinedSymbol getScope();
+
+  static AbstractVariableSymbol.Builder builder() {
+    return AbstractVariableSymbol.builder();
+  }
 }

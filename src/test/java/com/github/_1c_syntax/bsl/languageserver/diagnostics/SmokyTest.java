@@ -1,8 +1,8 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2020
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ * Copyright (c) 2018-2025
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,53 +21,79 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import mockit.Mock;
+import mockit.MockUp;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-public class SmokyTest {
+@SpringBootTest
+@Slf4j
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class SmokyTest {
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private Collection<DiagnosticInfo> diagnosticInfos;
+
+  @BeforeEach
+  void setUpStreams() {
+    new MockUp<System>() {
+      @Mock
+      public void exit(int value) {
+        throw new RuntimeException(String.valueOf(value));
+      }
+    };
+  }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
-  void test() {
+  void test() throws Exception {
 
+    // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
-    BSLLSPLauncher.main(args);
+    // when-then
+    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+      .isInstanceOf(RuntimeException.class)
+      .hasMessage("0");
 
-    assertThat(true).isTrue(); // TODO что проверять?
   }
 
   @Test
   void testIdenticalRanges() {
 
-    var configuration = LanguageServerConfiguration.create();
-    var diagnosticSupplier = new DiagnosticSupplier(configuration);
     var srcDir = "./src/test/resources/";
     List<Diagnostic> diagnostics = new ArrayList<>();
     FileUtils.listFiles(Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
       .forEach(filePath -> {
+        LOGGER.info(filePath.toString());
         var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
-        var diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-        diagnosticProvider.computeDiagnostics(documentContext).stream()
+        documentContext.getDiagnostics().stream()
           .filter(diagnostic ->
             (diagnostic.getRange() != null
               && diagnostic.getRange().getEnd().equals(diagnostic.getRange().getStart()))
@@ -92,25 +118,23 @@ public class SmokyTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = DiagnosticSupplier.getDiagnosticClasses().stream()
-      .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
+      .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
         diagnosticCode -> diagnosticCode.getStringValue(),
         diagnosticCode -> Either.forLeft(true),
         (a, b) -> b));
 
     // создадим новый конфиг, в котором включим все диагностики
-    var configuration = LanguageServerConfiguration.create();
     configuration.getDiagnosticsOptions().setParameters(diagnostics);
-    var diagnosticSupplier = new DiagnosticSupplier(configuration);
 
     // для каждой фикстуры расчитаем диагностики
     // если упадет, запомним файл и текст ошибки
     Map<File, Exception> diagnosticErrors = new HashMap<>();
-    var provider = new DiagnosticProvider(diagnosticSupplier);
     fixtures.forEach(filePath -> {
       try {
-        provider.computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
+        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
+        documentContext.getDiagnostics();
       } catch (Exception e) {
         diagnosticErrors.put(filePath, e);
       }
@@ -119,4 +143,13 @@ public class SmokyTest {
     assertThat(diagnosticErrors).isEmpty();
   }
 
+  @Test
+  void testExtraMinForComplexity() {
+    // нельзя ставить отрицательное значение
+    diagnosticInfos.forEach(diagnosticInfo ->
+      assertThat(diagnosticInfo.getExtraMinForComplexity())
+        .as(diagnosticInfo.getCode().getStringValue())
+        .isNotNegative()
+    );
+  }
 }
