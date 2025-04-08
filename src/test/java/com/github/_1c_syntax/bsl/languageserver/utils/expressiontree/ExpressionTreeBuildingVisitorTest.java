@@ -109,6 +109,16 @@ class ExpressionTreeBuildingVisitorTest {
         КонецЕсли;
         КонецПроцедуры
         """
+      ),
+      Arguments.of(
+        "Two modulos with identifier",
+        """
+        Процедура Имя()
+        Если %%a Тогда
+
+        КонецЕсли;
+        КонецПроцедуры
+        """
       )
     );
   }
