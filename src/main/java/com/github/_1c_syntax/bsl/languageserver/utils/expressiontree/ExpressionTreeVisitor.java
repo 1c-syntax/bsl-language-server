@@ -28,22 +28,12 @@ public class ExpressionTreeVisitor {
 
   private void visit(BslExpression node) {
     switch (node.getNodeType()) {
-      case CALL:
-        visitAbstractCall((AbstractCallNode) node);
-        break;
-      case UNARY_OP:
-        visitUnaryOperation((UnaryOperationNode) node);
-        break;
-      case TERNARY_OP:
-        var ternary = (TernaryOperatorNode) node;
-        visitTernaryOperator(ternary);
-        break;
-      case BINARY_OP:
-        visitBinaryOperation((BinaryOperationNode)node);
-        break;
-
-      default:
-        break; // для спокойствия сонара
+      case CALL -> visitAbstractCall(node.cast());
+      case UNARY_OP -> visitUnaryOperation(node.cast());
+      case TERNARY_OP -> visitTernaryOperator(node.cast());
+      case BINARY_OP -> visitBinaryOperation(node.cast());
+      default -> { // для спокойствия сонара
+      }
     }
   }
 

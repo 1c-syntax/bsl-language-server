@@ -21,13 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-public enum ExpressionNodeType {
-  LITERAL,
-  IDENTIFIER,
-  BINARY_OP,
-  UNARY_OP,
-  CALL,
-  TERNARY_OP,
-  SKIPPED_CALL_ARG,
-  ERROR
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+import org.antlr.v4.runtime.tree.ParseTree;
+
+@Value
+@NonFinal
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class ErrorExpressionNode extends BslExpression {
+
+  protected ErrorExpressionNode() {
+    super(ExpressionNodeType.ERROR);
+  }
+
+  protected ErrorExpressionNode(ParseTree sourceCodeOperator) {
+    super(ExpressionNodeType.ERROR, sourceCodeOperator, null);
+  }
+
 }

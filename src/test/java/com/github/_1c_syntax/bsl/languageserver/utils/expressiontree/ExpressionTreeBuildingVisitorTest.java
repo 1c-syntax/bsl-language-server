@@ -23,88 +23,93 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser.IfStatementContext;
-
-import org.junit.jupiter.api.Test;
+import org.antlr.v4.runtime.tree.Trees;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import org.antlr.v4.runtime.tree.Trees;
-
 @SpringBootTest
 class ExpressionTreeBuildingVisitorTest {
 
-  @Test
-  void testEmptyParenthesesHandling() {
-    // Create test code with empty parentheses
-    var code = """
-      Процедура ТестПроцедура()
-        Если () Тогда
-          Возврат;
-        КонецЕсли;
-      КонецПроцедуры
-      """;
-
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("errorHandlingTestCases")
+  @DisplayName("Test error handling in expressions")
+  void testErrorHandling(String testName, String code) {
     var documentContext = TestUtils.getDocumentContext(code);
 
-    // Assert that no exception is thrown when processing the if statement with empty parentheses
+    var ast = documentContext.getAst();
+    var ifStatement = Trees.getDescendants(ast)
+      .stream()
+      .filter(node -> node instanceof IfStatementContext)
+      .map(node -> (IfStatementContext) node)
+      .findFirst()
+      .orElseThrow();
+
+    var visitor = new ExpressionTreeBuildingVisitor();
+
+    // Find the expression node within the if statement
+    var expression = ifStatement.ifBranch().expression();
+
+    // Assert that no exception is thrown when processing problematic expressions
     assertThatNoException().isThrownBy(() -> {
-      var ast = documentContext.getAst();
-      var ifStatement = Trees.getDescendants(ast)
-        .stream()
-        .filter(node -> node instanceof IfStatementContext)
-        .map(node -> (IfStatementContext) node)
-        .findFirst()
-        .orElseThrow();
-      
-      var visitor = new ExpressionTreeBuildingVisitor();
-      
-      // Find the expression node within the if statement
-      var expression = ifStatement.ifBranch().expression();
-      
-      // Try to build expression tree from empty parentheses
+      // Try to build expression tree
       visitor.visitExpression(expression);
-      
-      // Result should be null since there's no expression
-      assertThat(visitor.getExpressionTree()).isNull();
+
+      // Result should be an error node
+      assertThat(visitor.getExpressionTree()).isInstanceOf(ErrorExpressionNode.class);
     });
   }
 
-  @Test
-  void testEmptyIfStatementHandling() {
-    // Create test code with empty parentheses
-    var code = """
-     Процедура Имя()
-      Если
-        Пока Истина Цикл
-        КонецЦикла;
-      КонецЕсли;
-     КонецПроцедуры
-     """;
+  static Stream<Arguments> errorHandlingTestCases() {
+    return Stream.of(
+      Arguments.of(
+        "Empty parentheses",
+        """
+        Процедура ТестПроцедура()
+          Если () Тогда
+            Возврат;
+          КонецЕсли;
+        КонецПроцедуры
+        """
+      ),
+      Arguments.of(
+        "Empty if statement",
+        """
+        Процедура Имя()
+         Если
+           Пока Истина Цикл
+           КонецЦикла;
+         КонецЕсли;
+        КонецПроцедуры
+        """
+      ),
+      Arguments.of(
+        "Unary operator with error",
+        """
+        Процедура Имя()
+        Если () + A Тогда
 
-    var documentContext = TestUtils.getDocumentContext(code);
+        КонецЕсли;
+        КонецПроцедуры
+        """
+      ),
+      Arguments.of(
+        "Multiply operator",
+        """
+        Процедура Имя()
+        Если * Тогда
 
-    // Assert that no exception is thrown when processing the if statement with empty parentheses
-    assertThatNoException().isThrownBy(() -> {
-      var ast = documentContext.getAst();
-      var ifStatement = Trees.getDescendants(ast)
-        .stream()
-        .filter(node -> node instanceof IfStatementContext)
-        .map(node -> (IfStatementContext) node)
-        .findFirst()
-        .orElseThrow();
-
-      var visitor = new ExpressionTreeBuildingVisitor();
-
-      // Find the expression node within the if statement
-      var expression = ifStatement.ifBranch().expression();
-
-      // Try to build expression tree from empty parentheses
-      visitor.visitExpression(expression);
-
-      // Result should be null since there's no expression
-      assertThat(visitor.getExpressionTree()).isNull();
-    });
+        КонецЕсли;
+        КонецПроцедуры
+        """
+      )
+    );
   }
 }
