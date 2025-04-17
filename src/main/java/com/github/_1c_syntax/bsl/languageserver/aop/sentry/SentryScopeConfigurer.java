@@ -28,6 +28,7 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -50,16 +51,13 @@ public class SentryScopeConfigurer {
   @Value("${sentry.dsn:}")
   private final String dsn;
 
-  @Value("${sentry.environment:dummy}")
-  private final String environment;
-
   @PostConstruct
   public void init() {
     if (dsn != null && !dsn.isEmpty()) {
       Sentry.init(options -> {
         options.setDsn(dsn);
-        options.setEnvironment(environment);
-        options.setRelease(serverInfo.getVersion());
+        options.setEnvironment(getEnvironment());
+        options.setRelease(getVersion());
         options.setAttachServerName(false);
         options.setServerName(getServerName());
         options.setBeforeSend(beforeSendCallback);
@@ -72,6 +70,26 @@ public class SentryScopeConfigurer {
       user.setId(UUID.randomUUID().toString());
       scope.setUser(user);
     });
+  }
+
+  private String getEnvironment() {
+    String version = getVersion();
+    String environment;
+
+    if (version.matches("\\d+\\.\\d+\\.\\d+")) {
+      environment = "production";
+    } else if (version.matches("\\d+\\.\\d+\\.\\d+-r[ca]\\d+")) {
+      environment = "pre-release";
+    } else if (version.startsWith("develop-") && !version.contains("-DIRTY-")) {
+      environment = "develop";
+    } else {
+      environment = "feature";
+    }
+    return environment;
+  }
+
+  private String getVersion() {
+    return serverInfo.getVersion();
   }
 
   @Nullable
