@@ -85,7 +85,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     var nestingCount = operatorsInFly.size();
     recursionLevel++;
 
-    if (Trees.nodeContainsErrors(ctx)) {
+    if (Trees.nodeContainsErrors(ctx) || (ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance))) {
       var errorExpressionNode = new ErrorExpressionNode(ctx);
       if (recursionLevel > 0) {
         operands.push(errorExpressionNode);
