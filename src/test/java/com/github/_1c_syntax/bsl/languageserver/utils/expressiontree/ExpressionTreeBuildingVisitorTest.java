@@ -119,6 +119,16 @@ class ExpressionTreeBuildingVisitorTest {
         КонецЕсли;
         КонецПроцедуры
         """
+      ),
+      Arguments.of(
+        "New expression",
+        """
+        Процедура Имя()
+        Если Новый Тогда
+
+        КонецЕсли;
+        КонецПроцедуры
+        """
       )
     );
   }

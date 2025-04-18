@@ -337,6 +337,11 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    if (Trees.nodeContainsErrors(ctx)) {
+      operands.push(new ErrorExpressionNode(ctx));
+      return ctx;
+    }
+
     var typeName = ctx.typeName();
 
     List<? extends BSLParser.CallParamContext> args;
