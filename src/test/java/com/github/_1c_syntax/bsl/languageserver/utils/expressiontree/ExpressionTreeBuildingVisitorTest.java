@@ -41,7 +41,7 @@ class ExpressionTreeBuildingVisitorTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("errorHandlingTestCases")
   @DisplayName("Test error handling in expressions")
-  void testErrorHandling(String testName, String code) {
+  void testErrorHandling(String testName, String code, Class<? extends BslExpression> expectedExpressionClass) {
     var documentContext = TestUtils.getDocumentContext(code);
 
     var ast = documentContext.getAst();
@@ -63,22 +63,12 @@ class ExpressionTreeBuildingVisitorTest {
       visitor.visitExpression(expression);
 
       // Result should be an error node
-      assertThat(visitor.getExpressionTree()).isInstanceOf(ErrorExpressionNode.class);
+      assertThat(visitor.getExpressionTree()).isInstanceOf(expectedExpressionClass);
     });
   }
 
   static Stream<Arguments> errorHandlingTestCases() {
     return Stream.of(
-      Arguments.of(
-        "Empty parentheses",
-        """
-        Процедура ТестПроцедура()
-          Если () Тогда
-            Возврат;
-          КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
       Arguments.of(
         "Empty if statement",
         """
@@ -88,68 +78,32 @@ class ExpressionTreeBuildingVisitorTest {
            КонецЦикла;
          КонецЕсли;
         КонецПроцедуры
-        """
+        """,
+        ErrorExpressionNode.class
       ),
-      Arguments.of(
-        "Unary operator with error",
-        """
-        Процедура Имя()
-        Если () + A Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
-      Arguments.of(
-        "Multiply operator",
-        """
-        Процедура Имя()
-        Если * Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
-      Arguments.of(
-        "Two modulos with identifier",
-        """
-        Процедура Имя()
-        Если %%a Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
-      Arguments.of(
-        "New expression",
-        """
-        Процедура Имя()
-        Если Новый Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
-      Arguments.of(
-        "New expression with parenthes",
-        """
-        Процедура Имя()
-        Если Новый ( Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      ),
-      Arguments.of(
-        "New expression with two parantheses",
-        """
-        Процедура Имя()
-        Если Новый () Тогда
-
-        КонецЕсли;
-        КонецПроцедуры
-        """
-      )
+      createIfStatementTestCase("Empty parentheses", "()"),
+      createIfStatementTestCase("Unary operator with error", "() + A"),
+      createIfStatementTestCase("Multiply operator", "*"),
+      createIfStatementTestCase("Two modulos with identifier", "%%a"),
+      createIfStatementTestCase("New expression", "Новый"),
+      createIfStatementTestCase("New expression with parenthes", "Новый ("),
+      createIfStatementTestCase("New expression with two parantheses", "Новый ()"),
+      createIfStatementTestCase("New expression with NOT", "Новый Структура(\"\", Не)", ConstructorCallNode.class)
     );
+  }
+
+  private static Arguments createIfStatementTestCase(String name, String condition) {
+    return createIfStatementTestCase(name, condition, ErrorExpressionNode.class);
+  }
+
+  private static Arguments createIfStatementTestCase(String name, String condition, Class<? extends BslExpression> expectedExpressionClass) {
+    String code = """
+                Процедура Имя()
+                  Если %s Тогда
+                  
+                  КонецЕсли;
+                КонецПроцедуры
+                """.formatted(condition);
+    return Arguments.of(name, code, expectedExpressionClass);
   }
 }

@@ -143,7 +143,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
 
     // В случае ошибки парсинга member может быть пустой.
-    if (ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance)) {
+    if (Trees.nodeContainsErrors(ctx) || ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance)) {
       operands.push(new ErrorExpressionNode(ctx));
       return ctx;
     }
