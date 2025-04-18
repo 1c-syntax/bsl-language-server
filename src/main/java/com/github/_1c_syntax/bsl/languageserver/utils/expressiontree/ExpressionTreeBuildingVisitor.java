@@ -355,6 +355,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (typeName == null) {
       // function style
       var typeNameArg = args.get(0);
+      if (typeNameArg.expression() == null) {
+        operands.push(new ErrorExpressionNode(ctx));
+        return ctx;
+      }
       args = args.stream().skip(1).toList();
       callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
     } else {

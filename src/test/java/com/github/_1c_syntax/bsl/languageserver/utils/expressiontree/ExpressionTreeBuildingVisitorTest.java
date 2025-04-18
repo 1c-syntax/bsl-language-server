@@ -129,6 +129,26 @@ class ExpressionTreeBuildingVisitorTest {
         КонецЕсли;
         КонецПроцедуры
         """
+      ),
+      Arguments.of(
+        "New expression with parenthes",
+        """
+        Процедура Имя()
+        Если Новый ( Тогда
+
+        КонецЕсли;
+        КонецПроцедуры
+        """
+      ),
+      Arguments.of(
+        "New expression with two parantheses",
+        """
+        Процедура Имя()
+        Если Новый () Тогда
+
+        КонецЕсли;
+        КонецПроцедуры
+        """
       )
     );
   }
