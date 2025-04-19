@@ -330,12 +330,18 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     // весь блок try
     blocks.enterBlock();
 
-    blocks.enterBlock();
-    ctx.exceptCodeBlock().accept(this);
-    var exception = blocks.leaveBlock();
+    var exceptionBlock = null;
+    CfgVertex exceptionHandler = blocks.getCurrentBlock().getJumpContext().exceptionHandler;
+
+    if (ctx.exceptCodeBlock() != null) {
+      blocks.enterBlock();
+      ctx.exceptCodeBlock().accept(this);
+      exceptionBlock = blocks.leaveBlock();
+      exceptionHandler = exceptionBlock.begin();
+    }
 
     var jumpInfo = new StatementsBlockWriter.JumpInformationRecord();
-    jumpInfo.exceptionHandler = exception.begin();
+    jumpInfo.exceptionHandler = exceptionHandler;
 
     blocks.enterBlock(jumpInfo);
     ctx.tryCodeBlock().accept(this);
@@ -344,8 +350,13 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.addEdge(tryBranch, success.begin(), CfgEdgeType.TRUE_BRANCH);
     blocks.getCurrentBlock().getBuildParts().push(success.end());
 
-    graph.addEdge(tryBranch, exception.begin(), CfgEdgeType.FALSE_BRANCH);
-    blocks.getCurrentBlock().getBuildParts().push(exception.end());
+    if (exceptionBlock != null) {
+      graph.addEdge(tryBranch, exceptionHandler, CfgEdgeType.FALSE_BRANCH);
+      blocks.getCurrentBlock().getBuildParts().push(exceptionBlock.end());
+    } else {
+      // If there's no except block, connect the false branch to the parent's exception handler
+      graph.addEdge(tryBranch, exceptionHandler, CfgEdgeType.FALSE_BRANCH);
+    }
 
     var builtBlock = blocks.leaveBlock();
 
