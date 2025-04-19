@@ -330,9 +330,20 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     // весь блок try
     blocks.enterBlock();
 
-    blocks.enterBlock();
-    ctx.exceptCodeBlock().accept(this);
-    var exception = blocks.leaveBlock();
+    // Handle exceptCodeBlock - check for null before accessing
+    StatementsBlockWriter.StatementsBlockRecord exception;
+    if (ctx.exceptCodeBlock() != null) {
+      blocks.enterBlock();
+      ctx.exceptCodeBlock().accept(this);
+      exception = blocks.leaveBlock();
+    } else {
+      // Handle the case when exceptCodeBlock is null
+      var dummyExceptionVertex = new BasicBlockVertex();
+      graph.addVertex(dummyExceptionVertex);
+      exception = new StatementsBlockWriter.StatementsBlockRecord();
+      exception.replaceBegin(dummyExceptionVertex);
+      exception.replaceEnd(dummyExceptionVertex);
+    }
 
     var jumpInfo = new StatementsBlockWriter.JumpInformationRecord();
     jumpInfo.exceptionHandler = exception.begin();

@@ -121,6 +121,24 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).isEmpty();
+  }
+  
+  @Test
+  void testTryWithoutExcept() {
+    var sample =
+      """
+        Функция ТестBезИсключений()
+          Результат = 0;
+          Попытка
+            Результат = 1;
+            Возврат Результат;
+          КонецПопытки;
+          Возврат Результат;
+        КонецФункции""";
 
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
   }
 }
