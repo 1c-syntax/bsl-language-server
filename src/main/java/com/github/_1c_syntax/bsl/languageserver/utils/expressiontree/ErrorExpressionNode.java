@@ -19,30 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-/**
- * Spring-конфигурация кэширования.
- */
-@Configuration
-@EnableCaching
-public class CacheConfiguration {
-  @Bean
-  public CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
-    var caffeineCacheManager = new CaffeineCacheManager();
-    caffeineCacheManager.setCaffeine(caffeine);
-    return caffeineCacheManager;
+@Value
+@NonFinal
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class ErrorExpressionNode extends BslExpression {
+
+  protected ErrorExpressionNode() {
+    super(ExpressionNodeType.ERROR);
   }
 
-  @Bean
-  public Caffeine<Object, Object> caffeineConfig() {
-    return Caffeine.newBuilder();
+  protected ErrorExpressionNode(ParseTree sourceCodeOperator) {
+    super(ExpressionNodeType.ERROR, sourceCodeOperator, null);
   }
+
 }

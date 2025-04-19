@@ -9,20 +9,20 @@ plugins {
     jacoco
     signing
     id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "6.0.1.5171"
-    id("io.freefair.lombok") version "8.12.1"
-    id("io.freefair.javadoc-links") version "8.12.1"
-    id("io.freefair.javadoc-utf-8") version "8.12.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.12.1"
-    id("io.freefair.maven-central.validate-poms") version "8.12.1"
+    id("org.sonarqube") version "6.1.0.5360"
+    id("io.freefair.lombok") version "8.13.1"
+    id("io.freefair.javadoc-links") version "8.13.1"
+    id("io.freefair.javadoc-utf-8") version "8.13.1"
+    id("io.freefair.aspectj.post-compile-weaving") version "8.13.1"
+    id("io.freefair.maven-central.validate-poms") version "8.13.1"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("com.github.ben-manes.versions") version "0.52.0"
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "3.4.4"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.2.0"
+    id("io.sentry.jvm.gradle") version "5.3.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("com.gorylenko.gradle-git-properties") version "2.4.2"
+    id("com.gorylenko.gradle-git-properties") version "2.5.0"
     id("io.codearte.nexus-staging") version "0.30.0"
     id("me.champeau.jmh") version "0.7.3"
 }
@@ -68,7 +68,11 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("org.springframework.boot:spring-boot-starter-cache")
+
     api("info.picocli:picocli-spring-boot-starter:4.7.6")
+
+    // кэширование
+    api("com.github.ben-manes.caffeine", "caffeine", "3.2.0")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
@@ -128,7 +132,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.1")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.3")
 
     // TEST
 

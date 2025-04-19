@@ -114,7 +114,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // тело true
     blocks.enterBlock();
-    ctx.ifBranch().codeBlock().accept(this);
+    if (ctx.ifBranch().codeBlock() != null) {
+      ctx.ifBranch().codeBlock().accept(this);
+    }
     var truePart = blocks.leaveBlock();
 
     graph.addEdge(conditionStatement, truePart.begin(), CfgEdgeType.TRUE_BRANCH);

@@ -70,7 +70,8 @@ public class ParentProcessWatcher {
       .orElse(false);
 
     if (!processIsAlive) {
-      LOGGER.info("Parent process with pid {} is not found. Closing application...", parentProcessId);
+      //noinspection StringConcatenationArgumentToLogCall - форматирование через {} не работает из-за NoClassDefException
+      LOGGER.info("Parent process with pid " + parentProcessId + " is not found. Closing application...");
       languageServer.exit();
     }
   }

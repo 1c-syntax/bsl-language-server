@@ -25,12 +25,24 @@ jobs:
       - name: Get version from Gradle
         id: get_version
         run: echo "RELEASE_VERSION=$(./gradlew version -q)" >> $GITHUB_ENV
+      - name: Get Sentry environment from project version 
+        id: get_env
+        run: |
+          if [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+          elif [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-r[ca][0-9]+$ ]]; then
+            echo "ENVIRONMENT=pre-release" >> $GITHUB_ENV
+          elif [[ "${{ env.RELEASE_VERSION }}" == develop-* && ! "${{ env.RELEASE_VERSION }}" == *-DIRTY-* ]]; then
+            echo "ENVIRONMENT=develop" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=feature" >> $GITHUB_ENV
+          fi
       - name: Create Sentry release
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
-          environment: production
+          environment: ${{ env.ENVIRONMENT }}
           version: ${{ env.RELEASE_VERSION }}

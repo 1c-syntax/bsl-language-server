@@ -28,5 +28,6 @@ public enum ExpressionNodeType {
   UNARY_OP,
   CALL,
   TERNARY_OP,
-  SKIPPED_CALL_ARG
+  SKIPPED_CALL_ARG,
+  ERROR
 }
