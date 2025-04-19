@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743022837414,
+  "lastUpdate": 1745078813307,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -28520,6 +28520,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0208971586342874",
             "extra": "mean: 79.76606663068135 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2c84ffc221b2c581a1b0f665e622177e7017a8d6",
+          "message": "Merge pull request #3449 from 1c-syntax/autofix/fix-empty-parentheses\n\nfix: handle empty parentheses in expression tree building",
+          "timestamp": "2025-04-19T17:58:11+02:00",
+          "tree_id": "6c07d8bc5f1ca01ee1676c791b9c38e568280003",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2c84ffc221b2c581a1b0f665e622177e7017a8d6"
+        },
+        "date": 1745078809814,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.39398082097371,
+            "unit": "sec",
+            "range": "stddev: 1.7088410552514777",
+            "extra": "mean: 81.39398082097371 sec\nrounds: 3"
           }
         ]
       }
