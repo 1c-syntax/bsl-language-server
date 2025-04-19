@@ -315,6 +315,26 @@ class ControlFlowGraphBuilderTest {
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
   }
+  
+  @Test
+  void tryWithoutExceptTest() {
+    var code = """
+      Попытка
+         А = 1;
+      КонецПопытки""";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("А=1");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
 
   @Test
   void linearBlockWithLabel() {
