@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1745080736688,
+  "lastUpdate": 1745243861153,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -28582,6 +28582,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.624239121520628",
             "extra": "mean: 82.41649746894836 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3fadca8273d3e0564e5f0054df533c2929a3196c",
+          "message": "Merge pull request #3463 from 1c-syntax/dependabot/gradle/info.picocli-picocli-spring-boot-starter-4.7.7\n\nbuild(deps): bump info.picocli:picocli-spring-boot-starter from 4.7.6 to 4.7.7",
+          "timestamp": "2025-04-21T15:48:23+02:00",
+          "tree_id": "b78530d7e8470e79820e23f7a8fe966dabfb4460",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3fadca8273d3e0564e5f0054df533c2929a3196c"
+        },
+        "date": 1745243857843,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 82.421875,
+            "unit": "sec",
+            "range": "stddev: 0.5436784330019682",
+            "extra": "mean: 82.421875 sec\nrounds: 3"
           }
         ]
       }
