@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import jakarta.annotation.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -524,7 +525,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.addVertex(blocks.getCurrentBlock().end());
   }
 
-  private void buildLoopSubgraph(BSLParser.CodeBlockContext ctx, LoopVertex loopStart) {
+  private void buildLoopSubgraph(@Nullable BSLParser.CodeBlockContext ctx, LoopVertex loopStart) {
     graph.addVertex(loopStart);
     connectGraphTail(blocks.getCurrentBlock(), loopStart);
 
@@ -537,7 +538,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     blocks.enterBlock(jumpState);
 
-    ctx.accept(this);
+    if (ctx != null) {
+      ctx.accept(this);
+    }
 
     var body = blocks.leaveBlock();
 
