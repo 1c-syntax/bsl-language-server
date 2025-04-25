@@ -195,7 +195,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
     var currentBlock = blocks.getCurrentBlock();
     graph.addVertex(currentBlock.begin());
-    return super.visitCodeBlock(ctx);
+    return ctx == null ? null : super.visitCodeBlock(ctx);
   }
 
   @Override
@@ -537,11 +537,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     jumpState.loopBreak = blocks.getCurrentBlock().end();
 
     blocks.enterBlock(jumpState);
-
-    if (ctx != null) {
-      ctx.accept(this);
-    }
-
+    visitCodeBlock(ctx);
     var body = blocks.leaveBlock();
 
     graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);

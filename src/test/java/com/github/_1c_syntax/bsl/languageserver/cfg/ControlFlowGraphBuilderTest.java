@@ -289,6 +289,40 @@ class ControlFlowGraphBuilderTest {
   }
 
   @Test
+  void testLoopWithNullCodeBlock() {
+    var code = """
+      Для х = 1 По 10 Цикл
+      КонецЦикла;""";
+
+    var parseTree = parse(code);
+
+    // Force null code block by removing the CodeBlock child
+    var forStatement = parseTree.statement(0).compoundStatement().forStatement();
+    var children = forStatement.children;
+
+    // Find and remove the CodeBlockContext child
+    for (int i = 0; i < children.size(); i++) {
+      if (children.get(i) instanceof BSLParser.CodeBlockContext) {
+        children.remove(i);
+        break;
+      }
+    }
+
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+
+    // Check if graph was built successfully
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+
+    // Verify basic structure - should at least have loop vertex and exit
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices)
+      .hasAtLeastOneElementOfType(ForLoopVertex.class)
+      .hasAtLeastOneElementOfType(ExitVertex.class);
+  }
+
+  @Test
   void tryHandlerFlowTest() {
     var code = """
       Попытка
@@ -449,41 +483,6 @@ class ControlFlowGraphBuilderTest {
     assertThat(textOfCurrentNode(walker)).isEqualTo("Б=3");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
-  }
-
-  @Test
-  void testLoopWithNullCodeBlock() {
-    var code = """
-      Для х = 1 По 10 Цикл
-        А = 1;
-      КонецЦикла;""";
-
-    var parseTree = parse(code);
-    
-    // Force null code block by removing the CodeBlock child
-    var forStatement = parseTree.statement(0).compoundStatement().forStatement();
-    var children = forStatement.children;
-    
-    // Find and remove the CodeBlockContext child
-    for (int i = 0; i < children.size(); i++) {
-      if (children.get(i) instanceof BSLParser.CodeBlockContext) {
-        children.remove(i);
-        break;
-      }
-    }
-
-    var builder = new CfgBuildingParseTreeVisitor();
-    var graph = builder.buildGraph(parseTree);
-
-    // Check if graph was built successfully
-    assertThat(graph).isNotNull();
-    assertThat(graph.vertexSet()).isNotEmpty();
-
-    // Verify basic structure - should at least have loop vertex and exit
-    var vertices = traverseToOrderedList(graph);
-    assertThat(vertices)
-      .hasAtLeastOneElementOfType(ForLoopVertex.class)
-      .hasAtLeastOneElementOfType(ExitVertex.class);
   }
 
   @Test
