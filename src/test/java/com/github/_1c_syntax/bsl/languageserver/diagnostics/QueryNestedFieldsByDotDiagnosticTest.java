@@ -27,9 +27,9 @@ class QueryNestedFieldsByDotDiagnosticTest extends AbstractDiagnosticTest<QueryN
       .hasRange(53, 6, 53, 39) //Ошибка №3
       .hasRange(53, 41, 53, 77) //Ошибка №3
       .hasRange(53, 79, 53, 116) //Ошибка №3
-      .hasRange(103, 7, 103, 61) //Ошибка №2
-      .hasRange(104, 7, 104, 64) //Ошибка №2
-      .hasRange(105, 7, 105, 65) //Ошибка №2
-      .hasRange(116, 3, 116, 86); //Ошибка №6
+      .hasRange(101, 7, 101, 61) //Ошибка №2
+      .hasRange(102, 7, 102, 64) //Ошибка №2
+      .hasRange(103, 7, 103, 65) //Ошибка №2
+      .hasRange(115, 3, 115, 82); //Ошибка №6
   }
 }
