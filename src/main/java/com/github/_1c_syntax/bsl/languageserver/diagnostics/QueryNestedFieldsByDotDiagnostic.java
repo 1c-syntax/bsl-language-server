@@ -5,10 +5,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -24,7 +20,6 @@ import java.util.Set;
 public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagnostic {
 
   public boolean isVirtualTable = false;
-  private final Set<ParseTree> columns = new HashSet<>();
 
   @Override
   public void enterQuery(SDBLParser.QueryContext ctx) {
@@ -39,14 +34,10 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
   }
 
   @Override
-  public void enterCastFunction(SDBLParser.CastFunctionContext ctx) {
-    super.enterCastFunction(ctx);
-  }
-
-  @Override
   public void enterFunctionCall(SDBLParser.FunctionCallContext ctx) {
     if(ctx.identifier != null && ctx.columnNames.size() > 1){
-      diagnosticStorage.addDiagnostic(ctx);
+      diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(ctx.getText()));
     }
     super.enterFunctionCall(ctx);
   }
@@ -55,7 +46,9 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
   public void enterColumn(SDBLParser.ColumnContext ctx) {
 
     if((isVirtualTable && ctx.columnNames.size() == 1 && ctx.mdoName != null) || ctx.columnNames.size() > 1){
-      diagnosticStorage.addDiagnostic(ctx);
+
+      diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(ctx.getText()));
     }
     super.enterColumn(ctx);
   }
