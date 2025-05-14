@@ -266,6 +266,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "LogicalOrInJoinQuerySection": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInJoinQuerySection"
+                },
                 "LogicalOrInTheWhereSectionOfQuery": {
                     "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },

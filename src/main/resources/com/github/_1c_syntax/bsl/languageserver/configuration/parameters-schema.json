@@ -1070,6 +1070,16 @@
             },
             "$id": "#/definitions/LineLength"
         },
+        "LogicalOrInJoinQuerySection": {
+            "description": "Logical 'OR' in 'JOIN' query section",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Logical 'OR' in 'JOIN' query section",
+            "$id": "#/definitions/LogicalOrInJoinQuerySection"
+        },
         "LogicalOrInTheWhereSectionOfQuery": {
             "description": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "default": true,

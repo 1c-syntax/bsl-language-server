@@ -1,4 +1,4 @@
-# <Diagnostic name> (LogicalOrInJoinQuerySection)
+# Логическое 'ИЛИ' в соединениях запроса (LogicalOrInJoinQuerySection)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
