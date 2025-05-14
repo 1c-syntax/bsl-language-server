@@ -27,16 +27,23 @@ public class LogicalOrInJoinQuerySectionDiagnostic extends AbstractSDBLVisitorDi
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+    //При посещении запроса сразу отбираем контексты соединений, которые в цикле обрабатываем отдельным методом.
     Trees.findAllRuleNodes(ctx, SDBLParser.RULE_joinPart).
       forEach(jpt -> processJoinPart((SDBLParser.JoinPartContext) jpt));
+
     return ctx;
   }
 
   private void processJoinPart(SDBLParser.JoinPartContext ctx) {
 
+    //Инициализируем поток для коллекции условий соединения, каждое условие преобразуем в логическое выражение.
       ctx.condition.condidions.stream().map(SDBLParser.PredicateContext::logicalExpression)
+        //фильтрация null отсекает условия, не содержащие составных логических конструкций.
         .filter(Objects::nonNull)
+        //Каждое условие дополнительно отбирается по наличию более чем одного различных полей.
         .filter(this::isMultipleFieldsExpression)
+        //По оставшимся условиям проводится цикл с поиском операторов "ИЛИ"
+        // и вложенным циклом фиксации ошибки диагностики для каждого оператора
         .forEach(
           exp -> Trees.findAllTokenNodes(exp, SDBLParser.OR)
             .forEach(diagnosticStorage::addDiagnostic));
@@ -45,6 +52,9 @@ public class LogicalOrInJoinQuerySectionDiagnostic extends AbstractSDBLVisitorDi
 
   private boolean isMultipleFieldsExpression(SDBLParser.LogicalExpressionContext exp){
 
+    //От контекста логического выражения спускаемся до контекста колонки,
+    // далее поток текстового представления колонок собираем в Set.
+    //По наличию в Set более чем одного элемента проверяем использование различных полей в условии
     Set<String> expFields = Trees.findAllRuleNodes(exp, SDBLParser.RULE_column).stream()
       .map(ParseTree::getText)
       .collect(Collectors.toSet());
