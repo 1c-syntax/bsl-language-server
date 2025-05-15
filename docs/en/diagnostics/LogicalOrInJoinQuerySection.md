@@ -76,9 +76,5 @@ LEFT JOIN Catalog.Nomenclature КАК CatalogNomenclature
 ```
 A fix similar to paragraph 2 is recommended by replacing the nested connection with a connection with the creation of an intermediate temporary table.
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+- [Standard: Effective Query Conditions, Clause 2 (RU)](https://its.1c.ru/db/v8std/content/658/hdoc)
+- [Typical Causes of Suboptimal Query Performance and Optimization Techniques: Using Logical OR in Conditions (RU)](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm#or)
