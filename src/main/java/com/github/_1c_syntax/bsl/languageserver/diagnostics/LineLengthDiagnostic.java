@@ -136,11 +136,9 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean shouldIncludeComment(Token comment, Set<Integer> linesWithCode) {
-    // If excludeTrailingComments is enabled and this is a line comment on a line with code,
+    // If excludeTrailingComments is enabled and this comment is on a line with code,
     // then it's a trailing comment and should be excluded
-    if (excludeTrailingComments && 
-        comment.getType() == BSLLexer.LINE_COMMENT &&
-        linesWithCode.contains(comment.getLine() - 1)) {
+    if (excludeTrailingComments && linesWithCode.contains(comment.getLine() - 1)) {
       return false;
     }
     return true;
