@@ -77,14 +77,18 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   private boolean excludeTrailingComments = EXCLUDE_TRAILING_COMMENTS;
 
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+  private final Map<Integer, Integer> nonCommentLineLength = new HashMap<>();
 
   @Override
   protected void check() {
     tokensInOneLine.clear();
+    nonCommentLineLength.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
         if (mustBePutIn(token)) {
           putInCollection(token, false);
+          // Track non-comment line length
+          updateNonCommentLineLength(token);
         }
         prevTokenType = token.getType();
       }
@@ -106,6 +110,16 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
+      
+      // If excluding trailing comments is enabled, check if we have a shorter non-comment length for this line
+      if (excludeTrailingComments && nonCommentLineLength.containsKey(key)) {
+        Integer nonCommentLength = nonCommentLineLength.get(key);
+        // If there are trailing comments, the non-comment length might be shorter
+        if (nonCommentLength < maxCharPosition) {
+          maxCharPosition = nonCommentLength;
+        }
+      }
+      
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
@@ -127,25 +141,18 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   private void putInCollection(Token token, boolean isComment) {
-    // If this is a comment and we should exclude trailing comments, check if it's a trailing comment
-    if (isComment && excludeTrailingComments && token.getType() == BSLParser.LINE_COMMENT) {
-      // Check if this comment is a trailing comment (on the same line as other non-whitespace tokens)
-      var tokens = documentContext.getTokens();
-      var lineTokens = tokens.stream()
-        .filter(t -> t.getLine() == token.getLine() 
-                  && t.getType() != BSLParser.LINE_COMMENT 
-                  && t.getType() != BSLParser.WHITE_SPACE)
-        .collect(Collectors.toList());
-      
-      // If there are other non-whitespace tokens on the same line, this is a trailing comment and should be excluded
-      if (!lineTokens.isEmpty()) {
-        return;
-      }
-    }
-    
     List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
+  }
+
+  private void updateNonCommentLineLength(Token token) {
+    int lineIndex = token.getLine() - 1;
+    int tokenEndPosition = token.getCharPositionInLine() + token.getText().length();
+    nonCommentLineLength.put(lineIndex, Math.max(
+      nonCommentLineLength.getOrDefault(lineIndex, 0), 
+      tokenEndPosition
+    ));
   }
 
   private static boolean descriptionContainToken(List<Range> descriptionRanges, Token token) {
