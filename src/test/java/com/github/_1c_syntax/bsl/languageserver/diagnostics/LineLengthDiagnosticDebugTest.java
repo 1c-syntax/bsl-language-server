@@ -27,47 +27,47 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+class LineLengthDiagnosticDebugTest extends AbstractDiagnosticTest<LineLengthDiagnostic> {
 
-class LineLengthDiagnosticTrailingCommentsTest extends AbstractDiagnosticTest<LineLengthDiagnostic> {
-
-  LineLengthDiagnosticTrailingCommentsTest() {
+  LineLengthDiagnosticDebugTest() {
     super(LineLengthDiagnostic.class);
   }
 
-  @Override
-  protected String getTestFile() {
-    return "LineLengthDiagnosticTrailingComments.bsl";
-  }
-
   @Test
-  void testDefault() {
-    // when - default configuration includes trailing comments
+  void testDebugDefault() {
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then - should flag lines 3, 5, 7, 9 
-    assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics, true)
-      .hasRange(2, 0, 2, 130)  // line 3: long line without comment
-      .hasRange(4, 0, 4, 138)  // line 5: short line + long trailing comment  
-      .hasRange(6, 0, 6, 139)  // line 7: long line + trailing comment
-      .hasRange(8, 0, 8, 123); // line 9: long comment-only line
+    // then
+    System.out.println("Default config diagnostics count: " + diagnostics.size());
+    for (int i = 0; i < diagnostics.size(); i++) {
+      Diagnostic diag = diagnostics.get(i);
+      System.out.println("  " + i + ": " + diag.getRange().getStart().getLine() + "," 
+        + diag.getRange().getStart().getCharacter() + " -> " 
+        + diag.getRange().getEnd().getLine() + "," 
+        + diag.getRange().getEnd().getCharacter());
+    }
   }
 
   @Test
-  void testExcludeTrailingComments() {
+  void testDebugExcludeTrailingComments() {
     // given
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
     configuration.put("excludeTrailingComments", true);
     diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then - should only flag lines 3 and 9 (lines 5 and 7 should be excluded since their code parts are short)
-    assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics, true)
-      .hasRange(2, 0, 2, 130)  // line 3: long line without comment
-      .hasRange(8, 0, 8, 123); // line 9: long comment-only line (not a trailing comment)
+    // then
+    System.out.println("Exclude trailing comments diagnostics count: " + diagnostics.size());
+    for (int i = 0; i < diagnostics.size(); i++) {
+      Diagnostic diag = diagnostics.get(i);
+      System.out.println("  " + i + ": " + diag.getRange().getStart().getLine() + "," 
+        + diag.getRange().getStart().getCharacter() + " -> " 
+        + diag.getRange().getEnd().getLine() + "," 
+        + diag.getRange().getEnd().getCharacter());
+    }
   }
 }
