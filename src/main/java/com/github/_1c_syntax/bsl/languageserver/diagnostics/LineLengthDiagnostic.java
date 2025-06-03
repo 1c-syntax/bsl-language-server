@@ -29,13 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
-
-import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -58,6 +56,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   private static final int MAX_LINE_LENGTH = 120;
   private static final boolean CHECK_METHOD_DESCRIPTION = true;
   private static final boolean EXCLUDE_TRAILING_COMMENTS = false;
+
   private int prevTokenType;
 
   @DiagnosticParameter(
@@ -79,36 +78,21 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   private boolean excludeTrailingComments = EXCLUDE_TRAILING_COMMENTS;
 
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
-  private final Map<Integer, Integer> nonCommentLineLength = new HashMap<>();
-  private final Map<Integer, List<Token>> commentsOnLine = new HashMap<>();
 
   @Override
   protected void check() {
     tokensInOneLine.clear();
-    nonCommentLineLength.clear();
-    commentsOnLine.clear();
 
-    // First, collect all comments from HIDDEN channel by line
-    documentContext.getTokens().stream()
-      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
-      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .forEach(comment -> {
-        int lineIndex = comment.getLine() - 1;
-        commentsOnLine.computeIfAbsent(lineIndex, k -> new ArrayList<>()).add(comment);
-      });
-
-    documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
+    documentContext.getTokens().forEach((Token token) -> {
         if (mustBePutIn(token)) {
-          putInCollection(token, false);
-          // Track non-comment line length
-          updateNonCommentLineLength(token);
+          putInCollection(token);
         }
         prevTokenType = token.getType();
       }
     );
 
     if (checkMethodDescription) {
-      documentContext.getComments().forEach(comment -> putInCollection(comment, true));
+      documentContext.getComments().forEach(comment -> putInCollection(comment));
     } else {
       var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
         .map(MethodSymbol::getDescription)
@@ -118,27 +102,11 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
       documentContext.getComments().stream()
         .filter(token -> !descriptionContainToken(descriptionRanges, token))
-        .forEach(comment -> putInCollection(comment, true));
+        .forEach(comment -> putInCollection(comment));
     }
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
-      
-      // If excluding trailing comments is enabled, check if we have trailing comments on this line
-      if (excludeTrailingComments && commentsOnLine.containsKey(key)) {
-        Integer nonCommentLength = nonCommentLineLength.get(key);
-        List<Token> lineComments = commentsOnLine.get(key);
-        
-        // Check if any comments are trailing (start after the last non-comment token)
-        boolean hasTrailingComments = lineComments.stream()
-          .anyMatch(comment -> nonCommentLength != null && comment.getCharPositionInLine() >= nonCommentLength);
-        
-        // If there are trailing comments, use the non-comment length instead
-        if (hasTrailingComments && nonCommentLength != null) {
-          maxCharPosition = nonCommentLength;
-        }
-      }
-      
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
@@ -149,6 +117,10 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean mustBePutIn(Token token) {
+    // If excludeTrailingComments is enabled, exclude LINE_COMMENT tokens from HIDDEN channel
+    if (excludeTrailingComments && token.getChannel() == HIDDEN_CHANNEL && token.getType() == BSLLexer.LINE_COMMENT) {
+      return false;
+    }
 
     boolean isStringPart = token.getType() == BSLLexer.STRINGPART
       || token.getType() == BSLLexer.STRINGTAIL;
@@ -159,19 +131,10 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
       && token.getType() == BSLLexer.SEMICOLON);
   }
 
-  private void putInCollection(Token token, boolean isComment) {
+  private void putInCollection(Token token) {
     List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
-  }
-
-  private void updateNonCommentLineLength(Token token) {
-    int lineIndex = token.getLine() - 1;
-    int tokenEndPosition = token.getCharPositionInLine() + token.getText().length();
-    nonCommentLineLength.put(lineIndex, Math.max(
-      nonCommentLineLength.getOrDefault(lineIndex, 0), 
-      tokenEndPosition
-    ));
   }
 
   private static boolean descriptionContainToken(List<Range> descriptionRanges, Token token) {
