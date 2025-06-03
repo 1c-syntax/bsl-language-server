@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,15 +86,14 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     tokensInOneLine.clear();
 
     // First, process all tokens from default channel (code tokens)
-    Set<Integer> linesWithCode = documentContext.getTokensFromDefaultChannel().stream()
-      .peek(token -> {
-        if (mustBePutIn(token)) {
-          putInCollection(token);
-        }
-        prevTokenType = token.getType();
-      })
-      .map(token -> token.getLine() - 1)
-      .collect(Collectors.toSet());
+    Set<Integer> linesWithCode = new HashSet<>();
+    for (Token token : documentContext.getTokensFromDefaultChannel()) {
+      if (mustBePutIn(token)) {
+        putInCollection(token);
+      }
+      prevTokenType = token.getType();
+      linesWithCode.add(token.getLine() - 1);
+    }
 
     // Then process comments
     if (checkMethodDescription) {
