@@ -35,6 +35,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
+import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,11 +80,22 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
   private final Map<Integer, Integer> nonCommentLineLength = new HashMap<>();
+  private final Map<Integer, List<Token>> commentsOnLine = new HashMap<>();
 
   @Override
   protected void check() {
     tokensInOneLine.clear();
     nonCommentLineLength.clear();
+    commentsOnLine.clear();
+
+    // First, collect all comments from HIDDEN channel by line
+    documentContext.getTokens().stream()
+      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
+      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
+      .forEach(comment -> {
+        int lineIndex = comment.getLine() - 1;
+        commentsOnLine.computeIfAbsent(lineIndex, k -> new ArrayList<>()).add(comment);
+      });
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
         if (mustBePutIn(token)) {
@@ -111,11 +124,17 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
       
-      // If excluding trailing comments is enabled, check if we have a shorter non-comment length for this line
-      if (excludeTrailingComments && nonCommentLineLength.containsKey(key)) {
+      // If excluding trailing comments is enabled, check if we have trailing comments on this line
+      if (excludeTrailingComments && commentsOnLine.containsKey(key)) {
         Integer nonCommentLength = nonCommentLineLength.get(key);
-        // If there are trailing comments, the non-comment length might be shorter
-        if (nonCommentLength < maxCharPosition) {
+        List<Token> lineComments = commentsOnLine.get(key);
+        
+        // Check if any comments are trailing (start after the last non-comment token)
+        boolean hasTrailingComments = lineComments.stream()
+          .anyMatch(comment -> nonCommentLength != null && comment.getCharPositionInLine() >= nonCommentLength);
+        
+        // If there are trailing comments, use the non-comment length instead
+        if (hasTrailingComments && nonCommentLength != null) {
           maxCharPosition = nonCommentLength;
         }
       }
