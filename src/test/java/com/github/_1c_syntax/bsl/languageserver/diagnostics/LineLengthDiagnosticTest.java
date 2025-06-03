@@ -121,4 +121,36 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     ;
   }
 
+  @Test
+  void testExcludeTrailingComments() {
+    // given
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    // Line 11 should not be flagged since without the trailing comment it's under the limit
+    // Lines 12 and 13 still exceed the limit even without comments, but with different lengths
+    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(12, 0, 12, 197)  // Length without trailing comment
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(56, 0, 162)
+      .hasRange(60, 0, 145)
+    ;
+  }
+
 }

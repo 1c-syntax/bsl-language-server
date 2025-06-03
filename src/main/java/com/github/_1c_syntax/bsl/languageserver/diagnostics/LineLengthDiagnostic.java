@@ -29,7 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
@@ -53,6 +55,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
   private static final boolean CHECK_METHOD_DESCRIPTION = true;
+  private static final boolean EXCLUDE_TRAILING_COMMENTS = false;
   private int prevTokenType;
 
   @DiagnosticParameter(
@@ -67,6 +70,12 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   )
   private boolean checkMethodDescription = CHECK_METHOD_DESCRIPTION;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + EXCLUDE_TRAILING_COMMENTS
+  )
+  private boolean excludeTrailingComments = EXCLUDE_TRAILING_COMMENTS;
+
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   @Override
@@ -75,14 +84,14 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
         if (mustBePutIn(token)) {
-          putInCollection(token);
+          putInCollection(token, false);
         }
         prevTokenType = token.getType();
       }
     );
 
     if (checkMethodDescription) {
-      documentContext.getComments().forEach(this::putInCollection);
+      documentContext.getComments().forEach(comment -> putInCollection(comment, true));
     } else {
       var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
         .map(MethodSymbol::getDescription)
@@ -92,7 +101,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
       documentContext.getComments().stream()
         .filter(token -> !descriptionContainToken(descriptionRanges, token))
-        .forEach(this::putInCollection);
+        .forEach(comment -> putInCollection(comment, true));
     }
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
@@ -117,7 +126,23 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
       && token.getType() == BSLLexer.SEMICOLON);
   }
 
-  private void putInCollection(Token token) {
+  private void putInCollection(Token token, boolean isComment) {
+    // If this is a comment and we should exclude trailing comments, check if it's a trailing comment
+    if (isComment && excludeTrailingComments && token.getType() == BSLParser.LINE_COMMENT) {
+      // Check if this comment is a trailing comment (on the same line as other non-whitespace tokens)
+      var tokens = documentContext.getTokens();
+      var lineTokens = tokens.stream()
+        .filter(t -> t.getLine() == token.getLine() 
+                  && t.getType() != BSLParser.LINE_COMMENT 
+                  && t.getType() != BSLParser.WHITE_SPACE)
+        .collect(Collectors.toList());
+      
+      // If there are other non-whitespace tokens on the same line, this is a trailing comment and should be excluded
+      if (!lineTokens.isEmpty()) {
+        return;
+      }
+    }
+    
     List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
