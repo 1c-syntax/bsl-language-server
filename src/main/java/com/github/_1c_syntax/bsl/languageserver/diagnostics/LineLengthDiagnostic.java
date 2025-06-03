@@ -35,10 +35,14 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,6 +57,8 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
   private static final boolean CHECK_METHOD_DESCRIPTION = true;
+  private static final boolean EXCLUDE_TRAILING_COMMENTS = false;
+
   private int prevTokenType;
 
   @DiagnosticParameter(
@@ -67,22 +73,33 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   )
   private boolean checkMethodDescription = CHECK_METHOD_DESCRIPTION;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + EXCLUDE_TRAILING_COMMENTS
+  )
+  private boolean excludeTrailingComments = EXCLUDE_TRAILING_COMMENTS;
+
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   @Override
   protected void check() {
     tokensInOneLine.clear();
 
-    documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
-        if (mustBePutIn(token)) {
-          putInCollection(token);
-        }
-        prevTokenType = token.getType();
+    // First, process all tokens from default channel (code tokens)
+    Set<Integer> linesWithCode = new HashSet<>();
+    for (Token token : documentContext.getTokensFromDefaultChannel()) {
+      if (mustBePutIn(token)) {
+        putInCollection(token);
       }
-    );
+      prevTokenType = token.getType();
+      linesWithCode.add(token.getLine() - 1);
+    }
 
+    // Then process comments
     if (checkMethodDescription) {
-      documentContext.getComments().forEach(this::putInCollection);
+      documentContext.getComments().stream()
+        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
+        .forEach(this::putInCollection);
     } else {
       var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
         .map(MethodSymbol::getDescription)
@@ -92,6 +109,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
       documentContext.getComments().stream()
         .filter(token -> !descriptionContainToken(descriptionRanges, token))
+        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
         .forEach(this::putInCollection);
     }
 
@@ -115,6 +133,15 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
     return !isStringPart && !(prevIsStringPart
       && token.getType() == BSLLexer.SEMICOLON);
+  }
+
+  private boolean shouldIncludeComment(Token comment, Set<Integer> linesWithCode) {
+    // If excludeTrailingComments is enabled and this comment is on a line with code,
+    // then it's a trailing comment and should be excluded
+    if (excludeTrailingComments && linesWithCode.contains(comment.getLine() - 1)) {
+      return false;
+    }
+    return true;
   }
 
   private void putInCollection(Token token) {

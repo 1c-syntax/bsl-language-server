@@ -1055,6 +1055,12 @@
             ],
             "title": "Line Length limit",
             "properties": {
+                "excludeTrailingComments": {
+                    "description": "Exclude trailing comments when calculating line length",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Exclude trailing comments when calculating line length"
+                },
                 "maxLineLength": {
                     "description": "Max length of string in characters",
                     "default": 120,

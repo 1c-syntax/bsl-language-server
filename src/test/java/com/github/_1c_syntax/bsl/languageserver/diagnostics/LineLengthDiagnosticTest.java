@@ -121,4 +121,31 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     ;
   }
 
+  @Test
+  void testExcludeTrailingComments() {
+    // Test with trailing comments excluded
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // When excluding trailing comments, we should have exactly 12 diagnostics
+    assertThat(diagnostics).hasSize(12);
+  }
+
+  @Test
+  void testExcludeTrailingCommentsWithCheckMethodDescriptionFalse() {
+    // Test that excludeTrailingComments works correctly with checkMethodDescription=false
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkMethodDescription", false);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // Should have the same count as testConfigureSkipMethodDescription but with trailing comments excluded
+    assertThat(diagnostics).hasSize(10);
+  }
+
 }
