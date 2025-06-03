@@ -123,31 +123,29 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
 
   @Test
   void testExcludeTrailingComments() {
-    // First get default behavior
-    Map<String, Object> defaultConfig = diagnosticInstance.getInfo().getDefaultConfiguration();
-    defaultConfig.put("maxLineLength", 120);
-    defaultConfig.put("excludeTrailingComments", false);
-    diagnosticInstance.configure(defaultConfig);
-    List<Diagnostic> defaultDiagnostics = getDiagnostics();
-    
-    // Then test with trailing comments excluded
+    // Test with trailing comments excluded
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("maxLineLength", 120);
     configuration.put("excludeTrailingComments", true);
     diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // When excluding trailing comments, we should have fewer or equal diagnostics
-    // since lines with only trailing comments exceeding the limit won't be flagged
-    assertThat(diagnostics.size()).isLessThanOrEqualTo(defaultDiagnostics.size());
-    
-    // Verify that lines which only exceed the limit due to trailing comments are not flagged
-    // For example, line 11 has code + trailing comment that together exceed 120 characters,
-    // but the code part alone is under the limit
-    assertThat(diagnostics).noneMatch(diag -> 
-      diag.getRange().getStart().getLine() == 10 && 
-      diag.getRange().getEnd().getCharacter() < 70 // Short lines that only fail due to comments
-    );
+    // When excluding trailing comments, we should have exactly 12 diagnostics
+    assertThat(diagnostics).hasSize(12);
+  }
+
+  @Test
+  void testExcludeTrailingCommentsWithCheckMethodDescriptionFalse() {
+    // Test that excludeTrailingComments works correctly with checkMethodDescription=false
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkMethodDescription", false);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // Should have the same count as testConfigureSkipMethodDescription but with trailing comments excluded
+    assertThat(diagnostics).hasSize(10);
   }
 
 }

@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
@@ -83,16 +84,22 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   protected void check() {
     tokensInOneLine.clear();
 
-    documentContext.getTokens().forEach((Token token) -> {
+    // First, process all tokens from default channel (code tokens)
+    Set<Integer> linesWithCode = documentContext.getTokensFromDefaultChannel().stream()
+      .peek(token -> {
         if (mustBePutIn(token)) {
           putInCollection(token);
         }
         prevTokenType = token.getType();
-      }
-    );
+      })
+      .map(token -> token.getLine() - 1)
+      .collect(Collectors.toSet());
 
+    // Then process comments
     if (checkMethodDescription) {
-      documentContext.getComments().forEach(comment -> putInCollection(comment));
+      documentContext.getComments().stream()
+        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
+        .forEach(this::putInCollection);
     } else {
       var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
         .map(MethodSymbol::getDescription)
@@ -102,7 +109,8 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
       documentContext.getComments().stream()
         .filter(token -> !descriptionContainToken(descriptionRanges, token))
-        .forEach(comment -> putInCollection(comment));
+        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
+        .forEach(this::putInCollection);
     }
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
@@ -117,10 +125,6 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean mustBePutIn(Token token) {
-    // If excludeTrailingComments is enabled, exclude LINE_COMMENT tokens from HIDDEN channel
-    if (excludeTrailingComments && token.getChannel() == HIDDEN_CHANNEL && token.getType() == BSLLexer.LINE_COMMENT) {
-      return false;
-    }
 
     boolean isStringPart = token.getType() == BSLLexer.STRINGPART
       || token.getType() == BSLLexer.STRINGTAIL;
@@ -129,6 +133,17 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
     return !isStringPart && !(prevIsStringPart
       && token.getType() == BSLLexer.SEMICOLON);
+  }
+
+  private boolean shouldIncludeComment(Token comment, Set<Integer> linesWithCode) {
+    // If excludeTrailingComments is enabled and this is a line comment on a line with code,
+    // then it's a trailing comment and should be excluded
+    if (excludeTrailingComments && 
+        comment.getType() == BSLLexer.LINE_COMMENT &&
+        linesWithCode.contains(comment.getLine() - 1)) {
+      return false;
+    }
+    return true;
   }
 
   private void putInCollection(Token token) {
