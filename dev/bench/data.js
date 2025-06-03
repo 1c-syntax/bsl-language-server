@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748450365346,
+  "lastUpdate": 1748983198055,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -28892,6 +28892,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.83634227747724",
             "extra": "mean: 82.89181478818257 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e64eea207e558c365e5a2076c15bd88049e1c63c",
+          "message": "Merge pull request #3481 from 1c-syntax/copilot/fix-3390\n\nAdd excludeTrailingComments option to LineLengthDiagnostic",
+          "timestamp": "2025-06-03T22:24:48+02:00",
+          "tree_id": "8bed6eabbc7b08a0540c9ffd2ccb77944c87fb17",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e64eea207e558c365e5a2076c15bd88049e1c63c"
+        },
+        "date": 1748983194287,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 83.58605241775513,
+            "unit": "sec",
+            "range": "stddev: 2.4203799689730228",
+            "extra": "mean: 83.58605241775513 sec\nrounds: 3"
           }
         ]
       }
