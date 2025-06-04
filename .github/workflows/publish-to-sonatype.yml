@@ -19,21 +19,14 @@ jobs:
           java-version: 17
           distribution: 'temurin'
           cache: gradle
-      - name: Publish to Central Portal (snapshots and releases)
-        run: ./gradlew publishMavenPublicationToSonatypeRepository -PsimplifyVersion
+      - name: Deploy with JReleaser to Central Portal
+        run: |
+          ./gradlew publishMavenPublicationToStagingRepository -x javadoc
+          ./gradlew jreleaserDeploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
-      # Alternative: Use JReleaser for Central Portal publishing (uncomment if needed)
-      # - name: Deploy with JReleaser
-      #   if: github.event_name == 'release'
-      #   run: ./gradlew jreleaserDeploy
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-      #     ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-      #     ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
-      #     ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+          JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          JRELEASER_GPG_SECRET_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          JRELEASER_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSWORD }}

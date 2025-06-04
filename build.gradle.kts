@@ -310,20 +310,10 @@ signing {
 
 publishing {
     repositories {
+        // Staging repository for JReleaser
         maven {
-            name = "sonatype"
-            url = if (isSnapshot)
-                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            else
-                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-
-            val sonatypeUsername: String? by project
-            val sonatypePassword: String? by project
-
-            credentials {
-                username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
-                password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
-            }
+            name = "staging"
+            url = uri("${layout.buildDirectory.get()}/staging-deploy")
         }
     }
     publications {
@@ -397,6 +387,11 @@ tasks.withType<GenerateModuleMetadata> {
 jreleaser {
     project {
         description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+        copyright.set("2018-" + Calendar.getInstance().get(Calendar.YEAR))
+        // For snapshots, use a semver-compatible version
+        if (isSnapshot) {
+            version.set("1.0.0-SNAPSHOT")
+        }
         links {
             homepage.set("https://1c-syntax.github.io/bsl-language-server")
         }
@@ -414,7 +409,7 @@ jreleaser {
     }
     
     signing {
-        active.set(org.jreleaser.model.Active.RELEASE)
+        active.set(org.jreleaser.model.Active.ALWAYS)
         armored.set(true)
     }
     
@@ -422,12 +417,11 @@ jreleaser {
         maven {
             mavenCentral {
                 create("sonatype") {
-                    active.set(org.jreleaser.model.Active.RELEASE)
+                    active.set(org.jreleaser.model.Active.ALWAYS)
                     url.set("https://central.sonatype.com/api/v1/publisher")
                     stagingRepository("build/staging-deploy")
-                    
-                    username.set(findProperty("sonatypeUsername") as String? ?: "")
-                    password.set(findProperty("sonatypePassword") as String? ?: "")
+                    // Support both snapshots and releases
+                    snapshotSupported.set(true)
                 }
             }
         }
