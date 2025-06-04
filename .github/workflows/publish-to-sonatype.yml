@@ -19,7 +19,7 @@ jobs:
           java-version: 17
           distribution: 'temurin'
           cache: gradle
-      - name: Publish to Sonatype
+      - name: Publish to Central Portal (snapshots and releases)
         run: ./gradlew publishMavenPublicationToSonatypeRepository -PsimplifyVersion
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,3 +27,13 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+      # Alternative: Use JReleaser for Central Portal publishing (uncomment if needed)
+      # - name: Deploy with JReleaser
+      #   if: github.event_name == 'release'
+      #   run: ./gradlew jreleaserDeploy
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
+      #     ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+      #     ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+      #     ORG_GRADLE_PROJECT_signingInMemoryPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}

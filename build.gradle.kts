@@ -23,6 +23,7 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.5.0"
+    id("org.jreleaser") version "1.15.0"
     id("me.champeau.jmh") version "0.7.3"
 }
 
@@ -390,6 +391,47 @@ publishing {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+// JReleaser configuration for Central Portal publishing (alternative approach)
+jreleaser {
+    project {
+        description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+        links {
+            homepage.set("https://1c-syntax.github.io/bsl-language-server")
+        }
+        license.set("LGPL-3.0-or-later")
+        authors.add("Alexey Sosnoviy")
+        authors.add("Nikita Fedkin") 
+        authors.add("Valery Maximov")
+        authors.add("Oleg Tymko")
+    }
+    
+    release {
+        github {
+            enabled.set(false)
+        }
+    }
+    
+    signing {
+        active.set(org.jreleaser.model.Active.RELEASE)
+        armored.set(true)
+    }
+    
+    deploy {
+        maven {
+            mavenCentral {
+                create("sonatype") {
+                    active.set(org.jreleaser.model.Active.RELEASE)
+                    url.set("https://central.sonatype.com/api/v1/publisher")
+                    stagingRepository("build/staging-deploy")
+                    
+                    username.set(findProperty("sonatypeUsername") as String? ?: "")
+                    password.set(findProperty("sonatypePassword") as String? ?: "")
+                }
+            }
+        }
+    }
 }
 
 fun buildTime(): String {
