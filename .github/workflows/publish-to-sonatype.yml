@@ -22,7 +22,7 @@ jobs:
           cache: gradle
       - name: Deploy with JReleaser to Central Portal
         run: |
-          ./gradlew publishMavenPublicationToStagingRepository -x javadoc
+          ./gradlew publishMavenPublicationToStagingRepository
           ./gradlew jreleaserDeploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
