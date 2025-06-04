@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - develop
+      - copilot/fix-3482
   workflow_dispatch:
 
 jobs:
