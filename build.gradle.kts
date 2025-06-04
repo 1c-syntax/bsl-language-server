@@ -23,7 +23,6 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.5.0"
-    id("io.codearte.nexus-staging") version "0.30.0"
     id("me.champeau.jmh") version "0.7.3"
 }
 
@@ -387,11 +386,6 @@ publishing {
             }
         }
     }
-}
-
-nexusStaging {
-    serverUrl = "https://s01.oss.sonatype.org/service/local/"
-    stagingProfileId = "15bd88b4d17915" // ./gradlew getStagingProfile
 }
 
 tasks.withType<GenerateModuleMetadata> {
