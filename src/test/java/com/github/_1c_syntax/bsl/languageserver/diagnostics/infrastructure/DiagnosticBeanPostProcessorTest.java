@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MagicNumberDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -32,7 +33,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -47,7 +47,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 class DiagnosticBeanPostProcessorTest {
 
   @Autowired
-  private ConfigurableApplicationContext applicationContext;
+  private DiagnosticBeanPostProcessor diagnosticBeanPostProcessor;
+
+  @Autowired
+  private DiagnosticObjectProvider diagnosticObjectProvider;
 
   @Autowired
   private LanguageServerConfiguration configuration;
@@ -55,8 +58,7 @@ class DiagnosticBeanPostProcessorTest {
   @Test
   void testPostProcessAfterInitializationWithClassCastExceptionShouldNotCrash() throws Exception {
     // given
-    var diagnosticBeanPostProcessor = applicationContext.getBean(DiagnosticBeanPostProcessor.class);
-    var diagnostic = new MagicNumberDiagnostic();
+    var diagnostic = diagnosticObjectProvider.get(MagicNumberDiagnostic.class);
     
     // Create configuration that will cause ClassCastException with values different from defaults
     var diagnosticsOptions = new DiagnosticsOptions();
