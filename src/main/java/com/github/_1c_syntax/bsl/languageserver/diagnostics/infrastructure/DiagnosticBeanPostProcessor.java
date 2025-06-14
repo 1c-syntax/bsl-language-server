@@ -30,8 +30,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -69,51 +67,15 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getCode().getStringValue());
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-      var configurationMap = diagnosticConfiguration.getRight();
-      var normalizedConfiguration = normalizeConfigurationTypes(configurationMap);
-      diagnostic.configure(normalizedConfiguration);
+      try {
+        diagnostic.configure(diagnosticConfiguration.getRight());
+      } catch (Exception e) {
+        LOGGER.error("Failed to configure diagnostic '{}': {}. Diagnostic will use default configuration.", 
+                     diagnostic.getInfo().getCode().getStringValue(), e.getMessage(), e);
+      }
     }
 
     return diagnostic;
-  }
-
-  /**
-   * Normalizes configuration values to handle type conversions that may cause ClassCastException.
-   * Specifically handles conversion of List to String by joining with commas.
-   * 
-   * @param configuration Original configuration map
-   * @return Normalized configuration map with converted types
-   */
-  private Map<String, Object> normalizeConfigurationTypes(Map<String, Object> configuration) {
-    Map<String, Object> normalizedConfig = new HashMap<>();
-    
-    for (Map.Entry<String, Object> entry : configuration.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      
-      try {
-        if (value instanceof List<?>) {
-          // Convert List to comma-separated String
-          List<?> listValue = (List<?>) value;
-          String stringValue = listValue.stream()
-            .map(Object::toString)
-            .reduce((a, b) -> a + "," + b)
-            .orElse("");
-          normalizedConfig.put(key, stringValue);
-          LOGGER.debug("Converted List configuration parameter '{}' to String: '{}'", key, stringValue);
-        } else {
-          // Keep the value as-is
-          normalizedConfig.put(key, value);
-        }
-      } catch (Exception e) {
-        // If any conversion fails, log warning and keep original value
-        LOGGER.warn("Failed to normalize configuration parameter '{}' with value '{}': {}. Using original value.", 
-                   key, value, e.getMessage());
-        normalizedConfig.put(key, value);
-      }
-    }
-    
-    return normalizedConfig;
   }
 
 }
