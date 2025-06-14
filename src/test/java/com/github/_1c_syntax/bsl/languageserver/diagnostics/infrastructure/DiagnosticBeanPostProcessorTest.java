@@ -29,65 +29,41 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class DiagnosticBeanPostProcessorTest {
 
-  @Mock
+  @Autowired
   private LanguageServerConfiguration configuration;
 
-  @Mock
+  @Autowired
   private Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
 
-  @Mock
+  @Autowired
   private Resources resources;
 
-  @Mock
-  private DiagnosticInfo diagnosticInfo;
-
-  @Mock
-  private DiagnosticCode diagnosticCode;
-
-  @Mock
-  private DiagnosticsOptions diagnosticsOptions;
-
-  private DiagnosticBeanPostProcessor diagnosticBeanPostProcessor;
-
-  @BeforeEach
-  void setUp() {
-    diagnosticBeanPostProcessor = new DiagnosticBeanPostProcessor(configuration, diagnosticInfos, resources);
-  }
-
   @Test
-  void testPostProcessAfterInitializationWithClassCastExceptionShouldNotCrash() {
+  void testPostProcessAfterInitializationWithClassCastExceptionShouldNotCrash() throws Exception {
     // given
+    var diagnosticBeanPostProcessor = new DiagnosticBeanPostProcessor(configuration, diagnosticInfos, resources);
     var diagnostic = new MagicNumberDiagnostic();
     
-    // Mock DiagnosticInfo and DiagnosticCode
-    lenient().when(diagnosticCode.getStringValue()).thenReturn("MagicNumber");
-    lenient().when(diagnosticInfo.getCode()).thenReturn(diagnosticCode);
-    lenient().when(diagnosticInfos.get(MagicNumberDiagnostic.class)).thenReturn(diagnosticInfo);
-    
-    // Mock configuration that will cause ClassCastException
+    // Create configuration that will cause ClassCastException
+    var diagnosticsOptions = new DiagnosticsOptions();
     var parameters = new HashMap<String, Either<Boolean, Map<String, Object>>>();
     
-    // Create a configuration that will cause ClassCastException
     Map<String, Object> configMap = new HashMap<>();
     List<String> invalidAuthorizedNumbers = new ArrayList<>();
     invalidAuthorizedNumbers.add("-1");
@@ -96,21 +72,27 @@ class DiagnosticBeanPostProcessorTest {
     configMap.put("authorizedNumbers", invalidAuthorizedNumbers); // This should be a String but is a List
     
     parameters.put("MagicNumber", Either.forRight(configMap));
-    when(diagnosticsOptions.getParameters()).thenReturn(parameters);
-    when(configuration.getDiagnosticsOptions()).thenReturn(diagnosticsOptions);
-    lenient().when(resources.getResourceString(any(Class.class), anyString(), anyString(), anyString()))
-      .thenReturn("Test error message");
+    diagnosticsOptions.setParameters(parameters);
+    
+    // Use reflection to set the diagnosticsOptions in configuration
+    Field diagnosticsOptionsField = configuration.getClass().getDeclaredField("diagnosticsOptions");
+    diagnosticsOptionsField.setAccessible(true);
+    diagnosticsOptionsField.set(configuration, diagnosticsOptions);
 
     // when/then - should not throw any exception, diagnostic configuration should fail gracefully
     assertDoesNotThrow(() -> {
-      // First set the diagnostic info (simulating postProcessBeforeInitialization)
-      diagnostic.setInfo(diagnosticInfo);
+      // First set the diagnostic info (postProcessBeforeInitialization)
+      var result1 = diagnosticBeanPostProcessor.postProcessBeforeInitialization(diagnostic, "testBean");
       
       // Then configure it (postProcessAfterInitialization)
-      var result = diagnosticBeanPostProcessor.postProcessAfterInitialization(diagnostic, "testBean");
+      var result2 = diagnosticBeanPostProcessor.postProcessAfterInitialization(result1, "testBean");
       
       // Verify the diagnostic bean is returned (normal behavior even with configuration error)
-      assert result == diagnostic;
+      assertThat(result2).isSameAs(diagnostic);
     });
+    
+    // Verify the diagnostic exists and has info set (basic functionality should work)
+    assertThat(diagnostic.getInfo()).isNotNull();
+    assertThat(diagnostic.getInfo().getCode()).isNotNull();
   }
 }

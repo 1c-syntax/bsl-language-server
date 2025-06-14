@@ -74,7 +74,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       } catch (Exception e) {
         var errorMessage = resources.getResourceString(getClass(), "diagnosticConfigurationError", 
                                                      diagnostic.getInfo().getCode().getStringValue(), e.getMessage());
-        LOGGER.error(errorMessage, e);
+        LOGGER.warn(errorMessage, e);
       }
     }
 
