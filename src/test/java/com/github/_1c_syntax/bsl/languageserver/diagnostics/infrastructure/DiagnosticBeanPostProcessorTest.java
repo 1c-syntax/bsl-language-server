@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -46,18 +47,15 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 class DiagnosticBeanPostProcessorTest {
 
   @Autowired
+  private ConfigurableApplicationContext applicationContext;
+
+  @Autowired
   private LanguageServerConfiguration configuration;
-
-  @Autowired
-  private Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
-
-  @Autowired
-  private Resources resources;
 
   @Test
   void testPostProcessAfterInitializationWithClassCastExceptionShouldNotCrash() throws Exception {
     // given
-    var diagnosticBeanPostProcessor = new DiagnosticBeanPostProcessor(configuration, diagnosticInfos, resources);
+    var diagnosticBeanPostProcessor = applicationContext.getBean(DiagnosticBeanPostProcessor.class);
     var diagnostic = new MagicNumberDiagnostic();
     
     // Create configuration that will cause ClassCastException
