@@ -58,16 +58,17 @@ class DiagnosticBeanPostProcessorTest {
     var diagnosticBeanPostProcessor = applicationContext.getBean(DiagnosticBeanPostProcessor.class);
     var diagnostic = new MagicNumberDiagnostic();
     
-    // Create configuration that will cause ClassCastException
+    // Create configuration that will cause ClassCastException with values different from defaults
     var diagnosticsOptions = new DiagnosticsOptions();
     var parameters = new HashMap<String, Either<Boolean, Map<String, Object>>>();
     
     Map<String, Object> configMap = new HashMap<>();
     List<String> invalidAuthorizedNumbers = new ArrayList<>();
-    invalidAuthorizedNumbers.add("-1");
-    invalidAuthorizedNumbers.add("0");
-    invalidAuthorizedNumbers.add("1");
+    invalidAuthorizedNumbers.add("-2"); // Different from default "-1,0,1"
+    invalidAuthorizedNumbers.add("2");
+    invalidAuthorizedNumbers.add("3");
     configMap.put("authorizedNumbers", invalidAuthorizedNumbers); // This should be a String but is a List
+    configMap.put("allowMagicIndexes", false); // Different from default true
     
     parameters.put("MagicNumber", Either.forRight(configMap));
     diagnosticsOptions.setParameters(parameters);
@@ -92,5 +93,21 @@ class DiagnosticBeanPostProcessorTest {
     // Verify the diagnostic exists and has info set (basic functionality should work)
     assertThat(diagnostic.getInfo()).isNotNull();
     assertThat(diagnostic.getInfo().getCode()).isNotNull();
+    
+    // Use reflection to verify the state of diagnostic parameters after configuration failure
+    Field authorizedNumbersField = diagnostic.getClass().getDeclaredField("authorizedNumbers");
+    authorizedNumbersField.setAccessible(true);
+    @SuppressWarnings("unchecked")
+    List<String> actualAuthorizedNumbers = (List<String>) authorizedNumbersField.get(diagnostic);
+    
+    Field allowMagicIndexesField = diagnostic.getClass().getDeclaredField("allowMagicIndexes");
+    allowMagicIndexesField.setAccessible(true);
+    boolean actualAllowMagicIndexes = (boolean) allowMagicIndexesField.get(diagnostic);
+    
+    // Verify actual state after configuration failure
+    // authorizedNumbers should be empty (cleared but not repopulated due to ClassCastException)
+    // allowMagicIndexes should be false (configured successfully before the exception)
+    assertThat(actualAuthorizedNumbers).isEmpty();
+    assertThat(actualAllowMagicIndexes).isFalse();
   }
 }
