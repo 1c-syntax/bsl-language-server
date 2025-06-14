@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import java.util.Optional;
     DiagnosticTag.BADPRACTICE
   }
 )
+@Slf4j
 public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_NUMBERS = "-1,0,1";
@@ -68,10 +70,40 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
     this.authorizedNumbers.clear();
 
-    var authorizedNumbersString =
-      (String) configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
-    for (String s : authorizedNumbersString.split(",")) {
-      this.authorizedNumbers.add(s.trim());
+    var authorizedNumbersValue = configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
+    
+    try {
+      if (authorizedNumbersValue instanceof String) {
+        // Handle string format: "-1,0,1"
+        String authorizedNumbersString = (String) authorizedNumbersValue;
+        for (String s : authorizedNumbersString.split(",")) {
+          this.authorizedNumbers.add(s.trim());
+        }
+      } else if (authorizedNumbersValue instanceof List<?>) {
+        // Handle list format: ["-1", "0", "1"] 
+        List<?> authorizedNumbersList = (List<?>) authorizedNumbersValue;
+        for (Object item : authorizedNumbersList) {
+          if (item instanceof String) {
+            this.authorizedNumbers.add(((String) item).trim());
+          } else {
+            // Convert to string if possible
+            this.authorizedNumbers.add(String.valueOf(item).trim());
+          }
+        }
+      } else {
+        // Unsupported type - log warning and use defaults
+        LOGGER.warn("Invalid configuration for authorizedNumbers parameter. Expected String or List, got {}. Using default value: {}", 
+                    authorizedNumbersValue.getClass().getSimpleName(), DEFAULT_AUTHORIZED_NUMBERS);
+        for (String s : DEFAULT_AUTHORIZED_NUMBERS.split(",")) {
+          this.authorizedNumbers.add(s.trim());
+        }
+      }
+    } catch (Exception e) {
+      // Catch any unexpected errors during configuration and use defaults
+      LOGGER.warn("Error configuring authorizedNumbers parameter: {}. Using default value: {}", e.getMessage(), DEFAULT_AUTHORIZED_NUMBERS);
+      for (String s : DEFAULT_AUTHORIZED_NUMBERS.split(",")) {
+        this.authorizedNumbers.add(s.trim());
+      }
     }
   }
 
