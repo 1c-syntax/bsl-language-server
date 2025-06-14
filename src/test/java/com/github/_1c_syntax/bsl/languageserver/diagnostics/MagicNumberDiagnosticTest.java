@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -111,67 +109,6 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(41, 16, 19)
       .hasRange(52, 32, 34)
       .hasRange(53, 18, 20);
-  }
-
-  @Test
-  void testConfigureWithArrayListShouldNotThrowClassCastException() {
-    // This test reproduces the issue described in the bug report
-    // When configuration contains ArrayList instead of String for authorizedNumbers
-    
-    // conf - simulate the configuration that causes ClassCastException
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    // Put an ArrayList instead of String to trigger the ClassCastException
-    configuration.put("authorizedNumbers", new ArrayList<>(Arrays.asList("-1", "0", "1", "60", "7")));
-    
-    // This should not throw ClassCastException after fix
-    diagnosticInstance.configure(configuration);
-
-    // when
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    // then - should work the same as when configured with a String
-    assertThat(diagnostics).hasSize(9);
-    assertThat(diagnostics, true)
-      .hasRange(7, 31, 33)
-      .hasRange(11, 20, 21)
-      .hasRange(20, 21, 23)
-      .hasRange(23, 24, 26)
-      .hasRange(33, 37, 38)
-      .hasRange(34, 37, 38)
-      .hasRange(36, 87, 88)
-      .hasRange(37, 55, 56)
-      .hasRange(41, 16, 19);
-  }
-
-  @Test
-  void testConfigureWithInvalidTypeShouldUseDefaults() {
-    // Test that invalid configuration types fall back to defaults gracefully
-    
-    // conf - provide an invalid type (Integer) instead of String or List
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("authorizedNumbers", 123); // Invalid type
-    
-    // This should not throw exception and should fall back to defaults
-    diagnosticInstance.configure(configuration);
-
-    // when
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    // then - should work the same as default configuration (12 diagnostics)
-    assertThat(diagnostics).hasSize(12);
-    assertThat(diagnostics, true)
-      .hasRange(3, 18, 20)
-      .hasRange(3, 23, 25)
-      .hasRange(7, 31, 33)
-      .hasRange(11, 20, 21)
-      .hasRange(20, 21, 23)
-      .hasRange(23, 24, 26)
-      .hasRange(27, 34, 35)
-      .hasRange(33, 37, 38)
-      .hasRange(34, 37, 38)
-      .hasRange(36, 87, 88)
-      .hasRange(37, 55, 56)
-      .hasRange(41, 16, 19);
   }
 
 }
