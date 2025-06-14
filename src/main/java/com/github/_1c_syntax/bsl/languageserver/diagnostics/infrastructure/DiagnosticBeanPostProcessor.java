@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -39,6 +40,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
   private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
+  private final Resources resources;
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -70,8 +72,9 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       try {
         diagnostic.configure(diagnosticConfiguration.getRight());
       } catch (Exception e) {
-        LOGGER.error("Failed to configure diagnostic '{}': {}. Diagnostic will use default configuration.", 
-                     diagnostic.getInfo().getCode().getStringValue(), e.getMessage(), e);
+        var errorMessage = resources.getResourceString(getClass(), "diagnosticConfigurationError", 
+                                                     diagnostic.getInfo().getCode().getStringValue(), e.getMessage());
+        LOGGER.error(errorMessage, e);
       }
     }
 
