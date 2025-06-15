@@ -75,10 +75,8 @@ class DiagnosticBeanPostProcessorTest {
     parameters.put("MagicNumber", Either.forRight(configMap));
     diagnosticsOptions.setParameters(parameters);
     
-    // Use reflection to set the diagnosticsOptions in configuration
-    Field diagnosticsOptionsField = configuration.getClass().getDeclaredField("diagnosticsOptions");
-    diagnosticsOptionsField.setAccessible(true);
-    diagnosticsOptionsField.set(configuration, diagnosticsOptions);
+    // Set the diagnostics options using the getter to access the existing object
+    configuration.getDiagnosticsOptions().setParameters(parameters);
 
     // when/then - should not throw any exception, diagnostic configuration should fail gracefully
     assertDoesNotThrow(() -> {
