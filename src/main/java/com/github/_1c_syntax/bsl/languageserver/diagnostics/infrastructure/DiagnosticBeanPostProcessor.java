@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -35,6 +36,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -46,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Component
 @Slf4j
+@CacheConfig(cacheNames = "diagnosticSchemaValidation")
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
@@ -55,6 +61,19 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
   
   private JsonSchema parametersSchema;
   private final Map<String, JsonSchema> diagnosticSchemas = new ConcurrentHashMap<>();
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Сбрасывает кеш валидации схем при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  @CacheEvict(allEntries = true)
+  public void handleLanguageServerConfigurationChange(LanguageServerConfigurationChangedEvent event) {
+    // No-op. Служит для сброса кеша при изменении конфигурации
+  }
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -86,7 +105,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       try {
         // Validate configuration against JSON schema if available
         var diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
-        validateDiagnosticConfiguration(diagnosticCode, diagnosticConfiguration.getRight());
+        validateDiagnosticConfigurationCached(diagnosticCode, diagnosticConfiguration.getRight());
         
         diagnostic.configure(diagnosticConfiguration.getRight());
       } catch (Exception e) {
@@ -97,6 +116,18 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
     }
 
     return diagnostic;
+  }
+
+  /**
+   * Cached validation of diagnostic configuration against JSON schema.
+   * Results are cached per diagnostic class and configuration to improve performance for prototype beans.
+   * 
+   * @param diagnosticCode Diagnostic code
+   * @param configuration Configuration map to validate
+   */
+  @Cacheable
+  private void validateDiagnosticConfigurationCached(String diagnosticCode, Map<String, Object> configuration) {
+    validateDiagnosticConfiguration(diagnosticCode, configuration);
   }
 
   private void validateDiagnosticConfiguration(String diagnosticCode, Map<String, Object> configuration) {
