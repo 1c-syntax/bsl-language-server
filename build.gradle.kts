@@ -117,6 +117,9 @@ dependencies {
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    
+    // JSON schema validation
+    implementation("com.networknt:json-schema-validator:1.5.4")
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.2")

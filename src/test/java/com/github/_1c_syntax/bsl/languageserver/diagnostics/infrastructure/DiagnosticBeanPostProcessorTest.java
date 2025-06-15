@@ -124,4 +124,63 @@ class DiagnosticBeanPostProcessorTest {
     // but after configuration failure they remain empty due to the configure() method clearing
     // the list first and then failing to repopulate it.
   }
+
+  @Test
+  void testSchemaValidationWithValidConfiguration() throws Exception {
+    // given
+    var diagnostic = diagnosticObjectProvider.get(MagicNumberDiagnostic.class);
+    
+    var parameters = new HashMap<String, Either<Boolean, Map<String, Object>>>();
+    Map<String, Object> configMap = new HashMap<>();
+    configMap.put("authorizedNumbers", "-1,0,1,100"); // Valid string format
+    configMap.put("allowMagicIndexes", false); // Valid boolean
+    
+    parameters.put("MagicNumber", Either.forRight(configMap));
+    configuration.getDiagnosticsOptions().setParameters(parameters);
+    
+    // when/then - should not throw any exception with valid configuration
+    assertDoesNotThrow(() -> {
+      var result1 = diagnosticBeanPostProcessor.postProcessBeforeInitialization(diagnostic, "testBean");
+      var result2 = diagnosticBeanPostProcessor.postProcessAfterInitialization(result1, "testBean");
+      assertThat(result2).isSameAs(diagnostic);
+    });
+    
+    // Verify configuration was applied correctly
+    Field authorizedNumbersField = diagnostic.getClass().getDeclaredField("authorizedNumbers");
+    authorizedNumbersField.setAccessible(true);
+    @SuppressWarnings("unchecked")
+    List<String> actualAuthorizedNumbers = (List<String>) authorizedNumbersField.get(diagnostic);
+    
+    Field allowMagicIndexesField = diagnostic.getClass().getDeclaredField("allowMagicIndexes");
+    allowMagicIndexesField.setAccessible(true);
+    boolean actualAllowMagicIndexes = (boolean) allowMagicIndexesField.get(diagnostic);
+    
+    assertThat(actualAuthorizedNumbers).containsExactly("-1", "0", "1", "100");
+    assertThat(actualAllowMagicIndexes).isFalse();
+  }
+
+  @Test
+  void testSchemaValidationWithInvalidType() throws Exception {
+    // given
+    var diagnostic = diagnosticObjectProvider.get(MagicNumberDiagnostic.class);
+    
+    var parameters = new HashMap<String, Either<Boolean, Map<String, Object>>>();
+    Map<String, Object> configMap = new HashMap<>();
+    configMap.put("authorizedNumbers", 123); // Invalid type - should be string
+    configMap.put("allowMagicIndexes", "not_a_boolean"); // Invalid type - should be boolean
+    
+    parameters.put("MagicNumber", Either.forRight(configMap));
+    configuration.getDiagnosticsOptions().setParameters(parameters);
+    
+    // when/then - should not throw any exception but should log schema validation errors
+    assertDoesNotThrow(() -> {
+      var result1 = diagnosticBeanPostProcessor.postProcessBeforeInitialization(diagnostic, "testBean");
+      var result2 = diagnosticBeanPostProcessor.postProcessAfterInitialization(result1, "testBean");
+      assertThat(result2).isSameAs(diagnostic);
+    });
+    
+    // Configuration should fail and diagnostic should continue to work
+    assertThat(diagnostic.getInfo()).isNotNull();
+    assertThat(diagnostic.getInfo().getCode()).isNotNull();
+  }
 }
