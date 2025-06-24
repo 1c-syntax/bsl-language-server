@@ -28,19 +28,25 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Slf4j
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
   private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
+  @Lazy
   private final Resources resources;
+  @Lazy
   private final DiagnosticParameterValidator diagnosticParameterValidator;
 
   @Override
