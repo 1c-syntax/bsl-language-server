@@ -43,8 +43,6 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
   private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
   @Lazy
   private final Resources resources;
-  @Lazy
-  private final DiagnosticParameterValidator diagnosticParameterValidator;
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -74,10 +72,6 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       try {
-        // Validate configuration against JSON schema if available
-        var diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
-        diagnosticParameterValidator.validateDiagnosticConfiguration(diagnosticCode, diagnosticConfiguration.getRight());
-        
         diagnostic.configure(diagnosticConfiguration.getRight());
       } catch (Exception e) {
         var errorMessage = resources.getResourceString(getClass(), "diagnosticConfigurationError", 
