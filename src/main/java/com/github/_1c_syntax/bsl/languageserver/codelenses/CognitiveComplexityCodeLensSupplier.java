@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.commands.ToggleCognitiveComplexi
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -35,7 +33,6 @@ import java.util.Map;
  * Сапплаер линз, показывающий когнитивную сложность методов.
  */
 @Component
-@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
   public CognitiveComplexityCodeLensSupplier(

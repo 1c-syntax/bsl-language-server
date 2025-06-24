@@ -39,8 +39,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -58,7 +56,6 @@ import java.util.regex.Pattern;
  * Физически выполняет команды по получению идентификаторов тестов на основании конфигурации.
  */
 @Component
-@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @RequiredArgsConstructor
 @Slf4j
 @CacheConfig(cacheNames = "testIds")

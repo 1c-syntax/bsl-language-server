@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -36,7 +34,6 @@ import java.util.Map;
  * Поставщик подсказок о когнитивной сложности методов.
  */
 @Component
-@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @RequiredArgsConstructor
 public class CognitiveComplexityInlayHintSupplier extends AbstractComplexityInlayHintSupplier {
 
