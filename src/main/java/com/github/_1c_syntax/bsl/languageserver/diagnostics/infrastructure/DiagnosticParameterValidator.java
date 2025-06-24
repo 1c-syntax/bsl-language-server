@@ -28,6 +28,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
@@ -35,6 +36,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -42,6 +44,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Валидатор параметров диагностик с кешированием результатов проверки.
+ * <p>
+ * Выполняет валидацию конфигурации диагностик против JSON-схемы для обеспечения
+ * корректности параметров. Результаты валидации кешируются по классу диагностики
+ * и конфигурации для повышения производительности при работе с prototype-бинами.
+ * <p>
+ * Кеш автоматически сбрасывается при получении события {@link LanguageServerConfigurationChangedEvent}.
+ * Ошибки валидации логируются как предупреждения, но не препятствуют созданию диагностик.
+ * 
+ * @see LanguageServerConfigurationChangedEvent
+ * @see DiagnosticBeanPostProcessor
+ */
 @RequiredArgsConstructor
 @Component
 @Slf4j
@@ -51,7 +66,9 @@ public class DiagnosticParameterValidator {
   private final Resources resources;
   private final ObjectMapper objectMapper;
   
-  private JsonSchema parametersSchema;
+  @Getter(lazy = true)
+  @Nullable
+  private final JsonSchema parametersSchema = loadParametersSchema();
   private final Map<String, JsonSchema> diagnosticSchemas = new ConcurrentHashMap<>();
 
   /**
@@ -105,13 +122,10 @@ public class DiagnosticParameterValidator {
 
   private JsonSchema loadDiagnosticSchema(String diagnosticCode) {
     try {
-      if (parametersSchema == null) {
-        parametersSchema = loadParametersSchema();
-      }
-      
-      if (parametersSchema != null) {
+      var schema = getParametersSchema();
+      if (schema != null) {
         // Extract the specific diagnostic schema from the main schema
-        var schemaNode = parametersSchema.getSchemaNode();
+        var schemaNode = schema.getSchemaNode();
         var definitionsNode = schemaNode.get("definitions");
         if (definitionsNode != null && definitionsNode.has(diagnosticCode)) {
           var diagnosticSchemaNode = definitionsNode.get(diagnosticCode);
