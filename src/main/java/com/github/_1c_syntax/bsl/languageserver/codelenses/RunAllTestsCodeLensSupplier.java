@@ -32,6 +32,8 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Paths;
@@ -43,6 +45,7 @@ import java.util.Map;
  * Поставщик линзы для запуска всех тестов в текущем файле.
  */
 @Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Slf4j
 public class RunAllTestsCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> {

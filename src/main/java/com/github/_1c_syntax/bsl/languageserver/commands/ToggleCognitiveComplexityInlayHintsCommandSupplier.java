@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.commands;
 
 import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.CognitiveComplexityInlayHintSupplier;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
 /**
  * Поставщик команды переключения подсказок когнитивной сложности.
  */
 @Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ToggleCognitiveComplexityInlayHintsCommandSupplier
   extends AbstractToggleComplexityInlayHintsCommandSupplier {
 
