@@ -28,8 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 public class ObjectMapperConfiguration  {
 
   @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public ObjectMapper objectMapper(
     Collection<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
     Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
