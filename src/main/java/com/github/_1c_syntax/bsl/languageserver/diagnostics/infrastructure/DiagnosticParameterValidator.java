@@ -31,9 +31,12 @@ import com.networknt.schema.ValidationMessage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Role;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.lang.Nullable;
@@ -59,11 +62,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @RequiredArgsConstructor
 @Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Slf4j
 @CacheConfig(cacheNames = "diagnosticSchemaValidation")
 public class DiagnosticParameterValidator {
 
   private final Resources resources;
+  @Lazy
   private final ObjectMapper objectMapper;
   
   @Getter(lazy = true)
