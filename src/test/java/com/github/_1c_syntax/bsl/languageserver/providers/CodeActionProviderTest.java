@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.StringInterner;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -42,7 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.CheckForNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -167,7 +167,7 @@ class CodeActionProviderTest {
     ;
   }
 
-  private static boolean toBoolean(@CheckForNull Boolean value) {
+  private static boolean toBoolean(@Nullable Boolean value) {
     if (value == null) {
       return false;
     }

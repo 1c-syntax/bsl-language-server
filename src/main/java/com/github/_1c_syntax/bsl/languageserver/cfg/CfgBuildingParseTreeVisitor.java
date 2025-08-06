@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,7 +29,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree> {
 
@@ -115,7 +114,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // тело true
     blocks.enterBlock();
-    ctx.ifBranch().codeBlock().accept(this);
+    if (ctx.ifBranch().codeBlock() != null) {
+      ctx.ifBranch().codeBlock().accept(this);
+    }
     var truePart = blocks.leaveBlock();
 
     graph.addEdge(conditionStatement, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
@@ -148,12 +149,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     while (!currentLevelBlock.getBuildParts().isEmpty()) {
       var blockTail = currentLevelBlock.getBuildParts().pop();
-      if (hasNoSignificantEdges(blockTail) && blockTail instanceof BasicBlockVertex) {
-        // это мертвый код. Он может быть пустым блоком
-        // тогда он не нужен сам по себе
-        var basicBlock = (BasicBlockVertex) blockTail;
-        if (basicBlock.statements().isEmpty())
-          continue;
+      // это мертвый код. Он может быть пустым блоком
+      // тогда он не нужен сам по себе
+      if (hasNoSignificantEdges(blockTail)
+        && blockTail instanceof BasicBlockVertex basicBlock
+        && basicBlock.statements().isEmpty()) {
+        continue;
       }
       graph.addEdge(blockTail, upperBlock.end());
     }
@@ -163,7 +164,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   private boolean hasNoSignificantEdges(CfgVertex blockTail) {
     var edges = graph.incomingEdgesOf(blockTail);
-    return edges.isEmpty() || (adjacentDeadCodeEnabled && edges.stream().allMatch(x -> x.getType() == CfgEdgeType.ADJACENT_CODE));
+    return edges.isEmpty()
+      || (adjacentDeadCodeEnabled
+      && edges.stream().allMatch(x -> x.getType() == CfgEdgeType.ADJACENT_CODE));
   }
 
   @Override
@@ -372,8 +375,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return ctx;
     }
 
-    if (!isStatementLevelPreproc(ctx))
+    if (!isStatementLevelPreproc(ctx)) {
       return super.visitPreproc_if(ctx);
+    }
 
     var node = new PreprocessorConditionVertex(ctx);
     graph.addVertex(node);
@@ -477,14 +481,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     // присоединяем все прямые выходы из тел условий
     while (!mainIf.getBuildParts().isEmpty()) {
       var blockTail = mainIf.getBuildParts().pop();
-      if (hasNoSignificantEdges(blockTail) && blockTail instanceof BasicBlockVertex) {
-        // это мертвый код. Он может быть пустым блоком
-        // тогда он не нужен сам по себе
-        var basicBlock = (BasicBlockVertex) blockTail;
-        if (basicBlock.statements().isEmpty()) {
-          graph.removeVertex(basicBlock);
-          continue;
-        }
+
+      // это мертвый код. Он может быть пустым блоком
+      // тогда он не нужен сам по себе
+      if (hasNoSignificantEdges(blockTail)
+        && blockTail instanceof BasicBlockVertex basicBlock
+        && basicBlock.statements().isEmpty()) {
+
+        graph.removeVertex(basicBlock);
+        continue;
       }
       graph.addVertex(blockTail);
       graph.addEdge(blockTail, upperBlock.end());
@@ -493,15 +498,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private boolean isStatementLevelPreproc(BSLParserRuleContext ctx) {
+  private static boolean isStatementLevelPreproc(BSLParserRuleContext ctx) {
     return ctx.getParent().getParent().getRuleIndex() == BSLParser.RULE_statement;
   }
 
   private PreprocessorConditionVertex popPreprocCondition() {
     var node = blocks.getCurrentBlock().getBuildParts().peek();
-    if (node instanceof PreprocessorConditionVertex) {
+    if (node instanceof PreprocessorConditionVertex preprocessorConditionVertex) {
       blocks.getCurrentBlock().getBuildParts().pop();
-      return (PreprocessorConditionVertex) node;
+      return preprocessorConditionVertex;
     }
     return null;
   }
@@ -545,12 +550,11 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   private void connectGraphTail(StatementsBlockWriter.StatementsBlockRecord currentBlock, CfgVertex vertex) {
 
-    if (!(currentBlock.end() instanceof BasicBlockVertex)) {
+    if (!(currentBlock.end() instanceof BasicBlockVertex currentTail)) {
       graph.addEdge(currentBlock.end(), vertex);
       return;
     }
 
-    var currentTail = (BasicBlockVertex) currentBlock.end();
     if (currentTail.statements().isEmpty()) {
       // перевести все связи на новую вершину
       var incoming = graph.incomingEdgesOf(currentTail);
@@ -575,17 +579,17 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   private void removeOrphanedNodes() {
     var orphans = graph.vertexSet().stream()
       .filter(vertex -> !(vertex instanceof ExitVertex))
-      .filter(vertex -> {
+      .filter((CfgVertex vertex) -> {
         var edges = new ArrayList<>(graph.edgesOf(vertex));
 
-        return edges.isEmpty() ||
-          adjacentDeadCodeEnabled &&
-            edges.size() == 1
-            && edges.get(0).getType() == CfgEdgeType.ADJACENT_CODE
-            && graph.getEdgeTarget(edges.get(0)) == vertex;
+        return edges.isEmpty()
+          || (adjacentDeadCodeEnabled
+          && edges.size() == 1
+          && edges.get(0).getType() == CfgEdgeType.ADJACENT_CODE
+          && graph.getEdgeTarget(edges.get(0)) == vertex);
 
       })
-      .collect(Collectors.toList());
+      .toList();
 
     // в одном стриме бывает ConcurrentModificationException
     // делаем через другую коллекцию

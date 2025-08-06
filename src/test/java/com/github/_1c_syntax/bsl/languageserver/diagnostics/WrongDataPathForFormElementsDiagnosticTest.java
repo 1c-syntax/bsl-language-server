@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.Configuration;
-import com.github._1c_syntax.mdclasses.mdo.children.Form;
+import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +33,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -64,9 +62,8 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
 
     context = spy(context);
     final var configuration = spy(context.getConfiguration());
-    when(context.getConfiguration()).thenReturn(configuration);
-
     fillConfigChildrenByFormsWithoutModule(configuration);
+    when(context.getConfiguration()).thenReturn(configuration);
 
     List<Diagnostic> diagnostics = getDiagnosticListForMockedFile(pathToManagedApplicationModuleFile);
 
@@ -100,21 +97,24 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
 
   }
 
-  private void fillConfigChildrenByFormsWithoutModule(Configuration configuration) {
-    final var childrenByMdoRefFromConfig = configuration.getChildrenByMdoRef();
-    var childrenByMdoRef = childrenByMdoRefFromConfig.entrySet().stream()
-      .filter(entry -> entry.getValue() instanceof Form)
-      .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-        ((Form) entry.getValue()).setModules(Collections.emptyList());
-        return entry.getValue();
-      }));
-    when(configuration.getChildrenByMdoRef()).thenReturn(childrenByMdoRef);
+  private void fillConfigChildrenByFormsWithoutModule(CF configuration) {
+    var plainChildren = configuration.getPlainChildren().stream()
+      .filter(md -> md instanceof Form)
+      .map(md -> {
+        var mockMD = spy(md);
+        when(((Form) mockMD).getModules()).thenReturn(Collections.emptyList());
+        return mockMD;
+      })
+      .toList();
+
+    when(configuration.getPlainChildren()).thenReturn(plainChildren);
   }
 
   private List<Diagnostic> getDiagnosticListForMockedFile(String pathToDynamicListModuleFile) {
     var testFile = Paths.get(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
 
-    var documentContext = TestUtils.getDocumentContext(testFile.toUri(), getText());
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText()));
+    when(documentContext.getServerContext()).thenReturn(context);
 
     return getDiagnostics(documentContext);
   }

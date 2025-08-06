@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -19,6 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-@ParametersAreNonnullByDefault package com.github._1c_syntax.bsl.languageserver.util;
+@DefaultAnnotation(NonNull.class)
+package com.github._1c_syntax.bsl.languageserver.util;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

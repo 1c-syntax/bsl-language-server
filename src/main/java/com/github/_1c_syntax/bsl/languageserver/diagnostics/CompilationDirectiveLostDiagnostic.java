@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,10 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -53,11 +53,8 @@ public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnosti
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     if (documentContext.getModuleType() == ModuleType.FormModule) {
       var mdo = documentContext.getMdObject();
-      if (mdo.isPresent() && mdo.get() instanceof AbstractMDOForm) {
-        var form = (AbstractMDOForm) mdo.get();
-        if (form.getFormType() != FormType.MANAGED) {
-          return ctx;
-        }
+      if (mdo.isPresent() && mdo.get() instanceof Form form && form.getFormType() != FormType.MANAGED) {
+        return ctx;
       }
     }
     return super.visitFile(ctx);
@@ -65,22 +62,17 @@ public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
-
     if (ctx.compilerDirective().isEmpty()) {
       diagnosticStorage.addDiagnostic(ctx.subName(), info.getMessage(ctx.subName().getText()));
     }
-
     return ctx;
   }
 
   @Override
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
-
     if (ctx.compilerDirective().isEmpty()) {
       diagnosticStorage.addDiagnostic(ctx.subName(), info.getMessage(ctx.subName().getText()));
     }
-
     return ctx;
   }
 }
-

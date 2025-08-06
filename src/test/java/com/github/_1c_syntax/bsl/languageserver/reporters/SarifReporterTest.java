@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,7 +27,6 @@ import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;

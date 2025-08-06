@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -84,15 +83,16 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
   @Test
   void testEmptyIfBodies() {
-    var sample = "Функция Тест()\n" +
-    "  Список = Новый СписокЗначений;\n" +
-    "  #Если Сервер Или ТолстыйКлиентОбычноеПриложение Или ВнешнееСоединение Тогда\n" +
-    "      Если Условие Тогда\n" +
-    "      Иначе\n" +
-    "      КонецЕсли;\n" +
-    "  #КонецЕсли\n" +
-    "  Возврат Список;\n" +
-    "КонецФункции";
+    var sample = """
+      Функция Тест()
+        Список = Новый СписокЗначений;
+        #Если Сервер Или ТолстыйКлиентОбычноеПриложение Или ВнешнееСоединение Тогда
+            Если Условие Тогда
+            Иначе
+            КонецЕсли;
+        #КонецЕсли
+        Возврат Список;
+      КонецФункции""";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
@@ -104,17 +104,18 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   @Test
   void testExitByRaiseException() {
     var sample =
-      "Функция Тест()\n" +
-      "#Если Не ВебКлиент Тогда\n" +
-      "  Массив = Новый Массив;\n" +
-      "  Если Условие Тогда\n" +
-      "  Возврат Массив;\n" +
-      "  КонецЕсли;\n" +
-      "  Возврат ПустойМассив;\n" +
-      "#Иначе\n" +
-      "  ВызватьИсключение \"Упс\";\n" +
-      "#КонецЕсли\n" +
-      "КонецФункции";
+      """
+        Функция Тест()
+        #Если Не ВебКлиент Тогда
+          Массив = Новый Массив;
+          Если Условие Тогда
+          Возврат Массив;
+          КонецЕсли;
+          Возврат ПустойМассив;
+        #Иначе
+          ВызватьИсключение "Упс";
+        #КонецЕсли
+        КонецФункции""";
 
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);

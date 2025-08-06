@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -44,9 +45,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -54,8 +53,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -105,7 +104,6 @@ public class ReferenceIndexFiller {
 
     @Override
     public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
-
       if (ctx.globalMethodCall() != null) {
         // see visitGlobalMethodCall
         return super.visitCallStatement(ctx);
@@ -123,14 +121,12 @@ public class ReferenceIndexFiller {
 
     @Override
     public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-
-      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
         return super.visitComplexIdentifier(ctx);
       }
 
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
-
       return super.visitComplexIdentifier(ctx);
     }
 
@@ -151,7 +147,7 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
-        if (doCallContext == null){
+        if (doCallContext == null) {
           return super.visitNewExpression(ctx);
         }
         var callParamList = doCallContext.callParamList().callParam();
@@ -179,11 +175,11 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
-      if (identifier != null){
+      if (identifier != null) {
         final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
           .map(BSLParser.AcceptorContext::modifier)
           .orElseGet(Collections::emptyList);
-        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
+        var mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
         if (!mdoRef.isEmpty()) {
           Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
         }
@@ -194,10 +190,10 @@ public class ReferenceIndexFiller {
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
       final var configuration = documentContext.getServerContext().getConfiguration();
-      Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
+      Map<ModuleType, URI> modules = configuration.mdoModuleTypes(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
-            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
+          || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
@@ -210,7 +206,7 @@ public class ReferenceIndexFiller {
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
       // todo: move this out of method 
-      if (mdoRef.isEmpty()){
+      if (mdoRef.isEmpty()) {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
@@ -232,7 +228,7 @@ public class ReferenceIndexFiller {
         .map(BSLParser.MemberContext::complexIdentifier)
         .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
         .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
-      if (complexIdentifierContext1.isEmpty()){
+      if (complexIdentifierContext1.isEmpty()) {
         return "";
       }
       return complexIdentifierContext1
@@ -250,7 +246,7 @@ public class ReferenceIndexFiller {
         .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
         .map(ParseTree::getText)
-        .map(configuration::getCommonModule)
+        .map(configuration::findCommonModule)
         .filter(Optional::isPresent)
         .flatMap(Optional::stream)
         .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
@@ -291,7 +287,7 @@ public class ReferenceIndexFiller {
           .ifPresent(scope -> currentScope = scope);
       }
 
-      BSLParserRuleContext result = super.visitSub(ctx);
+      var result = super.visitSub(ctx);
       currentScope = documentContext.getSymbolTree().getModule();
       return result;
     }
@@ -324,7 +320,10 @@ public class ReferenceIndexFiller {
 
       var variableName = ctx.IDENTIFIER().getText();
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
+        .ifPresent(s -> addVariableUsage(
+            s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
+          )
+        );
       return super.visitCallStatement(ctx);
     }
 
@@ -336,7 +335,10 @@ public class ReferenceIndexFiller {
 
       var variableName = ctx.IDENTIFIER().getText();
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
+        .ifPresent(s -> addVariableUsage(
+            s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
+          )
+        );
       return super.visitComplexIdentifier(ctx);
     }
 
@@ -396,7 +398,8 @@ public class ReferenceIndexFiller {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
     }
 
-    private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx, VariableSymbol variableSymbol) {
+    private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx,
+                                              VariableSymbol variableSymbol) {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
     }
 
@@ -412,7 +415,7 @@ public class ReferenceIndexFiller {
                                   String variableName,
                                   Range range,
                                   boolean usage) {
-      String methodName = "";
+      var methodName = "";
 
       if (methodSymbol.isPresent()) {
         methodName = methodSymbol.get().getName();
@@ -428,7 +431,5 @@ public class ReferenceIndexFiller {
         !usage
       );
     }
-
   }
-
 }

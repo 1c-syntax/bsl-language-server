@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.StringInterner;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -41,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -201,7 +201,7 @@ public class CyclomaticComplexityComputer
 
   @Override
   public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.MethodNameContext methodNameContext = ctx.methodName();
+    var methodNameContext = ctx.methodName();
     if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
       if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
@@ -234,15 +234,14 @@ public class CyclomaticComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext)) {
+      if (!(tree instanceof BSLParserRuleContext parserRule)) {
         continue;
       }
 
-      BSLParserRuleContext parserRule = ((BSLParserRuleContext) tree);
-      if (parserRule instanceof BSLParser.MemberContext) {
-        flattenMember(result, (BSLParser.MemberContext) parserRule);
-      } else if (parserRule instanceof BSLParser.OperationContext) {
-        flattenOperation(result, (BSLParser.OperationContext) parserRule);
+      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+        flattenMember(result, memberContext);
+      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+        flattenOperation(result, operationContext);
       }
     }
 
@@ -264,7 +263,7 @@ public class CyclomaticComplexityComputer
     final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
 
     if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
-      final CommonToken splitter = new CommonToken(-1);
+      final var splitter = new CommonToken(-1);
       result.add(splitter);
       result.addAll(nestedTokens);
       result.add(splitter);

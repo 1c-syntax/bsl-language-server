@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
@@ -84,7 +85,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(parameterDefinition -> Pair.of(methodSymbol, parameterDefinition));
   }
 
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
+                                                               ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
       // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
@@ -153,13 +155,14 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
 
     return assignment.flatMap(assignContext ->
         Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
-      .map(TerminalNode::getParent);
+      .map(TerminalNode::getParent)
+      .map(RuleNode.class::cast);
   }
 
   private static boolean isVarNameOnlyIntoExpression(RuleNode refContext) {
@@ -169,7 +172,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
       .filter(BSLParser.MemberContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(expression -> expression.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .isPresent();
@@ -181,7 +184,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
         documentContext.getUri(),
         reference.getSelectionRange(),
         "+1"
-      )).collect(Collectors.toList());
+      )).toList();
     var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
     resultRefs.add(RelatedInformation.create(
       documentContext.getUri(),

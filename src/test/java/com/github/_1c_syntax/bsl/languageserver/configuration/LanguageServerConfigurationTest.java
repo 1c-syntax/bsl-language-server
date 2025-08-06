@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -108,6 +109,10 @@ class LanguageServerConfigurationTest {
     assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
+    var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
+    assertThat(annotations)
+      .hasSize(2)
+      .contains("Test", "Test2");
   }
 
   @Test
@@ -152,6 +157,7 @@ class LanguageServerConfigurationTest {
     // when
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    InlayHintOptions inlayHintOptions = configuration.getInlayHintOptions();
 
     // then
     assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
@@ -162,6 +168,10 @@ class LanguageServerConfigurationTest {
     assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
     assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
     assertThat(diagnosticsOptions.getParameters()).isEmpty();
+
+    assertThat(inlayHintOptions.getParameters())
+      .containsEntry("sourceDefinedMethodCall", Either.forRight(Map.of("showParametersWithTheSameName", true)));
+
   }
 
 }

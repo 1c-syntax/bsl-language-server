@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperatio
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -145,6 +144,21 @@ class ExpressionParseTreeRewriterTest {
     assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
     assertThat(((UnaryOperationNode) negation).getOperator()).isEqualTo(BslOperator.NOT);
 
+  }
+
+  @Test
+  void booleanNotPriority() {
+    var code = "Рез = Не Б <> Неопределено И Ложь";
+    var expressionTree = getExpressionTree(code);
+    var binary = (BinaryOperationNode) expressionTree;
+
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.AND);
+
+    var negation = binary.getLeft().<UnaryOperationNode>cast();
+    assertThat(negation.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+    assertThat(negation.getOperator()).isEqualTo(BslOperator.NOT);
+
+    assertThat((binary.getRight()).getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
   }
 
   @Test
@@ -296,9 +310,10 @@ class ExpressionParseTreeRewriterTest {
 
   @Test
   void realLifeHardExpression() {
-    var code = "СодержитПоля = ВложенныеЭлементы.Количество() > 0\n" +
-      "И Не (ВложенныеЭлементы.Количество() = 1\n" +
-      "И ТипЗнч(ВложенныеЭлементы[0]) = Тип(\"АвтоВыбранноеПолеКомпоновкиДанных\"));";
+    var code = """
+      СодержитПоля = ВложенныеЭлементы.Количество() > 0
+      И Не (ВложенныеЭлементы.Количество() = 1
+      И ТипЗнч(ВложенныеЭлементы[0]) = Тип("АвтоВыбранноеПолеКомпоновкиДанных"));""";
 
     var expressionTree = getExpressionTree(code);
     var binary = (BinaryOperationNode) expressionTree;
@@ -317,8 +332,46 @@ class ExpressionParseTreeRewriterTest {
     assertThat(binary.getRight().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.EQUAL);
   }
 
+  @Test
+  void notOperatorPriority() {
+    var code = "А = Не Разыменование.Метод() = Неопределено";
+
+    var expressionTree = getExpressionTree(code);
+
+    assertThat(expressionTree.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+
+    var unary = expressionTree.<UnaryOperationNode>cast();
+    assertThat(unary.getOperator()).isEqualTo(BslOperator.NOT);
+    assertThat(unary.getOperand()).isInstanceOf(BinaryOperationNode.class);
+
+    var binary = unary.getOperand().<BinaryOperationNode>cast();
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(binary.getLeft().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+
+  }
+
+  @Test
+  void notOperatorPriority_with_parenthesis() {
+    var code = "А = Не (Разыменование.Метод() = Неопределено)";
+
+    var expressionTree = getExpressionTree(code);
+
+    assertThat(expressionTree.getNodeType()).isEqualTo(ExpressionNodeType.UNARY_OP);
+
+    var unary = expressionTree.<UnaryOperationNode>cast();
+    assertThat(unary.getOperator()).isEqualTo(BslOperator.NOT);
+    assertThat(unary.getOperand()).isInstanceOf(BinaryOperationNode.class);
+
+    var binary = unary.getOperand().<BinaryOperationNode>cast();
+    assertThat(binary.getOperator()).isEqualTo(BslOperator.EQUAL);
+    assertThat(binary.getLeft().<BinaryOperationNode>cast().getOperator()).isEqualTo(BslOperator.DEREFERENCE);
+    assertThat(binary.getRight().getNodeType()).isEqualTo(ExpressionNodeType.LITERAL);
+
+  }
+
   BslExpression getExpressionTree(String code) {
     var expression = parse(code);
-    return ExpressionParseTreeRewriter.buildExpressionTree(expression);
+    return ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
   }
 }

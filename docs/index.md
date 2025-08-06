@@ -2,13 +2,12 @@
 
 [![Actions Status](https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg)](https://github.com/1c-syntax/bsl-language-server/actions)
 [![Download](https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&style=flat)](https://github.com/1c-syntax/bsl-language-server/releases/latest)
-[![JitPack](https://jitpack.io/v/1c-syntax/bsl-language-server.svg)](https://jitpack.io/#1c-syntax/bsl-language-server)
+[![Latest release](https://badgen.net/github/release/1c-syntax/bsl-language-server)](https://github.com/1c-syntax/bsl-language-server/releases)
 [![GitHub Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/latest/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
 [![GitHub All Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
-[![Qodana](https://github.com/1c-syntax/bsl-language-server/actions/workflows/qodana.yml/badge.svg)](https://1c-syntax.github.io/bsl-language-server/qodana)
 [![Transifex](https://img.shields.io/badge/translation-transifex-green)](https://www.transifex.com/1c-syntax/bsl-language-server)
 [![Benchmark](bench/benchmark.svg)](bench/index.html)
 [![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
@@ -61,7 +60,7 @@
     | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
     | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
     | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/cross.svg" alt="no" width="20"> |                                                              |
+    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
     | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
     | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
 
@@ -112,6 +111,9 @@
     | [semanticTokens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [linkedEditingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [moniker](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [inlayHint](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    | resolveProvider = false | да |
+    | [inlayHint/resolve](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [inlayHint/refresh](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_inlayHint_refresh) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
 
 <a id="cli"></a>
 
@@ -204,7 +206,7 @@ Run analysis and get diagnostic info
 ```
 
 Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
-Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе **Репортеры**.
+Для формирования отчета об анализе требуется указать один из "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе **Репортеры**.
 
 Пример строки запуска анализа:
 

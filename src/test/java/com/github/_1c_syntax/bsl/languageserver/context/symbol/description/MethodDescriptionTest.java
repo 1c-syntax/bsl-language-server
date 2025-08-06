@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,7 +29,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,24 +43,38 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(14);
+      assertThat(methods).hasSize(16);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .collect(Collectors.toList());
+        .toList();
 
-      assertThat(methodsWithDescription.size()).isEqualTo(13);
+      assertThat(methodsWithDescription.size()).isEqualTo(15);
     }
+  }
+
+  @Test
+  void testMethodWithAnnotationBeforeDescription() {
+    var method = methodsWithDescription.get(14);
+    assertThat(method.getDescription()).isEqualTo("// Описание процедуры");
+  }
+
+  @Test
+  void testMethodWithAnnotation() {
+    var method = methodsWithDescription.get(13);
+    assertThat(method.getDescription()).isEqualTo("// Описание процедуры");
   }
 
   @Test
   void testMethod13() {
     var method = methodsWithDescription.get(12);
-    assertThat(method.getPurposeDescription()).isEqualTo("Значения реквизитов, прочитанные из информационной базы для нескольких объектов.\n" +
-      "\nЕсли необходимо зачитать реквизит независимо от прав текущего пользователя,\n" +
-      "то следует использовать предварительный переход в привилегированный режим.");
+    assertThat(method.getPurposeDescription()).isEqualTo("""
+      Значения реквизитов, прочитанные из информационной базы для нескольких объектов.
+
+      Если необходимо зачитать реквизит независимо от прав текущего пользователя,
+      то следует использовать предварительный переход в привилегированный режим.""");
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
@@ -74,9 +87,10 @@ class MethodDescriptionTest {
     assertThat(param.getName()).isEqualTo("Ссылки");
     assertThat(param.getTypes()).hasSize(1);
     assertThat(param.getTypes().get(0).getName()).isEqualTo("Массив");
-    assertThat(param.getTypes().get(0).getDescription()).isEqualTo("массив ссылок на объекты одного типа.\n" +
-      "Значения массива должны быть ссылками на объекты одного типа.\n" +
-      "если массив пуст, то результатом будет пустое соответствие.");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo("""
+      массив ссылок на объекты одного типа.
+      Значения массива должны быть ссылками на объекты одного типа.
+      если массив пуст, то результатом будет пустое соответствие.""");
     assertThat(param.isHyperlink()).isFalse();
 
     param = method.getParameters().get(1);
@@ -93,11 +107,12 @@ class MethodDescriptionTest {
     assertThat(param.getTypes()).hasSize(1);
     assertThat(param.getTypes().get(0).getName()).isEqualTo("Булево");
     assertThat(param.getTypes().get(0).getDescription()).isEqualTo(
-      "если Истина, то запрос к объектам выполняется с учетом прав пользователя, и в случае,\n" +
-      "- если какой-либо объект будет исключен из выборки по правам, то этот объект\n" +
-      "будет исключен и из результата;\n" +
-      "- если Ложь, то возникнет исключение при отсутствии прав на таблицу\n" +
-      "или любой из реквизитов.");
+      """
+        если Истина, то запрос к объектам выполняется с учетом прав пользователя, и в случае,
+        - если какой-либо объект будет исключен из выборки по правам, то этот объект
+        будет исключен и из результата;
+        - если Ложь, то возникнет исключение при отсутствии прав на таблицу
+        или любой из реквизитов.""");
     assertThat(param.isHyperlink()).isFalse();
 
     var type = method.getReturnedValue().get(0);

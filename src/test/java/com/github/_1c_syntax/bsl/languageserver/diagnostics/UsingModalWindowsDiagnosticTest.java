@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,12 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -42,7 +43,7 @@ import static org.mockito.Mockito.when;
 
 @DirtiesContext
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
-  @SpyBean
+  @MockitoSpyBean
   private ServerContext context;
 
   UsingModalWindowsDiagnosticTest() {
@@ -119,11 +120,9 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
 
     initServerContext(path);
     var configuration = spy(context.getConfiguration());
-    when(configuration.getModalityUseMode()).thenReturn(useMode);
+    when(((Configuration) configuration).getModalityUseMode()).thenReturn(useMode);
     when(context.getConfiguration()).thenReturn(configuration);
 
     return TestUtils.getDocumentContext(testFile.toUri(), getText());
   }
-
 }
-

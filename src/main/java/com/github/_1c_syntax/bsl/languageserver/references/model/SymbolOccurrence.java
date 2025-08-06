@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Обращение к символу в файле.
@@ -51,21 +50,21 @@ public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
   Location location;
 
   @Override
-  public int compareTo(@NotNull SymbolOccurrence o) {
+  public int compareTo(SymbolOccurrence o) {
     if (this.equals(o)) {
       return 0;
     }
     final var uriCompare = location.getUri().compareTo(o.location.getUri());
-    if (uriCompare != 0){
+    if (uriCompare != 0) {
       return uriCompare;
     }
     final var rangesCompare = Ranges.compare(location.getRange(), o.location.getRange());
-    if (rangesCompare != 0){
+    if (rangesCompare != 0) {
       return rangesCompare;
     }
-    final var occurenceCompare = occurrenceType.compareTo(o.occurrenceType);
-    if (occurenceCompare != 0){
-      return occurenceCompare;
+    final var occurrenceCompare = occurrenceType.compareTo(o.occurrenceType);
+    if (occurrenceCompare != 0) {
+      return occurrenceCompare;
     }
     return symbol.compareTo(o.symbol);
   }

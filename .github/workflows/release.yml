@@ -28,83 +28,40 @@ jobs:
 
         steps:
             - name: Checkout source
-              uses: actions/checkout@v3             
+              uses: actions/checkout@v4
+
             - name: Set up JDK
-              uses: actions/setup-java@v3
+              uses: actions/setup-java@v4
               with:
-                java-version: 17
+                java-version: 23
                 distribution: 'temurin'
+                cache: gradle
+
             - name: Build bootJar with Gradle
               run: ./gradlew check bootJar
-            - name: Build jpackage app-image
-              run: |
-                    import os
-                    import platform
-                    import re
-                    import ntpath
-                    import shutil
 
-                    pattern = r"bsl.+\.jar"
-                    thisPlatform = platform.system();
-                    isWindows = False
-                    if thisPlatform == 'Windows':
-                        isWindows = True
-                        
-                    if isWindows:
-                        dirName = os.getcwd() + "\\build\\libs"
-                    else:
-                        dirName = os.getcwd() + "/build/libs"
+            - name: Build jpackage application image
+              run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
 
-                    def start():
-                        fullname = get_bslls_jar(dirName)
-                        if (fullname == None):
-                            exit
-                        
-                        cmdArgs = ['jpackage']
-                        cmdArgs.append('--name')
-                        cmdArgs.append('bsl-language-server')
-                        cmdArgs.append('--input')
-                        cmdArgs.append('build/libs')
-                        cmdArgs.append('--main-jar')
-                        cmdArgs.append(fullname)
-                        if isWindows:
-                            cmdArgs.append('--win-console')
-                        cmdArgs.append('--type')
-                        cmdArgs.append('app-image')
-                        cmdArgs.append('--java-options')
-                        cmdArgs.append('-Xmx2g')
-
-                        cmd = ' '.join(cmdArgs) 
-                        os.system(cmd)
-                          
-                        shutil.make_archive("bsl-language-server_" + "${{ matrix.prefix }}", 'zip', './',"${{ matrix.app-image }}")
-
-                    def get_bslls_jar(dir):
-                        names = os.listdir(dir)
-                        for name in names:
-                            fullname = os.path.join(dir, name)
-                            if os.path.isfile(fullname) and re.search(pattern, fullname) and fullname.find('exec.jar') != -1:
-                                return ntpath.basename(fullname)
-                        return None
-
-                    start()
-              shell: python
             - name: Upload artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
+
             - name: Upload assets to release
-              uses: AButler/upload-release-assets@v2.0
+              uses: AButler/upload-release-assets@v3.0
               with:
                   files: './bsl-language-server_${{ matrix.prefix }}.zip'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
+
             - name: Build with Gradle
               if: matrix.prefix == 'nix'
-              run: ./gradlew build
+              run: ./gradlew build -x test
+
             - name: Upload jar to release
               if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v2.0
+              uses: AButler/upload-release-assets@v3.0
               with:
                   files: './build/libs/*.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}

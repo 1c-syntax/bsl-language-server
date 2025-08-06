@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,7 +26,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.eclipse.lsp4j.websocket.WebSocketEndpoint;
+import org.eclipse.lsp4j.websocket.jakarta.WebSocketEndpoint;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;

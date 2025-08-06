@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+    <appender name="LANGUAGE_CLIENT_AWARE" class="com.github._1c_syntax.bsl.languageserver.infrastructure.LanguageClientAwareAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${CONSOLE_LOG_THRESHOLD}</level>
+        </filter>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>${CONSOLE_LOG_CHARSET}</charset>
+        </encoder>
+    </appender>
+</included>

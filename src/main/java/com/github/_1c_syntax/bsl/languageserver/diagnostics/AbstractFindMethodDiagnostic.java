@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -83,10 +83,10 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    */
   protected String getMessage(BSLParserRuleContext ctx) {
 
-    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
-      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
-    } else if (ctx instanceof BSLParser.MethodCallContext) {
-      return info.getMessage(((BSLParser.MethodCallContext) ctx).methodName().getText());
+    if (ctx instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+      return info.getMessage(globalMethodCallContext.methodName().getText());
+    } else if (ctx instanceof BSLParser.MethodCallContext methodCallContext) {
+      return info.getMessage(methodCallContext.methodName().getText());
     } else {
       return info.getMessage();
     }

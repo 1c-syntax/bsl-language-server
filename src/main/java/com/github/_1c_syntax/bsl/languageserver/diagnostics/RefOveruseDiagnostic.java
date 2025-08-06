@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,18 +26,29 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.TabularSection;
+import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Range;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,91 +66,207 @@ import java.util.stream.Stream;
 public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile("Ссылка|Reference");
-  private static final int BAD_CHILD_COUNT = 3;
+  private static final int COUNT_OF_TABLE_DOT_REF = 3;
+  private static final int LAST_INDEX_OF_TABLE_DOT_REF = COUNT_OF_TABLE_DOT_REF - 1;
   private static final int COUNT_OF_TABLE_DOT_REF_DOT_REF = 5;
-  private Map<String, Boolean> dataSourcesWithTabularFlag = Collections.emptyMap();
+  private static final Set<Integer> RULE_COLUMNS = Set.of(SDBLParser.RULE_column, SDBLParser.RULE_query);
+  private static final Set<Integer> METADATA_TYPES = Set.of(
+    SDBLParser.BUSINESS_PROCESS_TYPE,
+    SDBLParser.CATALOG_TYPE,
+    SDBLParser.DOCUMENT_TYPE,
+    SDBLParser.INFORMATION_REGISTER_TYPE,
+    SDBLParser.CONSTANT_TYPE,
+    SDBLParser.FILTER_CRITERION_TYPE,
+    SDBLParser.EXCHANGE_PLAN_TYPE,
+    SDBLParser.SEQUENCE_TYPE,
+    SDBLParser.DOCUMENT_JOURNAL_TYPE,
+    SDBLParser.ENUM_TYPE,
+    SDBLParser.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
+    SDBLParser.CHART_OF_ACCOUNTS_TYPE,
+    SDBLParser.CHART_OF_CALCULATION_TYPES_TYPE,
+    SDBLParser.ACCUMULATION_REGISTER_TYPE,
+    SDBLParser.ACCOUNTING_REGISTER_TYPE,
+    SDBLParser.CALCULATION_REGISTER_TYPE,
+    SDBLParser.TASK_TYPE,
+    SDBLParser.EXTERNAL_DATA_SOURCE_TYPE);
+  private static final Collection<Integer> EXCLUDED_COLUMNS_ROOT =
+    Set.of(SDBLParser.RULE_inlineTableField, SDBLParser.RULE_query);
+  public static final List<String> SPECIAL_LIST_FOR_DATA_SOURCE = List.of("");
+
+  private Map<String, List<String>> dataSourceWithTabularSectionNames = Collections.emptyMap();
+  private Map<String, List<String>> prevDataSourceWithTabularSectionNames = Collections.emptyMap();
+  @Nullable
+  private Range prevQueryRange;
+
+  @Override
+  public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
+    var result = super.visitQueryPackage(ctx);
+    prevQueryRange = null;
+    prevDataSourceWithTabularSectionNames = Collections.emptyMap();
+    dataSourceWithTabularSectionNames = Collections.emptyMap();
+    return result;
+  }
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     checkQuery(ctx).forEach(diagnosticStorage::addDiagnostic);
-    return ctx;
+    return super.visitQuery(ctx);
   }
 
-  private Stream<BSLParserRuleContext> checkQuery(SDBLParser.QueryContext ctx) {
-    var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
+  private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
+    var columns = Trees.findAllTopLevelDescendantNodes(ctx, RULE_COLUMNS).stream()
+      .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
+      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
+        .getRuleIndex() == SDBLParser.RULE_query)
+      .map(SDBLParser.ColumnContext.class::cast)
+      .collect(Collectors.toList());
 
-    if (columnsCollection.isEmpty()) {
+    if (columns.isEmpty()) {
       return Stream.empty();
     }
 
-    dataSourcesWithTabularFlag = dataSourcesWithTabularSection(ctx);
-    if (dataSourcesWithTabularFlag.isEmpty()) {
-      return getSimpleOverused(columnsCollection);
+    dataSourceWithTabularSectionNames = dataSourcesWithTabularSection(ctx);
+    if (dataSourceWithTabularSectionNames.isEmpty()) {
+      return getSimpleOverused(columns);
     }
 
-    return getOverused(columnsCollection);
+    return getOverused(columns);
   }
 
-  private static Map<String, Boolean> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
-    return findAllDataSourceWithoutInnerQueries(ctx)
+  private Map<String, List<String>> dataSourcesWithTabularSection(SDBLParser.QueryContext ctx) {
+    var newResult = calcDataSourceWithTabularSectionNames(findAllDataSourceWithoutInnerQueries(ctx));
+
+    var queryRange = Ranges.create(ctx);
+
+    final Map<String, List<String>> result;
+    if (prevQueryRange == null || !Ranges.containsRange(prevQueryRange, queryRange)) {
+      result = newResult;
+      prevDataSourceWithTabularSectionNames = result;
+      prevQueryRange = queryRange;
+    } else {
+      result = new HashMap<>(newResult);
+      result.putAll(prevDataSourceWithTabularSectionNames);
+    }
+    return result;
+  }
+
+  private Map<String, List<String>> calcDataSourceWithTabularSectionNames(
+    Stream<? extends SDBLParser.DataSourceContext> dataSources
+  ) {
+
+    return dataSources
+      .map(dataSourceContext -> new TabularSectionTable(getTableNameOrAlias(dataSourceContext),
+        getTabularSectionNames(dataSourceContext)))
       .collect(Collectors.toMap(
-        RefOveruseDiagnostic::getTableNameOrAlias,
-        RefOveruseDiagnostic::isTableWithTabularSection,
-        (existing, replacement) -> existing,
-        HashMap::new));
+        TabularSectionTable::tableNameOrAlias,
+        TabularSectionTable::tabularSectionNames,
+        (existing, replacement) -> existing));
   }
 
   private static Stream<? extends SDBLParser.DataSourceContext> findAllDataSourceWithoutInnerQueries(
     SDBLParser.QueryContext ctx) {
-    if (ctx.from == null){
+    if (ctx.from == null) {
       return Stream.empty();
     }
     return Stream.concat(
       ctx.from.dataSource().stream(),
       ctx.from.dataSource().stream()
-        .flatMap(dataSourceContext -> dataSourceContext.joinPart().stream())
-        .map(SDBLParser.JoinPartContext::dataSource)
-        .filter(Objects::nonNull)
+        .flatMap(dataSourceContext -> getInnerDataSource(dataSourceContext).stream())
     );
+  }
+
+  private static Collection<SDBLParser.DataSourceContext> getInnerDataSource(
+    SDBLParser.DataSourceContext dataSourceContext
+  ) {
+    var result = new ArrayList<SDBLParser.DataSourceContext>();
+    Optional.ofNullable(dataSourceContext.dataSource())
+      .map(RefOveruseDiagnostic::getInnerDataSource)
+      .ifPresent(result::addAll);
+
+    var joinDataSources = dataSourceContext.joinPart().stream()
+      .map(SDBLParser.JoinPartContext::dataSource)
+      .filter(Objects::nonNull)
+      .toList();
+    result.addAll(joinDataSources);
+
+    var dataSourcesFromJoins = joinDataSources.stream()
+      .flatMap(dataSourceContext1 -> getInnerDataSource(dataSourceContext1).stream())
+      .toList();
+
+    result.addAll(dataSourcesFromJoins);
+    return result;
   }
 
   private static String getTableNameOrAlias(SDBLParser.DataSourceContext dataSource) {
     final var value = Optional.of(dataSource);
     return value
       .map(SDBLParser.DataSourceContext::alias)
-      .map(alias -> (ParseTree)alias.name)
+      .map(alias -> (ParseTree) alias.name)
       .or(() -> value
         .map(SDBLParser.DataSourceContext::table)
-        .map(tableContext -> (ParseTree)tableContext.tableName))
+        .map(tableContext -> (ParseTree) tableContext.tableName))
       .or(() -> value
         .map(SDBLParser.DataSourceContext::parameterTable)
-        .map(tableContext -> (ParseTree)tableContext.parameter()))
+        .map(tableContext -> (ParseTree) tableContext.parameter()))
       .map(ParseTree::getText)
       .orElse("");
   }
 
-  private static boolean isTableWithTabularSection(SDBLParser.DataSourceContext dataSourceContext) {
+  private List<String> getTabularSectionNames(SDBLParser.DataSourceContext dataSourceContext) {
     final var table = dataSourceContext.table();
     if (table == null) {
-      return dataSourceContext.virtualTable() != null;
+      return getSpecialListForDataSource(dataSourceContext.virtualTable() != null);
     }
-    return table.tableName != null || table.objectTableName != null;
+    final var mdo = dataSourceContext.table().mdo();
+    if (mdo == null) {
+      return getSpecialListForDataSource(table.tableName != null);
+    }
+    if (table.objectTableName != null) {
+      return SPECIAL_LIST_FOR_DATA_SOURCE;
+    }
+    return getTabularSectionNames(mdo);
   }
 
-  private static Stream<BSLParserRuleContext> getSimpleOverused(Collection<ParseTree> columnsCollection) {
+  private static List<String> getSpecialListForDataSource(boolean useSpecialName) {
+    if (useSpecialName) {
+      return SPECIAL_LIST_FOR_DATA_SOURCE;
+    }
+    return Collections.emptyList();
+  }
+
+  private List<String> getTabularSectionNames(SDBLParser.MdoContext mdo) {
+    final var configuration = documentContext.getServerContext()
+      .getConfiguration();
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY) {
+      return Collections.emptyList();
+    }
+    return MDOType.fromValue(mdo.type.getText()).stream()
+      .map(mdoTypeTabular -> MdoReference.create(mdoTypeTabular, mdo.tableName.getText()))
+      .map(configuration::findChild)
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .filter(TabularSectionOwner.class::isInstance)
+      .map(TabularSectionOwner.class::cast)
+      .flatMap(RefOveruseDiagnostic::getTabularSectionNames)
+      .collect(Collectors.toList());
+  }
+
+  private static Stream<String> getTabularSectionNames(TabularSectionOwner tabularSectionOwner) {
+    return tabularSectionOwner.getTabularSections().stream()
+      .map(TabularSection::getName);
+  }
+
+  private static Stream<SDBLParser.ColumnContext> getSimpleOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
-      .filter(columnNode -> columnNode.getChildCount() > BAD_CHILD_COUNT)
-      .map(column -> column.getChild(column.getChildCount() - 1))
-      .filter(lastChild -> REF_PATTERN.matcher(lastChild.getText()).matches())
-      .map(BSLParserRuleContext.class::cast);
+      .filter(columnNode -> columnNode.getChildCount() > COUNT_OF_TABLE_DOT_REF)
+      .filter(column -> REF_PATTERN.matcher(column.getChild(column.getChildCount() - 1).getText()).matches());
   }
 
-  private Stream<BSLParserRuleContext> getOverused(Collection<ParseTree> columnsCollection) {
+  private Stream<SDBLParser.ColumnContext> getOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
       .map(SDBLParser.ColumnContext.class::cast)
-      .filter(column -> column.getChildCount() >= BAD_CHILD_COUNT)
-      .filter(this::isOveruse)
-      .map(BSLParserRuleContext.class::cast);
+      .filter(column -> column.getChildCount() >= COUNT_OF_TABLE_DOT_REF)
+      .filter(this::isOveruse);
   }
 
   private boolean isOveruse(SDBLParser.ColumnContext ctx) {
@@ -154,26 +281,45 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     //     ^     ^    ^
     //     0     1    2
 
-    final int childCount = ctx.children.size();
+    var children = extractFirstMetadataTypeName(ctx);
+    var refIndex = findLastRef(children);
 
-    // dots are also children of ColumnContext,
-    // that is why -3 must be an index of penultimate identifier
-    var penultimateChild = ctx.getChild(childCount - BAD_CHILD_COUNT);
+    final var lastIndex = children.size() - 1;
+    if (refIndex == lastIndex) {
+      var penultimateIdentifierName = children.get(lastIndex - LAST_INDEX_OF_TABLE_DOT_REF).getText();
+      return dataSourceWithTabularSectionNames.get(penultimateIdentifierName) == null;
+    }
+    if (refIndex < LAST_INDEX_OF_TABLE_DOT_REF) {
+      return false;
+    }
+    if (refIndex > LAST_INDEX_OF_TABLE_DOT_REF) {
+      return true;
+    }
+    var tabName = children.get(0).getText();
+    return dataSourceWithTabularSectionNames.getOrDefault(tabName, Collections.emptyList()).isEmpty();
+  }
 
-    String penultimateIdentifierName = penultimateChild.getText();
-
-    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()) {
-      if (childCount < COUNT_OF_TABLE_DOT_REF_DOT_REF){
-        return true;
+  private static int findLastRef(List<ParseTree> children) {
+    for (int i = children.size() - 1; i >= 0; i--) {
+      final var child = children.get(i);
+      final var childText = child.getText();
+      if (REF_PATTERN.matcher(childText).matches()) {
+        return i;
       }
-      var prevChildID = ctx.getChild(childCount - COUNT_OF_TABLE_DOT_REF_DOT_REF).getText();
-      return !dataSourcesWithTabularFlag.getOrDefault(prevChildID, false);
     }
-    var lastChild = ctx.getChild(childCount - 1);
-    String lastIdentifierName = lastChild.getText();
-    if (REF_PATTERN.matcher(lastIdentifierName).matches()) {
-      return dataSourcesWithTabularFlag.get(penultimateIdentifierName) == null;
+    return -1;
+  }
+
+  private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
+    final var mdoName = ctx.mdoName;
+    final var children = ctx.children;
+    if (mdoName == null || children.size() < COUNT_OF_TABLE_DOT_REF_DOT_REF
+      || !METADATA_TYPES.contains(mdoName.getStart().getType())) {
+      return children;
     }
-    return false;
+    return children.subList(1, children.size() - 1);
+  }
+
+  private record TabularSectionTable(String tableNameOrAlias, List<String> tabularSectionNames) {
   }
 }

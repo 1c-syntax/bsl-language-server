@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,6 +38,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,9 +55,22 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
 
   @EqualsAndHashCode.Include
   DocumentContext owner;
-  Range range;
-  @EqualsAndHashCode.Include
-  Range subNameRange;
+
+  @Getter(AccessLevel.NONE)
+  int startLine;
+  @Getter(AccessLevel.NONE)
+  int startCharacter;
+  @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
+  int endCharacter;
+
+  @Getter(AccessLevel.NONE)
+  int subNameLine;
+  @Getter(AccessLevel.NONE)
+  int subNameStartCharacter;
+  @Getter(AccessLevel.NONE)
+  int subNameEndCharacter;
 
   @Getter
   @Setter
@@ -72,12 +88,22 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   boolean deprecated;
 
   @Builder.Default
-  List<ParameterDefinition> parameters = new ArrayList<>();
+  List<ParameterDefinition> parameters = Collections.emptyList();
 
   @Builder.Default
   Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
   @Builder.Default
-  List<Annotation> annotations = new ArrayList<>();
+  List<Annotation> annotations = Collections.emptyList();
+
+  @Override
+  public Range getRange() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @EqualsAndHashCode.Include
+  public Range getSubNameRange() {
+    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
+  }
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
@@ -93,5 +119,33 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @Override
   public Range getSelectionRange() {
     return getSubNameRange();
+  }
+
+  public static MethodSymbolBuilder builder() {
+    return new MethodSymbolBuilder();
+  }
+
+  public static class MethodSymbolBuilder {
+
+    public MethodSymbolBuilder range(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      startLine = start.getLine();
+      startCharacter = start.getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
+
+      return this;
+    }
+
+    public MethodSymbolBuilder subNameRange(Range range) {
+      var start = range.getStart();
+      var end = range.getEnd();
+      subNameLine = start.getLine();
+      subNameStartCharacter = start.getCharacter();
+      subNameEndCharacter = end.getCharacter();
+
+      return this;
+    }
   }
 }

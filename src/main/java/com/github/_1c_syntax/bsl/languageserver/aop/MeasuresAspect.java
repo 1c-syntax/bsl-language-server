@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,9 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.aop.measures.MeasureCollector;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -36,12 +36,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PreDestroy;
 import java.io.File;
 import java.util.Collection;
 
 @Aspect
-@Slf4j
 @NoArgsConstructor
 public class MeasuresAspect {
 

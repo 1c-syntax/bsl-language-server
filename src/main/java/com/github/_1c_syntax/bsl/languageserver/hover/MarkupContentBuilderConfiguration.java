@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,10 +42,10 @@ public class MarkupContentBuilderConfiguration {
    * @return Карта построителей контента для всплывающего окна и типов символов, для которых они предназначены.
    */
   @Bean
-  public <T extends Symbol> Map<Class<T>, MarkupContentBuilder<T>> markupContentBuilders(
+  public <T extends Symbol> Map<SymbolKind, MarkupContentBuilder<T>> markupContentBuilders(
     Collection<MarkupContentBuilder<T>> builders
   ) {
-    return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getType, Function.identity()));
+    return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getSymbolKind, Function.identity()));
   }
 
 }

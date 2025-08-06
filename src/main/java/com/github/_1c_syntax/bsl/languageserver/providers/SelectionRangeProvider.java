@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,14 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -76,7 +75,7 @@ public class SelectionRangeProvider {
    * Получение данных о {@link SelectionRange} по позиции в документе.
    *
    * @param documentContext контекст документа.
-   * @param params параметры вызова.
+   * @param params          параметры вызова.
    * @return список найденных диапазонов.
    */
   public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
@@ -92,7 +91,7 @@ public class SelectionRangeProvider {
       .collect(Collectors.toList());
   }
 
-  @CheckForNull
+  @Nullable
   private static SelectionRange toSelectionRange(@Nullable ParseTree node) {
     if (node == null) {
       return null;
@@ -130,16 +129,16 @@ public class SelectionRangeProvider {
   }
 
   private static BSLParserRuleContext getParentContext(ParseTree ctx) {
-    if (ctx instanceof BSLParser.StatementContext) {
-      return getStatementParent((BSLParser.StatementContext) ctx);
+    if (ctx instanceof BSLParser.StatementContext statementContext) {
+      return getStatementParent(statementContext);
     }
 
     return getDefaultParent(ctx);
   }
 
-  @CheckForNull
+  @Nullable
   private static BSLParserRuleContext getDefaultParent(ParseTree ctx) {
-    return  (BSLParserRuleContext) ctx.getParent();
+    return (BSLParserRuleContext) ctx.getParent();
   }
 
   private static BSLParserRuleContext getStatementParent(BSLParser.StatementContext statement) {
@@ -202,13 +201,11 @@ public class SelectionRangeProvider {
   }
 
   private static boolean ifBranchMatchesIfStatement(BSLParserRuleContext ctx) {
-    if (!(ctx instanceof BSLParser.IfBranchContext)) {
+    if (!(ctx instanceof BSLParser.IfBranchContext ifBranch)) {
       return false;
     }
 
-    var ifBranch = (BSLParser.IfBranchContext) ctx;
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
     return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
-
 }

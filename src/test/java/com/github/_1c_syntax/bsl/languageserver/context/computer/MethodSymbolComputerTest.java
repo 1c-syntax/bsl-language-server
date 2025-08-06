@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -30,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Compi
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +36,6 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +57,7 @@ class MethodSymbolComputerTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(24);
+    assertThat(methods.size()).isEqualTo(25);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription()).isNotPresent();
@@ -218,13 +215,13 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).isByValue()).isFalse();
     assertThat(parameters.get(2).isOptional()).isTrue();
-    assertThat(parameters.get(2).getDefaultValue().getValue()).isEqualTo("0");
+    assertThat(parameters.get(2).getDefaultValue().value()).isEqualTo("0");
     assertThat(parameters.get(2).getRange()).isEqualTo(Ranges.create(14, 32, 38));
 
     assertThat(parameters.get(3).getName()).isEqualTo("Парам4");
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
-    assertThat(parameters.get(3).getDefaultValue().getValue()).isEqualTo("0");
+    assertThat(parameters.get(3).getDefaultValue().value()).isEqualTo("0");
     assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
 
     parameters = methods.get(23).getParameters();
@@ -234,6 +231,22 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(1).getDescription()).isEmpty();
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).getDescription()).isPresent();
+
+    parameters = methods.get(24).getParameters();
+    assertThat(parameters.get(0).getName()).isEqualTo("Парам1");
+    assertThat(parameters.get(0).getAnnotations()).hasSize(1);
+    assertThat(parameters.get(0).getAnnotations().get(0).getName()).isEqualTo("Повторяемый");
+    assertThat(parameters.get(0).getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(0).getAnnotations().get(0).getParameters()).isEmpty();
+    assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
+    assertThat(parameters.get(1).getAnnotations()).hasSize(1);
+    assertThat(parameters.get(1).getAnnotations().get(0).getName()).isEqualTo("ДругаяАннотация");
+    assertThat(parameters.get(1).getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(1).getAnnotations().get(0).getParameters()).hasSize(1);
+    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).getName()).isEqualTo("");
+    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).getValue()).isEqualTo("СПараметром");
+    assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
+    assertThat(parameters.get(2).getAnnotations()).isEmpty();
 
   }
 
@@ -290,10 +303,11 @@ class MethodSymbolComputerTest {
     ServerContext serverContext,
     String path,
     int methodsCount
-  ) throws IOException {
+  ) {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");

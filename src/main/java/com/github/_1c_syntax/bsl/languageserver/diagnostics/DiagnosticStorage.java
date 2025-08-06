@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -32,7 +33,6 @@ import org.eclipse.lsp4j.DiagnosticCodeDescription;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -209,10 +209,10 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext) {
-      addDiagnostic((BSLParserRuleContext) tree);
-    } else if (tree instanceof TerminalNode) {
-      addDiagnostic((TerminalNode) tree);
+    if (tree instanceof BSLParserRuleContext parserRuleContext) {
+      addDiagnostic(parserRuleContext);
+    } else if (tree instanceof TerminalNode terminalNode) {
+      addDiagnostic(terminalNode);
     } else {
       throw new IllegalArgumentException("Unsupported parameter type " + tree);
     }
@@ -253,5 +253,4 @@ public class DiagnosticStorage {
     }
     return diagnostic;
   }
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
   minutesToFix = 15,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
-  }
+  },
+  extraMinForComplexity = 1
 )
 public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -99,28 +100,6 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       Integer methodComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
-
-        List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-        relatedInformation.add(RelatedInformation.create(
-          documentContext.getUri(),
-          methodSymbol.getSubNameRange(),
-          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-        ));
-
-        List<ComplexitySecondaryLocation> secondaryLocations =
-          documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
-
-        secondaryLocations.stream()
-          .map((ComplexitySecondaryLocation secondaryLocation) ->
-            RelatedInformation.create(
-              documentContext.getUri(),
-              secondaryLocation.getRange(),
-              secondaryLocation.getMessage()
-            )
-          )
-          .collect(Collectors.toCollection(() -> relatedInformation));
-
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
           info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),

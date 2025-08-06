@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 @NoArgsConstructor
 public class LanguageClientHolder implements LanguageClientAware {
 
-  @CheckForNull
+  @Nullable
   private LanguageClient client;
 
   /**

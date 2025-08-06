@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,9 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -84,7 +84,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     }
   }
 
-  private static String getVariableName(@CheckForNull BSLParser.StatementContext statement) {
+  private static String getVariableName(@Nullable BSLParser.StatementContext statement) {
     var variableName = "";
     if (statement != null && statement.assignment() != null) {
       var lValueContext = statement.assignment().lValue();

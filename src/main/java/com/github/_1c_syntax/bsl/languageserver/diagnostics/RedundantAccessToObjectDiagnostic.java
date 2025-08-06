@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,12 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
@@ -68,8 +68,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   private static final boolean CHECK_FORM_MODULE = true;
   private static final boolean CHECK_RECORD_SET_MODULE = true;
 
-  private boolean needCheckName = false;
-  private boolean skipLValue = false;
+  private boolean needCheckName;
+  private boolean skipLValue;
   private Pattern namePatternWithDot;
 
   @DiagnosticParameter(
@@ -94,14 +94,13 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     var typeModule = documentContext.getModuleType();
     if (typeModule == ModuleType.CommonModule || typeModule == ModuleType.ManagerModule) {
-      documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdObjectBase) -> {
-
-        needCheckName = !(mdObjectBase instanceof MDCommonModule)
-          || ((MDCommonModule) mdObjectBase).getReturnValuesReuse() == ReturnValueReuse.DONT_USE;
+      documentContext.getMdObject().ifPresent((MD mdo) -> {
+        needCheckName = !(mdo instanceof CommonModule commonModule)
+          || commonModule.getReturnValuesReuse() == ReturnValueReuse.DONT_USE;
 
         skipLValue = true;
         namePatternWithDot = CaseInsensitivePattern.compile(
-          String.format(getManagerModuleName(mdObjectBase.getMdoType()), mdObjectBase.getName())
+          String.format(getManagerModuleName(mdo.getMdoType()), mdo.getName())
         );
       });
     }

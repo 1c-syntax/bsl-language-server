@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,14 +28,14 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import javax.annotation.PostConstruct;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -54,7 +54,7 @@ class ReferenceIndexReferenceFinderTest {
   @Autowired
   private ServerContext serverContext;
 
-  @SpyBean
+  @MockitoSpyBean
   private ReferenceIndex referenceIndex;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndexReferenceFinder.bsl";

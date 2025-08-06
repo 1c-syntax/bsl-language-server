@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,7 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -40,10 +42,12 @@ import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
+import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
@@ -69,6 +73,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 @Slf4j
 @Component
@@ -78,9 +83,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
+  private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+
   private boolean shutdownWasCalled;
 
   @Override
@@ -89,7 +96,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
     setConfigurationRoot(params);
-    CompletableFuture.runAsync(context::populateContext);
+
+    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+    CompletableFuture
+      .runAsync(context::populateContext, executorService)
+      .thenAccept(unused -> executorService.shutdown())
+    ;
 
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
@@ -108,6 +121,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
+    capabilities.setInlayHintProvider(getInlayHintProvider());
+    capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -308,4 +323,17 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       .orElse(false);
   }
 
+  private static InlayHintRegistrationOptions getInlayHintProvider() {
+    var inlayHintOptions = new InlayHintRegistrationOptions();
+    inlayHintOptions.setResolveProvider(Boolean.FALSE);
+    inlayHintOptions.setWorkDoneProgress(Boolean.FALSE);
+    return inlayHintOptions;
+  }
+
+  private ExecuteCommandOptions getExecuteCommandProvider() {
+    var executeCommandOptions = new ExecuteCommandOptions();
+    executeCommandOptions.setCommands(commandProvider.getCommandIds());
+    executeCommandOptions.setWorkDoneProgress(Boolean.FALSE);
+    return executeCommandOptions;
+  }
 }

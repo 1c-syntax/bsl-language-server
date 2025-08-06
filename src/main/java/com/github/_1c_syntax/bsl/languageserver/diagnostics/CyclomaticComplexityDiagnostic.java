@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
   minutesToFix = 25,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
-  }
+  },
+  extraMinForComplexity = 1
 )
 public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private static final int COMPLEXITY_THRESHOLD = 20;

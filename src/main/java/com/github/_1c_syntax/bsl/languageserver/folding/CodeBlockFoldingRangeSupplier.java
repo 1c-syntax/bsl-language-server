@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -31,7 +32,6 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    CodeBlockVisitor codeBlockVisitor = new CodeBlockVisitor();
+    var codeBlockVisitor = new CodeBlockVisitor();
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
@@ -95,7 +95,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       return super.visitTryStatement(ctx);
     }
 
-    private void addRegionRange(@CheckForNull TerminalNode start, @CheckForNull TerminalNode stop) {
+    private void addRegionRange(@Nullable TerminalNode start, @Nullable TerminalNode stop) {
       if (start == null || stop == null) {
         return;
       }
@@ -104,7 +104,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       int stopLine = stop.getSymbol().getLine();
 
       if (stopLine > startLine) {
-        FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
 
         regionRanges.add(foldingRange);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -32,7 +31,7 @@ public class TestApplicationContext implements ApplicationContextAware {
   private static ApplicationContext CONTEXT;
 
   @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
+  public void setApplicationContext(ApplicationContext context) throws BeansException {
     CONTEXT = context;
   }
 

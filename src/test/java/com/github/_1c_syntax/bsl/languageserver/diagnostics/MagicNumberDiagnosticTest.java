@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -42,15 +42,20 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
-      .hasRange(3, 18, 3, 20)
-      .hasRange(3, 23, 3, 25)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26)
-      .hasRange(27, 34, 27, 35);
+      .hasRange(3, 18, 20)
+      .hasRange(3, 23, 25)
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(27, 34, 35)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(36, 87, 88)
+      .hasRange(37, 55, 56)
+      .hasRange(41, 16, 19);
   }
 
   @Test
@@ -64,12 +69,17 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26);
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(36, 87, 88)
+      .hasRange(37, 55, 56)
+      .hasRange(41, 16, 19);
   }
 
   @Test
@@ -83,17 +93,22 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
-      .hasRange(3, 18, 3, 20)
-      .hasRange(3, 23, 3, 25)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26)
-      .hasRange(27, 34, 27, 35)
-      .hasRange(53, 32, 53, 34)
-      .hasRange(54, 18, 54, 20);
+      .hasRange(3, 18, 20)
+      .hasRange(3, 23, 25)
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(27, 34, 35)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(36, 87, 88)
+      .hasRange(37, 55, 56)
+      .hasRange(41, 16, 19)
+      .hasRange(52, 32, 34)
+      .hasRange(53, 18, 20);
   }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,6 +30,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
+import org.eclipse.lsp4j.util.Positions;
 
 import java.util.Collection;
 import java.util.List;
@@ -144,7 +146,11 @@ public final class Ranges {
   }
 
   public boolean containsPosition(Range range, Position position) {
-    return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+    Preconditions.checkNotNull(range, "range");
+    Preconditions.checkNotNull(position, "position");
+    return range.getStart().equals(position)
+      || (Positions.isBefore(range.getStart(), position)
+        && Positions.isBefore(position, range.getEnd()));
   }
 
   /**

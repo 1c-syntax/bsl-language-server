@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -236,7 +236,9 @@ public class DescriptionReader {
     return strings.toString().strip();
   }
 
-  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+  private List<ParameterDescription> getParametersStrings(
+    List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+
     List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,13 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.PostConstruct;
 import java.nio.file.Paths;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -76,7 +76,7 @@ class DefinitionProviderTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     var params = new DefinitionParams();
-    params.setPosition(new Position(4, 10));
+    params.setPosition(new Position(4, 9));
 
     // when
     var definitions = definitionProvider.getDefinition(documentContext, params);

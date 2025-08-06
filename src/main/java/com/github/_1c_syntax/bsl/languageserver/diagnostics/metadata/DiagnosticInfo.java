@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,11 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +49,7 @@ public class DiagnosticInfo {
     = createSeverityToLSPSeverityMap();
   private static final Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> diagnosticTagMap = createDiagnosticTagMap();
 
+  @Getter
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final LanguageServerConfiguration configuration;
   private final StringInterner stringInterner;
@@ -71,17 +72,13 @@ public class DiagnosticInfo {
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
   }
 
-  public Class<? extends BSLDiagnostic> getDiagnosticClass() {
-    return diagnosticClass;
-  }
-
   public DiagnosticCode getCode() {
     return diagnosticCode;
   }
 
   public String getDiagnosticCodeDescriptionHref() {
     var language = configuration.getLanguage();
-    boolean useDevSite = configuration.isUseDevSite();
+    var useDevSite = configuration.isUseDevSite();
 
     var siteRoot = configuration.getSiteRoot();
     var devSuffix = useDevSite ? "/dev" : "";
@@ -102,10 +99,10 @@ public class DiagnosticInfo {
   }
 
   public String getDescription() {
-    String langCode = configuration.getLanguage().getLanguageCode();
+    var langCode = configuration.getLanguage().getLanguageCode();
 
-    String resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
-    InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
+    var resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
+    var descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
 
     if (descriptionStream == null) {
       LOGGER.error("Can't find resource {}", resourceName);
@@ -192,6 +189,14 @@ public class DiagnosticInfo {
 
   public Optional<DiagnosticParameterInfo> getParameter(String parameterName) {
     return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findAny();
+  }
+
+  public boolean canLocateOnProject() {
+    return diagnosticMetadata.canLocateOnProject();
+  }
+
+  public double getExtraMinForComplexity() {
+    return diagnosticMetadata.extraMinForComplexity();
   }
 
   public Map<String, Object> getDefaultConfiguration() {

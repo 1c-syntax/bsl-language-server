@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.WebService;
+import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDWebService;
-import com.github._1c_syntax.mdclasses.mdo.children.WEBServiceOperation;
 import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
@@ -63,20 +63,19 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
 
   private void processModule() {
     documentContext.getMdObject()
-      .filter(MDWebService.class::isInstance)
-      .map(MDWebService.class::cast)
+      .filter(WebService.class::isInstance)
+      .map(WebService.class::cast)
       .ifPresent(this::checkService);
   }
 
-  private void checkService(MDWebService mdWebService) {
-
+  private void checkService(WebService mdWebService) {
     mdWebService.getOperations()
       .forEach(webServiceOperation -> checkOperation(mdWebService.getName(), webServiceOperation));
   }
 
-  private void checkOperation(String serviceName, WEBServiceOperation webServiceOperation) {
+  private void checkOperation(String serviceName, WebServiceOperation webServiceOperation) {
     final var operationName = webServiceOperation.getName();
-    final var handler = webServiceOperation.getHandler();
+    final var handler = webServiceOperation.getProcedureName();
     if (handler.isEmpty()) {
       addMissingHandlerDiagnostic(serviceName, operationName);
       return;
@@ -101,5 +100,4 @@ public class WrongWebServiceHandlerDiagnostic extends AbstractDiagnostic {
       diagnosticRange,
       info.getResourceString("missingHandler", operationName, serviceName));
   }
-
 }

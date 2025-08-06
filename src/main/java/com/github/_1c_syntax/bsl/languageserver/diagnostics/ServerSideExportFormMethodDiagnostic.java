@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,10 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDOForm;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -52,9 +52,9 @@ public class ServerSideExportFormMethodDiagnostic extends AbstractSymbolTreeDiag
 
   @Override
   public void visitModule(ModuleSymbol module) {
-    documentContext.getMdObject().ifPresent((AbstractMDObjectBase mdo) -> {
+    documentContext.getMdObject().ifPresent((MD mdo) -> {
       // проверка актуальна только для управляемых форм
-      if (mdo instanceof AbstractMDOForm && ((AbstractMDOForm) mdo).getFormType() != FormType.ORDINARY) {
+      if (mdo instanceof Form form && form.getFormType() != FormType.ORDINARY) {
         super.visitModule(module);
       }
     });
@@ -63,8 +63,7 @@ public class ServerSideExportFormMethodDiagnostic extends AbstractSymbolTreeDiag
   @Override
   public void visitMethod(MethodSymbol method) {
     if (method.isExport()
-      && method.getCompilerDirectiveKind()
-      .orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT) {
+      && method.getCompilerDirectiveKind().orElse(CompilerDirectiveKind.AT_SERVER) != CompilerDirectiveKind.AT_CLIENT) {
       diagnosticStorage.addDiagnostic(method);
     }
   }

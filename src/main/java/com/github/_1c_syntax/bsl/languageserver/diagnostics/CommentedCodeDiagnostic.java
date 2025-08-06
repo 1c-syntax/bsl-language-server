@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -87,7 +87,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
     threshold = ((Number) configuration.getOrDefault("threshold", threshold)).floatValue();
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
 
-    String excludePrefixesString = (String) configuration.getOrDefault("exclusionPrefixes", "");
+    var excludePrefixesString = (String) configuration.getOrDefault("exclusionPrefixes", "");
     exclusionPrefixes = Arrays.stream(excludePrefixesString.split(","))
       .map(String::trim)
       .filter(s -> !s.isEmpty())
@@ -138,11 +138,9 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   }
 
   private boolean isAdjacent(Token comment, List<Token> currentGroup) {
-
-    Token last = currentGroup.get(currentGroup.size() - 1);
+    var last = currentGroup.get(currentGroup.size() - 1);
     return last.getLine() + 1 == comment.getLine()
       && onlyEmptyDelimiters(last.getTokenIndex(), comment.getTokenIndex());
-
   }
 
   private boolean onlyEmptyDelimiters(int firstTokenIndex, int lastTokenIndex) {
@@ -165,17 +163,17 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
       return true;
     }
 
-    final Token first = commentGroup.get(0);
-    final Token last = commentGroup.get(commentGroup.size() - 1);
+    final var first = commentGroup.get(0);
+    final var last = commentGroup.get(commentGroup.size() - 1);
 
     return methodDescriptions.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {
-    Token firstComment = commentGroup.get(0);
-    Token lastComment = commentGroup.get(commentGroup.size() - 1);
+    var firstComment = commentGroup.get(0);
+    var lastComment = commentGroup.get(commentGroup.size() - 1);
 
-    for (Token comment : commentGroup) {
+    for (var comment : commentGroup) {
       if (isTextParsedAsCode(comment.getText())) {
         diagnosticStorage.addDiagnostic(firstComment, lastComment);
         return;
@@ -184,9 +182,9 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   }
 
   private boolean isTextParsedAsCode(String text) {
-    String uncommented = uncomment(text);
+    var uncommented = uncomment(text);
 
-    for (String prefix : exclusionPrefixes) {
+    for (var prefix : exclusionPrefixes) {
       if (uncommented.startsWith(prefix)) {
         return false;
       }
@@ -195,16 +193,16 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
       return false;
     }
 
-    BSLTokenizer tokenizer = new BSLTokenizer(uncommented);
-    final List<Token> tokens = tokenizer.getTokens();
+    var tokenizer = new BSLTokenizer(uncommented);
+    final var tokens = tokenizer.getTokens();
 
     // Если меньше двух токенов нет смысла анализировать - это код
     if (tokens.size() >= MINIMAL_TOKEN_COUNT) {
 
-      List<Integer> tokenTypes = tokens.stream()
+      var tokenTypes = tokens.stream()
         .map(Token::getType)
         .filter(t -> t != BSLParser.WHITE_SPACE)
-        .collect(Collectors.toList());
+        .toList();
 
       // Если два идентификатора идут подряд - это не код
       for (int i = 0; i < tokenTypes.size() - 1; i++) {
@@ -229,10 +227,10 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
     List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = diagnostics.stream()
+    var textEdits = diagnostics.stream()
       .map(Diagnostic::getRange)
       .map(range -> new TextEdit(range, ""))
-      .collect(Collectors.toList());
+      .toList();
 
     return CodeActionProvider.createCodeActions(
       textEdits,

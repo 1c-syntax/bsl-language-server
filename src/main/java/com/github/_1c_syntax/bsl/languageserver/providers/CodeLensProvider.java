@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
-import com.github._1c_syntax.bsl.languageserver.codelenses.databind.CodeLensDataObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -40,7 +41,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class CodeLensProvider {
   private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  private final CodeLensDataObjectMapper codeLensDataObjectMapper;
+  private final ObjectMapper objectMapper;
 
   private List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers;
 
@@ -118,17 +118,7 @@ public class CodeLensProvider {
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
     enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
 
-    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getCodeLens)
-      .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
-      .orElse(false);
-
-    if (!clientSupportsRefreshCodeLenses) {
-      return;
-    }
-
-    clientHolder.execIfConnected(LanguageClient::refreshCodeLenses);
+    refreshCodeLenses();
   }
 
   /**
@@ -148,6 +138,23 @@ public class CodeLensProvider {
       return (CodeLensData) rawCodeLensData;
     }
 
-    return codeLensDataObjectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
+    return objectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
+  }
+
+  /**
+   * Отправить запрос на обновление линз кода.
+   */
+  public void refreshCodeLenses() {
+    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getCodeLens)
+      .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
+      .orElse(false);
+
+    if (!clientSupportsRefreshCodeLenses) {
+      return;
+    }
+
+    clientHolder.execIfConnected(LanguageClient::refreshCodeLenses);
   }
 }

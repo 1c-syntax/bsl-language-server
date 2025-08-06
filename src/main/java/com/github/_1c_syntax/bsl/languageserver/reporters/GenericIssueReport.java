@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,12 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
@@ -62,9 +60,9 @@ public class GenericIssueReport {
 
   public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, DiagnosticInfo> diagnosticInfos) {
     issues = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        GenericIssueEntry entry = new GenericIssueEntry(
+    for (var fileInfo : analysisInfo.getFileinfos()) {
+      for (var diagnostic : fileInfo.getDiagnostics()) {
+        var entry = new GenericIssueEntry(
           fileInfo.getPath().toString(),
           diagnostic,
           diagnosticInfos.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
@@ -111,7 +109,7 @@ public class GenericIssueReport {
       primaryLocation = new Location(fileName, diagnostic);
       effortMinutes = diagnosticInfo.getMinutesToFix();
 
-      List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
+      var relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
         secondaryLocations = new ArrayList<>();
       } else {
@@ -172,8 +170,8 @@ public class GenericIssueReport {
     }
 
     public TextRange(Range range) {
-      Position startPosition = range.getStart();
-      Position endPosition = range.getEnd();
+      var startPosition = range.getStart();
+      var endPosition = range.getEnd();
 
       startLine = startPosition.getLine() + 1;
       startColumn = startPosition.getCharacter();

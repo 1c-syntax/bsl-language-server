@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,16 +25,18 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -98,19 +100,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
 
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
+    String typeName = Constructors.typeName(newExpression)
       .orElse(UNDEFINED_TYPE);
 
     if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
@@ -130,10 +120,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     ParserRuleContext parent = modifier.getParent();
-    if (parent instanceof BSLParser.ComplexIdentifierContext) {
-      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
-    } else if (parent instanceof BSLParser.CallStatementContext) {
-      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
+    if (parent instanceof BSLParser.ComplexIdentifierContext complexIdentifierContext) {
+      return getComplexPathName(complexIdentifierContext, modifier);
+    } else if (parent instanceof BSLParser.CallStatementContext parentCall) {
 
       return parentCall.modifier().stream()
         .takeWhile(e -> !e.equals(modifier))
@@ -145,7 +134,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getComplexPathName(
     BSLParser.ComplexIdentifierContext ci,
-    @CheckForNull BSLParser.ModifierContext to
+    @Nullable BSLParser.ModifierContext to
   ) {
 
     return ci.modifier().stream()
@@ -226,7 +215,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(@CheckForNull BSLParser.CodeBlockContext ctx) {
+  private void visitDescendantCodeBlock(@Nullable BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
@@ -246,11 +235,10 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     String variableName = null;
     BSLParserRuleContext errorContext = null;
     BSLParserRuleContext parent = ctx.getParent();
-    if (parent instanceof BSLParser.CallStatementContext) {
+    if (parent instanceof BSLParser.CallStatementContext callStatementContext) {
       errorContext = parent;
-      variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
-    } else if (parent instanceof BSLParser.ModifierContext) {
-      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
+      variableName = getVariableNameFromCallStatementContext(callStatementContext);
+    } else if (parent instanceof BSLParser.ModifierContext callModifier) {
       errorContext = callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
@@ -331,6 +319,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class Scope {
+    @Getter
     private final String name;
 
     private final HashMap<String, VariableDefinition> variables = new HashMap<>();
@@ -352,10 +341,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
           return key;
         });
     }
-
-    public String getName() {
-      return name;
-    }
   }
 
   private static class VariableScope extends ArrayDeque<Scope> {
@@ -369,7 +354,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       return flowType == CodeFlowType.CYCLE;
     }
 
-    public Optional<VariableDefinition> getVariableByName(@CheckForNull String variableName) {
+    public Optional<VariableDefinition> getVariableByName(@Nullable String variableName) {
       return Optional.ofNullable(current().variables.get(variableName));
     }
 

@@ -29,6 +29,9 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
+                "BadWords": {
+                    "$ref": "parameters-schema.json#/definitions/BadWords"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
@@ -116,6 +119,9 @@
                 "DeletingCollectionItem": {
                     "$ref": "parameters-schema.json#/definitions/DeletingCollectionItem"
                 },
+                "DenyIncompleteValues": {
+                    "$ref": "parameters-schema.json#/definitions/DenyIncompleteValues"
+                },
                 "DeprecatedAttributes8312": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedAttributes8312"
                 },
@@ -140,8 +146,20 @@
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
                 },
+                "DisableSafeMode": {
+                    "$ref": "parameters-schema.json#/definitions/DisableSafeMode"
+                },
+                "DoubleNegatives": {
+                    "$ref": "parameters-schema.json#/definitions/DoubleNegatives"
+                },
                 "DuplicateRegion": {
                     "$ref": "parameters-schema.json#/definitions/DuplicateRegion"
+                },
+                "DuplicateStringLiteral": {
+                    "$ref": "parameters-schema.json#/definitions/DuplicateStringLiteral"
+                },
+                "DuplicatedInsertionIntoCollection": {
+                    "$ref": "parameters-schema.json#/definitions/DuplicatedInsertionIntoCollection"
                 },
                 "EmptyCodeBlock": {
                     "$ref": "parameters-schema.json#/definitions/EmptyCodeBlock"
@@ -164,11 +182,20 @@
                 "ExportVariables": {
                     "$ref": "parameters-schema.json#/definitions/ExportVariables"
                 },
+                "ExternalAppStarting": {
+                    "$ref": "parameters-schema.json#/definitions/ExternalAppStarting"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
                 "FieldsFromJoinsWithoutIsNull": {
                     "$ref": "parameters-schema.json#/definitions/FieldsFromJoinsWithoutIsNull"
+                },
+                "FileSystemAccess": {
+                    "$ref": "parameters-schema.json#/definitions/FileSystemAccess"
+                },
+                "ForbiddenMetadataName": {
+                    "$ref": "parameters-schema.json#/definitions/ForbiddenMetadataName"
                 },
                 "FormDataToValue": {
                     "$ref": "parameters-schema.json#/definitions/FormDataToValue"
@@ -218,6 +245,9 @@
                 "IncorrectUseOfStrTemplate": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
                 },
+                "InternetAccess": {
+                    "$ref": "parameters-schema.json#/definitions/InternetAccess"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
@@ -251,8 +281,14 @@
                 "MethodSize": {
                     "$ref": "parameters-schema.json#/definitions/MethodSize"
                 },
+                "MissedRequiredParameter": {
+                    "$ref": "parameters-schema.json#/definitions/MissedRequiredParameter"
+                },
                 "MissingCodeTryCatchEx": {
                     "$ref": "parameters-schema.json#/definitions/MissingCodeTryCatchEx"
+                },
+                "MissingCommonModuleMethod": {
+                    "$ref": "parameters-schema.json#/definitions/MissingCommonModuleMethod"
                 },
                 "MissingEventSubscriptionHandler": {
                     "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
@@ -329,17 +365,41 @@
                 "ParseError": {
                     "$ref": "parameters-schema.json#/definitions/ParseError"
                 },
+                "PrivilegedModuleMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/PrivilegedModuleMethodCall"
+                },
                 "ProcedureReturnsValue": {
                     "$ref": "parameters-schema.json#/definitions/ProcedureReturnsValue"
                 },
+                "ProtectedModule": {
+                    "$ref": "parameters-schema.json#/definitions/ProtectedModule"
+                },
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
+                },
+                "QueryParseError": {
+                    "$ref": "parameters-schema.json#/definitions/QueryParseError"
+                },
+                "QueryToMissingMetadata": {
+                    "$ref": "parameters-schema.json#/definitions/QueryToMissingMetadata"
                 },
                 "RedundantAccessToObject": {
                     "$ref": "parameters-schema.json#/definitions/RedundantAccessToObject"
                 },
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
+                },
+                "ReservedParameterNames": {
+                    "$ref": "parameters-schema.json#/definitions/ReservedParameterNames"
+                },
+                "RewriteMethodParameter": {
+                    "$ref": "parameters-schema.json#/definitions/RewriteMethodParameter"
+                },
+                "SameMetadataObjectAndChildNames": {
+                    "$ref": "parameters-schema.json#/definitions/SameMetadataObjectAndChildNames"
+                },
+                "ScheduledJobHandler": {
+                    "$ref": "parameters-schema.json#/definitions/ScheduledJobHandler"
                 },
                 "SelectTopWithoutOrderBy": {
                     "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
@@ -353,8 +413,14 @@
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
                 },
+                "ServerSideExportFormMethod": {
+                    "$ref": "parameters-schema.json#/definitions/ServerSideExportFormMethod"
+                },
                 "SetPermissionsForNewObjects": {
                     "$ref": "parameters-schema.json#/definitions/SetPermissionsForNewObjects"
+                },
+                "SetPrivilegedMode": {
+                    "$ref": "parameters-schema.json#/definitions/SetPrivilegedMode"
                 },
                 "SeveralCompilerDirectives": {
                     "$ref": "parameters-schema.json#/definitions/SeveralCompilerDirectives"
@@ -379,6 +445,9 @@
                 },
                 "TooManyReturns": {
                     "$ref": "parameters-schema.json#/definitions/TooManyReturns"
+                },
+                "TransferringParametersBetweenClientAndServer": {
+                    "$ref": "parameters-schema.json#/definitions/TransferringParametersBetweenClientAndServer"
                 },
                 "TryNumber": {
                     "$ref": "parameters-schema.json#/definitions/TryNumber"
@@ -415,6 +484,9 @@
                 },
                 "UseLessForEach": {
                     "$ref": "parameters-schema.json#/definitions/UseLessForEach"
+                },
+                "UseSystemInformation": {
+                    "$ref": "parameters-schema.json#/definitions/UseSystemInformation"
                 },
                 "UsingCancelParameter": {
                     "$ref": "parameters-schema.json#/definitions/UsingCancelParameter"
@@ -461,11 +533,17 @@
                 "WrongDataPathForFormElements": {
                     "$ref": "parameters-schema.json#/definitions/WrongDataPathForFormElements"
                 },
+                "WrongHttpServiceHandler": {
+                    "$ref": "parameters-schema.json#/definitions/WrongHttpServiceHandler"
+                },
                 "WrongUseFunctionProceedWithCall": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
+                },
+                "WrongWebServiceHandler": {
+                    "$ref": "parameters-schema.json#/definitions/WrongWebServiceHandler"
                 },
                 "YoLetterUsage": {
                     "$ref": "parameters-schema.json#/definitions/YoLetterUsage"
@@ -516,6 +594,58 @@
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
                 }
             }
+        },
+        "inlayHintParameters": {
+            "$id": "#/definitions/inlayHintParameters",
+            "type": "object",
+            "title": "Inlay hints parameters configuration.\nKey-value object, where key is a inlay hint ID, and value is boolean or object with concrete inlay hint configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            },
+            "properties": {
+                "cognitiveComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cognitive complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cognitiveComplexity"
+                },
+                "cyclomaticComplexity": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show cyclomatic complexity score inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/cyclomaticComplexity"
+                },
+                "sourceDefinedMethodCall": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show parameters of called source defined methods.",
+                    "properties": {
+                        "showParametersWithTheSameName": {
+                            "description": "Show hints for parameters with names that are contained in passed value.",
+                            "default": false,
+                            "type": "boolean",
+                            "title": "Show hints for parameters with names that contains passed value."
+                        },
+                        "showDefaultValues": {
+                            "description": "Show hints with default values for non-passed parameters.",
+                            "default": true,
+                            "type": "boolean",
+                            "title": "Show hints with default values for non-passed parameters."
+                        }
+                    },
+                    "$id": "#/definitions/inlayHintParameters/sourceDefinedMethodCall"
+                }
+            }
         }
     },
     "properties": {
@@ -542,6 +672,78 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/codeLensParameters"
+                },
+                "testRunner": {
+                    "$id": "#/properties/codeLens/testRunner",
+                    "type": "object",
+                    "title": "Test runner configuration to use for 'Run test' code lenses.",
+                    "properties": {
+                        "testSources": {
+                            "$id": "#/properties/codeLens/testRunner/testSources",
+                            "type": "array",
+                            "title": "List of directories with test sources.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "tests"
+                            ]
+                        },
+                        "annotations": {
+                            "$id": "#/properties/codeLens/testRunner/annotations",
+                            "type": "array",
+                            "title": "List of annotations to find test methods.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "\u0422\u0435\u0441\u0442",
+                                "Test"
+                            ]
+                        },
+                        "executable": {
+                            "$id": "#/properties/codeLens/testRunner/executable",
+                            "type": "string",
+                            "title": "Path to test runner executable.",
+                            "default": "1testrunner"
+                        },
+                        "executableWin": {
+                            "$id": "#/properties/codeLens/testRunner/executableWin",
+                            "type": "string",
+                            "title": "Path to test runner executable on Windows systems.",
+                            "default": "1testrunner.bat"
+                        },
+                        "getTestsByTestRunner": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsByTestRunner",
+                            "type": "boolean",
+                            "title": "Use testrunner to get test method names. By default, use internal parser to find methods annotated with &\u0422\u0435\u0441\u0442.",
+                            "default": true
+                        },
+                        "getTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/getTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to get test method names. %s will be replaced with path to current file.",
+                            "default": "-show %s"
+                        },
+                        "getTestsResultPattern": {
+                            "$id": "#/properties/codeLens/testRunner/resultPattern",
+                            "type": "string",
+                            "title": "Regular expression to parse test runner output for method names.",
+                            "default": "^[^<]*<([^>]+)>.*"
+                        },
+                        "runTestArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runTestArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run test method. %s will be replaced with path to current file, %m will be replaced with test method name.",
+                            "default": "-run %s %s"
+                        },
+                        "runAllTestsArguments": {
+                            "$id": "#/properties/codeLens/testRunner/runAllTestsArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to run all tests in current file. %s will be replaced with path to current file.",
+                            "default": "-run %s"
+                        }
+                    }
                 }
             }
         },
@@ -670,6 +872,22 @@
                             }
                         }
                     }
+                },
+                "analyzeOnStart": {
+                    "$id": "#/properties/analyzeOnStart",
+                    "type": "boolean",
+                    "title": "Analyze project and push computed diagnostics to client on server start.",
+                    "default": false,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Analyze project on start."
+                        },
+                        {
+                            "const": false,
+                            "description": "Don't analyze project on start. (default)."
+                        }
+                    ]
                 }
             }
         },
@@ -678,7 +896,7 @@
             "type": "object",
             "title": "Formatting configuration.",
             "properties": {
-                "useUpperCaseForOrNotKeywords": {
+                "useUpperCaseForOrNotAndKeywords": {
                     "$id": "#/properties/useUpperCaseForOrNotAndKeywords",
                     "type": "boolean",
                     "default": true,
@@ -707,6 +925,16 @@
                             "description": "Don't format keywords to canonical view"
                         }
                     ]
+                }
+            }
+        },
+        "inlayHint": {
+            "$id": "#/properties/inlayHint",
+            "type": "object",
+            "title": "Inlay hint configuration.",
+            "properties": {
+                "parameters": {
+                    "$ref": "#/definitions/inlayHintParameters"
                 }
             }
         },

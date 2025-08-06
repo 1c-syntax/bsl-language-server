@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,9 +39,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoFirstLines() {
-    String module = "  \n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+       \s
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -53,10 +54,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyThreeFirstLines() {
-    String module = "  \n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+       \s
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -68,10 +70,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoInnerLines() {
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -83,10 +86,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyTwoInnerLinesWithSpaces() {
-    String module = "Процедура Первая()  \n" +
-      " \n" +
-      " \n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая() \s
+      \s
+      \s
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -98,12 +102,13 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_WorseEmptyTwoInnerLines() {
-    String module = "Процедура Первая()  \n" +
-      "  \n" +
-      "  Метод1(); //комментарии  \n" +
-      "\n" +
-      "  \n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая() \s
+       \s
+        Метод1(); //комментарии \s
+
+       \s
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -115,11 +120,12 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyThreeInnerLines() {
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -131,8 +137,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_EmptyLastLines() {
-    String module = "Перем А;\n" +
-      "\n";
+    String module = """
+      Перем А;
+
+      """;
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -182,11 +190,12 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   void test_ConfigureEmptyLineParam() {
     setTwoForAllowedEmptyLinesCount();
 
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -200,10 +209,11 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   void test_ConfigureEmptyLineParamNoIssue() {
     setTwoForAllowedEmptyLinesCount();
 
-    String module = "Процедура Первая()\n" +
-      "\n" +
-      "\n" +
-      "КонецПроцедуры";
+    String module = """
+      Процедура Первая()
+
+
+      КонецПроцедуры""";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
@@ -267,8 +277,10 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void testQuickFixLastLines() {
-    String module = "Перем А;\n" +
-      "\n";
+    String module = """
+      Перем А;
+
+      """;
     checkQuickFixes(module, true);
   }
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -71,7 +71,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_START
+    defaultValue = DEFAULT_LIST_FOR_CHECK_START
   )
   private Pattern listOfIncorrectFirstSymbol = createPatternIncorrectStartLine(DEFAULT_LIST_FOR_CHECK_START);
 
@@ -83,7 +83,7 @@ public class IncorrectLineBreakDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_END
+    defaultValue = DEFAULT_LIST_FOR_CHECK_END
   )
   private Pattern listOfIncorrectLastSymbol = createPatternIncorrectEndLine(DEFAULT_LIST_FOR_CHECK_END);
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameGlobalClientDiagnostic> {
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
 
   CommonModuleNameGlobalClientDiagnosticTest() {
@@ -206,7 +206,6 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
 
   @SneakyThrows
   void getDocumentContextFromFile() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
@@ -217,9 +216,6 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context
     ));
-
-
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
-
+    module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
   }
 }

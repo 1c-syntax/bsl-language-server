@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -85,19 +85,19 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT
   )
   private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_RIGHT
   )
   private String listForCheckRight = DEFAULT_LIST_FOR_CHECK_RIGHT;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
   )
   private String listForCheckLeftAndRight = DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT;
 
@@ -169,9 +169,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
         }
         addDiagnosticLeftRight(token, noSpaceLeft, noSpaceRight);
       }
-
     }
-
   }
 
   @Override
@@ -196,21 +194,17 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
 
       // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
-      boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
-      boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
+      var missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+      var missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
       var range = diagnostic.getRange();
 
       if (missedLeft) {
-        var textEdit = new TextEdit(
-          new Range(range.getStart(), range.getStart()),
-          " ");
+        var textEdit = new TextEdit(new Range(range.getStart(), range.getStart()), " ");
         textEdits.add(textEdit);
       }
       if (missedRight) {
-        var textEdit = new TextEdit(
-          new Range(range.getEnd(), range.getEnd()),
-          " ");
+        var textEdit = new TextEdit(new Range(range.getEnd(), range.getEnd()), " ");
         textEdits.add(textEdit);
       }
     });
@@ -243,7 +237,6 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
-
     var previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
       && !StringUtils.isWhitespace(previousToken.getText());

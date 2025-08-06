@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,10 +30,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.utils.Absolute;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -44,8 +49,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,7 +57,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
@@ -90,6 +92,10 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
+  @JsonProperty("inlayHint")
+  @Setter(value = AccessLevel.NONE)
+  private InlayHintOptions inlayHintOptions = new InlayHintOptions();
+
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
   private FormattingOptions formattingOptions = new FormattingOptions();
@@ -110,10 +116,14 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
   @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
+  @Getter(value=AccessLevel.NONE)
+  @Setter(value=AccessLevel.NONE)
   @JsonIgnore
   private String globalConfigPath;
 
@@ -141,7 +151,7 @@ public class LanguageServerConfiguration {
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    var pathFromConfiguration = configuration.getConfigurationRoot();
 
     if (pathFromConfiguration == null) {
       rootPath = Absolute.path(srcDir);
@@ -155,7 +165,7 @@ public class LanguageServerConfiguration {
     }
 
     if (rootPath != null) {
-      File fileConfiguration = getConfigurationFile(rootPath);
+      var fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
         if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
           rootPath = Optional.of(fileConfiguration.toPath())
@@ -172,15 +182,18 @@ public class LanguageServerConfiguration {
     }
 
     return rootPath;
-
   }
 
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "False positive"
+  )
   private static File getConfigurationFile(Path rootPath) {
     File configurationFile = null;
     List<Path> listPath = new ArrayList<>();
     try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
       basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
+      listPath = stream.toList();
     } catch (IOException e) {
       LOGGER.error("Error on read configuration file", e);
     }
@@ -209,7 +222,6 @@ public class LanguageServerConfiguration {
     }
 
     this.configurationFile = configurationFile;
-
     copyPropertiesFrom(configuration);
   }
 
@@ -217,10 +229,10 @@ public class LanguageServerConfiguration {
   private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
     // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
   }
-
 }

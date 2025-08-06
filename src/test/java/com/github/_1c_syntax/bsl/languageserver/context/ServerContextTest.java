@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,18 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.utils.Absolute;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,10 +49,9 @@ class ServerContextTest {
 
   @Test
   void testConfigurationMetadata() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
 
@@ -69,14 +63,12 @@ class ServerContextTest {
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    ModuleType type = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
+    ModuleType type = configurationMetadata.getModuleTypeByURI(Absolute.uri(file.toURI()));
     assertThat(type).isEqualTo(ModuleType.CommonModule);
-
   }
 
   @Test
-  void testMdoRefs() throws IOException {
-
+  void testMdoRefs() {
     var path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
@@ -108,10 +100,10 @@ class ServerContextTest {
 
   @Test
   void testErrorConfigurationMetadata() {
-    Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
+    Path path = Absolute.path(PATH_TO_METADATA + "test");
 
     serverContext.setConfigurationRoot(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    var configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).isEmpty();
@@ -132,10 +124,11 @@ class ServerContextTest {
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
   }
 
-  private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
+  private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
+    var documentContext = serverContext.addDocument(uri);
+    serverContext.rebuildDocument(documentContext);
+    return documentContext;
   }
-
 }

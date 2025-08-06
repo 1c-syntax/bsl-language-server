@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import lombok.Getter;
 
 public enum DiagnosticCompatibilityMode {
   UNDEFINED(0, 0),
@@ -48,16 +49,15 @@ public enum DiagnosticCompatibilityMode {
   COMPATIBILITY_MODE_8_3_18(3, 18),
   COMPATIBILITY_MODE_8_3_19(3, 19),
   COMPATIBILITY_MODE_8_3_20(3, 20),
-  COMPATIBILITY_MODE_8_3_21(3, 21)
-  ;
+  COMPATIBILITY_MODE_8_3_21(3, 21),
+  COMPATIBILITY_MODE_8_3_22(3, 22),
+  COMPATIBILITY_MODE_8_3_23(3, 23),
+  COMPATIBILITY_MODE_8_3_24(3, 24);
 
+  @Getter
   private final CompatibilityMode compatibilityMode;
 
   DiagnosticCompatibilityMode(int minor, int version) {
     this.compatibilityMode = new CompatibilityMode(minor, version);
-  }
-
-  public CompatibilityMode getCompatibilityMode() {
-    return compatibilityMode;
   }
 }

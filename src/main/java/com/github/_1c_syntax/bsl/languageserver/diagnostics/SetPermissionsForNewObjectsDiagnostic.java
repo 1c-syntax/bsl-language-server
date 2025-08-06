@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,8 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.Role;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.MDRole;
 
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +55,7 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + NAMES_FULL_ACCESS_ROLE
+    defaultValue = NAMES_FULL_ACCESS_ROLE
   )
 
   private Set<String> namesFullAccessRole = getSetFromString(NAMES_FULL_ACCESS_ROLE);
@@ -68,8 +68,8 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     }
 
     documentContext.getServerContext().getConfiguration().getRoles().stream()
-      .filter(role -> role.getRoleData().isSetForNewObjects())
-      .map(MDRole::getName)
+      .filter(role -> role.getData().isSetForNewObjects())
+      .map(Role::getName)
       .filter(Predicate.not(namesFullAccessRole::contains))
       .map(info::getMessage)
       .forEach((String diagnosticMessage) -> diagnosticStorage.addDiagnostic(range, diagnosticMessage)

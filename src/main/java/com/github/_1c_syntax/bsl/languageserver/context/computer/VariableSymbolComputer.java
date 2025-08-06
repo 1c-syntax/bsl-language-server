@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -184,6 +184,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    if (ctx.IDENTIFIER() == null) {
+      return super.visitForEachStatement(ctx);
+    }
+
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
       || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
@@ -219,6 +223,30 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private Optional<VariableDescription> createDescription(BSLParser.LValueContext ctx) {
     var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.getStop());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      new VariableDescription(Collections.emptyList(), trailingComments)
+    );
+  }
+
+  private Optional<VariableDescription> createDescription(BSLParser.ForEachStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      new VariableDescription(Collections.emptyList(), trailingComments)
+    );
+  }
+
+  private Optional<VariableDescription> createDescription(BSLParser.ForStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
 
     if (trailingComments.isEmpty()) {
       return Optional.empty();

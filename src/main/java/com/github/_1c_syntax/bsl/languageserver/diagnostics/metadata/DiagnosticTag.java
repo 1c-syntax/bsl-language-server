@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+import lombok.Getter;
+
+/**
+ * Варианты тегов диагностик
+ */
 public enum DiagnosticTag {
   STANDARD("Нарушение стандартов 1С"),
   LOCKINOS("Не будет работать в другой ОС"),
@@ -37,13 +42,11 @@ public enum DiagnosticTag {
   ERROR("Ошибочная конструкция"),
   LOCALIZE("Проблемы локализации");
 
+  @Getter
   private final String description;
 
   DiagnosticTag(String descriptionRu) {
     this.description = descriptionRu;
   }
 
-  public String getDescription() {
-    return description;
-  }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,10 +31,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -62,9 +60,16 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    List<String> paramsNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
+    var params = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
-      .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
+      .map(BSLParser.ParamContext.class::cast)
+      .map(BSLParser.ParamContext::IDENTIFIER)
+      .filter(Objects::nonNull)
+      .toList();
+
+    var paramsNames = params
+      .stream()
+      .map(ind -> ind.getText().toLowerCase(Locale.getDefault()))
       .collect(Collectors.toList());
 
     Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER)
@@ -74,9 +79,8 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
         paramsNames.remove((node.getText().toLowerCase(Locale.getDefault())))
       );
 
-    Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
+    params
       .stream()
-      .map(param -> ((BSLParser.ParamContext) param).IDENTIFIER())
       .filter(param -> paramsNames.contains(param.getText().toLowerCase(Locale.getDefault())))
       .forEach(param ->
         diagnosticStorage.addDiagnostic(param, info.getMessage(param.getText()))
@@ -86,15 +90,11 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
-
-    Optional<ParseTree> subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
-
-    String subName = "";
+    var subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
+    var subName = "";
     if (subNames.isPresent()) {
       subName = subNames.get().getText();
     }
-
     return HANDLER_PATTERN.matcher(subName).matches();
   }
-
 }

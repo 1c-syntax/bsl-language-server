@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,17 +24,21 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public abstract class BslExpression {
   private final ExpressionNodeType nodeType;
   private ParseTree representingAst;
+
+  @ToString.Exclude
+  @Setter(AccessLevel.PACKAGE)
+  private BslExpression parent;
 
   /**
    * Синтаксический-помощник для более удобных downcast-ов

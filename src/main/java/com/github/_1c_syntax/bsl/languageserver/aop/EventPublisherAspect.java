@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,8 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -37,7 +40,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 
-import javax.annotation.PreDestroy;
+import java.io.File;
+import java.util.Collection;
 
 /**
  * Аспект подсистемы событий.
@@ -72,6 +76,11 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
     publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
+  }
+
+  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
+  public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
+    publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")

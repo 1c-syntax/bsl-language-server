@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2025
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,8 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.util.assertions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.assertj.core.api.AbstractAssert;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
+import java.util.List;
 import java.util.Objects;
 
 public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnostic> {
@@ -76,6 +78,47 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
 
     if (!Objects.equals(message, actual.getMessage())) {
       failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, actual.getMessage());
+    }
+
+    // return the current assertion for method chaining
+    return this;
+  }
+
+  /**
+   * Проверка на совпадение сообщения диагностики и диапазона текста, где она обнаружена
+   *
+   * @param expectedRange Первая строка диапазона
+   * @param expectedMessage   Сообщение диагностики
+   * @param expectedRelatedInformation   Список связанных диапазонов
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticAssert hasIssueOnRange(Range expectedRange, String expectedMessage, List<Range> expectedRelatedInformation) {
+    // check that actual TolkienCharacter we want to make assertions on is not null.
+    isNotNull();
+
+    // check condition
+    Range actualRange = actual.getRange();
+    if (!Objects.equals(actualRange, expectedRange)) {
+      failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
+    }
+
+    if (!Objects.equals(expectedMessage, actual.getMessage())) {
+      failWithMessage("Expected diagnostic's expectedMessage to be <%s> but was <%s>", expectedMessage, actual.getMessage());
+    }
+
+    List<DiagnosticRelatedInformation> actualRelatedInformation = actual.getRelatedInformation();
+    if (expectedRelatedInformation.size() != actualRelatedInformation.size()){
+      failWithMessage("Expected size of diagnostic's RelatedInformation to be <%d> but was <%d>",
+        expectedRelatedInformation.size(), actualRelatedInformation.size());
+  }
+
+    for (int i = 0; i < expectedRelatedInformation.size(); i++) {
+      var actualElem = actualRelatedInformation.get(i);
+      final var actualRelatedRange = actualElem.getLocation().getRange();
+      var expectedRelatedRange = expectedRelatedInformation.get(i);
+      if (!Objects.equals(actualRelatedRange, expectedRelatedRange)) {
+        failWithMessage("Expected diagnostic's actualRange to be <%s> but was <%s>", expectedRelatedRange.toString(), actualRelatedRange.toString());
+      }
     }
 
     // return the current assertion for method chaining
