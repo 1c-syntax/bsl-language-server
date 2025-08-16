@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1755335047232,
+  "lastUpdate": 1755353544886,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -29202,6 +29202,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.126245012740744",
             "extra": "mean: 83.26720746358235 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c4132b2aa064cbe7f9ce540545c77134573fc34d",
+          "message": "Merge pull request #3499 from 1c-syntax/dependabot/gradle/com.github.spotbugs-spotbugs-annotations-4.9.4\n\nbuild(deps): bump com.github.spotbugs:spotbugs-annotations from 4.9.3 to 4.9.4",
+          "timestamp": "2025-08-16T16:03:09+02:00",
+          "tree_id": "749f16a1796839b5fe1f283257b9a597e7e11028",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c4132b2aa064cbe7f9ce540545c77134573fc34d"
+        },
+        "date": 1755353540767,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 83.60332783063252,
+            "unit": "sec",
+            "range": "stddev: 1.2712450706500913",
+            "extra": "mean: 83.60332783063252 sec\nrounds: 3"
           }
         ]
       }
