@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
-import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.LoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -101,15 +100,9 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
     builder.producePreprocessorConditions(true);
     var graph = builder.buildGraph(ctx.subCodeBlock().codeBlock());
 
-    var exitNode = graph.vertexSet().stream()
-      .filter(ExitVertex.class::isInstance)
-      .findFirst();
+    var exitNode = graph.getExitPoint();
 
-    if (exitNode.isEmpty()) {
-      throw new IllegalStateException();
-    }
-
-    var incomingVertices = graph.incomingEdgesOf(exitNode.get()).stream()
+    var incomingVertices = graph.incomingEdgesOf(exitNode).stream()
       .map(graph::getEdgeSource)
       .map(vertex -> nonExplicitReturnNode(vertex, graph))
       .flatMap(Optional::stream)
