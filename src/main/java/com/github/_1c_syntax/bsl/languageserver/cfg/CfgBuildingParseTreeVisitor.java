@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -39,6 +40,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   private boolean produceLoopIterationsEnabled = true;
   private boolean producePreprocessorConditionsEnabled = true;
   private boolean adjacentDeadCodeEnabled = false;
+
+  private boolean hasTopLevelPreprocessor = false;
 
   public void produceLoopIterations(boolean enable) {
     produceLoopIterationsEnabled = enable;
@@ -63,6 +66,19 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     exitPoints.exceptionHandler = exitPoints.methodReturn;
 
     blocks.enterBlock(exitPoints);
+
+    if (producePreprocessorConditionsEnabled) {
+      // Если это тело модуля, то самую первую инструкцию препроцессора сожрет грамматика file
+      // надо ее тоже посетить принудительно.
+      var parent = block.getParent();
+      if (parent instanceof BSLParser.FileCodeBlockContext fileBlock) {
+        var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock , BSLParser.RULE_preprocessor);
+        if (probablyPreprocessor != fileBlock) {
+          hasTopLevelPreprocessor = true;
+          probablyPreprocessor.accept(this);
+        }
+      }
+    }
 
     block.accept(this);
 
@@ -375,7 +391,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return ctx;
     }
 
-    if (!isStatementLevelPreproc(ctx)) {
+    if (hasTopLevelPreprocessor) {
+
+      var currentBlock = blocks.getCurrentBlock();
+      graph.addVertex(currentBlock.begin());
+
+      hasTopLevelPreprocessor = false;
+
+    }
+    else if (!isStatementLevelPreproc(ctx)) {
       return super.visitPreproc_if(ctx);
     }
 

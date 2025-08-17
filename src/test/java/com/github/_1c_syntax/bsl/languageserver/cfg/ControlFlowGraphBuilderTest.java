@@ -506,6 +506,115 @@ class ControlFlowGraphBuilderTest {
 
   }
 
+  @Test
+  void test_shouldConnectTopLevelPreprocToSingleFileCodeBlock() {
+    var code = """
+      #Если Не ВебКлиент Тогда
+        Возврат ПустойМассив;
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+  }
+
+  @Test
+  void test_shouldIgnoreTopLevelPreprocOfVariablesSection() {
+    var code = """
+      #Если Не ВебКлиент Тогда
+      #КонецЕсли
+      
+      Перем А;
+      
+      А = 8;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isFalse();
+  }
+
+  @Test
+  void test_shouldHandleModuleBodyFirstPreprocessor() {
+    var code = """
+      Процедура А()
+         #Если Не ВебКлиент Тогда
+              М = 1;
+          #КонецЕсли
+      КонецПроцедуры
+      """;
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var parseTree = dContext.getAst().subs().sub(0).procedure().subCodeBlock().codeBlock();
+
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("М=1");
+  }
+
+  @Test
+  void preprocessorTestBranchingWithExiting()
+  {
+    var code = """
+      #Если Не ВебКлиент Тогда
+        Массив = Новый Массив;
+        Если Условие Тогда
+            Возврат Массив;
+        КонецЕсли;
+        Возврат ПустойМассив;
+      #Иначе
+        ВызватьИсключение "Упс";
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Массив=НовыйМассив");
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВозвратМассив");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    var lastStatement = walker.getCurrentNode();
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВызватьИсключение\"Упс\"");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 
