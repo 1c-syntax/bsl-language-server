@@ -32,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,12 +48,12 @@ class ControlFlowGraphBuilderTest {
     var graph = builder.buildGraph(parseTree);
 
     var vertices = traverseToOrderedList(graph);
-    assertThat(vertices.size()).isEqualTo(2);
+    assertThat(vertices).hasSize(2);
     assertThat(vertices.get(0)).isInstanceOf(BasicBlockVertex.class);
     assertThat(vertices.get(1)).isInstanceOf(ExitVertex.class);
 
     var outgoing = graph.outgoingEdgesOf(vertices.get(0));
-    assertThat(outgoing.size()).isEqualTo(1);
+    assertThat(outgoing).hasSize(1);
     var exitVertex = graph.getEdgeTarget((CfgEdge) (outgoing.toArray()[0]));
     assertThat(exitVertex).isEqualTo(vertices.get(1));
   }
@@ -77,7 +76,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
     walker.walkNext();
     assertThat(walker.isOnBranch()).isTrue();
-    assertThat(walker.availableRoutes().size()).isEqualTo(2);
+    assertThat(walker.availableRoutes()).hasSize(2);
 
     var branch = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
@@ -86,13 +85,13 @@ class ControlFlowGraphBuilderTest {
 
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
-    assertThat(walker.availableRoutes().size()).isZero();
+    assertThat(walker.availableRoutes()).isEmpty();
 
     var exit = walker.getCurrentNode();
     walker.walkTo(branch);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     assertThat(walker.getCurrentNode()).isEqualTo(exit);
-    assertThat(graph.incomingEdgesOf(exit).size()).isEqualTo(2);
+    assertThat(graph.incomingEdgesOf(exit)).hasSize(2);
 
   }
 
@@ -267,7 +266,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(graph.getEdge(secondLoopStart, secondLoopEnd).getType()).isEqualTo(CfgEdgeType.FALSE_BRANCH);
 
     // входящих - 2. переход из головы цикла и переход из блока до Прервать
-    assertThat(graph.incomingEdgesOf(secondLoopEnd).size()).isEqualTo(2);
+    assertThat(graph.incomingEdgesOf(secondLoopEnd)).hasSize(2);
     var edgeOfBreak = graph.incomingEdgesOf(secondLoopEnd)
       .stream()
       .filter(x -> x.getType() == CfgEdgeType.DIRECT)
@@ -276,10 +275,10 @@ class ControlFlowGraphBuilderTest {
     assertThat(edgeOfBreak).isPresent();
     walker.walkTo(secondLoopStart);
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).contains(edgeOfBreak.get())).isTrue();
+    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode())).contains(edgeOfBreak.get());
 
     // LOOP от мертвого куска существует
-    assertThat(graph.incomingEdgesOf(secondLoopStart).isEmpty()).isFalse();
+    assertThat(graph.incomingEdgesOf(secondLoopStart)).isNotEmpty();
 
     walker.walkTo(secondLoopEnd);
     walker.walkNext(CfgEdgeType.LOOP_ITERATION);
@@ -382,7 +381,7 @@ class ControlFlowGraphBuilderTest {
     var list = graph.vertexSet().stream()
       .filter(x -> x instanceof BasicBlockVertex)
       .filter(x -> ((BasicBlockVertex) x).statements().isEmpty())
-      .collect(Collectors.toList());
+      .toList();
 
     assertThat(list).isEmpty();
     assertThat(graph.vertexSet()).hasSize(18);
