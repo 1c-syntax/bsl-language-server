@@ -31,7 +31,7 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
   @Setter
   private CfgVertex entryPoint;
 
-  private ExitVertex exitPoint;
+  private final ExitVertex exitPoint;
 
   ControlFlowGraph() {
     super(CfgEdge.class);
@@ -41,6 +41,30 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   public void addEdge(CfgVertex source, CfgVertex target, CfgEdgeType type) {
     addEdge(source, target, new CfgEdge(type));
+  }
+
+  @Override
+  public boolean addEdge(CfgVertex source, CfgVertex target, CfgEdge edge)
+  {
+    if (edge.getType() == CfgEdgeType.DIRECT) {
+      var outgoing = outgoingEdgesOf(source)
+        .stream()
+        .filter(e -> e.getType() == CfgEdgeType.DIRECT)
+        .findAny();
+
+      if (outgoing.isPresent()) {
+        throw new IllegalArgumentException("Can't add edge "+source+"->"+target + "\n"
+          +"Source vertex "+source+" already has direct outgoing edge " + edgePresentation(outgoing.get()));
+      }
+
+    }
+
+    return super.addEdge(source, target, edge);
+  }
+
+  public String edgePresentation(CfgEdge edge)
+  {
+    return getEdgeSource(edge) + "->" + getEdgeTarget(edge);
   }
 
 }

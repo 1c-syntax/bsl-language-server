@@ -47,4 +47,12 @@ public class BasicBlockVertex extends CfgVertex {
 
     return Optional.of(statements.get(0));
   }
+
+  @Override
+  public String toString() {
+    if (statements.isEmpty())
+      return "<empty block>";
+
+    return super.toString();
+  }
 }

@@ -29,4 +29,11 @@ public abstract class CfgVertex {
   public Optional<BSLParserRuleContext> getAst() {
     return Optional.empty();
   }
+
+  @Override
+  public String toString() {
+    return getAst().map(
+      ast -> getClass().getSimpleName() + "{" + ast.getStart().getLine() + ":" + ast.getStop().getLine() + "}")
+      .orElseGet(() -> getClass().getSimpleName());
+  }
 }

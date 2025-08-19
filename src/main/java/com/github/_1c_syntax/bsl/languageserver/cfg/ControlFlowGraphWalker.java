@@ -45,7 +45,9 @@ public class ControlFlowGraphWalker {
     var edges = availableRoutes();
     var edgeOrNot = edges.stream()
       .filter(x -> x.getType() == CfgEdgeType.DIRECT)
-      .findFirst();
+      .reduce((a,b) -> {
+        throw new IllegalStateException("Multiple DIRECT outgoing edges in " + currentNode);
+      });
 
     if (edgeOrNot.isPresent()) {
       currentNode = graph.getEdgeTarget(edgeOrNot.get());

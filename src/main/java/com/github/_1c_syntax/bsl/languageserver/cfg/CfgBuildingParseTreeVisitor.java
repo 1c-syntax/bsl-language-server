@@ -581,7 +581,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     if (currentTail.statements().isEmpty()) {
       // перевести все связи на новую вершину
-      var incoming = graph.incomingEdgesOf(currentTail);
+      var incoming = graph.incomingEdgesOf(currentTail).stream().toList();
       for (var edge : incoming) {
         // ребра смежности не переключаем, т.к. текущий блок удаляется
         if (edge.getType() == CfgEdgeType.ADJACENT_CODE) {
@@ -589,6 +589,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         }
 
         var source = graph.getEdgeSource(edge);
+        graph.removeEdge(edge);
         graph.addEdge(source, vertex, edge.getType());
       }
       graph.removeVertex(currentTail);
