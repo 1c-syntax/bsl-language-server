@@ -125,8 +125,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     connectGraphTail(blocks.getCurrentBlock(), conditionStatement);
 
     // подграф if
-    blocks.enterBlock();
-    var currentLevelBlock = blocks.getCurrentBlock();
+    var currentLevelBlock = blocks.enterBlock();
 
     // тело true
     blocks.enterBlock();
@@ -168,8 +167,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // это мертвый код. Он может быть пустым блоком
       // тогда он не нужен сам по себе
       if (hasNoSignificantEdges(blockTail)
-        && blockTail instanceof BasicBlockVertex basicBlock
-        && basicBlock.statements().isEmpty()) {
+          && blockTail instanceof BasicBlockVertex basicBlock
+          && basicBlock.statements().isEmpty()) {
+        graph.removeVertex(basicBlock);
         continue;
       }
       graph.addEdge(blockTail, upperBlock.end());
@@ -403,19 +403,18 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return super.visitPreproc_if(ctx);
     }
 
-    var node = new PreprocessorConditionVertex(ctx);
-    graph.addVertex(node);
-    connectGraphTail(blocks.getCurrentBlock(), node);
+    var conditionVertex = new PreprocessorConditionVertex(ctx);
+    graph.addVertex(conditionVertex);
+    connectGraphTail(blocks.getCurrentBlock(), conditionVertex);
 
-    var mainIf = blocks.enterBlock();
-    var body = blocks.enterBlock(); // тело идущего следом блока
+    blocks.enterBlock();
+    var truePart = blocks.enterBlock(); // тело идущего следом блока
 
-    graph.addVertex(body.begin());
-    graph.addEdge(node, body.begin(), CfgEdgeType.TRUE_BRANCH);
+    graph.addVertex(truePart.begin());
+    graph.addEdge(conditionVertex, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
 
-    body.getBuildParts().push(node);
-
-    mainIf.getBuildParts().push(body.begin());
+    // маркерный узел для опознания в elseif/endif
+    truePart.getBuildParts().push(conditionVertex);
 
     return super.visitPreproc_if(ctx);
   }
@@ -470,6 +469,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.addVertex(body.begin());
     graph.addEdge(newCondition, body.begin(), CfgEdgeType.TRUE_BRANCH);
 
+    // маркерный узел для опознания в elseif/endif
     body.getBuildParts().push(newCondition);
 
     return ctx;
@@ -490,27 +490,24 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     var previousBody = blocks.leaveBlock();
-    var mainIf = blocks.leaveBlock();
-    mainIf.getBuildParts().push(previousBody.end());
+    var conditionSubgraph = blocks.leaveBlock();
+    conditionSubgraph.getBuildParts().push(previousBody.end());
 
     var upperBlock = blocks.getCurrentBlock();
     upperBlock.split();
     graph.addVertex(upperBlock.end());
 
-    // если блоки альтернатив были, то у условия будет уже 2 выхода
-    if (graph.outgoingEdgesOf(condition).size() < 2) {
-      graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
-    }
+    graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
 
     // присоединяем все прямые выходы из тел условий
-    while (!mainIf.getBuildParts().isEmpty()) {
-      var blockTail = mainIf.getBuildParts().pop();
+    while (!conditionSubgraph.getBuildParts().isEmpty()) {
+      var blockTail = conditionSubgraph.getBuildParts().pop();
 
       // это мертвый код. Он может быть пустым блоком
       // тогда он не нужен сам по себе
       if (hasNoSignificantEdges(blockTail)
-        && blockTail instanceof BasicBlockVertex basicBlock
-        && basicBlock.statements().isEmpty()) {
+          && blockTail instanceof BasicBlockVertex basicBlock
+          && basicBlock.statements().isEmpty()) {
 
         graph.removeVertex(basicBlock);
         continue;
