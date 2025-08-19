@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import java.util.Optional;
 
 public abstract class CfgVertex {
+
+  private boolean isConnected;
+
   public Optional<BSLParserRuleContext> getAst() {
     return Optional.empty();
   }
@@ -35,5 +38,26 @@ public abstract class CfgVertex {
     return getAst().map(
       ast -> getClass().getSimpleName() + "{" + ast.getStart().getLine() + ":" + ast.getStop().getLine() + "}")
       .orElseGet(() -> getClass().getSimpleName());
+  }
+
+  protected void onConnectOutgoing(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
+    if (!isConnected)
+    {
+      // Шорткат, чтобы не ходить для новых нод в граф
+      isConnected = true;
+      return;
+    }
+
+    graph.outgoingEdgesOf(this).stream()
+      .filter(existing -> existing.getType().equals(edge.getType()))
+      .findAny()
+      .ifPresent(existing -> {
+        throw duplicateLinkError(graph, target, existing);
+      });
+  }
+
+  private FlowGraphLinkException duplicateLinkError(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
+    throw new FlowGraphLinkException("Can't add edge " + this + "->"+target + "\n"
+      +"Source vertex " + this + " already has "+edge.getType()+" edge " + graph.edgePresentation(edge));
   }
 }
