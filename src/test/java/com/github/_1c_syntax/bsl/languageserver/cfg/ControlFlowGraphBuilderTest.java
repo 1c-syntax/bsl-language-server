@@ -379,7 +379,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(graph.vertexSet()).isNotEmpty();
 
     var list = graph.vertexSet().stream()
-      .filter(x -> x instanceof BasicBlockVertex)
+      .filter(BasicBlockVertex.class::isInstance)
       .filter(x -> ((BasicBlockVertex) x).statements().isEmpty())
       .toList();
 
@@ -596,23 +596,32 @@ class ControlFlowGraphBuilderTest {
     walker.start();
 
     assertThat(walker.isOnBranch()).isTrue();
-    var ifNode = walker.getCurrentNode();
+    var preprocIfNode = walker.getCurrentNode();
 
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("Массив=НовыйМассив");
     walker.walkNext();
     assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("ВозвратМассив");
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
 
-    var lastStatement = walker.getCurrentNode();
     walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВозвратПустойМассив");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    walker.walkTo(preprocIfNode);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     assertThat(textOfCurrentNode(walker)).isEqualTo("ВызватьИсключение\"Упс\"");
     walker.walkNext();
-    assertThat(walker.getCurrentNode()).isSameAs(lastStatement);
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    // Нет посторонних связей у входной ветки препроцессора
+    assertThat(graph.edgesOf(preprocIfNode)).hasSize(2);
   }
 
   @SneakyThrows

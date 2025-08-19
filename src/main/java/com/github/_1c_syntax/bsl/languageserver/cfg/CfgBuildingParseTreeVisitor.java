@@ -491,13 +491,21 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     var previousBody = blocks.leaveBlock();
     var conditionSubgraph = blocks.leaveBlock();
+
+    // Если в блоке if была ветка else/elsif, то из первого if уже существует ветка FALSE_BRANCH.
+    // А если альтернатив у if не было, то надо добавить FALSE_BRANCH
+    // Методы preproc_elsif/preproc_else добавят свои следы в conditionSubgraph
+    // А если там пусто, то у нас есть только ветка true
+    boolean mustAddFalseBranch = conditionSubgraph.getBuildParts().isEmpty();
+
     conditionSubgraph.getBuildParts().push(previousBody.end());
 
     var upperBlock = blocks.getCurrentBlock();
     upperBlock.split();
     graph.addVertex(upperBlock.end());
 
-    graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
+    if (mustAddFalseBranch)
+      graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
 
     // присоединяем все прямые выходы из тел условий
     while (!conditionSubgraph.getBuildParts().isEmpty()) {
