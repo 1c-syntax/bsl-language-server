@@ -44,15 +44,22 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
   }
 
   @Override
-  public boolean addEdge(CfgVertex source, CfgVertex target, CfgEdge edge)
-  {
+  public CfgEdge addEdge(CfgVertex source, CfgVertex target) {
+    var edge = new CfgEdge(CfgEdgeType.DIRECT);
+
+    addEdge(source, target, edge);
+
+    return edge;
+  }
+
+  @Override
+  public boolean addEdge(CfgVertex source, CfgVertex target, CfgEdge edge) {
     source.onConnectOutgoing(this, target, edge);
 
     return super.addEdge(source, target, edge);
   }
 
-  public String edgePresentation(CfgEdge edge)
-  {
+  public String edgePresentation(CfgEdge edge) {
     return getEdgeSource(edge) + "->" + getEdgeTarget(edge);
   }
 

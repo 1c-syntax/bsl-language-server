@@ -72,7 +72,9 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // надо ее тоже посетить принудительно.
       var parent = block.getParent();
       if (parent instanceof BSLParser.FileCodeBlockContext fileBlock) {
-        var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock , BSLParser.RULE_preprocessor);
+        var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock,
+          BSLParser.RULE_preprocessor);
+
         if (probablyPreprocessor != fileBlock) {
           hasTopLevelPreprocessor = true;
           probablyPreprocessor.accept(this);
@@ -167,8 +169,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // это мертвый код. Он может быть пустым блоком
       // тогда он не нужен сам по себе
       if (hasNoSignificantEdges(blockTail)
-          && blockTail instanceof BasicBlockVertex basicBlock
-          && basicBlock.statements().isEmpty()) {
+        && blockTail instanceof BasicBlockVertex basicBlock
+        && basicBlock.statements().isEmpty()) {
         graph.removeVertex(basicBlock);
         continue;
       }
@@ -398,8 +400,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
       hasTopLevelPreprocessor = false;
 
-    }
-    else if (!isStatementLevelPreproc(ctx)) {
+    } else if (!isStatementLevelPreproc(ctx)) {
       return super.visitPreproc_if(ctx);
     }
 
@@ -514,8 +515,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // это мертвый код. Он может быть пустым блоком
       // тогда он не нужен сам по себе
       if (hasNoSignificantEdges(blockTail)
-          && blockTail instanceof BasicBlockVertex basicBlock
-          && basicBlock.statements().isEmpty()) {
+        && blockTail instanceof BasicBlockVertex basicBlock
+        && basicBlock.statements().isEmpty()) {
 
         graph.removeVertex(basicBlock);
         continue;

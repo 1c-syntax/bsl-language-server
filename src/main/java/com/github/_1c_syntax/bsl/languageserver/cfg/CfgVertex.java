@@ -36,28 +36,28 @@ public abstract class CfgVertex {
   @Override
   public String toString() {
     return getAst().map(
-      ast -> getClass().getSimpleName() + "{" + ast.getStart().getLine() + ":" + ast.getStop().getLine() + "}")
+        ast -> getClass().getSimpleName() +
+          "{" + ast.getStart().getLine() + ":" + ast.getStop().getLine() + "}")
       .orElseGet(() -> getClass().getSimpleName());
   }
 
   protected void onConnectOutgoing(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
-    if (!isConnected)
-    {
+    if (!isConnected) {
       // Шорткат, чтобы не ходить для новых нод в граф
       isConnected = true;
       return;
     }
 
     graph.outgoingEdgesOf(this).stream()
-      .filter(existing -> existing.getType().equals(edge.getType()))
+      .filter(existing -> existing.getType() == edge.getType())
       .findAny()
-      .ifPresent(existing -> {
+      .ifPresent((CfgEdge existing) -> {
         throw duplicateLinkError(graph, target, existing);
       });
   }
 
   private FlowGraphLinkException duplicateLinkError(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
-    throw new FlowGraphLinkException("Can't add edge " + this + "->"+target + "\n"
-      +"Source vertex " + this + " already has "+edge.getType()+" edge " + graph.edgePresentation(edge));
+    throw new FlowGraphLinkException("Can't add edge " + this + "->" + target + "\n"
+      + "Source vertex " + this + " already has " + edge.getType() + " edge " + graph.edgePresentation(edge));
   }
 }

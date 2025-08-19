@@ -24,7 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.SneakyThrows;
+import org.antlr.v4.runtime.CommonToken;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.Assertions;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class ControlFlowGraphBuilderTest {
@@ -622,6 +626,38 @@ class ControlFlowGraphBuilderTest {
 
     // Нет посторонних связей у входной ветки препроцессора
     assertThat(graph.edgesOf(preprocIfNode)).hasSize(2);
+  }
+
+  @Test
+  void test_cannotAddSameEdgeTwice() {
+    var graph = new ControlFlowGraph();
+    var block1 = new BasicBlockVertex();
+    var block2 = new BasicBlockVertex();
+
+    graph.addVertex(block1);
+    graph.addVertex(block2);
+
+    graph.addEdge(block1, block2);
+    Assertions.assertThatExceptionOfType(FlowGraphLinkException.class)
+      .isThrownBy(() -> graph.addEdge(block1, block2));
+  }
+
+  @Test
+  void test_cannotAddDirectEdgeToBranch() {
+    var graph = new ControlFlowGraph();
+
+    var fakeContext = mock(BSLParser.IfBranchContext.class);
+    when(fakeContext.getStart()).thenReturn(new CommonToken(BSLParser.RULE_ifStatement));
+    when(fakeContext.getStop()).thenReturn(new CommonToken(BSLParser.RULE_ifStatement));
+
+    var ifBlock = new ConditionalVertex(fakeContext);
+    var truePart = new BasicBlockVertex();
+
+    graph.addVertex(ifBlock);
+    graph.addVertex(truePart);
+
+    Assertions.assertThatExceptionOfType(FlowGraphLinkException.class)
+      .isThrownBy(() -> graph.addEdge(ifBlock, truePart));
   }
 
   @SneakyThrows
