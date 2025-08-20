@@ -21,38 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-public class BasicBlockVertex extends CfgVertex {
-
-  private final List<BSLParserRuleContext> statements = new ArrayList<>();
-
-  public List<BSLParserRuleContext> statements() {
-    return statements;
-  }
-
-  public void addStatement(BSLParserRuleContext statement) {
-    statements.add(statement);
-  }
-
-  @Override
-  public Optional<BSLParserRuleContext> getAst() {
-    if(statements.isEmpty()) {
-      return super.getAst();
-    }
-
-    return Optional.of(statements.get(0));
-  }
-
-  @Override
-  public String toString() {
-    if (statements.isEmpty())
-      return "<empty block>";
-
-    return super.toString();
+public class FlowGraphLinkException extends RuntimeException {
+  public FlowGraphLinkException(String message) {
+    super(message);
   }
 }

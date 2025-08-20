@@ -53,4 +53,14 @@ public class ConditionalVertex extends BranchingVertex {
   public Optional<BSLParserRuleContext> getAst() {
     return Optional.of(ast);
   }
+
+  @Override
+  protected void onConnectOutgoing(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
+    super.onConnectOutgoing(graph, target, edge);
+
+    if (edge.getType() != CfgEdgeType.TRUE_BRANCH && edge.getType() != CfgEdgeType.FALSE_BRANCH) {
+      throw new FlowGraphLinkException("Can't add edge " + this + "-> " + target + "\n"
+        +"Edge type " + edge.getType() + " is forbidden here.");
+    }
+  }
 }

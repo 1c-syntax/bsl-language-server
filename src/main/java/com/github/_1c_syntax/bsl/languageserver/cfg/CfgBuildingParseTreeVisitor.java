@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -39,6 +40,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   private boolean produceLoopIterationsEnabled = true;
   private boolean producePreprocessorConditionsEnabled = true;
   private boolean adjacentDeadCodeEnabled = false;
+
+  private boolean hasTopLevelPreprocessor = false;
 
   public void produceLoopIterations(boolean enable) {
     produceLoopIterationsEnabled = enable;
@@ -63,6 +66,21 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     exitPoints.exceptionHandler = exitPoints.methodReturn;
 
     blocks.enterBlock(exitPoints);
+
+    if (producePreprocessorConditionsEnabled) {
+      // Если это тело модуля, то самую первую инструкцию препроцессора сожрет грамматика file
+      // надо ее тоже посетить принудительно.
+      var parent = block.getParent();
+      if (parent instanceof BSLParser.FileCodeBlockContext fileBlock) {
+        var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock,
+          BSLParser.RULE_preprocessor);
+
+        if (probablyPreprocessor != fileBlock) {
+          hasTopLevelPreprocessor = true;
+          probablyPreprocessor.accept(this);
+        }
+      }
+    }
 
     block.accept(this);
 
@@ -109,8 +127,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     connectGraphTail(blocks.getCurrentBlock(), conditionStatement);
 
     // подграф if
-    blocks.enterBlock();
-    var currentLevelBlock = blocks.getCurrentBlock();
+    var currentLevelBlock = blocks.enterBlock();
 
     // тело true
     blocks.enterBlock();
@@ -154,6 +171,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       if (hasNoSignificantEdges(blockTail)
         && blockTail instanceof BasicBlockVertex basicBlock
         && basicBlock.statements().isEmpty()) {
+        graph.removeVertex(basicBlock);
         continue;
       }
       graph.addEdge(blockTail, upperBlock.end());
@@ -375,23 +393,29 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return ctx;
     }
 
-    if (!isStatementLevelPreproc(ctx)) {
+    if (hasTopLevelPreprocessor) {
+
+      var currentBlock = blocks.getCurrentBlock();
+      graph.addVertex(currentBlock.begin());
+
+      hasTopLevelPreprocessor = false;
+
+    } else if (!isStatementLevelPreproc(ctx)) {
       return super.visitPreproc_if(ctx);
     }
 
-    var node = new PreprocessorConditionVertex(ctx);
-    graph.addVertex(node);
-    connectGraphTail(blocks.getCurrentBlock(), node);
+    var conditionVertex = new PreprocessorConditionVertex(ctx);
+    graph.addVertex(conditionVertex);
+    connectGraphTail(blocks.getCurrentBlock(), conditionVertex);
 
-    var mainIf = blocks.enterBlock();
-    var body = blocks.enterBlock(); // тело идущего следом блока
+    blocks.enterBlock();
+    var truePart = blocks.enterBlock(); // тело идущего следом блока
 
-    graph.addVertex(body.begin());
-    graph.addEdge(node, body.begin(), CfgEdgeType.TRUE_BRANCH);
+    graph.addVertex(truePart.begin());
+    graph.addEdge(conditionVertex, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
 
-    body.getBuildParts().push(node);
-
-    mainIf.getBuildParts().push(body.begin());
+    // маркерный узел для опознания в elseif/endif
+    truePart.getBuildParts().push(conditionVertex);
 
     return super.visitPreproc_if(ctx);
   }
@@ -446,6 +470,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     graph.addVertex(body.begin());
     graph.addEdge(newCondition, body.begin(), CfgEdgeType.TRUE_BRANCH);
 
+    // маркерный узел для опознания в elseif/endif
     body.getBuildParts().push(newCondition);
 
     return ctx;
@@ -466,21 +491,26 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     var previousBody = blocks.leaveBlock();
-    var mainIf = blocks.leaveBlock();
-    mainIf.getBuildParts().push(previousBody.end());
+    var conditionSubgraph = blocks.leaveBlock();
+
+    // Если в блоке if была ветка else/elsif, то из первого if уже существует ветка FALSE_BRANCH.
+    // А если альтернатив у if не было, то надо добавить FALSE_BRANCH
+    // Методы preproc_elsif/preproc_else добавят свои следы в conditionSubgraph
+    // А если там пусто, то у нас есть только ветка true
+    boolean mustAddFalseBranch = conditionSubgraph.getBuildParts().isEmpty();
+
+    conditionSubgraph.getBuildParts().push(previousBody.end());
 
     var upperBlock = blocks.getCurrentBlock();
     upperBlock.split();
     graph.addVertex(upperBlock.end());
 
-    // если блоки альтернатив были, то у условия будет уже 2 выхода
-    if (graph.outgoingEdgesOf(condition).size() < 2) {
+    if (mustAddFalseBranch)
       graph.addEdge(condition, upperBlock.end(), CfgEdgeType.FALSE_BRANCH);
-    }
 
     // присоединяем все прямые выходы из тел условий
-    while (!mainIf.getBuildParts().isEmpty()) {
-      var blockTail = mainIf.getBuildParts().pop();
+    while (!conditionSubgraph.getBuildParts().isEmpty()) {
+      var blockTail = conditionSubgraph.getBuildParts().pop();
 
       // это мертвый код. Он может быть пустым блоком
       // тогда он не нужен сам по себе
@@ -557,7 +587,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     if (currentTail.statements().isEmpty()) {
       // перевести все связи на новую вершину
-      var incoming = graph.incomingEdgesOf(currentTail);
+      var incoming = graph.incomingEdgesOf(currentTail).stream().toList();
       for (var edge : incoming) {
         // ребра смежности не переключаем, т.к. текущий блок удаляется
         if (edge.getType() == CfgEdgeType.ADJACENT_CODE) {
@@ -565,6 +595,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         }
 
         var source = graph.getEdgeSource(edge);
+        graph.removeEdge(edge);
         graph.addEdge(source, vertex, edge.getType());
       }
       graph.removeVertex(currentTail);
