@@ -59,7 +59,7 @@ public class ConditionalVertex extends BranchingVertex {
     super.onConnectOutgoing(graph, target, edge);
 
     if (edge.getType() != CfgEdgeType.TRUE_BRANCH && edge.getType() != CfgEdgeType.FALSE_BRANCH) {
-      throw new FlowGraphLinkException("Can't add edge " + this + "->"+target + "\n"
+      throw new FlowGraphLinkException("Can't add edge " + this + "-> " + target + "\n"
         +"Edge type " + edge.getType() + " is forbidden here.");
     }
   }
