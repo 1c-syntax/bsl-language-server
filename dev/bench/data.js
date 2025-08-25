@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1756114170147,
+  "lastUpdate": 1756115647190,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -29419,6 +29419,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5637546861558903",
             "extra": "mean: 85.96824590365092 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1fd31a5e7d7af8f304cf9e1c3d2b00019904229f",
+          "message": "Merge pull request #1770 from EvilBeaver/feature/dead-code-improve",
+          "timestamp": "2025-08-25T11:20:56+02:00",
+          "tree_id": "0397cad7447334fcc61be58e152c9d234aa89433",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1fd31a5e7d7af8f304cf9e1c3d2b00019904229f"
+        },
+        "date": 1756115643002,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.58523678779602,
+            "unit": "sec",
+            "range": "stddev: 3.010174419352232",
+            "extra": "mean: 87.58523678779602 sec\nrounds: 3"
           }
         ]
       }
