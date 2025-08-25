@@ -38,7 +38,7 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(15);
+    assertThat(diagnostics).hasSize(17);
     assertThat(diagnostics, true)
       .hasRange(12, 12, 20)
       .hasRange(21, 12, 20)
@@ -51,10 +51,12 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
       .hasRange(93, 8, 16)
       .hasRange(102, 8, 17)
       .hasRange(108, 16, 111, 29)
+      .hasRange(125, 4, 125, 12)
       .hasRange(138, 4, 16)
-      .hasRange(161, 4, 13)
-      .hasRange(166, 4, 168, 13)
-      .hasRange(172, 0, 9);
+      .hasRange(163, 4, 22)
+      .hasRange(171, 4, 13)
+      .hasRange(176, 4, 178, 13)
+      .hasRange(182, 0, 9);
   }
 
   @Test

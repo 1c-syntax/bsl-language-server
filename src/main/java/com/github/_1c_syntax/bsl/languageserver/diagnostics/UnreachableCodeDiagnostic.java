@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
+import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,6 +39,7 @@ import org.eclipse.lsp4j.Range;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,6 +111,59 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
           node.getStart().getLine(),
           node.getStart().getCharPositionInLine() - 1));
     }
+  }
+
+  @Override
+  public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
+    errorRanges.clear();
+    super.visitSubCodeBlock(ctx);
+    appendUnreachableCode(ctx.codeBlock());
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    errorRanges.clear();
+    super.visitFileCodeBlock(ctx);
+    appendUnreachableCode(ctx.codeBlock());
+    return ctx;
+  }
+
+  private void appendUnreachableCode(BSLParser.CodeBlockContext ctx) {
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    builder.produceLoopIterations(false);
+    builder.determineAdjacentDeadCode(false);
+
+    var graph = builder.buildGraph(ctx);
+    var deadCode = graph.vertexSet().stream()
+      .filter(vertex -> vertex != graph.getEntryPoint() && vertex.getClass() != ExitVertex.class)
+      .filter(vertex -> graph.inDegreeOf(vertex) == 0)
+      .flatMap(vertex -> vertex.getAst().stream())
+      .sorted(Comparator.comparingInt(bslParserRuleContext -> bslParserRuleContext.getStart().getLine()))
+      .map(Ranges::create)
+      .collect(Collectors.toList());
+
+
+    var newRanges = new ArrayList<Range>();
+    for (var range : deadCode) {
+      var alreadyDetected = false;
+      for (Range detectedRange : errorRanges) {
+        var pos = new Position(range.getStart().getLine(), range.getStart().getCharacter());
+        if (Ranges.containsPosition(detectedRange, pos)) {
+          alreadyDetected = true;
+          break;
+        }
+      }
+      if(!alreadyDetected) {
+        newRanges.add(range);
+      }
+    }
+
+    for (var range : newRanges) {
+      diagnosticStorage.addDiagnostic(range);
+    }
+
   }
 
   @Override
