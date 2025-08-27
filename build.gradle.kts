@@ -21,7 +21,7 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.19.0"
-    id("org.sonarqube") version "6.2.0.5505"
+    id("org.sonarqube") version "6.3.1.5724"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.2"
 }
