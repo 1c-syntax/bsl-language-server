@@ -126,11 +126,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setRenameProvider(getRenameProvider(params));
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
-
-    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
-    semanticTokensProvider.setFull(Boolean.TRUE);
-    semanticTokensProvider.setRange(Boolean.FALSE);
-    capabilities.setSemanticTokensProvider(semanticTokensProvider);
+    capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -344,4 +340,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     executeCommandOptions.setWorkDoneProgress(Boolean.FALSE);
     return executeCommandOptions;
   }
+
+  private SemanticTokensWithRegistrationOptions getSemanticTokensProvider() {
+    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
+    semanticTokensProvider.setFull(Boolean.TRUE);
+    semanticTokensProvider.setRange(Boolean.FALSE);
+    return semanticTokensProvider;
+  }
+
 }

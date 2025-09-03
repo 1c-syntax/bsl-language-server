@@ -26,7 +26,6 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -34,9 +33,21 @@ public class SemanticTokensLegendConfiguration {
 
   @Bean
   public SemanticTokensLegend semanticTokensLegend() {
-    List<String> tokenTypes = List.of(SemanticTokenTypes.Keyword);
-    List<String> tokenModifiers = Collections.emptyList();
-    return new SemanticTokensLegend(tokenTypes, tokenModifiers);
+    // Types we actually emit from the provider
+    List<String> tokenTypes = List.of(
+      SemanticTokenTypes.Keyword,
+      SemanticTokenTypes.String,
+      SemanticTokenTypes.Number,
+      SemanticTokenTypes.Comment,
+      SemanticTokenTypes.Function,
+      SemanticTokenTypes.Method,
+      SemanticTokenTypes.Variable,
+      SemanticTokenTypes.Parameter,
+      SemanticTokenTypes.Macro,
+      SemanticTokenTypes.Decorator
+    );
+
+    return new SemanticTokensLegend(tokenTypes, List.of());
   }
 
 }
