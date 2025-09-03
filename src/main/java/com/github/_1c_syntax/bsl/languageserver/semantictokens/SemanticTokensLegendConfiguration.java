@@ -44,7 +44,9 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Variable,
       SemanticTokenTypes.Parameter,
       SemanticTokenTypes.Macro,
-      SemanticTokenTypes.Decorator
+      SemanticTokenTypes.Decorator,
+      SemanticTokenTypes.Operator,
+      SemanticTokenTypes.Namespace
     );
 
     return new SemanticTokensLegend(tokenTypes, List.of());
