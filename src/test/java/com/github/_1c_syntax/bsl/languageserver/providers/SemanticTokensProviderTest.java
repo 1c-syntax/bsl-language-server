@@ -45,12 +45,12 @@ class SemanticTokensProviderTest {
       "#КонецЕсли"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    var params = new SemanticTokensParams(id);
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, params);
+    var params = new SemanticTokensParams(textDocumentIdentifier);
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, params);
 
     // then: collect type indexes present
     List<Integer> data = tokens.getData();
@@ -84,14 +84,14 @@ class SemanticTokensProviderTest {
       "#КонецОбласти"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, new SemanticTokensParams(id));
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
 
     // then: count how many lexer tokens are PREPROC_* (or HASH) on default channel
-    List<Token> defaultTokens = dc.getTokensFromDefaultChannel();
+    List<Token> defaultTokens = documentContext.getTokensFromDefaultChannel();
 
     long totalPreproc = defaultTokens.stream()
       .map(Token::getType)
@@ -145,11 +145,11 @@ class SemanticTokensProviderTest {
       "КонецПроцедуры"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, new SemanticTokensParams(id));
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
 
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
     assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
@@ -179,7 +179,7 @@ class SemanticTokensProviderTest {
       BSLLexer.TILDA
     );
 
-    long lexerOpCount = dc.getTokensFromDefaultChannel().stream()
+    long lexerOpCount = documentContext.getTokensFromDefaultChannel().stream()
       .map(Token::getType)
       .filter(opTypes::contains)
       .count();
@@ -200,27 +200,26 @@ class SemanticTokensProviderTest {
       "КонецПроцедуры"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, new SemanticTokensParams(id));
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
 
     int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
     assertThat(decoratorIdx).isGreaterThanOrEqualTo(0);
     assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
 
-    List<DecodedToken> decoded = decode(tokens.getData());
+    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
 
     // then: on line 0 we should have exactly one Decorator token: merged '&НаКлиенте'
-    List<DecodedToken> line0 = decoded.stream().filter(t -> t.line == 0).toList();
-    long decoratorsOnLine0 = line0.stream().filter(t -> t.type == decoratorIdx).count();
-    assertThat(decoratorsOnLine0).isEqualTo(1);
+    long decoratorsOnFirstLine = firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count();
+    assertThat(decoratorsOnFirstLine).isEqualTo(1);
 
     // and no operators or strings on that line
-    long operatorsOnLine0 = line0.stream().filter(t -> t.type == operatorIdx).count();
-    assertThat(operatorsOnLine0).isEqualTo(0);
+    long operatorsOnFirstLine = firstLineTokens.stream().filter(t -> t.type == operatorIdx).count();
+    assertThat(operatorsOnFirstLine).isEqualTo(0);
   }
 
   @Test
@@ -232,11 +231,11 @@ class SemanticTokensProviderTest {
       "КонецПроцедуры"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, new SemanticTokensParams(id));
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
 
     int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
@@ -245,16 +244,16 @@ class SemanticTokensProviderTest {
     assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
     assertThat(stringIdx).isGreaterThanOrEqualTo(0);
 
-    List<DecodedToken> line0 = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
+    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
 
     // one decorator on line 0: merged '&Перед'
-    assertThat(line0.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
 
     // operators present for parentheses
-    assertThat(line0.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(2);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(2);
 
     // string present
-    assertThat(line0.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
   }
 
   @Test
@@ -266,11 +265,11 @@ class SemanticTokensProviderTest {
       "КонецПроцедуры"
     );
 
-    DocumentContext dc = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier id = TestUtils.getTextDocumentIdentifier(dc.getUri());
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(dc, new SemanticTokensParams(id));
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
 
     int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
@@ -282,19 +281,82 @@ class SemanticTokensProviderTest {
     assertThat(stringIdx).isGreaterThanOrEqualTo(0);
     assertThat(paramIdx).isGreaterThanOrEqualTo(0);
 
-    List<DecodedToken> line0 = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
+    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
 
     // one decorator: merged '&КастомнаяАннотация'
-    assertThat(line0.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
 
     // operators for '(' ')' and '='
-    assertThat(line0.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(3);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(3);
 
     // parameter identifier 'Значение'
-    assertThat(line0.stream().filter(t -> t.type == paramIdx).count()).isGreaterThanOrEqualTo(1);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == paramIdx).count()).isGreaterThanOrEqualTo(1);
 
     // string literal
-    assertThat(line0.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
+    assertThat(firstLineTokens.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
+  }
+
+  @Test
+  void useDirective_isNamespace() {
+    // given: several #Использовать directives
+    String bsl = String.join("\n",
+      "#Использовать А",
+      "#Использовать Б",
+      "#Использовать В"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    assertThat(namespaceIdx).isGreaterThanOrEqualTo(0);
+
+    long nsCount = countOfType(tokens.getData(), namespaceIdx);
+
+    // then: each use line produces one Namespace token
+    assertThat(nsCount).isEqualTo(3);
+  }
+
+  @Test
+  void datetimeAndUndefinedTrueFalse_areHighlighted() {
+    // given: date literal and undefined/boolean literals
+    String bsl = String.join("\n",
+      "Процедура T()",
+      "  Дата = '20010101';",
+      "  X = Неопределено;",
+      "  Если Истина Тогда",
+      "  КонецЕсли;",
+      "  Если Ложь Тогда",
+      "  КонецЕсли;",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
+    assertThat(stringIdx).isGreaterThanOrEqualTo(0);
+    assertThat(keywordIdx).isGreaterThanOrEqualTo(0);
+
+    long strings = countOfType(tokens.getData(), stringIdx);
+    long keywords = countOfType(tokens.getData(), keywordIdx);
+
+    // then: at least one string (for DATETIME) and at least three keywords for undefined/true/false
+    assertThat(strings).isGreaterThanOrEqualTo(1);
+
+    long expectedSpecialLiteralCount = documentContext.getTokensFromDefaultChannel().stream()
+      .map(Token::getType)
+      .filter(t -> t == BSLLexer.UNDEFINED || t == BSLLexer.TRUE || t == BSLLexer.FALSE)
+      .count();
+
+    assertThat(keywords).isGreaterThanOrEqualTo(expectedSpecialLiteralCount);
   }
 
   // helpers
