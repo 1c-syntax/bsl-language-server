@@ -510,6 +510,38 @@ class SemanticTokensProviderTest {
     clientCapabilitiesHolder.setCapabilities(null);
   }
 
+  @Test
+  void regionName_isHighlightedAsVariable() {
+    // given: region with a name and its end
+    String bsl = String.join("\n",
+      "#Область МояСекция",
+      "Процедура Тест()\nКонецПроцедуры",
+      "#КонецОбласти"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int nsIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+    assertThat(nsIdx).isGreaterThanOrEqualTo(0);
+    assertThat(varIdx).isGreaterThanOrEqualTo(0);
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: one Namespace token for region start and one for region end, and one Variable on line 0 for the name
+    long nsOnLine0 = decoded.stream().filter(t -> t.line == 0 && t.type == nsIdx).count();
+    long nsOnLastLine = decoded.stream().filter(t -> t.line == 3 && t.type == nsIdx).count();
+    long varsOnLine0 = decoded.stream().filter(t -> t.line == 0 && t.type == varIdx).count();
+
+    assertThat(nsOnLine0).isEqualTo(1);
+    assertThat(nsOnLastLine).isEqualTo(1);
+    assertThat(varsOnLine0).isEqualTo(1);
+  }
+
   // helpers
   private record DecodedToken(int line, int start, int length, int type, int modifiers) {}
 

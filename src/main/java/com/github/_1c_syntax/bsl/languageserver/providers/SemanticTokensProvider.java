@@ -312,7 +312,17 @@ public class SemanticTokensProvider {
 
     // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
     for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
-      addNamespaceForPreprocessorNode(entries, regionStart);
+      // Namespace only for '#'+keyword part to avoid overlap with region name token
+      var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(regionStart, BSLParser.RULE_preprocessor);
+      if (preprocessor != null && regionStart.PREPROC_REGION() != null) {
+        addRange(entries, Ranges.create(preprocessor.getStart(), regionStart.PREPROC_REGION().getSymbol()), SemanticTokenTypes.Namespace);
+      } else {
+        addNamespaceForPreprocessorNode(entries, regionStart);
+      }
+      // region name highlighted as Variable (consistent with #Использовать <libName>)
+      if (regionStart.regionName() != null) {
+        addRange(entries, Ranges.create(regionStart.regionName()), SemanticTokenTypes.Variable);
+      }
     }
     for (var regionEnd : Trees.<RegionEndContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
       addNamespaceForPreprocessorNode(entries, regionEnd);
