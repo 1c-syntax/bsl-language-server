@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -43,12 +44,15 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -115,6 +119,7 @@ public class SemanticTokensProvider {
   );
 
   private final SemanticTokensLegend legend;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
@@ -122,7 +127,14 @@ public class SemanticTokensProvider {
   public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
     List<TokenEntry> entries = new ArrayList<>();
 
-    // collect documentation lines for describable symbols
+    boolean multilineTokenSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getSemanticTokens)
+      .map(SemanticTokensCapabilities::getMultilineTokenSupport)
+      .orElse(false);
+
+    // collect description ranges for describable symbols
+    List<Range> descriptionRanges = new ArrayList<>();
     BitSet documentationLines = new BitSet();
 
     // 1) Symbols: methods/functions, variables, parameters
@@ -136,33 +148,60 @@ public class SemanticTokensProvider {
       method.getDescription()
         .map(MethodDescription::getRange)
         .filter(r -> !Ranges.isEmpty(r))
-        .ifPresent(r -> markLines(documentationLines, r));
+        .ifPresent(r -> {
+          descriptionRanges.add(r);
+          if (!multilineTokenSupport) {
+            markLines(documentationLines, r);
+          }
+        });
     }
     for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
       addRange(entries, variableSymbol.getVariableNameRange(), SemanticTokenTypes.Variable);
       variableSymbol.getDescription().ifPresent(desc -> {
         var r = desc.getRange();
         if (!Ranges.isEmpty(r)) {
-          markLines(documentationLines, r);
+          descriptionRanges.add(r);
+          if (!multilineTokenSupport) {
+            markLines(documentationLines, r);
+          }
         }
-        // trailing description comment, if any
         desc.getTrailingDescription().ifPresent(trailing -> {
           var tr = trailing.getRange();
           if (!Ranges.isEmpty(tr)) {
-            markLines(documentationLines, tr);
+            descriptionRanges.add(tr);
+            if (!multilineTokenSupport) {
+              markLines(documentationLines, tr);
+            }
           }
         });
       });
     }
 
+    if (multilineTokenSupport) {
+      for (Range r : descriptionRanges) {
+        // compute multi-line token length using document text
+        int length = documentContext.getText(r).length();
+        addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
+      }
+    }
+
     // 2) Comments (lexer type LINE_COMMENT)
     for (Token commentToken : documentContext.getComments()) {
-      int commentLine = commentToken.getLine() - 1; // BitSet is zero-based; tokens are 1-based lines
-      boolean isDocumentation = documentationLines.get(commentLine);
-      if (isDocumentation) {
-        addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment, DOC_ONLY);
+      Range commentRange = Ranges.create(commentToken);
+      if (multilineTokenSupport) {
+        boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
+        if (insideDescription) {
+          continue;
+        }
+        addRange(entries, commentRange, SemanticTokenTypes.Comment);
       } else {
-        addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment);
+        int commentLine = commentToken.getLine() - 1;
+        boolean isDocumentation = documentationLines.get(commentLine);
+        if (isDocumentation) {
+          addRange(entries, commentRange, SemanticTokenTypes.Comment, DOC_ONLY);
+        } else {
+          addRange(entries, commentRange, SemanticTokenTypes.Comment);
+        }
       }
     }
 
@@ -361,6 +400,33 @@ public class SemanticTokensProvider {
     int line = range.getStart().getLine();
     int start = range.getStart().getCharacter();
     int length = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
+    if (length > 0) {
+      int modifierMask = 0;
+      if (modifiers != null) {
+        for (String mod : modifiers) {
+          if (mod == null) continue;
+          int idx = legend.getTokenModifiers().indexOf(mod);
+          if (idx >= 0) {
+            modifierMask |= (1 << idx);
+          }
+        }
+      }
+      entries.add(new TokenEntry(line, start, length, typeIdx, modifierMask));
+    }
+  }
+
+  // overload to add token with explicit precomputed length (used for multi-line tokens)
+  private void addRange(List<TokenEntry> entries, Range range, int explicitLength, String type, String... modifiers) {
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+    int typeIdx = legend.getTokenTypes().indexOf(type);
+    if (typeIdx < 0) {
+      return;
+    }
+    int line = range.getStart().getLine();
+    int start = range.getStart().getCharacter();
+    int length = Math.max(0, explicitLength);
     if (length > 0) {
       int modifierMask = 0;
       if (modifiers != null) {

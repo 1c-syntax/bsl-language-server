@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -42,6 +43,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 
 @SpringBootTest
 @DirtiesContext
@@ -53,11 +57,14 @@ class SemanticTokensProviderTest {
   @Autowired
   private SemanticTokensLegend legend;
 
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
   @Test
   void emitsExpectedTokenTypes() {
     // given: sample BSL with annotation, macro, method, parameter, string, number, comment, operators
     String bsl = String.join("\n",
-      "&НаКлиенте",
+      "&��аКлиенте",
       "#Если Истина Тогда",
       "Процедура Тест(Парам) Экспорт",
       "  // комментарий",
@@ -98,7 +105,7 @@ class SemanticTokensProviderTest {
       "#Область Region1",
       "#Если Сервер И НЕ Клиент Тогда",
       "Процедура Пусто()",
-      "КонецПроцедуры",
+      "КонецПроце��уры",
       "#ИначеЕсли Клиент Тогда",
       "#Иначе",
       "#КонецЕсли",
@@ -449,6 +456,58 @@ class SemanticTokensProviderTest {
 
     assertThat(line0.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
     assertThat(line1.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
+  }
+
+  @Test
+  void multilineDocumentation_isMergedIntoSingleToken_whenClientSupportsIt() {
+    // set multilineTokenSupport via ClientCapabilitiesHolder directly
+    ClientCapabilities caps = new ClientCapabilities();
+    TextDocumentClientCapabilities td = new TextDocumentClientCapabilities();
+    SemanticTokensCapabilities st = new SemanticTokensCapabilities();
+    st.setMultilineTokenSupport(true);
+    td.setSemanticTokens(st);
+    caps.setTextDocument(td);
+    clientCapabilitiesHolder.setCapabilities(caps);
+
+    // given: two-line documentation followed by a method and a body comment
+    String bsl = String.join("\n",
+      "// Первая строка описания",
+      "// Вторая строка описания",
+      "Процедура ДокТест()",
+      "  // не документация",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int commentIdx = legend.getTokenTypes().indexOf("comment");
+    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
+    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
+    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
+    int docMask = 1 << docModIdx;
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: exactly one documentation comment token exists (merged), starting on line 0
+    var docTokens = decoded.stream().filter(t -> t.type == commentIdx && (t.modifiers & docMask) != 0).toList();
+    assertThat(docTokens).hasSize(1);
+    assertThat(docTokens.get(0).line).isEqualTo(0);
+
+    // and there is no comment token on line 1 (second doc line)
+    var commentsLine1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
+    assertThat(commentsLine1).isEmpty();
+
+    // and a regular body comment exists on line 3 without the documentation modifier
+    var bodyComments = decoded.stream().filter(t -> t.line == 3 && t.type == commentIdx).toList();
+    assertThat(bodyComments).isNotEmpty();
+    assertThat(bodyComments.stream().allMatch(t -> (t.modifiers & docMask) == 0)).isTrue();
+
+    // reset capabilities to avoid side-effects on other tests
+    clientCapabilitiesHolder.setCapabilities(null);
   }
 
   // helpers
