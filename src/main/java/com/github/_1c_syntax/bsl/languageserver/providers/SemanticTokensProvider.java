@@ -22,21 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationParamNameContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.Preproc_nativeContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -199,7 +200,7 @@ public class SemanticTokensProvider {
     ParseTree parseTree = documentContext.getAst();
 
     // compiler directives: single Decorator from '&' through directive symbol
-    for (var compilerDirective : Trees.<BSLParser.CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
+    for (var compilerDirective : Trees.<CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
       var ampersand = compilerDirective.AMPERSAND().getSymbol(); // '&'
       if (compilerDirective.compilerDirectiveSymbol() != null) {
         var symbolToken = compilerDirective.compilerDirectiveSymbol().getStart();
@@ -210,7 +211,7 @@ public class SemanticTokensProvider {
     }
 
     // annotations: single Decorator from '&' through annotation name; params identifiers as Parameter
-    for (var annotation : Trees.<BSLParser.AnnotationContext>findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
+    for (var annotation : Trees.<AnnotationContext>findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
       var ampersand = annotation.AMPERSAND().getSymbol(); // '&'
       if (annotation.annotationName() != null) {
         var annotationNameToken = annotation.annotationName().getStart();
@@ -240,7 +241,7 @@ public class SemanticTokensProvider {
     }
 
     // 1.1) Use directives as Namespace: #Использовать ... (moduleAnnotations scope)
-    for (var use : Trees.<BSLParser.UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
+    for (var use : Trees.<UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
       addNamespaceForUse(entries, use);
     }
 
@@ -289,7 +290,7 @@ public class SemanticTokensProvider {
     addRange(entries, Ranges.create(hashToken, endToken), SemanticTokenTypes.Namespace);
   }
 
-  private void addNamespaceForUse(List<TokenEntry> entries, BSLParser.UseContext useCtx) {
+  private void addNamespaceForUse(List<TokenEntry> entries, UseContext useCtx) {
     TerminalNode hashNode = useCtx.HASH();
     TerminalNode useNode = useCtx.PREPROC_USE_KEYWORD();
 
