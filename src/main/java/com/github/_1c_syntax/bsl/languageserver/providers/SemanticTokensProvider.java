@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -42,6 +44,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
@@ -55,6 +58,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.BitSet;
 
 @Component
 @RequiredArgsConstructor
@@ -112,8 +116,14 @@ public class SemanticTokensProvider {
 
   private final SemanticTokensLegend legend;
 
+  private static final String[] NO_MODIFIERS = new String[0];
+  private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
+
   public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
     List<TokenEntry> entries = new ArrayList<>();
+
+    // collect documentation lines for describable symbols
+    BitSet documentationLines = new BitSet();
 
     // 1) Symbols: methods/functions, variables, parameters
     var symbolTree = documentContext.getSymbolTree();
@@ -123,14 +133,37 @@ public class SemanticTokensProvider {
       for (ParameterDefinition parameter : method.getParameters()) {
         addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
       }
+      method.getDescription()
+        .map(MethodDescription::getRange)
+        .filter(r -> !Ranges.isEmpty(r))
+        .ifPresent(r -> markLines(documentationLines, r));
     }
     for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
       addRange(entries, variableSymbol.getVariableNameRange(), SemanticTokenTypes.Variable);
+      variableSymbol.getDescription().ifPresent(desc -> {
+        var r = desc.getRange();
+        if (!Ranges.isEmpty(r)) {
+          markLines(documentationLines, r);
+        }
+        // trailing description comment, if any
+        desc.getTrailingDescription().ifPresent(trailing -> {
+          var tr = trailing.getRange();
+          if (!Ranges.isEmpty(tr)) {
+            markLines(documentationLines, tr);
+          }
+        });
+      });
     }
 
     // 2) Comments (lexer type LINE_COMMENT)
     for (Token commentToken : documentContext.getComments()) {
-      addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment);
+      int commentLine = commentToken.getLine() - 1; // BitSet is zero-based; tokens are 1-based lines
+      boolean isDocumentation = documentationLines.get(commentLine);
+      if (isDocumentation) {
+        addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment, DOC_ONLY);
+      } else {
+        addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment);
+      }
     }
 
     // 3) AST-driven annotations and compiler directives
@@ -194,6 +227,12 @@ public class SemanticTokensProvider {
     // 5) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
     return new SemanticTokens(data);
+  }
+
+  private static void markLines(BitSet lines, Range range) {
+    int startLine = range.getStart().getLine();
+    int endLine = range.getEnd().getLine();
+    lines.set(startLine, endLine + 1); // inclusive end
   }
 
   private void addAnnotationsFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
@@ -308,6 +347,10 @@ public class SemanticTokensProvider {
   }
 
   private void addRange(List<TokenEntry> entries, Range range, String type) {
+    addRange(entries, range, type, NO_MODIFIERS);
+  }
+
+  private void addRange(List<TokenEntry> entries, Range range, String type, String... modifiers) {
     if (Ranges.isEmpty(range)) {
       return;
     }
@@ -319,11 +362,21 @@ public class SemanticTokensProvider {
     int start = range.getStart().getCharacter();
     int length = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
     if (length > 0) {
-      entries.add(new TokenEntry(line, start, length, typeIdx, 0));
+      int modifierMask = 0;
+      if (modifiers != null) {
+        for (String mod : modifiers) {
+          if (mod == null) continue;
+          int idx = legend.getTokenModifiers().indexOf(mod);
+          if (idx >= 0) {
+            modifierMask |= (1 << idx);
+          }
+        }
+      }
+      entries.add(new TokenEntry(line, start, length, typeIdx, modifierMask));
     }
   }
 
-  private static List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
+  private List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
     // de-dup and sort
     Set<TokenEntry> uniq = new HashSet<>(entries);
     List<TokenEntry> sorted = new ArrayList<>(uniq);
@@ -340,6 +393,7 @@ public class SemanticTokensProvider {
       int deltaLine = first ? tokenEntry.line : (tokenEntry.line - prevLine);
       int prevCharOrZero = (deltaLine == 0) ? prevChar : 0;
       int deltaStart = first ? tokenEntry.start : (tokenEntry.start - prevCharOrZero);
+
       data.add(deltaLine);
       data.add(deltaStart);
       data.add(tokenEntry.length);

@@ -380,6 +380,77 @@ class SemanticTokensProviderTest {
     assertThat(keywords).isGreaterThanOrEqualTo(expectedSpecialLiteralCount);
   }
 
+  @Test
+  void methodDescriptionComments_areMarkedWithDocumentationModifier() {
+    // given: leading description comments above a method and a non-doc comment in body
+    String bsl = String.join("\n",
+      "// Описание процедуры",
+      "// Параметры: Парам - Число",
+      "Процедура ДокТест(Парам)",
+      "  // обычный комментарий",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int commentIdx = legend.getTokenTypes().indexOf("comment");
+    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
+    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
+    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
+    int docMask = 1 << docModIdx;
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+    // comments on lines 0 and 1 must have documentation modifier; line 3 comment must not
+    var line0 = decoded.stream().filter(t -> t.line == 0 && t.type == commentIdx).toList();
+    var line1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
+    var line3 = decoded.stream().filter(t -> t.line == 3 && t.type == commentIdx).toList();
+
+    assertThat(line0).isNotEmpty();
+    assertThat(line1).isNotEmpty();
+    assertThat(line3).isNotEmpty();
+
+    assertThat(line0.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
+    assertThat(line1.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
+    assertThat(line3.stream().allMatch(t -> (t.modifiers & docMask) == 0)).isTrue();
+  }
+
+  @Test
+  void variableDescriptionLeadingAndTrailing_areMarkedWithDocumentationModifier() {
+    // given: leading description and trailing description for a variable
+    String bsl = String.join("\n",
+      "// Описание переменной",
+      "Перем Перем1; // трейл"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int commentIdx = legend.getTokenTypes().indexOf("comment");
+    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
+    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
+    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
+    int docMask = 1 << docModIdx;
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // We expect two comment tokens: line 0 (leading) and line 1 (trailing). Both should have documentation modifier.
+    var line0 = decoded.stream().filter(t -> t.line == 0 && t.type == commentIdx).toList();
+    var line1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
+
+    assertThat(line0).isNotEmpty();
+    assertThat(line1).isNotEmpty();
+
+    assertThat(line0.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
+    assertThat(line1.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
+  }
+
   // helpers
   private record DecodedToken(int line, int start, int length, int type, int modifiers) {}
 

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
+import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.context.annotation.Bean;
@@ -49,7 +50,12 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Namespace
     );
 
-    return new SemanticTokensLegend(tokenTypes, List.of());
+    // Add tokenModifiers we plan to emit
+    List<String> tokenModifiers = List.of(
+      SemanticTokenModifiers.Documentation
+    );
+
+    return new SemanticTokensLegend(tokenTypes, tokenModifiers);
   }
 
 }
