@@ -29,6 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationParamNameContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.Preproc_nativeContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -54,259 +59,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
 
-  private final SemanticTokensLegend legend;
-
-  public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
-    List<TokenEntry> entries = new ArrayList<>();
-
-    // 1) Symbols: methods/functions, variables, parameters
-    var symbolTree = documentContext.getSymbolTree();
-    for (MethodSymbol method : symbolTree.getMethods()) {
-      addRange(entries, method.getSubNameRange(), method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method);
-      for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
-      }
-    }
-    for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
-      addRange(entries, variableSymbol.getVariableNameRange(), SemanticTokenTypes.Variable);
-    }
-
-    // 2) Comments (lexer type LINE_COMMENT)
-    for (Token commentToken : documentContext.getComments()) {
-      addTokenLike(entries, commentToken.getLine(), commentToken.getCharPositionInLine(), commentToken.getText(), SemanticTokenTypes.Comment);
-    }
-
-    // 3) AST-driven annotations and compiler directives
-    addAnnotationsFromAst(entries, documentContext);
-    addPreprocessorFromAst(entries, documentContext);
-
-    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
-    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
-    for (Token token : tokens) {
-      final int tokenTypeInt = token.getType();
-      final String tokenText = Objects.toString(token.getText(), "");
-      if (tokenText.isEmpty()) {
-        continue;
-      }
-
-      int zeroBasedLine = token.getLine() - 1;
-
-      // strings
-      if (STRING_TYPES.contains(tokenTypeInt)) {
-        addTokenLike(entries, token.getLine(), token.getCharPositionInLine(), tokenText, SemanticTokenTypes.String);
-        continue;
-      }
-
-      // date literals in single quotes
-      if (tokenTypeInt == BSLLexer.DATETIME) {
-        addToken(entries, zeroBasedLine, token.getCharPositionInLine(), tokenText.length(), SemanticTokenTypes.String);
-        continue;
-      }
-
-      // numbers
-      if (NUMBER_TYPES.contains(tokenTypeInt)) {
-        addToken(entries, zeroBasedLine, token.getCharPositionInLine(), tokenText.length(), SemanticTokenTypes.Number);
-        continue;
-      }
-
-      // operators and punctuators
-      if (OPERATOR_TYPES.contains(tokenTypeInt)) {
-        addToken(entries, zeroBasedLine, token.getCharPositionInLine(), tokenText.length(), SemanticTokenTypes.Operator);
-        continue;
-      }
-
-      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
-      if (tokenTypeInt == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenTypeInt)) {
-        continue;
-      }
-
-      // specific literals as keywords: undefined/boolean/null
-      if (tokenTypeInt == BSLLexer.UNDEFINED || tokenTypeInt == BSLLexer.TRUE || tokenTypeInt == BSLLexer.FALSE || tokenTypeInt == BSLLexer.NULL) {
-        addToken(entries, zeroBasedLine, token.getCharPositionInLine(), tokenText.length(), SemanticTokenTypes.Keyword);
-        continue;
-      }
-
-      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
-      String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenTypeInt);
-      if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
-        addToken(entries, zeroBasedLine, token.getCharPositionInLine(), tokenText.length(), SemanticTokenTypes.Keyword);
-      }
-    }
-
-    // 5) Build delta-encoded data
-    List<Integer> data = toDeltaEncoded(entries);
-    return new SemanticTokens(data);
-  }
-
-  private void addAnnotationsFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
-    ParseTree parseTree = documentContext.getAst();
-
-    // compiler directives: single Decorator from '&' through directive symbol
-    for (var compilerDirectiveRule : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
-      var compilerDirective = (BSLParser.CompilerDirectiveContext) compilerDirectiveRule;
-      Token ampersandToken = compilerDirective.getStart(); // '&'
-      if (compilerDirective.compilerDirectiveSymbol() != null) {
-        Token symbolToken = compilerDirective.compilerDirectiveSymbol().getStart();
-        addRange(entries, Ranges.create(ampersandToken, symbolToken), SemanticTokenTypes.Decorator);
-      } else {
-        addRange(entries, Ranges.create(ampersandToken), SemanticTokenTypes.Decorator);
-      }
-    }
-
-    // annotations: single Decorator from '&' through annotation name; params identifiers as Parameter
-    for (var annotationRule : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
-      var annotation = (BSLParser.AnnotationContext) annotationRule;
-      Token ampersandToken = annotation.getStart(); // '&'
-      if (annotation.annotationName() != null) {
-        Token annotationNameToken = annotation.annotationName().getStart();
-        addRange(entries, Ranges.create(ampersandToken, annotationNameToken), SemanticTokenTypes.Decorator);
-      } else {
-        addRange(entries, Ranges.create(ampersandToken), SemanticTokenTypes.Decorator);
-      }
-
-      var annotationParams = annotation.annotationParams();
-      if (annotationParams != null) {
-        for (var nameRule : Trees.findAllRuleNodes(annotationParams, BSLParser.RULE_annotationParamName)) {
-          var annotationParamName = (ParserRuleContext) nameRule;
-          addRange(entries, Ranges.create(annotationParamName.getStart()), SemanticTokenTypes.Parameter);
-        }
-      }
-    }
-  }
-
-  private void addPreprocessorFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
-    ParseTree parseTree = documentContext.getAst();
-
-    // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
-    for (var regionStartRuleNode : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
-      addNamespaceForPreprocessorNode(entries, (ParserRuleContext) regionStartRuleNode);
-    }
-    for (var regionEndRuleNode : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
-      addNamespaceForPreprocessorNode(entries, (ParserRuleContext) regionEndRuleNode);
-    }
-
-    // 1.1) Use directives as Namespace: #Использовать ...
-    for (var useRuleNode : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
-      addNamespaceForUse(entries, (BSLParser.UseContext) useRuleNode);
-    }
-
-    // 2) Other preprocessor directives: Macro for each HASH and PREPROC_* token, excluding region/use
-    for (var preprocessorRule : Trees.findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
-      var preprocessor = (BSLParser.PreprocessorContext) preprocessorRule;
-      boolean containsRegionOrUse = !Trees.findAllRuleNodes(preprocessor, BSLParser.RULE_regionStart).isEmpty()
-        || !Trees.findAllRuleNodes(preprocessor, BSLParser.RULE_regionEnd).isEmpty()
-        || !Trees.findAllRuleNodes(preprocessor, BSLParser.RULE_use).isEmpty();
-      if (containsRegionOrUse) {
-        continue; // already handled as Namespace
-      }
-      for (Token token : Trees.getTokens(preprocessor)) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) continue;
-        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
-        if ("HASH".equals(symbolicName) || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
-          addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
-        }
-      }
-    }
-  }
-
-  private void addNamespaceForPreprocessorNode(List<TokenEntry> entries, ParserRuleContext preprocessorChildNode) {
-    var preprocessor = (BSLParser.PreprocessorContext) Trees.getAncestorByRuleIndex((BSLParserRuleContext) preprocessorChildNode, BSLParser.RULE_preprocessor);
-    if (preprocessor == null) {
-      return;
-    }
-    Token hashToken = preprocessor.getStart();
-    Token endToken = preprocessorChildNode.getStop();
-    if (hashToken == null) {
-      return;
-    }
-    addRange(entries, Ranges.create(hashToken, endToken), SemanticTokenTypes.Namespace);
-  }
-
-  private void addNamespaceForUse(List<TokenEntry> entries, BSLParser.UseContext useCtx) {
-    TerminalNode hashNode = useCtx.HASH();
-    TerminalNode useNode = useCtx.PREPROC_USE_KEYWORD();
-
-    if (hashNode != null && useNode != null) {
-      addRange(entries, Ranges.create(hashNode, useNode), SemanticTokenTypes.Namespace);
-    } else if (hashNode != null) {
-      addRange(entries, Ranges.create(hashNode), SemanticTokenTypes.Namespace);
-    }
-
-    Optional.ofNullable(useCtx.usedLib())
-      .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
-      .ifPresent(id -> addRange(entries, Ranges.create(id), SemanticTokenTypes.Variable));
-  }
-
-  private void addRange(List<TokenEntry> entries, Range range, String type) {
-    if (Ranges.isEmpty(range)) {
-      return;
-    }
-    int typeIdx = legend.getTokenTypes().indexOf(type);
-    if (typeIdx < 0) {
-      return;
-    }
-    int line = range.getStart().getLine();
-    int start = range.getStart().getCharacter();
-    int length = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
-    if (length > 0) {
-      entries.add(new TokenEntry(line, start, length, typeIdx, 0));
-    }
-  }
-
-  private void addTokenLike(List<TokenEntry> entries, int antlrStartLine1, int startChar, String text, String type) {
-    // Split by newlines to keep single-line semantic tokens
-    String[] parts = text.split("\r?\n|\r", -1);
-    int line = antlrStartLine1 - 1; // LSP lines are 0-based
-    int col = startChar;
-    for (String part : parts) {
-      if (!part.isEmpty()) {
-        addToken(entries, line, col, part.length(), type);
-      }
-      // Subsequent lines start at column 0
-      line++;
-      col = 0;
-    }
-  }
-
-  private void addToken(List<TokenEntry> entries, int line, int start, int length, String type) {
-    int typeIdx = legend.getTokenTypes().indexOf(type);
-    if (typeIdx < 0) {
-      return; // type not announced in legend
-    }
-    entries.add(new TokenEntry(line, start, length, typeIdx, 0));
-  }
-
-  private List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
-    // de-dup and sort
-    Set<TokenEntry> uniq = new HashSet<>(entries);
-    List<TokenEntry> sorted = new ArrayList<>(uniq);
-    sorted.sort(Comparator
-      .comparingInt(TokenEntry::line)
-      .thenComparingInt(TokenEntry::start));
-
-    List<Integer> data = new ArrayList<>(sorted.size() * 5);
-    int prevLine = 0;
-    int prevChar = 0;
-    boolean first = true;
-
-    for (TokenEntry tokenEntry : sorted) {
-      int deltaLine = first ? tokenEntry.line : tokenEntry.line - prevLine;
-      int deltaStart = first ? tokenEntry.start : tokenEntry.start - (deltaLine == 0 ? prevChar : 0);
-      data.add(deltaLine);
-      data.add(deltaStart);
-      data.add(tokenEntry.length);
-      data.add(tokenEntry.type);
-      data.add(tokenEntry.modifiers);
-
-      prevLine = tokenEntry.line;
-      prevChar = tokenEntry.start;
-      first = false;
-    }
-    return data;
-  }
-
-  private record TokenEntry(int line, int start, int length, int type, int modifiers) { }
-
   private static final Set<Integer> NUMBER_TYPES = Set.of(
     BSLLexer.DECIMAL,
     BSLLexer.FLOAT
@@ -317,7 +69,6 @@ public class SemanticTokensProvider {
     BSLLexer.STRINGPART,
     BSLLexer.STRINGSTART,
     BSLLexer.STRINGTAIL,
-    // preprocessor string literal for #Использовать "путь"
     BSLLexer.PREPROC_STRING
   );
 
@@ -357,4 +108,249 @@ public class SemanticTokensProvider {
     BSLLexer.ANNOTATION_CHANGEANDVALIDATE_SYMBOL,
     BSLLexer.ANNOTATION_CUSTOM_SYMBOL
   );
+
+  private final SemanticTokensLegend legend;
+
+  public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
+    List<TokenEntry> entries = new ArrayList<>();
+
+    // 1) Symbols: methods/functions, variables, parameters
+    var symbolTree = documentContext.getSymbolTree();
+    for (var method : symbolTree.getMethods()) {
+      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
+      addRange(entries, method.getSubNameRange(), semanticTokenType);
+      for (ParameterDefinition parameter : method.getParameters()) {
+        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
+      }
+    }
+    for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
+      addRange(entries, variableSymbol.getVariableNameRange(), SemanticTokenTypes.Variable);
+    }
+
+    // 2) Comments (lexer type LINE_COMMENT)
+    for (Token commentToken : documentContext.getComments()) {
+      addRange(entries, Ranges.create(commentToken), SemanticTokenTypes.Comment);
+    }
+
+    // 3) AST-driven annotations and compiler directives
+    addAnnotationsFromAst(entries, documentContext);
+    addPreprocessorFromAst(entries, documentContext);
+
+    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
+    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
+    for (Token token : tokens) {
+      var tokenType = token.getType();
+      var tokenText = Objects.toString(token.getText(), "");
+      if (tokenText.isEmpty()) {
+        continue;
+      }
+
+      // strings
+      if (STRING_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+        continue;
+      }
+
+      // date literals in single quotes
+      if (tokenType == BSLLexer.DATETIME) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+        continue;
+      }
+
+      // numbers
+      if (NUMBER_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
+        continue;
+      }
+
+      // operators and punctuators
+      if (OPERATOR_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
+        continue;
+      }
+
+      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
+      if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
+        continue;
+      }
+
+      // specific literals as keywords: undefined/boolean/null
+      if (tokenType == BSLLexer.UNDEFINED
+        || tokenType == BSLLexer.TRUE
+        || tokenType == BSLLexer.FALSE
+        || tokenType == BSLLexer.NULL) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
+        continue;
+      }
+
+      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
+      String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
+      if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
+      }
+    }
+
+    // 5) Build delta-encoded data
+    List<Integer> data = toDeltaEncoded(entries);
+    return new SemanticTokens(data);
+  }
+
+  private void addAnnotationsFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
+    ParseTree parseTree = documentContext.getAst();
+
+    // compiler directives: single Decorator from '&' through directive symbol
+    for (var compilerDirective : Trees.<BSLParser.CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
+      var ampersand = compilerDirective.AMPERSAND().getSymbol(); // '&'
+      if (compilerDirective.compilerDirectiveSymbol() != null) {
+        var symbolToken = compilerDirective.compilerDirectiveSymbol().getStart();
+        addRange(entries, Ranges.create(ampersand, symbolToken), SemanticTokenTypes.Decorator);
+      } else {
+        addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
+      }
+    }
+
+    // annotations: single Decorator from '&' through annotation name; params identifiers as Parameter
+    for (var annotation : Trees.<BSLParser.AnnotationContext>findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
+      var ampersand = annotation.AMPERSAND().getSymbol(); // '&'
+      if (annotation.annotationName() != null) {
+        var annotationNameToken = annotation.annotationName().getStart();
+        addRange(entries, Ranges.create(ampersand, annotationNameToken), SemanticTokenTypes.Decorator);
+      } else {
+        addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
+      }
+
+      var annotationParams = annotation.annotationParams();
+      if (annotationParams != null) {
+        for (var annotationParamName : Trees.<AnnotationParamNameContext>findAllRuleNodes(annotationParams, BSLParser.RULE_annotationParamName)) {
+          addRange(entries, Ranges.create(annotationParamName.IDENTIFIER()), SemanticTokenTypes.Parameter);
+        }
+      }
+    }
+  }
+
+  private void addPreprocessorFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
+    ParseTree parseTree = documentContext.getAst();
+
+    // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
+    for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
+      addNamespaceForPreprocessorNode(entries, regionStart);
+    }
+    for (var regionEnd : Trees.<RegionEndContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
+      addNamespaceForPreprocessorNode(entries, regionEnd);
+    }
+
+    // 1.1) Use directives as Namespace: #Использовать ... (moduleAnnotations scope)
+    for (var use : Trees.<BSLParser.UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
+      addNamespaceForUse(entries, use);
+    }
+
+    // 1.2) Native directives as Macro: #NATIVE (moduleAnnotations scope)
+    for (var nativeCtx : Trees.<Preproc_nativeContext>findAllRuleNodes(parseTree, BSLParser.RULE_preproc_native)) {
+      var hash = nativeCtx.HASH();
+      var nativeKw = nativeCtx.PREPROC_NATIVE();
+      if (hash != null) {
+        addRange(entries, Ranges.create(hash), SemanticTokenTypes.Macro);
+      }
+      if (nativeKw != null) {
+        addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
+      }
+    }
+
+    // 2) Other preprocessor directives: Macro for each HASH and PREPROC_* token,
+    // excluding region start/end (handled as Namespace)
+    for (var preprocessor : Trees.<PreprocessorContext>findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
+      boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
+      if (containsRegion) {
+        continue; // region handled as Namespace above
+      }
+
+      for (Token token : Trees.getTokens(preprocessor)) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
+        if (token.getType() == BSLLexer.HASH || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
+          addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
+        }
+      }
+    }
+  }
+
+  private void addNamespaceForPreprocessorNode(List<TokenEntry> entries, BSLParserRuleContext preprocessorChildNode) {
+    var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(preprocessorChildNode, BSLParser.RULE_preprocessor);
+    if (preprocessor == null) {
+      return;
+    }
+    var hashToken = preprocessor.getStart();
+    if (hashToken == null) {
+      return;
+    }
+    var endToken = preprocessorChildNode.getStop();
+    addRange(entries, Ranges.create(hashToken, endToken), SemanticTokenTypes.Namespace);
+  }
+
+  private void addNamespaceForUse(List<TokenEntry> entries, BSLParser.UseContext useCtx) {
+    TerminalNode hashNode = useCtx.HASH();
+    TerminalNode useNode = useCtx.PREPROC_USE_KEYWORD();
+
+    if (hashNode != null && useNode != null) {
+      addRange(entries, Ranges.create(hashNode, useNode), SemanticTokenTypes.Namespace);
+    } else if (hashNode != null) {
+      addRange(entries, Ranges.create(hashNode), SemanticTokenTypes.Namespace);
+    } else {
+      // no-op
+    }
+
+    Optional.ofNullable(useCtx.usedLib())
+      .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
+      .ifPresent(id -> addRange(entries, Ranges.create(id), SemanticTokenTypes.Variable));
+  }
+
+  private void addRange(List<TokenEntry> entries, Range range, String type) {
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+    int typeIdx = legend.getTokenTypes().indexOf(type);
+    if (typeIdx < 0) {
+      return;
+    }
+    int line = range.getStart().getLine();
+    int start = range.getStart().getCharacter();
+    int length = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
+    if (length > 0) {
+      entries.add(new TokenEntry(line, start, length, typeIdx, 0));
+    }
+  }
+
+  private static List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
+    // de-dup and sort
+    Set<TokenEntry> uniq = new HashSet<>(entries);
+    List<TokenEntry> sorted = new ArrayList<>(uniq);
+    sorted.sort(Comparator
+      .comparingInt(TokenEntry::line)
+      .thenComparingInt(TokenEntry::start));
+
+    List<Integer> data = new ArrayList<>(sorted.size() * 5);
+    var prevLine = 0;
+    var prevChar = 0;
+    var first = true;
+
+    for (TokenEntry tokenEntry : sorted) {
+      int deltaLine = first ? tokenEntry.line : (tokenEntry.line - prevLine);
+      int prevCharOrZero = (deltaLine == 0) ? prevChar : 0;
+      int deltaStart = first ? tokenEntry.start : (tokenEntry.start - prevCharOrZero);
+      data.add(deltaLine);
+      data.add(deltaStart);
+      data.add(tokenEntry.length);
+      data.add(tokenEntry.type);
+      data.add(tokenEntry.modifiers);
+
+      prevLine = tokenEntry.line;
+      prevChar = tokenEntry.start;
+      first = false;
+    }
+    return data;
+  }
+
+  private record TokenEntry(int line, int start, int length, int type, int modifiers) { }
 }

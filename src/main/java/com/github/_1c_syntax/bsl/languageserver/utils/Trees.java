@@ -64,9 +64,9 @@ public final class Trees {
   /**
    * Обертки Trees
    */
-
-  public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
-    return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
+  @SuppressWarnings("unchecked")
+  public static <T extends ParseTree>Collection<T> findAllRuleNodes(ParseTree t, int ruleIndex) {
+    return (Collection<T>) org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
   }
 
   public static List<Tree> getChildren(Tree t) {
@@ -163,13 +163,14 @@ public final class Trees {
    * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
   @Nullable
-  public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
+  @SuppressWarnings("unchecked")
+  public static <T extends BSLParserRuleContext> T getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
     var parent = element.getParent();
     if (parent == null) {
       return null;
     }
     if (parent.getRuleIndex() == type) {
-      return parent;
+      return (T) parent;
     }
     return getAncestorByRuleIndex(parent, type);
   }
