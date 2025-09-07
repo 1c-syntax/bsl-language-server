@@ -52,7 +52,8 @@ public class SemanticTokensLegendConfiguration {
 
     // Add tokenModifiers we plan to emit
     List<String> tokenModifiers = List.of(
-      SemanticTokenModifiers.Documentation
+      SemanticTokenModifiers.Documentation,
+      SemanticTokenModifiers.Definition
     );
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);

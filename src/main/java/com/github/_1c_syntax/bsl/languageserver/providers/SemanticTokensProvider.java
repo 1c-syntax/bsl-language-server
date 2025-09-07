@@ -26,7 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -45,24 +46,25 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
-import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.BitSet;
 
 @Component
 @RequiredArgsConstructor
@@ -120,6 +122,7 @@ public class SemanticTokensProvider {
 
   private final SemanticTokensLegend legend;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final ReferenceResolver referenceResolver;
 
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
@@ -156,7 +159,18 @@ public class SemanticTokensProvider {
         });
     }
     for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
-      addRange(entries, variableSymbol.getVariableNameRange(), SemanticTokenTypes.Variable);
+      Range nameRange = variableSymbol.getVariableNameRange();
+      if (!Ranges.isEmpty(nameRange)) {
+        Position pos = nameRange.getStart();
+        boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), pos)
+          .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
+          .orElse(false);
+        if (isDefinition) {
+          addRange(entries, nameRange, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition);
+        } else {
+          addRange(entries, nameRange, SemanticTokenTypes.Variable);
+        }
+      }
       variableSymbol.getDescription().ifPresent(desc -> {
         var r = desc.getRange();
         if (!Ranges.isEmpty(r)) {
@@ -483,5 +497,6 @@ public class SemanticTokensProvider {
     return data;
   }
 
-  private record TokenEntry(int line, int start, int length, int type, int modifiers) { }
+  private record TokenEntry(int line, int start, int length, int type, int modifiers) {
+  }
 }

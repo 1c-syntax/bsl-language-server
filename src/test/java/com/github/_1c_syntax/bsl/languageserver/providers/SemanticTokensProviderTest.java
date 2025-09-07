@@ -542,6 +542,38 @@ class SemanticTokensProviderTest {
     assertThat(varsOnLine0).isEqualTo(1);
   }
 
+  @Test
+  void variableDefinition_hasDefinitionModifier() {
+    // given: module-level variable declaration
+    String bsl = String.join("\n",
+      "Перем Перем1;",
+      "Процедура T()",
+      "  // тело",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+    int defModIdx = legend.getTokenModifiers().indexOf("definition");
+    assertThat(varIdx).isGreaterThanOrEqualTo(0);
+    assertThat(defModIdx).isGreaterThanOrEqualTo(0);
+    int defMask = 1 << defModIdx;
+
+    // then: at least one Variable token has the definition modifier (for Перем1)
+    List<DecodedToken> decoded = decode(tokens.getData());
+    long defs = decoded.stream()
+      .filter(t -> t.type == varIdx)
+      .filter(t -> (t.modifiers & defMask) != 0)
+      .count();
+
+    assertThat(defs).isGreaterThanOrEqualTo(1);
+  }
+
   // helpers
   private record DecodedToken(int line, int start, int length, int type, int modifiers) {}
 
