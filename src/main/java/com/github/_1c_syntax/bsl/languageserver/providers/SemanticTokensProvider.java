@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -54,6 +55,7 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.springframework.stereotype.Component;
 
@@ -123,6 +125,7 @@ public class SemanticTokensProvider {
   private final SemanticTokensLegend legend;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ReferenceResolver referenceResolver;
+  private final ReferenceIndex referenceIndex;
 
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
@@ -222,6 +225,9 @@ public class SemanticTokensProvider {
     // 3) AST-driven annotations and compiler directives
     addAnnotationsFromAst(entries, documentContext);
     addPreprocessorFromAst(entries, documentContext);
+
+    // 3.1) Same-file method call occurrences as Method tokens
+    addLocalMethodCallTokens(entries, documentContext);
 
     // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
     List<Token> tokens = documentContext.getTokensFromDefaultChannel();
@@ -495,6 +501,18 @@ public class SemanticTokensProvider {
       first = false;
     }
     return data;
+  }
+
+  private void addLocalMethodCallTokens(List<TokenEntry> entries, DocumentContext documentContext) {
+    for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
+      if (!reference.isSourceDefinedSymbolReference()) {
+        continue;
+      }
+
+      reference.getSourceDefinedSymbol()
+        .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getOwner().equals(documentContext))
+        .ifPresent(symbol -> addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
+    }
   }
 
   private record TokenEntry(int line, int start, int length, int type, int modifiers) {
