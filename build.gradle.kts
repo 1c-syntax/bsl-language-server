@@ -17,7 +17,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.52.0"
     id("org.springframework.boot") version "3.5.5"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.10.0"
+    id("io.sentry.jvm.gradle") version "5.11.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.20.0"
