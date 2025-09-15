@@ -134,7 +134,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.4")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.5")
 
     // TEST
 
