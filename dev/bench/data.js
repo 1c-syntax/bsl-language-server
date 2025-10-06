@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1759771012446,
+  "lastUpdate": 1759772140351,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -29853,6 +29853,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4529854487258898",
             "extra": "mean: 83.65654110908508 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "distinct": true,
+          "id": "84dfa8569496e18990509fd8bea3ec111a269fcb",
+          "message": "Revert \"Merge pull request #3522 from 1c-syntax/dependabot/gradle/io.sentry.jvm.gradle-5.12.1\n\nbuild(deps): bump io.sentry.jvm.gradle from 5.12.0 to 5.12.1\"\n\nThis reverts commit 40450e9635361755b582ebffc3bab7df26843de1.",
+          "timestamp": "2025-10-06T20:06:20+03:00",
+          "tree_id": "2d92028a9ce23a49cbbaf043f6b49abf2efa2d7d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/84dfa8569496e18990509fd8bea3ec111a269fcb"
+        },
+        "date": 1759772136415,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 85.04160944620769,
+            "unit": "sec",
+            "range": "stddev: 0.5865870811800409",
+            "extra": "mean: 85.04160944620769 sec\nrounds: 3"
           }
         ]
       }
