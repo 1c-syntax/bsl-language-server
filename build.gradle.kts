@@ -30,6 +30,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
+    maven("https://central.sonatype.com/repository/maven-snapshots")
 }
 
 group = "io.github.1c-syntax"
