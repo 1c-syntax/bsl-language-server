@@ -503,18 +503,21 @@ public final class FormatProvider {
 
     MultiName orKeywordCanonText;
     MultiName notKeywordCanonText;
+    MultiName andKeywordCanonText;
 
     if (useUppercaseForLogicalOrNotAndKeywords) {
       orKeywordCanonText = Keywords.OR_UP;
       notKeywordCanonText = Keywords.NOT_UP;
+      andKeywordCanonText = Keywords.AND_UP;
     } else {
       orKeywordCanonText = Keywords.OR;
       notKeywordCanonText = Keywords.NOT;
+      andKeywordCanonText = Keywords.AND;
     }
 
     canonWords.put(BSLLexer.OR_KEYWORD, orKeywordCanonText);
     canonWords.put(BSLLexer.NOT_KEYWORD, notKeywordCanonText);
-    canonWords.put(BSLLexer.AND_KEYWORD, Keywords.AND);
+    canonWords.put(BSLLexer.AND_KEYWORD, andKeywordCanonText);
   }
 }
 
