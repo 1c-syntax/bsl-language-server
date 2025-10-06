@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
@@ -97,14 +96,8 @@ public class MdoRefBuilder {
    * @return the locale mdoRef
    */
   public String getLocaleMdoRef(DocumentContext documentContext, MD mdo) {
-    final var mdoReference = mdo.getMdoReference();
-    final String result;
-    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
-      result = mdoReference.getMdoRef();
-    } else {
-      result = mdoReference.getMdoRefRu();
-    }
-    return stringInterner.intern(result);
+    return stringInterner.intern(
+      mdo.getMdoReference().getMdoRef(documentContext.getServerContext().getConfiguration().getScriptVariant()));
   }
 
   /**
@@ -135,7 +128,7 @@ public class MdoRefBuilder {
       return "";
     }
 
-    return mdoType.getName() + "." + identifier;
+    return mdoType.nameEn() + "." + identifier;
   }
 
   private String getMdoName(List<? extends BSLParser.ModifierContext> modifiers) {

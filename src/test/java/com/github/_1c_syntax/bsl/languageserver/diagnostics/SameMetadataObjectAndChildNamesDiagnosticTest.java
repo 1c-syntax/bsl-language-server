@@ -145,7 +145,7 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     assertThat(diagnostics)
-      .hasSize(6)
+      .hasSize(16)
       .noneMatch(diagnostic -> diagnostic.getMessage().contains("имя `Справочник.Справочник1"))
       .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.Реквизит"))
       .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.ТабличнаяЧасть"))

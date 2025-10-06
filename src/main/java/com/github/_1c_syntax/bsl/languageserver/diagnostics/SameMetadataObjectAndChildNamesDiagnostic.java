@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -36,6 +35,7 @@ import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.StringInterner;
 
 import java.util.List;
@@ -110,12 +110,8 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
   }
 
   private void addAttributeDiagnostic(Attribute attribute, String mdoName) {
-    String mdoRef;
-    if (serverConfiguration.getLanguage() == Language.RU) {
-      mdoRef = attribute.getMdoReference().getMdoRefRu();
-    } else {
-      mdoRef = attribute.getMdoReference().getMdoRef();
-    }
+    var mdoRef = attribute.getMdoReference().getMdoRef(
+      ScriptVariant.valueByName(serverConfiguration.getLanguage().getLanguageCode()));
     addDiagnostic(info.getMessage(mdoRef, mdoName));
   }
 }
