@@ -102,6 +102,10 @@ public class DiagnosticMetadataDeserializer extends JsonDeserializer<DiagnosticM
       annotationParameters.put("extraMinForComplexity", node.get("extraMinForComplexity").asDouble());
     }
     
-    return TypeFactory.annotation(DiagnosticMetadata.class, annotationParameters);
+    try {
+      return TypeFactory.annotation(DiagnosticMetadata.class, annotationParameters);
+    } catch (Exception e) {
+      throw new IOException("Failed to create DiagnosticMetadata annotation", e);
+    }
   }
 }
