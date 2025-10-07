@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1759772140351,
+  "lastUpdate": 1759819117982,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -29884,6 +29884,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5865870811800409",
             "extra": "mean: 85.04160944620769 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7a620bc30582411dc98e58ee6500ae5df26e1b1d",
+          "message": "Поддержка стандартных реквизитов, типов значений, мультиязычности имен (#3523)\n\n1. правки из-за новых либ\n2. упрощение получения представлений в зависимости от языка",
+          "timestamp": "2025-10-07T09:29:24+03:00",
+          "tree_id": "c458949a3157c5814db61cf708f2eca303f039ef",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7a620bc30582411dc98e58ee6500ae5df26e1b1d"
+        },
+        "date": 1759819113884,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 84.44941250483195,
+            "unit": "sec",
+            "range": "stddev: 1.106692012902619",
+            "extra": "mean: 84.44941250483195 sec\nrounds: 3"
           }
         ]
       }
