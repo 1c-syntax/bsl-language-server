@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -74,7 +73,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     var moduleType = documentContext.getModuleType();
     var fileType = documentContext.getFileType();
 
-    ScriptVariant regionsLanguage = getRegionsLanguage(documentContext, fileType);
+    var regionsLanguage = getRegionsLanguage(documentContext, fileType);
     Set<String> neededStandardRegions;
 
     if (fileType == FileType.BSL) {
@@ -122,19 +121,9 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     ScriptVariant regionsLanguage;
     var configuration = documentContext.getServerContext().getConfiguration();
     if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      regionsLanguage = getScriptVariantFromConfigLanguage();
+      regionsLanguage = ScriptVariant.valueByName(languageServerConfiguration.getLanguage().getLanguageCode());
     } else {
       regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
-    }
-    return regionsLanguage;
-  }
-
-  private ScriptVariant getScriptVariantFromConfigLanguage() {
-    ScriptVariant regionsLanguage;
-    if (languageServerConfiguration.getLanguage() == Language.EN) {
-      regionsLanguage = ScriptVariant.ENGLISH;
-    } else {
-      regionsLanguage = ScriptVariant.RUSSIAN;
     }
     return regionsLanguage;
   }

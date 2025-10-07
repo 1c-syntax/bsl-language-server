@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 abstract class AbstractExecuteExternalCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern EVAL_METHOD_NAME = CaseInsensitivePattern.compile(
-    String.format("^(%s|%s)$", Keywords.EVAL_EN, Keywords.EVAL_RU));
+    String.format("^(%s|%s)$", Keywords.EVAL.getEn(), Keywords.EVAL.getRu()));
 
   @Override
   public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {

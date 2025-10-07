@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
@@ -42,6 +41,7 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -217,10 +217,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
       languageTag = configuration.getLanguage().getLanguageCode();
     } else {
       var scriptVariant = mdConfiguration.getScriptVariant();
-      if (scriptVariant == ScriptVariant.ENGLISH) {
-        languageTag = "en";
-      } else if (scriptVariant == ScriptVariant.RUSSIAN) {
-        languageTag = "ru";
+      if (scriptVariant != ScriptVariant.UNKNOWN) {
+        languageTag = scriptVariant.shortName();
       } else {
         throw new IllegalArgumentException("Unknown scriptVariant " + scriptVariant);
       }

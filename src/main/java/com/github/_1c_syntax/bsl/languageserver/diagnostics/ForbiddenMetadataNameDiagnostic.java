@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
-import com.github._1c_syntax.bsl.mdo.ChildrenOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -145,12 +143,8 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
 
   private void checkName(String name, MdoReference mdoReference) {
     if (FORBIDDEN_NAMES_PATTERN.matcher(name).matches()) {
-      String mdoRef;
-      if (serverConfiguration.getLanguage() == Language.RU) {
-        mdoRef = mdoReference.getMdoRefRu();
-      } else {
-        mdoRef = mdoReference.getMdoRef();
-      }
+      var mdoRef = mdoReference.getMdoRef(
+        documentContext.getServerContext().getConfiguration().getScriptVariant());
       addDiagnostic(info.getMessage(name, mdoRef));
     }
   }

@@ -53,26 +53,26 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
   private final Map<String, String> regionNames = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   public DuplicateRegionDiagnostic() {
-    regionNames.put(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
-    regionNames.put(Keywords.PUBLIC_REGION_EN, Keywords.PUBLIC_REGION_EN);
-    regionNames.put(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);
-    regionNames.put(Keywords.INTERNAL_REGION_EN, Keywords.INTERNAL_REGION_EN);
-    regionNames.put(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
-    regionNames.put(Keywords.PRIVATE_REGION_EN, Keywords.PRIVATE_REGION_EN);
-    regionNames.put(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.EVENT_HANDLERS_REGION_EN, Keywords.EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_EN, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-    regionNames.put(Keywords.VARIABLES_REGION_RU, Keywords.VARIABLES_REGION_EN);
-    regionNames.put(Keywords.VARIABLES_REGION_EN, Keywords.VARIABLES_REGION_EN);
-    regionNames.put(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
-    regionNames.put(Keywords.INITIALIZE_REGION_EN, Keywords.INITIALIZE_REGION_EN);
+    regionNames.put(Keywords.PUBLIC_REGION.getRu(), Keywords.PUBLIC_REGION.getEn());
+    regionNames.put(Keywords.PUBLIC_REGION.getEn(), Keywords.PUBLIC_REGION.getEn());
+    regionNames.put(Keywords.INTERNAL_REGION.getRu(), Keywords.INTERNAL_REGION.getEn());
+    regionNames.put(Keywords.INTERNAL_REGION.getEn(), Keywords.INTERNAL_REGION.getEn());
+    regionNames.put(Keywords.PRIVATE_REGION.getRu(), Keywords.PRIVATE_REGION.getEn());
+    regionNames.put(Keywords.PRIVATE_REGION.getEn(), Keywords.PRIVATE_REGION.getEn());
+    regionNames.put(Keywords.EVENT_HANDLERS_REGION.getRu(), Keywords.EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.EVENT_HANDLERS_REGION.getEn(), Keywords.EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION.getRu(), Keywords.FORM_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION.getEn(), Keywords.FORM_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu(),
+      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn(),
+      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getRu(), Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn(), Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn());
+    regionNames.put(Keywords.VARIABLES_REGION.getRu(), Keywords.VARIABLES_REGION.getEn());
+    regionNames.put(Keywords.VARIABLES_REGION.getEn(), Keywords.VARIABLES_REGION.getEn());
+    regionNames.put(Keywords.INITIALIZE_REGION.getRu(), Keywords.INITIALIZE_REGION.getEn());
+    regionNames.put(Keywords.INITIALIZE_REGION.getEn(), Keywords.INITIALIZE_REGION.getEn());
   }
 
   @Override
