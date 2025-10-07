@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverride;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -61,7 +60,7 @@ public class DiagnosticInfo {
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
   @Nullable
-  private final DiagnosticMetadataOverride metadataOverride;
+  private final DiagnosticMetadata metadataOverride;
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
@@ -144,13 +143,13 @@ public class DiagnosticInfo {
 
   public DiagnosticType getType() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getType)
+      .map(DiagnosticMetadata::type)
       .orElseGet(diagnosticMetadata::type);
   }
 
   public DiagnosticSeverity getSeverity() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getSeverity)
+      .map(DiagnosticMetadata::severity)
       .orElseGet(diagnosticMetadata::severity);
   }
 
@@ -177,37 +176,37 @@ public class DiagnosticInfo {
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getCompatibilityMode)
+      .map(DiagnosticMetadata::compatibilityMode)
       .orElseGet(diagnosticMetadata::compatibilityMode);
   }
 
   public DiagnosticScope getScope() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getScope)
+      .map(DiagnosticMetadata::scope)
       .orElseGet(diagnosticMetadata::scope);
   }
 
   public ModuleType[] getModules() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getModules)
+      .map(DiagnosticMetadata::modules)
       .orElseGet(diagnosticMetadata::modules);
   }
 
   public int getMinutesToFix() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getMinutesToFix)
+      .map(DiagnosticMetadata::minutesToFix)
       .orElseGet(diagnosticMetadata::minutesToFix);
   }
 
   public boolean isActivatedByDefault() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getActivatedByDefault)
+      .map(DiagnosticMetadata::activatedByDefault)
       .orElseGet(diagnosticMetadata::activatedByDefault);
   }
 
   public List<DiagnosticTag> getTags() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getTags)
+      .map(DiagnosticMetadata::tags)
       .map(tags -> new ArrayList<>(Arrays.asList(tags)))
       .orElseGet(() -> new ArrayList<>(Arrays.asList(diagnosticMetadata.tags())));
   }
@@ -229,13 +228,13 @@ public class DiagnosticInfo {
 
   public boolean canLocateOnProject() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getCanLocateOnProject)
+      .map(DiagnosticMetadata::canLocateOnProject)
       .orElseGet(diagnosticMetadata::canLocateOnProject);
   }
 
   public double getExtraMinForComplexity() {
     return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadataOverride::getExtraMinForComplexity)
+      .map(DiagnosticMetadata::extraMinForComplexity)
       .orElseGet(diagnosticMetadata::extraMinForComplexity);
   }
 
