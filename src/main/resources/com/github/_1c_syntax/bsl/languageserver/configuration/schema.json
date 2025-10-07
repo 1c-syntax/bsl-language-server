@@ -888,6 +888,82 @@
                             "description": "Don't analyze project on start. (default)."
                         }
                     ]
+                },
+                "overrideMinimumLSPDiagnosticLevel": {
+                    "$id": "#/properties/overrideMinimumLSPDiagnosticLevel",
+                    "type": "string",
+                    "title": "Override minimum LSP diagnostic severity level. If diagnostic severity is lower than specified, it will be raised to the specified level.",
+                    "oneOf": [
+                        {
+                            "const": "INFO",
+                            "description": "Information"
+                        },
+                        {
+                            "const": "MINOR",
+                            "description": "Minor"
+                        },
+                        {
+                            "const": "MAJOR",
+                            "description": "Major"
+                        },
+                        {
+                            "const": "CRITICAL",
+                            "description": "Critical"
+                        },
+                        {
+                            "const": "BLOCKER",
+                            "description": "Blocker"
+                        }
+                    ]
+                },
+                "metadata": {
+                    "$id": "#/properties/metadata",
+                    "type": "object",
+                    "title": "Diagnostic metadata overrides. Key is diagnostic code, value is object with metadata properties to override.",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["ERROR", "CODE_SMELL", "VULNERABILITY", "SECURITY_HOTSPOT"]
+                            },
+                            "severity": {
+                                "type": "string",
+                                "enum": ["INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"]
+                            },
+                            "scope": {
+                                "type": "string",
+                                "enum": ["ALL", "BSL", "OS"]
+                            },
+                            "modules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "minutesToFix": {
+                                "type": "integer"
+                            },
+                            "activatedByDefault": {
+                                "type": "boolean"
+                            },
+                            "compatibilityMode": {
+                                "type": "string"
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "canLocateOnProject": {
+                                "type": "boolean"
+                            },
+                            "extraMinForComplexity": {
+                                "type": "number"
+                            }
+                        }
+                    }
                 }
             }
         },
