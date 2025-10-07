@@ -55,23 +55,17 @@ public class DiagnosticMetadataDeserializer extends JsonDeserializer<DiagnosticM
     
     Map<String, Object> values = new HashMap<>();
     
-    // Parse all possible fields with defaults from DiagnosticMetadata annotation
+    // Only set values that are present in JSON, let annotation defaults handle the rest
     if (node.has("type")) {
       values.put("type", DiagnosticType.valueOf(node.get("type").asText()));
-    } else {
-      values.put("type", DiagnosticType.ERROR);
     }
     
     if (node.has("severity")) {
       values.put("severity", DiagnosticSeverity.valueOf(node.get("severity").asText()));
-    } else {
-      values.put("severity", DiagnosticSeverity.MINOR);
     }
     
     if (node.has("scope")) {
       values.put("scope", DiagnosticScope.valueOf(node.get("scope").asText()));
-    } else {
-      values.put("scope", DiagnosticScope.ALL);
     }
     
     if (node.has("modules")) {
@@ -81,26 +75,18 @@ public class DiagnosticMetadataDeserializer extends JsonDeserializer<DiagnosticM
         modules[i] = ModuleType.valueOf(modulesNode.get(i).asText());
       }
       values.put("modules", modules);
-    } else {
-      values.put("modules", new ModuleType[]{});
     }
     
     if (node.has("minutesToFix")) {
       values.put("minutesToFix", node.get("minutesToFix").asInt());
-    } else {
-      values.put("minutesToFix", 0);
     }
     
     if (node.has("activatedByDefault")) {
       values.put("activatedByDefault", node.get("activatedByDefault").asBoolean());
-    } else {
-      values.put("activatedByDefault", true);
     }
     
     if (node.has("compatibilityMode")) {
       values.put("compatibilityMode", DiagnosticCompatibilityMode.valueOf(node.get("compatibilityMode").asText()));
-    } else {
-      values.put("compatibilityMode", DiagnosticCompatibilityMode.UNDEFINED);
     }
     
     if (node.has("tags")) {
@@ -110,20 +96,14 @@ public class DiagnosticMetadataDeserializer extends JsonDeserializer<DiagnosticM
         tags[i] = DiagnosticTag.valueOf(tagsNode.get(i).asText());
       }
       values.put("tags", tags);
-    } else {
-      values.put("tags", new DiagnosticTag[]{});
     }
     
     if (node.has("canLocateOnProject")) {
       values.put("canLocateOnProject", node.get("canLocateOnProject").asBoolean());
-    } else {
-      values.put("canLocateOnProject", false);
     }
     
     if (node.has("extraMinForComplexity")) {
       values.put("extraMinForComplexity", node.get("extraMinForComplexity").asDouble());
-    } else {
-      values.put("extraMinForComplexity", 0.0);
     }
     
     return createAnnotation(DiagnosticMetadata.class, values);
@@ -167,7 +147,12 @@ public class DiagnosticMetadataDeserializer extends JsonDeserializer<DiagnosticM
         return proxy == args[0];
       }
       
-      return values.get(methodName);
+      // If value is present in map, return it; otherwise return annotation default
+      if (values.containsKey(methodName)) {
+        return values.get(methodName);
+      } else {
+        return method.getDefaultValue();
+      }
     }
   }
 }
