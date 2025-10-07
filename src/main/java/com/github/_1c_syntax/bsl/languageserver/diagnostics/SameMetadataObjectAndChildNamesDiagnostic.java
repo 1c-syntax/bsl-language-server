@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.StringInterner;
 
 import java.util.List;
@@ -111,7 +110,7 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
 
   private void addAttributeDiagnostic(Attribute attribute, String mdoName) {
     var mdoRef = attribute.getMdoReference().getMdoRef(
-      ScriptVariant.valueByName(serverConfiguration.getLanguage().getLanguageCode()));
+      documentContext.getServerContext().getConfiguration().getScriptVariant());
     addDiagnostic(info.getMessage(mdoRef, mdoName));
   }
 }

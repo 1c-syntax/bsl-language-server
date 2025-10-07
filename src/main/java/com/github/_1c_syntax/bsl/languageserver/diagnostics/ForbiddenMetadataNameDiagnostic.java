@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 
@@ -145,7 +144,7 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
   private void checkName(String name, MdoReference mdoReference) {
     if (FORBIDDEN_NAMES_PATTERN.matcher(name).matches()) {
       var mdoRef = mdoReference.getMdoRef(
-        ScriptVariant.valueByName(serverConfiguration.getLanguage().getLanguageCode()));
+        documentContext.getServerContext().getConfiguration().getScriptVariant());
       addDiagnostic(info.getMessage(name, mdoRef));
     }
   }

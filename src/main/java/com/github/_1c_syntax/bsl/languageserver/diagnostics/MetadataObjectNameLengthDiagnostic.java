@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 
 import java.util.List;
 
@@ -84,7 +83,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
 
   private void addAttributeDiagnostic(MD attribute) {
     var mdoRef = attribute.getMdoReference().getMdoRef(
-      ScriptVariant.valueByName(serverConfiguration.getLanguage().getLanguageCode()));
+      documentContext.getServerContext().getConfiguration().getScriptVariant());
     addDiagnostic(info.getMessage(mdoRef, maxMetadataObjectNameLength));
   }
 }
