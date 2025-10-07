@@ -145,13 +145,13 @@ public class DiagnosticInfo {
   public DiagnosticType getType() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getType)
-      .orElse(diagnosticMetadata.type());
+      .orElseGet(diagnosticMetadata::type);
   }
 
   public DiagnosticSeverity getSeverity() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getSeverity)
-      .orElse(diagnosticMetadata.severity());
+      .orElseGet(diagnosticMetadata::severity);
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
@@ -178,31 +178,31 @@ public class DiagnosticInfo {
   public DiagnosticCompatibilityMode getCompatibilityMode() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getCompatibilityMode)
-      .orElse(diagnosticMetadata.compatibilityMode());
+      .orElseGet(diagnosticMetadata::compatibilityMode);
   }
 
   public DiagnosticScope getScope() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getScope)
-      .orElse(diagnosticMetadata.scope());
+      .orElseGet(diagnosticMetadata::scope);
   }
 
   public ModuleType[] getModules() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getModules)
-      .orElse(diagnosticMetadata.modules());
+      .orElseGet(diagnosticMetadata::modules);
   }
 
   public int getMinutesToFix() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getMinutesToFix)
-      .orElse(diagnosticMetadata.minutesToFix());
+      .orElseGet(diagnosticMetadata::minutesToFix);
   }
 
   public boolean isActivatedByDefault() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getActivatedByDefault)
-      .orElse(diagnosticMetadata.activatedByDefault());
+      .orElseGet(diagnosticMetadata::activatedByDefault);
   }
 
   public List<DiagnosticTag> getTags() {
@@ -230,13 +230,13 @@ public class DiagnosticInfo {
   public boolean canLocateOnProject() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getCanLocateOnProject)
-      .orElse(diagnosticMetadata.canLocateOnProject());
+      .orElseGet(diagnosticMetadata::canLocateOnProject);
   }
 
   public double getExtraMinForComplexity() {
     return Optional.ofNullable(metadataOverride)
       .map(DiagnosticMetadataOverride::getExtraMinForComplexity)
-      .orElse(diagnosticMetadata.extraMinForComplexity());
+      .orElseGet(diagnosticMetadata::extraMinForComplexity);
   }
 
   public Map<String, Object> getDefaultConfiguration() {
