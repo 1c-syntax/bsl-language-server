@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -59,8 +58,7 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
-  @Nullable
-  private final DiagnosticMetadata metadataOverride;
+  private final Optional<Map<String, Object>> metadataOverride;
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
@@ -77,7 +75,7 @@ public class DiagnosticInfo {
     
     // Get metadata override from configuration if exists
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
-    metadataOverride = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
+    metadataOverride = Optional.ofNullable(diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue()));
   }
 
   public DiagnosticCode getCode() {
@@ -142,18 +140,24 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticType getType() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::type)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable(map.get("type")))
+      .map(value -> value instanceof DiagnosticType ? (DiagnosticType) value : DiagnosticType.valueOf(value.toString()))
       .orElseGet(diagnosticMetadata::type);
   }
 
   public DiagnosticSeverity getSeverity() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::severity)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable(map.get("severity")))
+      .map(value -> value instanceof DiagnosticSeverity ? (DiagnosticSeverity) value : DiagnosticSeverity.valueOf(value.toString()))
       .orElseGet(diagnosticMetadata::severity);
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
+    return calculateLSPSeverity();
+  }
+  
+  private org.eclipse.lsp4j.DiagnosticSeverity calculateLSPSeverity() {
     var type = getType();
     org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
     
@@ -175,38 +179,38 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::compatibilityMode)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((DiagnosticCompatibilityMode) map.get("compatibilityMode")))
       .orElseGet(diagnosticMetadata::compatibilityMode);
   }
 
   public DiagnosticScope getScope() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::scope)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((DiagnosticScope) map.get("scope")))
       .orElseGet(diagnosticMetadata::scope);
   }
 
   public ModuleType[] getModules() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::modules)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((ModuleType[]) map.get("modules")))
       .orElseGet(diagnosticMetadata::modules);
   }
 
   public int getMinutesToFix() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::minutesToFix)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((Integer) map.get("minutesToFix")))
       .orElseGet(diagnosticMetadata::minutesToFix);
   }
 
   public boolean isActivatedByDefault() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::activatedByDefault)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((Boolean) map.get("activatedByDefault")))
       .orElseGet(diagnosticMetadata::activatedByDefault);
   }
 
   public List<DiagnosticTag> getTags() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::tags)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((DiagnosticTag[]) map.get("tags")))
       .map(tags -> new ArrayList<>(Arrays.asList(tags)))
       .orElseGet(() -> new ArrayList<>(Arrays.asList(diagnosticMetadata.tags())));
   }
@@ -227,14 +231,14 @@ public class DiagnosticInfo {
   }
 
   public boolean canLocateOnProject() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::canLocateOnProject)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((Boolean) map.get("canLocateOnProject")))
       .orElseGet(diagnosticMetadata::canLocateOnProject);
   }
 
   public double getExtraMinForComplexity() {
-    return Optional.ofNullable(metadataOverride)
-      .map(DiagnosticMetadata::extraMinForComplexity)
+    return metadataOverride
+      .flatMap(map -> Optional.ofNullable((Double) map.get("extraMinForComplexity")))
       .orElseGet(diagnosticMetadata::extraMinForComplexity);
   }
 

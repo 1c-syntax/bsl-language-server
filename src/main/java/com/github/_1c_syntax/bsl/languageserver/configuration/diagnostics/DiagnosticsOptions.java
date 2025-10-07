@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -58,6 +56,5 @@ public class DiagnosticsOptions {
   @Nullable
   private DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
 
-  @JsonDeserialize(contentUsing = DiagnosticMetadataDeserializer.class)
-  private Map<String, DiagnosticMetadata> metadata = new HashMap<>();
+  private Map<String, Map<String, Object>> metadata = new HashMap<>();
 }

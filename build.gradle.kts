@@ -120,7 +120,6 @@ dependencies {
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
-    implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.2")
