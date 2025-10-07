@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -58,13 +57,9 @@ import java.util.List;
 )
 public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataDiagnostic {
 
-  private final LanguageServerConfiguration serverConfiguration;
   private final StringInterner stringInterner;
 
-  SameMetadataObjectAndChildNamesDiagnostic(
-    LanguageServerConfiguration serverConfiguration,
-    StringInterner stringInterner
-  ) {
+  SameMetadataObjectAndChildNamesDiagnostic(StringInterner stringInterner) {
     super(List.of(
       MDOType.ACCOUNTING_REGISTER,
       MDOType.ACCUMULATION_REGISTER,
@@ -79,7 +74,6 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
       MDOType.INFORMATION_REGISTER,
       MDOType.TASK
     ));
-    this.serverConfiguration = serverConfiguration;
     this.stringInterner = stringInterner;
   }
 
@@ -91,18 +85,18 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
 
     if (mdo instanceof AttributeOwner attributeOwner && !attributeOwner.getAllAttributes().isEmpty()) {
       var mdoName = stringInterner.intern(mdo.getName());
-      checkkAttributes(attributeOwner.getAllAttributes(), mdoName);
+      checkAttributes(attributeOwner.getAllAttributes(), mdoName);
     }
 
     if (mdo instanceof TabularSectionOwner tabularSectionOwner && !tabularSectionOwner.getTabularSections().isEmpty()) {
       tabularSectionOwner.getTabularSections().forEach((TabularSection table) -> {
         var tableName = stringInterner.intern(table.getName());
-        checkkAttributes(table.getAllAttributes(), tableName);
+        checkAttributes(table.getAllAttributes(), tableName);
       });
     }
   }
 
-  private void checkkAttributes(List<Attribute> attributeOwner, String mdoName) {
+  private void checkAttributes(List<Attribute> attributeOwner, String mdoName) {
     attributeOwner.stream()
       .filter(attribute -> mdoName.equalsIgnoreCase(attribute.getName()))
       .forEach(attribute -> addAttributeDiagnostic(attribute, mdoName));
