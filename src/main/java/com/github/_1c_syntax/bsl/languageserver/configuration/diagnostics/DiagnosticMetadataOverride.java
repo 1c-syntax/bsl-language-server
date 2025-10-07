@@ -23,38 +23,53 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
+ * Класс для переопределения метаданных диагностики из конфигурационного файла
  */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DiagnosticsOptions {
-  private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
-  private boolean analyzeOnStart;
-  private SkipSupport skipSupport = SkipSupport.NEVER;
-  private Mode mode = Mode.ON;
-  private boolean ordinaryAppSupport = true;
-  private SubsystemFilter subsystemsFilter = new SubsystemFilter();
-
-  @JsonDeserialize(using = ParametersDeserializer.class)
-  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
+public class DiagnosticMetadataOverride {
 
   @Nullable
-  private DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
+  private DiagnosticType type;
 
-  private Map<String, DiagnosticMetadataOverride> metadata = new HashMap<>();
+  @Nullable
+  private DiagnosticSeverity severity;
+
+  @Nullable
+  private DiagnosticScope scope;
+
+  @Nullable
+  private ModuleType[] modules;
+
+  @Nullable
+  private Integer minutesToFix;
+
+  @Nullable
+  private Boolean activatedByDefault;
+
+  @Nullable
+  private DiagnosticCompatibilityMode compatibilityMode;
+
+  @Nullable
+  private DiagnosticTag[] tags;
+
+  @Nullable
+  private Boolean canLocateOnProject;
+
+  @Nullable
+  private Double extraMinForComplexity;
 }

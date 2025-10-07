@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverride;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -58,6 +60,9 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
+  @Nullable
+  private final DiagnosticMetadataOverride metadataOverride;
+
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
     LanguageServerConfiguration configuration,
@@ -70,6 +75,10 @@ public class DiagnosticInfo {
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
+    
+    // Get metadata override from configuration if exists
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
+    metadataOverride = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
   }
 
   public DiagnosticCode getCode() {
@@ -134,45 +143,82 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticType getType() {
+    if (metadataOverride != null && metadataOverride.getType() != null) {
+      return metadataOverride.getType();
+    }
     return diagnosticMetadata.type();
   }
 
   public DiagnosticSeverity getSeverity() {
+    if (metadataOverride != null && metadataOverride.getSeverity() != null) {
+      return metadataOverride.getSeverity();
+    }
     return diagnosticMetadata.severity();
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
     var type = getType();
+    org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
+    
     if (type == DiagnosticType.CODE_SMELL) {
-      return severityToLSPSeverityMap.get(getSeverity());
+      lspSeverity = severityToLSPSeverityMap.get(getSeverity());
     } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+      lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
     } else {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
+      lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Error;
     }
+    
+    // Apply minimum severity override if configured
+    var overrideMinimum = configuration.getDiagnosticsOptions().getOverrideMinimumLSPDiagnosticLevel();
+    if (overrideMinimum != null) {
+      var overrideLSPSeverity = severityToLSPSeverityMap.get(overrideMinimum);
+      if (overrideLSPSeverity != null && lspSeverity.getValue() > overrideLSPSeverity.getValue()) {
+        lspSeverity = overrideLSPSeverity;
+      }
+    }
+    
+    return lspSeverity;
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
+    if (metadataOverride != null && metadataOverride.getCompatibilityMode() != null) {
+      return metadataOverride.getCompatibilityMode();
+    }
     return diagnosticMetadata.compatibilityMode();
   }
 
   public DiagnosticScope getScope() {
+    if (metadataOverride != null && metadataOverride.getScope() != null) {
+      return metadataOverride.getScope();
+    }
     return diagnosticMetadata.scope();
   }
 
   public ModuleType[] getModules() {
+    if (metadataOverride != null && metadataOverride.getModules() != null) {
+      return metadataOverride.getModules();
+    }
     return diagnosticMetadata.modules();
   }
 
   public int getMinutesToFix() {
+    if (metadataOverride != null && metadataOverride.getMinutesToFix() != null) {
+      return metadataOverride.getMinutesToFix();
+    }
     return diagnosticMetadata.minutesToFix();
   }
 
   public boolean isActivatedByDefault() {
+    if (metadataOverride != null && metadataOverride.getActivatedByDefault() != null) {
+      return metadataOverride.getActivatedByDefault();
+    }
     return diagnosticMetadata.activatedByDefault();
   }
 
   public List<DiagnosticTag> getTags() {
+    if (metadataOverride != null && metadataOverride.getTags() != null) {
+      return new ArrayList<>(Arrays.asList(metadataOverride.getTags()));
+    }
     return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
   }
 
@@ -192,10 +238,16 @@ public class DiagnosticInfo {
   }
 
   public boolean canLocateOnProject() {
+    if (metadataOverride != null && metadataOverride.getCanLocateOnProject() != null) {
+      return metadataOverride.getCanLocateOnProject();
+    }
     return diagnosticMetadata.canLocateOnProject();
   }
 
   public double getExtraMinForComplexity() {
+    if (metadataOverride != null && metadataOverride.getExtraMinForComplexity() != null) {
+      return metadataOverride.getExtraMinForComplexity();
+    }
     return diagnosticMetadata.extraMinForComplexity();
   }
 
