@@ -59,6 +59,7 @@ public class DiagnosticInfo {
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
   private final Optional<Map<String, Object>> metadataOverride;
+  private final org.eclipse.lsp4j.DiagnosticSeverity cachedLSPSeverity;
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
@@ -76,6 +77,9 @@ public class DiagnosticInfo {
     // Get metadata override from configuration if exists
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
     metadataOverride = Optional.ofNullable(diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue()));
+    
+    // Cache LSP severity calculation
+    cachedLSPSeverity = calculateLSPSeverity();
   }
 
   public DiagnosticCode getCode() {
@@ -154,7 +158,7 @@ public class DiagnosticInfo {
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    return calculateLSPSeverity();
+    return cachedLSPSeverity;
   }
   
   private org.eclipse.lsp4j.DiagnosticSeverity calculateLSPSeverity() {
