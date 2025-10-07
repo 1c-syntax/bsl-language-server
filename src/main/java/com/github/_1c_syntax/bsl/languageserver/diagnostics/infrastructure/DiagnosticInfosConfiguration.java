@@ -88,16 +88,6 @@ public class DiagnosticInfosConfiguration {
   private DiagnosticInfo createDiagnosticInfo(
     @Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass
   ) {
-    var diagnosticCode = createDiagnosticCode(diagnosticClass);
-    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata().get(diagnosticCode);
-    return new DiagnosticInfo(diagnosticClass, configuration, stringInterner, metadataOverride);
-  }
-
-  private String createDiagnosticCode(Class<? extends BSLDiagnostic> diagnosticClass) {
-    String simpleName = diagnosticClass.getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-    return simpleName;
+    return new DiagnosticInfo(diagnosticClass, configuration, stringInterner);
   }
 }

@@ -66,8 +66,7 @@ public class DiagnosticInfo {
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
     LanguageServerConfiguration configuration,
-    StringInterner stringInterner,
-    @Nullable DiagnosticMetadataOverride metadataOverride
+    StringInterner stringInterner
   ) {
     this.diagnosticClass = diagnosticClass;
     this.configuration = configuration;
@@ -76,7 +75,10 @@ public class DiagnosticInfo {
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
-    this.metadataOverride = metadataOverride;
+    
+    // Get metadata override from configuration if exists
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
+    metadataOverride = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
   }
 
   public DiagnosticCode getCode() {
