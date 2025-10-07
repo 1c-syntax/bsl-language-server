@@ -53,13 +53,14 @@ class DiagnosticInfoOverrideTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
     configuration.update(configurationFile);
 
-    // when - Create diagnostic info for a diagnostic with INFO severity
-    // INFO severity normally maps to Hint LSP severity
-    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner);
+    // when - Create diagnostic info for a diagnostic with MINOR severity
+    // MINOR severity normally maps to Information LSP severity
+    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata().get("LineLength");
+    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner, metadataOverride);
 
-    // then - With override to MAJOR, it should be at least Warning
+    // then - With override to MAJOR (Warning), it should be at least Warning
     assertThat(configuration.getDiagnosticsOptions().getOverrideMinimumLSPDiagnosticLevel())
-      .isEqualTo(DiagnosticSeverity.MAJOR);
+      .isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
     assertThat(diagnosticInfo.getLSPSeverity())
       .isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
   }
@@ -71,7 +72,8 @@ class DiagnosticInfoOverrideTest {
     configuration.update(configurationFile);
 
     // when - Create diagnostic info for EmptyCodeBlock (normally MAJOR severity)
-    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata().get("EmptyCodeBlock");
+    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner, metadataOverride);
 
     // then - Should be overridden to BLOCKER
     assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.BLOCKER);
@@ -84,7 +86,8 @@ class DiagnosticInfoOverrideTest {
     configuration.update(configurationFile);
 
     // when - Create diagnostic info for EmptyCodeBlock (normally CODE_SMELL)
-    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata().get("EmptyCodeBlock");
+    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner, metadataOverride);
 
     // then - Should be overridden to ERROR, which means LSP Error severity
     assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.ERROR);
@@ -98,7 +101,8 @@ class DiagnosticInfoOverrideTest {
     configuration.update(configurationFile);
 
     // when - Create diagnostic info for LineLength
-    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner);
+    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata().get("LineLength");
+    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner, metadataOverride);
 
     // then - Should be overridden to 10
     assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(10);
@@ -110,7 +114,7 @@ class DiagnosticInfoOverrideTest {
     configuration.reset();
 
     // when - Create diagnostic info for EmptyCodeBlock
-    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner, null);
 
     // then - Should use default values from annotation
     assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);

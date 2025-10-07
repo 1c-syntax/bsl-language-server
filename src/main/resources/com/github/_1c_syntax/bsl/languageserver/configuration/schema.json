@@ -895,24 +895,20 @@
                     "title": "Override minimum LSP diagnostic severity level. If diagnostic severity is lower than specified, it will be raised to the specified level.",
                     "oneOf": [
                         {
-                            "const": "INFO",
+                            "const": "Error",
+                            "description": "Error"
+                        },
+                        {
+                            "const": "Warning",
+                            "description": "Warning"
+                        },
+                        {
+                            "const": "Information",
                             "description": "Information"
                         },
                         {
-                            "const": "MINOR",
-                            "description": "Minor"
-                        },
-                        {
-                            "const": "MAJOR",
-                            "description": "Major"
-                        },
-                        {
-                            "const": "CRITICAL",
-                            "description": "Critical"
-                        },
-                        {
-                            "const": "BLOCKER",
-                            "description": "Blocker"
+                            "const": "Hint",
+                            "description": "Hint"
                         }
                     ]
                 },

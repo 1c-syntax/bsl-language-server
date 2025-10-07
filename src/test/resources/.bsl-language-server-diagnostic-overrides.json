@@ -1,6 +1,6 @@
 {
   "diagnostics": {
-    "overrideMinimumLSPDiagnosticLevel": "MAJOR",
+    "overrideMinimumLSPDiagnosticLevel": "Warning",
     "metadata": {
       "EmptyCodeBlock": {
         "severity": "BLOCKER",

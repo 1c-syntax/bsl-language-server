@@ -51,7 +51,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameter() {
 
-    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner, null);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -90,13 +90,13 @@ class DiagnosticInfoTest {
   @Test
   void testLSPTags() {
     // given
-    var diagnosticInfo = new DiagnosticInfo(UnusedLocalMethodDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(UnusedLocalMethodDiagnostic.class, configuration, stringInterner, null);
 
     // then
     assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Unnecessary);
 
     // given
-    diagnosticInfo = new DiagnosticInfo(DeprecatedAttributes8312Diagnostic.class, configuration, stringInterner);
+    diagnosticInfo = new DiagnosticInfo(DeprecatedAttributes8312Diagnostic.class, configuration, stringInterner, null);
 
     // then
     assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Deprecated);
@@ -105,7 +105,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameterSuper() {
 
-    var diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration, stringInterner, null);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -142,7 +142,7 @@ class DiagnosticInfoTest {
 
   @Test
   void testCanLocateOnProject() {
-    var diagnosticInfo = new DiagnosticInfo(ForbiddenMetadataNameDiagnostic.class, configuration, stringInterner);
+    var diagnosticInfo = new DiagnosticInfo(ForbiddenMetadataNameDiagnostic.class, configuration, stringInterner, null);
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("ForbiddenMetadataName"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
@@ -165,7 +165,7 @@ class DiagnosticInfoTest {
     configuration.setLanguage(Language.EN);
 
     // when
-    var diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
+    var diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner, null);
 
     // then
     assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
