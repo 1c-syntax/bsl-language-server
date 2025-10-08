@@ -96,5 +96,5 @@ public @interface DiagnosticMetadata {
    * Если не указан, рассчитывается автоматически на основе type и severity.
    */
   @Nullable
-  DiagnosticSeverity lspSeverity();
+  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity();
 }
