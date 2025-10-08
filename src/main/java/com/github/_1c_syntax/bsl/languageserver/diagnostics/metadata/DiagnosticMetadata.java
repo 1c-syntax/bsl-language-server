@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.types.ModuleType;
+import jakarta.annotation.Nullable;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -93,6 +95,6 @@ public @interface DiagnosticMetadata {
    * LSP-уровень серьезности диагностики.
    * Если не указан, рассчитывается автоматически на основе type и severity.
    */
-  @jakarta.annotation.Nullable
-  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity();
+  @Nullable
+  DiagnosticSeverity lspSeverity();
 }
